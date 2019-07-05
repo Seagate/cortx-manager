@@ -19,13 +19,14 @@
 """
 
 import inspect
-from csm.providers.provider_factory import ProviderFactory
-from csm.providers.providers import Request, Response
+from csm.core.providers.provider_factory import ProviderFactory
+from csm.core.providers.providers import Request, Response
 from csm.common import const
 
 class Const:
     INVENTORY_FILE = 'INVENTORY_FILE'
     CLUSTER = 'cluster'
+    TESTDIR = "/opt/seagate/csm/test/"
 
 class TestFailed(Exception):
     def __init__(self, desc):
