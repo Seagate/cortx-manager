@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -25,7 +25,7 @@ import yaml
 import argparse
 
 from csm.common.log import Log
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.errors import CsmError
 from csm.common.payload import *
 from csm.common.conf import Conf
@@ -39,7 +39,7 @@ def tmain(argp, argv):
 
     # Perform validation of setup before tests are run
     try:
-        csm_conf = const.CSM_FILE
+        csm_conf = const.CSM_CONF
         if not os.path.exists(csm_conf):
             raise TestFailed('%s not present. Refer to samples directory' %csm_conf)
 

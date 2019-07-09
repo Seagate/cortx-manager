@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
- Filename:          init_provider.py
- Description:       Init Provider for csm initalization
+ Filename:          setup_provider.py
+ Description:       Setup Provider for csm
 
  Creation Date:     05/08/2019
  Author:            Ajay Paratmandali
@@ -21,39 +21,35 @@ import errno
 from csm.common.errors import CsmError
 from csm.common.log import Log
 from csm.common.conf import Conf
-from csm.common import const
+from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
 
-from csm.core.blogic.csm_ha import CsmHA
-
-class InitProvider(Provider):
+class SetupProvider(Provider):
     """ Provider implementation for csm initialization """
 
-    _init_list = {
-        "ha": CsmHA
-    }
-
     def __init__(self, cluster):
-        super(InitProvider, self).__init__(const.CSM_INIT_CMD, cluster)
+        super(SetupProvider, self).__init__(const.CSM_SETUP_CMD, cluster)
         # TODO- Load all configuration file
-        self._actions = list(self._init_list.keys())
+        self._init_list = {
+            "ha": cluster
+        }
 
     def _validate_request(self, request):
+        self._actions = const.CSM_SETUP_ACTIONS
         self._action = request.action()
-        self._args = request.args()
-        if self._action not in self._actions + ["all"]:
+        self._force = True if 'force' in request.args() else False
+
+        if self._action not in self._actions:
             raise CsmError(errno.EINVAL, 'Invalid Action %s' % self._action)
 
+        if len(request.args()) > 1 and 'force' not in request.args():
+            raise CsmError(errno.EINVAL, 'Invalid Option %s' % request.args())
+
     def _process_request(self, request):
-        _output = ''
         try:
-            if self._action == "all":
+            if self._action == "init":
                 for component in self._init_list.values():
-                    csm_component = component(self._args)
-                    _output = csm_component.init()
-            else:
-                csm_component = self._init_list[self._action](self._args)
-                _output = csm_component.init()
-            return Response(0, _output)
+                    component.init(self._force)
+            return Response(0, 'CSM initalized successfully !!!')
         except Exception as e:
             raise CsmError(errno.EINVAL, 'Error: %s' % e)

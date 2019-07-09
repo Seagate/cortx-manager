@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
- Filename:          csm_resource_agent.py
+ Filename:          csm_ha.py
  Description:       Manage CSM Resources
 
  Creation Date:     03/08/2019
@@ -17,37 +17,60 @@
  ****************************************************************************
 """
 
+import os
+import subprocess
+
+from csm.common.log import Log
 from csm.common.payload import *
 from csm.common.conf import Conf
-from csm.common import const
-from csm.common.cluster import Cluster
-from csm.common.ha_framework import *
+from csm.common.errors import CsmError
+from csm.core.blogic import const
+from csm.common.ha_framework import PcsHAFramework, PcsResourceAgent
 
-class CsmHA:
-    def __init__(self, args):
-        self._resources = Conf.get(const.CSM_GLOBAL_INDEX, 'HA.resources')
-        self._cluster = Cluster(const.INVENTORY_FILE)
-        self._csm_resource_agents = {
-            "csm_resource_agent": CsmResourceAgent(self._resources)
-        }
-        self._ha = HAFramework(self._csm_resource_agents)
-
-    def init(self):
-        results =  self._cluster.init(self._ha)
-        for result in results:
-            if not result:
-                return "HA not initalized"
-        return "HA initalized Successfully"
-
-class CsmResourceAgent(ResourceAgent):
+class CsmResourceAgent(PcsResourceAgent):
+    ''' Provide initalization on csm resources '''
 
     def __init__(self, resources):
-        pass
+        super(CsmResourceAgent, self).__init__(resources)
+        self._resources = resources
+        self._csm_index = const.CSM_GLOBAL_INDEX
+        self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.primary")
+        self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.secondary")
 
-    def init(self):
+    def init(self, force_flag):
         ''' Perform initalization for CSM resources '''
-        #TODO- Add HA Configuration
-        return True
+        try:
+            Log.info("Starting configuring HA for CSM..")
+
+            if force_flag:
+                if self.is_available():
+                    self._delete_resource()
+                if os.path.exists(const.HA_INIT):
+                    os.remove(const.HA_INIT)
+
+            # Check if resource already configured
+            if os.path.exists(const.HA_INIT):
+                Log.info("Csm resources are already configured...")
+                return True
+
+            self._ra_init()
+
+            for resource in self._resources:
+                service = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".service")
+                provider = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".provider")
+                interval = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".interval")
+                timeout = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".timeout")
+                self._init_resource(resource, service, provider, interval, timeout)
+
+            # TODO- check score for failback
+            self._init_constraint("INFINITY")
+            self._execute_config()
+            open(const.HA_INIT, 'a').close()
+            Log.info("Successed: Configuring HA for CSM..")
+            return True
+        except CsmError as err:
+            Log.exception("%s" %err)
+            raise CsmError(-1, "Error: Unable to configure csm resources...")
 
     def failover(self):
         #TODO

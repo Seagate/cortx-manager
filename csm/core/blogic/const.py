@@ -1,8 +1,11 @@
 # Commands
-CSM_INIT_CMD = "init"
-CSM_INIT_ACTIONS = ["all", "ha"]
+CSM_SETUP_CMD = "setup"
+CSM_SETUP_ACTIONS = ["init"]
 SUPPORT_BUNDLE = "support_bundle"
 EMAIL_CONFIGURATION = "email"
+
+# Initalization
+HA_INIT = '/var/csm/ha_initialized'
 
 # File names
 SUMMARY_FILE = "summary.txt"
@@ -36,7 +39,8 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
-CSM_FILE = '/etc/csm/csm.conf'
+CSM_CONF = '/etc/csm/csm.conf'
+CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 COMPONENTS_FILE = 'COMPONENTS_FILE'
 DEFAULT_COMPONENTS_FILE = '/etc/csm/components.yaml'
 SUPPORT_BUNDLE_ROOT='SUPPORT_BUNDLE_ROOT'
