@@ -1,0 +1,13 @@
+#
+# Cloud Storage Managaer Configuration
+#
+
+# Path
+INVENTORY_FILE: '/etc/csm/cluster.yaml'
+COMPONENTS_FILE: '/etc/csm/components.yaml'
+SUPPORT_BUNDLE_ROOT: '/opt/seagate/bundle'
+CSM_USER: 'admin'
+
+# Timeout Releated
+SLEEP_DURATION: 1
+SSH_TIMEOUT: 5

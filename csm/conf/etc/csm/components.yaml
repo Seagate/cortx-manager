@@ -1,0 +1,83 @@
+os:
+    commands:
+        - df -h
+        - ps -eaux
+        - systemctl
+        - mount
+        - /usr/sbin/lsmod
+        - lslogins
+        - cat /proc/vmstat
+        - nmcli device show
+        - cat /etc/resolv.conf
+        - uptime
+        - top -b -n 1 | head -4
+        - cat /proc/mdstat
+        - cat /proc/sys/fs/file-nr
+        - date
+        - systemctl status ntpd
+
+    files:
+        - /var/log/dmesg
+        - /var/log/secure
+        - /var/log/messages
+
+s3_server:
+    commands:
+#       - s3iamcli listaccounts
+#       - s3iamcli listusers
+        - systemctl status s3authserver
+        - s3cmd ls
+        - hctl mero status
+
+    files:
+        - /opt/seagate/auth/resources/authserver.properties
+        - /opt/seagate/s3/conf/s3config.yaml
+        - /etc/sysconfig/s3server-*
+        - /var/log/seagate/s3/s3server*INFO*
+
+# s3 server logs are redirected to cmu to /var/log/seagate/<node>/s3/
+csm:
+    commands:
+
+    files:
+        - /var/log/seagate/*
+
+s3_cli:
+    commands:
+
+    files:
+        - /home/*/.sgs3iamcli/config.yaml
+
+mero:
+    commands:
+        - ls -l /var/mero/*
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') dumpdrives
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') getvpd
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') ver
+        - sg_scan -i
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') getboardid
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') ver
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') ddump
+        - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') report_faults
+        - sg_scan -a
+        - sg_scan -n
+        - sg_scan -V
+        - sg_scan -x
+        - m0reportbug
+
+    files:
+        - /var/mero/m0d-*/m0trace.*
+        - /var/mero/m0d-*/addb-stobs/*
+        - /var/mero/*/conf.xc
+        - /etc/mero/*
+        - /etc/sysconfig/mero
+        - /var/log/messages
+        - /var/crash/*
+        - /run/log/journal/*
+
+halon:
+    commands:
+
+    files:
+        - /etc/halon/halon_facts.yaml
+        - /var/log/halon-decision.log

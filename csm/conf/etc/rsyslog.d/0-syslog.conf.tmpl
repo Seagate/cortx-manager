@@ -1,0 +1,12 @@
+# Enable log redirection for IEM and inmportant messages
+if ($msg contains "IEC:" ) or ( $syslogseverity < 6 ) then
+{
+    action(type="omfwd"
+    queue.type="LinkedList"
+    queue.filename="syslog"
+    action.resumeRetryCount= "-1"
+    queue.saveonshutdown="on"
+    Target="hostname"
+    Port="port"
+    Protocol="tcp")
+}
