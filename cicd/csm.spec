@@ -1,19 +1,16 @@
 Name: csm
 Version: %{version}
 Release: %{dist}
-Summary: Seagate Object Storage CSM Tools
+Summary: CSM Tools
 License: Seagate Proprietary
-URL: http://gerrit.mero.colo.seagate.com:8080/#/admin/projects/csm
+URL: http://gitlab.mero.colo.seagate.com/eos/csm
 Source0: csm-%{version}.tar.gz
-Requires: initscripts fontconfig
-Requires: graphite-web python-carbon python-requests
-Requires: PyYAML python-paramiko
 
 %description
-Seagate Object Storage CSM Tools
+CSM Tools
 
 %prep
-%setup -n csm
+%setup -n csm/src
 # Nothing to do here
 
 %build
@@ -21,21 +18,23 @@ Seagate Object Storage CSM Tools
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/seagate/csm
 cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
-ln -s /opt/seagate/csm/config/csm_init $RPM_BUILD_ROOT/opt/seagate/csm/csm_init
 
 %post
-ln -sf /opt/seagate/csm/cli/csmcli.py /usr/bin/csmcli
+CSM_DIR=/opt/seagate/csm
+ln -sf $CSM_DIR/cli/csmcli.py /usr/bin/csmcli
 mkdir -p /etc/csm/email
-CFG_DIR=/opt/seagate/csm/config
+CFG_DIR=$CSM_DIR/conf
+[ -f /etc/csm/csm.conf ] || \
+    cp -R $CFG_DIR/etc/csm/csm.conf.sample /etc/csm/csm.conf
 cp $CFG_DIR/etc/csm/cluster.yaml.* /etc/csm/
-[ -f /etc/csm/components.yaml ] || cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
+[ -f /etc/csm/components.yaml ] || \
+    cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
 mkdir -p /var/csm/bundle
-touch /var/log/csm.log
-[ -f /etc/csm.conf ] || cp -R $CFG_DIR/etc/csm.conf.sample /etc/csm.conf
+mkdir -p /var/log/csm
+touch /var/log/csm/csm.log
 
 %postun
 /bin/rm -f /usr/bin/csmcli 2> /dev/null
-/bin/rm -f /opt/seagate/csm/csm_init 2> /dev/null
 
 %clean
 
@@ -45,5 +44,5 @@ touch /var/log/csm.log
 /opt/seagate/csm/*
 
 %changelog
-* Mon Jul 16 2018 Malhar Vora <malhar.vora@seagate.com> - 1.0.0
+* Mon Jul 29 2019 Ajay Paratmandali <ajay.paratmandali@seagate.com> - 1.0.0
 - Initial spec file
