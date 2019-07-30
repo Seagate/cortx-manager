@@ -43,7 +43,7 @@ class CsmApiClientTest(unittest.TestCase):
         """ Test functionality of call method.  """
 
         response = self.csm_api_client.call(self.command)
-        print 'rc=%d output=%s' %(response.rc(), response.output())
+        print('rc=%d output=%s' %(response.rc(), response.output()))
 
         self.assertEqual(response.rc(), 0)
 

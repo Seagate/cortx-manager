@@ -34,7 +34,7 @@ def test1(args):
 
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user())
-        channel.open()
+        channel.connect()
         cmd = "ls -l /tmp"
         rc, output = channel.execute(cmd)
         channel.close()
@@ -47,10 +47,10 @@ def test2(args):
 
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user())
-        channel.open()
+        channel.connect()
         cmd = "ls -l /invalid_path"
         rc, output = channel.execute(cmd)
-        channel.close()
+        channel.disconnect()
         Log.debug('rc=%d, output=%s' %(rc, output))
         if rc == 0:
             raise TestFailed('invalid command returned 0')
@@ -60,10 +60,10 @@ def test3(args):
 
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user(), True)
-        channel.open()
+        channel.connect()
         channel.get_file("/etc/hosts", "/tmp/hosts")
         channel.put_file("/tmp/hosts", "/tmp/hosts1")
-        channel.close()
+        channel.disconnect()
         if not filecmp.cmp("/etc/hosts", "/tmp/hosts1"):
             raise TestFailed('File Copy failed')
 

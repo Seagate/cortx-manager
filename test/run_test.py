@@ -48,7 +48,7 @@ def tmain(argv):
             raise TestFailed('Missing config file %s' %inventory_file)
 
     except TestFailed as e:
-        print 'Test Pre-condition failed. %s' %e
+        print ('Test Pre-condition failed. %s' %e)
         sys.exit(errno.ENOENT)
 
     # Initialization
@@ -61,7 +61,7 @@ def tmain(argv):
         args[Const.INVENTORY_FILE] = inventory_file
 
     except TestFailed as e:
-        print 'Test Initialization failed. %s' %e
+        print ('Test Initialization failed. %s' %e)
         sys.exit(errno.ENOENT)
 
     # Prepare to run the test, all or subset per command line args
@@ -72,7 +72,7 @@ def tmain(argv):
     ts_count = test_count = pass_count = fail_count = 0
     ts_start_time = time.time()
     for ts in ts_list:
-        print '\n####### Test Suite: %s ######' %ts
+        print( '\n####### Test Suite: %s ######' %ts)
         ts_count += 1
         ts_module = __import__('csm.test.%s' %ts, fromlist=[ts])
 
@@ -91,20 +91,20 @@ def tmain(argv):
                 start_time = time.time()
                 test(args)
                 duration = time.time() - start_time
-                print '%s:%s: PASSED (Time: %ds)' %(ts, test.__name__, duration)
+                print('%s:%s: PASSED (Time: %ds)' %(ts, test.__name__, duration))
                 pass_count += 1
 
             except (CsmError, TestFailed, Exception) as e:
                 Log.exception(e)
-                print '%s:%s: FAILED #@#@#@' %(ts, test.__name__)
-                print '    %s\n' %e
+                print ('%s:%s: FAILED #@#@#@' %(ts, test.__name__))
+                print ('    %s\n' %e)
                 fail_count += 1
 
     duration = time.time() - ts_start_time
-    print '\n***************************************'
-    print 'TestSuite:%d Tests:%d Passed:%d Failed:%d TimeTaken:%ds' \
-        %(ts_count, test_count, pass_count, fail_count, duration)
-    print '***************************************'
+    print( '\n***************************************')
+    print( 'TestSuite:%d Tests:%d Passed:%d Failed:%d TimeTaken:%ds' \
+        %(ts_count, test_count, pass_count, fail_count, duration))
+    print ('***************************************')
 
 if __name__ == '__main__':
     tmain(sys.argv)

@@ -178,7 +178,7 @@ class RemoteFileCollector(FileCollector):
 
     def _startup(self):
         """ Initialization before the data is collected """
-        self._channel.open()
+        self._channel.connect()
 
     def _execute_commands(self, comp_name, out_dir):
         """ Execute the commands """

@@ -2,7 +2,7 @@
 
 """
  ****************************************************************************
- Filename:          node_communication_handler.py
+ Filename:          comm.py
  Description:       Contains functionality to represent a single node and to
                     handle communication with nodes.
 
@@ -18,42 +18,73 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
+import sys,os
 import paramiko, socket
 import getpass
 import errno
 from paramiko.ssh_exception import SSHException
+##Local ##
+import csm.common.const 
 from csm.common.log import Log
 from csm.common.conf import Conf
-from csm.common import const
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError 
+# Third party
+import pika
+import json
+# Local
+from pika.exceptions import AMQPConnectionError, AMQPError
+from abc import ABC ,ABCMeta, abstractmethod 
 
-class Channel(object):
+class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
 
-    def __init__(self, node):
-        self._node = node
+    @abstractmethod
+    def initialize(self, config_file_path):
+        pass
 
+    @abstractmethod
+    def connect(self):
+        pass
+
+    @abstractmethod
+    def disconnect(self):
+        pass             
+
+    @abstractmethod
+    def send(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def recieve(self, **kwargs):
+        pass
+  
 class SSHChannel(Channel):
     """
     Represents ssh channel to a node for communication
     Communication to node is taken care by this class using paramiko
     """
-    def __init__(self, node, user=None, ftp_enabled=False):
-        super(SSHChannel, self).__init__(node)
+    def __init__(self, node, user=None, **args):
+        super(SSHChannel, self).__init__(self)
         self._user = user or getpass.getuser()
-        self._ftp_enabled = ftp_enabled
+        self.ftp_enabled = False
+        self.allow_agent = True
         self._ssh = None
+        self._node = node
         self._ssh_timeout = Conf.get(const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
+        for key, value in args.items():
+            setattr(self, key, value)
 
-    def open(self):
+    def initialize(self, config_file_path):
+        pass
+
+    def connect(self):
         Log.debug('node=%s user=%s' %(self._node, self._user))
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            self._ssh.connect(self._node, username=self._user, timeout=self._ssh_timeout)
-            if not self._ftp_enabled: return 0
+            self._ssh.connect(self._node, username=self._user, timeout=self._ssh_timeout, allow_agent=self.allow_agent)
+            if not self.ftp_enabled: return 0
             self._sftp = self._ssh.open_sftp()
 
         except socket.error as e:
@@ -65,11 +96,11 @@ class SSHChannel(Channel):
             Log.exception(e)
             raise CsmError(-1, 'can not connect to host %s@%s. %s' %(self._user, self._node, e))
 
-    def close(self):
+    def disconnect(self):
         """ Close the SSH channel """
         try:
             self._ssh.close()
-            if self._ftp_enabled: self._sftp.close()
+            if self.ftp_enabled: self._sftp.close()
 
         except Exception as e:
             Log.exception(e)
@@ -97,10 +128,16 @@ class SSHChannel(Channel):
 
         return rc, output
 
+    def send(self, **kwargs ):
+        pass
+
+    def recieve(self, **kwargs):
+        pass    
+
     def get_file(self, remote_file, local_file):
         """ Get a file from node """
 
-        if not self._ftp_enabled:
+        if not self.ftp_enabled:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
 
         try:
@@ -122,4 +159,207 @@ class SSHChannel(Channel):
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
+
+
+class AmqpChannel(Channel):
+    """
+    Represents Amqp channel to a node for communication
+    Communication to node is taken care by this class using pika
+    
+    """
+    def __init__(self):
+        """
+          @param config_file_path: Absolute path to configuration JSON file.
+        @type config_file_path: str
+        """
+        Channel.__init__(self)
+        Log.init(self.__class__.__name__, '/tmp', Log.DEBUG) 
+        self.host = 'localhost'
+        self.virtual_host = 'SSPL'
+        self.username = 'sspluser'
+        self.password = 'sspl4ever'
+        self.exchange_type = 'topic'
+        self.exchange = 'sspl_out'
+        self.exchange_queue = 'sensor-queue'
+        self.routing_key = 'sensor-key'
+        self._connection = None
+        self._channel = None
+        self.retry_counter = 1
+        self.configuration =None
+
+    def initialize(self, config_file_path):
+        """
+            Initialize the object from a configuration file.
+            establish connection with Rabbit-MQ server.
+        """
+        if config_file_path:
+            self.configuration = json.loads(open(config_file_path).read())
+
+        while not(self._connection and self._channel) and self.retry_counter < 6:
+            self.connect()
+            if not (self._connection and self._channel):
+                Log.warn('RMQ Connection Failed. Retry Attempt: {%d} in {%d} secs'\
+                %(retry_counter, retry_counter * 2 + 60))
+
+                time.sleep(retry_counter * 2 + 60)
+                self.retry_counter += 1
+        if not(self._connection and self._channel):
+            Log.warn('RMQ connection Failed. SSPL communication channel\
+                        could not be established.')
+            Log.error('sspl-csm channel creation FAILED.\
+                                  Retry attempts: 3')
+            raise CsmError(-1,'RMQ connection Failed to Initialize.')
+        else:
+            Log.debug('RMQ connection is Initialized.')
+
+    def declare_exchange_and_queue(self) :
+
+        if(self._connection and self._channel )  :  
+            try:
+                self._channel.exchange_declare(exchange=self.exchange,
+                                           exchange_type=self.exchange_type)
+            except AMQPError as err:
+                Log.error('Exchange: [{%s}], type: [ {%s} ] cannot be declared.\
+                           Details: {%s}'%(self.exchange,
+                                              self.exchange_type,
+                                              str(err)))
+            try:
+                self._channel.queue_declare(queue=self.exchange_queue,
+                                            exclusive=False)
+                self._channel.queue_bind(exchange=self.exchange,
+                                         queue=self.exchange_queue,
+                                         routing_key=self.routing_key)
+            except AMQPError as err:
+                Log.error('CSM Fails to initialize the queue.\
+                      Details: %s'.str(err))
+                Log.exception(err)
+                raise CsmError(-1, '%s' %err)
+           
+            Log.info('Initialized Exchange: {%s}, Queue: {%s},\
+                     routing_key: {%s}'%(self.exchange,self.exchange_queue,
+                                          self.routing_key))
+
+    def connect(self):
+        """
+        Initiate the connection with RMQ and open the necessary
+        communication channel.
+        """
+        try:
+            self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host,
+                               virtual_host=self.virtual_host,
+                               credentials=pika.PlainCredentials(self.username,self.password)))
+                                                                               
+            self._channel = self._connection.channel()
+        except AMQPError as err:
+                Log.error('RMQ connections has not established. Details  :%s ' %str(err))
+                raise CsmError(-1, '%s' %err)
+
+        Log.debug('RMQ connections has established.')
+ 
+    def disconnect(self):
+        """
+        Disconnect the connection 
+        """
+        self._connection.close()
+        self._channel.close()
+
+
+    def recieve(self, **kwargs):
+        """
+        Start consuming the queue messages.
+        """
+        for key, value in kwargs.items():
+            Log.debug("The value of {} is {}".format(key, value))
+            if key == "callback_function" :
+               callback_fn = value
+     
+        self.declare_exchange_and_queue()
+        try:
+           
+            self._channel.basic_consume(self.exchange_queue,callback_fn)    
+
+            self._channel.queue_declare(queue= self.exchange_queue)
+            self._channel.start_consuming()
+      
+        except AMQPConnectionError as err:
+            Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
+            Log.exception(str(err))
+            self.disconnect()
+
+    def send(self, **kwargs):
+        """
+        Publish the message to SSPL Rabbit-MQ queue.
+
+        @param message: message to be published to queue.
+        @type message: str
+        """
+        for key, value in kwargs.items():
+            Log.debug("The value of {} is {}".format(key, value))
+            if key == "message" :
+               input_msg = value        
+        try:
+            self._channel.basic_publish(exchange=self.exchange,routing_key=self.routing_key,
+                                        body=json.dumps(input_msg))
+        except AMQPError as err:
+            Log.warn('Message Publish Failed to Xchange:%s Key: %s, Msg:\
+                Details: %s Error: %s' %(self.exchange,self.routing_key,input_msg,str(err)))
+        else:
+              Log.info('Message Publish to Xchange:%s Key: %s, Msg:\
+                Details: %s ' %(self.exchange,self.routing_key,input_msg ))
+
+
+class comm(metaclass=ABCMeta):
+    """ Abstract class to represent a comm channel  
+
+    """
+    @abstractmethod
+    def initialize(self):
+        pass
+
+    @abstractmethod
+    def connect(self):
+        pass
+
+    @abstractmethod
+    def disconnect(self):
+        pass             
+
+    @abstractmethod
+    def send(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def recieve(self, **kwargs):
+        pass
+
+  
+class AmqpComm(comm):
+
+    def __init__(self):
+        comm.__init__(self)
+        self._inChannel = AmqpChannel()
+        self._outChannel = AmqpChannel()
+
+    def initialize(self, config_file_path):
+        self._inChannel.initialize(config_file_path)
+        self._outChannel.initialize(config_file_path)
+
+    def send(self, **kwargs):
+
+        for key, value in kwargs.items():
+            if key == "message" :
+               input_msg = value        
+        self._outChannel.send(message = input_msg)
+
+    def recieve(self, **kwargs):
+        for key, value in kwargs.items():
+            if key == "callback_function" :
+               callback_fn = value      
+        self._inChannel.recieve(callback_function=callback_fn )
+
+    def disconnect(self):
+        self._outChannel.disconnect()
+
+    def connect(self):
+        pass   
 
