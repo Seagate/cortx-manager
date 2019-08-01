@@ -23,7 +23,7 @@ import os
 import errno
 import yaml
 
-from csm.providers.provider_factory import ProviderFactory
+from csm.core.providers.provider_factory import ProviderFactory
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common import const

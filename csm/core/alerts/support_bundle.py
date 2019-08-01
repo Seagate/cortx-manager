@@ -79,7 +79,7 @@ class SupportBundle(object):
                 self._bundle_root, bundle_name)
             output = subprocess.check_output(bundle_cmd, stderr=subprocess.PIPE,
                                              shell=True)
-            print 'Removing %s' %bundle_path
+            print('Removing %s' %bundle_path)
             shutil.rmtree(bundle_path)
             msg = "Support bundle %s.tgz created." % bundle_path
 

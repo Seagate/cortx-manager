@@ -39,7 +39,7 @@ class Log:
 
         try:
             if not os.path.exists(log_path): os.makedirs(log_path)
-        except OSError, err:
+        except OSError as err:
             if err.errno != errno.EEXIST: raise
 
         format = '%(asctime)s: %(name)s %(levelname)s %(message)s'
@@ -91,4 +91,4 @@ class Log:
         """ Logs a message with level ERROR on this logger. """
         caller = inspect.stack()[1][3]
         Log.logger.debug('[%s] %s' %(caller, msg), *args, **kwargs)
-        print '[%s] %s' %(caller, msg)
+        print('[%s] %s' %(caller, msg))

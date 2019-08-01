@@ -17,8 +17,8 @@
 """
 
 import errno
-from csm.providers.providers import BundleProvider
-from csm.providers.providers import EmailProvider
+from csm.core.providers.providers import BundleProvider
+from csm.core.providers.providers import EmailProvider
 from csm.common.errors import CsmError
 from csm.common import const
 
