@@ -51,12 +51,20 @@ class Channel(metaclass=ABCMeta):
         pass             
 
     @abstractmethod
-    def send(self, **kwargs):
+    def send(self, message):
+        pass 
+
+    @abstractmethod
+    def send_file(self, local_file, remote_file):
+        pass 
+
+    @abstractmethod
+    def recv(self, callback_fn):
         pass
 
     @abstractmethod
-    def recieve(self, **kwargs):
-        pass
+    def recv_file(self, remote_file, local_file):
+        pass        
   
 class SSHChannel(Channel):
     """
@@ -128,13 +136,13 @@ class SSHChannel(Channel):
 
         return rc, output
 
-    def send(self, **kwargs ):
+    def send(self, message):
         pass
 
-    def recieve(self, **kwargs):
+    def recv(self, callback_fn):
         pass    
 
-    def get_file(self, remote_file, local_file):
+    def recv_file(self, remote_file, local_file):
         """ Get a file from node """
 
         if not self.ftp_enabled:
@@ -147,7 +155,7 @@ class SSHChannel(Channel):
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
 
-    def put_file(self, local_file, remote_file):
+    def send_file(self, local_file, remote_file):
         """ Put a file in node """
 
         if not self._ftp_enabled:
@@ -212,7 +220,7 @@ class AmqpChannel(Channel):
         else:
             Log.debug('RMQ connection is Initialized.')
 
-    def declare_exchange_and_queue(self) :
+    def _declare_exchange_and_queue(self) :
 
         if(self._connection and self._channel )  :  
             try:
@@ -264,48 +272,47 @@ class AmqpChannel(Channel):
         self._channel.close()
 
 
-    def recieve(self, **kwargs):
+    def recv(self, callback_fn):
         """
         Start consuming the queue messages.
         """
-        for key, value in kwargs.items():
-            Log.debug("The value of {} is {}".format(key, value))
-            if key == "callback_function" :
-               callback_fn = value
-     
-        self.declare_exchange_and_queue()
-        try:
-           
-            self._channel.basic_consume(self.exchange_queue,callback_fn)    
+        self._declare_exchange_and_queue()
+        self._channel.basic_consume(self.exchange_queue,callback_fn)    
+        self._channel.queue_declare(queue= self.exchange_queue)
 
-            self._channel.queue_declare(queue= self.exchange_queue)
+    def start_consuming(self):
+        """
+        Start consuming the queue messages.
+        """
+        try:
             self._channel.start_consuming()
-      
         except AMQPConnectionError as err:
             Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
             Log.exception(str(err))
             self.disconnect()
 
-    def send(self, **kwargs):
+    def send(self, message):
         """
         Publish the message to SSPL Rabbit-MQ queue.
 
         @param message: message to be published to queue.
         @type message: str
         """
-        for key, value in kwargs.items():
-            Log.debug("The value of {} is {}".format(key, value))
-            if key == "message" :
-               input_msg = value        
         try:
             self._channel.basic_publish(exchange=self.exchange,routing_key=self.routing_key,
-                                        body=json.dumps(input_msg))
+                                        body=json.dumps(message))
         except AMQPError as err:
             Log.warn('Message Publish Failed to Xchange:%s Key: %s, Msg:\
-                Details: %s Error: %s' %(self.exchange,self.routing_key,input_msg,str(err)))
+                Details: %s Error: %s' %(self.exchange,self.routing_key,message,str(err)))
         else:
               Log.info('Message Publish to Xchange:%s Key: %s, Msg:\
-                Details: %s ' %(self.exchange,self.routing_key,input_msg ))
+                Details: %s ' %(self.exchange,self.routing_key,message ))
+
+    def recv_file(self, remote_file, local_file):
+        pass        
+    
+    def send_file(self, local_file, remote_file):
+        pass  
 
 
 class comm(metaclass=ABCMeta):
@@ -325,11 +332,11 @@ class comm(metaclass=ABCMeta):
         pass             
 
     @abstractmethod
-    def send(self, **kwargs):
+    def send(self, message):
         pass
 
     @abstractmethod
-    def recieve(self, **kwargs):
+    def recv(self, callback_fn):
         pass
 
   
@@ -344,21 +351,15 @@ class AmqpComm(comm):
         self._inChannel.initialize(config_file_path)
         self._outChannel.initialize(config_file_path)
 
-    def send(self, **kwargs):
-
-        for key, value in kwargs.items():
-            if key == "message" :
-               input_msg = value        
+    def send(self, message):
         self._outChannel.send(message = input_msg)
 
-    def recieve(self, **kwargs):
-        for key, value in kwargs.items():
-            if key == "callback_function" :
-               callback_fn = value      
+    def recv(self, callback_fn):
         self._inChannel.recieve(callback_function=callback_fn )
 
     def disconnect(self):
         self._outChannel.disconnect()
+        self._inChannel.disconnect()
 
     def connect(self):
         pass   
