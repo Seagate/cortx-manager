@@ -29,7 +29,7 @@ def main(argv):
     cli_path = os.path.realpath(argv[0])
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
     from csm.cli.command_factory import CommandFactory
-    from csm.api.api_client import CsmApiClient
+    from csm.core.api.api_client import CsmApiClient
     from csm.common.log import Log
 
     Log.init("csm")

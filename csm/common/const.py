@@ -1,4 +1,6 @@
 # Commands
+CSM_INIT_CMD = "init"
+CSM_INIT_ACTIONS = ["all", "ha"]
 SUPPORT_BUNDLE = "support_bundle"
 EMAIL_CONFIGURATION = "email"
 
@@ -20,9 +22,12 @@ BUNDLE_FILE = 'files.tgz'
 # Poll check internal
 RESPONSE_CHECK_INTERVAL = 1
 
+# Index
+CSM_GLOBAL_INDEX = 'CSM'
+INVENTORY_INDEX = 'INVENTORY'
+
 # Cluster Inventory Related
-DEFAULT_INVENTORY_FILE = '/etc/csm/cluster.yaml'
-INVENTORY_FILE = 'INVENTORY_FILE'
+INVENTORY_FILE = '/etc/csm/cluster.yaml'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
 KEY_NODES  = 'nodes'
@@ -31,6 +36,7 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
+CSM_FILE = '/etc/csm/csm.conf'
 COMPONENTS_FILE = 'COMPONENTS_FILE'
 DEFAULT_COMPONENTS_FILE = '/etc/csm/components.yaml'
 SUPPORT_BUNDLE_ROOT='SUPPORT_BUNDLE_ROOT'

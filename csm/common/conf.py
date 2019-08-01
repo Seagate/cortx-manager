@@ -16,26 +16,42 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
-import os, errno
-import yaml
+import os
+from csm.common.payload import *
 from csm.common.errors import CsmError
 
 class Conf:
-    _map = None
+    ''' Represents conf file - singleton '''
+    _payloads = {}
 
     @staticmethod
-    def init(conf_file=None):
-        if conf_file is None or not os.path.exists(conf_file):
-            Conf._map = {}
-            return
-        try:
-            Conf._map = yaml.load(open(conf_file).read())
-        except:
-            raise CsmError(errno.ENOENT, 'Unable to read conf from %s' %conf_file)
+    def init():
+        ''' Initializes data from conf file '''
+        pass
 
     @staticmethod
-    def get(key, default_value=None):
-        if Conf._map == None:
-            raise CsmError(errno.ENOENT, 'Configuration not initialized')
-        return Conf._map[key] if key in Conf._map else default_value
+    def load(index, doc, force=False):
+        if not os.path.isfile('%s' %doc):
+            raise CsmError(-1, 'File %s does not exist' %doc)
+        if index in Conf._payloads.keys():
+            if force == False:
+                raise Exception('index %s is already loaded')
+            Conf.save(index)
+        Conf._payloads[index] = Payload(doc)
+
+    @staticmethod
+    def get(index, key, default_val=None):
+        ''' Obtain value for the given key '''
+        return Conf._payloads[index].get(key) \
+            if default_val is None else default_val
+
+    @staticmethod
+    def set(index, key, val):
+        ''' Sets the value into the conf for the given key '''
+        Conf._payloads[index].set(key, val)
+
+    @staticmethod
+    def save(index=None):
+        indexes = [x for x in _payloads.keys()] if index is None else index
+        for index in indexes:
+            Conf._payloads[index].dump()
