@@ -34,6 +34,22 @@ class Command(object):
     def args(self):
         return self._args
 
+class InitCommand(Command):
+    """ Contains funtionality to initialization CSM """
+
+    def __init__(self, args):
+        super(InitCommand, self).__init__(args)
+
+    def name(self):
+        return const.CSM_INIT_CMD
+
+    @staticmethod
+    def add_args(parser):
+        sbparser = parser.add_parser(const.CSM_INIT_CMD, help='Initialize csm component.')
+        sbparser.add_argument('action', help='action', choices=const.CSM_INIT_ACTIONS)
+        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
+        sbparser.set_defaults(command=InitCommand)
+
 class SupportBundleCommand(Command):
     """ Contains funtionality to handle support bundle """
 
