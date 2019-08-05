@@ -97,7 +97,7 @@ def tmain(argv):
             except (CsmError, TestFailed, Exception) as e:
                 Log.exception(e)
                 print('%s:%s: FAILED #@#@#@' %(ts, test.__name__))
-                print('%s\n' %e)
+                print('    %s\n' %e)
                 fail_count += 1
 
     duration = time.time() - ts_start_time

@@ -20,8 +20,8 @@
 """
 
 import time
-from csm.api.api import CsmApi
-from csm.providers.providers import Request, Response
+from csm.core.api.api import CsmApi
+from csm.core.providers.providers import Request, Response
 from csm.common.log import Log
 from csm.common import const
 
