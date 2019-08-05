@@ -1,13 +1,36 @@
-#
-# Cloud Storage Managaer Configuration
-#
+# CSM HA
+HA:
+    primary: "node1"
+    secondary: "node2"
+    resources: [ "APPSV", "WEBSV" ]
 
-# Path
-INVENTORY_FILE: '/etc/csm/cluster.yaml'
-COMPONENTS_FILE: '/etc/csm/components.yaml'
-SUPPORT_BUNDLE_ROOT: '/opt/seagate/bundle'
-CSM_USER: 'admin'
+# CSM RESOURCES:
+RESOURCES:
+    APPSV:
+        service: "appsv"
+        resource: "APPSV"
+        provider: "systemd"
+        interval: [ "10s", "10s", "10s" ] # Start stop monitor
+        timeout: [ "10s", "10s", "10s" ]
 
-# Timeout Releated
-SLEEP_DURATION: 1
-SSH_TIMEOUT: 5
+    WEBSV:
+        service: "websv"
+        resource: "WEBSV"
+        provider: "systemd"
+        interval: [ "10s", "10s", "10s" ]
+        timeout: [ "10s", "10s", "10s" ]
+
+#CSM AMQPChannel
+CHANNEL:
+    host: "localhost"
+    virtual_host: "SSPL"
+    username: "sspluser"
+    password: "sspl4ever"
+    exchange_type: "topic"
+    exchange: "sspl_out"
+    exchange_queue: "sensor-queue"
+    routing_key: "sensor-key"
+    connection: ""
+    channel: ""
+    retry_counter: "1"
+

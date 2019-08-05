@@ -24,7 +24,8 @@ import getpass
 import errno
 from paramiko.ssh_exception import SSHException
 ##Local ##
-import csm.common.const 
+from csm.common import const
+from csm.common.payload import *
 from csm.common.log import Log
 from csm.common.conf import Conf
 from csm.common.errors import CsmError 
@@ -39,7 +40,7 @@ class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
 
     @abstractmethod
-    def initialize(self, config_file_path):
+    def initialize(self):
         pass
 
     @abstractmethod
@@ -61,7 +62,7 @@ class Channel(metaclass=ABCMeta):
     @abstractmethod
     def recv(self, callback_fn):
         pass
-
+    
     @abstractmethod
     def recv_file(self, remote_file, local_file):
         pass        
@@ -82,7 +83,7 @@ class SSHChannel(Channel):
         for key, value in args.items():
             setattr(self, key, value)
 
-    def initialize(self, config_file_path):
+    def initialize(self):
         pass
 
     def connect(self):
@@ -175,35 +176,39 @@ class AmqpChannel(Channel):
     Communication to node is taken care by this class using pika
     
     """
+
     def __init__(self):
         """
           @param config_file_path: Absolute path to configuration JSON file.
         @type config_file_path: str
         """
         Channel.__init__(self)
-        Log.init(self.__class__.__name__, '/tmp', Log.DEBUG) 
-        self.host = 'localhost'
-        self.virtual_host = 'SSPL'
-        self.username = 'sspluser'
-        self.password = 'sspl4ever'
-        self.exchange_type = 'topic'
-        self.exchange = 'sspl_out'
-        self.exchange_queue = 'sensor-queue'
-        self.routing_key = 'sensor-key'
-        self._connection = None
-        self._channel = None
-        self.retry_counter = 1
-        self.configuration =None
+        Log.init(self.__class__.__name__, '/tmp', Log.DEBUG)
 
-    def initialize(self, config_file_path):
+        csm_conf = const.DEFAULT_CSM_CONF
+        if not os.path.exists(csm_conf):
+            print("Configuration file not found. Returning...")
+            return
+
+        Conf.init(Yaml(csm_conf), const.CSM_CONF)
+        self.host = Conf.get(const.CSM_CONF, "CHANNEL.host") 
+        self.virtual_host = Conf.get(const.CSM_CONF, "CHANNEL.virtual_host")
+        self.username = Conf.get(const.CSM_CONF, "CHANNEL.username")
+        self.password = Conf.get(const.CSM_CONF, "CHANNEL.password")
+        self.exchange_type = Conf.get(const.CSM_CONF, "CHANNEL.exchange_type")
+        self.exchange = Conf.get(const.CSM_CONF, "CHANNEL.exchange")
+        self.exchange_queue = Conf.get(const.CSM_CONF, "CHANNEL.exchange_queue")
+        self.routing_key = Conf.get(const.CSM_CONF, "CHANNEL.routing_key")
+        self._connection = Conf.get(const.CSM_CONF, "CHANNEL.connection")
+        self._channel = Conf.get(const.CSM_CONF, "CHANNEL.channel")
+        self.retry_counter = Conf.get(const.CSM_CONF, "CHANNEL.retry_counter")
+
+    def initialize(self):
         """
             Initialize the object from a configuration file.
             establish connection with Rabbit-MQ server.
         """
-        if config_file_path:
-            self.configuration = json.loads(open(config_file_path).read())
-
-        while not(self._connection and self._channel) and self.retry_counter < 6:
+        while not(self._connection and self._channel) and int(self.retry_counter) < 6:
             self.connect()
             if not (self._connection and self._channel):
                 Log.warn('RMQ Connection Failed. Retry Attempt: {%d} in {%d} secs'\
@@ -271,14 +276,14 @@ class AmqpChannel(Channel):
         self._connection.close()
         self._channel.close()
 
-
     def recv(self, callback_fn):
         """
         Start consuming the queue messages.
         """
         self._declare_exchange_and_queue()
-        self._channel.basic_consume(self.exchange_queue,callback_fn)    
+        self._channel.basic_consume(self.exchange_queue, callback_fn)    
         self._channel.queue_declare(queue= self.exchange_queue)
+        self.start_consuming()
 
     def start_consuming(self):
         """
@@ -347,15 +352,15 @@ class AmqpComm(comm):
         self._inChannel = AmqpChannel()
         self._outChannel = AmqpChannel()
 
-    def initialize(self, config_file_path):
-        self._inChannel.initialize(config_file_path)
-        self._outChannel.initialize(config_file_path)
+    def initialize(self):
+        self._inChannel.initialize()
+        self._outChannel.initialize()
 
     def send(self, message):
         self._outChannel.send(message = input_msg)
 
     def recv(self, callback_fn):
-        self._inChannel.recieve(callback_function=callback_fn )
+        self._inChannel.recv(callback_fn)
 
     def disconnect(self):
         self._outChannel.disconnect()

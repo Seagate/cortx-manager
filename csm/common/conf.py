@@ -18,24 +18,33 @@
 """
 
 import os, errno
-import yaml
+import sys
+from csm.common.payload import *
 from csm.common.errors import CsmError
 
 class Conf:
-    _map = None
+    ''' Represents conf file - singleton '''
+    _payload_dict = {}
+
 
     @staticmethod
-    def init(conf_file=None):
-        if conf_file is None or not os.path.exists(conf_file):
-            Conf._map = {}
-            return
-        try:
-            Conf._map = yaml.load(open(conf_file).read())
-        except:
-            raise CsmError(errno.ENOENT, 'Unable to read conf from %s' %conf_file)
+    def init(doc, session):
+        ''' Initializes data from conf file '''
+        if not os.path.isfile('%s' %doc):
+            raise CsmError(-1, 'conf file %s does not exist' %doc)
+        if session not in Conf._payload_dict.keys():
+            Conf._payload_dict[session] = Payload(doc)
 
     @staticmethod
-    def get(key, default_value=None):
-        if Conf._map == None:
-            raise CsmError(errno.ENOENT, 'Configuration not initialized')
-        return Conf._map[key] if key in Conf._map else default_value
+    def get(session, key, default_val=None):
+        ''' Obtain value for the given key '''
+        return default_val if default_val is not None else Conf._payload_dict[session].get(key)
+
+    @staticmethod
+    def set(session, key, val):
+        ''' Sets the value into the conf for the given key '''
+        Conf._payload_dict[session].set(key, val)
+
+    @staticmethod
+    def save():
+        Conf._payload_dict[session].dump()
