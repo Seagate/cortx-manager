@@ -4,5 +4,5 @@ if ($msg contains "IEC:" ) or ( $syslogseverity < 6 ) then
 {
     set $!message = $msg;
     action(type="omprog"
-       binary="/opt/seagate/csm/email/send_email.sh $!message p2 --param3=\"value 3\"")
+       binary="/opt/seagate/csm/core/blogic/send_email.sh $!message p2 --param3=\"value 3\"")
 }
