@@ -87,8 +87,9 @@ class Cluster(object):
     """
 
     def __init__(self, inventory_file):
-        self._inventory = yaml.load(open(inventory_file).read())
+        self._inventory = yaml.safe_load(open(inventory_file).read())
         self._node_list = {}
+        self._ha_framework = None
         for node_type in self._inventory.keys():
             if const.KEY_COMPONENTS not in self._inventory[node_type].keys():
                 raise CsmError(errno.EINVAL,
@@ -107,6 +108,10 @@ class Cluster(object):
                 if node_id not in self._node_list.keys():
                     node = Node(node_id, node_type, sw_components, admin_user)
                     self._node_list[node_id] = node
+
+    def init(self, ha_framework):
+        self._ha_framework = ha_framework
+        return self._ha_framework.init()
 
     def node_list(self, node_type=None):
         """ Nodes of specified type """

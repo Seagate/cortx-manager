@@ -19,6 +19,7 @@
 import errno
 from csm.core.providers.providers import BundleProvider
 from csm.core.providers.providers import EmailProvider
+from csm.core.providers.init_provider import InitProvider
 from csm.common.errors import CsmError
 from csm.common import const
 
@@ -27,7 +28,8 @@ class ProviderFactory(object):
 
     providers = {
         const.SUPPORT_BUNDLE: BundleProvider,
-        const.EMAIL_CONFIGURATION: EmailProvider
+        const.EMAIL_CONFIGURATION: EmailProvider,
+        const.CSM_INIT_CMD: InitProvider
     }
 
     @staticmethod

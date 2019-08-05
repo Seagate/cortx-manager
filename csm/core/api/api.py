@@ -24,6 +24,7 @@ import errno
 import yaml
 
 from csm.core.providers.provider_factory import ProviderFactory
+from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common import const
@@ -38,9 +39,10 @@ class CsmApi(object):
     def init():
         """ API server initialization. Validates and Loads configuration """
 
-        Conf.init('/etc/csm.conf')
+        Conf.init()
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_FILE))
         # Validate configuration files are present
-        inventory_file = Conf.get(const.INVENTORY_FILE, const.DEFAULT_INVENTORY_FILE)
+        inventory_file = const.INVENTORY_FILE
         if not os.path.isfile(inventory_file):
             raise CsmError(errno.ENOENT, 'cluster config file %s does not exist' %inventory_file)
 

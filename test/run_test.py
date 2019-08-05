@@ -22,28 +22,32 @@ import traceback
 import errno
 import re
 import yaml
+import argparse
 
-def tmain(argv):
+from csm.common.log import Log
+from csm.common import const
+from csm.common.errors import CsmError
+from csm.common.payload import *
+from csm.common.conf import Conf
+from csm.test.common import TestFailed, Const
+from csm.common.cluster import Cluster
+
+def tmain(argp, argv):
     # Import required TEST modules
-    ts_path = os.path.dirname(argv[0])
+    ts_path = os.path.dirname(argv)
     sys.path.append(os.path.join(ts_path, '..', '..'))
-
-    from csm.common.log import Log
-    from csm.common import const
-    from csm.common.errors import CsmError
-    from csm.common.conf import Conf
-    from csm.test.common import TestFailed, Const
-    from csm.common.cluster import Cluster
 
     # Perform validation of setup before tests are run
     try:
-        if not os.path.exists('/etc/csm.conf'):
-            raise TestFailed('/etc/csm.conf not present. Refer to samples directory')
+        csm_conf = const.CSM_FILE
+        if not os.path.exists(csm_conf):
+            raise TestFailed('%s not present. Refer to samples directory' %csm_conf)
 
         Log.init('csm', '/tmp')
-        Conf.init('/etc/csm.conf')
+        Conf.init()
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf))
 
-        inventory_file = Conf.get(const.INVENTORY_FILE, const.DEFAULT_INVENTORY_FILE)
+        inventory_file = const.INVENTORY_FILE
         if not os.path.exists(inventory_file):
             raise TestFailed('Missing config file %s' %inventory_file)
 
@@ -54,33 +58,45 @@ def tmain(argv):
     # Initialization
     try:
         test_args_file = os.path.join(ts_path, 'args.yaml')
-        args = yaml.load(open(test_args_file, 'r').read())
+        args = yaml.safe_load(open(test_args_file, 'r').read())
         if args is None: args = {}
 
         # Read inventory data and collection rules from file
         args[Const.INVENTORY_FILE] = inventory_file
-
     except TestFailed as e:
         print('Test Initialization failed. %s' %e)
         sys.exit(errno.ENOENT)
 
     # Prepare to run the test, all or subset per command line args
-    if len(argv) > 1: ts_list = argv[1:]
+    ts_list = []
+    if argp.t is not None:
+        if not os.path.exists(argp.t):
+            raise TestFailed('Missing file %s' %argp.t)
+        with open(argp.t) as f:
+            content = f.readlines()
+            ts_list = [x.strip() for x in content]
     else:
-        ts_list = [f.rsplit('.', 1)[0] for f in os.listdir(ts_path) if re.match(r'test_.*\.py$', f)]
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        for root, directories, filenames in os.walk(os.getcwd()):
+            for filename in filenames:
+                if re.match(r'test_.*\.py$', filename):
+                    file = os.path.join(root, filename).rsplit('.', 1)[0]\
+                        .replace(file_path + "/", "").replace("/", ".")
+                    ts_list.append(file)
 
     ts_count = test_count = pass_count = fail_count = 0
     ts_start_time = time.time()
     for ts in ts_list:
         print('\n####### Test Suite: %s ######' %ts)
         ts_count += 1
-        ts_module = __import__('csm.test.%s' %ts, fromlist=[ts])
-
-        # Initialization
         try:
+            ts_module = __import__('csm.test.%s' %ts, fromlist=[ts])
+            # Initialization
             init = getattr(ts_module, 'init')
             init(args)
         except Exception as e:
+            print('FAILED: Error: %s #@#@#@' %e)
+            fail_count += 1
             Log.exception(e)
             continue
 
@@ -107,5 +123,16 @@ def tmain(argv):
     print('***************************************')
 
 if __name__ == '__main__':
-    tmain(sys.argv)
+    try:
+        argParser = argparse.ArgumentParser(
+            usage = "%(prog)s [-h] [-t]",
+            formatter_class = argparse.RawDescriptionHelpFormatter)
+        argParser.add_argument("-t",
+                help="Enter path of testlist file")
+        args = argParser.parse_args()
 
+        args = argParser.parse_args()
+        tmain(args, sys.argv[0])
+    except Exception as e:
+        print(e, traceback.format_exc())
+        Log.exception(e)

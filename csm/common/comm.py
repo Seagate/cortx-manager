@@ -198,18 +198,18 @@ class AmqpChannel(Channel):
             return
 
         Conf.init()
-        Conf.load(const.INDEX_CSM_FILE, Yaml(csm_conf))
-        self.host = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.host") 
-        self.virtual_host = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.virtual_host")
-        self.username = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.username")
-        self.password = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.password")
-        self.exchange_type = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange_type")
-        self.exchange = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange")
-        self.exchange_queue = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange_queue")
-        self.routing_key = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.routing_key")
-        self._connection = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.connection")
-        self._channel = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.channel")
-        self.retry_counter = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.retry_count")
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf))
+        self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host") 
+        self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
+        self.username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
+        self.password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.password")
+        self.exchange_type = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange_type")
+        self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange")
+        self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange_queue")
+        self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.routing_key")
+        self._connection = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.connection")
+        self._channel = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.channel")
+        self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.retry_count")
 
     def init(self):
         """
