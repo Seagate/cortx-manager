@@ -32,5 +32,4 @@ CHANNEL:
     routing_key: "sensor-key"
     connection: ""
     channel: ""
-    retry_counter: "1"
-
+    retry_count: "1"

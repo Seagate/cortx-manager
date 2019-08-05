@@ -40,7 +40,7 @@ class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
 
     @abstractmethod
-    def initialize(self):
+    def init(self):
         pass
 
     @abstractmethod
@@ -65,7 +65,11 @@ class Channel(metaclass=ABCMeta):
     
     @abstractmethod
     def recv_file(self, remote_file, local_file):
-        pass        
+        pass       
+
+    @abstractmethod
+    def listen(self):
+        pass
   
 class SSHChannel(Channel):
     """
@@ -83,7 +87,7 @@ class SSHChannel(Channel):
         for key, value in args.items():
             setattr(self, key, value)
 
-    def initialize(self):
+    def init(self):
         pass
 
     def connect(self):
@@ -169,6 +173,9 @@ class SSHChannel(Channel):
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
 
+    def listen(self):
+        pass
+
 
 class AmqpChannel(Channel):
     """
@@ -185,25 +192,26 @@ class AmqpChannel(Channel):
         Channel.__init__(self)
         Log.init(self.__class__.__name__, '/tmp', Log.DEBUG)
 
-        csm_conf = const.DEFAULT_CSM_CONF
+        csm_conf = const.CSM_FILE
         if not os.path.exists(csm_conf):
             print("Configuration file not found. Returning...")
             return
 
-        Conf.init(Yaml(csm_conf), const.CSM_CONF)
-        self.host = Conf.get(const.CSM_CONF, "CHANNEL.host") 
-        self.virtual_host = Conf.get(const.CSM_CONF, "CHANNEL.virtual_host")
-        self.username = Conf.get(const.CSM_CONF, "CHANNEL.username")
-        self.password = Conf.get(const.CSM_CONF, "CHANNEL.password")
-        self.exchange_type = Conf.get(const.CSM_CONF, "CHANNEL.exchange_type")
-        self.exchange = Conf.get(const.CSM_CONF, "CHANNEL.exchange")
-        self.exchange_queue = Conf.get(const.CSM_CONF, "CHANNEL.exchange_queue")
-        self.routing_key = Conf.get(const.CSM_CONF, "CHANNEL.routing_key")
-        self._connection = Conf.get(const.CSM_CONF, "CHANNEL.connection")
-        self._channel = Conf.get(const.CSM_CONF, "CHANNEL.channel")
-        self.retry_counter = Conf.get(const.CSM_CONF, "CHANNEL.retry_counter")
+        Conf.init()
+        Conf.load(const.INDEX_CSM_FILE, Yaml(csm_conf))
+        self.host = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.host") 
+        self.virtual_host = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.virtual_host")
+        self.username = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.username")
+        self.password = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.password")
+        self.exchange_type = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange_type")
+        self.exchange = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange")
+        self.exchange_queue = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.exchange_queue")
+        self.routing_key = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.routing_key")
+        self._connection = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.connection")
+        self._channel = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.channel")
+        self.retry_counter = Conf.get(const.INDEX_CSM_FILE, "CHANNEL.retry_count")
 
-    def initialize(self):
+    def init(self):
         """
             Initialize the object from a configuration file.
             establish connection with Rabbit-MQ server.
@@ -283,9 +291,8 @@ class AmqpChannel(Channel):
         self._declare_exchange_and_queue()
         self._channel.basic_consume(self.exchange_queue, callback_fn)    
         self._channel.queue_declare(queue= self.exchange_queue)
-        self.start_consuming()
 
-    def start_consuming(self):
+    def listen(self):
         """
         Start consuming the queue messages.
         """
@@ -325,7 +332,7 @@ class comm(metaclass=ABCMeta):
 
     """
     @abstractmethod
-    def initialize(self):
+    def init(self):
         pass
 
     @abstractmethod
@@ -343,6 +350,10 @@ class comm(metaclass=ABCMeta):
     @abstractmethod
     def recv(self, callback_fn):
         pass
+    
+    @abstractmethod
+    def listen(self):
+        pass
 
   
 class AmqpComm(comm):
@@ -352,9 +363,9 @@ class AmqpComm(comm):
         self._inChannel = AmqpChannel()
         self._outChannel = AmqpChannel()
 
-    def initialize(self):
-        self._inChannel.initialize()
-        self._outChannel.initialize()
+    def init(self):
+        self._inChannel.init()
+        self._outChannel.init()
 
     def send(self, message):
         self._outChannel.send(message = input_msg)
@@ -368,4 +379,7 @@ class AmqpComm(comm):
 
     def connect(self):
         pass   
+
+    def listen(self):
+        self._inChannel.listen()
 

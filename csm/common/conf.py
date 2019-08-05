@@ -16,9 +16,7 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
 import os, errno
-import sys
 from csm.common.payload import *
 from csm.common.errors import CsmError
 
@@ -26,19 +24,22 @@ class Conf:
     ''' Represents conf file - singleton '''
     _payload_dict = {}
 
-
     @staticmethod
-    def init(doc, session):
+    def init():
         ''' Initializes data from conf file '''
-        if not os.path.isfile('%s' %doc):
-            raise CsmError(-1, 'conf file %s does not exist' %doc)
-        if session not in Conf._payload_dict.keys():
-            Conf._payload_dict[session] = Payload(doc)
+        pass
 
     @staticmethod
-    def get(session, key, default_val=None):
+    def load(index, doc):
+        if not os.path.isfile('%s' %doc):
+            raise CsmError(-1, 'File %s does not exist' %doc)
+        Conf._payload_dict[index] = Payload(doc)
+
+    @staticmethod
+    def get(index, key, default_val=None):
         ''' Obtain value for the given key '''
-        return default_val if default_val is not None else Conf._payload_dict[session].get(key)
+        return Conf._payload_dict[index].get(key) \
+            if default_val is None else default_val
 
     @staticmethod
     def set(session, key, val):
@@ -46,5 +47,7 @@ class Conf:
         Conf._payload_dict[session].set(key, val)
 
     @staticmethod
-    def save():
-        Conf._payload_dict[session].dump()
+    def save(index=None):
+        indexes = [x for x in _payload_dict.keys()] if index is None else index
+        for index in indexes:
+            Conf._payload_dict[index].dump()
