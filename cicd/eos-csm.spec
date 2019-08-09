@@ -22,10 +22,12 @@ mkdir -p ${RPM_BUILD_ROOT}/opt/seagate/csm/eos
 cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm/eos
 
 %post
-CSM_DIR=/opt/seagate/csm/
+CSM_INSTALL_PATH=/opt/seagate/csm
+ENV=${CSM_INSTALL_PATH}/web/.env
+sed -i "s/CSM_UI_PATH=\"\"/CSM_UI_PATH=\"\/opt\/seagate\/csm\/eos\/gui\"/g" $ENV
 
 %postun
-/bin/rm -rf /opt/seagate/csm/eos 2> /dev/null
+/bin/rm -rf ${CSM_INSTALL_PATH}/eos 2> /dev/null
 
 %clean
 

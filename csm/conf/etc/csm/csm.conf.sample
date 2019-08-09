@@ -1,3 +1,7 @@
+# PRODUCT
+PRODUCT
+    name: "eos"
+
 # CSM HA
 HA:
     primary: "node1"
