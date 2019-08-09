@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -30,7 +30,7 @@ from threading import Thread
 from csm.common.file_collector import RemoteFileCollector
 from csm.common.log import Log
 from csm.common.conf import Conf
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.errors import CsmError
 
 

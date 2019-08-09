@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -23,7 +23,7 @@ import time
 from csm.core.api.api import CsmApi
 from csm.core.providers.providers import Request, Response
 from csm.common.log import Log
-from csm.common import const
+from csm.core.blogic import const
 
 class ApiClient(object):
     """ Base class for invoking business logic functionality """

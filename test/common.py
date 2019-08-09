@@ -21,7 +21,9 @@
 import inspect
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
-from csm.common import const
+from csm.core.blogic import const
+import traceback
+from csm.core.api.api import CsmApi
 
 class Const:
     INVENTORY_FILE = 'INVENTORY_FILE'
@@ -33,15 +35,19 @@ class TestFailed(Exception):
         super(TestFailed, self).__init__(desc)
 
 class TestProvider(object):
-    def __init__(self, provider_name, cluster):
+    def __init__(self, provider_name, cluster=None):
+        if cluster is None:
+            CsmApi.init()
+            cluster = CsmApi.get_cluster()
         self._provider = ProviderFactory.get_provider(provider_name, cluster)
 
-    def start(self, cmd, args):
+    def process(self, cmd, args):
         self._response = None
         request = Request(cmd, args)
-        self._provider.process_request(request, self.stop)
-        while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
+        self._provider.process_request(request, self._process_response)
+        while self._response == None:
+            time.sleep(const.RESPONSE_CHECK_INTERVAL)
+        return self._response
 
-    def stop(self, response):
+    def _process_response(self, response):
         self._response = response
-

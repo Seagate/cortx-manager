@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -25,7 +25,7 @@ from mock import MagicMock, call
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from csm.common import const
+from csm.core.blogic import const
 from csm.cli.command_factory import CommandFactory
 
 

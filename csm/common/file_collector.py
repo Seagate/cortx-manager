@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -28,7 +28,7 @@ import errno
 
 from csm.common.comm import SSHChannel
 from csm.common.log import Log
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.errors import CsmError
 
 class FileCollector(object):

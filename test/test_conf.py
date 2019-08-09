@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -22,7 +22,7 @@ import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.conf import Conf
-from csm.common import const
+from csm.core.blogic import const
 
 def init(args):
     pass

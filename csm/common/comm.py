@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -25,7 +25,7 @@ import errno
 from paramiko.ssh_exception import SSHException
 from csm.common.log import Log
 from csm.common.conf import Conf
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.errors import CsmError
 
 class Channel(object):

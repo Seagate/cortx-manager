@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -19,11 +19,12 @@
  ****************************************************************************
 """
 
+import subprocess
 import getpass
 import yaml
 import errno
 
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.errors import CsmError
 from csm.common.log import Log
 
@@ -86,10 +87,10 @@ class Cluster(object):
     -----------------------------------------------
     """
 
-    def __init__(self, inventory_file):
+    def __init__(self, inventory_file, ha_framework):
         self._inventory = yaml.safe_load(open(inventory_file).read())
         self._node_list = {}
-        self._ha_framework = None
+        self._ha_framework = ha_framework
         for node_type in self._inventory.keys():
             if const.KEY_COMPONENTS not in self._inventory[node_type].keys():
                 raise CsmError(errno.EINVAL,
@@ -109,9 +110,8 @@ class Cluster(object):
                     node = Node(node_id, node_type, sw_components, admin_user)
                     self._node_list[node_id] = node
 
-    def init(self, ha_framework):
-        self._ha_framework = ha_framework
-        return self._ha_framework.init()
+    def init(self, force_flag):
+        self._ha_framework.init(force_flag)
 
     def node_list(self, node_type=None):
         """ Nodes of specified type """
@@ -157,3 +157,17 @@ class Cluster(object):
         else: state = const.STATE_DEGRADED
 
         return state, active_node_list, inactive_node_list
+
+    def get_nodes(self):
+        """
+            Return following things
+            1. List of active nodes
+            2. List of inactive nodes
+        """
+        return self._ha_framework.get_nodes()
+
+    def get_status(self):
+        """
+            Return if HAFramework in up or down
+        """
+        return self._ha_framework.get_status()
