@@ -58,7 +58,7 @@ class Channel(metaclass=ABCMeta):
         raise Exception('send_file not implemented in Channel class') 
 
     @abstractmethod
-    def recv(self, callback_fn):
+    def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Channel class') 
     
     @abstractmethod
@@ -135,7 +135,7 @@ class SSHChannel(Channel):
     def send(self, message):
         raise Exception('send not implemented for SSH Channel')
 
-    def recv(self, callback_fn):
+    def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented for SSH Channel')
 
     def recv_file(self, remote_file, local_file):
@@ -252,7 +252,7 @@ class AmqpChannel(Channel):
         self._connection.close()
         self._channel.close()
 
-    def recv(self, callback_fn):
+    def recv(self, callback_fn=None, message=None):
         """
         Start consuming the queue messages.
         """
@@ -313,7 +313,7 @@ class Comm(metaclass=ABCMeta):
         raise Exception('send not implemented in Comm class') 
 
     @abstractmethod
-    def recv(self, callback_fn):
+    def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Comm class') 
     
     @abstractmethod
@@ -333,8 +333,11 @@ class AmqpComm(Comm):
     def send(self, message):
         self._outChannel.send(message = input_msg)
 
-    def recv(self, callback_fn):
-        self._inChannel.recv(callback_fn)
+    def recv(self, callback_fn=None, message=None):
+        if callback_fn is not None:
+            self._inChannel.recv(callback_fn)
+        else:
+            raise Exception("AmqpComm::recv - No callback method provided")
 
     def disconnect(self):
         self._outChannel.disconnect()
