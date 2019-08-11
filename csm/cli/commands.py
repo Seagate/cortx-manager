@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -20,7 +20,7 @@
 """
 
 import abc, argparse
-from csm.common import const
+from csm.core.blogic import const
 
 class Command(object):
     """ Base class for all commands supported by RAS CLI """
@@ -34,21 +34,21 @@ class Command(object):
     def args(self):
         return self._args
 
-class InitCommand(Command):
+class SetupCommand(Command):
     """ Contains funtionality to initialization CSM """
 
     def __init__(self, args):
-        super(InitCommand, self).__init__(args)
+        super(SetupCommand, self).__init__(args)
 
     def name(self):
-        return const.CSM_INIT_CMD
+        return const.CSM_SETUP_CMD
 
     @staticmethod
     def add_args(parser):
-        sbparser = parser.add_parser(const.CSM_INIT_CMD, help='Initialize csm component.')
-        sbparser.add_argument('action', help='action', choices=const.CSM_INIT_ACTIONS)
+        sbparser = parser.add_parser(const.CSM_SETUP_CMD, help='Setup csm.')
+        sbparser.add_argument('action', help='action', choices=const.CSM_SETUP_ACTIONS)
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=InitCommand)
+        sbparser.set_defaults(command=SetupCommand)
 
 class SupportBundleCommand(Command):
     """ Contains funtionality to handle support bundle """

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -27,28 +27,37 @@ from csm.core.providers.provider_factory import ProviderFactory
 from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError
+from csm.common.ha_framework import PcsHAFramework
+from csm.core.blogic.csm_ha import CsmResourceAgent
 
 class CsmApi(object):
     """ Interface class to communicate with RAS API """
     _providers = {}
     _cluster = None
+
     @staticmethod
     def init():
         """ API server initialization. Validates and Loads configuration """
 
-        Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_FILE))
         # Validate configuration files are present
         inventory_file = const.INVENTORY_FILE
         if not os.path.isfile(inventory_file):
             raise CsmError(errno.ENOENT, 'cluster config file %s does not exist' %inventory_file)
 
+        # Instantiation of cluster
+        _csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
+        _csm_ra = {
+            "csm_resource_agent": CsmResourceAgent(_csm_resources)
+        }
+        _ha_framework = PcsHAFramework(_csm_ra)
+        CsmApi._cluster = Cluster(inventory_file, _ha_framework)
 
-        # Read inventory data
-        CsmApi._cluster = Cluster(inventory_file)
+    @staticmethod
+    def get_cluster():
+        return CsmApi._cluster
 
     @staticmethod
     def process_request(command_name, request, callback):

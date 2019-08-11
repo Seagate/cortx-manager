@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -23,10 +23,10 @@ import errno
 from threading import Thread
 from csm.common.errors import CsmError
 from csm.common.log import Log
-from csm.core.alerts.support_bundle import SupportBundle
-from csm.core.alerts.email_conf import EmailConfig
+from csm.core.blogic.support_bundle import SupportBundle
+from csm.core.blogic.email_conf import EmailConfig
 from csm.common.conf import Conf
-from csm.common import const
+from csm.core.blogic import const
 import getpass
 
 class Request(object):

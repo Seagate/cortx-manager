@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -21,6 +21,13 @@ import sys
 import os
 import traceback
 
+from csm.cli.command_factory import CommandFactory
+from csm.core.api.api_client import CsmApiClient
+from csm.common.log import Log
+from csm.common.conf import Conf
+from csm.common.payload import *
+from csm.core.blogic import const
+
 def main(argv):
     """
     Parse command line to obtain command structure. Execute the CLI
@@ -28,12 +35,12 @@ def main(argv):
     """
     cli_path = os.path.realpath(argv[0])
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
-    from csm.cli.command_factory import CommandFactory
-    from csm.core.api.api_client import CsmApiClient
-    from csm.common.log import Log
 
-    Log.init("csm")
+    Log.init("csm", "/var/log/csm")
     try:
+        Conf.init()
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+
         command = CommandFactory.get_command(argv[1:])
         # TODO - Use Factory Method for Api Client
         client = CsmApiClient()

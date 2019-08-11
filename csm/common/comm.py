@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -23,18 +23,16 @@ import paramiko, socket
 import getpass
 import errno
 from paramiko.ssh_exception import SSHException
-##Local ##
 from csm.common import const
 from csm.common.payload import *
 from csm.common.log import Log
 from csm.common.conf import Conf
-from csm.common.errors import CsmError 
-# Third party
 import pika
 import json
-# Local
 from pika.exceptions import AMQPConnectionError, AMQPError
 from abc import ABC ,ABCMeta, abstractmethod 
+from csm.core.blogic import const
+from csm.common.errors import CsmError
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """

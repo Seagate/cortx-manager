@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -26,7 +26,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.cluster import Cluster, Node
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.common.errors import CsmError
-from csm.common import const
+from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.log import Log
 
@@ -35,16 +35,13 @@ class TestBundleProvider(TestProvider):
         super(TestBundleProvider, self).__init__(const.SUPPORT_BUNDLE, cluster)
 
     def create(self, bundle_name):
-        self.start('create', [bundle_name])
-        return self._response
+        return self.process('create', [bundle_name])
 
     def delete(self, bundle_name):
-        self.start('delete', [bundle_name])
-        return self._response
+        return self.process('delete', [bundle_name])
 
     def list(self):
-        self.start('list', [])
-        return self._response
+        return self.process('list', [])
 
 def init(args):
     args[Const.CLUSTER] = Cluster(args[Const.INVENTORY_FILE])
