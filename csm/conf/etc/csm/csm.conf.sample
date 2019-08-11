@@ -20,7 +20,7 @@ RESOURCES:
         interval: [ "10s", "10s", "10s" ]
         timeout: [ "10s", "10s", "10s" ]
 
-#CSM AMQPChannel
+# AMQP Channel
 CHANNEL:
     host: "localhost"
     virtual_host: "SSPL"
@@ -30,6 +30,4 @@ CHANNEL:
     exchange: "sspl_out"
     exchange_queue: "sensor-queue"
     routing_key: "sensor-key"
-    connection: ""
-    channel: ""
     retry_count: "1"

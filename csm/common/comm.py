@@ -18,7 +18,7 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-import sys,os
+import sys, os
 import paramiko, socket
 import getpass
 import errno
@@ -27,47 +27,47 @@ from csm.common import const
 from csm.common.payload import *
 from csm.common.log import Log
 from csm.common.conf import Conf
+from csm.core.blogic import const
+from csm.common.errors import CsmError
 import pika
 import json
 from pika.exceptions import AMQPConnectionError, AMQPError
-from abc import ABC ,ABCMeta, abstractmethod 
-from csm.core.blogic import const
-from csm.common.errors import CsmError
+from abc import ABC, ABCMeta, abstractmethod 
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
 
     @abstractmethod
     def init(self):
-        pass
+        raise Exception('init not implemented in Channel class')
 
     @abstractmethod
     def connect(self):
-        pass
+        raise Exception('connect not implemented in Channel class') 
 
     @abstractmethod
     def disconnect(self):
-        pass             
+        raise Exception('disconnect not implemented in Channel class') 
 
     @abstractmethod
     def send(self, message):
-        pass 
+        raise Exception('send not implemented in Channel class') 
 
     @abstractmethod
     def send_file(self, local_file, remote_file):
-        pass 
+        raise Exception('send_file not implemented in Channel class') 
 
     @abstractmethod
     def recv(self, callback_fn):
-        pass
+        raise Exception('recv not implemented in Channel class') 
     
     @abstractmethod
     def recv_file(self, remote_file, local_file):
-        pass       
+        raise Exception('recv_file not implemented in Channel class') 
 
     @abstractmethod
     def listen(self):
-        pass
+        raise Exception('listen not implemented in Channel class') 
   
 class SSHChannel(Channel):
     """
@@ -86,23 +86,20 @@ class SSHChannel(Channel):
             setattr(self, key, value)
 
     def init(self):
-        pass
+        raise Exception('init not implemented for SSH Channel')
 
     def connect(self):
         Log.debug('node=%s user=%s' %(self._node, self._user))
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
         try:
             self._ssh.connect(self._node, username=self._user, timeout=self._ssh_timeout, allow_agent=self.allow_agent)
             if not self.ftp_enabled: return 0
             self._sftp = self._ssh.open_sftp()
-
         except socket.error as e:
             rc = errno.EHOSTUNREACH if e.errno is None else e.errno
             Log.exception(e)
             raise CsmError(rc, 'can not connect to host %s' %self._node)
-
         except (SSHException, Exception) as e:
             Log.exception(e)
             raise CsmError(-1, 'can not connect to host %s@%s. %s' %(self._user, self._node, e))
@@ -112,7 +109,6 @@ class SSHChannel(Channel):
         try:
             self._ssh.close()
             if self.ftp_enabled: self._sftp.close()
-
         except Exception as e:
             Log.exception(e)
 
@@ -128,75 +124,52 @@ class SSHChannel(Channel):
             _err.close()
             if rc != 0: output = error
             Log.debug('$ %s\n%s' %(command, output))
-
         except IOError as e:
             Log.exception(e)
             raise CsmError(errno.EIO, '%s' %e)
-
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
-
         return rc, output
 
     def send(self, message):
-        pass
+        raise Exception('send not implemented for SSH Channel')
 
     def recv(self, callback_fn):
-        pass    
+        raise Exception('recv not implemented for SSH Channel')
 
     def recv_file(self, remote_file, local_file):
         """ Get a file from node """
-
         if not self.ftp_enabled:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
-
         try:
             self._sftp.get(remote_file, local_file)
-
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
 
     def send_file(self, local_file, remote_file):
         """ Put a file in node """
-
         if not self._ftp_enabled:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
-
         try:
             self._sftp.put(local_file, remote_file)
-
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
 
     def listen(self):
-        pass
+        raise Exception('listen not implemented for SSH Channel')
 
 
 class AmqpChannel(Channel):
     """
     Represents Amqp channel to a node for communication
-    Communication to node is taken care by this class using pika
-    
+    Communication to node is taken care by this class using pika    
     """
-
     def __init__(self):
-        """
-          @param config_file_path: Absolute path to configuration JSON file.
-        @type config_file_path: str
-        """
         Channel.__init__(self)
         Log.init(self.__class__.__name__, '/tmp', Log.DEBUG)
-
-        csm_conf = const.CSM_FILE
-        if not os.path.exists(csm_conf):
-            print("Configuration file not found. Returning...")
-            return
-
-        Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf))
         self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host") 
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
         self.username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
@@ -205,21 +178,20 @@ class AmqpChannel(Channel):
         self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange")
         self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange_queue")
         self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.routing_key")
-        self._connection = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.connection")
-        self._channel = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.channel")
+        self._connection = None 
+        self._channel = None
         self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.retry_count")
 
     def init(self):
         """
-            Initialize the object from a configuration file.
-            establish connection with Rabbit-MQ server.
+        Initialize the object from a configuration file.
+        Establish connection with Rabbit-MQ server.
         """
         while not(self._connection and self._channel) and int(self.retry_counter) < 6:
             self.connect()
             if not (self._connection and self._channel):
                 Log.warn('RMQ Connection Failed. Retry Attempt: {%d} in {%d} secs'\
                 %(retry_counter, retry_counter * 2 + 60))
-
                 time.sleep(retry_counter * 2 + 60)
                 self.retry_counter += 1
         if not(self._connection and self._channel):
@@ -231,9 +203,8 @@ class AmqpChannel(Channel):
         else:
             Log.debug('RMQ connection is Initialized.')
 
-    def _declare_exchange_and_queue(self) :
-
-        if(self._connection and self._channel )  :  
+    def _declare_exchange_and_queue(self):
+        if(self._connection and self._channel):  
             try:
                 self._channel.exchange_declare(exchange=self.exchange,
                                            exchange_type=self.exchange_type)
@@ -260,8 +231,7 @@ class AmqpChannel(Channel):
 
     def connect(self):
         """
-        Initiate the connection with RMQ and open the necessary
-        communication channel.
+        Initiate the connection with RMQ and open the necessary communication channel.
         """
         try:
             self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host,
@@ -304,7 +274,6 @@ class AmqpChannel(Channel):
     def send(self, message):
         """
         Publish the message to SSPL Rabbit-MQ queue.
-
         @param message: message to be published to queue.
         @type message: str
         """
@@ -319,45 +288,41 @@ class AmqpChannel(Channel):
                 Details: %s ' %(self.exchange,self.routing_key,message ))
 
     def recv_file(self, remote_file, local_file):
-        pass        
+        raise Exception('recv_file not implemented for AMQP Channel')
     
     def send_file(self, local_file, remote_file):
-        pass  
+        raise Exception('send_file not implemented for AMQP Channel')
 
 
-class comm(metaclass=ABCMeta):
-    """ Abstract class to represent a comm channel  
-
-    """
+class Comm(metaclass=ABCMeta):
+    """ Abstract class to represent a comm channel """
     @abstractmethod
     def init(self):
-        pass
+        raise Exception('init not implemented in Comm class') 
 
     @abstractmethod
     def connect(self):
-        pass
+        raise Exception('connect not implemented in Comm class') 
 
     @abstractmethod
     def disconnect(self):
-        pass             
+        raise Exception('disconnect not implemented in Comm class') 
 
     @abstractmethod
     def send(self, message):
-        pass
+        raise Exception('send not implemented in Comm class') 
 
     @abstractmethod
     def recv(self, callback_fn):
-        pass
+        raise Exception('recv not implemented in Comm class') 
     
     @abstractmethod
     def listen(self):
-        pass
+       raise Exception('listen not implemented in Comm class') 
 
-  
-class AmqpComm(comm):
-
+class AmqpComm(Comm):
     def __init__(self):
-        comm.__init__(self)
+        Comm.__init__(self)
         self._inChannel = AmqpChannel()
         self._outChannel = AmqpChannel()
 
@@ -376,8 +341,7 @@ class AmqpComm(comm):
         self._inChannel.disconnect()
 
     def connect(self):
-        pass   
+        raise Exception('connect not implemented for AMQP Comm')
 
     def listen(self):
         self._inChannel.listen()
-
