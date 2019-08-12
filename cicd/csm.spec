@@ -5,6 +5,8 @@ Summary: CSM Tools
 License: Seagate Proprietary
 URL: http://gitlab.mero.colo.seagate.com/eos/csm
 Source0: csm-%{version}.tar.gz
+BuildRequires: python36-devel
+%define debug_package %{nil}
 
 %description
 CSM Tools
@@ -18,23 +20,28 @@ CSM Tools
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/seagate/csm
 cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
+exit 0
 
 %post
 CSM_DIR=/opt/seagate/csm
 ln -sf $CSM_DIR/cli/csmcli.py /usr/bin/csmcli
-mkdir -p /etc/csm/email
 CFG_DIR=$CSM_DIR/conf
 [ -f /etc/csm/csm.conf ] || \
     cp -R $CFG_DIR/etc/csm/csm.conf.sample /etc/csm/csm.conf
-cp $CFG_DIR/etc/csm/cluster.yaml.* /etc/csm/
+[ -f /etc/csm/cluster.conf ] || \
+	cp $CFG_DIR/etc/csm/cluster.conf.sample /etc/csm/cluster.conf.sample
+cp -f $CSM_DIR/web/csm_web.service /etc/systemd/system/csm_web.service
 [ -f /etc/csm/components.yaml ] || \
     cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
-mkdir -p /var/csm/bundle
-mkdir -p /var/log/csm
+mkdir -p /var/csm/bundle /var/log/csm
 touch /var/log/csm/csm.log
+exit 0
 
 %postun
-/bin/rm -f /usr/bin/csmcli 2> /dev/null
+[ $1 -eq 1 ] && exit 0
+rm -f /usr/bin/csmcli 2> /dev/null;
+rm -f /usr/bin/csm_web 2> /dev/null;
+exit 0
 
 %clean
 
