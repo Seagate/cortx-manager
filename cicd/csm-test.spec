@@ -6,6 +6,7 @@ License: Seagate Proprietary
 URL: http://gitlab.mero.colo.seagate.com/eos/csm
 Source0: csm-test-%{version}.tar.gz
 Requires: csm
+%define debug_package %{nil}
 
 %description
 Installs CSM sanity test scripts
