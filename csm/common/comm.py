@@ -23,7 +23,6 @@ import paramiko, socket
 import getpass
 import errno
 from paramiko.ssh_exception import SSHException
-from csm.common import const
 from csm.common.payload import *
 from csm.common.log import Log
 from csm.common.conf import Conf
@@ -33,6 +32,7 @@ import pika
 import json
 from pika.exceptions import AMQPConnectionError, AMQPError
 from abc import ABC, ABCMeta, abstractmethod 
+from functools import partial
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -256,8 +256,9 @@ class AmqpChannel(Channel):
         """
         Start consuming the queue messages.
         """
+        consumer_tag = const.CONSUMER_TAG
         self._declare_exchange_and_queue()
-        self._channel.basic_consume(self.exchange_queue, callback_fn)    
+        self._channel.basic_consume(self.exchange_queue, partial(callback_fn, consumer_tag), consumer_tag=consumer_tag)    
         self._channel.queue_declare(queue= self.exchange_queue)
 
     def listen(self):
@@ -331,7 +332,7 @@ class AmqpComm(Comm):
         self._outChannel.init()
 
     def send(self, message):
-        self._outChannel.send(message = input_msg)
+        self._outChannel.send(message)
 
     def recv(self, callback_fn=None, message=None):
         if callback_fn is not None:
@@ -340,8 +341,11 @@ class AmqpComm(Comm):
             raise Exception("AmqpComm::recv - No callback method provided")
 
     def disconnect(self):
-        self._outChannel.disconnect()
-        self._inChannel.disconnect()
+        try:
+            self._outChannel.disconnect()
+            self._inChannel.disconnect()
+        except Exception as e:
+            Log.exception(e)
 
     def connect(self):
         raise Exception('connect not implemented for AMQP Comm')

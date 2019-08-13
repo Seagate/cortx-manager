@@ -21,10 +21,11 @@
 import sys, os, getpass, socket, filecmp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.comm import SSHChannel
+from csm.common.comm import SSHChannel, AmqpComm
 from csm.common.log import Log
-from csm.test.common import Const
+from csm.test.common import Const, TestFailed
 from csm.common.cluster import Cluster, Node
+import json, time
 
 def init(args):
     args[Const.CLUSTER] = Cluster(args[Const.INVENTORY_FILE])
@@ -67,4 +68,26 @@ def test3(args):
         if not filecmp.cmp("/etc/hosts", "/tmp/hosts1"):
             raise TestFailed('File Copy failed')
 
-test_list = [ test1, test2, test3 ]
+def amqp_callback(ct, ch, method, properties, body):
+    with open('output.text', 'w') as json_file:
+        json.dump(json.loads(body), json_file)
+        json_file.close()
+        compare_results()
+        ch.basic_cancel(consumer_tag=ct)
+
+def compare_results():
+    if not filecmp.cmp('input.text', 'output.text'):
+        raise TestFailed('Input and Output alerts do not match.')
+
+def test4(args):
+    """ Receive alerts from RMQ Channel"""
+
+    amqp_client = AmqpComm()
+    amqp_client.init()  
+    with open('input.text') as json_file:
+        data = json.load(json_file)
+        amqp_client.send(data)
+    amqp_client.recv(amqp_callback)
+    amqp_client.listen()
+
+test_list = [ test1, test2, test3, test4 ]

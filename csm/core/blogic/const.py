@@ -29,6 +29,9 @@ RESPONSE_CHECK_INTERVAL = 1
 CSM_GLOBAL_INDEX = 'CSM'
 INVENTORY_INDEX = 'INVENTORY'
 
+# AMQP Consumer Tag
+CONSUMER_TAG = 'AMQP_CONSUMER'
+
 # Cluster Inventory Related
 INVENTORY_FILE = '/etc/csm/cluster.yaml'
 KEY_COMPONENTS = 'sw_components'
