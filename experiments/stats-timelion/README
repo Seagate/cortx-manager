@@ -1,0 +1,62 @@
+README
+~~~~~~
+
+This experiment shows how to send stats data from various components like NFS,
+S3 Mero etc to statsd and how to fetch JSON response from Timelion API.
+
+Files -
+1. export.py -> Shows how to export stats data to stastd.
+2. consume.py -> Shows how to consume stats data.
+3. test.py -> Shows how to use both the classes. Sends data to statsd and
+   prints the JSON response from Timelion API.
+4. sample.txt -> This file contains stats data in JSON format. Modify
+   "time_fields" to reflect the timeframe you want the results for.
+
+How to test -
+1. Run command - python test.py
+2. You will see that the stats being sent to statsd.
+3. For test case 1 we have used sum opertaion for get_object_request_count and
+   get_multipart_parts_request_count fields.
+4. Based on the values defined in the sample.txt an expected result is
+   calculated first.
+5. After that response from timelion API is fetched and checked whether the
+   result returned matches the expected one.
+6. More test cases will be added in future
+
+Output -
+1. Sending Stats -
+   Sending stats to statsd...
+   ('delete_multiobject_request_count', '50|c')
+   ('delete_object_request_count', '48|c')
+   ('get_object_request_count', '42|c')
+   ('get_multipart_parts_request_count', '48|c')
+
+2. Result - 
+   IOPS : with 15 seconds interval
+   Test case 1 PASSED!!!!. Expected : 90, Actual : 90
+
+   {'sheet':
+       [{'type': 'seriesList',
+       'list':
+           [{'data':
+               [[1565237363000, 90],
+               [1565237378000, 0],
+               [1565237393000, 0],
+               [1565237408000, 0],
+               [1565237423000, 0],
+               [1565237438000, 0],
+               [1565237453000, 0]
+               ],
+           'type': 'series',
+           'fit': 'nearest',
+           'label': 'get_object_request_count'
+           }]
+       }],
+   'stats':
+       {'invokeTime': 1565245727659,
+       'queryCount': 2,
+       'queryTime': 1565245727688,
+       'cacheCount': 2,
+       'sheetTime': 1565245727691
+       }
+   }
