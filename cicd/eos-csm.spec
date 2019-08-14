@@ -6,6 +6,7 @@ License: Seagate Proprietary
 URL: http://gitlab.mero.colo.seagate.com/eos/csm
 Source0: eos-csm-%{version}.tar.gz
 Requires: csm
+%define debug_package %{nil}
 
 %description
 EOS CSM Plugin
