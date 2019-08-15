@@ -64,10 +64,6 @@ class Channel(metaclass=ABCMeta):
     @abstractmethod
     def recv_file(self, remote_file, local_file):
         raise Exception('recv_file not implemented in Channel class') 
-
-    @abstractmethod
-    def listen(self):
-        raise Exception('listen not implemented in Channel class') 
   
 class SSHChannel(Channel):
     """
@@ -158,10 +154,6 @@ class SSHChannel(Channel):
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
 
-    def listen(self):
-        raise Exception('listen not implemented for SSH Channel')
-
-
 class AmqpChannel(Channel):
     """
     Represents Amqp channel to a node for communication
@@ -202,6 +194,7 @@ class AmqpChannel(Channel):
             raise CsmError(-1,'RMQ connection Failed to Initialize.')
         else:
             Log.debug('RMQ connection is Initialized.')
+        self._declare_exchange_and_queue()
 
     def _declare_exchange_and_queue(self):
         if(self._connection and self._channel):  
@@ -252,25 +245,14 @@ class AmqpChannel(Channel):
         self._connection.close()
         self._channel.close()
 
-    def recv(self, callback_fn=None, message=None):
-        """
-        Start consuming the queue messages.
-        """
-        consumer_tag = const.CONSUMER_TAG
-        self._declare_exchange_and_queue()
-        self._channel.basic_consume(self.exchange_queue, partial(callback_fn, consumer_tag), consumer_tag=consumer_tag)    
-        self._channel.queue_declare(queue= self.exchange_queue)
+    def recv(self, message=None):
+        raise Exception('recv not implemented for AMQP Channel')
 
-    def listen(self):
-        """
-        Start consuming the queue messages.
-        """
-        try:
-            self._channel.start_consuming()
-        except AMQPConnectionError as err:
-            Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
-            Log.exception(str(err))
-            self.disconnect()
+    def connection(self):
+        return self._connection
+
+    def channel(self):
+        return self._channel
 
     def send(self, message):
         """
@@ -316,16 +298,13 @@ class Comm(metaclass=ABCMeta):
     @abstractmethod
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Comm class') 
-    
-    @abstractmethod
-    def listen(self):
-       raise Exception('listen not implemented in Comm class') 
 
 class AmqpComm(Comm):
     def __init__(self):
         Comm.__init__(self)
         self._inChannel = AmqpChannel()
         self._outChannel = AmqpChannel()
+        self.monitor_callback = None
 
     def init(self):
         self._inChannel.init()
@@ -336,7 +315,17 @@ class AmqpComm(Comm):
 
     def recv(self, callback_fn=None, message=None):
         if callback_fn is not None:
-            self._inChannel.recv(callback_fn)
+        """
+        Start consuming the queue messages.
+        """
+        try:
+            consumer_tag = const.CONSUMER_TAG
+            self._inChannel.channel().basic_consume(self._inChannel.exchange_queue, partial(callback_fn, consumer_tag), consumer_tag=consumer_tag)    
+            self._inChannel.channel().start_consuming()
+        except AMQPConnectionError as err:
+            Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
+            Log.exception(str(err))
+            self.disconnect()
         else:
             raise Exception("AmqpComm::recv - No callback method provided")
 
@@ -349,6 +338,3 @@ class AmqpComm(Comm):
 
     def connect(self):
         raise Exception('connect not implemented for AMQP Comm')
-
-    def listen(self):
-        self._inChannel.listen()

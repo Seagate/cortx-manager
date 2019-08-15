@@ -2,12 +2,12 @@
 
 """
  ****************************************************************************
- Filename:          run_log.py
- _description:      SSH Communication Reference
+ Filename:          test_comm.py
+ description:       SSH, AMQP Communication Reference
 
  Creation Date:     30/06/2018
  Author:            Malhar Vora
-                Ujjwal Lanjewar
+                    Ujjwal Lanjewar
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
