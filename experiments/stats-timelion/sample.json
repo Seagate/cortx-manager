@@ -1,0 +1,86 @@
+{
+  "stats": [
+    {
+      "field": "delete_multiobject_request_count",
+      "type": "c",
+      "value": "50"
+    },
+    {
+      "field": "delete_object_request_count",
+      "type": "c",
+      "value": "48"
+    },
+    {
+      "field": "get_object_request_count",
+      "type": "c",
+      "value": "42"
+    },
+    {
+      "field": "get_multipart_parts_request_count",
+      "type": "c",
+      "value": "48"
+    },
+    {
+      "field": "haproxy.app-main.BACKEND.bin",
+      "type": "c",
+      "value": "40"
+    },
+    {
+      "field": "haproxy.app-main.BACKEND.bout",
+      "type": "c",
+      "value": "20"
+    },
+    {
+      "field": "get_object_acl_request_count",
+      "type": "c",
+      "value": "50"
+    },
+    {
+      "field": "get_object_acl_request_count",
+      "type": "c",
+      "value": "40"
+    },
+    {
+      "field": "put_object_acl_request_count",
+      "type": "c",
+      "value": "50"
+    },
+    {
+      "field": "put_object_acl_request_count",
+      "type": "c",
+      "value": "40"
+    }
+  ],
+  "test_case_params": [
+    {
+      "query": "((.es(q=ns:get_object_request_count,timefield=@timestamp, index=statsd-node1-*, metric=sum:val), .es(q=ns:get_multipart_parts_request_count, timefield=@timestamp, index=statsd-node1-*, metric=sum:val)).sum()).label(get_object_request_count)",
+      "test_case_number": 0,
+      "expected_result": 90
+    },
+    {
+      "query": ".es(q=act:bin, timefield=@timestamp, index=statsd-*, metric=avg:val ).movingaverage(2).label(Write)",
+      "test_case_number": 1,
+      "expected_result": 20
+    },
+    {
+      "query": ".es(q=act:bout, timefield=@timestamp, index=statsd-*, metric=avg:val ).movingaverage(2).label(Read)",
+      "test_case_number": 2,
+      "expected_result": 10
+    },
+    {
+      "query": "(.es(q=act:bin, timefield=@timestamp, index=statsd-*, metric=avg:val), .es(q=act:bout, timefield=@timestamp, index=statsd-*, metric=avg:val)).sum().movingaverage(2).label(Total)",
+      "test_case_number": 3,
+      "expected_result": 30
+    },
+    {
+      "query": "(.es(q=ns:get_object_acl_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).divide(10).label(GetACL)).yaxis(units='custom::iops').title('Cluster Metadata')",
+      "test_case_number": 4,
+      "expected_result": 9
+    },
+    {
+      "query": "(.es(q=ns:put_object_acl_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).divide(10).label(PutACL)).yaxis(units='custom::iops').title('Cluster Metadata')",
+      "test_case_number": 4,
+      "expected_result": 9
+    }
+  ]
+}
