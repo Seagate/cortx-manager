@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-03/schema#",
     "id": "http://json-schema.org/draft-03/schema#",
-    "title": "CSM Schema",
+    "title": "CSM HW Schema",
 
-    "type": "object"
+    "type": "object",
     "properties": {
         "header": {
             "type": "hw",
@@ -12,38 +12,16 @@
             "resolved": "no",
             "acknowledged": "no",
             "description": "The power supply is not installed",
+            "location": "Enclosure 0 - Right"
             "severity": "1",
-            "recommendation": "If the power supply is missing, insert a power supply of the correct type.  - If the power supply is present, confirm that it is fully inserted and locked in place.  - If the above steps do not resolve the issue, the power supply has probably failed and if the error persists, it should be replaced."
+            "recommendation": "Check the power supply for the correct type or if inserted check whether it is locked."
         },
         "hw": {
             "vendor": "",
             "enclosure_id": 0,
             "serial_number": "",
             "part_number": ""
-       },
+       }
+    }
 }
 
-{
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "http://json-schema.org/draft-03/schema#",
-    "title": "CSM Schema",
-
-    "type": "object"
-    "properties": {
-        "header": {
-            "type": "sw",
-            "alert_type": "disabled",
-            "status": "not running",           
-            "resolved": "no",
-            "acknowledged": "no",
-            "description": "",
-            "severity": "1",
-            "recommendation": ""
-        },
-        "sw": {
-            "node_id": "",
-            "component": "",
-            "module": "",
-            "error_code": ""
-       },
-}

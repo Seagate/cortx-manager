@@ -89,7 +89,8 @@ class SSHChannel(Channel):
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            self._ssh.connect(self._node, username=self._user, timeout=self._ssh_timeout, allow_agent=self.allow_agent)
+            self._ssh.connect(self._node, username=self._user,\
+                    timeout=self._ssh_timeout, allow_agent=self.allow_agent)
             if not self.ftp_enabled: return 0
             self._sftp = self._ssh.open_sftp()
         except socket.error as e:
@@ -98,7 +99,8 @@ class SSHChannel(Channel):
             raise CsmError(rc, 'can not connect to host %s' %self._node)
         except (SSHException, Exception) as e:
             Log.exception(e)
-            raise CsmError(-1, 'can not connect to host %s@%s. %s' %(self._user, self._node, e))
+            raise CsmError(-1, 'can not connect to host %s@%s. %s'\
+                    %(self._user, self._node, e))
 
     def disconnect(self):
         """ Close the SSH channel """
@@ -159,6 +161,7 @@ class AmqpChannel(Channel):
     Represents Amqp channel to a node for communication
     Communication to node is taken care by this class using pika    
     """
+
     def __init__(self):
         Channel.__init__(self)
         Log.init(self.__class__.__name__, '/tmp', Log.DEBUG)

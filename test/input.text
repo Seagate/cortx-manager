@@ -1,1 +1,48 @@
-{"username": "sspl-ll", "description": "Seagate Storage Platform Library - Low Level - Sensor Response", "title": "SSPL-LL Sensor Response", "expires": 3600, "signature": "None", "time": "2019-07-25 11:24:39.303712", "message": {"sspl_ll_msg_header": {"msg_version": "1.0.0", "schema_version": "1.0.0", "sspl_version": "1.0.0"}, "sensor_response_type": {"enclosure_psu_alert": {"info": {"status": "Not Present", "dc12v": 0, "dctemp": 0, "vendor": "", "description": "", "enclosure-id": 0, "dc33v": 0, "mfg-vendor-id": "", "fru-shortname": "", "location": "Enclosure 0 - Right", "health-reason": "The power supply is not installed.", "serial-number": "", "health": "Fault", "mfg-date": "N/A", "part-number": "", "model": "", "health-recommendation": "- If the power supply is missing, insert a power supply of the correct type.  - If the power supply is present, confirm that it is fully inserted and locked in place.  - If the above steps do not resolve the issue, the power supply has probably failed and if the error persists, it should be replaced.", "revision": "", "dc5v": 0, "dc12i": 0, "dc5i": 0}, "alert_type": "missing", "extended_info": {"position": "Right", "durable-id": "psu_0.1"}, "resource_type": "fru"}}}}
+{
+    "username": "sspl-ll",
+    "description": "Seagate Storage Platform Library - Low Level - Sensor Response",
+    "title": "SSPL-LL Sensor Response",
+    "expires": 3600,
+    "signature": "None",
+    "time": "2019-07-25 11:24:39.303712",
+    "message": {
+        "sspl_ll_msg_header": {
+            "msg_version": "1.0.0",
+            "schema_version": "1.0.0",
+            "sspl_version": "1.0.0"
+        },
+        "sensor_response_type": {
+            "enclosure_psu_alert": {
+                "info": {
+                    "status": "Not Present",
+                    "dc12v": 0,
+                    "dctemp": 0,
+                    "vendor": "",
+                    "description": "",
+                    "enclosure-id": 0,
+                    "dc33v": 0,
+                    "mfg-vendor-id": "",
+                    "fru-shortname": "",
+                    "location": "Enclosure 0 - Right",
+                    "health-reason": "The power supply is not installed.",
+                    "serial-number": "",
+                    "health": "Fault",
+                    "mfg-date": "N/A",
+                    "part-number": "",
+                    "model": "",
+                    "health-recommendation": "- If the power supply is missing, insert a power supply of the correct type.  - If the power supply is present, confirm that it is fully inserted and locked in place.  - If the above steps do not resolve the issue, the power supply has probably failed and if the error persists, it should be replaced.",
+                    "revision": "",
+                    "dc5v": 0,
+                    "dc12i": 0,
+                    "dc5i": 0
+                },
+                "alert_type": "missing",
+                "extended_info": {
+                    "position": "Right",
+                    "durable-id": "psu_0.1"
+                },
+                "resource_type": "fru"
+            }
+        }
+    }
+}
