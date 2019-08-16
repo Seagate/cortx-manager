@@ -1,7 +1,6 @@
 # EOS Management Stack
 
-Directory Structure
-~~~~~~~~~~~~~~~~~~
+### Directory Structure
 
 cli     - Command Line Implementation
 ras     - RAS Functionality
@@ -9,8 +8,20 @@ rest    - REST API Impementation
 gui     - Graphical User Interface
 auth    - Authentication platform
 
-Supported Package
-~~~~~~~~~~~~~~~~
+### Required Environment
+Nodejs 10.x or greater. Installation steps
+Install NVM
+-------------------
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+
+Install nodejs
+----------------------------
+nvm install node
+node --version
+Python 3.6 
+
+### Supported Package
+
 pip3.6 install paramiko
 pip3.6 install toml
 pip3.6 install PyYAML
@@ -18,32 +29,28 @@ pip3.6 install configparser
 pip3.6 install argparse
 pip3.6 install paramiko
 
-Build
-~~~~~
+### Build
+
 Run the command below to generate the rpm.
 $ ./jenkins/build.sh -b <build-no>
 
 RPM would be created in dist/rpmbuild/RPMS folder.
 
-Install csm RPMs
-~~~~~~~~~~~~~~
+#### Install csm RPMs
 yum localinstall -y csm-<version>.rpm
 yum localinstall -y csm-test-<version>.rpm
 yum localinstall -y eos-csm-<version>.rpm
 yum localinstall -y eos-csm-test-<version>.rpm
 
-Setup CSM
-~~~~~~~~~~~~~~
+### Setup CSM
 csmcli setup init
 
-Unit Testing
-~~~~~~~~~~~~
+### Unit Testing
 Follow the commands given below to run unit tests for CLI.
 $ cd csm
 $ python -m unittest discover cli/test/
 
-Sanity Testing
-~~~~~~~~~~~~~~
+#### Sanity Testing
 1. copy samples/csm/config to /etc/csm/config. Review/Edit/Update the same.
 
 2. copy samples/cluster.yaml to /etc/csm/cluster.yaml

@@ -4,6 +4,9 @@ CSM_SETUP_ACTIONS = ["init"]
 SUPPORT_BUNDLE = "support_bundle"
 EMAIL_CONFIGURATION = "email"
 
+# CSM Agent Port
+CSM_AGENT_PORT=8082
+
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
 
@@ -33,7 +36,7 @@ INVENTORY_INDEX = 'INVENTORY'
 CONSUMER_TAG = 'AMQP_CONSUMER'
 
 # Cluster Inventory Related
-INVENTORY_FILE = '/etc/csm/cluster.yaml'
+INVENTORY_FILE = '/etc/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
 KEY_NODES  = 'nodes'
