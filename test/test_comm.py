@@ -68,7 +68,7 @@ def test3(args):
         if not filecmp.cmp("/etc/hosts", "/tmp/hosts1"):
             raise TestFailed('File Copy failed')
 
-def amqp_callback(ct, ch, method, properties, body):
+def amqp_callback(body):
     with open('output.text', 'w') as json_file:
         json.dump(json.loads(body), json_file)
         json_file.close()
