@@ -20,6 +20,7 @@ from csm.eos.plugins.alert import AlertPlugin
 from csm.common.errors import CsmError
 import json
 import threading
+import errno
 
 class Alert(object):
     """ Represents an alert to be sent to front end """
@@ -30,15 +31,15 @@ class Alert(object):
 
     def get(self, **kwargs):
         # TODO
-        raise CsmError(-1, 'Alert.get() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
 
     def acknowledge(self, id):
         # TODO
-        raise CsmError(-1, 'Alert.acknowledge() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented') 
 
     def configure(self):
         # TODO
-        raise CsmError(-1, 'Alert.configure() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.configure() not implemented') 
 
 class AlertMonitor(object):
     """ 
@@ -58,7 +59,7 @@ class AlertMonitor(object):
         self.obj = AlertPlugin()
         self.data = {}
 
-    def _start_plugin(self):
+    def _monitor(self):
         """
         This method acts as a thread function. 
         It will start the alert plugin in a seprate thread.
@@ -70,7 +71,7 @@ class AlertMonitor(object):
         """
         This method creats and starts an alert monitor thread
         """
-        amqp_thread = threading.Thread(target=self._start_plugin, args=())
+        amqp_thread = threading.Thread(target=self._monitor, args=())
         amqp_thread.start()
 
     def consume_alert(self, message):

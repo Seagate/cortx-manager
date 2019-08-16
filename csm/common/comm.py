@@ -58,12 +58,15 @@ class Channel(metaclass=ABCMeta):
         raise Exception('send_file not implemented in Channel class') 
 
     @abstractmethod
-    def recv(self, callback_fn=None, message=None):
+    def recv(self, message=None):
         raise Exception('recv not implemented in Channel class') 
     
     @abstractmethod
     def recv_file(self, remote_file, local_file):
         raise Exception('recv_file not implemented in Channel class') 
+    
+    def acknowledge(self, delivery_tag=None):
+        raise Exception('acknowledge not implemented for Channel class')
   
 class SSHChannel(Channel):
     """
@@ -133,7 +136,7 @@ class SSHChannel(Channel):
     def send(self, message):
         raise Exception('send not implemented for SSH Channel')
 
-    def recv(self, callback_fn=None, message=None):
+    def recv(self, message=None):
         raise Exception('recv not implemented for SSH Channel')
 
     def recv_file(self, remote_file, local_file):
@@ -155,6 +158,9 @@ class SSHChannel(Channel):
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' %e)
+
+    def acknowledge(self, delivery_tag=None):
+        raise Exception('acknowledge not implemented for SSH Channel')
 
 class AmqpChannel(Channel):
     """
@@ -279,6 +285,8 @@ class AmqpChannel(Channel):
     def send_file(self, local_file, remote_file):
         raise Exception('send_file not implemented for AMQP Channel')
 
+    def acknowledge(self, delivery_tag=None):
+        self._channel.basic_ack(delivery_tag=delivery_tag)
 
 class Comm(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel """
@@ -301,13 +309,18 @@ class Comm(metaclass=ABCMeta):
     @abstractmethod
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Comm class') 
+    
+    @abstractmethod
+    def acknowledge(self):
+        raise Exception('acknowledge not implemented in Comm class') 
 
 class AmqpComm(Comm):
     def __init__(self):
         Comm.__init__(self)
         self._inChannel = AmqpChannel()
         self._outChannel = AmqpChannel()
-        self.monitor_callback = None
+        self.plugin_callback = None
+        self.delivery_tag = None
 
     def init(self):
         self._inChannel.init()
@@ -316,14 +329,33 @@ class AmqpComm(Comm):
     def send(self, message):
         self._outChannel.send(message)
 
+    def _alert_callback(self, ct, ch, method, properties, body):
+        """
+        1. This is the callback method on which we will receive the 
+           alerts from RMQ channel.
+        2. This method will call AlertPlugin class function and will 
+           send the alert JSON string as parameter.
+        Parameters -
+        1. ch - RMQ Channel
+        2. method - Contains the server-assigned delivery tag
+        3. properties - Contains basic properties like delivery_mode etc. 
+        4. body - Actual alert JSON string
+        """
+        self.delivery_tag = method.delivery_tag
+        self.plugin_callback(body)
+
+    def acknowledge(self):
+        self._inChannel.acknowledge(self.delivery_tag)
+                
     def recv(self, callback_fn=None, message=None):
-        if callback_fn is not None:
         """
         Start consuming the queue messages.
         """
         try:
             consumer_tag = const.CONSUMER_TAG
-            self._inChannel.channel().basic_consume(self._inChannel.exchange_queue, partial(callback_fn, consumer_tag), consumer_tag=consumer_tag)    
+            self.plugin_callback = callback_fn
+            self._inChannel.channel().basic_consume(self._inChannel.exchange_queue,\
+                    partial(self._alert_callback, consumer_tag), consumer_tag=consumer_tag)    
             self._inChannel.channel().start_consuming()
         except AMQPConnectionError as err:
             Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
