@@ -20,21 +20,14 @@
 import sys
 import os
 import traceback
+import asyncio
 
-from csm.cli.command_factory import CommandFactory
-from csm.core.api.api_client import CsmApiClient
-from csm.common.log import Log
-from csm.common.conf import Conf
-from csm.common.payload import *
-from csm.core.blogic import const
 
 def main(argv):
     """
     Parse command line to obtain command structure. Execute the CLI
     command and print the result back to the terminal.
     """
-    cli_path = os.path.realpath(argv[0])
-    sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
 
     Log.init("csm", "/var/log/csm")
     try:
@@ -42,9 +35,11 @@ def main(argv):
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
         command = CommandFactory.get_command(argv[1:])
-        # TODO - Use Factory Method for Api Client
-        client = CsmApiClient()
-        response = client.call(command)
+        csm_agent_url = "http://localhost:%s" %const.CSM_AGENT_PORT
+        client = CsmRestClient(csm_agent_url)
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(client.call(command))
         rc = response.rc()
         if rc != 0:
             sys.stdout.write('error(%d): ' %rc)
@@ -58,4 +53,14 @@ def main(argv):
         return 1
 
 if __name__ == '__main__':
+    cli_path = os.path.realpath(sys.argv[0])
+    sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
+
+    from csm.cli.command_factory import CommandFactory
+    from csm.cli.csm_client import CsmRestClient
+    from csm.common.log import Log
+    from csm.common.conf import Conf
+    from csm.common.payload import *
+    from csm.core.blogic import const
+
     sys.exit(main(sys.argv))

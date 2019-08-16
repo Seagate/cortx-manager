@@ -65,7 +65,7 @@ class Provider(object):
         self._name = name
         self._cluster = cluster
 
-    def process_request(self, request, callback):
+    def process_request(self, request, callback=None):
         """
         Primary interface for processing of queries/requests
         Derived class will implement _process_request which will
@@ -73,15 +73,21 @@ class Provider(object):
         """
 
         self._validate_request(request)
-        Thread(target=self.process_request_bg(request, callback))
+        if callback is None:
+            return self.__process_request(request)
+        else:
+            Thread(target=self.__process_request_bg(request, callback))
 
-    def process_request_bg(self, request, callback):
-        """ Process request in background and invoke callback once done """
-
+    def __process_request(self, request):
         try:
             response = self._process_request(request)
         except CsmError as e:
-            response = Response(e.rc(), e.error())
+            response = Response(e.rc(), e.error()) 
+        return response
+
+    def __process_request_bg(self, request, callback):
+        """ Process request in background and invoke callback once done """
+        response = self.__process_request(request)
         callback(response)
 
 class BundleProvider(Provider):

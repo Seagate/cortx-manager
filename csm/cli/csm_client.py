@@ -20,26 +20,35 @@
 """
 
 import time
-from csm.core.api.api import CsmApi
+import json
+import aiohttp
+
+from csm.core.agent.api import CsmApi
 from csm.core.providers.providers import Request, Response
 from csm.common.log import Log
 from csm.core.blogic import const
 
-class ApiClient(object):
+class CsmClient:
     """ Base class for invoking business logic functionality """
 
-    def __init__(self, server):
-        self._server = server
+    def __init__(self, url):
+        self._url = url
+
+    def call(self, command):
+        pass
+
+    def process_request(self, session, cmd, action, args):
+        pass
 
 
-class CsmApiClient(ApiClient):
+class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
 
     def __init__(self):
         super(CsmApiClient, self).__init__(None)
         CsmApi.init()
 
-    def call(self, command):
+    def call(self, cmd):
         """
         Method Invocation:
         Call remote API method asynchronously. Response is received over the
@@ -47,21 +56,38 @@ class CsmApiClient(ApiClient):
         TODO: Add a timeout.
         """
         self._response = None
-        request = Request(command.action(), command.args().args)
-        self.process_request(command.name(), request)
+        
+        self.process_request(cmd.name(), cmd.action(), cmd.args().args)
         while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
 
         # TODO - Examine results
         # TODO - Return (return_code, output)
         return self._response
 
-    def process_request(self, command_name, request):
-        CsmApi.process_request(command_name, request, self.process_response)
+    def process_request(self, session, cmd, action, args):
+        request = Request(action, args)
+        CsmApi.process_request(cmd, request, self.process_response)
 
     def process_response(self, response):
         self._response = response
 
 
-class CsmRestClient(ApiClient):
+class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
-    pass        # TODO - To be implemented
+    def __init__(self, url):
+        super(CsmRestClient, self).__init__(url)
+
+    async def process_request(self, session, cmd, action, args):
+        request_url = "%s?cmd=%s,action=%s,args=%s" %(self._url, cmd, action, args)
+        async with session.get(request_url) as response:
+            return await response.text()
+
+    async def call(self, cmd):
+        async with aiohttp.ClientSession() as session:
+            response = await self.process_request(session, cmd.name(), cmd.action(), cmd.args())
+        print('response: %s' %response)
+        return Response(rc=0, output='output')
+
+    def __cleanup__(self):
+        self._loop.close()    
+
