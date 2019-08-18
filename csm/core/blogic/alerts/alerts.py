@@ -74,6 +74,9 @@ class AlertMonitor(object):
         amqp_thread = threading.Thread(target=self._monitor, args=())
         amqp_thread.start()
 
+    def stop(self):
+        self.obj.stop()
+
     def consume_alert(self, message):
         """
         This is a callback function on which alert plugin will send the alerts in JSON format.

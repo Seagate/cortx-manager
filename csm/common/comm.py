@@ -346,6 +346,10 @@ class AmqpComm(Comm):
 
     def acknowledge(self):
         self._inChannel.acknowledge(self.delivery_tag)
+    
+    def stop(self):
+        consumer_tag = const.CONSUMER_TAG
+        self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
                 
     def recv(self, callback_fn=None, message=None):
         """
@@ -361,8 +365,6 @@ class AmqpComm(Comm):
             Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
             Log.exception(str(err))
             self.disconnect()
-        else:
-            raise Exception("AmqpComm::recv - No callback method provided")
 
     def disconnect(self):
         try:
