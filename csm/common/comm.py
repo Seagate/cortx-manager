@@ -350,6 +350,7 @@ class AmqpComm(Comm):
     def stop(self):
         consumer_tag = const.CONSUMER_TAG
         self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
+        self.disconnect()
                 
     def recv(self, callback_fn=None, message=None):
         """

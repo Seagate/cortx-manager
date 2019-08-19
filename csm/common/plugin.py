@@ -23,8 +23,8 @@ import errno
 
 class CsmPlugin(metaclass=ABCMeta):
     """
-    This is an abstract class. Various plugins will implement\
-            this interface i.e. Alert plugin, S3 plugin etc.
+    This is an abstract class. Various plugins will implement this interface
+    i.e. Alert plugin, S3 plugin etc.
     """
     @abstractmethod
     def init(self):
@@ -35,4 +35,5 @@ class CsmPlugin(metaclass=ABCMeta):
         """
         This method will handle GET/POST calls. 
         """
-        raise CsmError(errno.ENOSYS, 'process_request not implemented for Plugin class') 
+        raise CsmError(errno.ENOSYS, 'process_request not implemented\
+                for Plugin class') 

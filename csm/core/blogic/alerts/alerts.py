@@ -18,6 +18,7 @@
 import sys
 from csm.eos.plugins.alert import AlertPlugin
 from csm.common.errors import CsmError
+from csm.common.log import Log
 import json
 import threading
 import errno
@@ -49,37 +50,63 @@ class AlertMonitor(object):
     one subscriber at any given point of time. 
     Then it waits for AmqpComm to notice if there are any new alert. 
     Alert Monitor takes action on the received alerts using a callback. 
-    Actions include (1) storing on the DB and (2) sending to subscribers, i.e. web server. 
+    Actions include (1) storing on the DB and (2) sending to subscribers, i.e.
+    web server. 
     """
 
     def __init__(self):
         """
         Initializes the Alert Plugin
         """
-        self.obj = AlertPlugin()
-        self.data = {}
+        self.alert_plugin = AlertPlugin()
+        self.monitor_thread = None
+        self.thread_started = False 
+        self.thread_running = False
+
+    def init(self):
+        """
+        This function will scan the DB for pending alerts and send it over the
+        back channel.
+        """
+        # TODO
+        raise CsmError(errno.ENOSYS, 'AlertMonitor.init() not implemented') 
 
     def _monitor(self):
         """
         This method acts as a thread function. 
-        It will start the alert plugin in a seprate thread.
+        It will monitor the alert plugin for alerts.
         This method passes consume_alert as a callback function to alert plugin.
         """
-        self.obj.init(callback_fn=self.consume_alert)
+        self.thread_running = True
+        self.alert_plugin.init(callback_fn=self.consume_alert)
+        self.alert_plugin.process_request(cmd='listen')
 
     def start(self):
         """
         This method creats and starts an alert monitor thread
         """
-        amqp_thread = threading.Thread(target=self._monitor, args=())
-        amqp_thread.start()
+        try:
+            if not self.thread_running and not self.thread_started:
+                self.monitor_thread = threading.Thread(target=self._monitor,\
+                        args=())
+                self.monitor_thread.start()
+                self.thread_started = True
+        except Exception as e:
+            Log.exception(e)
 
     def stop(self):
-        self.obj.stop()
+        try:
+            self.thread_started = False
+            self.thread_running = False
+            self.alert_plugin.stop()
+            self.monitor_thread.join()
+        except Exception as e:
+            Log.exception(e)
 
     def consume_alert(self, message):
         """
-        This is a callback function on which alert plugin will send the alerts in JSON format.
+        This is a callback function on which alert plugin will send the alerts\
+        in JSON format.
         1. Upon receiving the alert it is converted to output schema.
         2. The output schema is then stored to DB.
         3. The same schema is published over web sockets.
@@ -89,31 +116,4 @@ class AlertMonitor(object):
            whether to acknowledge the alert or not.
         """
         # TODO : The above mentioned 3 tasks
-        output_schema = self._create_output_schema(json.loads(message))
         return False
-
-    def _create_output_schema(self, message):
-        """ 
-        Parsing the alert JSON to create the output schema
-        """
-        data = {'$schema': 'http://json-schema.org/draft-03/schema#', \
-                 'id': 'http://json-schema.org/draft-03/schema#', \
-                 'title': 'CSM HW Schema', 'type': 'object', \
-                 'properties': {'header': {}, 'hw': {}}}
-        dict = message['message']['sensor_response_type']
-        for values in dict.values():
-            data['properties']['header'] = {'type': 'hw', 'alert_type': '%s'\
-                    %(values.get('alert_type', "")), 'type': 'hw', 'status': '%s'\
-                    %(values.get('info', {}).get('status', '')), 'resolved': 'no'\
-                    , 'acknowledged': 'no', 'description': '%s'\
-                    %(values.get('info', {}).get('health-reason', '')),\
-                     'location': '%s' %(values.get('info', {}).get('location', '')),\
-                     'severity': '1', 'recommendation': '%s'\
-                     %(values.get('info', {}).get('health-recommendation', ''))}
-            data['properties']['hw'] = {'vendor': '%s' %(values.get('info', {})\
-                    .get('vendor', '')), 'enclosure_id': '%s'\
-                    %(values.get('info', {}).get('enclosure-id', '')), \
-                    'serial_number': '%s' %(values.get('info', {})\
-                    .get('serial-number', '')), 'part_number': '%s'\
-                    %(values.get('info', {}).get('part-number', ''))}
-        return data

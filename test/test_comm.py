@@ -86,7 +86,7 @@ def compare_results():
         raise TestFailed('Input and Output alerts do not match.')
 
 def send_recv(args):
-    """ Receive alerts from RMQ Channel"""
+    """ Receive alerts from RMQ Channel """
 
     global client
     client.init() 
