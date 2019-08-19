@@ -96,10 +96,10 @@ class AlertMonitor(object):
 
     def stop(self):
         try:
-            self.thread_started = False
-            self.thread_running = False
             self.alert_plugin.stop()
             self.monitor_thread.join()
+            self.thread_started = False
+            self.thread_running = False
         except Exception as e:
             Log.exception(e)
 

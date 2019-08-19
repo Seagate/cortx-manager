@@ -55,3 +55,6 @@ SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER='user'
 DEFAULT_USER='admin'
+
+# CSM Alert Related
+CSM_ALERT_CMD = 'cmd'
