@@ -23,7 +23,8 @@ import errno
 
 class CsmPlugin(metaclass=ABCMeta):
     """
-    This is an abstract class. Various plugins will implement this interface i.e. Alert plugin, S3 plugin etc.
+    This is an abstract class. Various plugins will implement\
+            this interface i.e. Alert plugin, S3 plugin etc.
     """
     @abstractmethod
     def init(self):

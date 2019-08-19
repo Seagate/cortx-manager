@@ -89,10 +89,10 @@ class AlertMonitor(object):
            whether to acknowledge the alert or not.
         """
         # TODO : The above mentioned 3 tasks
-        output_schema = self.create_output_schema(json.loads(message))
+        output_schema = self._create_output_schema(json.loads(message))
         return False
 
-    def create_output_schema(self, message):
+    def _create_output_schema(self, message):
         """ 
         Parsing the alert JSON to create the output schema
         """
