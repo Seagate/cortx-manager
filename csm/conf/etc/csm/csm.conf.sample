@@ -19,3 +19,15 @@ RESOURCES:
         provider: "systemd"
         interval: [ "10s", "10s", "10s" ]
         timeout: [ "10s", "10s", "10s" ]
+
+# AMQP Channel
+CHANNEL:
+    host: "localhost"
+    virtual_host: "SSPL"
+    username: "sspluser"
+    password: "sspl4ever"
+    exchange_type: "topic"
+    exchange: "sspl_out"
+    exchange_queue: "sensor-queue"
+    routing_key: "sensor-key"
+    retry_count: "1"

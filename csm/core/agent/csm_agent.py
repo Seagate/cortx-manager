@@ -21,6 +21,9 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         CsmRestApi.init()
+        """ Starting Alert Monitor """
+        alert_monitor = AlertMonitor()
+        alert_monitor.start()
 
     @staticmethod
     def _daemonize():
@@ -73,6 +76,7 @@ if __name__ == '__main__':
         from csm.core.blogic import const
         from csm.common.payload import *
         from csm.core.agent.api import CsmRestApi
+        from csm.core.blogic.alerts.alerts import AlertMonitor
 
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)

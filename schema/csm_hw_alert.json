@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "id": "http://json-schema.org/draft-03/schema#",
+    "title": "CSM HW Schema",
+
+    "type": "object",
+    "properties": {
+        "header": {
+            "type": "hw",
+            "alert_type": "missing",
+            "status": "not present",
+            "resolved": "no",
+            "acknowledged": "no",
+            "description": "The power supply is not installed",
+            "location": "Enclosure 0 - Right"
+            "severity": "1",
+            "recommendation": "Check the power supply for the correct type or if inserted check whether it is locked."
+        },
+        "hw": {
+            "vendor": "",
+            "enclosure_id": 0,
+            "serial_number": "",
+            "part_number": ""
+       }
+    }
+}
+

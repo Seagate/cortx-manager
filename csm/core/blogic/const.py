@@ -32,6 +32,9 @@ RESPONSE_CHECK_INTERVAL = 1
 CSM_GLOBAL_INDEX = 'CSM'
 INVENTORY_INDEX = 'INVENTORY'
 
+# AMQP Consumer Tag
+CONSUMER_TAG = 'AMQP_CONSUMER'
+
 # Cluster Inventory Related
 INVENTORY_FILE = '/etc/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
@@ -52,3 +55,6 @@ SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER='user'
 DEFAULT_USER='admin'
+
+# CSM Alert Related
+CSM_ALERT_CMD = 'cmd'

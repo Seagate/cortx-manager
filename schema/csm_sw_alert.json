@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "id": "http://json-schema.org/draft-03/schema#",
+    "title": "CSM SW Schema",
+
+    "type": "object",
+    "properties": {
+        "header": {
+            "type": "sw",
+            "alert_type": "disabled",
+            "status": "not running",           
+            "resolved": "no",
+            "acknowledged": "no",
+            "description": "",
+            "severity": "1",
+            "recommendation": ""
+        },
+        "sw": {
+            "node_id": "",
+            "component": "",
+            "module": "",
+            "error_code": ""
+       }
+    }
+}

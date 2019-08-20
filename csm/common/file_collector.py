@@ -33,7 +33,6 @@ from csm.common.errors import CsmError
 
 class FileCollector(object):
     """ Base class of File collector. """
-
     def __init__(self, collection_rules, target_path):
         """
         Collection rules relate component to its bundle spec. It contains
@@ -178,7 +177,7 @@ class RemoteFileCollector(FileCollector):
 
     def _startup(self):
         """ Initialization before the data is collected """
-        self._channel.open()
+        self._channel.connect()
 
     def _execute_commands(self, comp_name, out_dir):
         """ Execute the commands """
@@ -222,7 +221,7 @@ class RemoteFileCollector(FileCollector):
             Log.debug('cmd: %s' %tar_cmd)
             output, error = self._channel.execute(tar_cmd)
             Log.debug('Copy remote:%s local:%s' %(remote_file, local_file))
-            self._channel.get_file(remote_file, local_file)
+            self._channel.recv_file(remote_file, local_file)
             self._channel.execute('rm -f %s' %remote_file)
 
         except CsmError:
@@ -242,4 +241,4 @@ class RemoteFileCollector(FileCollector):
 
     def _cleanup(self):
         """ Clean all the temp files and the directory """
-        self._channel.close()
+        self._channel.disconnect()
