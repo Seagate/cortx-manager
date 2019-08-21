@@ -3,6 +3,7 @@ CSM_SETUP_CMD = "setup"
 CSM_SETUP_ACTIONS = ["init"]
 SUPPORT_BUNDLE = "support_bundle"
 EMAIL_CONFIGURATION = "email"
+ALERTS_COMMAND = 'alerts'
 
 # CSM Agent Port
 CSM_AGENT_PORT=8082

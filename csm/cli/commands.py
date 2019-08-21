@@ -82,3 +82,24 @@ class EmailConfigCommand(Command):
         sbparser.add_argument('action', help='action', choices=['config', 'reset', 'show', 'subscribe', 'unsubscribe'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=EmailConfigCommand)
+
+class AlertsCommand(Command):
+    """ Contains funtionality to handle Alerts """
+
+    def __init__(self, args):
+        super(AlertsCommand, self).__init__(args)
+
+    def name(self):
+        return const.ALERTS_COMMAND
+
+    @staticmethod
+    def add_args(parser):
+        sbparser = parser.add_parser(const.ALERTS_COMMAND,
+                                     help='Show | Acknowledge system alerts')
+        sbparser.add_argument('action', help='action',
+                              choices=['show', 'acknowledge'])
+        sbparser.add_argument('-d', help='Minutes', nargs='?')
+        sbparser.add_argument('-c', help='Number of Alerts', nargs='?')
+        sbparser.add_argument('-f', help='Format', nargs='?')
+        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
+        sbparser.set_defaults(command=AlertsCommand)
