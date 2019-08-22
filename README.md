@@ -28,6 +28,7 @@ pip3.6 install PyYAML
 pip3.6 install configparser
 pip3.6 install argparse
 pip3.6 install paramiko
+pip3.6 install aiohttp
 
 ### Build
 

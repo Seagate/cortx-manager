@@ -23,7 +23,7 @@ from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.blogic import const
 import traceback
-from csm.core.api.api import CsmApi
+from csm.core.agent.api import CsmApi
 
 class Const:
     INVENTORY_FILE = 'INVENTORY_FILE'

@@ -29,7 +29,6 @@ class ProviderFactory(object):
     providers = {
         const.SUPPORT_BUNDLE: BundleProvider,
         const.EMAIL_CONFIGURATION: EmailProvider,
-        const.CSM_SETUP_CMD: SetupProvider
     }
 
     @staticmethod
