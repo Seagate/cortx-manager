@@ -16,7 +16,6 @@
 """
 
 import sys
-from csm.eos.plugins.alert import AlertPlugin
 from csm.common.errors import CsmError
 from csm.common.log import Log
 import json
@@ -58,7 +57,9 @@ class AlertMonitor(object):
         """
         Initializes the Alert Plugin
         """
-        self.alert_plugin = AlertPlugin()
+        self.__product_name = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name")
+        self.__alert = __import__('csm.%s.plugins.alert',%self.__product_name, fromlist=[None])
+        self.alert_plugin = self.__alert.AlertPlugin()
         self.monitor_thread = None
         self.thread_started = False 
         self.thread_running = False
