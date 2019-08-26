@@ -35,7 +35,7 @@ def main(argv):
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
         command = CommandFactory.get_command(argv[1:])
-        csm_agent_url = f"http://localhost:{const.CSM_AGENT_PORT}/csm"
+        csm_agent_url = f"http://localhost:{const.CSM_AGENT_PORT}"
         client = CsmRestClient(csm_agent_url)
 
         loop = asyncio.get_event_loop()
@@ -43,6 +43,7 @@ def main(argv):
         command.process_output(response)
 
     except Exception as exception:
+        traceback.print_exc()
         RestResponse.error(1, exception)
         Log.error(traceback.format_exc())
         # TODO - Extract rc from exception

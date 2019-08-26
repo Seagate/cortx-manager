@@ -38,7 +38,7 @@ INVENTORY_INDEX = 'INVENTORY'
 CONSUMER_TAG = 'AMQP_CONSUMER'
 
 # Cluster Inventory Related
-INVENTORY_FILE = 'H:\\727892\\Documents\\cluster.conf'  # '/etc/csm/cluster.conf'
+INVENTORY_FILE = '/etc/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
 KEY_NODES = 'nodes'
@@ -47,10 +47,10 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
-CSM_CONF = 'H:\\727892\\Documents\\csm.conf'  # '/etc/csm/csm.conf'
-CSM_CLUSTER_CONF = 'H:\\727892\\Documents\\cluster.conf'  # '/etc/csm/cluster.conf'
+CSM_CONF = '/etc/csm/csm.conf'
+CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 COMPONENTS_FILE = 'COMPONENTS_FILE'
-DEFAULT_COMPONENTS_FILE = 'H:\\727892\\Documents\\components.yaml'  # '/etc/csm/components.yaml'
+DEFAULT_COMPONENTS_FILE = '/etc/csm/components.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = '/opt/seagate/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'

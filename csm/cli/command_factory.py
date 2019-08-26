@@ -17,7 +17,7 @@
  ****************************************************************************
 """
 
-import argparse
+import argparse, sys
 from csm.cli.commands import SupportBundleCommand
 from csm.cli.commands import EmailConfigCommand
 from csm.cli.commands import SetupCommand
@@ -45,5 +45,10 @@ class CommandFactory(object):
         for command in CommandFactory.commands:
             command.add_args(subparsers)
 
-        args = parser.parse_args(argv)
-        return args.command(args)
+        namespace = parser.parse_args(argv)
+        sys_module = sys.modules[__name__]
+        for attr in ['command', 'action', 'args', 'method']:
+            setattr(sys_module, attr, getattr(namespace, attr))
+            delattr(namespace, attr)
+        return sys_module.command(sys_module.action, vars(namespace),
+                                  sys_module.args, sys_module.method)
