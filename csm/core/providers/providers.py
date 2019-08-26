@@ -47,7 +47,7 @@ class Response(object):
 
     def __init__(self, rc=0, output=''):
         self._rc = int(rc)
-        self._output = str(output)
+        self._output = output
 
     def output(self):
         return self._output

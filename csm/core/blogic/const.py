@@ -4,9 +4,10 @@ CSM_SETUP_ACTIONS = ["init"]
 SUPPORT_BUNDLE = "support_bundle"
 EMAIL_CONFIGURATION = "email"
 ALERTS_COMMAND = 'alerts'
-
+ALERTS_CLI_KEYS = ["id", "health", "updated_time", "description", "severity",
+                   "state", "acknowledge"]
 # CSM Agent Port
-CSM_AGENT_PORT=8082
+CSM_AGENT_PORT = 8082
 
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
@@ -37,25 +38,25 @@ INVENTORY_INDEX = 'INVENTORY'
 CONSUMER_TAG = 'AMQP_CONSUMER'
 
 # Cluster Inventory Related
-INVENTORY_FILE = '/etc/csm/cluster.conf'
+INVENTORY_FILE = 'H:\\727892\\Documents\\cluster.conf'  # '/etc/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
-KEY_NODES  = 'nodes'
+KEY_NODES = 'nodes'
 TYPE_CMU = 'CMU'
 TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
-CSM_CONF = '/etc/csm/csm.conf'
-CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
+CSM_CONF = 'H:\\727892\\Documents\\csm.conf'  # '/etc/csm/csm.conf'
+CSM_CLUSTER_CONF = 'H:\\727892\\Documents\\cluster.conf'  # '/etc/csm/cluster.conf'
 COMPONENTS_FILE = 'COMPONENTS_FILE'
-DEFAULT_COMPONENTS_FILE = '/etc/csm/components.yaml'
-SUPPORT_BUNDLE_ROOT='SUPPORT_BUNDLE_ROOT'
-DEFAULT_SUPPORT_BUNDLE_ROOT='/opt/seagate/bundle'
+DEFAULT_COMPONENTS_FILE = 'H:\\727892\\Documents\\components.yaml'  # '/etc/csm/components.yaml'
+SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
+DEFAULT_SUPPORT_BUNDLE_ROOT = '/opt/seagate/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
-USER='user'
-DEFAULT_USER='admin'
+USER = 'user'
+DEFAULT_USER = 'admin'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'

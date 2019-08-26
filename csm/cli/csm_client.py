@@ -25,6 +25,7 @@ import aiohttp
 
 from csm.core.agent.api import CsmApi
 from csm.core.providers.providers import Request, Response
+from csm.common.rest import RestRequest
 from csm.common.log import Log
 from csm.core.blogic import const
 
@@ -37,7 +38,7 @@ class CsmClient:
     def call(self, command):
         pass
 
-    def process_request(self, session, cmd, action, args):
+    def process_request(self, session, cmd, action, args, method):
         pass
 
 
@@ -77,16 +78,18 @@ class CsmRestClient(CsmClient):
     def __init__(self, url):
         super(CsmRestClient, self).__init__(url)
 
-    async def process_request(self, session, cmd, action, args):
-        request_url = "%s?cmd=%s,action=%s,args=%s" %(self._url, cmd, action, args)
-        async with session.get(request_url) as response:
-            return await response.text()
+    async def process_request(self, session, cmd, action, args, method):
+        request_url = f"{self._url}/{cmd}/{action}"
+        rest_obj = RestRequest(request_url, session, args, method)
+        return await rest_obj.get_request()
 
     async def call(self, cmd):
         async with aiohttp.ClientSession() as session:
-            response = await self.process_request(session, cmd.name(), cmd.action(), cmd.args())
-        print('response: %s' %response)
-        return Response(rc=0, output='output')
+            response = await self.process_request(session, cmd.name(),
+                                                  cmd.action(), cmd.args(),
+                                                  cmd.method())
+        # print('response: %s' %response)
+        return Response(rc=0, output=json.loads(response))
 
     def __cleanup__(self):
         self._loop.close()    

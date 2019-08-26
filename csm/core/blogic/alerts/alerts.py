@@ -30,7 +30,7 @@ class Alert(object):
         # TODO
         pass
 
-    def get(self, **kwargs):
+    def show(self, **kwargs):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
 
