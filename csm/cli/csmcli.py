@@ -43,7 +43,6 @@ def main(argv):
         command.process_output(response)
 
     except Exception as exception:
-        traceback.print_exc()
         RestResponse.error(1, exception)
         Log.error(traceback.format_exc())
         # TODO - Extract rc from exception
