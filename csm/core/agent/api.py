@@ -88,18 +88,23 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def init():
         CsmApi.init()
-        CsmApi._app = web.Application()
-        CsmApi._app.add_routes([
+        CsmRestApi._queue = asyncio.Queue()
+        CsmRestApi._bgtask = None
+        CsmRestApi._wsclients = WeakSet()
+        CsmRestApi._app = web.Application()
+        # Last route is for debugging purposes only. Please see
+        # the description of the process_dbg_static_page() method.
+        CsmRestApi._app.add_routes([
             web.get("/csm", CsmRestApi.process_request),
             web.get("/ws", CsmRestApi.process_websocket),
             web.get('/{path:.*}', CsmRestApi.process_dbg_static_page)
         ])
-        CsmApi._app.on_startup.append(CsmRestApi._on_startup)
-        CsmApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
+        CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
+        CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
     @staticmethod
     def run(port):
-        web.run_app(CsmApi._app, port=port, reuse_port=True)
+        web.run_app(CsmRestApi._app, port=port)
 
     @staticmethod
     async def process_request(request):
@@ -120,7 +125,7 @@ class CsmRestApi(CsmApi, ABC):
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         Log.debug('REST API websock connection opened')
-        request.app['wsclients'].add(ws)
+        CsmRestApi._wsclients.add(ws)
 
         try:
             async for msg in ws:
@@ -129,49 +134,51 @@ class CsmRestApi(CsmApi, ABC):
                 elif msg.type == web.WSMsgType.ERROR:
                     Log.debug('REST API websock exception: %s' %ws.exception())
             Log.debug('REST API websock connection closed')
+            await ws.close()
         finally:
-            request.app['wsclients'].discard(ws)
+            CsmRestApi._wsclients.discard(ws)
         return ws
 
     @staticmethod
     async def _on_startup(app):
-        Log.debug(f'REST API startup')
-        app['bgtask'] = app.loop.create_task(CsmRestApi._websock_bg(app))
-        app['wsclients'] = WeakSet()
+        Log.debug('REST API startup')
+        CsmRestApi._bgtask = app.loop.create_task(CsmRestApi._websock_bg())
 
     @staticmethod
     async def _on_shutdown(app):
-        Log.debug(f'REST API shutdown')
-        app['bgtask'].cancel()
+        Log.debug('REST API shutdown')
+        CsmRestApi._bgtask.cancel()
 
     @staticmethod
-    async def _websock_bg(app):
-        Log.debug(f'REST API websock background task started')
+    async def _websock_bg():
+        Log.debug('REST API websock background task started')
         try:
             while True:
-                await asyncio.sleep(5)
-
-                ts = datetime.utcnow().isoformat()
-                alert = dict(id=None, status=0,
-                    result=dict(type='alert', time=f'{ts}Z'))
-                await CsmRestApi._websock_broadcast(app, json.dumps(alert))
+                msg = await CsmRestApi._queue.get()
+                await CsmRestApi._websock_broadcast(msg)
         except asyncio.CancelledError:
-            Log.debug(f'REST API websock background task canceled')
+            Log.debug('REST API websock background task canceled')
 
-        Log.debug(f'REST API websock background task done')
+        Log.debug('REST API websock background task done')
 
     @staticmethod
-    async def _websock_broadcast(app, msg):
+    async def _websock_broadcast(msg):
         # do explicit copy because the list can change asynchronously
-        clients = app['wsclients'].copy()
+        clients = CsmRestApi._wsclients.copy()
         try:
             for ws in clients:
-                await ws.send_str(msg)
+                await ws.send_str(json.dumps(msg))
         except:
-            Log.debug(f'REST API websock broadcast error')
+            Log.debug('REST API websock broadcast error')
 
     @staticmethod
     async def process_dbg_static_page(request):
+        """
+        Static page handler is for debugging purposes only. To be
+        deleted later when we have tests for aiohttp web sockets.
+        HTML and JS debug files are loaded from 'dbgwbi' directory
+        (which will be deleted later completely too).
+        """
         base = "src/core/agent/dbgwbi"
         path = request.match_info.get('path', '.')
         realpath = os.path.abspath(f'{base}/{path}')
@@ -180,3 +187,13 @@ class CsmRestApi(CsmApi, ABC):
         if os.path.exists(realpath):
             return web.FileResponse(realpath)
         return web.FileResponse(f'{base}/error.html')
+
+    @staticmethod
+    async def _async_push(msg):
+        return await CsmRestApi._queue.put(msg)
+
+    @staticmethod
+    def push(alert):
+        coro = CsmRestApi._async_push(alert)
+        asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
+        return True
