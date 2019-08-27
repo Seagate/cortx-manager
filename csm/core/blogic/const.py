@@ -1,11 +1,16 @@
 # Commands
-CSM_SETUP_CMD = "setup"
-CSM_SETUP_ACTIONS = ["init"]
-SUPPORT_BUNDLE = "support_bundle"
-EMAIL_CONFIGURATION = "email"
+CSM_SETUP_CMD = 'setup'
+CSM_SETUP_ACTIONS = ['init']
+SUPPORT_BUNDLE = 'support_bundle'
+EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-ALERTS_CLI_KEYS = ["id", "health", "updated_time", "description", "severity",
-                   "state", "acknowledge"]
+ALERTS_CLI_HEADERS = {'id': 'Alert Id',
+                      'health': 'Health',
+                      'description': 'Description',
+                      'severity': 'Severity',
+                      'state': 'State',
+                      'acknowledge': 'Acknowledged',
+                      'resolved': 'Resolved'}
 # CSM Agent Port
 CSM_AGENT_PORT = 8082
 
@@ -13,7 +18,7 @@ CSM_AGENT_PORT = 8082
 HA_INIT = '/var/csm/ha_initialized'
 
 # File names
-SUMMARY_FILE = "summary.txt"
+SUMMARY_FILE = 'summary.txt'
 
 # Cluster states
 STATE_UP = 'up'

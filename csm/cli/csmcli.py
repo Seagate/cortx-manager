@@ -22,7 +22,6 @@ import os
 import traceback
 import asyncio
 
-
 def main(argv):
     """
     Parse command line to obtain command structure. Execute the CLI
@@ -35,15 +34,15 @@ def main(argv):
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
         command = CommandFactory.get_command(argv[1:])
-        csm_agent_url = f"http://localhost:{const.CSM_AGENT_PORT}"
+        csm_agent_url = f"http://localhost:{const.CSM_AGENT_PORT}/api"
         client = CsmRestClient(csm_agent_url)
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(client.call(command))
-        command.process_output(response)
+        command.process_response(response)
 
     except Exception as exception:
-        RestResponse.error(1, exception)
+        CliResponse.error(1, exception)
         Log.error(traceback.format_exc())
         # TODO - Extract rc from exception
         return 1
@@ -53,10 +52,9 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
 
     from csm.cli.command_factory import CommandFactory
-    from csm.cli.csm_client import CsmRestClient
+    from csm.cli.csm_client import CsmRestClient, CliResponse
     from csm.common.log import Log
     from csm.common.conf import Conf
-    from csm.common.rest import RestResponse
     from csm.common.payload import *
     from csm.core.blogic import const
 

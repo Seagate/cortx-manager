@@ -42,13 +42,12 @@ class CommandFactory(object):
         parser = argparse.ArgumentParser(description='RAS CLI command')
         subparsers = parser.add_subparsers()
 
-        for command in CommandFactory.commands:
-            command.add_args(subparsers)
+        for each_command in CommandFactory.commands:
+            each_command.add_args(subparsers)
 
         namespace = parser.parse_args(argv)
         sys_module = sys.modules[__name__]
-        for attr in ['command', 'action', 'args', 'method']:
+        for attr in ['command', 'action', 'args']:
             setattr(sys_module, attr, getattr(namespace, attr))
             delattr(namespace, attr)
-        return sys_module.command(sys_module.action, vars(namespace),
-                                  sys_module.args, sys_module.method)
+        return command(action, vars(namespace), args)

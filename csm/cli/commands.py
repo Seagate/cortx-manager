@@ -21,16 +21,16 @@
 
 import abc, argparse
 from csm.core.blogic import const
-from csm.common.rest import RestResponse
+from csm.cli.csm_client import CliResponse
 
-class Command(object):
+class Command:
     """ Base class for all commands supported by RAS CLI """
 
-    def __init__(self, action, options, args, method):
+    def __init__(self, action, options, args):
         self._action = action
         self._options = options
         self._args = args
-        self._method = method
+        self._method = {}
 
     def name(self):
         return self._name
@@ -44,11 +44,23 @@ class Command(object):
     def args(self):
         return self._args
 
-    def method(self):
-        return self._method
+    def method(self, action):
+        return self._method.get(action, 'get')
+
+    def process_response(self, response):
+        """Process Response as per display method in format else normal display"""
+        if response.rc() != 200:
+            return CliResponse.error(response.rc(), response.output())
+        if self._options['f'] == 'table':
+            return CliResponse.table(response.output().get(self._filter, []),
+                               self._headers)
+        if self._options['f'] == 'xml':
+            return CliResponse.xml(response.output())
+        if self._options['f'] == 'json':
+            return CliResponse.json(response.output())
 
 class SetupCommand(Command):
-    """ Contains funtionality to initialization CSM """
+    """ Contains functionality to initialization CSM """
 
     _name = const.CSM_SETUP_CMD
 
@@ -58,10 +70,10 @@ class SetupCommand(Command):
         sbparser.add_argument('action', help='action',
                               choices=const.CSM_SETUP_ACTIONS)
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=SetupCommand, method='get')
+        sbparser.set_defaults(command=SetupCommand)
 
 class SupportBundleCommand(Command):
-    """ Contains funtionality to handle support bundle """
+    """ Contains functionality to handle support bundle """
 
     _name = const.SUPPORT_BUNDLE
 
@@ -72,55 +84,42 @@ class SupportBundleCommand(Command):
         sbparser.add_argument('action', help='action',
                               choices=['create', 'list', 'delete'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=SupportBundleCommand, methd='get')
+        sbparser.set_defaults(command=SupportBundleCommand)
 
 class EmailConfigCommand(Command):
-    """ Contains funtionality to handle Email Configuration """
+    """ Contains functionality to handle Email Configuration """
 
     _name = const.EMAIL_CONFIGURATION
 
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.EMAIL_CONFIGURATION,
-                                     help='Perform | reset  email configuration, show, subscribe or unsubscribe for email alerts.')
+                                     help='Perform | reset  email configuration,\
+                              show, subscribe or unsubscribe for email alerts.')
         sbparser.add_argument('action', help='action',
                               choices=['config', 'reset', 'show', 'subscribe',
                                        'unsubscribe'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=EmailConfigCommand, method='get')
+        sbparser.set_defaults(command=EmailConfigCommand)
 
 class AlertsCommand(Command):
-    """ Contains funtionality to handle Alerts """
+    """ Contains functionality to handle Alerts """
 
     _name = const.ALERTS_COMMAND
-
-    def process_output(self, response):
-        if response.rc() != 0:
-            RestResponse.error(response.rc(), response.output())
-        if self._options['f'] == 'table':
-            #todo: Get the Response Schema and then changes to be made here.
-            RestResponse.table(response.output().get('alerts', []),
-                               const.ALERTS_CLI_KEYS)
-        if self._options['f'] == 'xml':
-            RestResponse.xml(response.output())
-        if self._options['f'] == 'json':
-            RestResponse.json(response.output())
+    _method = {'show': 'get'}
+    _headers = const.ALERTS_CLI_HEADERS
+    _filter = const.ALERTS_COMMAND
 
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.ALERTS_COMMAND,
                                      help='Show | Acknowledge system alerts')
-        arg_parser = sbparser.add_subparsers()
-        AlertsCommand.show(arg_parser)
-        sbparser.add_argument("args", nargs="*")
+        sbparser.add_argument('action', help='Action',
+                              choices=['show', 'acknowledge'])
+        sbparser.add_argument('-d', help='Seconds', nargs='?', default=60)
+        sbparser.add_argument('-c', help='No. of Alerts', nargs='?',
+                              default=1000)
+        sbparser.add_argument('-f', help='Format', nargs='?', default='table',
+                              choices=['json', 'xml', 'table'])
+        sbparser.add_argument('args', nargs='*')
         sbparser.set_defaults(command=AlertsCommand)
-
-    @staticmethod
-    def show(parser):
-        sub_parser = parser.add_parser("show", help="Show Alerts")
-        sub_parser.add_argument("-d", help="Seconds", nargs="?", default=60)
-        sub_parser.add_argument("-c", help="No. of Alerts", nargs="?",
-                                default=1000)
-        sub_parser.add_argument("-f", help="Format", nargs="?", default="table",
-                                choices=['json', 'xml', 'table'])
-        sub_parser.set_defaults(action="show", method='get')
