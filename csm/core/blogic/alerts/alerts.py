@@ -18,6 +18,8 @@
 import sys
 from csm.common.errors import CsmError
 from csm.common.log import Log
+from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
+from datetime import datetime
 import json
 import threading
 import errno
@@ -25,9 +27,32 @@ import errno
 class Alert(object):
     """ Represents an alert to be sent to front end """
 
-    def __init__(self):
-        # TODO
-        pass
+    def __init__(self, data):
+        self._key = None
+        self._data = data
+        self._timestamp = datetime.utcnow()
+        self._publushed = False
+
+    def key(self):
+        return self._key
+
+    def data(self):
+        return self._data
+
+    def timestamp(self):
+        return self._timestamp
+
+    def store(self, key):
+        self._key = key
+
+    def isstored(self):
+        return self._key != None
+
+    def publish(self):
+        self._publushed = True
+
+    def ispublished(self):
+        return self._publushed
 
     def get(self, **kwargs):
         # TODO
@@ -37,9 +62,54 @@ class Alert(object):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented') 
 
-    def configure(self):
-        # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.configure() not implemented') 
+class SyncAlertStorage:
+    def __init__(self, kvs):
+        self._kvs = kvs
+        self._id = 0
+
+    def _nextid(self):
+        result = self._id
+        self._id += 1
+        return result
+
+    def store(self, alert):
+        key = self._nextid()
+        alert.store(key)
+        self._kvs.put(key, alert)
+
+    def retrieve(self, key):
+        return self._kvs.get(key)
+
+    def select(self, predicate):
+        return (alert
+            for key, alert in self._kvs.items()
+                if predicate(key, alert))
+
+# TODO: Implement async alert storage after
+#       moving from threads to asyncio
+#
+# class AsyncAlertStorage:
+#     def __init__(self, kvs):
+#         self._kvs = kvs
+#         self._id = 0
+
+#     def nextid(self):
+#         result = self._id
+#         self._id += 1
+#         return result
+
+#     async def store(self, alert):
+#         key = self.nextid()
+#         alert.store(key)
+#         await self._kvs.put(alert.key(), alert)
+
+#     async def retrieve(self, key):
+#         return await self._kvs.get(key)
+
+#     async def select(self, predicate):
+#         return (alert
+#             async for key, alert in self._kvs.items()
+#                 if predicate(key, alert))
 
 class AlertMonitor(object):
     """ 
@@ -53,24 +123,26 @@ class AlertMonitor(object):
     web server. 
     """
 
-    def __init__(self):
+    def __init__(self, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
-        self.__product_name = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name")
-        self.__alert = __import__('csm.%s.plugins.alert',%self.__product_name, fromlist=[None])
-        self.alert_plugin = self.__alert.AlertPlugin()
-        self.monitor_thread = None
-        self.thread_started = False 
-        self.thread_running = False
+        self._alert_plugin = plugin
+        self._handle_alert = alert_handler_cb
+        self._monitor_thread = None
+        self._thread_started = False 
+        self._thread_running = False
+        self._storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
 
     def init(self):
         """
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
-        # TODO
-        raise CsmError(errno.ENOSYS, 'AlertMonitor.init() not implemented') 
+        def nonpublished(_, alert):
+            return not alert.ispublished()
+        for alert in self._storage.select(nonpublished):
+            self._publish(alert)
 
     def _monitor(self):
         """
@@ -78,43 +150,47 @@ class AlertMonitor(object):
         It will monitor the alert plugin for alerts.
         This method passes consume_alert as a callback function to alert plugin.
         """
-        self.thread_running = True
-        self.alert_plugin.init(callback_fn=self.consume_alert)
-        self.alert_plugin.process_request(cmd='listen')
+        self._thread_running = True
+        self._alert_plugin.init(callback_fn=self._consume)
+        self._alert_plugin.process_request(cmd='listen')
 
     def start(self):
         """
         This method creats and starts an alert monitor thread
         """
         try:
-            if not self.thread_running and not self.thread_started:
-                self.monitor_thread = threading.Thread(target=self._monitor,\
-                        args=())
-                self.monitor_thread.start()
-                self.thread_started = True
+            if not self._thread_running and not self._thread_started:
+                self._monitor_thread = threading.Thread(target=self._monitor,
+                                                        args=())
+                self._monitor_thread.start()
+                self._thread_started = True
         except Exception as e:
             Log.exception(e)
 
     def stop(self):
         try:
-            self.alert_plugin.stop()
-            self.monitor_thread.join()
-            self.thread_started = False
-            self.thread_running = False
+            self._alert_plugin.stop()
+            self._monitor_thread.join()
+            self._thread_started = False
+            self._thread_running = False
         except Exception as e:
             Log.exception(e)
 
-    def consume_alert(self, message):
+    def _consume(self, message):
         """
-        This is a callback function on which alert plugin will send the alerts\
-        in JSON format.
-        1. Upon receiving the alert it is converted to output schema.
-        2. The output schema is then stored to DB.
-        3. The same schema is published over web sockets.
-        4. After perfoming the above 3 tasks a boolean value 
-           (Ture is success and False if some error) is returned.
-        5. This return value will be used by alert plugin to decide 
-           whether to acknowledge the alert or not.
+        This is a callback function which will receive
+        a message from the alert plugin as a dictionary.
+        The message is already convrted to CSM schema.
+            1. Store the alert to Alert DB.
+            2. Publish the alert over web sockets.
+            3. Return a boolean value to signal whether the plugin
+               should acknowledge the alert to the RabbitMQ.
         """
-        # TODO : The above mentioned 3 tasks
-        return False
+        alert = Alert(message)
+        self._storage.store(alert)
+        self._publish(alert)
+        return True
+
+    def _publish(self, alert):
+        if self._handle_alert(alert.data()):
+            alert.publish()

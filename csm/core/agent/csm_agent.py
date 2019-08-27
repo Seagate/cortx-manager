@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-from aiohttp import web
 import sys
 import os
 import traceback
+import json
+from aiohttp import web
+from importlib import import_module
 
 # Global options for debugging purposes
 # It is quick and dirty temporary solution
@@ -13,6 +15,12 @@ class Opt:
 
 global opt
 
+def import_plugin_module(name):
+    """ Import product-specific plugin module by the plugin name """
+
+    product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'eos'
+    return import_module(f'csm.{product}.plugins.{name}')
+
 class CsmAgent:
     """ CSM Core Agent / Deamon """
 
@@ -21,9 +29,9 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         CsmRestApi.init()
-        """ Starting Alert Monitor """
-        alert_monitor = AlertMonitor()
-        alert_monitor.start()
+        pm = import_plugin_module('alert')
+        CsmAgent.alert_monitor = AlertMonitor(pm.AlertPlugin(),
+                                              CsmAgent._push_alert)
 
     @staticmethod
     def _daemonize():
@@ -57,10 +65,17 @@ class CsmAgent:
     def run(port):
         if not opt.debug:
             CsmAgent._daemonize()
+        CsmAgent.alert_monitor.start()
         CsmRestApi.run(port)
+        CsmAgent.alert_monitor.stop()
+
+    @staticmethod
+    def _push_alert(alert):
+        return CsmRestApi.push(alert)
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..'))
+
     opt = Opt(sys.argv)
     try:
         from csm.common.log import Log
@@ -73,14 +88,14 @@ if __name__ == '__main__':
 
     try:
         from csm.common.conf import Conf
+        from csm.common.payload import Yaml
         from csm.core.blogic import const
-        from csm.common.payload import *
-        from csm.core.agent.api import CsmRestApi
         from csm.core.blogic.alerts.alerts import AlertMonitor
+        from csm.eos.plugins.alert import AlertPlugin
+        from csm.core.agent.api import CsmRestApi
 
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)
-
     except:
         Log.error(traceback.format_exc())
         os._exit(1)
