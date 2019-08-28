@@ -16,10 +16,11 @@
 """
 
 import sys
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 from datetime import datetime
+from typing import Optional
 import json
 import threading
 import errno
@@ -80,6 +81,9 @@ class SyncAlertStorage:
     def retrieve(self, key):
         return self._kvs.get(key)
 
+    def update(self, alert):
+        self._kvs.put(alert.key(), alert)
+
     def select(self, predicate):
         return (alert
             for key, alert in self._kvs.items()
@@ -110,6 +114,51 @@ class SyncAlertStorage:
 #         return (alert
 #             async for key, alert in self._kvs.items()
 #                 if predicate(key, alert))
+
+
+# TODO: make it async once AsyncAlertStorage is implemented
+class AlertsService:
+    def __init__(self, storage: SyncAlertStorage):
+        self.storage = storage
+
+    """
+        Update alert fields
+
+        :param str alert_id: A unique identifier of an alert to update
+        :param dict fields:  A dictionary containing fields to update.
+            Currently it supports "comment" and "acknowledged" fields only.
+            "comment" - string, can be empty
+            "acknowledged" - boolean
+        :raises CsmError
+    """
+    def update_alert(self, alert_id, fields: dict):
+        alert = self.storage.retrieve(alert_id)
+        if not alert:
+            raise CsmNotFoundError("Alert was not found")
+
+        if "comment" in fields:
+            # TODO: Alert should contain such fields directly, not as a
+            #   dictionary accessible by data() method
+            alert.data()["comment"] = fields["comment"]
+
+        if "acknowledged" in fields:
+            new_value = fields["acknowledged"]
+            if type(new_value) != type(bool):
+                raise CsmError("Invalid type of 'acknowledged' field")
+
+            alert.data()["acknowledged"] = fields["acknowledged"]
+
+        self.storage.update(alert)
+
+    """
+        Fetch a single alert by key
+
+        :param str alert_id: A unique identifier of the requried alert
+        :returns: Alert object or None
+    """
+    def fetch_alert(self, alert_id) -> Optional[Alert]:
+        return self.storage.retrieve(alert_id)
+
 
 class AlertMonitor(object):
     """ 

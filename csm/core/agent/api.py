@@ -35,8 +35,9 @@ from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
+from csm.core.blogic.alerts import AlertsService
 from csm.common.cluster import Cluster
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.ha_framework import PcsHAFramework
 from csm.core.blogic.csm_ha import CsmResourceAgent
 
@@ -67,13 +68,12 @@ class CsmApi(ABC):
         return CsmApi._cluster
 
     @staticmethod
-    def process_request(command, request, callback=None):
+    def process_request(command, request: Request, callback=None):
         """
         Processes requests received from client using a backend provider.
         Provider is loaded initially and instance is reused for future calls.
         """
-
-        if CsmApi._cluster == None:
+        if CsmApi._cluster is None:
             raise CsmError(errno.ENOENT, 'CSM API not initialized')
         Log.info('command=%s action=%s args=%s' %(command, \
             request.action(), request.args()))
@@ -81,6 +81,33 @@ class CsmApi(ABC):
             CsmApi._providers[command] = ProviderFactory.get_provider(command, CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
+
+# Let it all reside in a separate controller until we've all ageed on
+# request processing architecture
+class AlertsRestController:
+    def __init__(self, service: AlertsService):
+        self.service = service
+
+    # This function allows to call synchronous code in a separate thread and 
+    # then await it. It won't be needed if all
+    async def _call_nonasync(self, function, *args):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, function, *args)
+
+    async def update_alert(self, request):
+        alert_id = request.rel_url.query["alert_id"]
+        body = await request.json()
+        result = await self._call_nonasync(
+            self.service.update_alert, alert_id, body)
+        return "Success"
+
+    # This is for debugging purposes right now
+    async def fetch_alert(self, request):
+        alert_id = request.rel_url.query["alert_id"]
+        alert = await self._call_nonasync(self.service.fetch_alert, alert_id)
+        if not alert:
+            raise CsmNotFoundError("Alert is not found")
+        return alert.__dict__  # Returning a dictionary to keep it simple
 
 
 class CsmRestApi(CsmApi, ABC):
@@ -91,17 +118,33 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
-        CsmRestApi._app = web.Application()
+        CsmRestApi._app = web.Application(
+            midldewares=[CsmRestApi.rest_middleware]
+        )
+
+        alerts = AlertsRestController(None)
+
         # Last route is for debugging purposes only. Please see
         # the description of the process_dbg_static_page() method.
         CsmRestApi._app.add_routes([
             web.get("/csm", CsmRestApi.process_request),
             web.get("/ws", CsmRestApi.process_websocket),
+            web.get("/api/alerts/{alert_id}", alerts.fetch_alert),
+            web.patch("/api/alerts/{alert_id}", alerts.update_alert),
             web.get('/{path:.*}', CsmRestApi.process_dbg_static_page)
         ])
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
+    @staticmethod
+    async def rest_middleware(request, handler):
+        try:
+            resp = await handler(request)
+            return web.json_response(resp, status=200)
+        except CsmNotFoundError as e:
+            return web.json_response({'message': e.error()}, status=404)
+        except CsmError as e:
+            return web.json_response({'message': e.error()}, status=400)
     @staticmethod
     def run(port):
         web.run_app(CsmRestApi._app, port=port)

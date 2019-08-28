@@ -26,6 +26,7 @@ CSM_ERR_INTERRUPTED         = 0x1002
 CSM_INVALID_REQUEST         = 0x1003
 CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
 CSM_INTERNAL_ERROR          = 0x1005
+CSM_ERROR_NOT_FOUND         = 0x1006
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -85,3 +86,7 @@ class CsmInternalError(CsmError):
         super(CsmInternalError, self).__init__(
             CSM_INTERNAL_ERROR, 'Internal error: %s' %desc)
 
+class CsmNotFoundError(CsmError):
+    def __init(self, desc=None):
+        super(NotFoundError, self).__init__(
+            CSM_ERROR_NOT_FOUND, desc or "Not found")
