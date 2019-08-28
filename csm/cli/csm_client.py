@@ -103,8 +103,7 @@ class RestRequest(Request):
     """Cli Rest Request Class """
 
     def __init__(self, url: str, action: str, session: ClassVar, options: Dict,
-                 args: ClassVar,
-                 method: str):
+                 args: ClassVar, method: str):
         super(RestRequest, self).__init__(args, action)
         self._method = method
         self._url = url
@@ -118,25 +117,36 @@ class RestRequest(Request):
     async def get_request(self) -> str:
         return await getattr(self, f'_{self._method}')()
 
-class CliResponse:
+class Output:
     """CLI Response Display Class"""
 
     @staticmethod
-    def table(data: Any, headers: dict) -> None:
-        table_obj = PrettyTable()
-        table_obj.field_names = headers.values()
-        for each_row in data:
-            table_obj.add_row([each_row.get(x) for x in headers.keys()])
-        sys.stdout.write("{0}".format(table_obj))
-
-    @staticmethod
-    def xml(data):
-        sys.stdout.write(dict2xml(data))
-
-    @staticmethod
-    def json(data):
-        pprint.pprint(data, indent=4)
+    def dump(response, output_format, **kwargs) -> None:
+        if response.rc() != 200:
+            return Output.error(response.rc(), response.output())
+        if output_format:
+            return getattr(Output, f'dump_{output_format}')(response.output(),
+                                                            **kwargs)
+        else:
+            return sys.stdout.write(response.output())
 
     @staticmethod
     def error(rc: int, message: str) -> None:
         sys.stdout.write(f'error({rc}): {message}')
+
+    @staticmethod
+    def dump_table(data: Any, headers: Dict, filters: str,
+                   **kwargs: Dict) -> None:
+        table_obj = PrettyTable()
+        table_obj.field_names = headers.values()
+        for each_row in data[filters]:
+            table_obj.add_row([each_row.get(x) for x in headers.keys()])
+        sys.stdout.write("{0}".format(table_obj))
+
+    @staticmethod
+    def dump_xml(data, **kwargs: Dict) -> None:
+        sys.stdout.write(dict2xml(data))
+
+    @staticmethod
+    def dump_json(data, **kwargs: Dict) -> None:
+        pprint.pprint(data, indent=4)

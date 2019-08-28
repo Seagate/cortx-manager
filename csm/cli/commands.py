@@ -21,7 +21,7 @@
 
 import abc, argparse
 from csm.core.blogic import const
-from csm.cli.csm_client import CliResponse
+from csm.cli.csm_client import Output
 
 class Command:
     """ Base class for all commands supported by RAS CLI """
@@ -49,15 +49,8 @@ class Command:
 
     def process_response(self, response):
         """Process Response as per display method in format else normal display"""
-        if response.rc() != 200:
-            return CliResponse.error(response.rc(), response.output())
-        if self._options['f'] == 'table':
-            return CliResponse.table(response.output().get(self._filter, []),
-                               self._headers)
-        if self._options['f'] == 'xml':
-            return CliResponse.xml(response.output())
-        if self._options['f'] == 'json':
-            return CliResponse.json(response.output())
+        return Output.dump(response, output_format=self._options.get('f', None),
+                           headers=self._headers, filters=self._filter)
 
 class SetupCommand(Command):
     """ Contains functionality to initialization CSM """
@@ -94,8 +87,9 @@ class EmailConfigCommand(Command):
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.EMAIL_CONFIGURATION,
-                                     help='Perform | reset  email configuration,\
-                              show, subscribe or unsubscribe for email alerts.')
+                                     help='Perform | reset  email configuration, \
+                                     show, subscribe or unsubscribe for email \
+                                     alerts.')
         sbparser.add_argument('action', help='action',
                               choices=['config', 'reset', 'show', 'subscribe',
                                        'unsubscribe'])
@@ -117,9 +111,8 @@ class AlertsCommand(Command):
         sbparser.add_argument('action', help='Action',
                               choices=['show', 'acknowledge'])
         sbparser.add_argument('-d', help='Seconds', nargs='?', default=60)
-        sbparser.add_argument('-c', help='No. of Alerts', nargs='?',
-                              default=1000)
+        sbparser.add_argument('-c', help='No. of Alerts', nargs='?', default=1000)
         sbparser.add_argument('-f', help='Format', nargs='?', default='table',
                               choices=['json', 'xml', 'table'])
-        sbparser.add_argument('args', nargs='*')
+        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=AlertsCommand)

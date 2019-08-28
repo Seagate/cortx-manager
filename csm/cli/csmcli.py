@@ -42,7 +42,7 @@ def main(argv):
         command.process_response(response)
 
     except Exception as exception:
-        CliResponse.error(1, exception)
+        Output.error(1, exception)
         Log.error(traceback.format_exc())
         # TODO - Extract rc from exception
         return 1
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
 
     from csm.cli.command_factory import CommandFactory
-    from csm.cli.csm_client import CsmRestClient, CliResponse
+    from csm.cli.csm_client import CsmRestClient, Output
     from csm.common.log import Log
     from csm.common.conf import Conf
     from csm.common.payload import *
