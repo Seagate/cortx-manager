@@ -6,6 +6,8 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
+from csm.core.blogic.alerts import SyncAlertStorage, AlertsService
+from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 # Global options for debugging purposes
 # It is quick and dirty temporary solution
@@ -28,9 +30,15 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        CsmRestApi.init()
+
+        alerts_storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
+        alerts_service = AlertsService(alerts_storage)
+
+        CsmRestApi.init(alerts_service)
         pm = import_plugin_module('alert')
-        CsmAgent.alert_monitor = AlertMonitor(pm.AlertPlugin(),
+
+        CsmAgent.alert_monitor = AlertMonitor(alerts_storage,
+                                              pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
     @staticmethod

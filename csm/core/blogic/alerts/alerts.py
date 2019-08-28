@@ -18,7 +18,6 @@
 import sys
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
-from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 from datetime import datetime
 from typing import Optional
 import json
@@ -119,7 +118,7 @@ class SyncAlertStorage:
 # TODO: make it async once AsyncAlertStorage is implemented
 class AlertsService:
     def __init__(self, storage: SyncAlertStorage):
-        self.storage = storage
+        self._storage = storage
 
     """
         Update alert fields
@@ -132,7 +131,7 @@ class AlertsService:
         :raises CsmError
     """
     def update_alert(self, alert_id, fields: dict):
-        alert = self.storage.retrieve(alert_id)
+        alert = self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found")
 
@@ -148,7 +147,7 @@ class AlertsService:
 
             alert.data()["acknowledged"] = fields["acknowledged"]
 
-        self.storage.update(alert)
+        self._storage.update(alert)
 
     """
         Fetch a single alert by key
@@ -157,7 +156,7 @@ class AlertsService:
         :returns: Alert object or None
     """
     def fetch_alert(self, alert_id) -> Optional[Alert]:
-        return self.storage.retrieve(alert_id)
+        return self._storage.retrieve(alert_id)
 
 
 class AlertMonitor(object):
@@ -172,7 +171,7 @@ class AlertMonitor(object):
     web server. 
     """
 
-    def __init__(self, plugin, alert_handler_cb):
+    def __init__(self, storage: SyncAlertStorage, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
@@ -181,7 +180,7 @@ class AlertMonitor(object):
         self._monitor_thread = None
         self._thread_started = False 
         self._thread_running = False
-        self._storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
+        self._storage = storage
 
     def init(self):
         """

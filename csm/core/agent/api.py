@@ -113,7 +113,7 @@ class AlertsRestController:
 class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
     @staticmethod
-    def init():
+    def init(alerts_service: AlertsService):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
@@ -122,7 +122,7 @@ class CsmRestApi(CsmApi, ABC):
             midldewares=[CsmRestApi.rest_middleware]
         )
 
-        alerts = AlertsRestController(None)
+        alerts = AlertsRestController(alerts_service)
 
         # Last route is for debugging purposes only. Please see
         # the description of the process_dbg_static_page() method.
