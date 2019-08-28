@@ -58,3 +58,7 @@ DEFAULT_USER='admin'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
+
+# CSM Schema Path
+CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
+FAN_ALERT = 'enclosure_fan_module_alert'
