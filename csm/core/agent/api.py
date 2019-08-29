@@ -35,7 +35,7 @@ from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
-from csm.core.blogic.alerts import AlertsService
+from csm.core.blogic.alerts.alerts import AlertsService
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.ha_framework import PcsHAFramework
@@ -89,25 +89,25 @@ class AlertsRestController:
         self.service = service
 
     # This function allows to call synchronous code in a separate thread and 
-    # then await it. It won't be needed if all
+    # then await it. It won't be needed if all code uses asyncio
     async def _call_nonasync(self, function, *args):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, function, *args)
 
     async def update_alert(self, request):
-        alert_id = request.rel_url.query["alert_id"]
+        alert_id = request.match_info["alert_id"]
         body = await request.json()
         result = await self._call_nonasync(
             self.service.update_alert, alert_id, body)
-        return "Success"
+        return result.data()
 
-    # This is for debugging purposes right now
+    # This method is for debugging purposes only
     async def fetch_alert(self, request):
-        alert_id = request.rel_url.query["alert_id"]
+        alert_id = request.match_info["alert_id"]
         alert = await self._call_nonasync(self.service.fetch_alert, alert_id)
         if not alert:
             raise CsmNotFoundError("Alert is not found")
-        return alert.__dict__  # Returning a dictionary to keep it simple
+        return alert.data()
 
 
 class CsmRestApi(CsmApi, ABC):
@@ -119,7 +119,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
         CsmRestApi._app = web.Application(
-            midldewares=[CsmRestApi.rest_middleware]
+            middlewares=[CsmRestApi.rest_middleware]
         )
 
         alerts = AlertsRestController(alerts_service)
@@ -137,10 +137,19 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
     @staticmethod
+    @web.middleware
     async def rest_middleware(request, handler):
         try:
             resp = await handler(request)
-            return web.json_response(resp, status=200)
+            if isinstance(resp, web.FileResponse):
+                return resp
+            
+            if isinstance(resp, Response):
+                resp_obj = {'status': resp.rc(), 'message': resp.output()}
+            else:
+                resp_obj = resp
+
+            return web.json_response(resp_obj, status=200)
         except CsmNotFoundError as e:
             return web.json_response({'message': e.error()}, status=404)
         except CsmError as e:
@@ -158,9 +167,8 @@ class CsmRestApi(CsmApi, ABC):
 
         request = Request(action, args)
         response = CsmApi.process_request(cmd, request)
-        response_msg = {'status': response.rc(), 'message': response.output()}
-        Log.debug('response_msg: %s' %response_msg)
-        return web.Response(text=json.dumps(response_msg), status=200)
+
+        return response
 
     @staticmethod
     async def process_websocket(request):

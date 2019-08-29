@@ -73,7 +73,7 @@ class SyncAlertStorage:
         return result
 
     def store(self, alert):
-        key = self._nextid()
+        key = str(self._nextid())
         alert.store(key)
         self._kvs.put(key, alert)
 
@@ -141,16 +141,18 @@ class AlertsService:
             alert.data()["comment"] = fields["comment"]
 
         if "acknowledged" in fields:
-            new_value = fields["acknowledged"]
-            if type(new_value) != type(bool):
-                raise CsmError("Invalid type of 'acknowledged' field")
+            # TODO: We need some common code that does such conversions
+            new_value = fields["acknowledged"] == True \
+                        or fields["acknowledged"] == "1" \
+                        or fields["acknowledged"] == "true"
 
-            alert.data()["acknowledged"] = fields["acknowledged"]
+            alert.data()["acknowledged"] = new_value
 
         self._storage.update(alert)
+        return alert
 
     """
-        Fetch a single alert by key
+        Fetch a single alert by its key
 
         :param str alert_id: A unique identifier of the requried alert
         :returns: Alert object or None

@@ -87,6 +87,6 @@ class CsmInternalError(CsmError):
             CSM_INTERNAL_ERROR, 'Internal error: %s' %desc)
 
 class CsmNotFoundError(CsmError):
-    def __init(self, desc=None):
-        super(NotFoundError, self).__init__(
+    def __init__(self, desc=None):
+        super(CsmNotFoundError, self).__init__(
             CSM_ERROR_NOT_FOUND, desc or "Not found")
