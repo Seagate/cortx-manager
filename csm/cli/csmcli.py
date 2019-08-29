@@ -39,8 +39,8 @@ def main(argv):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(client.call(command))
-        command.process_response(response)
-
+        command.process_response(out=sys.stdout, err=sys.stderr,
+                                 response=response)
     except Exception as exception:
         Output.error(1, exception)
         Log.error(traceback.format_exc())

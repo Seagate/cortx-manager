@@ -120,33 +120,42 @@ class RestRequest(Request):
 class Output:
     """CLI Response Display Class"""
 
-    @staticmethod
-    def dump(response, output_format, **kwargs) -> None:
-        if response.rc() != 200:
-            return Output.error(response.rc(), response.output())
+    def __init__(self, response):
+        self.rc = response.rc()
+        self.output = response.output()
+
+    def dump(self, out, err, output_format, **kwargs) -> None:
+        """Dump the Output on CLI"""
+        if self.rc != 200:
+            return err.write(Output.error(self.rc, self.output))
         if output_format:
-            return getattr(Output, f'dump_{output_format}')(response.output(),
-                                                            **kwargs)
+            output = getattr(Output, f'dump_{output_format}')(self.output,
+                                                              **kwargs)
         else:
-            return sys.stdout.write(response.output())
+            output = str(self.output)
+        out.write(output)
 
     @staticmethod
-    def error(rc: int, message: str) -> None:
-        sys.stdout.write(f'error({rc}): {message}')
+    def error(rc: int, message: str) -> str:
+        """Format for Error message"""
+        return f'error({rc}): {message}'
 
     @staticmethod
     def dump_table(data: Any, headers: Dict, filters: str,
-                   **kwargs: Dict) -> None:
+                   **kwargs: Dict) -> str:
+        """Format for Table Data"""
         table_obj = PrettyTable()
         table_obj.field_names = headers.values()
         for each_row in data[filters]:
             table_obj.add_row([each_row.get(x) for x in headers.keys()])
-        sys.stdout.write("{0}".format(table_obj))
+        return "{0}".format(table_obj)
 
     @staticmethod
-    def dump_xml(data, **kwargs: Dict) -> None:
-        sys.stdout.write(dict2xml(data))
+    def dump_xml(data, **kwargs: Dict) -> str:
+        """Format for XML Data"""
+        return dict2xml(data)
 
     @staticmethod
-    def dump_json(data, **kwargs: Dict) -> None:
-        pprint.pprint(data, indent=4)
+    def dump_json(data, **kwargs: Dict) -> str:
+        """Format for Json Data"""
+        return json.dumps(data, indent=4, sort_keys=True)

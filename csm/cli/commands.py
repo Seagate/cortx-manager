@@ -47,10 +47,12 @@ class Command:
     def method(self, action):
         return self._method.get(action, 'get')
 
-    def process_response(self, response):
+    def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
-        return Output.dump(response, output_format=self._options.get('f', None),
-                           headers=self._headers, filters=self._filter)
+        output_obj = Output(response)
+        return output_obj.dump(out, err,
+                               headers=self._headers, filters=self._filter,
+                               output_format=self._options.get('format', None))
 
 class SetupCommand(Command):
     """ Contains functionality to initialization CSM """
@@ -110,9 +112,13 @@ class AlertsCommand(Command):
                                      help='Show | Acknowledge system alerts')
         sbparser.add_argument('action', help='Action',
                               choices=['show', 'acknowledge'])
-        sbparser.add_argument('-d', help='Seconds', nargs='?', default=60)
-        sbparser.add_argument('-c', help='No. of Alerts', nargs='?', default=1000)
-        sbparser.add_argument('-f', help='Format', nargs='?', default='table',
-                              choices=['json', 'xml', 'table'])
+        sbparser.add_argument('-d', help='Seconds', dest='duration', nargs='?',
+                              default="60s")
+        sbparser.add_argument('-c', help='No. of Alerts', dest='no_of_alerts',
+                              nargs='?', default=1000)
+        sbparser.add_argument('-a', help='Display All Alerts', dest='all',
+                              action='store_const', default='false', const='true')
+        sbparser.add_argument('-f', help='Format', dest='format', nargs='?',
+                              default='table', choices=['json', 'xml', 'table'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=AlertsCommand)
