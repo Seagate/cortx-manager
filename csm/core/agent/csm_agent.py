@@ -6,7 +6,7 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-from csm.core.blogic.alerts import SyncAlertStorage, AlertsService
+from csm.core.blogic.alerts.alerts import SyncAlertStorage, AlertsService
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 # Global options for debugging purposes
@@ -83,7 +83,6 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..'))
-
     opt = Opt(sys.argv)
     try:
         from csm.common.log import Log

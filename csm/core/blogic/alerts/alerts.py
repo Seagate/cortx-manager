@@ -117,20 +117,25 @@ class SyncAlertStorage:
 
 # TODO: make it async once AsyncAlertStorage is implemented
 class AlertsService:
+    """
+        The class contains all alert-related actions that are supposed to be callable
+        by upper layer(s) of the application.
+    """
     def __init__(self, storage: SyncAlertStorage):
         self._storage = storage
 
-    """
-        Update alert fields
-
-        :param str alert_id: A unique identifier of an alert to update
-        :param dict fields:  A dictionary containing fields to update.
-            Currently it supports "comment" and "acknowledged" fields only.
-            "comment" - string, can be empty
-            "acknowledged" - boolean
-        :raises CsmError
-    """
     def update_alert(self, alert_id, fields: dict):
+        """
+            Update alert fields
+
+            :param str alert_id: A unique identifier of an alert to update
+            :param dict fields:  A dictionary containing fields to update.
+                Currently it supports "comment" and "acknowledged" fields only.
+                "comment" - string, can be empty
+                "acknowledged" - boolean
+            :returns: the updated Alert object
+            :raises CsmError:
+        """
         alert = self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found")
@@ -146,23 +151,24 @@ class AlertsService:
                         or fields["acknowledged"] == "1" \
                         or fields["acknowledged"] == "true"
 
+            # TODO: Check whether we can acknowledge it
             alert.data()["acknowledged"] = new_value
 
         self._storage.update(alert)
         return alert
 
-    """
-        Fetch a single alert by its key
-
-        :param str alert_id: A unique identifier of the requried alert
-        :returns: Alert object or None
-    """
     def fetch_alert(self, alert_id) -> Optional[Alert]:
+        """
+            Fetch a single alert by its key
+
+            :param str alert_id: A unique identifier of the requried alert
+            :returns: Alert object or None
+        """
         return self._storage.retrieve(alert_id)
 
 
 class AlertMonitor(object):
-    """ 
+    """
     Alert Monitor works with AmqpComm to monitor alerts. 
     When Alert Monitor receives a subscription request, it scans the DB and 
     sends all pending alerts. It is assumed currently that there can be only 

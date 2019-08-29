@@ -85,12 +85,21 @@ class CsmApi(ABC):
 # Let it all reside in a separate controller until we've all ageed on
 # request processing architecture
 class AlertsRestController:
+    """
+        Converts incoming REST queries to the appropriate service calls
+    """
     def __init__(self, service: AlertsService):
         self.service = service
 
-    # This function allows to call synchronous code in a separate thread and 
-    # then await it. It won't be needed if all code uses asyncio
     async def _call_nonasync(self, function, *args):
+        """
+            This function allows to await on synchronous code.
+            It won't be needed once we switch to asynchronous code everywhere.
+
+            :param function: A callable
+            :param args: Positional arguments that will be passed to the function
+            :returns: the result returned by 'function'
+        """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, function, *args)
 
