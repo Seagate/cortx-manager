@@ -24,6 +24,7 @@ import errno
 import yaml
 import asyncio
 import json
+import traceback
 from weakref import WeakSet
 from datetime import datetime
 from aiohttp import web
@@ -105,6 +106,25 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
     @staticmethod
+    def error_response(err: Exception) -> dict:
+        resp = {
+            "message_id": None,
+            "message": None,
+            "error_format_args": {},  # Empty for now
+            # TODO: Should we send trace only when we are in debug mode? 
+            "stacktrace": traceback.format_exc().splitlines()
+        }
+
+        if isinstance(err, CsmError):
+            resp["message_id"] = err.rc()
+            resp["message"] = err.error()
+        else:
+            resp["message"] = str(err)
+
+        return resp
+
+
+    @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
         try:
@@ -120,11 +140,11 @@ class CsmRestApi(CsmApi, ABC):
             return web.json_response(resp_obj, status=200)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
-            return web.json_response({'message': e.error()}, status=404)
+            return web.json_response(CsmRestApi.error_response(e), status=404)
         except CsmError as e:
-            return web.json_response({'message': e.error()}, status=400)
+            return web.json_response(CsmRestApi.error_response(e), status=400)
         except Exception as e:
-            return web.json_response({'message': f"{e}"}, status=422)
+            return web.json_response(CsmRestApi.error_response(e), status=422)
 
     @staticmethod
     def run(port):

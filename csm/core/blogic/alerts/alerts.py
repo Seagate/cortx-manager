@@ -183,9 +183,13 @@ class SyncAlertStorage:
 #             async for key, alert in self._kvs.items()
 #                 if predicate(key, alert))
 
+ALERTS_ERROR_NOT_FOUND="alerts_not_found"
+ALERTS_ERROR_NOT_RESOLVED="alerts_not_resolved"
+
 
 # TODO: make it async once AsyncAlertStorage is implemented
 class AlertsService:
+
     """
         The class contains all alert-related actions that are supposed to be callable
         by upper layer(s) of the application.
@@ -208,7 +212,7 @@ class AlertsService:
         """
         alert = self._storage.retrieve(alert_id)
         if not alert:
-            raise CsmNotFoundError("Alert was not found")
+            raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert was not found")
 
         if "comment" in fields:
             # TODO: Alert should contain such fields directly, not as a
@@ -221,7 +225,10 @@ class AlertsService:
                         or fields["acknowledged"] == "1" \
                         or fields["acknowledged"] == "true"
 
-            # TODO: Check whether we can acknowledge it
+            if new_value and not alert.data()["resolved"]:
+                raise CsmError(ALERTS_ERROR_NOT_RESOLVED,
+                        "Unresolved alerts cannot be acknowledged")
+
             alert.data()["acknowledged"] = new_value
 
         self._storage.update(alert)

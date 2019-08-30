@@ -23,12 +23,16 @@ from aiohttp import web
 from csm.core.controller.alerts import AlertsRestController
 from csm.core.blogic.alerts.alerts import SyncAlertStorage, Alert, AlertsService
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-class Alerts(web.View):
-    storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
-    storage.add_data()
-    a = AlertsService(storage)
-    alerts = AlertsRestController(a)
 
+
+# TODO: Services and storages should not be instantiated by each controller
+# separately.
+storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
+storage.store(Alert({'A':"b"}))
+a = AlertsService(storage)
+alerts = AlertsRestController(a)
+
+class AlertsView(web.View):
     async def get(self):
         """Calling Alerts Get Method"""
         duration = self.request.rel_url.query.get("duration")
@@ -36,7 +40,7 @@ class Alerts(web.View):
         page_limit = self.request.rel_url.query.get("limit", "")
         sort_by = self.request.rel_url.query.get("sortby", "created_time")
         direction = self.request.rel_url.query.get("dir", "desc")
-        return await self.alerts.fetch_all_alerts(duration, direction, sort_by,
+        return await alerts.fetch_all_alerts(duration, direction, sort_by,
                                                   offset,
                                                   page_limit)
 
@@ -44,4 +48,4 @@ class Alerts(web.View):
         """ Update Alert """
         alert_id = self.request.match_info["alert_id"]
         body = await self.request.json()
-        return await self.alerts.update_alert(alert_id, body)
+        return await alerts.update_alert(alert_id, body)

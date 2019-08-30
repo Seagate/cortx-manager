@@ -25,8 +25,10 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict
 
-from csm.common.errors import CsmNotFoundError
-from csm.core.blogic.alerts.alerts import AlertsService
+from csm.common.errors import CsmNotFoundError, CsmError
+from csm.core.blogic.alerts.alerts import AlertsService, ALERTS_ERROR_NOT_FOUND
+
+ALERT_ERROR_INVALID_DURATION = "alert_invalid_duration"
 
 class AlertsRestController:
     """
@@ -73,14 +75,15 @@ class AlertsRestController:
         alerts_obj = await self._call_nonasync(self.service.fetch_all_alerts)
         if alerts_obj:
             reverse = True if direction == 'desc' else False
-            alerts_obj = sorted(alerts_obj, key=lambda item: item[sort_by],
+            alerts_obj = sorted(alerts_obj, key=lambda item: item.data()[sort_by],
                                 reverse=reverse)
             if duration:  # Filter
                 time_duration = int(re.split(r'[a-z]', duration)[0])
                 time_format = re.split(r'[0-9]', duration)[-1]
                 dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
                 if time_format not in dur.keys():
-                    raise Exception("Invalid Parameter for Duration")
+                    raise CsmError(ALERT_ERROR_INVALID_DURATION,
+                            "Invalid Parameter for Duration")
                 end_time = datetime.now().timestamp()
                 start_time = (datetime.utcnow() - timedelta(
                     **{dur[time_format]: time_duration})).timestamp()
@@ -96,12 +99,11 @@ class AlertsRestController:
 
                 alerts_obj = alerts_obj[int(offset) - 1]
 
-        return {"total_records": len(alerts_obj), "alerts": alerts_obj}
+        return {"total_records": len(alerts_obj), "alerts": alerts_obj.data()}
 
-    async def fetch_alert(self, request):
+    async def fetch_alert(self, alert_id):
         # This method is for debugging purposes only
-        alert_id = request.match_info["alert_id"]
         alert = await self._call_nonasync(self.service.fetch_alert, alert_id)
         if not alert:
-            raise CsmNotFoundError("Alert is not found")
+            raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert is not found")
         return alert.data()

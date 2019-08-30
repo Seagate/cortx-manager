@@ -20,13 +20,12 @@
 
 import inspect
 
-CSM_OPERATION_SUCESSFUL     = 0x0000
-CSM_ERR_INVALID_VALUE       = 0x1001
-CSM_ERR_INTERRUPTED         = 0x1002
-CSM_INVALID_REQUEST         = 0x1003
-CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
-CSM_INTERNAL_ERROR          = 0x1005
-CSM_ERROR_NOT_FOUND         = 0x1006
+CSM_OPERATION_SUCESSFUL     = "csm_success"
+CSM_ERR_INVALID_VALUE       = "csm_invalid_file"
+CSM_ERR_INTERRUPTED         = "csm_interrupted"
+CSM_INVALID_REQUEST         = "csm_invalid_request"
+CSM_PROVIDER_NOT_AVAILABLE  = "csm_no_provider"
+CSM_INTERNAL_ERROR          = "csm_internal_error"
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -35,10 +34,11 @@ class CsmError(Exception):
     _desc = 'Operation Successful'
     _caller = ''
 
-    def __init__(self, rc=0, desc=None):
+    def __init__(self, rc=None, desc=None):
         super(CsmError, self).__init__()
         self._caller = inspect.stack()[1][3]
-        if rc != 0: self._rc = int(rc)
+        if rc is not None: 
+            self._rc = str(rc)
         self._desc = desc or self._desc
 
     def rc(self):
@@ -51,7 +51,7 @@ class CsmError(Exception):
         return self._caller
 
     def __str__(self):
-        return "error(%d): %s" % (self._rc, self._desc)
+        return "error(%s): %s" % (self._rc, self._desc)
 
 class CommandTerminated(KeyboardInterrupt):
     """
@@ -87,6 +87,4 @@ class CsmInternalError(CsmError):
             CSM_INTERNAL_ERROR, 'Internal error: %s' %desc)
 
 class CsmNotFoundError(CsmError):
-    def __init__(self, desc=None):
-        super(CsmNotFoundError, self).__init__(
-            CSM_ERROR_NOT_FOUND, desc or "Not found")
+    pass

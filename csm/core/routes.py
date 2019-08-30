@@ -27,6 +27,6 @@ def add_routes(self):
     # todo: Will be restructuring this part on Tuesday Morning.
     # self._app.router.add_view("/csm", CsmCliView),
     # self._app.web.get("/ws", self.process_websocket),
-    self._app.router.add_view("/api/v1/alerts", Alerts),
-    self._app.router.add_view("/api/v1/alerts/{alerts_id}", Alerts),
+    self._app.router.add_view("/api/v1/alerts", AlertsView),
+    self._app.router.add_view("/api/v1/alerts/{alerts_id}", AlertsView),
     # self._app.router.add_view('/{path:.*}', self.process_dbg_static_page)
