@@ -56,11 +56,11 @@ class Alert(object):
 
     def get(self, **kwargs):
         # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented')
 
     def acknowledge(self, id):
         # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented')
 
 class SyncAlertStorage:
     def __init__(self, kvs):
@@ -80,13 +80,82 @@ class SyncAlertStorage:
     def retrieve(self, key):
         return self._kvs.get(key)
 
+    def retrieve_all(self):
+        return list(map(lambda x: x[1], self._kvs.items()))
+
     def update(self, alert):
         self._kvs.put(alert.key(), alert)
 
     def select(self, predicate):
         return (alert
-            for key, alert in self._kvs.items()
+                for key, alert in self._kvs.items()
                 if predicate(key, alert))
+
+    # todo: Remove the Below Commeted code this is just to dump the data while starting the server.
+    # @staticmethod
+    # def random_date():
+    #     """
+    #     This function will return a random datetime between two datetime
+    #     objects.
+    #     """
+    #     from random import randrange
+    #     from datetime import timedelta, datetime
+    #     start = datetime.utcnow() - timedelta(days=2)
+    #     end = datetime.utcnow()
+    #     delta = end - start
+    #     int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
+    #     random_second = randrange(int_delta)
+    #     return start + timedelta(seconds=random_second)
+    #
+    #
+    # def add_data(self):
+    #     x = {
+    #         "id": 0,
+    #         "alert_uuid": 0,
+    #         "status": "Up",
+    #         "type": "hw",
+    #         "enclosure_id": 0,
+    #         "module_name": "",
+    #         "description": "",
+    #         "health": "OK",
+    #         "health_recommendation": "",
+    #         "location": "Enclosure 0 - Right",
+    #         "resolved": 0,
+    #         "acknowledged": 0,
+    #         "severity": 1,
+    #         "state": "fault_resolved",
+    #         "extended_info": {
+    #             "resource_type": "fru",
+    #             "position": "Right",
+    #             "durable-id": "psu_0.1",
+    #             "other_details": {
+    #                 "dc12v": 0,
+    #                 "dctemp": 0,
+    #                 "vendor": "",
+    #                 "description": "",
+    #                 "dc33v": 0,
+    #                 "mfg-vendor-id": "",
+    #                 "fru-shortname": "",
+    #                 "serial-number": "DHSILTC-1913PIZZAS",
+    #                 "mfg-date": "N/A",
+    #                 "part-number": "FRUKE18-01",
+    #                 "model": "FRUKE18-01",
+    #                 "revision": "A",
+    #                 "dc5v": 0,
+    #                 "dc12i": 0,
+    #                 "dc5i": 0
+    #             }
+    #         },
+    #         "module_type": "psu",
+    #         "updated_time": "2019-08-28 11:10:09.137026",
+    #         "created_time": "2019-07-25 11:23:28.563236"
+    #     }
+    #     for i in range(0, 1000):
+    #         x['id'] = i
+    #         x["alert_uuid"] = i
+    #         x['updated_time'] = SyncAlertStorage.random_date().timestamp()
+    #         x['created_time'] = SyncAlertStorage.random_date().timestamp()
+    #         self._kvs.put(i, x)
 
 # TODO: Implement async alert storage after
 #       moving from threads to asyncio
@@ -121,6 +190,7 @@ class AlertsService:
         The class contains all alert-related actions that are supposed to be callable
         by upper layer(s) of the application.
     """
+
     def __init__(self, storage: SyncAlertStorage):
         self._storage = storage
 
@@ -157,6 +227,13 @@ class AlertsService:
         self._storage.update(alert)
         return alert
 
+    def fetch_all_alerts(self) -> list:
+        """
+        Fetch all Alerts
+        :return: Alerts Object or Blank dict
+        """
+        return self._storage.retrieve_all()
+
     def fetch_alert(self, alert_id) -> Optional[Alert]:
         """
             Fetch a single alert by its key
@@ -165,7 +242,6 @@ class AlertsService:
             :returns: Alert object or None
         """
         return self._storage.retrieve(alert_id)
-
 
 class AlertMonitor(object):
     """
@@ -186,7 +262,7 @@ class AlertMonitor(object):
         self._alert_plugin = plugin
         self._handle_alert = alert_handler_cb
         self._monitor_thread = None
-        self._thread_started = False 
+        self._thread_started = False
         self._thread_running = False
         self._storage = storage
 
@@ -195,8 +271,10 @@ class AlertMonitor(object):
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
+
         def nonpublished(_, alert):
             return not alert.ispublished()
+
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
 

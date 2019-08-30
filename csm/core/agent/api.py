@@ -35,11 +35,12 @@ from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
-from csm.core.blogic.alerts.alerts import AlertsService
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.ha_framework import PcsHAFramework
 from csm.core.blogic.csm_ha import CsmResourceAgent
+from csm.core.routes import add_routes
+from csm.core.controller.alerts import AlertsRestController
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -53,7 +54,8 @@ class CsmApi(ABC):
         # Validate configuration files are present
         inventory_file = const.INVENTORY_FILE
         if not os.path.isfile(inventory_file):
-            raise CsmError(errno.ENOENT, 'cluster config file %s does not exist' %inventory_file)
+            raise CsmError(errno.ENOENT,
+                           'cluster config file %s does not exist' % inventory_file)
 
         # Instantiation of cluster
         _csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
@@ -75,73 +77,30 @@ class CsmApi(ABC):
         """
         if CsmApi._cluster is None:
             raise CsmError(errno.ENOENT, 'CSM API not initialized')
-        Log.info('command=%s action=%s args=%s' %(command, \
-            request.action(), request.args()))
+        Log.info('command=%s action=%s args=%s' % (command,
+                                                   request.action(),
+                                                   request.args()))
         if not command in CsmApi._providers.keys():
-            CsmApi._providers[command] = ProviderFactory.get_provider(command, CsmApi._cluster)
+            CsmApi._providers[command] = ProviderFactory.get_provider(command,
+                                                                      CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
 
-# Let it all reside in a separate controller until we've all ageed on
-# request processing architecture
-class AlertsRestController:
-    """
-        Converts incoming REST queries to the appropriate service calls
-    """
-    def __init__(self, service: AlertsService):
-        self.service = service
-
-    async def _call_nonasync(self, function, *args):
-        """
-            This function allows to await on synchronous code.
-            It won't be needed once we switch to asynchronous code everywhere.
-
-            :param function: A callable
-            :param args: Positional arguments that will be passed to the function
-            :returns: the result returned by 'function'
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, function, *args)
-
-    async def update_alert(self, request):
-        alert_id = request.match_info["alert_id"]
-        body = await request.json()
-        result = await self._call_nonasync(
-            self.service.update_alert, alert_id, body)
-        return result.data()
-
-    # This method is for debugging purposes only
-    async def fetch_alert(self, request):
-        alert_id = request.match_info["alert_id"]
-        alert = await self._call_nonasync(self.service.fetch_alert, alert_id)
-        if not alert:
-            raise CsmNotFoundError("Alert is not found")
-        return alert.data()
-
-
 class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
+
     @staticmethod
-    def init(alerts_service: AlertsService):
+    def init(alerts_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
+        alerts = AlertsRestController(alerts_service)
         CsmRestApi._app = web.Application(
             middlewares=[CsmRestApi.rest_middleware]
         )
+        add_routes(CsmRestApi)
 
-        alerts = AlertsRestController(alerts_service)
-
-        # Last route is for debugging purposes only. Please see
-        # the description of the process_dbg_static_page() method.
-        CsmRestApi._app.add_routes([
-            web.get("/csm", CsmRestApi.process_request),
-            web.get("/ws", CsmRestApi.process_websocket),
-            web.get("/api/alerts/{alert_id}", alerts.fetch_alert),
-            web.patch("/api/alerts/{alert_id}", alerts.update_alert),
-            web.get('/{path:.*}', CsmRestApi.process_dbg_static_page)
-        ])
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
@@ -152,17 +111,21 @@ class CsmRestApi(CsmApi, ABC):
             resp = await handler(request)
             if isinstance(resp, web.FileResponse):
                 return resp
-            
+
             if isinstance(resp, Response):
                 resp_obj = {'status': resp.rc(), 'message': resp.output()}
             else:
                 resp_obj = resp
 
             return web.json_response(resp_obj, status=200)
+        # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
             return web.json_response({'message': e.error()}, status=404)
         except CsmError as e:
             return web.json_response({'message': e.error()}, status=400)
+        except Exception as e:
+            return web.json_response({'message': f"{e}"}, status=422)
+
     @staticmethod
     def run(port):
         web.run_app(CsmRestApi._app, port=port)
@@ -190,9 +153,9 @@ class CsmRestApi(CsmApi, ABC):
         try:
             async for msg in ws:
                 if msg.type == web.WSMsgType.TEXT:
-                    Log.debug('REST API websock msg (ignored): %s' %msg)
+                    Log.debug('REST API websock msg (ignored): %s' % msg)
                 elif msg.type == web.WSMsgType.ERROR:
-                    Log.debug('REST API websock exception: %s' %ws.exception())
+                    Log.debug('REST API websock exception: %s' % ws.exception())
             Log.debug('REST API websock connection closed')
             await ws.close()
         finally:

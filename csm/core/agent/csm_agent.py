@@ -32,6 +32,8 @@ class CsmAgent:
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
         alerts_storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
+        #todo: Remove the below line it only dumps the data when server starts. kept for debugging
+        # alerts_storage.add_data()
         alerts_service = AlertsService(alerts_storage)
 
         CsmRestApi.init(alerts_service)
