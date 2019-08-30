@@ -19,5 +19,5 @@
  ****************************************************************************
 """
 
-from .alerts import AlertsView
+from .alerts import AlertsRestController
 # from .csm import CsmCliView

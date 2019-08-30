@@ -41,7 +41,8 @@ from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.ha_framework import PcsHAFramework
 from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.core.routes import add_routes
-from csm.core.controller.alerts import AlertsRestController
+from csm.core.blogic.services.alerts import AlertsAppService
+from csm.core.controllers import AlertsRestController
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -87,6 +88,7 @@ class CsmApi(ABC):
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
 
+
 class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
 
@@ -96,11 +98,12 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
-        alerts = AlertsRestController(alerts_service)
         CsmRestApi._app = web.Application(
             middlewares=[CsmRestApi.rest_middleware]
         )
-        add_routes(CsmRestApi)
+
+        alerts_ctrl = AlertsRestController(AlertsAppService(alerts_service))
+        add_routes(CsmRestApi, alerts_ctrl)
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)

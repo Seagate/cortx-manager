@@ -21,12 +21,12 @@
 # Last route is for debugging purposes only. Please see the description of the
 # process_dbg_static_page() method.
 
-from csm.core.views import *
+from csm.core.controllers import *
 
-def add_routes(self):
+def add_routes(self, alerts_ctrl):
     # todo: Will be restructuring this part on Tuesday Morning.
     # self._app.router.add_view("/csm", CsmCliView),
     # self._app.web.get("/ws", self.process_websocket),
-    self._app.router.add_view("/api/v1/alerts", AlertsView),
-    self._app.router.add_view("/api/v1/alerts/{alerts_id}", AlertsView),
+    self._app.router.add_view("/api/v1/alerts", alerts_ctrl.get_list_view_class()),
+    self._app.router.add_view("/api/v1/alerts/{alert_id}", alerts_ctrl.get_view_class()),
     # self._app.router.add_view('/{path:.*}', self.process_dbg_static_page)

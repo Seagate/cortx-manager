@@ -30,10 +30,14 @@ from csm.core.blogic.alerts.alerts import AlertsService, ALERTS_ERROR_NOT_FOUND
 
 ALERT_ERROR_INVALID_DURATION = "alert_invalid_duration"
 
-class AlertsRestController:
+
+class AlertsAppService:
     """
-        Converts incoming REST queries to the appropriate service calls
+        Provides operations on alerts without involving the domain specifics
     """
+
+    # TODO: In the case of alerts, we probably do not need another alert-related
+    # service
 
     def __init__(self, service: AlertsService):
         self.service = service
@@ -72,12 +76,16 @@ class AlertsRestController:
         :param page_limit: no of records to be displayed on page.
         :return: :type:list
         """
+        # TODO: The storage must provide a function to fetch alerts with respect to
+        # parameters and orderings requried by the business logic.
         alerts_obj = await self._call_nonasync(self.service.fetch_all_alerts)
         if alerts_obj:
             reverse = True if direction == 'desc' else False
             alerts_obj = sorted(alerts_obj, key=lambda item: item.data()[sort_by],
                                 reverse=reverse)
             if duration:  # Filter
+                # TODO: time format can generally be API-dependent. Better pass here an already
+                # parsed TimeDelta object.
                 time_duration = int(re.split(r'[a-z]', duration)[0])
                 time_format = re.split(r'[0-9]', duration)[-1]
                 dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}

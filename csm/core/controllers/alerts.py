@@ -20,19 +20,16 @@
 """
 
 from aiohttp import web
-from csm.core.controller.alerts import AlertsRestController
-from csm.core.blogic.alerts.alerts import SyncAlertStorage, Alert, AlertsService
+from csm.core.blogic.services.alerts import AlertsAppService
+from csm.core.blogic.alerts.alerts import SyncAlertStorage, Alert
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 
-# TODO: Services and storages should not be instantiated by each controller
-# separately.
-storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
-storage.store(Alert({'A':"b"}))
-a = AlertsService(storage)
-alerts = AlertsRestController(a)
+class AlertsListRestView(web.View):
+    def __init__(self, request, alerts_service: AlertsAppService):
+        super().__init__(request)
+        self.alerts_service = alerts_service
 
-class AlertsView(web.View):
     async def get(self):
         """Calling Alerts Get Method"""
         duration = self.request.rel_url.query.get("duration")
@@ -40,12 +37,39 @@ class AlertsView(web.View):
         page_limit = self.request.rel_url.query.get("limit", "")
         sort_by = self.request.rel_url.query.get("sortby", "created_time")
         direction = self.request.rel_url.query.get("dir", "desc")
-        return await alerts.fetch_all_alerts(duration, direction, sort_by,
-                                                  offset,
-                                                  page_limit)
+        return await self.alerts_service.fetch_all_alerts(duration, 
+                                                direction, 
+                                                sort_by,
+                                                offset,
+                                                page_limit)
+
+
+class AlertsRestView(web.View):
+    def __init__(self, request, alerts_service: AlertsAppService):
+        super().__init__(request)
+        self.alerts_service = alerts_service
 
     async def patch(self):
         """ Update Alert """
         alert_id = self.request.match_info["alert_id"]
         body = await self.request.json()
-        return await alerts.update_alert(alert_id, body)
+        return await self.alerts_service.update_alert(alert_id, body)
+
+
+# AIOHTTP does not provide a way to pass custom parameters to its views. 
+# It is a workaround.
+class AlertsRestController:
+    def __init__(self, alerts_service: AlertsAppService):
+        self.alerts_service = alerts_service
+
+    def get_list_view_class(self):
+        class Child(AlertsListRestView):
+            def __init__(child_self, request):
+                super().__init__(request, self.alerts_service)
+        return Child
+ 
+    def get_view_class(self):
+        class Child(AlertsRestView):
+            def __init__(child_self, request):
+                super().__init__(request, self.alerts_service)
+        return Child
