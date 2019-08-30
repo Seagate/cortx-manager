@@ -24,12 +24,12 @@
       "description": "State of the alert (e.g. missing| insertion etc.)"
     },
     "created_time": {
-      "type": "string",
+      "type": "integer",
       "required": true,
       "description": "Origination time of the alert"
     },
     "updated_time": {
-      "type": "string",
+      "type": "integer",
       "required": false,
       "description": "Updation time of the alert"
     },

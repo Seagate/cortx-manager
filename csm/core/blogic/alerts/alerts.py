@@ -23,15 +23,18 @@ from datetime import datetime
 import json
 import threading
 import errno
+from csm.core.blogic import const 
 
 class Alert(object):
     """ Represents an alert to be sent to front end """
 
     def __init__(self, data):
-        self._key = None
+        """ Setting up the key with alert_uuid from the CSM json. """
+        self._key = data.get(const.ALERT_UUID, const.ALERT_INT_DEFAULT)
         self._data = data
         self._timestamp = datetime.utcnow()
-        self._publushed = False
+        self._published = False
+        self._resolved = False
 
     def key(self):
         return self._key
@@ -49,10 +52,30 @@ class Alert(object):
         return self._key != None
 
     def publish(self):
-        self._publushed = True
+        self._published = True
 
     def ispublished(self):
-        return self._publushed
+        return self._published
+
+    def resolved(self):
+        self._resolved = True
+
+    def isResolved(self):
+        return self._resolved
+
+    def resolve(self, storage):
+        """
+        Get the previous alert with the same alert_uuid.
+        """
+        prev_alert = storage.retrieve(self.key())
+        if prev_alert and prev_alert.data().get('state', "")\
+                in const.BAD_ALERT and not prev_alert.isResolved():
+            """
+            Try to resolve the alert if the previous alert is bad and
+            the current alert is good.
+            """
+            self.data()['resolved'] = 1
+            self.resolved()
 
     def get(self, **kwargs):
         # TODO
@@ -73,9 +96,7 @@ class SyncAlertStorage:
         return result
 
     def store(self, alert):
-        key = self._nextid()
-        alert.store(key)
-        self._kvs.put(key, alert)
+        self._kvs.put(alert.key(), alert)
 
     def retrieve(self, key):
         return self._kvs.get(key)
@@ -84,7 +105,6 @@ class SyncAlertStorage:
         return (alert
             for key, alert in self._kvs.items()
                 if predicate(key, alert))
-
 # TODO: Implement async alert storage after
 #       moving from threads to asyncio
 #
@@ -181,15 +201,25 @@ class AlertMonitor(object):
         This is a callback function which will receive
         a message from the alert plugin as a dictionary.
         The message is already convrted to CSM schema.
-            1. Store the alert to Alert DB.
-            2. Publish the alert over web sockets.
-            3. Return a boolean value to signal whether the plugin
+            1. Resolve the alerts.
+            2. Store the alert to Alert DB.
+            3. Publish the alert over web sockets.
+            4. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
-        alert = Alert(message)
-        self._storage.store(alert)
-        self._publish(alert)
-        return True
+        try:
+            alert = Alert(message)
+            """
+            Before storing the alert let us fisrt try to resolve it.
+            We will only resolve the alert if it is a good one.
+            """
+            if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
+                alert.resolve(self._storage)
+            self._storage.store(alert)
+            self._publish(alert)
+        except Exception as e:
+            Log.exception(e)
+        return False
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
