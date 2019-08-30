@@ -114,7 +114,7 @@ class AlertsCommand(Command):
                               choices=['show', 'acknowledge'])
         sbparser.add_argument('-d', help='Seconds', dest='duration', nargs='?',
                               default="60s")
-        sbparser.add_argument('-c', help='No. of Alerts', dest='no_of_alerts',
+        sbparser.add_argument('-c', help='No. of Alerts', dest='limit',
                               nargs='?', default=1000)
         sbparser.add_argument('-a', help='Display All Alerts', dest='all',
                               action='store_const', default='false', const='true')
