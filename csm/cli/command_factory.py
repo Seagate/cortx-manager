@@ -20,7 +20,6 @@
 import argparse, sys
 from csm.cli.commands import SupportBundleCommand
 from csm.cli.commands import EmailConfigCommand
-from csm.cli.commands import SetupCommand
 from csm.cli.commands import AlertsCommand
 
 class CommandFactory(object):
@@ -29,8 +28,7 @@ class CommandFactory(object):
     a generic skeleton.
     """
 
-    commands = {SetupCommand, SupportBundleCommand, EmailConfigCommand,
-                AlertsCommand}
+    commands = {SupportBundleCommand, EmailConfigCommand, AlertsCommand}
 
     @staticmethod
     def get_command(argv):

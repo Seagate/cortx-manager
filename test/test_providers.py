@@ -63,7 +63,8 @@ def test1(args):
     # Confirm bundle is created
     response = tp.list()
     bundle_list = response.output().split('\n')
-    bundle_root = Conf.get(const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
+    bundle_root = Conf.get(const.CSM_GLOBAL_INDEX,
+        const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
     bundle_path = os.path.join(bundle_root, '%s.tgz' %bundle_name)
     found = False
     for bundle_spec in bundle_list:

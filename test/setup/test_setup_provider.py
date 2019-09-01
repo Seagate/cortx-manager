@@ -21,18 +21,28 @@ import sys, os
 import traceback
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.cluster import Cluster
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
 from csm.common.log import Log
-from csm.core.api.api import CsmApi
+from csm.core.agent.api import CsmApi
+from csm.core.providers.providers import Request, Response
+from csm.core.providers.setup_provider import SetupProvider
 
-class TestSetupProvider(TestProvider):
+class TestSetupProvider:
     def __init__(self):
-        super(TestSetupProvider, self).__init__(const.CSM_SETUP_CMD)
+        self._cluster = CsmApi.get_cluster()
+        self._provider = SetupProvider(self._cluster)
 
-    def setup_csm(self, action, args):
-        return self.process(action, args)
+    def process(self, cmd, args):
+        self._response = None
+        request = Request(cmd, args)
+        self._provider.process_request(request, self._process_response)
+        while self._response == None:
+            time.sleep(const.RESPONSE_CHECK_INTERVAL)
+        return self._response
+
+    def _process_response(self, response):
+        self._response = response
 
 def init(args):
     pass
@@ -48,8 +58,7 @@ def test1(args):
 
     # Init Component
     Log.console('Initalizing CSM Component ...')
-    response = tp.setup_csm('init', arg_list)
-
+    response = tp.process('init', arg_list)
     if response.rc() != 0: raise TestFailed('%s' %response.output())
     Log.console('Init CSM: response=%s' %response)
 
