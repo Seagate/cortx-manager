@@ -21,64 +21,104 @@
 
 import abc, argparse
 from csm.core.blogic import const
+from csm.cli.csm_client import Output
 
-class Command(object):
+class Command:
     """ Base class for all commands supported by RAS CLI """
 
-    def __init__(self, args):
+    def __init__(self, action, options, args):
+        self._action = action
+        self._options = options
         self._args = args
+        self._method = {}
+
+    def name(self):
+        return self._name
 
     def action(self):
-        return self._args.action
+        return self._action
+
+    def options(self):
+        return self._options
 
     def args(self):
         return self._args
 
+    def method(self, action):
+        return self._method.get(action, 'get')
+
+    def process_response(self, response, out, err):
+        """Process Response as per display method in format else normal display"""
+        output_obj = Output(response)
+        return output_obj.dump(out, err,
+                               headers=self._headers, filters=self._filter,
+                               output_format=self._options.get('format', None))
+
 class SetupCommand(Command):
-    """ Contains funtionality to initialization CSM """
+    """ Contains functionality to initialization CSM """
 
-    def __init__(self, args):
-        super(SetupCommand, self).__init__(args)
-
-    def name(self):
-        return const.CSM_SETUP_CMD
+    _name = const.CSM_SETUP_CMD
 
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.CSM_SETUP_CMD, help='Setup csm.')
-        sbparser.add_argument('action', help='action', choices=const.CSM_SETUP_ACTIONS)
+        sbparser.add_argument('action', help='action',
+                              choices=const.CSM_SETUP_ACTIONS)
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=SetupCommand)
 
 class SupportBundleCommand(Command):
-    """ Contains funtionality to handle support bundle """
+    """ Contains functionality to handle support bundle """
 
-    def __init__(self, args):
-        super(SupportBundleCommand, self).__init__(args)
-
-    def name(self):
-        return const.SUPPORT_BUNDLE
+    _name = const.SUPPORT_BUNDLE
 
     @staticmethod
     def add_args(parser):
-        sbparser = parser.add_parser(const.SUPPORT_BUNDLE, help='Create, list or delete support bundle.')
-        sbparser.add_argument('action', help='action', choices=['create', 'list', 'delete'])
+        sbparser = parser.add_parser(const.SUPPORT_BUNDLE,
+                                     help='Create, list or delete support bundle.')
+        sbparser.add_argument('action', help='action',
+                              choices=['create', 'list', 'delete'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=SupportBundleCommand)
 
 class EmailConfigCommand(Command):
-    """ Contains funtionality to handle Email Configuration """
+    """ Contains functionality to handle Email Configuration """
 
-    def __init__(self, args):
-        super(EmailConfigCommand, self).__init__(args)
-
-    def name(self):
-        return const.EMAIL_CONFIGURATION
+    _name = const.EMAIL_CONFIGURATION
 
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.EMAIL_CONFIGURATION,
-            help='Perform | reset  email configuration, show, subscribe or unsubscribe for email alerts.')
-        sbparser.add_argument('action', help='action', choices=['config', 'reset', 'show', 'subscribe', 'unsubscribe'])
+                                     help='Perform | reset  email configuration, \
+                                     show, subscribe or unsubscribe for email \
+                                     alerts.')
+        sbparser.add_argument('action', help='action',
+                              choices=['config', 'reset', 'show', 'subscribe',
+                                       'unsubscribe'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=EmailConfigCommand)
+
+class AlertsCommand(Command):
+    """ Contains functionality to handle Alerts """
+
+    _name = const.ALERTS_COMMAND
+    _method = {'show': 'get'}
+    _headers = const.ALERTS_CLI_HEADERS
+    _filter = const.ALERTS_COMMAND
+
+    @staticmethod
+    def add_args(parser):
+        sbparser = parser.add_parser(const.ALERTS_COMMAND,
+                                     help='Show | Acknowledge system alerts')
+        sbparser.add_argument('action', help='Action',
+                              choices=['show', 'acknowledge'])
+        sbparser.add_argument('-d', help='Seconds', dest='duration', nargs='?',
+                              default="60s")
+        sbparser.add_argument('-c', help='No. of Alerts', dest='limit',
+                              nargs='?', default=1000)
+        sbparser.add_argument('-a', help='Display All Alerts', dest='all',
+                              action='store_const', default='false', const='true')
+        sbparser.add_argument('-f', help='Format', dest='format', nargs='?',
+                              default='table', choices=['json', 'xml', 'table'])
+        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
+        sbparser.set_defaults(command=AlertsCommand)

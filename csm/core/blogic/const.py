@@ -1,17 +1,24 @@
 # Commands
 CSM_SETUP_CMD = "csm_setup"
-CSM_SETUP_ACTIONS = ["init"]
-SUPPORT_BUNDLE = "support_bundle"
-EMAIL_CONFIGURATION = "email"
-
+CSM_SETUP_ACTIONS = ['init']
+SUPPORT_BUNDLE = 'support_bundle'
+EMAIL_CONFIGURATION = 'email'
+ALERTS_COMMAND = 'alerts'
+ALERTS_CLI_HEADERS = {'id': 'Alert Id',
+                      'health': 'Health',
+                      'description': 'Description',
+                      'severity': 'Severity',
+                      'state': 'State',
+                      'acknowledge': 'Acknowledged',
+                      'resolved': 'Resolved'}
 # CSM Agent Port
-CSM_AGENT_PORT=8082
+CSM_AGENT_PORT = 8082
 
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
 
 # File names
-SUMMARY_FILE = "summary.txt"
+SUMMARY_FILE = 'summary.txt'
 
 # Cluster states
 STATE_UP = 'up'
@@ -40,7 +47,7 @@ CONSUMER_TAG = 'AMQP_CONSUMER'
 INVENTORY_FILE = '/etc/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
-KEY_NODES  = 'nodes'
+KEY_NODES = 'nodes'
 TYPE_CMU = 'CMU'
 TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
@@ -53,8 +60,8 @@ SUPPORT_BUNDLE_ROOT='SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT='/opt/seagate/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
-USER='user'
-DEFAULT_USER='admin'
+USER = 'user'
+DEFAULT_USER = 'admin'
 
 # Non root user
 NON_ROOT_USER='csm'

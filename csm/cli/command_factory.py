@@ -17,9 +17,10 @@
  ****************************************************************************
 """
 
-import argparse
+import argparse, sys
 from csm.cli.commands import SupportBundleCommand
 from csm.cli.commands import EmailConfigCommand
+from csm.cli.commands import AlertsCommand
 
 class CommandFactory(object):
     """
@@ -27,7 +28,7 @@ class CommandFactory(object):
     a generic skeleton.
     """
 
-    commands = {SupportBundleCommand, EmailConfigCommand}
+    commands = {SupportBundleCommand, EmailConfigCommand, AlertsCommand}
 
     @staticmethod
     def get_command(argv):
@@ -39,8 +40,12 @@ class CommandFactory(object):
         parser = argparse.ArgumentParser(description='RAS CLI command')
         subparsers = parser.add_subparsers()
 
-        for command in CommandFactory.commands:
-            command.add_args(subparsers)
+        for each_command in CommandFactory.commands:
+            each_command.add_args(subparsers)
 
-        args = parser.parse_args(argv)
-        return args.command(args)
+        namespace = parser.parse_args(argv)
+        sys_module = sys.modules[__name__]
+        for attr in ['command', 'action', 'args']:
+            setattr(sys_module, attr, getattr(namespace, attr))
+            delattr(namespace, attr)
+        return command(action, vars(namespace), args)

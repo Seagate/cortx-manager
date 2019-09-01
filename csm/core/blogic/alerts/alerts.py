@@ -54,7 +54,7 @@ class Alert(object):
     def ispublished(self):
         return self._publushed
 
-    def get(self, **kwargs):
+    def show(self, **kwargs):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
 
