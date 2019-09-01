@@ -35,10 +35,7 @@ from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
-from csm.common.cluster import Cluster
 from csm.common.errors import CsmError
-from csm.common.ha_framework import PcsHAFramework
-from csm.core.blogic.csm_ha import CsmResourceAgent
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -54,17 +51,13 @@ class CsmApi(ABC):
         if not os.path.isfile(inventory_file):
             raise CsmError(errno.ENOENT, 'cluster config file %s does not exist' %inventory_file)
 
-        # Instantiation of cluster
-        _csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
-        _csm_ra = {
-            "csm_resource_agent": CsmResourceAgent(_csm_resources)
-        }
-        _ha_framework = PcsHAFramework(_csm_ra)
-        CsmApi._cluster = Cluster(inventory_file, _ha_framework)
-
     @staticmethod
     def get_cluster():
         return CsmApi._cluster
+
+    @staticmethod
+    def set_cluster(cluster):
+        CsmApi._cluster = cluster
 
     @staticmethod
     def process_request(command, request, callback=None):

@@ -28,7 +28,7 @@ def init(args):
     pass
 
 def test1(args={}):
-    val = Conf.get('dummy', 'default')
+    val = Conf.get(const.CSM_GLOBAL_INDEX, 'dummy', 'default')
     return True if val == 'default' else False
 
 def test2(args={}):

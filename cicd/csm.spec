@@ -24,6 +24,7 @@ exit 0
 
 %post
 CSM_DIR=/opt/seagate/csm
+ln -sf $CSM_DIR/conf/csm_setup.py /usr/bin/csm_setup
 ln -sf $CSM_DIR/cli/csmcli.py /usr/bin/csmcli
 ln -sf $CSM_DIR/core/agent/csm_agent.py /usr/bin/csm_agent
 CFG_DIR=$CSM_DIR/conf
@@ -41,6 +42,7 @@ exit 0
 
 %postun
 [ $1 -eq 1 ] && exit 0
+rm -f /usr/bin/csm_setup 2> /dev/null;
 rm -f /usr/bin/csmcli 2> /dev/null;
 rm -f /usr/bin/csm_web 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
