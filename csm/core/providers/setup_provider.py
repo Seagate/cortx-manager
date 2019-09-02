@@ -30,8 +30,9 @@ from csm.core.providers.providers import Provider, Request, Response
 class SetupProvider(Provider):
     """ Provider implementation for csm initialization """
 
-    def __init__(self, cluster):
+    def __init__(self, cluster, options):
         super(SetupProvider, self).__init__(const.CSM_SETUP_CMD, cluster)
+        self._options = options
         self._user = const.NON_ROOT_USER
         self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
@@ -65,7 +66,7 @@ class SetupProvider(Provider):
     def _validate_request(self, request):
         self._actions = const.CSM_SETUP_ACTIONS
         self._action = request.action()
-        self._force = True if 'force' in request.args() else False
+        self._force = self._options['f']
 
         if self._action not in self._actions:
             raise CsmError(errno.EINVAL, 'Invalid Action %s' % self._action)

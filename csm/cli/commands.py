@@ -64,6 +64,7 @@ class SetupCommand(Command):
         sbparser = parser.add_parser(const.CSM_SETUP_CMD, help='Setup csm.')
         sbparser.add_argument('action', help='action',
                               choices=const.CSM_SETUP_ACTIONS)
+        sbparser.add_argument('-f', help='force', action="store_true", default=False)
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=SetupCommand)
 
