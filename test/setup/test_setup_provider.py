@@ -30,8 +30,9 @@ from csm.core.providers.setup_provider import SetupProvider
 
 class TestSetupProvider:
     def __init__(self):
+        options = {'f':False}
         self._cluster = CsmApi.get_cluster()
-        self._provider = SetupProvider(self._cluster)
+        self._provider = SetupProvider(self._cluster, options)
 
     def process(self, cmd, args):
         self._response = None

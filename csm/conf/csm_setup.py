@@ -61,25 +61,29 @@ class CsmSetup:
         parser = argparse.ArgumentParser(description='CSM Setup CLI')
         subparsers = parser.add_subparsers()
         SetupCommand.add_args(subparsers)
-        args = parser.parse_args(self._args)
-        return args.command(args)
+        namespace = parser.parse_args(self._args)
+        sys_module = sys.modules[__name__]
+        for attr in ['command', 'action', 'args']:
+            setattr(sys_module, attr, getattr(namespace, attr))
+            delattr(namespace, attr)
+        return command(action, vars(namespace), args)
 
     def setup(self):
         ''' Parse args for csm_setup and execute cmd to print output '''
         self._cmd = self._get_command()
         self._response = None
-        self._request = Request(self._cmd.action(), self._cmd.args().args)
-        self.process_request(self._process_response)
+        self._request = Request(self._cmd.action(), self._cmd.args())
+        self.process_request(self._cmd.options(), self._process_response)
         while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
         if self._response.rc() != 0:
             sys.stdout.write('error(%d): ' %rc)
         sys.stdout.write('%s\n' %self._response.output())
         return self._response.rc()
 
-    def process_request(self, callback=None):
-        Log.info('command=%s action=%s args=%s' %(self._cmd.name(),
-            self._request.action(), self._request.args()))
-        self._providers = SetupProvider(self._cluster)
+    def process_request(self, options, callback=None):
+        Log.info('command=%s action=%s args=%s options=%s' %(self._cmd.name(),
+            self._request.action(), self._request.args(), options))
+        self._providers = SetupProvider(self._cluster, options)
         return self._providers.process_request(self._request, callback)
 
     def _process_response(self, response):
