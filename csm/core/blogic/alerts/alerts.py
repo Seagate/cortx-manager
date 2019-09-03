@@ -77,7 +77,7 @@ class Alert(object):
             self.data()['resolved'] = 1
             self.resolved()
 
-    def get(self, **kwargs):
+    def show(self, **kwargs):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
 

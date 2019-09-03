@@ -42,7 +42,7 @@ def test1(args={}):
     """ Use bundle provider to create a support bundle """
     cluster = Cluster(args[Const.INVENTORY_FILE])
 
-    components_file  = Conf.get(const.COMPONENTS_FILE, const.DEFAULT_COMPONENTS_FILE)
+    components_file  = const.COMPONENTS_CONF
     components = yaml.load(open(components_file, 'r').read())
 
     sb = SupportBundle(cluster, components)
@@ -57,7 +57,8 @@ def test1(args={}):
     # Confirm bundle is created
     bundle_list = sb.list()
     found = False
-    bundle_root = Conf.get(const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
+    bundle_root = Conf.get(const.CSM_GLOBAL_INDEX, const.SUPPORT_BUNDLE_ROOT,
+            const.DEFAULT_SUPPORT_BUNDLE_ROOT)
     bundle_path = os.path.join(bundle_root, '%s.tgz' %bundle_name)
     for bundle_spec in bundle_list:
         if bundle_path not in bundle_spec.split('\t'): continue

@@ -47,7 +47,7 @@ class Response(object):
 
     def __init__(self, rc=0, output=''):
         self._rc = int(rc)
-        self._output = str(output)
+        self._output = output
 
     def output(self):
         return self._output
@@ -97,7 +97,7 @@ class BundleProvider(Provider):
         super(BundleProvider, self).__init__(const.SUPPORT_BUNDLE, cluster)
         self._actions = ['create', 'delete', 'list']
 
-        components_file = Conf.get(const.COMPONENTS_FILE, const.DEFAULT_COMPONENTS_FILE)
+        components_file = const.COMPONENTS_CONF
         self._components = yaml.load(open(components_file).read())
         self._support_bundle = SupportBundle(cluster, self._components)
 

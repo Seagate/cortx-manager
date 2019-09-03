@@ -44,7 +44,8 @@ class SupportBundle(object):
 
         self._bundle_root = bundle_root
         if self._bundle_root is None:
-            self._bundle_root = Conf.get(const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
+            self._bundle_root = Conf.get(const.CSM_GLOBAL_INDEX,
+                const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
 
     def create(self, bundle_name=None):
         """
