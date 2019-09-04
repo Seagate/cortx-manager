@@ -67,7 +67,7 @@ class Channel(metaclass=ABCMeta):
     
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
-  
+
 class SSHChannel(Channel):
     """
     Represents ssh channel to a node for communication

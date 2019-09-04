@@ -82,4 +82,5 @@ class SetupProvider(Provider):
                     component.init(self._force)
             return Response(0, 'CSM initalized successfully !!!')
         except Exception as e:
-            raise CsmError(errno.EINVAL, 'Error: %s' % e)
+            Log.error("CSM initalized failed: %s" %e)
+            return Response(errno.EINVAL, 'CSM initalized failed !!!')
