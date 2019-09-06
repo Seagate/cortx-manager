@@ -1,0 +1,17 @@
+{
+    "fan":
+    {
+        "time": "created_time",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.status": "status",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.enclosure-id": "enclosure_id",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.health-reason": "description",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.health": "health",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.location": "location",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.health-recommendation": "health_recommendation",
+        "message.sensor_response_type.enclosure_fan_module_alert.alert_type": "state",
+        "message.sensor_response_type.enclosure_fan_module_alert.extended_info.fan_module.position": "extended_info.fan_module.position",
+        "message.sensor_response_type.enclosure_fan_module_alert.extended_info.fan_module.durable-id": "extended_info.fan_module.durable-id",
+        "message.sensor_response_type.enclosure_fan_module_alert.resource_type": "resource_type",
+        "message.sensor_response_type.enclosure_fan_module_alert.info.fan_module.fans": "extended_info.info.fans"
+    }
+}

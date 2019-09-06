@@ -69,38 +69,26 @@ NON_ROOT_USER_PASS='csm'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
-FAN_ALERT = 'enclosure_fan_module_alert'
 GOOD_ALERT = ['insertion', 'fault_resolved']
 BAD_ALERT = ['missing', 'fault']
 ALERT_ID = 'id'
 ALERT_TYPE = 'type'
 ALERT_UUID = 'alert_uuid'
-ALERT_STATUS = 'status'
-ALERT_HW = 'hw'
 ALERT_ENCLOSURE_ID = 'enclosure_id'
-IN_ALERT_ENCLOSURE_ID = 'enclosure-id'
 ALERT_MODULE_NAME = 'module_name'
-ALERT_DESCRIPTION = 'description'
-ALERT_HEALTH = 'health'
-ALERT_HEALTH_REASON = 'health-reason'
-ALERT_HEALTH_RECOMMENDATION = 'health_recommendation'
-IN_ALERT_HEALTH_RECOMMENDATION = 'health-recommendation'
-ALERT_LOCATION = 'location'
 ALERT_RESOLVED = 'resolved'
 ALERT_ACKNOWLEDGED = 'acknowledged'
 ALERT_SEVERITY = 'severity'
-ALERT_INFO = 'info'
-ALERT_FAN_MODULE = 'fan_module'
-ALERT_STATE = 'state'
-ALERT_EXTENDED_INFO = 'extended_info'
 ALERT_RESOURCE_TYPE = 'resource_type'
-ALERT_OTHER_DETAILS = 'other_details'
 ALERT_MODULE_TYPE = 'module_type'
 ALERT_UPDATED_TIME = 'updated_time'
 ALERT_CREATED_TIME = 'created_time'
 ALERT_INT_DEFAULT = -1
 ALERT_TRUE = 1
 ALERT_FALSE = 0
+ALERT_SENSOR_TYPE = 'sensor_response_type'
+ALERT_MESSAGE = 'message'
 
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
+ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'

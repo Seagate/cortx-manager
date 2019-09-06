@@ -93,14 +93,7 @@
     },
     "extended_info": {
       "type": "object",
-      "required": true,
-      "properties": {
-        "resource_type": {
-          "type": "string",
-          "required": true,
-          "description": "Describes the resource type. (e.g. fru etc.)"
-        }
-      }
+      "required": false
     }
   }
 }
