@@ -30,7 +30,10 @@ from csm.common.errors import CsmError
 from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.test.common import TestFailed, Const
+from csm.core.blogic.csm_ha import CsmResourceAgent
+from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
+from csm.core.agent.api import CsmApi
 
 def tmain(argp, argv):
     # Import required TEST modules
@@ -65,6 +68,19 @@ def tmain(argp, argv):
         args[Const.INVENTORY_FILE] = inventory_file
     except TestFailed as e:
         print('Test Initialization failed. %s' %e)
+        sys.exit(errno.ENOENT)
+
+    # Cluster Instantiation
+    try:
+        csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
+        csm_ra = {
+            "csm_resource_agent": CsmResourceAgent(csm_resources)
+        }
+        ha_framework = PcsHAFramework(csm_ra)
+        cluster = Cluster(const.INVENTORY_FILE, ha_framework)
+        CsmApi.set_cluster(cluster)
+    except TestFailed as e:
+        print('Test Initialization of cluster failed. %s' %e)
         sys.exit(errno.ENOENT)
 
     # Prepare to run the test, all or subset per command line args

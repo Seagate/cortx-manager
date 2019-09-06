@@ -80,7 +80,8 @@ class SSHChannel(Channel):
         self.allow_agent = True
         self._ssh = None
         self._node = node
-        self._ssh_timeout = Conf.get(const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
+        self._ssh_timeout = Conf.get(const.CSM_GLOBAL_INDEX,
+                const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
         for key, value in args.items():
             setattr(self, key, value)
 
