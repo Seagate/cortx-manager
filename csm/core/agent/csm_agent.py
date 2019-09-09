@@ -36,7 +36,8 @@ class CsmAgent:
     @staticmethod
     def _daemonize():
         """ Change process into background service """
-
+        if not os.path.isdir("/var/run/csm/"):
+            os.makedirs('/var/run/csm/')
         try:
             # Check and Create a PID file for systemd
             pidfile = "/var/run/csm/csm_agent.pid"
@@ -91,7 +92,6 @@ if __name__ == '__main__':
         from csm.common.payload import Yaml
         from csm.core.blogic import const
         from csm.core.blogic.alerts.alerts import AlertMonitor
-        from csm.eos.plugins.alert import AlertPlugin
         from csm.core.agent.api import CsmRestApi
 
         CsmAgent.init()
