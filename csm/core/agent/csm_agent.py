@@ -6,7 +6,9 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-from csm.core.blogic.alerts.alerts import SyncAlertStorage, AlertsService
+from csm.core.repositories.alerts import AlertSimpleStorage
+from csm.core.blogic.services.alerts import AlertsAppService, \
+                                            AlertMonitorService
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 # Global options for debugging purposes
@@ -31,15 +33,15 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
-        alerts_storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
+        alerts_storage = AlertSimpleStorage(SyncInMemoryKeyValueStorage())
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
-        alerts_service = AlertsService(alerts_storage)
+        alerts_service = AlertsAppService(alerts_storage)
 
         CsmRestApi.init(alerts_service)
         pm = import_plugin_module('alert')
 
-        CsmAgent.alert_monitor = AlertMonitor(alerts_storage,
+        CsmAgent.alert_monitor = AlertMonitorService(alerts_storage,
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 

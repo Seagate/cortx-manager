@@ -57,3 +57,24 @@ class Alert(object):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented')
 
+
+class IAlertStorage(ABC):
+    """
+        Interface for Alerts repository
+    """
+    @abstractmethod
+    async def store(alert):
+        pass
+
+    @abstractmethod
+    async def retrieve(alert_id):
+        pass
+
+    @abstractmethod
+    async def update(alert):
+        pass
+
+    @abstractmethod
+    async def retrieve_all():
+        pass
+

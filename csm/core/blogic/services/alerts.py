@@ -24,7 +24,7 @@ import asyncio
 import re
 from datetime import datetime, timedelta
 from typing import Dict
-from csm.core.repositories.alerts import SyncAlertStorage
+from csm.core.blogic.models.alerts import IAlertStorage, Alert
 
 from csm.common.errors import CsmNotFoundError, CsmError
 
@@ -41,7 +41,7 @@ class AlertsAppService:
     # TODO: In the case of alerts, we probably do not need another alert-related
     # service
 
-    def __init__(self, storage: SyncAlertStorage):
+    def __init__(self, storage: IAlertStorage):
         self._storage = storage
 
     async def _call_nonasync(self, function, *args):
@@ -67,7 +67,7 @@ class AlertsAppService:
                 "acknowledged" - boolean
         :return:
         """
-        alert = await self._call_nonasync(self._storage.retrieve, alert_id)
+        alert = await self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert was not found")
 
@@ -88,7 +88,7 @@ class AlertsAppService:
 
             alert.data()["acknowledged"] = new_value
 
-        await self._call_nonasync(self._storage.update, alert)
+        await self._storage.update(alert)
         return alert.data()
 
     async def fetch_all_alerts(self, duration, direction, sort_by, offset,
@@ -104,7 +104,7 @@ class AlertsAppService:
         """
         # TODO: The storage must provide a function to fetch alerts with respect to
         # parameters and orderings requried by the business logic.
-        alerts_obj = await self._call_nonasync(self.service.fetch_all_alerts)
+        alerts_obj = await self._storage.retrieve_all())
         if alerts_obj:
             reverse = True if direction == 'desc' else False
             alerts_obj = sorted(alerts_obj, key=lambda item: item.data()[sort_by],
@@ -143,7 +143,7 @@ class AlertsAppService:
             :returns: Alert object or None
         """
         # This method is for debugging purposes only
-        alert = await self._call_nonasync(self._storage.retrieve, alert_id))
+        alert = await self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert is not found")
         return alert.data()
@@ -161,7 +161,7 @@ class AlertMonitorService(object):
     web server. 
     """
 
-    def __init__(self, storage: SyncAlertStorage, plugin, alert_handler_cb):
+    def __init__(self, storage: IAlertStorage, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
@@ -170,6 +170,7 @@ class AlertMonitorService(object):
         self._monitor_thread = None
         self._thread_started = False
         self._thread_running = False
+        self._loop = asyncio.get_event_loop()
         self._storage = storage
 
     def init(self):
@@ -216,6 +217,18 @@ class AlertMonitorService(object):
         except Exception as e:
             Log.exception(e)
 
+    def save_alert(self, message) -> Alert:
+        alert = Alert(message)
+        alert_task = self._loop.create_task(self._storage.store(alert))
+
+        # This implementation uses threads, but storage is supposed to be async
+        # So we put the task onto the main event loop and wait for its completion        
+        event = Event()
+        alert_task.add_done_callback(event.set)
+        event.wait()
+
+        return alert_task.result()
+
     def _consume(self, message):
         """
         This is a callback function which will receive
@@ -226,8 +239,7 @@ class AlertMonitorService(object):
             3. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
-        alert = Alert(message)
-        self._storage.store(alert)
+        alert = self.save_alert(message)
         self._publish(alert)
         return True
 

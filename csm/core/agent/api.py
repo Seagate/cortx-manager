@@ -97,7 +97,7 @@ class CsmRestApi(CsmApi, ABC):
             middlewares=[CsmRestApi.rest_middleware]
         )
 
-        alerts_ctrl = AlertsRestController(AlertsAppService(alerts_service))
+        alerts_ctrl = AlertsRestController(alerts_service)
         add_routes(CsmRestApi, alerts_ctrl)
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)

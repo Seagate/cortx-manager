@@ -1,30 +1,31 @@
+from csm.core.blogic.models.alerts import IAlertStorage
 
 
-class SyncAlertStorage:
+class AlertSimpleStorage(IAlertStorage):
     def __init__(self, kvs):
         self._kvs = kvs
         self._id = 0
 
-    def _nextid(self):
+    async def _nextid(self):
         result = self._id
         self._id += 1
         return result
 
-    def store(self, alert):
+    async def store(self, alert):
         key = str(self._nextid())
         alert.store(key)
         self._kvs.put(key, alert)
 
-    def retrieve(self, key):
+    async def retrieve(self, key):
         return self._kvs.get(key)
 
-    def retrieve_all(self):
+    async def retrieve_all(self):
         return list(map(lambda x: x[1], self._kvs.items()))
 
-    def update(self, alert):
+    async def update(self, alert):
         self._kvs.put(alert.key(), alert)
 
-    def select(self, predicate):
+    async def select(self, predicate):
         return (alert
                 for key, alert in self._kvs.items()
                 if predicate(key, alert))
