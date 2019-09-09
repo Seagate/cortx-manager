@@ -24,11 +24,13 @@ import asyncio
 import re
 from datetime import datetime, timedelta
 from typing import Dict
+from csm.core.repositories.alerts import SyncAlertStorage
 
 from csm.common.errors import CsmNotFoundError, CsmError
-from csm.core.blogic.alerts.alerts import AlertsService, ALERTS_ERROR_NOT_FOUND
 
-ALERT_ERROR_INVALID_DURATION = "alert_invalid_duration"
+ALERTS_ERROR_INVALID_DURATION = "alert_invalid_duration"
+ALERTS_ERROR_NOT_FOUND="alerts_not_found"
+ALERTS_ERROR_NOT_RESOLVED="alerts_not_resolved"
 
 
 class AlertsAppService:
@@ -39,8 +41,8 @@ class AlertsAppService:
     # TODO: In the case of alerts, we probably do not need another alert-related
     # service
 
-    def __init__(self, service: AlertsService):
-        self.service = service
+    def __init__(self, storage: SyncAlertStorage):
+        self._storage = storage
 
     async def _call_nonasync(self, function, *args):
         """
@@ -48,22 +50,46 @@ class AlertsAppService:
             It won't be needed once we switch to asynchronous code everywhere.
 
             :param function: A callable
-            :param args: Positional arguments that will be passed to the function
+            :param args: Positional arguments that will be passed to the
+                         function
             :returns: the result returned by 'function'
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, function, *args)
 
-    async def update_alert(self, alert_id, data):
+    async def update_alert(self, alert_id, fields):
         """
         Update the Data of Specific Alerts
         :param alert_id: id for the alert
-        :param data: data to be updated for the alert
+        :param fields: A dictionary containing fields to update.
+                Currently it supports "comment" and "acknowledged" fields only.
+                "comment" - string, can be empty
+                "acknowledged" - boolean
         :return:
         """
-        result = await self._call_nonasync(self.service.update_alert, alert_id,
-                                           data)
-        return result.data()
+        alert = await self._call_nonasync(self._storage.retrieve, alert_id)
+        if not alert:
+            raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert was not found")
+
+        if "comment" in fields:
+            # TODO: Alert should contain such fields directly, not as a
+            #   dictionary accessible by data() method
+            alert.data()["comment"] = fields["comment"]
+
+        if "acknowledged" in fields:
+            # TODO: We need some common code that does such conversions
+            new_value = fields["acknowledged"] == True \
+                        or fields["acknowledged"] == "1" \
+                        or fields["acknowledged"] == "true"
+
+            if new_value and not alert.data()["resolved"]:
+                raise CsmError(ALERTS_ERROR_NOT_RESOLVED,
+                        "Unresolved alerts cannot be acknowledged")
+
+            alert.data()["acknowledged"] = new_value
+
+        await self._call_nonasync(self._storage.update, alert)
+        return alert.data()
 
     async def fetch_all_alerts(self, duration, direction, sort_by, offset,
                                page_limit) -> Dict:
@@ -100,7 +126,7 @@ class AlertsAppService:
                            alerts_obj))
             if offset and int(offset) >= 1:
                 offset = int(offset)
-                if page_limit  and int(page_limit) > 0:
+                if page_limit and int(page_limit) > 0:
                     page_limit = int(page_limit)
                     alerts_obj = [alerts_obj[i:i + page_limit] for i in
                                   range(0, len(alerts_obj), page_limit)]
@@ -110,8 +136,101 @@ class AlertsAppService:
         return {"total_records": len(alerts_obj), "alerts": alerts_obj.data()}
 
     async def fetch_alert(self, alert_id):
+        """
+            Fetch a single alert by its key
+
+            :param str alert_id: A unique identifier of the requried alert
+            :returns: Alert object or None
+        """
         # This method is for debugging purposes only
-        alert = await self._call_nonasync(self.service.fetch_alert, alert_id)
+        alert = await self._call_nonasync(self._storage.retrieve, alert_id))
         if not alert:
             raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert is not found")
         return alert.data()
+
+
+class AlertMonitorService(object):
+    """
+    Alert Monitor works with AmqpComm to monitor alerts. 
+    When Alert Monitor receives a subscription request, it scans the DB and 
+    sends all pending alerts. It is assumed currently that there can be only 
+    one subscriber at any given point of time. 
+    Then it waits for AmqpComm to notice if there are any new alert. 
+    Alert Monitor takes action on the received alerts using a callback. 
+    Actions include (1) storing on the DB and (2) sending to subscribers, i.e.
+    web server. 
+    """
+
+    def __init__(self, storage: SyncAlertStorage, plugin, alert_handler_cb):
+        """
+        Initializes the Alert Plugin
+        """
+        self._alert_plugin = plugin
+        self._handle_alert = alert_handler_cb
+        self._monitor_thread = None
+        self._thread_started = False
+        self._thread_running = False
+        self._storage = storage
+
+    def init(self):
+        """
+        This function will scan the DB for pending alerts and send it over the
+        back channel.
+        """
+
+        def nonpublished(_, alert):
+            return not alert.ispublished()
+
+        for alert in self._storage.select(nonpublished):
+            self._publish(alert)
+
+    def _monitor(self):
+        """
+        This method acts as a thread function. 
+        It will monitor the alert plugin for alerts.
+        This method passes consume_alert as a callback function to alert plugin.
+        """
+        self._thread_running = True
+        self._alert_plugin.init(callback_fn=self._consume)
+        self._alert_plugin.process_request(cmd='listen')
+
+    def start(self):
+        """
+        This method creats and starts an alert monitor thread
+        """
+        try:
+            if not self._thread_running and not self._thread_started:
+                self._monitor_thread = threading.Thread(target=self._monitor,
+                                                        args=())
+                self._monitor_thread.start()
+                self._thread_started = True
+        except Exception as e:
+            Log.exception(e)
+
+    def stop(self):
+        try:
+            self._alert_plugin.stop()
+            self._monitor_thread.join()
+            self._thread_started = False
+            self._thread_running = False
+        except Exception as e:
+            Log.exception(e)
+
+    def _consume(self, message):
+        """
+        This is a callback function which will receive
+        a message from the alert plugin as a dictionary.
+        The message is already convrted to CSM schema.
+            1. Store the alert to Alert DB.
+            2. Publish the alert over web sockets.
+            3. Return a boolean value to signal whether the plugin
+               should acknowledge the alert to the RabbitMQ.
+        """
+        alert = Alert(message)
+        self._storage.store(alert)
+        self._publish(alert)
+        return True
+
+    def _publish(self, alert):
+        if self._handle_alert(alert.data()):
+            alert.publish()
