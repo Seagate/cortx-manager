@@ -32,6 +32,7 @@ from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 
+
 class CsmClient:
     """ Base class for invoking business logic functionality """
 
@@ -43,6 +44,7 @@ class CsmClient:
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
+
 
 class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
@@ -62,7 +64,8 @@ class CsmApiClient(CsmClient):
         self.process_request(cmd.name(), cmd.action(), cmd.options(),
                              cmd.options(),
                              cmd.args(), cmd.method(cmd.action()))
-        while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
+        while self._response == None:
+            time.sleep(const.RESPONSE_CHECK_INTERVAL)
 
         # TODO - Examine results
         # TODO - Return (return_code, output)
@@ -74,6 +77,7 @@ class CsmApiClient(CsmClient):
 
     def process_response(self, response):
         self._response = response
+
 
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
@@ -99,6 +103,7 @@ class CsmRestClient(CsmClient):
     def __cleanup__(self):
         self._loop.close()
 
+
 class RestRequest(Request):
     """Cli Rest Request Class """
 
@@ -114,8 +119,13 @@ class RestRequest(Request):
         async with self._session.get(self._url, params=self._options) as response:
             return await response.text(), response.status
 
+    async def _patch(self) -> tuple:
+        async with self._session.patch(self._url, params=self._options) as response:
+            return await response.text(), response.status
+
     async def get_request(self) -> str:
         return await getattr(self, f'_{self._method}')()
+
 
 class Output:
     """CLI Response Display Class"""

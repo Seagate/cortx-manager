@@ -19,9 +19,11 @@
  ****************************************************************************
 """
 
-import abc, argparse
+import abc
+import argparse
 from csm.core.blogic import const
 from csm.cli.csm_client import Output
+
 
 class Command:
     """ Base class for all commands supported by RAS CLI """
@@ -54,6 +56,7 @@ class Command:
                                headers=self._headers, filters=self._filter,
                                output_format=self._options.get('format', None))
 
+
 class SetupCommand(Command):
     """ Contains functionality to initialization CSM """
 
@@ -64,9 +67,11 @@ class SetupCommand(Command):
         sbparser = parser.add_parser(const.CSM_SETUP_CMD, help='Setup csm.')
         sbparser.add_argument('action', help='action',
                               choices=const.CSM_SETUP_ACTIONS)
-        sbparser.add_argument('-f', help='force', action="store_true", default=False)
+        sbparser.add_argument('-f', help='force',
+                              action="store_true", default=False)
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=SetupCommand)
+
 
 class SupportBundleCommand(Command):
     """ Contains functionality to handle support bundle """
@@ -81,6 +86,7 @@ class SupportBundleCommand(Command):
                               choices=['create', 'list', 'delete'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=SupportBundleCommand)
+
 
 class EmailConfigCommand(Command):
     """ Contains functionality to handle Email Configuration """
@@ -99,11 +105,12 @@ class EmailConfigCommand(Command):
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=EmailConfigCommand)
 
+
 class AlertsCommand(Command):
     """ Contains functionality to handle Alerts """
 
     _name = const.ALERTS_COMMAND
-    _method = {'show': 'get'}
+    _method = {'show': 'get', 'acknowlede': 'patch'}
     _headers = const.ALERTS_CLI_HEADERS
     _filter = const.ALERTS_COMMAND
 
