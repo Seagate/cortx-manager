@@ -1,6 +1,7 @@
 import sys
 import pytest
 import asyncio
+import time
 
 
 from importlib import import_module
@@ -14,41 +15,42 @@ def setup_redirection():
 
 
 @pytest.fixture(scope='module')
-def server():
+def server(loop):
     from csm.core.blogic import const
 
     def start_server():
-        async def hello(request):
-            print(555)
-            return web.Response(text='response')
+        async def r_get(request):
+            return web.Response(text='{"response":"show"}')
+
+        async def r_patch(request):
+            return web.Response(text='{"response":"acknowledge"}')
 
         app = web.Application()
-        app.add_routes([web.get('/api/alerts', hello)])
+        app.add_routes([web.get('/api/alerts', r_get),
+                        web.patch('/api/alerts', r_patch
+                                  )])
         web.run_app(app,
                     host='localhost',
                     port=const.CSM_AGENT_PORT)
 
     p = Process(target=start_server)
     p.start()
+
+    # Wait for server to start
+    time.sleep(2)
+
     yield
+
     p.terminate()
 
 
 @pytest.fixture(scope='module')
-def scm_client():
+def csm_client():
     from csm.cli.csm_client import CsmRestClient
     from csm.core.blogic import const
 
     client = CsmRestClient(f"http://localhost:{const.CSM_AGENT_PORT}/api")
     return client
-
-
-@pytest.fixture(scope='module')
-def command():
-    from csm.cli.command_factory import CommandFactory
-    command = CommandFactory.get_command(['alerts', 'show'])
-
-    return command
 
 
 @pytest.fixture(scope='module')

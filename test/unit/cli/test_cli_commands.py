@@ -1,5 +1,6 @@
+def test_get_request(loop, setup_redirection, server, csm_client, command):
+    from csm.cli.command_factory import CommandFactory
 
-
-def test_cli(loop, setup_redirection, server, scm_client, command):
-    response = loop.run_until_complete(scm_client.call(command))
-    a = 10
+    command = CommandFactory.get_command(['alerts', 'show'])
+    response = loop.run_until_complete(csm_client.call(command))
+    assert response.output()['response'] == command._action == 'show'

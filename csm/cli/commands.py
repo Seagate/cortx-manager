@@ -110,7 +110,7 @@ class AlertsCommand(Command):
     """ Contains functionality to handle Alerts """
 
     _name = const.ALERTS_COMMAND
-    _method = {'show': 'get', 'acknowlede': 'patch'}
+    _method = {'show': 'get', 'acknowledge': 'patch'}
     _headers = const.ALERTS_CLI_HEADERS
     _filter = const.ALERTS_COMMAND
 
