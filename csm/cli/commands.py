@@ -34,19 +34,23 @@ class Command:
         self._args = args
         self._method = {}
 
+    @property
     def name(self):
         return self._name
 
+    @property
     def action(self):
         return self._action
 
+    @property
     def options(self):
         return self._options
 
+    @property
     def args(self):
         return self._args
 
-    def method(self, action):
+    def get_method(self, action):
         return self._method.get(action, 'get')
 
     def process_response(self, response, out, err):
@@ -114,6 +118,11 @@ class AlertsCommand(Command):
     _headers = const.ALERTS_CLI_HEADERS
     _filter = const.ALERTS_COMMAND
 
+    def __init__(self, action, options, args):
+        super().__init__(action, options, args)
+        self._method = AlertsCommand._method
+        self.update_options()
+
     @staticmethod
     def add_args(parser):
         sbparser = parser.add_parser(const.ALERTS_COMMAND,
@@ -130,3 +139,24 @@ class AlertsCommand(Command):
                               default='table', choices=['json', 'xml', 'table'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=AlertsCommand)
+
+    def validate_command(self):
+        if self._action == 'acknowledge':
+            if len(self.args) != 2:
+                raise AttributeError(
+                    'For "acknowledge" action you must specify "id" and "comment" arguments')
+            try:
+                int(self.args[0])
+            except ValueError:
+                raise AttributeError(
+                    f'"id" argument must be integer, got {self.args[0]} instead')
+            if not isinstance(self.args[1], str):
+                raise AttributeError(
+                    f'"comment" argument must be string, got {self.args[1]} instead')
+
+    def update_options(self):
+        self.validate_command()
+
+        if self._action == 'acknowledge':
+            self._options['alert_id'] = self.args[0]
+            self._options['comment'] = self.args[1]

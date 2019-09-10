@@ -10,12 +10,12 @@ from multiprocessing import Process
 
 
 @pytest.fixture(scope='module')
-def setup_redirection():
+def imprt_redirection():
     sys.modules['csm'] = import_module('csm.src')
 
 
 @pytest.fixture(scope='module')
-def server(loop):
+def server():
     from csm.core.blogic import const
 
     def start_server():
@@ -36,7 +36,8 @@ def server(loop):
     p = Process(target=start_server)
     p.start()
 
-    # Wait for server to start
+    # Wait for server to start.
+    # Better to put in event loop instead of a separate process later.
     time.sleep(2)
 
     yield

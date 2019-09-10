@@ -61,9 +61,9 @@ class CsmApiClient(CsmClient):
         TODO: Add a timeout.
         """
         self._response = None
-        self.process_request(cmd.name(), cmd.action(), cmd.options(),
-                             cmd.options(),
-                             cmd.args(), cmd.method(cmd.action()))
+        self.process_request(cmd.name, cmd.action, cmd.options,
+                             cmd.options,
+                             cmd.args, cmd.get_method(cmd.action))
         while self._response == None:
             time.sleep(const.RESPONSE_CHECK_INTERVAL)
 
@@ -93,10 +93,10 @@ class CsmRestClient(CsmClient):
 
     async def call(self, cmd):
         async with aiohttp.ClientSession() as session:
-            response = await self.process_request(session, cmd.name(),
-                                                  cmd.action(), cmd.options(),
-                                                  cmd.args(),
-                                                  cmd.method(cmd.action()))
+            response = await self.process_request(session, cmd.name,
+                                                  cmd.action, cmd.options,
+                                                  cmd.args,
+                                                  cmd.get_method(cmd.action))
         return Response(rc=response[1],
                         output=json.loads(response[0]))
 
