@@ -49,7 +49,9 @@ class CsmResourceAgent(PcsResourceAgent):
                     os.remove(const.HA_INIT)
 
             # Check if resource already configured
-            if os.path.exists(const.HA_INIT):
+            if self.is_available():
+                if not os.path.exists(const.HA_INIT):
+                    open(const.HA_INIT, 'a').close()
                 Log.info("Csm resources are already configured...")
                 return True
 
