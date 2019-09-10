@@ -82,12 +82,7 @@ class AlertsAppService:
             # TODO: We need some common code that does such conversions
             new_value = fields["acknowledged"] == True \
                         or fields["acknowledged"] == "1" \
-                        or fields["acknowledged"] == "true"
-
-            if new_value and not alert.data()["resolved"]:
-                raise CsmError(ALERTS_ERROR_NOT_RESOLVED,
-                        "Unresolved alerts cannot be acknowledged")
-
+                        or fields["acknowledged"] == "true":
             alert.data()["acknowledged"] = new_value
 
         await self._storage.update(alert)
