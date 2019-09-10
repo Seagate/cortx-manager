@@ -22,8 +22,11 @@
 # processing architecture
 import asyncio
 import re
+from typing import Optional
 from datetime import datetime, timedelta
 from typing import Dict
+from threading import Event, Thread
+from csm.common.log import Log
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 
@@ -82,14 +85,15 @@ class AlertsAppService:
             # TODO: We need some common code that does such conversions
             new_value = fields["acknowledged"] == True \
                         or fields["acknowledged"] == "1" \
-                        or fields["acknowledged"] == "true":
+                        or fields["acknowledged"] == "true"
             alert.data()["acknowledged"] = new_value
 
         await self._storage.update(alert)
         return alert.data()
 
-    async def fetch_all_alerts(self, duration, direction, sort_by, offset,
-                               page_limit) -> Dict:
+    async def fetch_all_alerts(self, duration, direction, sort_by,
+                               offset: Optional[int],
+                               page_limit: Optional[int]) -> Dict:
         """
         Fetch All Alerts
         :param duration: time duration for range of alerts
@@ -110,12 +114,14 @@ class AlertsAppService:
                 raise CsmError(ALERT_ERROR_INVALID_DURATION,
                         "Invalid Parameter for Duration")
             start_time = (datetime.utcnow() - timedelta(
-                **{dur[time_format]: time_duration})).timestamp()
+                **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
 
         limits = None
-        if offset and offset >= 1:
-            limits = QueryLimits((offset - 1) * page_limit, page_limit)
+        if offset is not None:
+            limits = QueryLimits(page_limit, offset * page_limit)
+        elif page_limit is not None:
+            limits = QueryLimits(page_limit, 0)
 
         alerts_list = await self._storage.retrieve_by_range(
             SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
@@ -124,7 +130,10 @@ class AlertsAppService:
         )
 
         alerts_count = await self._storage.count_by_range(time_range)
-        return {"total_records": alerts_count, "alerts": alerts_list}
+        return {
+            "total_records": alerts_count,
+            "alerts": [alert.data() for alert in alerts_list]
+        }
 
     async def fetch_alert(self, alert_id):
         """
@@ -192,11 +201,12 @@ class AlertMonitorService(object):
         """
         try:
             if not self._thread_running and not self._thread_started:
-                self._monitor_thread = threading.Thread(target=self._monitor,
-                                                        args=())
+                self._monitor_thread = Thread(target=self._monitor,
+                                              args=())
                 self._monitor_thread.start()
                 self._thread_started = True
         except Exception as e:
+            raise e
             Log.exception(e)
 
     def stop(self):
@@ -215,10 +225,10 @@ class AlertMonitorService(object):
         # This implementation uses threads, but storage is supposed to be async
         # So we put the task onto the main event loop and wait for its completion        
         event = Event()
-        alert_task.add_done_callback(event.set)
+        alert_task.add_done_callback(lambda _: event.set())
         event.wait()
 
-        return alert_task.result()
+        return alert
 
     def _consume(self, message):
         """
@@ -231,9 +241,10 @@ class AlertMonitorService(object):
                should acknowledge the alert to the RabbitMQ.
         """
         alert = self.save_alert(message)
-        self._publish(alert)
+        #self._publish(alert)
         return True
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
-            alert.publish()
+            pass
+            #alert.publish()

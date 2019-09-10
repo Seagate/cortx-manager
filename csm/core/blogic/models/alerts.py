@@ -46,6 +46,7 @@ class Alert(object):
 
     def store(self, key):
         self._key = key
+        self._data["key"] = key
 
     def isstored(self):
         return self._key != None

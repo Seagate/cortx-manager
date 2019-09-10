@@ -15,7 +15,7 @@ class AlertSimpleStorage(IAlertStorage):
         return result
 
     async def store(self, alert):
-        key = str(self._nextid())
+        key = str(await self._nextid())
         alert.store(key)
         self._kvs.put(key, alert)
 
@@ -44,13 +44,16 @@ class AlertSimpleStorage(IAlertStorage):
             return True
 
         alerts = await self.retrieve_all()
-        return [x for x in alerts if _check_alert_date(x.data()['created_time'])]
+        if time_range is not None:
+            return [x for x in alerts if _check_alert_date(x.data()['created_time'])]
+        else:
+            return alerts
 
     async def retrieve_by_range(self,
                                 sort: Optional[SortBy],
                                 time_range: DateTimeRange,
                                 limits: Optional[QueryLimits]):
-        alerts = self._retrieve_by_range(time_range)
+        alerts = await self._retrieve_by_range(time_range)
         if sort is not None:
             alerts = sorted(alerts,
                             key=lambda item: item.data()[sort.field],
@@ -59,12 +62,12 @@ class AlertSimpleStorage(IAlertStorage):
         if limits is not None:
             slice_from = limits.offset or 0
             slice_to = slice_from + (limits.limit or 0)
-            alerts = alerts[slice_from:(slice_to - 1)]
+            alerts = alerts[slice_from:slice_to]
 
         return alerts
 
     async def count_by_range(self, time_range: DateTimeRange):
-        return len(self._retrieve_by_range(time_range))
+        return len(await self._retrieve_by_range(time_range))
 
     # todo: Remove the Below Commeted code this is just to dump the data while starting the server.
     # @staticmethod

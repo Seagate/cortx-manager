@@ -123,6 +123,11 @@ class CsmRestApi(CsmApi, ABC):
 
 
     @staticmethod
+    def json_serializer(*args, **kwargs):
+        kwargs['default'] = str
+        return json.dumps(*args, **kwargs)
+
+    @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
         try:
@@ -135,7 +140,8 @@ class CsmRestApi(CsmApi, ABC):
             else:
                 resp_obj = resp
 
-            return web.json_response(resp_obj, status=200)
+            return web.json_response(resp_obj, status=200, 
+                                     dumps=CsmRestApi.json_serializer)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
             return web.json_response(CsmRestApi.error_response(e), status=404)

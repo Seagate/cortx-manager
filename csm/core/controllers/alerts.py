@@ -21,8 +21,6 @@
 
 from aiohttp import web
 from csm.core.blogic.services.alerts import AlertsAppService
-from csm.core.blogic.alerts.alerts import SyncAlertStorage, Alert
-from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 
 class AlertsListRestView(web.View):
@@ -32,11 +30,18 @@ class AlertsListRestView(web.View):
 
     async def get(self):
         """Calling Alerts Get Method"""
-        duration = self.request.rel_url.query.get("duration")
-        offset = self.request.rel_url.query.get("offset", "")
-        page_limit = self.request.rel_url.query.get("limit", "")
+        duration = self.request.rel_url.query.get("duration", None)
+        offset = self.request.rel_url.query.get("offset", None)
+        page_limit = self.request.rel_url.query.get("limit", None)
         sort_by = self.request.rel_url.query.get("sortby", "created_time")
         direction = self.request.rel_url.query.get("dir", "desc")
+
+        if offset is not None:
+            offset = int(offset)
+        
+        if page_limit is not None:
+            page_limit = int(page_limit)
+
         return await self.alerts_service.fetch_all_alerts(duration, 
                                                 direction, 
                                                 sort_by,
