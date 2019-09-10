@@ -24,9 +24,11 @@ import asyncio
 import re
 from datetime import datetime, timedelta
 from typing import Dict
+from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 
 from csm.common.errors import CsmNotFoundError, CsmError
+
 
 ALERTS_ERROR_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_ERROR_NOT_FOUND="alerts_not_found"
@@ -102,38 +104,32 @@ class AlertsAppService:
         :param page_limit: no of records to be displayed on page.
         :return: :type:list
         """
-        # TODO: The storage must provide a function to fetch alerts with respect to
-        # parameters and orderings requried by the business logic.
-        alerts_obj = await self._storage.retrieve_all())
-        if alerts_obj:
-            reverse = True if direction == 'desc' else False
-            alerts_obj = sorted(alerts_obj, key=lambda item: item.data()[sort_by],
-                                reverse=reverse)
-            if duration:  # Filter
-                # TODO: time format can generally be API-dependent. Better pass here an already
-                # parsed TimeDelta object.
-                time_duration = int(re.split(r'[a-z]', duration)[0])
-                time_format = re.split(r'[0-9]', duration)[-1]
-                dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
-                if time_format not in dur.keys():
-                    raise CsmError(ALERT_ERROR_INVALID_DURATION,
-                            "Invalid Parameter for Duration")
-                end_time = datetime.now().timestamp()
-                start_time = (datetime.utcnow() - timedelta(
-                    **{dur[time_format]: time_duration})).timestamp()
-                alerts_obj = list(
-                    filter(lambda x: start_time < x['created_time'] < end_time,
-                           alerts_obj))
-            if offset and int(offset) >= 1:
-                offset = int(offset)
-                if page_limit and int(page_limit) > 0:
-                    page_limit = int(page_limit)
-                    alerts_obj = [alerts_obj[i:i + page_limit] for i in
-                                  range(0, len(alerts_obj), page_limit)]
+        time_range = None
+        if duration:  # Filter
+            # TODO: time format can generally be API-dependent. Better pass here an
+            # already parsed TimeDelta object.
+            time_duration = int(re.split(r'[a-z]', duration)[0])
+            time_format = re.split(r'[0-9]', duration)[-1]
+            dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
+            if time_format not in dur.keys():
+                raise CsmError(ALERT_ERROR_INVALID_DURATION,
+                        "Invalid Parameter for Duration")
+            start_time = (datetime.utcnow() - timedelta(
+                **{dur[time_format]: time_duration})).timestamp()
+            time_range = DateTimeRange(start_time, None)
 
-                alerts_obj = alerts_obj[int(offset) - 1]
+        limits = None
+        if offset and offset >= 1:
+            limits = QueryLimits((offset - 1) * page_limit, page_limit)
 
-        return {"total_records": len(alerts_obj), "alerts": alerts_obj.data()}
+        alerts_list = await self._storage.retrieve_by_range(
+            SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
+            time_range,
+            limits
+        )
+
+        alerts_count = await self._storage.count_by_range(time_range)
+        return {"total_records": alerts_count, "alerts": alerts_list}
 
     async def fetch_alert(self, alert_id):
         """

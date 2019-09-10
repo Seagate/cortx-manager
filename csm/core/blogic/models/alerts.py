@@ -19,8 +19,9 @@ import sys
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
 from datetime import datetime
-from typing import Optional
 from abc import ABC, abstractmethod
+from csm.common.queries import SortBy, QueryLimits, DateTimeRange
+from typing import Optional
 import json
 import threading
 import errno
@@ -63,18 +64,24 @@ class IAlertStorage(ABC):
         Interface for Alerts repository
     """
     @abstractmethod
-    async def store(alert):
+    async def store(self, alert):
         pass
 
     @abstractmethod
-    async def retrieve(alert_id):
+    async def retrieve(self, alert_id):
         pass
 
     @abstractmethod
-    async def update(alert):
+    async def update(self, alert):
         pass
 
     @abstractmethod
-    async def retrieve_all():
+    async def retrieve_by_range(self,
+                                sort: Optional[SortBy],
+                                time_range: DateTimeRange,
+                                limits: Optional[QueryLimits]):
         pass
 
+    @abstractmethod
+    async def count_by_range(self, time_range: DateTimeRange):
+        pass

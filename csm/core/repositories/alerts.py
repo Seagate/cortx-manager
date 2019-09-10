@@ -1,4 +1,7 @@
+from datetime import datetime
+from typing import Optional
 from csm.core.blogic.models.alerts import IAlertStorage
+from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 
 
 class AlertSimpleStorage(IAlertStorage):
@@ -29,6 +32,39 @@ class AlertSimpleStorage(IAlertStorage):
         return (alert
                 for key, alert in self._kvs.items()
                 if predicate(key, alert))
+
+    async def _retrieve_by_range(self, time_range: DateTimeRange):
+
+        def _check_alert_date(datetime: datetime):
+            if (time_range.start is not None) and datetime < time_range.start:
+                return False
+            if (time_range.end is not None) and datetime > time_range.end:
+                return False
+
+            return True
+
+        alerts = await self.retrieve_all()
+        return [x for x in alerts if _check_alert_date(x.data()['created_time'])]
+
+    async def retrieve_by_range(self,
+                                sort: Optional[SortBy],
+                                time_range: DateTimeRange,
+                                limits: Optional[QueryLimits]):
+        alerts = self._retrieve_by_range(time_range)
+        if sort is not None:
+            alerts = sorted(alerts,
+                            key=lambda item: item.data()[sort.field],
+                            reverse=(sort.order == SortOrder.ASC))
+
+        if limits is not None:
+            slice_from = limits.offset or 0
+            slice_to = slice_from + (limits.limit or 0)
+            alerts = alerts[slice_from:(slice_to - 1)]
+
+        return alerts
+
+    async def count_by_range(self, time_range: DateTimeRange):
+        return len(self._retrieve_by_range(time_range))
 
     # todo: Remove the Below Commeted code this is just to dump the data while starting the server.
     # @staticmethod
