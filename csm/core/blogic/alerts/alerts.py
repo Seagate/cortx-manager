@@ -15,15 +15,14 @@
  ****************************************************************************
 """
 
-import sys
+import errno
+import threading
+from datetime import datetime
+
 from csm.common.errors import CsmError
 from csm.common.log import Log
+from csm.core.blogic import const
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-from datetime import datetime
-import json
-import threading
-import errno
-from csm.core.blogic import const 
 
 class Alert(object):
     """ Represents an alert to be sent to front end """
@@ -68,7 +67,7 @@ class Alert(object):
         Get the previous alert with the same alert_uuid.
         """
         prev_alert = storage.retrieve(self.key())
-        if prev_alert and prev_alert.data().get('state', "")\
+        if prev_alert and prev_alert.data().get('state', "") \
                 in const.BAD_ALERT and not prev_alert.isResolved():
             """
             Try to resolve the alert if the previous alert is bad and
@@ -79,11 +78,11 @@ class Alert(object):
 
     def show(self, **kwargs):
         # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented')
 
     def acknowledge(self, id):
         # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented') 
+        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented')
 
 class SyncAlertStorage:
     def __init__(self, kvs):
@@ -103,7 +102,7 @@ class SyncAlertStorage:
 
     def select(self, predicate):
         return (alert
-            for key, alert in self._kvs.items()
+                for key, alert in self._kvs.items()
                 if predicate(key, alert))
 # TODO: Implement async alert storage after
 #       moving from threads to asyncio
@@ -150,7 +149,7 @@ class AlertMonitor(object):
         self._alert_plugin = plugin
         self._handle_alert = alert_handler_cb
         self._monitor_thread = None
-        self._thread_started = False 
+        self._thread_started = False
         self._thread_running = False
         self._storage = SyncAlertStorage(SyncInMemoryKeyValueStorage())
 
@@ -159,8 +158,10 @@ class AlertMonitor(object):
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
+
         def nonpublished(_, alert):
             return not alert.ispublished()
+
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
 
