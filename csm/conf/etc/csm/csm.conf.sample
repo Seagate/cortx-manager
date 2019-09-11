@@ -11,14 +11,14 @@ HA:
 # CSM RESOURCES:
 RESOURCES:
     APPSV:
-        service: "appsv"
+        service: "csm_agent"
         resource: "APPSV"
         provider: "systemd"
         interval: [ "10s", "10s", "10s" ] # Start stop monitor
         timeout: [ "10s", "10s", "10s" ]
 
     WEBSV:
-        service: "websv"
+        service: "csm_web"
         resource: "WEBSV"
         provider: "systemd"
         interval: [ "10s", "10s", "10s" ]

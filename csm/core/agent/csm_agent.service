@@ -14,8 +14,10 @@ ExecStartPre=
 ExecStartPre=/usr/bin/mkdir -p /var/run/csm /var/log/csm
 ExecStartPre=/usr/bin/chown csm:csm /var/run/csm /var/log/csm
 ExecStart=/usr/bin/csm_agent
-ExecStopPost=
+ExecStopPost=fuser -k 8082/tcp
+ExecStopPost=rm -rf /var/run/csm/csm_agent.pid
 PIDFile=/var/run/csm/csm_agent.pid
 User=csm
+
 # Restart=on-failure
 TimeoutStartSec=300

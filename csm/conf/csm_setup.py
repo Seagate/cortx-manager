@@ -28,7 +28,7 @@ class CsmSetup:
         permission like log, bundle path.
     """
     def __init__(self, argv):
-        Log.init("csm", "/var/log/csm")
+        Log.init("csm_setup", "/var/log/csm")
         self._args = argv[1:]
         self._args.insert(0, 'csm_setup')
         Conf.init()
