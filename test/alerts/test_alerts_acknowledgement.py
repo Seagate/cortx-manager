@@ -23,6 +23,3 @@ def test_patch_method():
     t.assertEqual(actual_output, expected_output)
 
 test_list = [test_patch_action, test_patch_options, test_patch_method]
-
-if __name__ == '__main__':
-    test_incorrect_format()
