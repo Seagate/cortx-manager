@@ -30,13 +30,12 @@ from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
+from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 
-from csm.common.errors import CsmNotFoundError, CsmError
 
-
-ALERTS_ERROR_INVALID_DURATION = "alert_invalid_duration"
-ALERTS_ERROR_NOT_FOUND = "alerts_not_found"
-ALERTS_ERROR_NOT_RESOLVED = "alerts_not_resolved"
+ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
+ALERTS_MSG_NOT_FOUND = "alerts_not_found"
+ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
 
 
 class AlertsAppService(ApplicationService):
@@ -59,7 +58,7 @@ class AlertsAppService(ApplicationService):
         """
         alert = await self._storage.retrieve(alert_id)
         if not alert:
-            raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert was not found")
+            raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
         if "comment" in fields:
             # TODO: Alert should contain such fields directly, not as a
@@ -96,8 +95,9 @@ class AlertsAppService(ApplicationService):
             time_format = re.split(r'[0-9]', duration)[-1]
             dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
             if time_format not in dur.keys():
-                raise CsmError(ALERTS_ERROR_INVALID_DURATION,
-                        "Invalid Parameter for Duration")
+                raise InvalidRequest(
+                    "Invalid Parameter for Duration", ALERTS_MSG_INVALID_DURATION)
+            
             start_time = (datetime.utcnow() - timedelta(
                 **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
@@ -130,7 +130,7 @@ class AlertsAppService(ApplicationService):
         # This method is for debugging purposes only
         alert = await self._storage.retrieve(alert_id)
         if not alert:
-            raise CsmNotFoundError(ALERTS_ERROR_NOT_FOUND, "Alert is not found")
+            raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.data()
 
 

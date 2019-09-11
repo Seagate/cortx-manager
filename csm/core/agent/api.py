@@ -77,8 +77,8 @@ class CsmApi(ABC):
                                                    request.action(),
                                                    request.args()))
         if not command in CsmApi._providers.keys():
-            CsmApi._providers[command] = ProviderFactory.get_provider(
-                command, CsmApi._cluster)
+            CsmApi._providers[command] = ProviderFactory.get_provider(command,
+                                                                      CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
 
@@ -108,6 +108,7 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def error_response(err: Exception) -> dict:
         resp = {
+            "error_code": None,
             "message_id": None,
             "message": None,
             "error_format_args": {},  # Empty for now
@@ -116,8 +117,10 @@ class CsmRestApi(CsmApi, ABC):
         }
 
         if isinstance(err, CsmError):
-            resp["message_id"] = err.rc()
+            resp["error_code"] = err.rc()
+            resp["message_id"] = err.message_id()
             resp["message"] = err.error()
+            resp["error_format_args"] = err.message_args()
         else:
             resp["message"] = str(err)
 
@@ -127,6 +130,11 @@ class CsmRestApi(CsmApi, ABC):
     def json_serializer(*args, **kwargs):
         kwargs['default'] = str
         return json.dumps(*args, **kwargs)
+
+    @staticmethod
+    def json_response(resp_obj, status=200):
+        return web.json_response(
+            resp_obj, status=status, dumps=CsmRestApi.json_serializer)
 
     @staticmethod
     @web.middleware
@@ -141,15 +149,14 @@ class CsmRestApi(CsmApi, ABC):
             else:
                 resp_obj = resp
 
-            return web.json_response(resp_obj, status=200, 
-                                     dumps=CsmRestApi.json_serializer)
+            return CsmRestApi.json_response(resp_obj, 200)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
-            return web.json_response(CsmRestApi.error_response(e), status=404)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=404)
         except CsmError as e:
-            return web.json_response(CsmRestApi.error_response(e), status=400)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=400)
         except Exception as e:
-            return web.json_response(CsmRestApi.error_response(e), status=422)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=422)
 
     @staticmethod
     def run(port):

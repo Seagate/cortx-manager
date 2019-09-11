@@ -20,12 +20,12 @@
 
 import inspect
 
-CSM_OPERATION_SUCESSFUL     = "csm_success"
-CSM_ERR_INVALID_VALUE       = "csm_invalid_file"
-CSM_ERR_INTERRUPTED         = "csm_interrupted"
-CSM_INVALID_REQUEST         = "csm_invalid_request"
-CSM_PROVIDER_NOT_AVAILABLE  = "csm_no_provider"
-CSM_INTERNAL_ERROR          = "csm_internal_error"
+CSM_OPERATION_SUCESSFUL     = 0x0000
+CSM_ERR_INVALID_VALUE       = 0x1001
+CSM_ERR_INTERRUPTED         = 0x1002
+CSM_INVALID_REQUEST         = 0x1003
+CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
+CSM_INTERNAL_ERROR          = 0x1005
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -34,12 +34,20 @@ class CsmError(Exception):
     _desc = 'Operation Successful'
     _caller = ''
 
-    def __init__(self, rc=None, desc=None):
+    def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
         super(CsmError, self).__init__()
         self._caller = inspect.stack()[1][3]
-        if rc is not None: 
+        if rc is not None:
             self._rc = str(rc)
         self._desc = desc or self._desc
+        self._message_id = message_id
+        self._message_args = message_args
+
+    def message_id(self):
+        return self._message_id
+
+    def message_args(self):
+        return self._message_args
 
     def rc(self):
         return self._rc
@@ -65,6 +73,7 @@ class CommandTerminated(KeyboardInterrupt):
     def __init__(self, _desc=None):
         super(CommandTerminated, self).__init__(_err, _desc)
 
+
 class InvalidRequest(CsmError):
     """
     This error will be raised when an invalid response
@@ -74,17 +83,28 @@ class InvalidRequest(CsmError):
     _err = CSM_INVALID_REQUEST
     _desc = "Invalid request message received."
 
-    def __init__(self, _desc=None):
-        super(InvalidRequest, self).__init__(_desc)
+    def __init__(self, _desc=None, message_id=None, message_args=None):
+        super(InvalidRequest, self).__init__(
+            CSM_INVALID_REQUEST, _desc, message_id, message_args)
+
 
 class CsmInternalError(CsmError):
     """
     This error is raised by CLI for all unknown internal errors
     """
 
-    def __init__(self, desc=None):
+    def __init__(self, desc=None, message_id=None, message_args=None):
         super(CsmInternalError, self).__init__(
-            CSM_INTERNAL_ERROR, 'Internal error: %s' %desc)
+            CSM_INTERNAL_ERROR, 'Internal error: %s' % desc,
+            message_id, message_args)
+
 
 class CsmNotFoundError(CsmError):
-    pass
+    """
+    This error is raised for all cases when an entity was not found
+    """
+
+    def __init__(self, desc=None, message_id=None, message_args=None):
+        super(CsmNotFoundError, self).__init__(
+            CSM_INTERNAL_ERROR, desc,
+            message_id, message_args)
