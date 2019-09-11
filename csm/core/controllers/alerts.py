@@ -2,13 +2,11 @@
 
 """
  ****************************************************************************
- Filename:          api_client.py
- Description:       Infrastructure for invoking business logic locally or
-                    remotely or various available channels like REST.
+ Filename:          alerts.py
+ Description:       Controllers for alerts
 
- Creation Date:     31/05/2018
- Author:            Malhar Vora
-                    Ujjwal Lanjewar
+ Creation Date:     09/05/2019
+ Author:            Alexander Nogikh
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -42,11 +40,8 @@ class AlertsListRestView(web.View):
         if page_limit is not None:
             page_limit = int(page_limit)
 
-        return await self.alerts_service.fetch_all_alerts(duration, 
-                                                direction, 
-                                                sort_by,
-                                                offset,
-                                                page_limit)
+        return await self.alerts_service.fetch_all_alerts(
+            duration, direction, sort_by, offset, page_limit)
 
 
 class AlertsRestView(web.View):
@@ -61,7 +56,7 @@ class AlertsRestView(web.View):
         return await self.alerts_service.update_alert(alert_id, body)
 
 
-# AIOHTTP does not provide a way to pass custom parameters to its views. 
+# AIOHTTP does not provide a way to pass custom parameters to its views.
 # It is a workaround.
 class AlertsRestController:
     def __init__(self, alerts_service: AlertsAppService):
@@ -72,7 +67,7 @@ class AlertsRestController:
             def __init__(child_self, request):
                 super().__init__(request, self.alerts_service)
         return Child
- 
+
     def get_view_class(self):
         class Child(AlertsRestView):
             def __init__(child_self, request):

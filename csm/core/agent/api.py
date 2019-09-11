@@ -26,7 +26,6 @@ import asyncio
 import json
 import traceback
 from weakref import WeakSet
-from datetime import datetime
 from aiohttp import web
 from abc import ABC
 
@@ -38,7 +37,7 @@ from csm.common.log import Log
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
-from csm.core.routes import add_routes
+from csm.core.routes import ApiRoutes
 from csm.core.blogic.services.alerts import AlertsAppService
 from csm.core.controllers import AlertsRestController
 
@@ -78,8 +77,8 @@ class CsmApi(ABC):
                                                    request.action(),
                                                    request.args()))
         if not command in CsmApi._providers.keys():
-            CsmApi._providers[command] = ProviderFactory.get_provider(command,
-                                                                      CsmApi._cluster)
+            CsmApi._providers[command] = ProviderFactory.get_provider(
+                command, CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
 
@@ -98,7 +97,10 @@ class CsmRestApi(CsmApi, ABC):
         )
 
         alerts_ctrl = AlertsRestController(alerts_service)
-        add_routes(CsmRestApi, alerts_ctrl)
+        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
+        ApiRoutes.add_websocket_routes(
+            CsmRestApi._app.router, CsmRestApi.process_websocket)
+        ApiRoutes.add_debug_routes(CsmRestApi._app.router)
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
@@ -109,7 +111,7 @@ class CsmRestApi(CsmApi, ABC):
             "message_id": None,
             "message": None,
             "error_format_args": {},  # Empty for now
-            # TODO: Should we send trace only when we are in debug mode? 
+            # TODO: Should we send trace only when we are in debug mode?
             "stacktrace": traceback.format_exc().splitlines()
         }
 
@@ -120,7 +122,6 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = str(err)
 
         return resp
-
 
     @staticmethod
     def json_serializer(*args, **kwargs):
@@ -214,26 +215,10 @@ class CsmRestApi(CsmApi, ABC):
         clients = CsmRestApi._wsclients.copy()
         try:
             for ws in clients:
-                await ws.send_str(json.dumps(msg))
+                json_msg = CsmRestApi.json_serializer(msg)
+                await ws.send_str(json_msg)
         except:
             Log.debug('REST API websock broadcast error')
-
-    @staticmethod
-    async def process_dbg_static_page(request):
-        """
-        Static page handler is for debugging purposes only. To be
-        deleted later when we have tests for aiohttp web sockets.
-        HTML and JS debug files are loaded from 'dbgwbi' directory
-        (which will be deleted later completely too).
-        """
-        base = "src/core/agent/dbgwbi"
-        path = request.match_info.get('path', '.')
-        realpath = os.path.abspath(f'{base}/{path}')
-        if os.path.exists(realpath) and os.path.isdir(realpath):
-            realpath = os.path.abspath(f'{realpath}/index.html')
-        if os.path.exists(realpath):
-            return web.FileResponse(realpath)
-        return web.FileResponse(f'{base}/error.html')
 
     @staticmethod
     async def _async_push(msg):

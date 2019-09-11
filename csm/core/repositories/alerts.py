@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from csm.core.blogic.models.alerts import IAlertStorage
+from typing import Optional, Iterable
+from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 
 
@@ -15,8 +15,11 @@ class AlertSimpleStorage(IAlertStorage):
         return result
 
     async def store(self, alert):
-        key = str(await self._nextid())
-        alert.store(key)
+        key = alert.key()
+        if key is None:
+            key = str(await self._nextid())
+            alert.store(key)
+
         self._kvs.put(key, alert)
 
     async def retrieve(self, key):
@@ -49,10 +52,9 @@ class AlertSimpleStorage(IAlertStorage):
         else:
             return alerts
 
-    async def retrieve_by_range(self,
-                                sort: Optional[SortBy],
-                                time_range: DateTimeRange,
-                                limits: Optional[QueryLimits]):
+    async def retrieve_by_range(
+            self, time_range: DateTimeRange, sort: Optional[SortBy],
+            limits: Optional[QueryLimits]) -> Iterable[Alert]:
         alerts = await self._retrieve_by_range(time_range)
         if sort is not None:
             alerts = sorted(alerts,

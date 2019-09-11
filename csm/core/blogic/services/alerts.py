@@ -2,13 +2,13 @@
 
 """
  ****************************************************************************
- Filename:          api_client.py
- Description:       Infrastructure for invoking business logic locally or
-                    remotely or various available channels like REST.
+ Filename:          alerts.py
+ Description:       Services for alerts handling 
 
- Creation Date:     31/05/2018
- Author:            Malhar Vora
-                    Ujjwal Lanjewar
+ Creation Date:     09/05/2019
+ Author:            Alexander Nogikh
+                    Prathamesh Rodi
+                    Oleg Babin
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 from typing import Dict
 from threading import Event, Thread
 from csm.common.log import Log
+from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 
@@ -34,33 +35,17 @@ from csm.common.errors import CsmNotFoundError, CsmError
 
 
 ALERTS_ERROR_INVALID_DURATION = "alert_invalid_duration"
-ALERTS_ERROR_NOT_FOUND="alerts_not_found"
-ALERTS_ERROR_NOT_RESOLVED="alerts_not_resolved"
+ALERTS_ERROR_NOT_FOUND = "alerts_not_found"
+ALERTS_ERROR_NOT_RESOLVED = "alerts_not_resolved"
 
 
-class AlertsAppService:
+class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics
     """
 
-    # TODO: In the case of alerts, we probably do not need another alert-related
-    # service
-
     def __init__(self, storage: IAlertStorage):
         self._storage = storage
-
-    async def _call_nonasync(self, function, *args):
-        """
-            This function allows to await on synchronous code.
-            It won't be needed once we switch to asynchronous code everywhere.
-
-            :param function: A callable
-            :param args: Positional arguments that will be passed to the
-                         function
-            :returns: the result returned by 'function'
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, function, *args)
 
     async def update_alert(self, alert_id, fields):
         """
@@ -99,8 +84,8 @@ class AlertsAppService:
         :param duration: time duration for range of alerts
         :param direction: direction of sorting asc/desc
         :param sort_by: key by which sorting needs to be performed.
-        :param offset: offset page
-        :param page_limit: no of records to be displayed on page.
+        :param offset: offset page (1-based indexing)
+        :param page_limit: no of records to be displayed on a page.
         :return: :type:list
         """
         time_range = None
@@ -111,21 +96,21 @@ class AlertsAppService:
             time_format = re.split(r'[0-9]', duration)[-1]
             dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
             if time_format not in dur.keys():
-                raise CsmError(ALERT_ERROR_INVALID_DURATION,
+                raise CsmError(ALERTS_ERROR_INVALID_DURATION,
                         "Invalid Parameter for Duration")
             start_time = (datetime.utcnow() - timedelta(
                 **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
 
         limits = None
-        if offset is not None:
-            limits = QueryLimits(page_limit, offset * page_limit)
+        if offset is not None and offset > 1:
+            limits = QueryLimits(page_limit, (offset - 1) * page_limit)
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
         alerts_list = await self._storage.retrieve_by_range(
-            SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
             time_range,
+            SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
             limits
         )
 
@@ -149,7 +134,7 @@ class AlertsAppService:
         return alert.data()
 
 
-class AlertMonitorService(object):
+class AlertMonitorService(Service):
     """
     Alert Monitor works with AmqpComm to monitor alerts. 
     When Alert Monitor receives a subscription request, it scans the DB and 
@@ -180,7 +165,7 @@ class AlertMonitorService(object):
         """
 
         def nonpublished(_, alert):
-            return not alert.ispublished()
+            return not alert.is_published()
 
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
@@ -206,7 +191,6 @@ class AlertMonitorService(object):
                 self._monitor_thread.start()
                 self._thread_started = True
         except Exception as e:
-            raise e
             Log.exception(e)
 
     def stop(self):
@@ -219,15 +203,14 @@ class AlertMonitorService(object):
             Log.exception(e)
 
     def save_alert(self, message) -> Alert:
-        alert = Alert(message)
-        alert_task = self._loop.create_task(self._storage.store(alert))
-
         # This implementation uses threads, but storage is supposed to be async
-        # So we put the task onto the main event loop and wait for its completion        
-        event = Event()
-        alert_task.add_done_callback(lambda _: event.set())
-        event.wait()
+        # So we put the task onto the main event loop and wait for its completion
 
+        alert = Alert(message)
+        alert_task = asyncio.run_coroutine_threadsafe(
+            self._storage.store(alert), self._loop)
+
+        alert_task.result()  # wait for completion
         return alert
 
     def _consume(self, message):
@@ -241,10 +224,9 @@ class AlertMonitorService(object):
                should acknowledge the alert to the RabbitMQ.
         """
         alert = self.save_alert(message)
-        #self._publish(alert)
+        self._publish(alert)
         return True
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
-            pass
-            #alert.publish()
+            alert.publish()

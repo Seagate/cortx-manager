@@ -1,7 +1,8 @@
 """
  ****************************************************************************
  Filename:          alerts.py
- Description:       Contains functionality for alert plugin.
+ Description:       Contains the alert model and the interface for alerts
+                    repository.
 
  Creation Date:     12/08/2019
  Author:            Pawan Kumar Srivastava
@@ -21,18 +22,23 @@ from csm.common.log import Log
 from datetime import datetime
 from abc import ABC, abstractmethod
 from csm.common.queries import SortBy, QueryLimits, DateTimeRange
-from typing import Optional
+from typing import Optional, Iterable
 import json
 import threading
 import errno
 
 
+# TODO: probably, it makes more sense to put alert data directly into the fields of
+# the class, rather than storing Alert as a dictionary in the _data field
 class Alert(object):
-    """ Represents an alert to be sent to front end """
+    """
+    Represents an alert to be sent to front end
+    """
 
     def __init__(self, data):
-        self._key = None
+        self._key = data.get("alert_uuid", None)
         self._data = data
+        self._published = False
         self._timestamp = datetime.utcnow()
 
     def key(self):
@@ -46,10 +52,16 @@ class Alert(object):
 
     def store(self, key):
         self._key = key
-        self._data["key"] = key
+        self._data["alert_uuid"] = key
 
-    def isstored(self):
-        return self._key != None
+    def is_stored(self):
+        return self._key is not None
+
+    def publish(self):
+        self._published = True
+
+    def is_published(self):
+        return self._published
 
     def show(self, **kwargs):
         # TODO
@@ -62,27 +74,58 @@ class Alert(object):
 
 class IAlertStorage(ABC):
     """
-        Interface for Alerts repository
+    Interface for Alerts repository
     """
     @abstractmethod
-    async def store(self, alert):
+    async def store(self, alert: Alert):
+        """
+        Store an alert.
+        It is supposed that the passed object already has the unique key 
+
+        :param alert: Alert object
+        :return: nothing
+        """
         pass
 
     @abstractmethod
-    async def retrieve(self, alert_id):
+    async def retrieve(self, alert_id) -> Optional[Alert]:
+        """
+        Retrieves an alert by its unique key.
+
+        :return: an Alert object or None if there is no such entity
+        """
         pass
 
     @abstractmethod
-    async def update(self, alert):
+    async def update(self, alert: Alert):
+        """
+        Saves the alert object 
+
+        :param alert: Alert object
+        :return: nothing
+        """
         pass
 
     @abstractmethod
-    async def retrieve_by_range(self,
-                                sort: Optional[SortBy],
-                                time_range: DateTimeRange,
-                                limits: Optional[QueryLimits]):
+    async def retrieve_by_range(
+            self, time_range: DateTimeRange, sort: Optional[SortBy],
+            limits: Optional[QueryLimits]) -> Iterable[Alert]:
+        """
+        Retrieves alerts that occured within the specified time range
+
+        :param time_range: Alerts will be filered according to this parameter.
+        :param sort: Alserts will be ordered according to this parameter
+        :param limits: Allows to specify offset and limit for the query
+        :return: a list of Alert objects
+        """
         pass
 
     @abstractmethod
-    async def count_by_range(self, time_range: DateTimeRange):
+    async def count_by_range(self, time_range: DateTimeRange) -> int:
+        """
+        Retrieves the number of alerts that occured within the specified time range
+
+        :param time_range: Alerts will be filered according to this parameter.
+        :return: the number of suitable alerts
+        """
         pass
