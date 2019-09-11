@@ -23,6 +23,7 @@ import abc
 import argparse
 from csm.core.blogic import const
 from csm.cli.csm_client import Output
+from csm.common.errors import CsmError
 
 
 class Command:
@@ -33,6 +34,8 @@ class Command:
         self._options = options
         self._args = args
         self._method = {}
+        self.validate_command()
+        self.update_options()
 
     @property
     def name(self):
@@ -52,6 +55,12 @@ class Command:
 
     def get_method(self, action):
         return self._method.get(action, 'get')
+
+    def validate_command():
+        pass
+
+    def update_options():
+        pass
 
     def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
@@ -121,7 +130,6 @@ class AlertsCommand(Command):
     def __init__(self, action, options, args):
         super().__init__(action, options, args)
         self._method = AlertsCommand._method
-        self.update_options()
 
     @staticmethod
     def add_args(parser):
@@ -148,15 +156,16 @@ class AlertsCommand(Command):
             try:
                 int(self.args[0])
             except ValueError:
-                raise AttributeError(
+                raise CsmError(
                     f'"id" argument must be integer, got {self.args[0]} instead')
             if not isinstance(self.args[1], str):
-                raise AttributeError(
+                raise CsmError(
                     f'"comment" argument must be string, got {self.args[1]} instead')
 
     def update_options(self):
-        self.validate_command()
-
         if self._action == 'acknowledge':
+            # To avoid this we need to restructure argument addition process
+            self._options.clear()
+
             self._options['alert_id'] = self.args[0]
             self._options['comment'] = self.args[1]
