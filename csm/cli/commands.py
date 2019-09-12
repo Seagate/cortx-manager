@@ -21,6 +21,8 @@
 
 import abc
 import argparse
+import errno
+
 from csm.core.blogic import const
 from csm.cli.csm_client import Output
 from csm.common.errors import CsmError
@@ -156,11 +158,11 @@ class AlertsCommand(Command):
             try:
                 int(self.args[0])
             except ValueError:
-                raise CsmError(
-                    f'"id" argument must be integer, got {self.args[0]} instead')
+                raise CsmError(errno.EINVAL,
+                               f'"id" argument must be integer, got {self.args[0]} instead')
             if not isinstance(self.args[1], str):
-                raise CsmError(
-                    f'"comment" argument must be string, got {self.args[1]} instead')
+                raise CsmError(errno.EINVAL,
+                               f'"comment" argument must be string, got {self.args[1]} instead')
 
     def update_options(self):
         if self._action == 'acknowledge':
