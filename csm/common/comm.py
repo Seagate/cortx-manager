@@ -223,14 +223,12 @@ class AmqpChannel(Channel):
                                          queue=self.exchange_queue,
                                          routing_key=self.routing_key)
             except AMQPError as err:
-                Log.error('CSM Fails to initialize the queue.\
-                      Details: %s'.str(err))
+                Log.error(f'CSM Fails to initialize the queue.\
+                      Details: {err}')
                 Log.exception(err)
-                raise CsmError(-1, '%s' %err)
-           
-            Log.info('Initialized Exchange: {%s}, Queue: {%s},\
-                     routing_key: {%s}'%(self.exchange,self.exchange_queue,
-                                          self.routing_key))
+                raise CsmError(-1, f'{err}')
+            Log.info(f'Initialized Exchange: {self.exchange}, '
+                     f'Queue: {self.exchange_queue}, routing_key: {self.routing_key}')
 
     def connect(self):
         """

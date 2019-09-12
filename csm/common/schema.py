@@ -15,10 +15,9 @@
  ****************************************************************************
 """
 
-import json
+from csm.common.log import Log
 from csm.common.payload import *
 from csm.core.blogic import const
-from csm.common.log import Log
 
 class Schema:
     """
@@ -56,13 +55,17 @@ class Schema:
                     data[key] = message[key]
                     continue
                 for sub_key in sub_data.keys():
-                    new_key = '%s.%s' %(key, sub_key)
+                    new_key = f'{key}.{sub_key}'
                     data[new_key] = sub_data[sub_key]
+                    return data
+        except (KeyError, IndexError) as e:
+            Log.exception(e)
+            raise Exception("Cannot De-serialize the received message")
         except Exception as e:
             Log.exception(e)
-        return data
+            raise Exception(e)
 
-    def deserialize(self, message:dict, out_message={}):
+    def deserialize(self, message: dict, out_message={}):
         """
         This method will deserialize the dictionary.
         i.e Input - {'x.y.z': 20, 'a.b.c': 10}
@@ -77,20 +80,24 @@ class Schema:
                     rem_key = new_key.pop(0)
                     if rem_key not in out_message:
                         out_message[rem_key] = {}
-                    self.deserialize({".".join(new_key): message[key]},\
-                        out_message[rem_key])
+                    self.deserialize({".".join(new_key): message[key]},
+                                     out_message[rem_key])
+                    return out_message
+        except (KeyError, IndexError) as e:
+            Log.exception(e)
+            raise Exception("Cannot De-serialize the received message")
         except Exception as e:
             Log.exception(e)
-        return out_message
+            raise Exception(e)
 
-    def map_schema(self, type, serialize_data):
+    def map_schema(self, data_type, serialize_data):
         """
         This method will use the mapping table to convert the serialized
         input schema to serialized output schema.
         """
         output_schema = {}
         try:
-            data = self._mapping_table.get(type, {})
+            data = self._mapping_table.get(data_type, {})
             for key in serialize_data:
                 if key in data:
                     output_schema[data[key]] = serialize_data[key]
