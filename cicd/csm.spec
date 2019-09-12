@@ -24,6 +24,10 @@ exit 0
 
 %post
 CSM_DIR=/opt/seagate/csm
+mkdir -p /var/csm/bundle /var/log/csm /etc/csm
+chmod +x $CSM_DIR/conf/csm_setup.py
+chmod +x $CSM_DIR/cli/csmcli.py
+chmod +x $CSM_DIR/core/agent/csm_agent.py
 ln -sf $CSM_DIR/conf/csm_setup.py /usr/bin/csm_setup
 ln -sf $CSM_DIR/cli/csmcli.py /usr/bin/csmcli
 ln -sf $CSM_DIR/core/agent/csm_agent.py /usr/bin/csm_agent
@@ -36,8 +40,6 @@ cp -f $CSM_DIR/web/csm_web.service /etc/systemd/system/csm_web.service
 cp -f $CSM_DIR/core/agent/csm_agent.service /etc/systemd/system/csm_agent.service
 [ -f /etc/csm/components.yaml ] || \
     cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
-mkdir -p /var/csm/bundle /var/log/csm
-touch /var/log/csm/csm.log
 exit 0
 
 %postun
