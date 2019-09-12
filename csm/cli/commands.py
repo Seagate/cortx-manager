@@ -153,8 +153,8 @@ class AlertsCommand(Command):
     def validate_command(self):
         if self._action == 'acknowledge':
             if len(self.args) != 2:
-                raise AttributeError(
-                    'For "acknowledge" action you must specify "id" and "comment" arguments')
+                raise CsmError(errno.EINVAL,
+                               'For "acknowledge" action you must specify "id" and "comment" arguments')
             try:
                 int(self.args[0])
             except ValueError:
