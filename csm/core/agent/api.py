@@ -39,7 +39,7 @@ from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.blogic.services.alerts import AlertsAppService
-from csm.core.controllers import AlertsRestController
+from csm.core.controllers import AlertsHttpController
 
 
 class CsmApi(ABC):
@@ -96,7 +96,7 @@ class CsmRestApi(CsmApi, ABC):
             middlewares=[CsmRestApi.rest_middleware]
         )
 
-        alerts_ctrl = AlertsRestController(alerts_service)
+        alerts_ctrl = AlertsHttpController(alerts_service)
         ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)

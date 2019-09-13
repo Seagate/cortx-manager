@@ -17,5 +17,5 @@
  ****************************************************************************
 """
 
-from .alerts import AlertsRestController
+from .alerts import AlertsHttpController
 # from .csm import CsmCliView

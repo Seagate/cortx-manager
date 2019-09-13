@@ -21,7 +21,8 @@ from aiohttp import web
 from csm.core.blogic.services.alerts import AlertsAppService
 
 
-class AlertsListRestView(web.View):
+# TODO: Implement base class for sharing common controller logic
+class AlertsListView(web.View):
     def __init__(self, request, alerts_service: AlertsAppService):
         super().__init__(request)
         self.alerts_service = alerts_service
@@ -44,7 +45,7 @@ class AlertsListRestView(web.View):
             duration, direction, sort_by, offset, page_limit)
 
 
-class AlertsRestView(web.View):
+class AlertsView(web.View):
     def __init__(self, request, alerts_service: AlertsAppService):
         super().__init__(request)
         self.alerts_service = alerts_service
@@ -58,18 +59,18 @@ class AlertsRestView(web.View):
 
 # AIOHTTP does not provide a way to pass custom parameters to its views.
 # It is a workaround.
-class AlertsRestController:
+class AlertsHttpController:
     def __init__(self, alerts_service: AlertsAppService):
         self.alerts_service = alerts_service
 
     def get_list_view_class(self):
-        class Child(AlertsListRestView):
+        class Child(AlertsListView):
             def __init__(child_self, request):
                 super().__init__(request, self.alerts_service)
         return Child
 
     def get_view_class(self):
-        class Child(AlertsRestView):
+        class Child(AlertsView):
             def __init__(child_self, request):
                 super().__init__(request, self.alerts_service)
         return Child
