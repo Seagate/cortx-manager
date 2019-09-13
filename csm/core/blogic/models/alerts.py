@@ -63,15 +63,8 @@ class Alert(object):
     def is_published(self):
         return self._published
 
-    def show(self, **kwargs):
-        # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.get() not implemented')
 
-    def acknowledge(self, id):
-        # TODO
-        raise CsmError(errno.ENOSYS, 'Alert.acknowledge() not implemented')
-
-
+# TODO: Consider a more generic approach to storage interfaces
 class IAlertStorage(ABC):
     """
     Interface for Alerts repository
@@ -99,7 +92,7 @@ class IAlertStorage(ABC):
     @abstractmethod
     async def update(self, alert: Alert):
         """
-        Saves the alert object 
+        Saves the alert object
 
         :param alert: Alert object
         :return: nothing
