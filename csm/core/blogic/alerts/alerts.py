@@ -201,7 +201,7 @@ class AlertMonitor(object):
             We will only resolve the alert if it is a good one.
             """
             if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
-                self._resolve(self._storage, alert)
+                self._resolve(alert)
             self._storage.store(alert)
             self._publish(alert)
         except Exception as e:
@@ -212,11 +212,11 @@ class AlertMonitor(object):
         if self._handle_alert(alert.data()):
             alert.publish()
 
-    def _resolve(self, storage, alert):
+    def _resolve(self, alert):
         """
         Get the previous alert with the same alert_uuid.
         """
-        prev_alert = storage.retrieve(alert.key())
+        prev_alert = self._storage.retrieve(alert.key())
         if prev_alert and prev_alert.data().get('state', "") \
                 in const.BAD_ALERT and not prev_alert.isResolved():
             """
