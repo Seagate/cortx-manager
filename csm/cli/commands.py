@@ -66,7 +66,7 @@ class Command:
 
     def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
-        output_obj = Output(response)
+        output_obj = Output(self, response)
         return output_obj.dump(out, err,
                                headers=self._headers, filters=self._filter,
                                output_format=self._options.get('format', None))
@@ -171,3 +171,13 @@ class AlertsCommand(Command):
 
             self._options['alert_id'] = self.args[0]
             self._options['comment'] = self.args[1]
+
+    def standard_output(self):
+        if self._action == 'acknowledge':
+            return f"Alert with id {self.options['alert_id']} has been acknowledged."
+        else:
+            return ''
+
+    def error_output(self, output):
+        if self._action == 'acknowledge':
+            return f"Alert with id {self.options['alert_id']} wasn't acknowledged. Error: {output['message']}. Error code: {output['error_code']}.\n"

@@ -120,7 +120,8 @@ class RestRequest(Request):
             return await response.text(), response.status
 
     async def _patch(self) -> tuple:
-        async with self._session.patch(self._url, params=self._options) as response:
+        async with self._session.patch(
+                self._url + f'/{self._options["alert_id"]}', json=str(self._options)) as response:
             return await response.text(), response.status
 
     async def get_request(self) -> str:
@@ -130,25 +131,35 @@ class RestRequest(Request):
 class Output:
     """CLI Response Display Class"""
 
-    def __init__(self, response):
+    def __init__(self, command, response):
+        self.command = command
         self.rc = response.rc()
         self.output = response.output()
 
     def dump(self, out, err, output_format, **kwargs) -> None:
         """Dump the Output on CLI"""
         if self.rc != 200:
-            return err.write(Output.error(self.rc, self.output))
+            errstr = ''
+            if hasattr(self.command, 'error_output'):
+                errstr = self.command.error_output(self.output)
+            else:
+                errstr = Output.error(self.rc, self.output) + '\n'
+            return err.write(errstr)
+        if hasattr(self.command, 'standard_output') and self.command.standard_output():
+            output = command.standard_output()
+            out.write(output)
+
         if output_format:
             output = getattr(Output, f'dump_{output_format}')(self.output,
-                                                              **kwargs)
+                                                              **kwargs) + '\n'
         else:
-            output = str(self.output)
+            output = str(self.output) + '\n'
         out.write(output)
 
     @staticmethod
     def error(rc: int, message: str) -> str:
         """Format for Error message"""
-        return f'error({rc}): {message}'
+        return f'error({rc}): {message}\n'
 
     @staticmethod
     def dump_table(data: Any, headers: Dict, filters: str,
