@@ -74,6 +74,7 @@ BAD_ALERT = ['missing', 'fault']
 ALERT_ID = 'id'
 ALERT_TYPE = 'type'
 ALERT_UUID = 'alert_uuid'
+ALERT_STATE = 'state'
 ALERT_ENCLOSURE_ID = 'enclosure_id'
 ALERT_MODULE_NAME = 'module_name'
 ALERT_RESOLVED = 'resolved'

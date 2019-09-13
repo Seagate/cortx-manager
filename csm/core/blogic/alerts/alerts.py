@@ -62,20 +62,6 @@ class Alert(object):
     def isResolved(self):
         return self._resolved
 
-    def resolve(self, storage):
-        """
-        Get the previous alert with the same alert_uuid.
-        """
-        prev_alert = storage.retrieve(self.key())
-        if prev_alert and prev_alert.data().get('state', "") \
-                in const.BAD_ALERT and not prev_alert.isResolved():
-            """
-            Try to resolve the alert if the previous alert is bad and
-            the current alert is good.
-            """
-            self.data()['resolved'] = 1
-            self.resolved()
-
     def show(self, **kwargs):
         # TODO
         raise CsmError(errno.ENOSYS, 'Alert.get() not implemented')
@@ -215,7 +201,7 @@ class AlertMonitor(object):
             We will only resolve the alert if it is a good one.
             """
             if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
-                alert.resolve(self._storage)
+                self._resolve(self._storage, alert)
             self._storage.store(alert)
             self._publish(alert)
         except Exception as e:
@@ -225,3 +211,17 @@ class AlertMonitor(object):
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
             alert.publish()
+
+    def _resolve(self, storage, alert):
+        """
+        Get the previous alert with the same alert_uuid.
+        """
+        prev_alert = storage.retrieve(alert.key())
+        if prev_alert and prev_alert.data().get('state', "") \
+                in const.BAD_ALERT and not prev_alert.isResolved():
+            """
+            Try to resolve the alert if the previous alert is bad and
+            the current alert is good.
+            """
+            alert.data()['resolved'] = 1
+            alert.resolved()

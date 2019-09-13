@@ -21,6 +21,7 @@
 import sys, os
 import paramiko, socket
 import getpass
+import time
 import errno
 from paramiko.ssh_exception import SSHException
 from csm.common.payload import *
@@ -193,8 +194,8 @@ class AmqpChannel(Channel):
             self.connect()
             if not (self._connection and self._channel):
                 Log.warn('RMQ Connection Failed. Retry Attempt: {%d} in {%d} secs'\
-                %(retry_counter, retry_counter * 2 + 60))
-                time.sleep(retry_counter * 2 + 60)
+                %(self.retry_counter, self.retry_counter * 2 + 60))
+                time.sleep(self.retry_counter * 2 + 60)
                 self.retry_counter += 1
         if not(self._connection and self._channel):
             Log.warn('RMQ connection Failed. SSPL communication channel\
