@@ -154,7 +154,6 @@ class Output:
                                                               **kwargs) + '\n'
         else:
             output = str(self.output) + '\n'
-        out.write(output)
 
     @staticmethod
     def error(rc: int, message: str) -> str:

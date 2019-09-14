@@ -36,6 +36,8 @@ class Command:
         self._options = options
         self._args = args
         self._method = {}
+        if not hasattr(self, '_cmd_action_map'):
+            self._cmd_action_map = {}
         self.validate_command()
         self.update_options()
 
@@ -58,8 +60,19 @@ class Command:
     def get_method(self, action):
         return self._method.get(action, 'get')
 
-    def validate_command():
-        pass
+    def validate_command(self):
+        if self._action in self._cmd_action_map:
+            if len(self.args) != len(self._cmd_action_map[self._action]):
+                argstr = str(arg for arg in self._args)
+                raise CsmError(errno.EINVAL,
+                               f'For "{self._action}" action you must specify ' + ' and '.join(f'"{a}"' for a in self._cmd_action_map[self._action].keys()) + ' arguments')
+            for i, (k, v) in enumerate(self._cmd_action_map[self._action].items()):
+                if v is int:
+                    try:
+                        int(self.args[i])
+                    except ValueError:
+                        raise CsmError(errno.EINVAL,
+                                       f'"{k}" argument must be integer, got {self.args[i]} instead')
 
     def update_options():
         pass
@@ -130,6 +143,7 @@ class AlertsCommand(Command):
     _filter = const.ALERTS_COMMAND
 
     def __init__(self, action, options, args):
+        self._cmd_action_map = {'acknowledge': {'id': int, 'comment': str}}
         super().__init__(action, options, args)
         self._method = AlertsCommand._method
 
@@ -149,20 +163,6 @@ class AlertsCommand(Command):
                               default='table', choices=['json', 'xml', 'table'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=AlertsCommand)
-
-    def validate_command(self):
-        if self._action == 'acknowledge':
-            if len(self.args) != 2:
-                raise CsmError(errno.EINVAL,
-                               'For "acknowledge" action you must specify "id" and "comment" arguments')
-            try:
-                int(self.args[0])
-            except ValueError:
-                raise CsmError(errno.EINVAL,
-                               f'"id" argument must be integer, got {self.args[0]} instead')
-            if not isinstance(self.args[1], str):
-                raise CsmError(errno.EINVAL,
-                               f'"comment" argument must be string, got {self.args[1]} instead')
 
     def update_options(self):
         if self._action == 'acknowledge':
