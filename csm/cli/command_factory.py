@@ -17,10 +17,12 @@
  ****************************************************************************
 """
 
-import argparse, sys
+import argparse
+import sys
 from csm.cli.commands import SupportBundleCommand
 from csm.cli.commands import EmailConfigCommand
 from csm.cli.commands import AlertsCommand
+
 
 class CommandFactory(object):
     """
