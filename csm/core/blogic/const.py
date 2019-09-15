@@ -56,16 +56,16 @@ TYPE_S3_SERVER = 'S3_SERVER'
 CSM_CONF = '/etc/csm/csm.conf'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
-SUPPORT_BUNDLE_ROOT='SUPPORT_BUNDLE_ROOT'
-DEFAULT_SUPPORT_BUNDLE_ROOT='/opt/seagate/bundle'
+SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
+DEFAULT_SUPPORT_BUNDLE_ROOT = '/opt/seagate/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
 DEFAULT_USER = 'admin'
 
 # Non root user
-NON_ROOT_USER='csm'
-NON_ROOT_USER_PASS='csm'
+NON_ROOT_USER = 'csm'
+NON_ROOT_USER_PASS = 'csm'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
