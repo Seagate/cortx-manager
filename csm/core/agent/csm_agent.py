@@ -6,10 +6,6 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-from csm.core.repositories.alerts import AlertSimpleStorage
-from csm.core.blogic.services.alerts import AlertsAppService, \
-                                            AlertMonitorService
-from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 # Global options for debugging purposes
 # It is quick and dirty temporary solution
@@ -102,7 +98,10 @@ if __name__ == '__main__':
         from csm.common.conf import Conf
         from csm.common.payload import Yaml
         from csm.core.blogic import const
-        from csm.core.blogic.alerts.alerts import AlertMonitor
+        from csm.core.repositories.alerts import AlertSimpleStorage
+        from csm.core.blogic.services.alerts import AlertsAppService, \
+                                            AlertMonitorService
+        from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 
         CsmAgent.init()
