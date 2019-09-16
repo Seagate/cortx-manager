@@ -32,15 +32,19 @@ import getpass
 class Request(object):
     """ Represents a request to be processed by Provider """
 
-    def __init__(self, action, args):
+    def __init__(self, action, args, options=None):
         self._action = action
         self._args = args
+        self.options = options
 
     def action(self):
         return self._action
 
     def args(self):
         return self._args
+
+    def options(self):
+        return self.options
 
 class Response(object):
     """ Represents a response after processing of a request """

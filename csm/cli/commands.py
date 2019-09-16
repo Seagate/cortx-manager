@@ -39,7 +39,6 @@ class Command:
         if not hasattr(self, '_cmd_action_map'):
             self._cmd_action_map = {}
         self.validate_command()
-        self.update_options()
 
     @property
     def name(self):
@@ -73,9 +72,6 @@ class Command:
                     except ValueError:
                         raise CsmError(errno.EINVAL,
                                        f'"{k}" argument must be integer, got {self.args[i]} instead')
-
-    def update_options():
-        pass
 
     def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
@@ -163,14 +159,6 @@ class AlertsCommand(Command):
                               default='table', choices=['json', 'xml', 'table'])
         sbparser.add_argument('args', nargs='*', default=[], help='bar help')
         sbparser.set_defaults(command=AlertsCommand)
-
-    def update_options(self):
-        if self._action == 'acknowledge':
-            # To avoid this we need to restructure argument addition process
-            self._options.clear()
-
-            self._options['alert_id'] = self.args[0]
-            self._options['comment'] = self.args[1]
 
     def standard_output(self):
         if self._action == 'acknowledge':
