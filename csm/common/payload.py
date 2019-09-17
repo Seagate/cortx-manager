@@ -115,8 +115,8 @@ class Dict(Doc):
     def load(self):
         return self.data
 
-    def dump(self):
-        return self.data
+    def dump(self, data):
+        return data
 
 class Payload:
     ''' implements a Paload in specified format. '''
@@ -133,8 +133,8 @@ class Payload:
 
     def dump(self):
         ''' Dump the anifest file to desired file or to the source '''
-        self._doc.dump(self._data)
         self._dirty = False
+        return self._doc.dump(self._data)
 
     def _get(self, key, data):
         ''' Obtain value for the given key '''
