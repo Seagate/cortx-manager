@@ -167,8 +167,8 @@ class Payload:
         :param map: mapping dictionary :type:Dict
         :return: :type: Dict
         """
-        converted_data = {}
+        payload = Payload(Dict({}))
         for key in map.keys():
             val = self.get(key)
-            self._set(map[key], val, converted_data)
-        return converted_data
+            payload.set(map[key], val)
+        return payload
