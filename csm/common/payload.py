@@ -137,7 +137,7 @@ class Payload:
         self._dirty = False
 
     def _get(self, key, data):
-        ''' Obtain value f the given key '''
+        ''' Obtain value for the given key '''
         k = key.split('.', 1)
         if k[0] not in data.keys(): return None
         return self._get(k[1], data[k[0]]) if len(k) > 1 else data[k[0]]
