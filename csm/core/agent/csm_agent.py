@@ -28,15 +28,24 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        CsmRestApi.init()
+
+        alerts_storage = AlertSimpleStorage(SyncInMemoryKeyValueStorage())
+        #todo: Remove the below line it only dumps the data when server starts. kept for debugging
+        # alerts_storage.add_data()
+        alerts_service = AlertsAppService(alerts_storage)
+
+        CsmRestApi.init(alerts_service)
         pm = import_plugin_module('alert')
-        CsmAgent.alert_monitor = AlertMonitor(pm.AlertPlugin(),
+
+        CsmAgent.alert_monitor = AlertMonitorService(alerts_storage,
+                                              pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
     @staticmethod
     def _daemonize():
         """ Change process into background service """
-
+        if not os.path.isdir("/var/run/csm/"):
+            os.makedirs('/var/run/csm/')
         try:
             # Check and Create a PID file for systemd
             pidfile = "/var/run/csm/csm_agent.pid"
@@ -75,7 +84,6 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..'))
-
     opt = Opt(sys.argv)
     try:
         from csm.common.log import Log
@@ -90,8 +98,10 @@ if __name__ == '__main__':
         from csm.common.conf import Conf
         from csm.common.payload import Yaml
         from csm.core.blogic import const
-        from csm.core.blogic.alerts.alerts import AlertMonitor
-        from csm.eos.plugins.alert import AlertPlugin
+        from csm.core.repositories.alerts import AlertSimpleStorage
+        from csm.core.blogic.services.alerts import AlertsAppService, \
+                                            AlertMonitorService
+        from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 
         CsmAgent.init()

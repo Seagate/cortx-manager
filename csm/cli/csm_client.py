@@ -32,6 +32,7 @@ from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 
+
 class CsmClient:
     """ Base class for invoking business logic functionality """
 
@@ -43,6 +44,7 @@ class CsmClient:
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
+
 
 class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
@@ -59,10 +61,11 @@ class CsmApiClient(CsmClient):
         TODO: Add a timeout.
         """
         self._response = None
-        self.process_request(cmd.name(), cmd.action(), cmd.options(),
-                             cmd.options(),
-                             cmd.args(), cmd.method(cmd.action()))
-        while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
+        self.process_request(cmd.name, cmd.action, cmd.options,
+                             cmd.options,
+                             cmd.args, cmd.get_method(cmd.action))
+        while self._response == None:
+            time.sleep(const.RESPONSE_CHECK_INTERVAL)
 
         # TODO - Examine results
         # TODO - Return (return_code, output)
@@ -74,6 +77,7 @@ class CsmApiClient(CsmClient):
 
     def process_response(self, response):
         self._response = response
+
 
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
@@ -89,15 +93,16 @@ class CsmRestClient(CsmClient):
 
     async def call(self, cmd):
         async with aiohttp.ClientSession() as session:
-            response = await self.process_request(session, cmd.name(),
-                                                  cmd.action(), cmd.options(),
-                                                  cmd.args(),
-                                                  cmd.method(cmd.action()))
+            response = await self.process_request(session, cmd.name,
+                                                  cmd.action, cmd.options,
+                                                  cmd.args,
+                                                  cmd.get_method(cmd.action))
         return Response(rc=response[1],
                         output=json.loads(response[0]))
 
     def __cleanup__(self):
         self._loop.close()
+
 
 class RestRequest(Request):
     """Cli Rest Request Class """
@@ -114,31 +119,46 @@ class RestRequest(Request):
         async with self._session.get(self._url, params=self._options) as response:
             return await response.text(), response.status
 
+    async def _patch(self) -> tuple:
+        async with self._session.patch(
+                self._url + f'/{self._options["alert_id"]}', json=str(self._options)) as response:
+            return await response.text(), response.status
+
     async def get_request(self) -> str:
         return await getattr(self, f'_{self._method}')()
+
 
 class Output:
     """CLI Response Display Class"""
 
-    def __init__(self, response):
+    def __init__(self, command, response):
+        self.command = command
         self.rc = response.rc()
         self.output = response.output()
 
     def dump(self, out, err, output_format, **kwargs) -> None:
         """Dump the Output on CLI"""
         if self.rc != 200:
-            return err.write(Output.error(self.rc, self.output))
+            errstr = ''
+            if hasattr(self.command, 'error_output'):
+                errstr = self.command.error_output(self.output)
+            else:
+                errstr = Output.error(self.rc, self.output) + '\n'
+            return err.write(errstr)
+        if hasattr(self.command, 'standard_output') and self.command.standard_output():
+            output = command.standard_output()
+            out.write(output)
+
         if output_format:
             output = getattr(Output, f'dump_{output_format}')(self.output,
-                                                              **kwargs)
+                                                              **kwargs) + '\n'
         else:
-            output = str(self.output)
-        out.write(output)
+            output = str(self.output) + '\n'
 
     @staticmethod
     def error(rc: int, message: str) -> str:
         """Format for Error message"""
-        return f'error({rc}): {message}'
+        return f'error({rc}): {message}\n'
 
     @staticmethod
     def dump_table(data: Any, headers: Dict, filters: str,

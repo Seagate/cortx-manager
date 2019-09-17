@@ -24,8 +24,8 @@ import errno
 import yaml
 import asyncio
 import json
+import traceback
 from weakref import WeakSet
-from datetime import datetime
 from aiohttp import web
 from abc import ABC
 
@@ -35,7 +35,12 @@ from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
-from csm.common.errors import CsmError
+from csm.common.cluster import Cluster
+from csm.common.errors import CsmError, CsmNotFoundError
+from csm.core.routes import ApiRoutes
+from csm.core.blogic.services.alerts import AlertsAppService
+from csm.core.controllers import AlertsHttpController
+
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -49,7 +54,8 @@ class CsmApi(ABC):
         # Validate configuration files are present
         inventory_file = const.INVENTORY_FILE
         if not os.path.isfile(inventory_file):
-            raise CsmError(errno.ENOENT, 'cluster config file %s does not exist' %inventory_file)
+            raise CsmError(errno.ENOENT,
+                           'cluster config file %s does not exist' % inventory_file)
 
     @staticmethod
     def get_cluster():
@@ -60,40 +66,97 @@ class CsmApi(ABC):
         CsmApi._cluster = cluster
 
     @staticmethod
-    def process_request(command, request, callback=None):
+    def process_request(command, request: Request, callback=None):
         """
         Processes requests received from client using a backend provider.
         Provider is loaded initially and instance is reused for future calls.
         """
-
-        if CsmApi._cluster == None:
+        if CsmApi._cluster is None:
             raise CsmError(errno.ENOENT, 'CSM API not initialized')
-        Log.info('command=%s action=%s args=%s' %(command, \
-            request.action(), request.args()))
+        Log.info('command=%s action=%s args=%s' % (command,
+                                                   request.action(),
+                                                   request.args()))
         if not command in CsmApi._providers.keys():
-            CsmApi._providers[command] = ProviderFactory.get_provider(command, CsmApi._cluster)
+            CsmApi._providers[command] = ProviderFactory.get_provider(command,
+                                                                      CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
 
 
 class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
+
     @staticmethod
-    def init():
+    def init(alerts_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
-        CsmRestApi._app = web.Application()
-        # Last route is for debugging purposes only. Please see
-        # the description of the process_dbg_static_page() method.
-        CsmRestApi._app.add_routes([
-            web.get("/csm", CsmRestApi.process_request),
-            web.get("/ws", CsmRestApi.process_websocket),
-            web.get('/{path:.*}', CsmRestApi.process_dbg_static_page)
-        ])
+        CsmRestApi._app = web.Application(
+            middlewares=[CsmRestApi.rest_middleware]
+        )
+
+        alerts_ctrl = AlertsHttpController(alerts_service)
+        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
+        ApiRoutes.add_websocket_routes(
+            CsmRestApi._app.router, CsmRestApi.process_websocket)
+        ApiRoutes.add_debug_routes(CsmRestApi._app.router)
+
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
+
+    @staticmethod
+    def error_response(err: Exception) -> dict:
+        resp = {
+            "error_code": None,
+            "message_id": None,
+            "message": None,
+            "error_format_args": {},  # Empty for now
+            # TODO: Should we send trace only when we are in debug mode?
+            "stacktrace": traceback.format_exc().splitlines()
+        }
+
+        if isinstance(err, CsmError):
+            resp["error_code"] = err.rc()
+            resp["message_id"] = err.message_id()
+            resp["message"] = err.error()
+            resp["error_format_args"] = err.message_args()
+        else:
+            resp["message"] = str(err)
+
+        return resp
+
+    @staticmethod
+    def json_serializer(*args, **kwargs):
+        kwargs['default'] = str
+        return json.dumps(*args, **kwargs)
+
+    @staticmethod
+    def json_response(resp_obj, status=200):
+        return web.json_response(
+            resp_obj, status=status, dumps=CsmRestApi.json_serializer)
+
+    @staticmethod
+    @web.middleware
+    async def rest_middleware(request, handler):
+        try:
+            resp = await handler(request)
+            if isinstance(resp, web.FileResponse):
+                return resp
+
+            if isinstance(resp, Response):
+                resp_obj = {'status': resp.rc(), 'message': resp.output()}
+            else:
+                resp_obj = resp
+
+            return CsmRestApi.json_response(resp_obj, 200)
+        # todo: Changes for handling all Errors to be done.
+        except CsmNotFoundError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=404)
+        except CsmError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=400)
+        except Exception as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=422)
 
     @staticmethod
     def run(port):
@@ -108,9 +171,8 @@ class CsmRestApi(CsmApi, ABC):
 
         request = Request(action, args)
         response = CsmApi.process_request(cmd, request)
-        response_msg = {'status': response.rc(), 'message': response.output()}
-        Log.debug('response_msg: %s' %response_msg)
-        return web.Response(text=json.dumps(response_msg), status=200)
+
+        return response
 
     @staticmethod
     async def process_websocket(request):
@@ -123,9 +185,9 @@ class CsmRestApi(CsmApi, ABC):
         try:
             async for msg in ws:
                 if msg.type == web.WSMsgType.TEXT:
-                    Log.debug('REST API websock msg (ignored): %s' %msg)
+                    Log.debug('REST API websock msg (ignored): %s' % msg)
                 elif msg.type == web.WSMsgType.ERROR:
-                    Log.debug('REST API websock exception: %s' %ws.exception())
+                    Log.debug('REST API websock exception: %s' % ws.exception())
             Log.debug('REST API websock connection closed')
             await ws.close()
         finally:
@@ -160,26 +222,10 @@ class CsmRestApi(CsmApi, ABC):
         clients = CsmRestApi._wsclients.copy()
         try:
             for ws in clients:
-                await ws.send_str(json.dumps(msg))
+                json_msg = CsmRestApi.json_serializer(msg)
+                await ws.send_str(json_msg)
         except:
             Log.debug('REST API websock broadcast error')
-
-    @staticmethod
-    async def process_dbg_static_page(request):
-        """
-        Static page handler is for debugging purposes only. To be
-        deleted later when we have tests for aiohttp web sockets.
-        HTML and JS debug files are loaded from 'dbgwbi' directory
-        (which will be deleted later completely too).
-        """
-        base = "src/core/agent/dbgwbi"
-        path = request.match_info.get('path', '.')
-        realpath = os.path.abspath(f'{base}/{path}')
-        if os.path.exists(realpath) and os.path.isdir(realpath):
-            realpath = os.path.abspath(f'{realpath}/index.html')
-        if os.path.exists(realpath):
-            return web.FileResponse(realpath)
-        return web.FileResponse(f'{base}/error.html')
 
     @staticmethod
     async def _async_push(msg):

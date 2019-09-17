@@ -28,7 +28,7 @@ class CsmSetup:
         permission like log, bundle path.
     """
     def __init__(self, argv):
-        Log.init("csm", "/var/log/csm")
+        Log.init("csm_setup", "/var/log/csm")
         self._args = argv[1:]
         self._args.insert(0, 'csm_setup')
         Conf.init()
@@ -68,22 +68,21 @@ class CsmSetup:
             delattr(namespace, attr)
         return command(action, vars(namespace), args)
 
-    def setup(self):
+    def process(self):
         ''' Parse args for csm_setup and execute cmd to print output '''
         self._cmd = self._get_command()
         self._response = None
-        self._request = Request(self._cmd.action(), self._cmd.args())
-        self.process_request(self._cmd.options(), self._process_response)
+        self._request = Request(self._cmd.action, self._cmd.args, self._cmd.options)
+        self.process_request(self._process_response)
         while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
         if self._response.rc() != 0:
-            sys.stdout.write('error(%d): ' %rc)
-        sys.stdout.write('%s\n' %self._response.output())
-        return self._response.rc()
+            raise CsmError(self._response.rc(), "%s" %self._response.output())
+        return self._response.output()
 
-    def process_request(self, options, callback=None):
-        Log.info('command=%s action=%s args=%s options=%s' %(self._cmd.name(),
-            self._request.action(), self._request.args(), options))
-        self._providers = SetupProvider(self._cluster, options)
+    def process_request(self, callback=None):
+        Log.info('command=%s action=%s args=%s options=%s' %(self._cmd.name,
+            self._request.action, self._request.args, self._request.options))
+        self._providers = SetupProvider(self._cluster, self._request.options)
         return self._providers.process_request(self._request, callback)
 
     def _process_response(self, response):
@@ -107,8 +106,8 @@ if __name__ == '__main__':
     from csm.core.agent.api import CsmApi
 
     try:
-        csm = CsmSetup(sys.argv)
-        sys.exit(csm.setup())
-    except Exception as exception:
+        csm_setup = CsmSetup(sys.argv)
+        sys.stdout.write('%s\n' %csm_setup.process())
+    except CsmError as exception:
         sys.stderr.write('%s\n' %exception)
         Log.error(traceback.format_exc())

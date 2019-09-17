@@ -34,11 +34,20 @@ class CsmError(Exception):
     _desc = 'Operation Successful'
     _caller = ''
 
-    def __init__(self, rc=0, desc=None):
+    def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
         super(CsmError, self).__init__()
         self._caller = inspect.stack()[1][3]
-        if rc != 0: self._rc = int(rc)
+        if rc is not None:
+            self._rc = str(rc)
         self._desc = desc or self._desc
+        self._message_id = message_id
+        self._message_args = message_args
+
+    def message_id(self):
+        return self._message_id
+
+    def message_args(self):
+        return self._message_args
 
     def rc(self):
         return self._rc
@@ -50,7 +59,7 @@ class CsmError(Exception):
         return self._caller
 
     def __str__(self):
-        return "error(%d): %s" % (self._rc, self._desc)
+        return "error(%s): %s" % (self._rc, self._desc)
 
 class CommandTerminated(KeyboardInterrupt):
     """
@@ -64,6 +73,7 @@ class CommandTerminated(KeyboardInterrupt):
     def __init__(self, _desc=None):
         super(CommandTerminated, self).__init__(_err, _desc)
 
+
 class InvalidRequest(CsmError):
     """
     This error will be raised when an invalid response
@@ -73,15 +83,28 @@ class InvalidRequest(CsmError):
     _err = CSM_INVALID_REQUEST
     _desc = "Invalid request message received."
 
-    def __init__(self, _desc=None):
-        super(InvalidRequest, self).__init__(_desc)
+    def __init__(self, _desc=None, message_id=None, message_args=None):
+        super(InvalidRequest, self).__init__(
+            CSM_INVALID_REQUEST, _desc, message_id, message_args)
+
 
 class CsmInternalError(CsmError):
     """
     This error is raised by CLI for all unknown internal errors
     """
 
-    def __init__(self, desc=None):
+    def __init__(self, desc=None, message_id=None, message_args=None):
         super(CsmInternalError, self).__init__(
-            CSM_INTERNAL_ERROR, 'Internal error: %s' %desc)
+            CSM_INTERNAL_ERROR, 'Internal error: %s' % desc,
+            message_id, message_args)
 
+
+class CsmNotFoundError(CsmError):
+    """
+    This error is raised for all cases when an entity was not found
+    """
+
+    def __init__(self, desc=None, message_id=None, message_args=None):
+        super(CsmNotFoundError, self).__init__(
+            CSM_INTERNAL_ERROR, desc,
+            message_id, message_args)

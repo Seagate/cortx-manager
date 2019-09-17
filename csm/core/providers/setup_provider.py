@@ -60,8 +60,11 @@ class SetupProvider(Provider):
                 raise CsmError(-1, "Unable to create %s user" % self._user)
         os.makedirs(self._bundle_path, exist_ok=True)
         os.chown(self._bundle_path, self._uid, self._gid)
-        os.system("setfacl -m u:" + self._user + ":rwx /var/log/csm/csm.log")
-        os.system("setfacl -m u:" + self._user + ":rwx /var/log/messages")
+        os.system("chown -R " + self._user + ":" + self._user + " /etc/csm")
+        os.system("chown -R " + self._user + ":" + self._user + " /var/log/csm")
+        os.system("systemctl daemon-reload")
+        os.system("systemctl enable csm_agent")
+        os.system("systemctl enable csm_web")
 
     def _validate_request(self, request):
         self._actions = const.CSM_SETUP_ACTIONS
@@ -82,4 +85,5 @@ class SetupProvider(Provider):
                     component.init(self._force)
             return Response(0, 'CSM initalized successfully !!!')
         except Exception as e:
-            raise CsmError(errno.EINVAL, 'Error: %s' % e)
+            Log.error("CSM initalized failed: %s" %e)
+            return Response(errno.EINVAL, 'CSM initalized failed !!!')

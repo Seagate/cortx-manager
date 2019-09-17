@@ -112,10 +112,10 @@ class Dict(Doc):
         Doc.__init__(self, "")
         self.data = data
 
-    def _load(self):
+    def load(self):
         return self.data
 
-    def _dump(self):
+    def dump(self):
         return self.data
 
 class Payload:
@@ -167,8 +167,8 @@ class Payload:
         :param map: mapping dictionary :type:Dict
         :return: :type: Dict
         """
-        return_dict = {}
+        converted_data = {}
         for key in map.keys():
             val = self.get(key)
-            self._set(map[key], val, return_dict)
-        return return_dict
+            self._set(map[key], val, converted_data)
+        return converted_data

@@ -68,7 +68,7 @@ class Channel(metaclass=ABCMeta):
     
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
-  
+
 class SSHChannel(Channel):
     """
     Represents ssh channel to a node for communication
@@ -172,7 +172,6 @@ class AmqpChannel(Channel):
 
     def __init__(self):
         Channel.__init__(self)
-        Log.init(self.__class__.__name__, '/tmp', Log.DEBUG)
         self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host") 
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
         self.username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")

@@ -18,7 +18,7 @@
 """
 
 import sys, os
-import subprocess
+from csm.common.process import SimpleProcess
 
 class HAFramework:
     def __init__(self, resource_agents):
@@ -56,9 +56,13 @@ class PcsHAFramework(HAFramework):
             1. List of active nodes
             2. List of inactive nodes
         """
-        _livenode_cmd = ["/usr/sbin/pcs", "status", "nodes", "corosync"]
-        _output = str(subprocess.check_output(_livenode_cmd, stderr=subprocess.PIPE))
-        _status_list = _output.split("\\n")
+        _livenode_cmd = "/usr/sbin/pcs status nodes corosync"
+        _proc = SimpleProcess(_livenode_cmd)
+        _output, _err, _rc = _proc.run(universal_newlines=True)
+        if _err != '':
+            raise Exception("Failed: Command: %s Returncode: %s Error: %s"
+                            %(_livenode_cmd, _rc, _err))
+        _status_list = _output.split('\n')
         _activenodes = _status_list[1].split()
         _activenodes.pop(0)
         _inactivenodes = _status_list[2].split()
@@ -69,9 +73,10 @@ class PcsHAFramework(HAFramework):
         """
             Return if HAFramework in up or down
         """
-        _cluster_status_cmd = ["/usr/sbin/pcs", "cluster", "status"]
-        _rc = subprocess.run(_cluster_status_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return 'up' if _rc.returncode == 0 else 'down'
+        _cluster_status_cmd = "/usr/sbin/pcs cluster status"
+        _proc = SimpleProcess(_cluster_status_cmd)
+        _output, _err, _rc = _proc.run(universal_newlines=True)
+        return 'down' if _err != '' else 'up'
 
 class ResourceAgent:
     def __init__(self, resources):
@@ -99,26 +104,27 @@ class PcsResourceAgent(ResourceAgent):
             Return True if all resources available else False
         """
         for resource in self._resources:
-            _chk_res_cmd = ["pcs", "resource", "show", resource]
-            _rc = subprocess.run( _chk_res_cmd, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
-            if _rc.returncode != 0:
+            _chk_res_cmd = "pcs resource show " + resource
+            _proc = SimpleProcess(_chk_res_cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            if _err != '':
                 return False
         return True
 
     def _delete_resource(self):
         for resource in self._resources:
-            _delete_res_cmd = ["pcs", "resource", "delete", resource]
-            _rc = subprocess.run( _delete_res_cmd, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
-            if _rc.returncode != 0:
-                raise Exception("Failed to delete resource %s" %resource)
+            _delete_res_cmd = "pcs resource delete " + resource
+            _proc = SimpleProcess(_delete_res_cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            if _err != '':
+                raise Exception("Failed: Command: %s Error: %s Returncode: %s"
+                                %(_delete_res_cmd, _err, _rc))
 
     def _ra_init(self):
         self._cmd_list = []
         self._resource_file = "/var/tmp/resource.conf"
-        self._cmd_list.append("pcs cluster cib " + self._resource_file)
         if not os.path.exists("/var/tmp"): os.makedirs("/var/tmp")
+        self._cmd_list.append("pcs cluster cib " + self._resource_file)
 
     def _init_resource(self, resource, service, provider, interval, timeout):
         _cmd = "pcs -f " + self._resource_file + " resource create " + resource +\
@@ -148,6 +154,8 @@ class PcsResourceAgent(ResourceAgent):
 
     def _execute_config(self):
         self._cmd_list.append("pcs cluster cib-push " + self._resource_file)
-        FNULL = open(os.devnull, 'w')
         for cmd in self._cmd_list:
-            subprocess.check_call(cmd.split(), stdout=FNULL, stderr=subprocess.PIPE)
+            _proc = SimpleProcess(cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            if _err != '':
+                raise Exception("Failed: Command: %s Error: %s Returncode: %s" %(cmd, _err, _rc))
