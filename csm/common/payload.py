@@ -105,7 +105,7 @@ class Ini(Doc):
         with open(self._file, 'w') as f:
             data.write(f)
 
-class Dict(Doc):
+class NullDoc(Doc):
     '''Represents Dictionary Wihthout file'''
 
     def __init__(self, data):
@@ -117,6 +117,17 @@ class Dict(Doc):
 
     def dump(self, data):
         return data
+
+class JsonMessage(Json):
+    def __init__(self, data):
+        Json.__init__(self, "")
+        self._data = data
+
+    def load(self):
+        return json.loads(self._data)
+
+    def dump(self, data):
+        return json.dumps(data)
 
 class Payload:
     ''' implements a Paload in specified format. '''
@@ -167,7 +178,7 @@ class Payload:
         :param map: mapping dictionary :type:Dict
         :return: :type: Dict
         """
-        payload = Payload(Dict({}))
+        payload = Payload(NullDoc({}))
         for key in map.keys():
             val = self.get(key)
             payload.set(map[key], val)
