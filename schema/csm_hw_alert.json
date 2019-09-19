@@ -71,8 +71,7 @@
     "description": {
       "type": "string",
       "required": true,
-      "description":
-          "This is the id from which a description will be fetched (e.g. TBD)"
+      "description": "This is the id from which a description will be fetched (e.g. TBD)"
     },
     "health": {
       "type": "string",

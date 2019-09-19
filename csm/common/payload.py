@@ -25,24 +25,24 @@ import configparser
 class Doc:
     _type = dict
 
-    def __init__(self, file_path):
-        self._file = file_path
+    def __init__(self, source):
+        self._source = source
 
     def __str__(self):
-        return self._file
+        return str(self._source)
 
     def load(self):
         ''' Loads data from file of given format '''
-        if not os.path.exists(self._file):
+        if not os.path.exists(self._source):
             return {}
         try:
             return self._load()
         except Exception as e:
-            raise Exception('Unable to read file %s. %s' % (self._file, e))
+            raise Exception('Unable to read file %s. %s' % (self._source, e))
 
     def dump(self, data):
         ''' Dump the anifest file to desired file or to the source '''
-        dir_path = os.path.dirname(self._file)
+        dir_path = os.path.dirname(self._source)
         if len(dir_path) > 0 and not os.path.exists(dir_path):
             os.makedirs(dir_path)
         self._dump(data)
@@ -54,11 +54,11 @@ class Toml(Doc):
         Doc.__init__(self, file_path)
 
     def _load(self):
-        with open(self._file, 'r') as f:
+        with open(self._source, 'r') as f:
             return toml.load(f, dict)
 
     def _dump(self, data):
-        with open(self._file, 'w') as f:
+        with open(self._source, 'w') as f:
             toml.dump(data, f)
 
 class Json(Doc):
@@ -68,11 +68,11 @@ class Json(Doc):
         Doc.__init__(self, file_path)
 
     def _load(self):
-        with open(self._file, 'r') as f:
+        with open(self._source, 'r') as f:
             return json.load(f)
 
     def _dump(self, data):
-        with open(self._file, 'w') as f:
+        with open(self._source, 'w') as f:
             json.dump(data, f, indent=2)
 
 class Yaml(Doc):
@@ -82,11 +82,11 @@ class Yaml(Doc):
         Doc.__init__(self, file_path)
 
     def _load(self):
-        with open(self._file, 'r') as f:
+        with open(self._source, 'r') as f:
             return yaml.safe_load(f)
 
     def _dump(self, data):
-        with open(self._file, 'w') as f:
+        with open(self._source, 'w') as f:
             yaml.dump(data, f)
 
 class Ini(Doc):
@@ -98,39 +98,50 @@ class Ini(Doc):
         self._type = configparser.SectionProxy
 
     def _load(self):
-        self._config.read(self._file)
+        self._config.read(self._source)
         return self._config
 
     def _dump(self, data):
-        with open(self._file, 'w') as f:
+        with open(self._source, 'w') as f:
             data.write(f)
 
-class NullDoc(Doc):
-    '''Represents Dictionary Wihthout file'''
+class Dict(Doc):
+    '''Represents Dictionary Without file'''
 
-    def __init__(self, data):
-        Doc.__init__(self, "")
-        self.data = data
+    def __init__(self, data={}):
+        Doc.__init__(self, data)
 
     def load(self):
-        return self.data
+        return self._source
 
     def dump(self, data):
-        return data
+        self._source = data
 
 class JsonMessage(Json):
-    def __init__(self, data):
-        Json.__init__(self, "")
-        self._data = data
+    def __init__(self, json_str):
+        """
+        Represents the Json Without FIle
+        :param json_str: Json String to be processed :type: str
+        """
+        Json.__init__(self, json_str)
 
     def load(self):
-        return json.loads(self._data)
+        """
+        Load the json to python interpretable Dictionary Object
+        :return: :type: Dict
+        """
+        return json.loads(self._source)
 
-    def dump(self, data):
-        return json.dumps(data)
+    def dump(self, data: dict):
+        """
+        Set's the data _source after converting to json
+        :param data: :type: Dict
+        :return:
+        """
+        self._source = json.dumps(data)
 
 class Payload:
-    ''' implements a Paload in specified format. '''
+    ''' implements a Payload in specified format. '''
 
     def __init__(self, doc):
         self._dirty = False
@@ -141,11 +152,12 @@ class Payload:
         if self._dirty:
             raise Exception('%s not synced to disk' % self._doc)
         self._data = self._doc.load()
+        return self._data
 
     def dump(self):
         ''' Dump the anifest file to desired file or to the source '''
+        self._doc.dump(self._data)
         self._dirty = False
-        return self._doc.dump(self._data)
 
     def _get(self, key, data):
         ''' Obtain value for the given key '''
@@ -172,13 +184,13 @@ class Payload:
         self._set(key, val, self._data)
         self._dirty = True
 
-    def convert(self, map):
+    def convert(self, map, payload):
         """
         Converts 1 Schema to 2nd Schema depending on mapping dictionary.
         :param map: mapping dictionary :type:Dict
+        :param payload: Payload Class Object with desired Source.
         :return: :type: Dict
         """
-        payload = Payload(NullDoc({}))
         for key in map.keys():
             val = self.get(key)
             payload.set(map[key], val)
