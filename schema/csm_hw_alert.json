@@ -1,27 +1,98 @@
 {
-    "$schema": "http://json-schema.org/draft-03/schema#",
-    "id": "http://json-schema.org/draft-03/schema#",
-    "title": "CSM HW Schema",
-
-    "type": "object",
-    "properties": {
-        "header": {
-            "type": "hw",
-            "alert_type": "missing",
-            "status": "not present",
-            "resolved": "no",
-            "acknowledged": "no",
-            "description": "The power supply is not installed",
-            "location": "Enclosure 0 - Right"
-            "severity": "1",
-            "recommendation": "Check the power supply for the correct type or if inserted check whether it is locked."
-        },
-        "hw": {
-            "vendor": "",
-            "enclosure_id": 0,
-            "serial_number": "",
-            "part_number": ""
-       }
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://json-schema.org/draft-03/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "required": true,
+      "description": "Id for an alert which identifies alerts of specific type."
+    },
+    "alert_uuid": {
+      "type": "integer",
+      "required": true,
+      "description": "uuid to identify an alert."
+    },
+    "type": {
+      "type": "string",
+      "required": true,
+      "description": "Type of alert (e.g. HW|SW)"
+    },
+    "state": {
+      "type": "string",
+      "required": true,
+      "description": "State of the alert (e.g. missing| insertion etc.)"
+    },
+    "created_time": {
+      "type": "integer",
+      "required": true,
+      "description": "Origination time of the alert"
+    },
+    "updated_time": {
+      "type": "integer",
+      "required": false,
+      "description": "Updation time of the alert"
+    },
+    "resolved": {
+      "type": "integer",
+      "required": false,
+      "description": "Resolution status of an alert. (e.g. 0 | 1)"
+    },
+    "acknowledged": {
+      "type": "integer",
+      "required": false,
+      "description": "Alert is acknowldeged by the user or not. (e.g. 0 | 1)"
+    },
+    "severity": {
+      "type": "number",
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "required": true,
+      "description": "Severity of an alert.(e.g. TBD)"
+    },
+    "enclosure_id": {
+      "type": "integer",
+      "required": true,
+      "description": "Enclosure ID. (e.g. TBD)"
+    },
+    "module_type": {
+      "type": "string",
+      "required": true,
+      "description": "Type of the module. (e.g. PSU, FAN)"
+    },
+    "module_name": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the module. (e.g. Fan Module 4)"
+    },
+    "description": {
+      "type": "string",
+      "required": true,
+      "description": "This is the id from which a description will be fetched (e.g. TBD)"
+    },
+    "health": {
+      "type": "string",
+      "required": true,
+      "enum": [
+        "OK",
+        "Degraded",
+        "Fault",
+        "N/A",
+        "Unknown"
+      ],
+      "description": "Describes the health of PSU, Controller, Disk etc."
+    },
+    "health_recommendation": {
+      "type": "string",
+      "required": true,
+      "description": "This is the health recommendation string."
+    },
+    "extended_info": {
+      "type": "object",
+      "required": false
     }
+  }
 }
-

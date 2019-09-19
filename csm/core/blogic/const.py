@@ -69,3 +69,27 @@ NON_ROOT_USER_PASS = 'csm'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
+GOOD_ALERT = ['insertion', 'fault_resolved']
+BAD_ALERT = ['missing', 'fault']
+ALERT_ID = 'id'
+ALERT_TYPE = 'type'
+ALERT_UUID = 'alert_uuid'
+ALERT_STATE = 'state'
+ALERT_ENCLOSURE_ID = 'enclosure_id'
+ALERT_MODULE_NAME = 'module_name'
+ALERT_RESOLVED = 'resolved'
+ALERT_ACKNOWLEDGED = 'acknowledged'
+ALERT_SEVERITY = 'severity'
+ALERT_RESOURCE_TYPE = 'resource_type'
+ALERT_MODULE_TYPE = 'module_type'
+ALERT_UPDATED_TIME = 'updated_time'
+ALERT_CREATED_TIME = 'created_time'
+ALERT_INT_DEFAULT = -1
+ALERT_TRUE = 1
+ALERT_FALSE = 0
+ALERT_SENSOR_TYPE = 'sensor_response_type'
+ALERT_MESSAGE = 'message'
+
+# CSM Schema Path
+CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
+ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
