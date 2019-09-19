@@ -60,7 +60,7 @@ def tmain(argp, argv):
 
     # Initialization
     try:
-        test_args_file = os.path.join(ts_path, 'args.yaml')
+        test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())
         if args is None: args = {}
 
@@ -141,10 +141,12 @@ def tmain(argp, argv):
 if __name__ == '__main__':
     try:
         argParser = argparse.ArgumentParser(
-            usage = "%(prog)s [-h] [-t]",
+            usage = "%(prog)s [-h] [-t] [-f]",
             formatter_class = argparse.RawDescriptionHelpFormatter)
         argParser.add_argument("-t",
                 help="Enter path of testlist file")
+        argParser.add_argument("-f",
+                help="Enter path of args.yaml")
         args = argParser.parse_args()
 
         args = argParser.parse_args()

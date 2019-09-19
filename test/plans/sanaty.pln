@@ -1,0 +1,3 @@
+setup.test_setup_provider
+alerts.test_alerts_command
+alerts.test_alerts_acknowledgement

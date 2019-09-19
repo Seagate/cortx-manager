@@ -1,0 +1,11 @@
+aiohttp
+paramiko
+toml
+PyYAML
+configparser
+argparse
+dict2xml
+prettytable
+pika
+idna
+jsonschema
