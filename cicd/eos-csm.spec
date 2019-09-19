@@ -23,11 +23,11 @@ cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm/eos
 
 %post
 CSM_INSTALL_PATH=/opt/seagate/csm
-ENV=${CSM_INSTALL_PATH}/web/.env
+ENV=${CSM_INSTALL_PATH}/web/web-dist/.env
 
 sed -i "s/CSM_UI_PATH=\"\"/CSM_UI_PATH=\"\/opt\/seagate\/csm\/eos\/gui\/ui-dist\"/g" $ENV
 sed -i "s/NODE_ENV=\"development\"/NODE_ENV=\"production\"/g" $ENV
-
+ln -sf ${CSM_INSTALL_PATH}/web/csm_web.service /usr/bin/csm_web
 
 %postun
 /bin/rm -rf ${CSM_INSTALL_PATH}/eos 2> /dev/null
