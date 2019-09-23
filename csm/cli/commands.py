@@ -163,8 +163,6 @@ class AlertsCommand(Command):
     def standard_output(self):
         if self._action == 'acknowledge':
             return f"Alert with id {self.options['alert_id']} has been acknowledged."
-        else:
-            return ''
 
     def error_output(self, output):
         if self._action == 'acknowledge':

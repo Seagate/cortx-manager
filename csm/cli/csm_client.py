@@ -139,21 +139,19 @@ class Output:
     def dump(self, out, err, output_format, **kwargs) -> None:
         """Dump the Output on CLI"""
         if self.rc != 200:
-            errstr = ''
-            if hasattr(self.command, 'error_output'):
+            if hasattr(self.command, 'error_output') and self.command.error_output(self.output):
                 errstr = self.command.error_output(self.output)
             else:
                 errstr = Output.error(self.rc, self.output) + '\n'
-            return err.write(errstr)
+            err.write(errstr or "")
         if hasattr(self.command, 'standard_output') and self.command.standard_output():
-            output = command.standard_output()
-            out.write(output)
-
-        if output_format:
+            output = self.command.standard_output()
+        elif output_format:
             output = getattr(Output, f'dump_{output_format}')(self.output,
                                                               **kwargs) + '\n'
         else:
             output = str(self.output) + '\n'
+        out.write(output)
 
     @staticmethod
     def error(rc: int, message: str) -> str:
