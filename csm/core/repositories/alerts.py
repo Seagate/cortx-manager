@@ -38,10 +38,12 @@ class AlertSimpleStorage(IAlertStorage):
 
     async def _retrieve_by_range(self, time_range: DateTimeRange):
 
-        def _check_alert_date(datetime: datetime):
-            if (time_range.start is not None) and datetime < time_range.start:
+        def _check_alert_date(epoch_time):
+            datetime_obj = datetime.utcfromtimestamp(epoch_time)
+
+            if (time_range.start is not None) and datetime_obj < time_range.start:
                 return False
-            if (time_range.end is not None) and datetime > time_range.end:
+            if (time_range.end is not None) and datetime_obj > time_range.end:
                 return False
 
             return True
