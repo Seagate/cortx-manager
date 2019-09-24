@@ -1,4 +1,5 @@
 from datetime import datetime
+from copy import  deepcopy
 from typing import Optional, Iterable
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
@@ -19,11 +20,10 @@ class AlertSimpleStorage(IAlertStorage):
         if key is None:
             key = str(await self._nextid())
             alert.store(key)
+        self._kvs.put(key, deepcopy(alert))
 
-        self._kvs.put(key, alert)
-
-    async def retrieve(self, key):
-        return self._kvs.get(key)
+    async def retrieve(self, key, def_val=None):
+        return self._kvs.get(key, def_val)
 
     async def retrieve_all(self):
         return list(map(lambda x: x[1], self._kvs.items()))

@@ -19,7 +19,7 @@ class SyncInMemoryKeyValueStorage(SyncKeyValueStorage):
         super().__init__()
         self.memdict = OrderedDict()
 
-    def get(self, key, defval = None):
+    def get(self, key, defval=None):
         return self.memdict.get(key, defval)
 
     def put(self, key, val):

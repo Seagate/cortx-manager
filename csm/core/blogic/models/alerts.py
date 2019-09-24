@@ -40,6 +40,7 @@ class Alert(object):
         self._data = data
         self._published = False
         self._timestamp = datetime.utcnow()
+        self._resolved = False
 
     def key(self):
         return self._key
@@ -63,6 +64,11 @@ class Alert(object):
     def is_published(self):
         return self._published
 
+    def resolved(self):
+        self._resolved = True
+
+    def is_resolved(self):
+        return self._resolved
 
 # TODO: Consider a more generic approach to storage interfaces
 class IAlertStorage(ABC):
@@ -81,7 +87,7 @@ class IAlertStorage(ABC):
         pass
 
     @abstractmethod
-    async def retrieve(self, alert_id) -> Optional[Alert]:
+    async def retrieve(self, alert_id, def_val=None) -> Optional[Alert]:
         """
         Retrieves an alert by its unique key.
 
@@ -120,5 +126,12 @@ class IAlertStorage(ABC):
 
         :param time_range: Alerts will be filered according to this parameter.
         :return: the number of suitable alerts
+        """
+        pass
+
+    @abstractmethod
+    async def retrieve_all(self) -> list:
+        """
+        Retrieves all the
         """
         pass
