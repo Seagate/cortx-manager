@@ -39,6 +39,7 @@ class Command:
         if not hasattr(self, '_cmd_action_map'):
             self._cmd_action_map = {}
         self.validate_command()
+        self.update_options()
 
     @property
     def name(self):
@@ -72,6 +73,9 @@ class Command:
                     except ValueError:
                         raise CsmError(errno.EINVAL,
                                        f'"{k}" argument must be integer, got {self.args[i]} instead')
+
+    def update_options(self):
+        pass
 
     def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
@@ -166,4 +170,16 @@ class AlertsCommand(Command):
 
     def error_output(self, output):
         if self._action == 'acknowledge':
-            return f"Alert with id {self.options['alert_id']} wasn't acknowledged. Error: {output['message']}. Error code: {output['error_code']}.\n"
+            output = f"Alert with id {self.options['alert_id']} wasn't acknowledged."
+            if 'message' in output:
+                output += f" Error: {output['message']}."
+            if 'error_id' in output:
+                output += f"Error code: {output['error_code']}.\n"
+            else:
+                output += "\n"
+            return output
+        return ''
+
+    def update_options(self):
+        self.options['alert_id'] = self.args[0]
+        self.options['comment'] = self.args[1]

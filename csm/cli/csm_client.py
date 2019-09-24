@@ -22,6 +22,7 @@ import json
 import pprint
 import sys
 import time
+import errno
 from typing import ClassVar, Dict, Any
 
 import aiohttp
@@ -31,6 +32,7 @@ from prettytable import PrettyTable
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
+from csm.common.errors import CsmError
 
 
 class CsmClient:
@@ -97,8 +99,12 @@ class CsmRestClient(CsmClient):
                                                   cmd.action, cmd.options,
                                                   cmd.args,
                                                   cmd.get_method(cmd.action))
+        try:
+            data = json.loads(response[0])
+        except ValueError:
+            raise CsmError(errno.EINVAL, 'Could not parse the response')
         return Response(rc=response[1],
-                        output=json.loads(response[0]))
+                        output=data)
 
     def __cleanup__(self):
         self._loop.close()
