@@ -31,7 +31,7 @@ from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
-
+from csm.core.blogic import const
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_MSG_NOT_FOUND = "alerts_not_found"
@@ -213,6 +213,17 @@ class AlertMonitorService(Service):
         alert_task.result()  # wait for completion
         return alert
 
+    def get_alert(self, alert_id) -> Optional[Alert]:
+        """
+        Get the single from the DB for the alert_id
+        :param alert_id: ID for Alerts.
+        :return: Alert Object
+        """
+        alert_task = asyncio.run_coroutine_threadsafe(
+            self._storage.retrieve(alert_id, {}), self._loop)
+        result = alert_task.result(timeout=2)
+        return  result # wait for completion
+
     def _consume(self, message):
         """
         This is a callback function which will receive
@@ -223,9 +234,34 @@ class AlertMonitorService(Service):
             3. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
+        alert = Alert(message)
+        """
+        Before storing the alert let us fisrt try to resolve it.
+        We will only resolve the alert if it is a good one.
+        """
+        if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
+            self._resolve(alert)
         alert = self.save_alert(message)
         self._publish(alert)
         return True
+
+
+    def _resolve(self, alert) -> None:
+        """
+        Get the previous alert with the same alert_uuid.
+        :param alert: Alert Object.
+        :return: None
+        """
+        prev_alert = self.get_alert(alert.key())
+        if prev_alert:
+            if prev_alert.data().get('state', "") \
+                in const.BAD_ALERT and not prev_alert.is_resolved():
+                """
+                Try to resolve the alert if the previous alert is bad and
+                the current alert is good.
+                """
+                alert.data()['resolved'] = 1
+                alert.resolved()
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
