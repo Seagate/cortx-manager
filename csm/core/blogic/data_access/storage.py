@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from csm.core.data_access.queries import Query
-from csm.core.data_access.queries import ExtQuery
+from csm.core.blogic.data_access.queries import Query
+from csm.core.blogic.data_access.queries import ExtQuery
 from csm.core.blogic.models import Object
 
 
@@ -38,6 +38,7 @@ class IStorage(ABC):
         """TODO: it also should take fields to update"""
         pass
 
+    @abstractmethod
     async def delete(self, query: Query):
         """Delete objects in DB by Query
 
@@ -46,6 +47,7 @@ class IStorage(ABC):
         """
         pass
 
+    @abstractmethod
     async def sum(self, ext_query: ExtQuery):
         """Sum Aggregation function
 
@@ -54,6 +56,7 @@ class IStorage(ABC):
         """
         pass
 
+    @abstractmethod
     async def avg(self, ext_query: ExtQuery):
         """Average Aggregation function
 
@@ -63,6 +66,7 @@ class IStorage(ABC):
         """
         pass
 
+    @abstractmethod
     async def count(self, ext_query: ExtQuery):
         """Count Aggregation function
 
@@ -71,13 +75,16 @@ class IStorage(ABC):
         """
         pass
 
+    @abstractmethod
     async def max(self, ext_query: ExtQuery):
         """Max Aggregation function
 
             :param ExtQuery ext_query: Extended query which describes how to perform Max aggregation
+
         """
         pass
 
+    @abstractmethod
     async def min(self, ext_query: ExtQuery):
         """Min Aggregation function
 
