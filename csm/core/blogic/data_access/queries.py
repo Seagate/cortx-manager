@@ -3,8 +3,8 @@ from schematics.types import BaseType
 from csm.core.blogic.data_access.filters import IFilterQuery
 
 
-ASC = 0  # Ascending
-DESC = 1  # Descending
+ASC = "asc"  # Ascending
+DESC = "desc"  # Descending
 
 
 class OrderBy:
@@ -25,21 +25,18 @@ class Query:
         """Data storage class for Query parameters"""
 
         def __init__(self, order_by: OrderBy = None, group_by: BaseType = None,
-                     filter_by: IFilterQuery = None, limit: int = None, having=None, offset: int = None):
-
-            # TODO: specify type for @having attribute
+                     filter_by: IFilterQuery = None, limit: int = None, offset: int = None):
 
             self.order_by = order_by
             self.group_by = group_by
             self.filter_by = filter_by
             self.limit = limit
-            self.having = having
             self.offset = offset
 
     def __init__(self, order_by: OrderBy = None, group_by: BaseType = None,
-                 filter_by: IFilterQuery = None, limit: int = None, having=None, offset: int = None):
+                 filter_by: IFilterQuery = None, limit: int = None, offset: int = None):
 
-        self.data = self.Data(order_by, group_by, filter_by, limit, having, offset)
+        self.data = self.Data(order_by, group_by, filter_by, limit, offset)
 
     def order_by(self, by_field: BaseType, by_order: int = ASC):
         """
@@ -82,16 +79,6 @@ class Query:
         self.data.limit = limit
         return self
 
-    def having(self, having):
-        """
-        Set Query having parameter
-
-        :param having: having parameter for Query
-        :return:
-        """
-        self.data.having = having
-        return self
-
     def offset(self, offset: int):
         """
         Set Query offset parameter
@@ -102,6 +89,8 @@ class Query:
         self.data.offset = offset
         return self
 
+    # TODO: having functionality
+
 
 class ExtQuery(Query):
 
@@ -109,4 +98,3 @@ class ExtQuery(Query):
 
     def __init__(self):
         super().__init__()
-
