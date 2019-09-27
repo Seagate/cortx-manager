@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 
+from schematics.models import Model
+
 from csm.core.blogic.data_access.queries import Query
 from csm.core.blogic.data_access.queries import ExtQuery
-from csm.core.blogic.models import Object
 
 
 class IStorage(ABC):
@@ -10,7 +11,7 @@ class IStorage(ABC):
     """Abstract Storage Interface"""
 
     @abstractmethod
-    async def store(self, obj: Object):
+    async def store(self, obj: Model):
         """Store object into Storage
 
             :param Object obj: Arbitrary CSM object for storing into DB
@@ -32,7 +33,7 @@ class IStorage(ABC):
         """Update object in Storage by Query
 
             :param Query query: query object which describes what objects need to update
-            :param dict to_update: dictionary with fields and values whish should be updated
+            :param dict to_update: dictionary with fields and values which should be updated
 
         """
         """TODO: it also should take fields to update"""
