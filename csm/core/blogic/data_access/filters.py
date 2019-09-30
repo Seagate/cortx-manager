@@ -6,28 +6,7 @@ from csm.common.errors import CsmInternalError
 
 class IFilterQuery(ABC):
     @abstractmethod
-    def accept_visitor(self, visitor: IFilterTreeVisitor) -> Any:
-        pass
-
-
-class IFilterTreeVisitor(ABC):
-    """
-    Descendants of this class are supposed to be used for filter tree traversal.
-    Application of "visitor" design pattern allows to:
-    1) Avoid switch'ing over possible filter types
-    2) Not to forget to add handers for new filter types as they are added to the system
-    """
-
-    @abstractmethod
-    def handle_and(entry: FilterOperationAnd):
-        pass
-
-    @abstractmethod
-    def handle_or(entry: FilterOperationOr):
-        pass
-
-    @abstractmethod
-    def handle_compare(entry: FilterOperationCompare):
+    def accept_visitor(self, visitor) -> Any:
         pass
 
 
@@ -107,6 +86,27 @@ class FilterOperationCompare(IFilterQuery):
 
     def get_operation(self) -> ComparisonOperation:
         return self.operation
+
+
+class IFilterTreeVisitor(ABC):
+    """
+    Descendants of this class are supposed to be used for filter tree traversal.
+    Application of "visitor" design pattern allows to:
+    1) Avoid switch'ing over possible filter types
+    2) Not to forget to add handers for new filter types as they are added to the system
+    """
+
+    @abstractmethod
+    def handle_and(entry: FilterOperationAnd):
+        pass
+
+    @abstractmethod
+    def handle_or(entry: FilterOperationOr):
+        pass
+
+    @abstractmethod
+    def handle_compare(entry: FilterOperationCompare):
+        pass
 
 
 def And(*args):
