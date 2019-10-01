@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-
-from schematics.models import Model
-
+from typing import Type, Union
 from csm.core.blogic.data_access.queries import Query
 from csm.core.blogic.data_access.queries import ExtQuery
+from src.core.blogic.models import CsmModel
 
 
 class IStorage(ABC):
@@ -11,7 +10,7 @@ class IStorage(ABC):
     """Abstract Storage Interface"""
 
     @abstractmethod
-    async def store(self, obj: Model):
+    async def store(self, obj: CsmModel):
         """Store object into Storage
 
             :param Object obj: Arbitrary CSM object for storing into DB
@@ -92,4 +91,26 @@ class IStorage(ABC):
             :param ExtQuery ext_query: Extended query which describes how to perform Min aggregation
 
         """
+        pass
+
+
+class AbstractDbProvider(ABC):
+    """
+    A class for data storage access.
+
+    Below you can see its indended usage.
+    Suppose db is an instance of AbstractDbProvider.
+
+    db(SomeModel).get(some_query)
+    db(some_model_instance).get(some_query)  # we can avoid passing model class
+
+    """
+    async def __call__(self, model: Union[CsmModel, Type[CsmModel]]) -> IStorage:
+        if isinstance(model, CsmModel):
+            model = type(model)
+
+        return await self.get_storage(model)
+
+    @abstractmethod
+    async def get_storage(self, model: Type[CsmModel]) -> IStorage:
         pass
