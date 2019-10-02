@@ -2,13 +2,14 @@ import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from typing import List, Type
 
-from elasticsearch_dsl import Q
+from elasticsearch_dsl import Q, Search
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException, RequestError
 from schematics.models import Model
 from schematics.models import FieldDescriptor
-from schematics.types import StringType, DecimalType, DateType, IntType
+from schematics.types import StringType, DecimalType, DateType, IntType, BaseType
 
 from csm.common.errors import CsmInternalError
 from csm.core.blogic.data_access import Query
@@ -16,17 +17,22 @@ from csm.core.blogic.data_access import ExtQuery
 from csm.core.databases import BaseAbstractStorage
 from csm.core.blogic.models import Alert
 from csm.core.blogic.data_access import DataAccessExternalError, DataAccessInternalError
-from csm.core.blogic.filters import (IFilterTreeVisitor, FilterOperationAnd,
-                                     FilterOperationOr, FilterOperationCompare)
-from csm.core.blogic.filters import ComparisonOperation, IFilterQuery
+from csm.core.blogic.data_access.filters import (IFilterTreeVisitor, FilterOperationAnd,
+                                                 FilterOperationOr, FilterOperationCompare)
+from csm.core.blogic.data_access.filters import Compare, And, Or
+from csm.core.blogic.data_access.filters import ComparisonOperation, IFilterQuery
 
 
-# elasticsearch service words
-MAPPINGS = "mappings"
-PROPERTIES = "properties"
-DATA_TYPE = "type"
-ALIASES = "aliases"
-SETTINGS = "settings"
+class ESWords:
+
+    """ElasticSearch service words"""
+
+    MAPPINGS = "mappings"
+    PROPERTIES = "properties"
+    DATA_TYPE = "type"
+    ALIASES = "aliases"
+    SETTINGS = "settings"
+    SOURCE = "_source"
 
 
 # TODO: Add remaining schematics data types
@@ -72,14 +78,14 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
             ComparisonOperation.OPERATION_EQ: _match_query,
             ComparisonOperation.OPERATION_LT: _range_generator('lt'),
             ComparisonOperation.OPERATION_GT: _range_generator('gt'),
-            ComparisonOperation.OPERATION_LTE: _range_generator('lte'),
-            ComparisonOperation.OPERATION_GTE: _range_generator('gte')
+            ComparisonOperation.OPERATION_LEQ: _range_generator('lte'),
+            ComparisonOperation.OPERATION_GEQ: _range_generator('gte')
         }
 
     def build(self, root: IFilterQuery):
         # TODO: may be, we should move this method to the entity that processes
         # Query objects
-        return self.accept_visitor(root)
+        return root.accept_visitor(self)
 
     def handle_and(self, entry: FilterOperationAnd):
         operands = entry.get_operands()
@@ -88,7 +94,7 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
 
         ret = operands[0].accept_visitor(self)
         for operand in operands[1:]:
-            ret = ret & operand.accept_visitor(operand)
+            ret = ret & operand.accept_visitor(self)
 
         return ret
 
@@ -99,17 +105,16 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
 
         ret = operands[0].accept_visitor(self)
         for operand in operands[1:]:
-            ret = ret | operand.accept_visitor(operand)
+            ret = ret | operand.accept_visitor(self)
 
         return ret
 
     def handle_compare(self, entry: FilterOperationCompare):
         field = entry.get_left_operand()
-        field_str = None
 
         if isinstance(field, str):
             field_str = field
-        elif isinstance(field, FieldDescriptor):
+        elif isinstance(field, BaseType):
             field_str = field.name
         else:
             raise Exception("Failed to process left side of comparison operation")
@@ -122,34 +127,35 @@ class ElasticSearchDataMapper:
 
     """ElasticSearch data mappings helper"""
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Type[Model]):
         """
 
-        :param Model model: model for constructing data mapping for index in ElasticSearch
+        :param Type[Model] model: model for constructing data mapping for index in ElasticSearch
         """
         self._model = model
         self._mapping = {
-            MAPPINGS: {
-                PROPERTIES: {
+            ESWords.MAPPINGS: {
+                ESWords.PROPERTIES: {
                 }
             }
         }
 
-    def _add_property(self, name: str, property_type):
+    def _add_property(self, name: str, property_type: Type[BaseType]):
         """
         Add property to mappings
-        #TODO: add type for property_type
+
         :param str name: property name
-        :param property_type:
+        :param Type[BaseType] property_type: type of property for given property `name`
         :return:
         """
-        properties = self._mapping[MAPPINGS][PROPERTIES]
+        properties = self._mapping[ESWords.MAPPINGS][ESWords.PROPERTIES]
 
         if name in properties:
             raise CsmInternalError(f"Repeated property name in model: {name}")
 
         properties[name] = dict()
-        properties[name][DATA_TYPE] = DATA_MAP[property_type]
+        properties[name][ESWords.DATA_TYPE] = DATA_MAP[property_type]
+        # properties[name]["index"] = "false"
 
     def build_index_mappings(self) -> dict:
         """
@@ -167,35 +173,60 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
     """ElasticSearch Storage Interface Implementation"""
 
-    def __init__(self, es_client: Elasticsearch, model: Model, thread_pool_exec: ThreadPoolExecutor,
-                 loop: asyncio.AbstractEventLoop = None):
+    def __init__(self, es_client: Elasticsearch, model: Type[Model], collection: str,
+                 thread_pool_exec: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
         """
 
         :param Elasticsearch es_client: elasticsearch client
-        :param Model model: model to associate it with elasticsearch storage
+        :param Type[Model] model: model (class object) to associate it with elasticsearch storage
+        :param str collection: string represented collection for `model`
         :param ThreadPoolExecutor thread_pool_exec: thread pool executor
         :param BaseEventLoop loop: asyncio event loop
         """
-        self._tread_pool_exec = thread_pool_exec
         self._es_client = es_client
+        self._tread_pool_exec = thread_pool_exec
         self._loop = asyncio.get_running_loop() if loop is None else loop
+        self._collection = collection
 
-        # We are associating index name in ElasticSearch with model name
-        self._index = model.__name__.lower()
+        self._query_converter = ElasticSearchQueryConverter()
 
-        # return a dict object
-        # index_data = self._es_client.indices.get(self._index, ignore_unavailable=True)
+        # We are associating index name in ElasticSearch with given collection
+        self._index = self._collection
 
-        indices = self._es_client.indices.get_alias(self._index, ignore_unavailable=True)
+        if not isinstance(model, type) or Model not in model.__bases__:
+            raise DataAccessInternalError("model parameter is not a Class object or not inherited "
+                                          "from schematics.Model")
+        self._model = model  # Needed to build returning objects
+
+        self._index_info = None
+        self._properties = None
+
+    async def attach_to_index(self) -> None:
+        """
+        Provides async method to connect storage to index bound to provided model and collection
+        :return:
+        """
+        def _get_alias(_index):
+            return self._es_client.indices.get_alias(self._index, ignore_unavailable=True)
+
+        def _create(_index, _body):
+            self._es_client.indices.create(index=_index, body=_body)
+
+        def _get(_index):
+            return self._es_client.indices.get(self._index)
+
+        indices = await self._loop.run_in_executor(self._tread_pool_exec, _get_alias, self._index)
         # self._obj_index = self._es_client.indices.get_alias("*")
         if indices.get(self._index, None) is None:
-            data_mappings = ElasticSearchDataMapper(model)
+            data_mappings = ElasticSearchDataMapper(self._model)
             mappings_dict = data_mappings.build_index_mappings()
             # self._es_client.indices.create(index=model.__name__, ignore=400, body=mappings_dict)
-            self._es_client.indices.create(index=self._index, body=mappings_dict)
+            await self._loop.run_in_executor(self._tread_pool_exec,
+                                             _create, self._index, mappings_dict)
 
-        self._index_info = self._es_client.indices.get(self._index)
-        self._properties = self._index_info[self._index][MAPPINGS][PROPERTIES]
+        self._index_info = await self._loop.run_in_executor(self._tread_pool_exec,
+                                                            _get, self._index)
+        self._properties = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
 
     async def store(self, obj: Model):
         """
@@ -211,7 +242,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
             :param dict _doc: dict representation of the object
             :return: elastic search server response
             """
-            # TODO: need to use id?
+            # TODO: is it needed to use id?
             _result = self._es_client.index(index=self._index, id=obj.id, body=_doc)
             return _result
 
@@ -235,15 +266,23 @@ class ElasticSearchStorage(BaseAbstractStorage):
         result = await self._loop.run_in_executor(self._tread_pool_exec, _store, doc)
         return result
 
-    async def get(self, query: Query):
-        """Get object from Storage by Query
-
-            :param Query query: query object which describes request to Storage
-
+    async def get(self, query: Query) -> List[Model]:
         """
-        pass
+        Get object from Storage by Query
 
-    async def get_by_id(self, obj_id: int):
+        :param query:
+        :return: empty list or list with objects which satisfy the passed query condition
+        """
+        def _get(_q_obj):
+            search = Search(index="alert", using=self._es_client)
+            search = search.query(_q_obj)
+            return search.execute()
+
+        q_obj = self._query_converter.build(query.data.filter_by)
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _get, q_obj)
+        return [self._model(hit.to_dict()) for hit in result]
+
+    async def get_by_id(self, obj_id: int) -> Model:
         """
         Simple implementation of get function
 
@@ -260,7 +299,9 @@ class ElasticSearchStorage(BaseAbstractStorage):
             return _result
 
         result = await self._loop.run_in_executor(self._tread_pool_exec, _get, obj_id)
-        return result
+        data = result[ESWords.SOURCE]
+
+        return self._model(data)
 
     async def update(self, query: Query, to_update: dict):
         """Update object in Storage by Query
@@ -320,54 +361,3 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
         """
         pass
-
-
-# NOTE: code below for testing purposes. Will be removed
-
-async def store_alert(storage, alert):
-    tasks = [asyncio.ensure_future(storage.store(alert))]
-    done, pending = await asyncio.wait(tasks)
-
-
-async def get_alert(storage, query):
-    tasks = [asyncio.ensure_future(storage.get(query))]
-    done, pending = await asyncio.wait(tasks)
-
-
-async def get_alert_by_id(storage, id):
-    tasks = [asyncio.ensure_future(storage.get_by_id(id))]
-    done, pending = await asyncio.wait(tasks)
-    for task in done:
-        print(task.result())
-
-
-if __name__ == "__main__":
-    pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
-    loop = asyncio.get_event_loop()
-    es = Elasticsearch()
-    storage = ElasticSearchStorage(es, Alert, pool, loop)
-    _alert = {'id': 1,
-              'alert_uuid': 1,
-              'status': "Success",
-              'type': "Hardware",
-              'enclosure_id': 1,
-              'module_name': "SSPL",
-              'description': "Some Description",
-              'health': "Good",
-              'health_recommendation': "Replace Disk",
-              'location': "USA",
-              'resolved': 0,
-              'acknowledged': 0,
-              'severity': 1,
-              'state': "Unknown",
-              'extended_info': "No",
-              'module_type': "FAN",
-              'updated_time': datetime.now(),
-              'created_time': datetime.now()
-              }
-    alert = Alert(_alert)
-    loop.run_until_complete(store_alert(storage, alert))
-    # query = Query().filter_by(Compare(Alert.id, "=", alert.id))
-    # loop.run_until_complete(get_alert(storage, query))
-    loop.run_until_complete(get_alert_by_id(storage, alert.id))
-    loop.close()
