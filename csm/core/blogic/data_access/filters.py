@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Any
-from csm.common.errors import CsmInternalError
+from csm.core.blogic.data_access.errors import MalformedQueryError
 
 
 class IFilterQuery(ABC):
@@ -13,9 +13,12 @@ class IFilterQuery(ABC):
 class FilterOperationAnd(IFilterQuery):
     """
     Class representing AND condition
-    :param *args: List of nested filter conditions
+    :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
     def __init__(self, *args):
+        if len(args) < 2 or not all(isinstance(x, IFilterQuery) for x in args):
+            raise MalformedQueryError("AND operation takes >= 2 arguments of filter type")
+
         self._operands = args
 
     def accept_visitor(self, visitor):
@@ -28,9 +31,12 @@ class FilterOperationAnd(IFilterQuery):
 class FilterOperationOr(IFilterQuery):
     """
     Class representing OR condition
-    :param *args: List of nested filter conditions
+    :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
     def __init__(self, *args):
+        if len(args) < 2 or not all(isinstance(x, IFilterQuery) for x in args):
+            raise MalformedQueryError("OR operation takes >= 2 arguments of filter type")
+
         self._operands = args
 
     def accept_visitor(self, visitor):
@@ -63,7 +69,7 @@ class ComparisonOperation(Enum):
         if op in mapping:
             return mapping[op]
         else:
-            raise CsmInternalError("Invalid comparison operation: {}".format(op))
+            raise MalformedQueryError("Invalid comparison operation: {}".format(op))
 
 
 class FilterOperationCompare(IFilterQuery):
