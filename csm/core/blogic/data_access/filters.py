@@ -103,15 +103,15 @@ class IFilterTreeVisitor(ABC):
     """
 
     @abstractmethod
-    def handle_and(entry: FilterOperationAnd):
+    def handle_and(self, entry: FilterOperationAnd):
         pass
 
     @abstractmethod
-    def handle_or(entry: FilterOperationOr):
+    def handle_or(self, entry: FilterOperationOr):
         pass
 
     @abstractmethod
-    def handle_compare(entry: FilterOperationCompare):
+    def handle_compare(self, entry: FilterOperationCompare):
         pass
 
 
@@ -127,7 +127,7 @@ def And(*args):
 def Or(*args):
     """
     Adds a condition that demands that at least one of the nested conditions is true.
-    :param *args: List of nested conditions (each must be an instance of IFilterQuery)
+    :param args: List of nested conditions (each must be an instance of IFilterQuery)
     :returns: a FilterOperationOr object
     """
     return FilterOperationOr(*args)
