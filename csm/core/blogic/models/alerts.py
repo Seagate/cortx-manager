@@ -30,8 +30,10 @@ import errno
 from schematics.models import Model
 from schematics.types import IntType, StringType, DateType
 
+from csm.core.blogic.models import CsmModel
 
-class Alert(Model):
+
+class Alert(CsmModel):
 
     id = IntType()
     alert_uuid = IntType()

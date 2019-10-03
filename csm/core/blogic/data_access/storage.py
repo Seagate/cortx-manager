@@ -98,19 +98,19 @@ class AbstractDbProvider(ABC):
     """
     A class for data storage access.
 
-    Below you can see its indended usage.
+    Below you can see its intended usage.
     Suppose db is an instance of AbstractDbProvider.
 
-    db(SomeModel).get(some_query)
-    db(some_model_instance).get(some_query)  # we can avoid passing model class
+    await db(SomeModel).get(some_query)
+    await db(some_model_instance).get(some_query)  # we can avoid passing model class
 
     """
-    async def __call__(self, model: Union[CsmModel, Type[CsmModel]]) -> IStorage:
+    def __call__(self, model: Union[CsmModel, Type[CsmModel]]) -> IStorage:
         if isinstance(model, CsmModel):
             model = type(model)
 
-        return await self.get_storage(model)
+        return self.get_storage(model)
 
     @abstractmethod
-    async def get_storage(self, model: Type[CsmModel]) -> IStorage:
+    def get_storage(self, model: Type[CsmModel]) -> IStorage:
         pass
