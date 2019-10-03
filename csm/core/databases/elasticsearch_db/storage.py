@@ -16,6 +16,7 @@ from csm.core.blogic.data_access import Query
 from csm.core.blogic.data_access import ExtQuery
 from csm.core.databases import BaseAbstractStorage
 from csm.core.blogic.models import Alert
+from csm.core.blogic.models import CsmModel
 from csm.core.blogic.data_access import DataAccessExternalError, DataAccessInternalError
 from csm.core.blogic.data_access.filters import (IFilterTreeVisitor, FilterOperationAnd,
                                                  FilterOperationOr, FilterOperationCompare)
@@ -193,7 +194,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         # We are associating index name in ElasticSearch with given collection
         self._index = self._collection
 
-        if not isinstance(model, type) or Model not in model.__bases__:
+        if not isinstance(model, type) or CsmModel not in model.__bases__:
             raise DataAccessInternalError("model parameter is not a Class object or not inherited "
                                           "from schematics.Model")
         self._model = model  # Needed to build returning objects
@@ -228,6 +229,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
                                                             _get, self._index)
         self._properties = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
 
+    # TODO: rename to CsmModel
     async def store(self, obj: Model):
         """
         Store object into Storage
