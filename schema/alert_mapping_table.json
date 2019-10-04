@@ -15,7 +15,7 @@
   },
   "enclosure_controller_alert": {
     "time": "created_time",
-    "message.sensor_response_type.enclosure_controller_alert.info.alert_type": "state",
+    "message.sensor_response_type.enclosure_controller_alert.alert_type": "state",
     "message.sensor_response_type.enclosure_controller_alert.resource_type": "module_name",
     "message.sensor_response_type.enclosure_controller_alert.info.status": "status",
     "message.sensor_response_type.enclosure_controller_alert.info.health": "health",
@@ -27,7 +27,7 @@
   },
   "enclosure_disk_alert": {
     "time": "created_time",
-    "message.sensor_response_type.enclosure_disk_alert.info.alert_type": "state",
+    "message.sensor_response_type.enclosure_disk_alert.alert_type": "state",
     "message.sensor_response_type.enclosure_disk_alert.resource_type": "module_name",
     "message.sensor_response_type.enclosure_disk_alert.info.status": "status",
     "message.sensor_response_type.enclosure_disk_alert.info.health": "health",
@@ -42,7 +42,6 @@
     "message.sensor_response_type.enclosure_psu_alert.alert_type": "state",
     "message.sensor_response_type.enclosure_psu_alert.resource_type": "module_name",
     "time": "created_time",
-    "?  ": "alert_uuid",
     "message.sensor_response_type.enclosure_psu_alert.info.status": "status",
     "message.sensor_response_type.enclosure_psu_alert.info.health": "health",
     "message.sensor_response_type.enclosure_psu_alert.info.health-reason": "description",
@@ -50,7 +49,6 @@
     "message.sensor_response_type.enclosure_psu_alert.info.health-recommendation": "health_recommendation",
     "message.sensor_response_type.enclosure_psu_alert.info.enclosure-id": "enclosure_id",
     "Not needed. CSM will handle this.": "acknowledged",
-    "N/A": "updated_time",
     "message.sensor_response_type.enclosure_psu_alert.extended_info": "extended_info",
     "message.sensor_response_type.enclosure_psu_alert.info": "extended_info.info"
   }

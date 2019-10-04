@@ -4,12 +4,12 @@ CSM_SETUP_ACTIONS = ['init']
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-ALERTS_CLI_HEADERS = {'id': 'Alert Id',
+ALERTS_CLI_HEADERS = {'alert_uuid': 'Alert Id',
                       'health': 'Health',
                       'description': 'Description',
                       'severity': 'Severity',
                       'state': 'State',
-                      'acknowledge': 'Acknowledged',
+                      'acknowledged': 'Acknowledged',
                       'resolved': 'Resolved'}
 # CSM Agent Port
 CSM_AGENT_PORT = 8082
