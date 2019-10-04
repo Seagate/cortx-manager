@@ -56,7 +56,7 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
-        alert = await self._storage.retrieve(alert_id)
+        alert = await self._storage.retrieve(int(alert_id))
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
@@ -64,13 +64,10 @@ class AlertsAppService(ApplicationService):
             # TODO: Alert should contain such fields directly, not as a
             #   dictionary accessible by data() method
             alert.data()["comment"] = fields["comment"]
-
         if "acknowledged" in fields:
-            # TODO: We need some common code that does such conversions
-            new_value = fields["acknowledged"] == True \
-                        or fields["acknowledged"] == "1" \
-                        or fields["acknowledged"] == "true"
-            alert.data()["acknowledged"] = new_value
+            if not isinstance(fields["acknowledged"], bool):
+                raise TypeError("Acknowledged Value Must Be of Type Boolean.")
+            alert.data()["acknowledged"] = fields["acknowledged"]
 
         await self._storage.update(alert)
         return alert.data()

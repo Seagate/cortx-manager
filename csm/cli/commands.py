@@ -143,7 +143,7 @@ class AlertsCommand(Command):
     _filter = const.ALERTS_COMMAND
 
     def __init__(self, action, options, args):
-        self._cmd_action_map = {'acknowledge': {'id': int, 'comment': str}}
+        self._cmd_action_map = {'acknowledge': {'id': int}}
         super().__init__(action, options, args)
         self._method = AlertsCommand._method
 
@@ -166,7 +166,7 @@ class AlertsCommand(Command):
 
     def standard_output(self):
         if self._action == 'acknowledge':
-            return f"Alert with id {self.options['alert_id']} has been acknowledged."
+            return f"Alert with id {self.options['alert_id']} has been acknowledged. \n"
 
     def error_output(self, output):
         if self._action == 'acknowledge':
@@ -174,12 +174,12 @@ class AlertsCommand(Command):
             if 'message' in output:
                 output += f" Error: {output['message']}."
             if 'error_id' in output:
-                output += f"Error code: {output['error_code']}.\n"
-            else:
-                output += "\n"
-            return output
+                output += f"Error code: {output['error_code']}."
+            return output + "\n"
         return ''
 
     def update_options(self):
+        if not self.args:
+            return
         self.options['alert_id'] = self.args[0]
-        self.options['comment'] = self.args[1]
+        self.options['acknowledged'] = True

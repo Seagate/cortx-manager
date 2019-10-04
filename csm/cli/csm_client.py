@@ -127,7 +127,7 @@ class RestRequest(Request):
 
     async def _patch(self) -> tuple:
         async with self._session.patch(
-                self._url + f'/{self._options["alert_id"]}', json=str(self._options)) as response:
+                self._url + f'/{self._options["alert_id"]}', json=self._options) as response:
             return await response.text(), response.status
 
     async def get_request(self) -> str:
@@ -150,6 +150,7 @@ class Output:
             else:
                 errstr = Output.error(self.rc, self.output) + '\n'
             err.write(errstr or "")
+            return None
         if hasattr(self.command, 'standard_output') and self.command.standard_output():
             output = self.command.standard_output()
         elif output_format:
