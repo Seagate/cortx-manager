@@ -34,7 +34,7 @@ from .common import CsmModel
 
 
 # This is an example of how Alert model can look like 
-class AlertModelExample(CsmModel):
+class AlertExample(CsmModel):
 
     id = IntType()
     alert_uuid = IntType()

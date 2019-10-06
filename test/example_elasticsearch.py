@@ -6,7 +6,7 @@ from csm.core.databases.db_provider import (DbStorageProvider, DbDriverConfig,
                                             DbDriverProvider, DbModelConfig, DbConfig)
 from csm.core.blogic.data_access.filters import Compare, And, Or
 from csm.core.blogic.data_access import Query, SortOrder
-from csm.core.blogic.models import Alert
+from csm.core.blogic.models.alert import AlertExample
 
 ALERT1 = {'id': 22,
           'alert_uuid': 1,
@@ -63,7 +63,7 @@ async def example():
         },
         "models": [
             {
-                "import_path": "csm.core.blogic.models.Alert",
+                "import_path": "csm.core.blogic.models.alert.AlertExample",
                 "driver": "es_db",
                 "config": {
                     "index": "alert"
@@ -74,26 +74,26 @@ async def example():
     driver_provider = DbDriverProvider(conf.drivers)
     db = DbStorageProvider(driver_provider, conf.models)
 
-    alert1 = Alert(ALERT1)
-    alert2 = Alert(ALERT2)
+    alert1 = AlertExample(ALERT1)
+    alert2 = AlertExample(ALERT2)
 
-    await db(Alert).store(alert1)
-    await db(Alert).store(alert2)
+    await db(AlertExample).store(alert1)
+    await db(AlertExample).store(alert2)
 
-    filter = And(Compare(Alert.id, "=", 22), And(Compare(Alert.status, "=", "Success"),
-                                                 Compare(Alert.id, ">", 1)))
-    query = Query().filter_by(filter).order_by(Alert.id, SortOrder.DESC)
-    res = await db(Alert).get(query)
+    filter = And(Compare(AlertExample.id, "=", 22), And(Compare(AlertExample.status, "=", "Success"),
+                                                 Compare(AlertExample.id, ">", 1)))
+    query = Query().filter_by(filter).order_by(AlertExample.id, SortOrder.DESC)
+    res = await db(AlertExample).get(query)
     print(f"Get by query: {[alert.to_primitive() for alert in res]}")
     
-    res = await db(Alert).get_by_id(22)
+    res = await db(AlertExample).get_by_id(22)
     print(f"Get by id = 22: {res.to_primitive()}")
 
-    filter_obj = Or(Compare(Alert.id, "=", 1), Compare(Alert.id, "=", 2), Compare(Alert.id, "=", 22))
-    res = await db(Alert).count(filter_obj)
+    filter_obj = Or(Compare(AlertExample.id, "=", 1), Compare(AlertExample.id, "=", 2), Compare(AlertExample.id, "=", 22))
+    res = await db(AlertExample).count(filter_obj)
     print(f"Count by filter: {res}")
 
-    res = await db(Alert).delete(filter_obj)
+    res = await db(AlertExample).delete(filter_obj)
     print(f"Deleted by filter: {res}")
 
 
