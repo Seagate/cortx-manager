@@ -61,7 +61,7 @@ class ElasticSearchDriver(CachedDatabaseDriver):
         config = self._convert_config(config, ElasticSearchModelConfiguration)
 
         pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
-        loop = asyncio.get_running_loop()
+        loop = asyncio.get_event_loop()
         es_storage = ElasticSearchStorage(self.elastic_instance, model, config.index, pool, loop)
         await es_storage.attach_to_index()
 

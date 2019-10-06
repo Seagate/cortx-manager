@@ -246,7 +246,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         """
         self._es_client = es_client
         self._tread_pool_exec = thread_pool_exec
-        self._loop = asyncio.get_running_loop() if loop is None else loop
+        self._loop = asyncio.get_event_loop() if loop is None else loop
         self._collection = collection
 
         self._query_converter = ElasticSearchQueryConverter()
@@ -423,7 +423,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         """
         pass
 
-    async def simple_count(self, filter_obj: IFilterQuery) -> int:
+    async def count(self, filter_obj: IFilterQuery) -> int:
         """
         Returns count of entities for given filter_obj
 
@@ -431,16 +431,16 @@ class ElasticSearchStorage(BaseAbstractStorage):
         :return: count of entries which satisfy the `filter_obj`
         """
 
-        def _simple_count(_body):
+        def _count(_body):
             return self._es_client.count(index=self._index, body=_body)
 
         filter_by = self._query_converter.build(filter_obj)
         search = Search(index=self._index, using=self._es_client)
         search = search.query(filter_by)
-        result = await self._loop.run_in_executor(self._tread_pool_exec, _simple_count, search.to_dict())
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _count, search.to_dict())
         return result.get(ESWords.COUNT)
 
-    async def count(self, ext_query: ExtQuery):
+    async def count_by_query(self, ext_query: ExtQuery):
         """
         Count Aggregation function
 

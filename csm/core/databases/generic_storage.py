@@ -26,7 +26,7 @@ class BaseAbstractStorage(IStorage):
         """
         pass
 
-    async def simple_count(self, filter_obj: IFilterQuery) -> int:
+    async def count(self, filter_obj: IFilterQuery) -> int:
         """
         Returns count of entities for given filter_obj
 
@@ -34,7 +34,7 @@ class BaseAbstractStorage(IStorage):
         :return:
         """
 
-    async def count(self, ext_query: ExtQuery):
+    async def count_by_query(self, ext_query: ExtQuery):
         """
         Count Aggregation function
 
