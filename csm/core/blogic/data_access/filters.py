@@ -121,6 +121,12 @@ def And(*args):
     :param *args: List of nested conditions (each must be an instance of IFilterQuery)
     :returns: a FilterOperationAnd object
     """
+    if not args:
+        raise MalformedQueryError("AND operation must take at least 1 argument")
+
+    if len(args) == 1:
+        return args[0]
+
     return FilterOperationAnd(*args)
 
 
@@ -130,6 +136,12 @@ def Or(*args):
     :param args: List of nested conditions (each must be an instance of IFilterQuery)
     :returns: a FilterOperationOr object
     """
+    if not args:
+        raise MalformedQueryError("OR operation must take at least 1 argument")
+
+    if len(args) == 1:
+        return args[0]
+
     return FilterOperationOr(*args)
 
 

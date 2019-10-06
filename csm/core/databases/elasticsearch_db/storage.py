@@ -2,17 +2,16 @@ import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import List, Type
+from typing import List, Type, Union
 
 from elasticsearch_dsl import Q, Search
 from elasticsearch import Elasticsearch
-from elasticsearch import ElasticsearchException, RequestError
+from elasticsearch import ElasticsearchException, RequestError, ConflictError
 from schematics.models import Model
-from schematics.models import FieldDescriptor
 from schematics.types import StringType, DecimalType, DateType, IntType, BaseType
 
 from csm.common.errors import CsmInternalError
-from csm.core.blogic.data_access import Query
+from csm.core.blogic.data_access import Query, SortOrder
 from csm.core.blogic.data_access import ExtQuery
 from csm.core.databases import BaseAbstractStorage
 from csm.core.blogic.models import Alert
@@ -34,6 +33,12 @@ class ESWords:
     ALIASES = "aliases"
     SETTINGS = "settings"
     SOURCE = "_source"
+    ASC = "asc"
+    DESC = "desc"
+    MODE = "mode"
+    ORDER = "order"
+    COUNT = "count"
+    DELETED = "deleted"
 
 
 # TODO: Add remaining schematics data types
@@ -63,6 +68,21 @@ def _range_generator(op_string: str):
         return Q("range", **obj)
 
     return _make_query
+
+
+def field_to_str(field: Union[str, BaseType]) -> str:
+    """
+    Convert model field to its string representation
+
+    :param Union[str, BaseType] field:
+    :return: model field string representation
+    """
+    if isinstance(field, str):
+        return field
+    elif isinstance(field, BaseType):
+        return field.name
+    else:
+        raise DataAccessInternalError("Failed to process left side of comparison operation")
 
 
 class ElasticSearchQueryConverter(IFilterTreeVisitor):
@@ -113,12 +133,7 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
     def handle_compare(self, entry: FilterOperationCompare):
         field = entry.get_left_operand()
 
-        if isinstance(field, str):
-            field_str = field
-        elif isinstance(field, BaseType):
-            field_str = field.name
-        else:
-            raise Exception("Failed to process left side of comparison operation")
+        field_str = field_to_str(field)
 
         op = entry.get_operation()
         return self.comparison_conversion[op](field_str, entry.get_right_operand())
@@ -128,10 +143,10 @@ class ElasticSearchDataMapper:
 
     """ElasticSearch data mappings helper"""
 
-    def __init__(self, model: Type[Model]):
+    def __init__(self, model: Type[CsmModel]):
         """
 
-        :param Type[Model] model: model for constructing data mapping for index in ElasticSearch
+        :param Type[CsmModel] model: model for constructing data mapping for index in ElasticSearch
         """
         self._model = model
         self._mapping = {
@@ -170,16 +185,61 @@ class ElasticSearchDataMapper:
         return self._mapping
 
 
+class ElasticSearchQueryService:
+
+    """Query service-helper for Elasticsearch"""
+
+    def __init__(self, index: str, es_client: Elasticsearch,
+                 query_converter: ElasticSearchQueryConverter):
+        self._index = index
+        self._es_client = es_client
+        self._query_converter = query_converter
+
+    def search_by_query(self, query: Query) -> Search:
+        """
+        Get Elasticsearch Search instance by given query object
+
+        :param Query query: query object to construct ES's Search object
+        :return: Search object constructed by given `query` param
+        """
+        def convert(name):
+            return ESWords.ASC if name == SortOrder.ASC else ESWords.DESC
+
+        extra_params = dict()
+        sort_by = dict()
+        search = Search(index=self._index, using=self._es_client)
+
+        q = query.data
+
+        if q.filter_by is not None:
+            filter_by = self._query_converter.build(q.filter_by)
+            search = search.query(filter_by)
+
+        if q.offset is not None:
+            extra_params["from_"] = q.offset
+        if q.limit is not None:
+            extra_params["size"] = q.limit + extra_params.get("from_", 0)
+
+        if any((i is not None for i in (q.offset, q.limit))):
+            search = search.extra(**extra_params)
+
+        if q.order_by is not None:
+            sort_by[field_to_str(q.order_by.field)] = {ESWords.ORDER: convert(q.order_by.order)}
+            search = search.sort(sort_by)
+
+        return search
+
+
 class ElasticSearchStorage(BaseAbstractStorage):
 
     """ElasticSearch Storage Interface Implementation"""
 
-    def __init__(self, es_client: Elasticsearch, model: Type[Model], collection: str,
+    def __init__(self, es_client: Elasticsearch, model: Type[CsmModel], collection: str,
                  thread_pool_exec: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
         """
 
         :param Elasticsearch es_client: elasticsearch client
-        :param Type[Model] model: model (class object) to associate it with elasticsearch storage
+        :param Type[CsmModel] model: model (class object) to associate it with elasticsearch storage
         :param str collection: string represented collection for `model`
         :param ThreadPoolExecutor thread_pool_exec: thread pool executor
         :param BaseEventLoop loop: asyncio event loop
@@ -201,6 +261,8 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
         self._index_info = None
         self._properties = None
+        self._query_service = ElasticSearchQueryService(self._index, self._es_client,
+                                                        self._query_converter)
 
     async def attach_to_index(self) -> None:
         """
@@ -229,8 +291,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
                                                             _get, self._index)
         self._properties = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
 
-    # TODO: rename to CsmModel
-    async def store(self, obj: Model):
+    async def store(self, obj: CsmModel):
         """
         Store object into Storage
 
@@ -266,6 +327,8 @@ class ElasticSearchStorage(BaseAbstractStorage):
         # result = self._loop.run_until_complete(future)
 
         result = await self._loop.run_in_executor(self._tread_pool_exec, _store, doc)
+        # TODO: discuss that. May be better avoid this to increase store performance
+        await self._refresh_index()  # NOTE: make refresh to ensure that updated results will be available quickly
         return result
 
     async def get(self, query: Query) -> List[Model]:
@@ -275,91 +338,131 @@ class ElasticSearchStorage(BaseAbstractStorage):
         :param query:
         :return: empty list or list with objects which satisfy the passed query condition
         """
-        def _get(_q_obj):
-            search = Search(index="alert", using=self._es_client)
-            search = search.query(_q_obj)
+        def _get(_query):
+            search = self._query_service.search_by_query(_query)
             return search.execute()
 
-        q_obj = self._query_converter.build(query.data.filter_by)
-        result = await self._loop.run_in_executor(self._tread_pool_exec, _get, q_obj)
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _get, query)
         return [self._model(hit.to_dict()) for hit in result]
 
-    async def get_by_id(self, obj_id: int) -> Model:
+    async def get_by_id(self, obj_id: int) -> Union[Model, None]:
         """
         Simple implementation of get function
 
         :param int obj_id:
         :return:
         """
-        def _get(_id: int):
-            """
-            Simple get object function by its id
-            :param int _id: object id to get
-            :return: elasticsearch server response
-            """
-            _result = self._es_client.get(index=self._index, id=_id)
-            return _result
+        query = Query().filter_by(Compare(self._model.id, "=", obj_id))
+        result = await self.get(query)
+        if result:
+            return result.pop()
 
-        result = await self._loop.run_in_executor(self._tread_pool_exec, _get, obj_id)
-        data = result[ESWords.SOURCE]
-
-        return self._model(data)
+        return None
 
     async def update(self, query: Query, to_update: dict):
-        """Update object in Storage by Query
+        """
+        Update object in Storage by Query
 
-            :param Query query: query object which describes what objects need to update
-            :param dict to_update: dictionary with fields and values which should be updated
+        :param Query query: query object which describes what objects need to update
+        :param dict to_update: dictionary with fields and values which should be updated
 
         """
         """TODO: it also should take fields to update"""
         pass
 
-    async def delete(self, query: Query):
-        """Delete objects in DB by Query
-
-            :param Query query: query object to perform delete operation
-
+    async def _refresh_index(self):
         """
-        pass
+        Refresh index
+
+        :return:
+        """
+        def _refresh():
+            self._es_client.indices.refresh(index=self._index)
+
+        await self._loop.run_in_executor(self._tread_pool_exec, _refresh)
+
+    async def delete(self, filter_obj: IFilterQuery) -> int:
+        """
+        Delete objects in DB by Query
+
+        :param IFilterQuery filter_obj: filter object to perform delete operation
+        :return: number of deleted entries
+        """
+        def _delete(_by_filter):
+            search = Search(index=self._index, using=self._es_client)
+            search = search.query(_by_filter)
+            return search.delete()
+
+        filter_by = self._query_converter.build(filter_obj)
+        # NOTE: Needed to avoid elasticsearch.ConflictError when we perform delete quickly after store operation
+        await self._refresh_index()
+        try:
+            # TODO: it is possible to return a number of deleted
+            result = await self._loop.run_in_executor(self._tread_pool_exec, _delete, filter_by)
+        except ConflictError as e:
+            raise DataAccessExternalError(f"{e}")
+
+        return result[ESWords.DELETED]
 
     async def sum(self, ext_query: ExtQuery):
-        """Sum Aggregation function
+        """
+        Sum Aggregation function
 
-            :param ExtQuery ext_query: Extended query which describes how to perform sum aggregation
-
+        :param ExtQuery ext_query: Extended query which describes how to perform sum aggregation
+        :return:
         """
         pass
 
     async def avg(self, ext_query: ExtQuery):
-        """Average Aggregation function
+        """
+        Average Aggregation function
 
-            :param ExtQuery ext_query: Extended query which describes how to perform average
-                                       aggregation
-
+        :param ExtQuery ext_query: Extended query which describes how to perform average
+                                   aggregation
+        :return:
         """
         pass
 
+    async def simple_count(self, filter_obj: IFilterQuery) -> int:
+        """
+        Returns count of entities for given filter_obj
+
+        :param IFilterQuery filter_obj: filter to perform count aggregation
+        :return: count of entries which satisfy the `filter_obj`
+        """
+
+        def _simple_count(_body):
+            return self._es_client.count(index=self._index, body=_body)
+
+        filter_by = self._query_converter.build(filter_obj)
+        search = Search(index=self._index, using=self._es_client)
+        search = search.query(filter_by)
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _simple_count, search.to_dict())
+        return result.get(ESWords.COUNT)
+
     async def count(self, ext_query: ExtQuery):
-        """Count Aggregation function
+        """
+        Count Aggregation function
 
-            :param ExtQuery ext_query: Extended query which describes to perform count aggregation
-
+        :param ExtQuery ext_query: Extended query which describes to perform count aggregation
+        :return:
         """
         pass
 
     async def max(self, ext_query: ExtQuery):
-        """Max Aggregation function
+        """
+        Max Aggregation function
 
-            :param ExtQuery ext_query: Extended query which describes how to perform Max aggregation
-
+        :param ExtQuery ext_query: Extended query which describes how to perform Max aggregation
+        :return:
         """
         pass
 
     async def min(self, ext_query: ExtQuery):
-        """Min Aggregation function
+        """
+        Min Aggregation function
 
-            :param ExtQuery ext_query: Extended query which describes how to perform Min aggregation
-
+        :param ExtQuery ext_query: Extended query which describes how to perform Min aggregation
+        :return:
         """
         pass

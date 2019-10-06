@@ -54,14 +54,14 @@ class ElasticSearchDriver(CachedDatabaseDriver):
         raise MalformedConfigurationError("Invalid ElasticSearch configuration: "
                                           "unexpected type")
 
-    async def create_storage(self, model,
-                             config: Union[ElasticSearchModelConfiguration, dict]) -> IStorage:
+    async def _create_storage(self, model,
+                              config: Union[ElasticSearchModelConfiguration, dict]) -> IStorage:
 
         # TODO: analyze model and config: it will be required to create new ElasticSearch instance
         config = self._convert_config(config, ElasticSearchModelConfiguration)
 
         pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         es_storage = ElasticSearchStorage(self.elastic_instance, model, config.index, pool, loop)
         await es_storage.attach_to_index()
 

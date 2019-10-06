@@ -23,11 +23,6 @@ from enum import Enum
 from typing import Optional
 
 
-class SortOrder(Enum):
-    ASC = "asc"
-    DESC = "desc"
-
-
 class SortBy:
     def __init__(self, field, order: SortOrder):
         self.field = field
