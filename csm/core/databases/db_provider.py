@@ -174,7 +174,7 @@ class ProxyStorageCallDecorator:
 
 
 # TODO: class can't be inherited from IStorage
-class AsyncIStorage:
+class AsyncStorage:
 
     """
     Decorates all storage async calls and async db drivers and db storages initializations
@@ -240,5 +240,5 @@ class DbStorageProvider(AbstractDbProvider):
         if model in self._cached_async_decorators:
             return self._cached_async_decorators[model]
 
-        self._cached_async_decorators[model] = AsyncIStorage(model, self.model_config[model], self.driver_provider)
+        self._cached_async_decorators[model] = AsyncStorage(model, self.model_config[model], self.driver_provider)
         return self._cached_async_decorators[model]
