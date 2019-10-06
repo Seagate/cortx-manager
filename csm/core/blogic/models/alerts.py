@@ -30,10 +30,11 @@ import errno
 from schematics.models import Model
 from schematics.types import IntType, StringType, DateType
 
-from csm.core.blogic.models import CsmModel
+from .common import CsmModel
 
 
-class Alert(CsmModel):
+# This is an example of how Alert model can look like 
+class AlertModelExample(CsmModel):
 
     id = IntType()
     alert_uuid = IntType()
@@ -57,38 +58,38 @@ class Alert(CsmModel):
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
 # the class, rather than storing Alert as a dictionary in the _data field
-# class Alert(object):
-#     """
-#     Represents an alert to be sent to front end
-#     """
+class Alert(object):
+    """
+    Represents an alert to be sent to front end
+    """
 
-#     def __init__(self, data):
-#         self._key = data.get("alert_uuid", None)
-#         self._data = data
-#         self._published = False
-#         self._timestamp = datetime.utcnow()
+    def __init__(self, data):
+        self._key = data.get("alert_uuid", None)
+        self._data = data
+        self._published = False
+        self._timestamp = datetime.utcnow()
 
-#     def key(self):
-#         return self._key
+    def key(self):
+        return self._key
 
-#     def data(self):
-#         return self._data
+    def data(self):
+        return self._data
 
-#     def timestamp(self):
-#         return self._timestamp
+    def timestamp(self):
+        return self._timestamp
 
-#     def store(self, key):
-#         self._key = key
-#         self._data["alert_uuid"] = key
+    def store(self, key):
+        self._key = key
+        self._data["alert_uuid"] = key
 
-#     def is_stored(self):
-#         return self._key is not None
+    def is_stored(self):
+        return self._key is not None
 
-#     def publish(self):
-#         self._published = True
+    def publish(self):
+        self._published = True
 
-#     def is_published(self):
-#         return self._published
+    def is_published(self):
+        return self._published
 
     def resolved(self, value):
         self._resolved = value

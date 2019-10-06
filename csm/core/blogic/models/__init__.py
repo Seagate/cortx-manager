@@ -1,8 +1,3 @@
-from schematics.models import Model
+from csm.core.blogic.models.common import CsmModel
+#from csm.core.blogic.models.alerts import Alert
 
-
-class CsmModel(Model):
-    pass
-
-
-from csm.core.blogic.models.alerts import Alert
