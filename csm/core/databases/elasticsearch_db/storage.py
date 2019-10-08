@@ -15,7 +15,7 @@ from csm.common.errors import CsmInternalError
 from csm.core.blogic.data_access import Query, SortOrder
 from csm.core.blogic.data_access import ExtQuery
 from csm.core.databases import BaseAbstractStorage
-from csm.core.blogic.models.alerts import AlertModelExample
+from csm.core.blogic.models.alerts import AlertExample
 from csm.core.blogic.models import CsmModel
 from csm.core.blogic.data_access import DataAccessExternalError, DataAccessInternalError
 from csm.core.blogic.data_access.filters import (IFilterTreeVisitor, FilterOperationAnd,

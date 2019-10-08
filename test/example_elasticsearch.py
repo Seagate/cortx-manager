@@ -6,7 +6,7 @@ from csm.core.databases.db_provider import (DbStorageProvider, DbDriverConfig,
                                             DbDriverProvider, DbModelConfig, DbConfig)
 from csm.core.blogic.data_access.filters import Compare, And, Or
 from csm.core.blogic.data_access import Query, SortOrder
-from csm.core.blogic.models.alert import AlertExample
+from csm.core.blogic.models.alerts import AlertExample
 
 ALERT1 = {'id': 22,
           'alert_uuid': 1,
@@ -63,7 +63,7 @@ async def example():
         },
         "models": [
             {
-                "import_path": "csm.core.blogic.models.alert.AlertExample",
+                "import_path": "csm.core.blogic.models.alerts.AlertExample",
                 "driver": "es_db",
                 "config": {
                     "index": "alert"
