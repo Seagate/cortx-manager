@@ -8,13 +8,14 @@ from elasticsearch_dsl import Q, Search
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException, RequestError, ConflictError
 from schematics.models import Model
-from schematics.types import StringType, DecimalType, DateType, IntType, BaseType
+from schematics.types import StringType, DecimalType, DateType, IntType, BaseType, BooleanType
+from schematics.exceptions import ConversionError
 
 from csm.common.errors import CsmInternalError
 from csm.core.blogic.data_access import Query, SortOrder
 from csm.core.blogic.data_access import ExtQuery
 from csm.core.databases import BaseAbstractStorage
-from csm.core.blogic.models import Alert
+from csm.core.blogic.models.alerts import AlertModelExample
 from csm.core.blogic.models import CsmModel
 from csm.core.blogic.data_access import DataAccessExternalError, DataAccessInternalError
 from csm.core.blogic.data_access.filters import (IFilterTreeVisitor, FilterOperationAnd,
@@ -45,7 +46,8 @@ class ESWords:
 DATA_MAP = {
     StringType: "text",  # TODO: keyword
     IntType: "integer",
-    DateType: "date"
+    DateType: "date",
+    BooleanType: "boolean"
 }
 
 
@@ -136,7 +138,11 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
         field_str = field_to_str(field)
 
         op = entry.get_operation()
-        return self.comparison_conversion[op](field_str, entry.get_right_operand())
+        try:
+            right_operand = field.to_native(entry.get_right_operand())
+        except ConversionError as e:
+            raise DataAccessInternalError(f"{e}")
+        return self.comparison_conversion[op](field_str, right_operand)
 
 
 class ElasticSearchDataMapper:
@@ -423,7 +429,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         """
         pass
 
-    async def count(self, filter_obj: IFilterQuery) -> int:
+    async def count(self, filter_obj: IFilterQuery = None) -> int:
         """
         Returns count of entities for given filter_obj
 
@@ -434,9 +440,13 @@ class ElasticSearchStorage(BaseAbstractStorage):
         def _count(_body):
             return self._es_client.count(index=self._index, body=_body)
 
-        filter_by = self._query_converter.build(filter_obj)
         search = Search(index=self._index, using=self._es_client)
-        search = search.query(filter_by)
+        if filter_obj is not None:
+            filter_by = self._query_converter.build(filter_obj)
+            search = search.query(filter_by)
+        else:
+            search = search.query()
+
         result = await self._loop.run_in_executor(self._tread_pool_exec, _count, search.to_dict())
         return result.get(ESWords.COUNT)
 

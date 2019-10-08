@@ -68,7 +68,7 @@ class IStorage(ABC):
         pass
 
     @abstractmethod
-    async def count(self, ext_query: ExtQuery):
+    async def count(self, ext_query: ExtQuery = None):
         """Count Aggregation function
 
             :param ExtQuery ext_query: Extended query which describes to perform count aggregation
