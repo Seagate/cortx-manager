@@ -56,7 +56,7 @@ PRODUCT=<PRODUCT>
     cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
 
     ENV=$CSM_DIR/web/web-dist/.env
-    sed -i "s|CSM_UI_PATH=\"\"|CSM_UI_PATH=\"${CSM_DIR}/${PRODUCT}/gui/ui-dist\"|g" $ENV
+    sed -i "s|CSM_UI_PATH=\"/\"|CSM_UI_PATH=\"${CSM_DIR}/${PRODUCT}/gui/ui-dist\"|g" $ENV
     sed -i "s/NODE_ENV=\"development\"/NODE_ENV=\"production\"/g" $ENV
 }
 exit 0
