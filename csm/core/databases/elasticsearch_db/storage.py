@@ -8,8 +8,9 @@ from elasticsearch_dsl import Q, Search
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException, RequestError, ConflictError
 from schematics.models import Model
-from schematics.types import StringType, DecimalType, DateType, IntType, BaseType, BooleanType
-from schematics.exceptions import ConversionError
+from schematics.types import (StringType, DecimalType, DateType, IntType, BaseType, BooleanType,
+                              DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType)
+from schematics.exceptions import ConversionError, ValidationError
 
 from csm.common.errors import CsmInternalError
 from csm.core.blogic.data_access import Query, SortOrder
@@ -47,7 +48,14 @@ DATA_MAP = {
     StringType: "text",  # TODO: keyword
     IntType: "integer",
     DateType: "date",
-    BooleanType: "boolean"
+    BooleanType: "boolean",
+    DateTimeType: "date",
+    UTCDateTimeType: "date",
+    DecimalType: "keyword",  # TODO: maybe a poor text?
+    FloatType: "float",  # TODO: it is possible to increase type to elasticsearch's double
+    LongType: "long",
+    NumberType: "short",  # TODO: Size of ES's type can be increased to 'integer'
+    # DictType: "nested"
 }
 
 
@@ -326,7 +334,13 @@ class ElasticSearchStorage(BaseAbstractStorage):
                                           f"{','.join([k for k in extra_keys])}")
 
         for key in self._properties:
-            doc[key] = getattr(obj, key)
+            schematic_type = self._model.fields.get(key)
+            try:
+                doc[key] = schematic_type.validate(getattr(obj, key))  # convert into necessary type
+            except ValidationError as e:
+                raise DataAccessInternalError(f"Field '{key}' validation error: {e}")
+            except ConversionError as e:
+                raise DataAccessInternalError(f"Field '{key}' conversion error: {e}")
 
         # TODO: check future for the error and result
         # future = self._tread_pool_exec.submit(_store, doc)

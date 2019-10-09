@@ -29,7 +29,7 @@ ALERT1 = {'id': 22,
           }
 
 ALERT2 = {'id': 23,
-          'alert_uuid': 1,
+          'alert_uuid': 2,
           'status': "Failed",
           'type': "Hardware",
           'enclosure_id': 1,
