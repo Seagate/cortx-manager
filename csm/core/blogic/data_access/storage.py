@@ -3,7 +3,7 @@ from typing import Type, Union
 from csm.core.blogic.data_access import Query
 from csm.core.blogic.data_access import ExtQuery
 from csm.core.blogic.data_access import IFilterQuery
-from src.core.blogic.models import CsmModel
+from csm.core.blogic.models import CsmModel
 
 
 class IStorage(ABC):

@@ -1,13 +1,15 @@
-from asyncio import coroutine, Event
+from asyncio import coroutine
 from abc import ABC, abstractmethod
 from pydoc import locate
 from schematics import Model
 from schematics.types import DictType, BaseType, StringType, ListType, ModelType
 from typing import Type, Dict, List, Union, Callable, Any
+from enum import Enum
+from threading import Event
+
 from csm.core.blogic.models import CsmModel
 from csm.core.blogic.data_access.errors import MalformedConfigurationError, DataAccessInternalError
 from csm.core.blogic.data_access.storage import IStorage, AbstractDbProvider
-from enum import Enum
 
 
 class ServiceStatus(Enum):
@@ -82,7 +84,12 @@ class CachedDatabaseDriver(IDatabaseDriver, ABC):
         """
         pass
 
-    async def create_storage(self, model, config) -> None:
+    async def create_storage(self, model: Type[CsmModel], config) -> None:
+        if model.primary_key is None:
+            raise DataAccessInternalError(f"Primary key is not set for model: {model}")
+        elif model.primary_key not in model.fields:
+            raise DataAccessInternalError(f"Primary key should reference to another "
+                                          f"field of model: {model}")
         if model not in self.cache:
             storage = await self._create_storage(model, config)
             self.cache[model] = storage

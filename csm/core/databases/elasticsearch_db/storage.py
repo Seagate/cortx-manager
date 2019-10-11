@@ -104,7 +104,7 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
     converter = ElasticSearchQueryConverter()
     q_obj = converter.build(filter_root)
     """
-    def __init__(self):
+    def __init__(self, model):
         self.comparison_conversion = {
             ComparisonOperation.OPERATION_EQ: _match_query,
             ComparisonOperation.OPERATION_LT: _range_generator('lt'),
@@ -112,6 +112,9 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
             ComparisonOperation.OPERATION_LEQ: _range_generator('lte'),
             ComparisonOperation.OPERATION_GEQ: _range_generator('gte')
         }
+        # Needed to perform for type casting if field name is pure string,
+        # not of format Model.field
+        self._model = model
 
     def build(self, root: IFilterQuery):
         # TODO: may be, we should move this method to the entity that processes
@@ -147,9 +150,13 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
 
         op = entry.get_operation()
         try:
-            right_operand = field.to_native(entry.get_right_operand())
+            if isinstance(field, str):
+                right_operand = getattr(self._model, field_str).to_native(entry.get_right_operand())
+            else:
+                right_operand = field.to_native(entry.get_right_operand())
         except ConversionError as e:
             raise DataAccessInternalError(f"{e}")
+
         return self.comparison_conversion[op](field_str, right_operand)
 
 
@@ -263,7 +270,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         self._loop = asyncio.get_event_loop() if loop is None else loop
         self._collection = collection
 
-        self._query_converter = ElasticSearchQueryConverter()
+        self._query_converter = ElasticSearchQueryConverter(model)
 
         # We are associating index name in ElasticSearch with given collection
         self._index = self._collection
@@ -275,6 +282,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
         self._index_info = None
         self._properties = None
+
         self._query_service = ElasticSearchQueryService(self._index, self._es_client,
                                                         self._query_converter)
 
@@ -312,7 +320,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         :param Model obj: Arbitrary CSM object for storing into DB
 
         """
-        def _store(_doc: dict):
+        def _store(_id, _doc: dict):
             """
             Store particular object into elasticsearch index
 
@@ -320,7 +328,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
             :return: elastic search server response
             """
             # TODO: is it needed to use id?
-            _result = self._es_client.index(index=self._index, id=obj.id, body=_doc)
+            _result = self._es_client.index(index=self._index, id=_id, body=_doc)
             return _result
 
         doc = dict()
@@ -342,13 +350,16 @@ class ElasticSearchStorage(BaseAbstractStorage):
             except ConversionError as e:
                 raise DataAccessInternalError(f"Field '{key}' conversion error: {e}")
 
+        obj_id = str(obj.primary_key_val)  # convert primary key value into string
+
         # TODO: check future for the error and result
         # future = self._tread_pool_exec.submit(_store, doc)
         # result = self._loop.run_until_complete(future)
 
-        result = await self._loop.run_in_executor(self._tread_pool_exec, _store, doc)
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _store, obj_id, doc)
         # TODO: discuss that. May be better avoid this to increase store performance
-        await self._refresh_index()  # NOTE: make refresh to ensure that updated results will be available quickly
+        # NOTE: make refresh to ensure that updated results will be available quickly
+        await self._refresh_index()
         return result
 
     async def get(self, query: Query) -> List[Model]:
@@ -365,14 +376,23 @@ class ElasticSearchStorage(BaseAbstractStorage):
         result = await self._loop.run_in_executor(self._tread_pool_exec, _get, query)
         return [self._model(hit.to_dict()) for hit in result]
 
-    async def get_by_id(self, obj_id: int) -> Union[Model, None]:
+    async def get_by_id(self, obj_id: Union[int, str]) -> Union[Model, None]:
         """
-        Simple implementation of get function
+        Simple implementation of get function.
+        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
+        contains 'id' field please use ordinary get call. For example,
 
-        :param int obj_id:
-        :return:
+            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
+
+        This API call is equivalent to
+
+            await db(YourCsmModel).get(Query().filter_by(
+                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
+
+        :param Union[int, str] obj_id:
+        :return: CsmModel if object was found by its id and None otherwise
         """
-        query = Query().filter_by(Compare(self._model.id, "=", obj_id))
+        query = Query().filter_by(Compare(self._model.primary_key, "=", str(obj_id)))
         result = await self.get(query)
         if result:
             return result.pop()
@@ -414,7 +434,8 @@ class ElasticSearchStorage(BaseAbstractStorage):
             return search.delete()
 
         filter_by = self._query_converter.build(filter_obj)
-        # NOTE: Needed to avoid elasticsearch.ConflictError when we perform delete quickly after store operation
+        # NOTE: Needed to avoid elasticsearch.ConflictError when we perform delete quickly
+        #       after store operation
         await self._refresh_index()
         try:
             # TODO: it is possible to return a number of deleted

@@ -8,6 +8,7 @@ from csm.core.blogic.data_access.filters import Compare, And, Or
 from csm.core.blogic.data_access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
 
+
 ALERT1 = {'id': 22,
           'alert_uuid': 1,
           'status': "Success",
@@ -18,7 +19,7 @@ ALERT1 = {'id': 22,
           'health': "Good",
           'health_recommendation': "Replace Disk",
           'location': "USA",
-          'resolved': 0,
+          'resolved': 1,
           'acknowledged': 0,
           'severity': 1,
           'state': "Unknown",
@@ -85,9 +86,11 @@ async def example():
     query = Query().filter_by(filter).order_by(AlertExample.id, SortOrder.DESC)
     res = await db(AlertExample).get(query)
     print(f"Get by query: {[alert.to_primitive() for alert in res]}")
-    
-    res = await db(AlertExample).get_by_id(22)
-    print(f"Get by id = 22: {res.to_primitive()}")
+
+    _id = 2
+    res = await db(AlertExample).get_by_id(_id)
+    if res is not None:
+        print(f"Get by id = {_id}: {res.to_primitive()}")
 
     filter_obj = Or(Compare(AlertExample.id, "=", 1), Compare(AlertExample.id, "=", 2), Compare(AlertExample.id, "=", 22))
     res = await db(AlertExample).count(filter_obj)
