@@ -33,9 +33,14 @@ from schematics.types import IntType, StringType, DateType
 from .common import CsmModel
 
 
-# This is an example of how Alert model can look like 
+# This is an example of how Alert model can look like
 class AlertExample(CsmModel):
 
+    """
+    Alert model example
+    """
+
+    _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
     id = IntType()
     alert_uuid = IntType()
     status = StringType()
@@ -101,7 +106,7 @@ class IAlertStorage(ABC):
     async def store(self, alert: Alert):
         """
         Store an alert.
-        It is supposed that the passed object already has the unique key 
+        It is supposed that the passed object already has the unique key
 
         :param alert: Alert object
         :return: nothing
@@ -144,9 +149,9 @@ class IAlertStorage(ABC):
     @abstractmethod
     async def count_by_range(self, time_range: DateTimeRange) -> int:
         """
-        Retrieves the number of alerts that occured within the specified time range
+        Retrieves the number of alerts that occurred within the specified time range
 
-        :param time_range: Alerts will be filered according to this parameter.
+        :param time_range: Alerts will be filtered according to this parameter.
         :return: the number of suitable alerts
         """
         pass
