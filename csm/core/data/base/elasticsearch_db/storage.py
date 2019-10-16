@@ -13,20 +13,22 @@ from schematics.types import (StringType, DecimalType, DateType, IntType, BaseTy
 from schematics.exceptions import ConversionError, ValidationError
 
 from csm.common.errors import CsmInternalError
-from csm.core.blogic.data_access import Query, SortOrder
-from csm.core.blogic.data_access import ExtQuery
-from csm.core.databases import BaseAbstractStorage
+from csm.core.data.access import Query, SortOrder
+from csm.core.data.access import ExtQuery
+from csm.core.data.base import BaseAbstractStorage
 from csm.core.blogic.models.alerts import AlertExample
 from csm.core.blogic.models import CsmModel
-from csm.core.blogic.data_access import DataAccessExternalError, DataAccessInternalError
-from csm.core.blogic.data_access.filters import (IFilterTreeVisitor, FilterOperationAnd,
-                                                 FilterOperationOr, FilterOperationCompare)
-from csm.core.blogic.data_access.filters import Compare, And, Or
-from csm.core.blogic.data_access.filters import ComparisonOperation, IFilterQuery
+from csm.common.errors import DataAccessExternalError, DataAccessInternalError
+from csm.core.data.access.filters import (IFilterTreeVisitor, FilterOperationAnd,
+                                          FilterOperationOr, FilterOperationCompare)
+from csm.core.data.access.filters import Compare, And, Or
+from csm.core.data.access.filters import ComparisonOperation, IFilterQuery
+
+
+__all__ = ["ElasticSearchStorage"]
 
 
 class ESWords:
-
     """ElasticSearch service words"""
 
     MAPPINGS = "mappings"
@@ -59,27 +61,6 @@ DATA_MAP = {
 }
 
 
-def _match_query(field: str, target):
-    obj = {
-        field: target
-    }
-
-    return Q("match", **obj)
-
-
-def _range_generator(op_string: str):
-    def _make_query(field: str, target):
-        obj = {
-            field: {
-                op_string: target
-            }
-        }
-
-        return Q("range", **obj)
-
-    return _make_query
-
-
 def field_to_str(field: Union[str, BaseType]) -> str:
     """
     Convert model field to its string representation
@@ -104,17 +85,39 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
     converter = ElasticSearchQueryConverter()
     q_obj = converter.build(filter_root)
     """
+
     def __init__(self, model):
         self.comparison_conversion = {
-            ComparisonOperation.OPERATION_EQ: _match_query,
-            ComparisonOperation.OPERATION_LT: _range_generator('lt'),
-            ComparisonOperation.OPERATION_GT: _range_generator('gt'),
-            ComparisonOperation.OPERATION_LEQ: _range_generator('lte'),
-            ComparisonOperation.OPERATION_GEQ: _range_generator('gte')
+            ComparisonOperation.OPERATION_EQ: self._match_query,
+            ComparisonOperation.OPERATION_LT: self._range_generator('lt'),
+            ComparisonOperation.OPERATION_GT: self._range_generator('gt'),
+            ComparisonOperation.OPERATION_LEQ: self._range_generator('lte'),
+            ComparisonOperation.OPERATION_GEQ: self._range_generator('gte')
         }
         # Needed to perform for type casting if field name is pure string,
         # not of format Model.field
         self._model = model
+
+    @staticmethod
+    def _match_query(field: str, target):
+        obj = {
+            field: target
+        }
+
+        return Q("match", **obj)
+
+    @staticmethod
+    def _range_generator(op_string: str):
+        def _make_query(field: str, target):
+            obj = {
+                field: {
+                    op_string: target
+                }
+            }
+
+            return Q("range", **obj)
+
+        return _make_query
 
     def build(self, root: IFilterQuery):
         # TODO: may be, we should move this method to the entity that processes
@@ -161,7 +164,6 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
 
 
 class ElasticSearchDataMapper:
-
     """ElasticSearch data mappings helper"""
 
     def __init__(self, model: Type[CsmModel]):
@@ -267,7 +269,7 @@ class ElasticSearchStorage(BaseAbstractStorage):
         """
         self._es_client = es_client
         self._tread_pool_exec = thread_pool_exec
-        self._loop = asyncio.get_event_loop() if loop is None else loop
+        self._loop = loop or asyncio.get_event_loop()
         self._collection = collection
 
         self._query_converter = ElasticSearchQueryConverter(model)
@@ -276,8 +278,8 @@ class ElasticSearchStorage(BaseAbstractStorage):
         self._index = self._collection
 
         if not isinstance(model, type) or CsmModel not in model.__bases__:
-            raise DataAccessInternalError("model parameter is not a Class object or not inherited "
-                                          "from schematics.Model")
+            raise DataAccessInternalError("Model parameter is not a Class object or not inherited "
+                                          "from csm.core.blogic.models.CsmModel")
         self._model = model  # Needed to build returning objects
 
         self._index_info = None

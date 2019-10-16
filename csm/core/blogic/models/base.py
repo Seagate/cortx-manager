@@ -9,7 +9,7 @@ PRIMARY_KEY_FIELD = "_id"
 class PrimaryKey:
 
     def __init__(self, model_id=None):
-        self._id = PRIMARY_KEY_FIELD if model_id is None else model_id
+        self._id = model_id or PRIMARY_KEY_FIELD
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -27,7 +27,7 @@ class PrimaryKey:
 class PrimaryKeyValue:
 
     def __init__(self, model_id=None):
-        self._id = PRIMARY_KEY_FIELD if model_id is None else model_id
+        self._id = model_id or PRIMARY_KEY_FIELD
 
     def __get__(self, instance, owner):
         if instance is None:

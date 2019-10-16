@@ -1,11 +1,10 @@
 
-from csm.core.blogic.data_access import IStorage
-from csm.core.blogic.data_access import ExtQuery
-from csm.core.blogic.data_access import IFilterQuery
+from csm.core.data.access import IStorage
+from csm.core.data.access import ExtQuery
+from csm.core.data.access import IFilterQuery
 
 
 class BaseAbstractStorage(IStorage):
-
     """Base Abstract Storage class for aggregation functions"""
 
     async def sum(self, ext_query: ExtQuery):

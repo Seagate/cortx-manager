@@ -8,13 +8,17 @@ from schematics.models import Model
 from schematics.types import StringType, ListType
 from schematics.exceptions import BaseError
 
-from csm.core.blogic.data_access.storage import IStorage
-from csm.core.databases.db_provider import CachedDatabaseDriver
-from csm.core.blogic.data_access.errors import MalformedConfigurationError
-from csm.core.databases.elasticsearch_db import ElasticSearchStorage
+from csm.core.data.access.storage import IStorage
+from csm.core.data.base.db_provider import CachedDatabaseDriver
+from csm.common.errors import MalformedConfigurationError
+from csm.core.data.base.elasticsearch_db import ElasticSearchStorage
 
 
 class ElasticSearchConfiguration(Model):
+    """
+    Configuration for ElasticSearch
+    """
+
     hosts = ListType(StringType, min_size=1)
     login = StringType(default=None)
     password = StringType(default=None)
@@ -22,6 +26,10 @@ class ElasticSearchConfiguration(Model):
 
 
 class ElasticSearchModelConfiguration(Model):
+    """
+    Model configuration for ElasticSearch storage
+    """
+
     index = StringType(required=True)
 
 
@@ -30,6 +38,7 @@ class ElasticSearchDriver(CachedDatabaseDriver):
     Driver for ElasticSearch database
     :param config: Instance of ElasticSearchConfiguration or a dictionary that complies with it
     """
+
     def __init__(self, config: Union[ElasticSearchConfiguration, dict]):
         super().__init__()
 
@@ -40,19 +49,6 @@ class ElasticSearchDriver(CachedDatabaseDriver):
             auth = (config.login, config.password)
 
         self.elastic_instance = Elasticsearch(hosts=config.hosts, http_auth=auth)
-
-    def _convert_config(self, config: Union[Model, dict], target_model: Type[Model]):
-        if isinstance(config, target_model):
-            return config
-
-        if isinstance(config, dict):
-            try:
-                return target_model(config)
-            except BaseError:
-                raise MalformedConfigurationError("Invalid ElasticSearch configuration")
-
-        raise MalformedConfigurationError("Invalid ElasticSearch configuration: "
-                                          "unexpected type")
 
     async def _create_storage(self, model,
                               config: Union[ElasticSearchModelConfiguration, dict]) -> IStorage:
