@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime
 from time import sleep
 
-from csm.core.databases.db_provider import (DbStorageProvider, DbDriverConfig,
+from csm.core.data.base.db_provider import (DbStorageProvider, DbDriverConfig,
                                             DbDriverProvider, DbModelConfig, DbConfig)
-from csm.core.blogic.data_access.filters import Compare, And, Or
-from csm.core.blogic.data_access import Query, SortOrder
+from csm.core.data.access.filters import Compare, And, Or
+from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
 
 
@@ -54,7 +54,7 @@ async def example():
     conf = DbConfig({
         "drivers": {
             "es_db": {
-                "import_path": "csm.core.databases.elasticsearch_db.driver.ElasticSearchDriver",
+                "import_path": "csm.core.data.base.elasticsearch_db.driver.ElasticSearchDriver",
                 "config": {
                     "hosts": ["localhost"],
                     "login": "",
@@ -67,7 +67,10 @@ async def example():
                 "import_path": "csm.core.blogic.models.alerts.AlertExample",
                 "driver": "es_db",
                 "config": {
-                    "index": "alert"
+                    "es_db":
+                        {
+                            "index": "alert"
+                        }
                 }
             }]
     })

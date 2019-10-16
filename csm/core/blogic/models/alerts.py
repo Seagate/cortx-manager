@@ -30,7 +30,7 @@ import errno
 from schematics.models import Model
 from schematics.types import IntType, StringType, DateType
 
-from .common import CsmModel
+from .base import CsmModel
 
 
 # This is an example of how Alert model can look like

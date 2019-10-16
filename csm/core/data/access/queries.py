@@ -1,6 +1,6 @@
 from schematics.types import BaseType
 
-from csm.core.blogic.data_access.filters import IFilterQuery
+from csm.core.data.access.filters import IFilterQuery
 from enum import Enum
 
 

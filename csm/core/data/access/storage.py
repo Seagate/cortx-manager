@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Type, Union
-from csm.core.blogic.data_access import Query
-from csm.core.blogic.data_access import ExtQuery
-from csm.core.blogic.data_access import IFilterQuery
+from csm.core.data.access import Query
+from csm.core.data.access import ExtQuery
+from csm.core.data.access import IFilterQuery
 from csm.core.blogic.models import CsmModel
 
 

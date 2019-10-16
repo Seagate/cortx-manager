@@ -1,15 +1,17 @@
 from asyncio import coroutine
 from abc import ABC, abstractmethod
 from pydoc import locate
-from schematics import Model
-from schematics.types import DictType, BaseType, StringType, ListType, ModelType
-from typing import Type, Dict, List, Union, Callable, Any
 from enum import Enum
 from threading import Event
+from typing import Type, Dict, List, Union, Callable, Any
+
+from schematics import Model
+from schematics.types import DictType, BaseType, StringType, ListType, ModelType
+from schematics.exceptions import BaseError
 
 from csm.core.blogic.models import CsmModel
-from csm.core.blogic.data_access.errors import MalformedConfigurationError, DataAccessInternalError
-from csm.core.blogic.data_access.storage import IStorage, AbstractDbProvider
+from csm.common.errors import MalformedConfigurationError, DataAccessInternalError
+from csm.core.data.access.storage import IStorage, AbstractDbProvider
 
 
 class ServiceStatus(Enum):
@@ -33,21 +35,25 @@ class IDatabaseDriver(ABC):
 
 
 class DbDriverConfig(Model):
+
     """
     Database driver configuration description
     """
+
     import_path = StringType(required=True)
     config = BaseType(default={})  # driver-specific configuration
 
 
 class DbModelConfig(Model):
+
     """
     Description of how a specific model is expected to be stored
     """
+
     import_path = StringType(required=True)
     driver = StringType(required=True)
-    # TODO: Discuss: maybe better to use DictType?
-    config = BaseType(default={})  # this configuration is db driver-specific
+    # this configuration is specific for each supported by model db driver
+    config = DictType(DictType(BaseType(), str), str)
 
 
 class DbConfig(Model):
@@ -84,12 +90,26 @@ class CachedDatabaseDriver(IDatabaseDriver, ABC):
         """
         pass
 
+    @staticmethod
+    def _convert_config(config: Union[Model, dict], target_model: Type[Model]):
+        if isinstance(config, target_model):
+            return config
+
+        if isinstance(config, dict):
+            try:
+                return target_model(config)
+            except BaseError:
+                raise MalformedConfigurationError("Invalid Consul configuration")
+
+        raise MalformedConfigurationError("Invalid Consul configuration: "
+                                          "unexpected type")
+
     async def create_storage(self, model: Type[CsmModel], config) -> None:
         if model.primary_key is None:
             raise DataAccessInternalError(f"Primary key is not set for model: {model}")
         elif model.primary_key not in model.fields:
             raise DataAccessInternalError(f"Primary key should reference to another "
-                                          f"field of model: {model}")
+                                          f"fields of model: {model}")
         if model not in self.cache:
             storage = await self._create_storage(model, config)
             self.cache[model] = storage
@@ -206,7 +226,8 @@ class AsyncStorage:
             await self._driver_provider.create_driver(self._model_config.driver)
         driver = self._driver_provider.get_driver(self._model_config.driver)
 
-        await driver.create_storage(self._model, self._model_config.config)
+        await driver.create_storage(self._model,
+                                    self._model_config.config.get(self._model_config.driver))
         self._storage_status = ServiceStatus.READY
 
     def get_storage(self):
@@ -247,5 +268,6 @@ class DbStorageProvider(AbstractDbProvider):
         if model in self._cached_async_decorators:
             return self._cached_async_decorators[model]
 
-        self._cached_async_decorators[model] = AsyncStorage(model, self.model_config[model], self.driver_provider)
+        self._cached_async_decorators[model] = AsyncStorage(model, self.model_config[model],
+                                                            self.driver_provider)
         return self._cached_async_decorators[model]
