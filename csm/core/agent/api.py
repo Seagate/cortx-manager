@@ -38,9 +38,9 @@ from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
-from csm.core.blogic.services.alerts import AlertsAppService
+from csm.core.services.alerts import AlertsAppService
 from csm.core.controllers import AlertsHttpController
-
+from csm.core.controllers import CsmRroutes
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -97,6 +97,7 @@ class CsmRestApi(CsmApi, ABC):
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
+        CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
