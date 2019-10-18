@@ -18,7 +18,7 @@
 """
 
 from aiohttp import web
-from csm.core.blogic.services.alerts import AlertsAppService
+from csm.core.services.alerts import AlertsAppService
 
 
 # TODO: Implement base class for sharing common controller logic
