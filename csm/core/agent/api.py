@@ -40,7 +40,7 @@ from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.controllers import AlertsHttpController
-from csm.core.controllers import CsmRroutes
+from csm.core.controllers import CsmRoutes
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
