@@ -99,7 +99,7 @@ if __name__ == '__main__':
         from csm.common.payload import Yaml
         from csm.core.blogic import const
         from csm.core.repositories.alerts import AlertSimpleStorage
-        from csm.core.blogic.services.alerts import AlertsAppService, \
+        from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi

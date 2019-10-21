@@ -2,11 +2,11 @@
 
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package 
+ Filename:          routes.py
+ Description:       adding route to web application
 
- Creation Date:     09/10/2019
- Author:            Alexander Nogikh
+ Creation Date:     10/16/2019
+ Author:            Naval Patel
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -16,8 +16,19 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
+# To add new route import from view file
+from .view import CsmView
+from .stats import *
 
-from .alerts import AlertsHttpController
-from .routes import CsmRoutes
 
-# from .csm import CsmCliView
+class CsmRoutes():
+    """
+    Common class for adding routes
+    """
+
+    @staticmethod
+    def add_routes(app):
+        """
+        Add routes to Web application
+        """
+        app.add_routes(CsmView._app_routes)
