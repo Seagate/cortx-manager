@@ -32,6 +32,7 @@ from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
+import time
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_MSG_NOT_FOUND = "alerts_not_found"
@@ -199,16 +200,14 @@ class AlertMonitorService(Service):
         except Exception as e:
             Log.exception(e)
 
-    def save_alert(self, message) -> Alert:
+    def save_alert(self, alert):
         # This implementation uses threads, but storage is supposed to be async
         # So we put the task onto the main event loop and wait for its completion
 
-        alert = Alert(message)
         alert_task = asyncio.run_coroutine_threadsafe(
             self._storage.store(alert), self._loop)
 
         alert_task.result()  # wait for completion
-        return alert
 
     def get_alert(self, alert_id) -> Optional[Alert]:
         """
@@ -221,6 +220,17 @@ class AlertMonitorService(Service):
         result = alert_task.result(timeout=2)
         return  result # wait for completion
 
+    def get_all_alerts(self):
+        """
+        Get the list of all the alerts from storage
+        :param None
+        :return: list of Alert objects
+        """
+        alert_task = asyncio.run_coroutine_threadsafe\
+                (self._storage.retrieve_all(), self._loop)
+        result = alert_task.result(timeout=2)
+        return result
+
     def _consume(self, message):
         """
         This is a callback function which will receive
@@ -232,33 +242,104 @@ class AlertMonitorService(Service):
                should acknowledge the alert to the RabbitMQ.
         """
         alert = Alert(message)
+        prev_alert = None
         """
         Before storing the alert let us fisrt try to resolve it.
         We will only resolve the alert if it is a good one.
+        Logic implemented for resolving or updating alerts -
+        1.) If a good alert comes we search of previous alert for the same hw.
+        2.) If there is no previous alert we save and publish the alert.
+        3.) If a good previous alert(another state) is found we update the 
+        previous alert.
+        4.) If a bad previous alert is found we resolve the previous alert.
+        5.) If a bad alert comes we search for previous alert for the same hw.
+        6.) If there is no previous alert we save and publish the alert.
+        7.) If a bad previous alert(another state) is found we update
+        the previous alert.
+        8.) If a good previous alert is found we update the previous alert.
         """
         if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
-            self._resolve(alert)
-        alert = self.save_alert(message)
-        self._publish(alert)
+            prev_alert = self._get_prev_alert(alert)
+            if not prev_alert == None:
+                state = prev_alert.data().get('state', "")
+                if state in const.GOOD_ALERT:
+                    if not alert.data().get('state', "") == state:
+                        self._update_prev_alert(alert, prev_alert)
+                        self.save_alert(prev_alert)
+                else:
+                    self._resolve(prev_alert)
+                    self._update_prev_alert(alert, prev_alert)
+                    self.save_alert(prev_alert)
+            else:
+                self.save_alert(alert)
+                self._publish(alert)
+        elif alert.data().get(const.ALERT_STATE, "") in const.BAD_ALERT:
+            prev_alert = self._get_prev_alert(alert)
+            if not prev_alert == None:
+                state = prev_alert.data().get('state', "")
+                if state in const.BAD_ALERT:
+                    if not alert.data().get('state', "") == state:
+                        prev_alert.data()['resolved'] = alert.data()['resolved']
+                        prev_alert.resolved(False)
+                        self._update_prev_alert(alert, prev_alert)
+                        self.save_alert(prev_alert)
+                else:
+                    prev_alert.data()['resolved'] = alert.data()['resolved']
+                    prev_alert.resolved(False)
+                    self._update_prev_alert(alert, prev_alert)
+                    self.save_alert(prev_alert)
+            else:
+                self.save_alert(alert)
+                self._publish(alert)
+
         return True
 
+    def _get_prev_alert(self, alert):
+        """
+        Get the previously stored alert for the hw
+        :param alert: Alert's object.
+        :return: Alert Object
+        """
+        prev_alert = None
+        alert_list = self.get_all_alerts()
+        for value in alert_list:
+            if value.data().get("hw_identifier_list", '') == \
+                    alert.data().get("hw_identifier_list", ''):
+                prev_alert = value
+                break
 
-    def _resolve(self, alert) -> None:
+        return prev_alert
+
+    def _update_prev_alert(self, alert, prev_alert):
+        """
+        Update the previously stored alert for the hw
+        :param alert: Alert's object.
+        :param prev_alert: Previous Alert's object.
+        :return: None
+        """
+        if not prev_alert == None:
+            prev_alert.data()['state'] = alert.data()['state'] 
+            prev_alert.data()['severity'] = alert.data()['severity'] 
+            prev_alert.data()['updated_time'] = int(time.time())
+
+
+    def _resolve(self, prev_alert):
         """
         Get the previous alert with the same alert_uuid.
         :param alert: Alert Object.
         :return: None
         """
-        prev_alert = self.get_alert(alert.key())
-        if prev_alert:
+        #prev_alert = self._get_prev_alert(alert)
+        if not prev_alert == None:
             if prev_alert.data().get('state', "") \
                 in const.BAD_ALERT and not prev_alert.is_resolved():
                 """
                 Try to resolve the alert if the previous alert is bad and
                 the current alert is good.
                 """
-                alert.data()['resolved'] = 1
-                alert.resolved()
+                prev_alert.data()['resolved'] = True 
+                prev_alert.resolved(True)
+        #return prev_alert
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
