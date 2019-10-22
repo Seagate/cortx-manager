@@ -8,8 +8,8 @@ from schematics.models import Model
 from schematics.types import StringType, IntType
 
 from csm.core.data.access.storage import IStorage
-from csm.core.data.base.db_provider import CachedDatabaseDriver
-from csm.core.data.base.consul_db import ConsulStorage
+from csm.core.data.db.db_provider import CachedDatabaseDriver
+from csm.core.data.db.consul_db import ConsulStorage
 
 
 DEFAULT_HOST = "127.0.0.1"
