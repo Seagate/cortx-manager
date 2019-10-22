@@ -8,12 +8,12 @@ import operator
 
 from consul.aio import Consul
 from schematics.models import Model
-from schematics.types import BaseType
+from schematics.types import BaseType, StringType
 from schematics.exceptions import ConversionError, ValidationError
 
 from csm.core.data.access import Query, SortOrder
 from csm.core.data.access import ExtQuery
-from csm.core.data.base import BaseAbstractStorage
+from csm.core.data.db import BaseAbstractStorage
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
 from csm.core.data.access.filters import (IFilterTreeVisitor, FilterOperationAnd,
@@ -27,7 +27,6 @@ PROPERTY_DIR = "prop"
 
 
 class ConsulWords:
-
     """Consul service words"""
 
     VALUE = "Value"
@@ -131,7 +130,6 @@ def query_converter_build(model: CsmModel, filter_obj: IFilterQuery, raw_data: L
 
 
 class ConsulKeyTemplate:
-
     """Class-helper for storing consul key structure"""
     
     _OBJECT_ROOT = f"{CONSUL_ROOT}/$OBJECT_TYPE"
@@ -273,18 +271,42 @@ class ConsulStorage(BaseAbstractStorage):
         :param query:
         :return: empty list or list with objects which satisfy the passed query condition
         """
-        if query.data.filter_by is None:
-            raise DataAccessInternalError("Only filter_by query parameter is now supported")
+        def _sorted_key_func(_by_field, _field_type):
+            """
+            Generates key function for built-in sorted function to perform correct sorting
+            of get results
 
-        raw_data = await self._get_all_raw()
+            :param _by_field: field which will be used for sorting (ordering by)
+            :param _field_type: type of the field which will be used for sorting
+            :return:
+            """
+            # TODO: for other types we can define other wrapper-functions
+            wrapper = str.lower if _field_type is StringType else lambda x: x
+            return lambda x: wrapper(getattr(x, _by_field))
+
+        query = query.data
+        if not any((query.order_by, query.filter_by)):
+            raise DataAccessInternalError("Only filter_by and order_by query parameters are "
+                                          "now supported")
+
+        suitable_models = await self._get_all_raw()
 
         # NOTE: use processes for parallel data calculations and make true asynchronous work
-        suitable_models = await self._loop.run_in_executor(self._process_pool,
-                                                           query_converter_build,
-                                                           self._model,
-                                                           query.data.filter_by,
-                                                           raw_data)
-        return [self._model(json.loads(entry[ConsulWords.VALUE])) for entry in suitable_models]
+        if query.filter_by is not None:
+            suitable_models = await self._loop.run_in_executor(self._process_pool,
+                                                               query_converter_build,
+                                                               self._model,
+                                                               query.filter_by,
+                                                               suitable_models)
+
+        csm_models = [self._model(json.loads(entry[ConsulWords.VALUE])) for entry in suitable_models]
+        if query.order_by is not None:
+            field_str = field_to_str(query.order_by.field)
+            field_type = type(getattr(self._model, field_str))
+            key = _sorted_key_func(field_str, field_type)
+            return sorted(csm_models, key=key, reverse=(SortOrder.DESC == query.order_by.order))
+
+        return csm_models
 
     async def get_by_id(self, obj_id: Union[int, str]) -> Union[Model, None]:
         """
