@@ -1,1 +1,1 @@
-from csm.core.data.base.elasticsearch_db.storage import ElasticSearchStorage
+from csm.core.data.db.elasticsearch_db.storage import ElasticSearchStorage
