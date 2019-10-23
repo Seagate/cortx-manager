@@ -1,1 +1,1 @@
-from csm.core.data.base.generic_storage import BaseAbstractStorage
+from csm.core.data.db.generic_storage import BaseAbstractStorage

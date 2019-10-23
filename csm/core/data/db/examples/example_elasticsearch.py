@@ -1,9 +1,14 @@
 import asyncio
 from datetime import datetime
 from time import sleep
+import sys
 
-from csm.core.data.base.db_provider import (DbStorageProvider, DbDriverConfig,
-                                            DbDriverProvider, DbModelConfig, DbConfig)
+if __name__ == "__main__":
+    # Add "csm" module at top
+    sys.path.append("../../../../..") # Adds higher directory to python modules path.
+
+from csm.core.data.db.db_provider import (DbStorageProvider, DbDriverConfig,
+                                          DbDriverProvider, DbModelConfig, DbConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
@@ -54,7 +59,7 @@ async def example():
     conf = DbConfig({
         "drivers": {
             "es_db": {
-                "import_path": "csm.core.data.base.elasticsearch_db.driver.ElasticSearchDriver",
+                "import_path": "csm.core.data.db.elasticsearch_db.driver.ElasticSearchDriver",
                 "config": {
                     "hosts": ["localhost"],
                     "login": "",
@@ -104,6 +109,7 @@ async def example():
 
 
 if __name__ == "__main__":
+    sys.path.append("../../../../..") # Adds higher directory to python modules path.
     loop = asyncio.get_event_loop()
     loop.run_until_complete(example())
     loop.close()

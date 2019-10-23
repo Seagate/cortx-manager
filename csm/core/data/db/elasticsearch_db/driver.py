@@ -9,9 +9,9 @@ from schematics.types import StringType, ListType
 from schematics.exceptions import BaseError
 
 from csm.core.data.access.storage import IStorage
-from csm.core.data.base.db_provider import CachedDatabaseDriver
+from csm.core.data.db.db_provider import CachedDatabaseDriver
 from csm.common.errors import MalformedConfigurationError
-from csm.core.data.base.elasticsearch_db import ElasticSearchStorage
+from csm.core.data.db.elasticsearch_db import ElasticSearchStorage
 
 
 class ElasticSearchConfiguration(Model):

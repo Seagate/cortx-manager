@@ -15,7 +15,7 @@ from schematics.exceptions import ConversionError, ValidationError
 from csm.common.errors import CsmInternalError
 from csm.core.data.access import Query, SortOrder
 from csm.core.data.access import ExtQuery
-from csm.core.data.base import BaseAbstractStorage
+from csm.core.data.db import BaseAbstractStorage
 from csm.core.blogic.models.alerts import AlertExample
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
