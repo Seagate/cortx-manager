@@ -1,0 +1,32 @@
+{
+  "username": "sspl-ll",
+  "description": "Seagate Storage Platform Library - Low Level - Sensor Response",
+  "title": "SSPL-LL Sensor Response",
+  "expires": 3600,
+  "signature": "None",
+  "time": "2019-07-25 11:24:39.303712",
+  "message": {
+    "sspl_ll_msg_header": {
+      "msg_version": "1.0.0",
+      "schema_version": "1.0.0",
+      "sspl_version": "1.0.0"
+    },
+    "sensor_response_type": {
+      "enclosure_psu_alert": {
+        "info": {
+          "status": "Not Present",
+          "dc12v": 0,
+          "dctemp": 0,
+          "vendor": "",
+          "description": ""
+        },
+        "alert_type": "missing",
+        "extended_info": {
+          "position": "Right",
+          "durable_id": "psu_0.1"
+        },
+        "resource_type": "fru"
+      }
+    }
+  }
+}

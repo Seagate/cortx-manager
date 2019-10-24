@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "http://json-schema.org/draft-03/schema#",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "required": true,
+      "description": "User name."
+    },
+    "description": {
+      "type": "string",
+      "required": true,
+      "description": "description."
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "description": "Title"
+    },
+    "expires": {
+      "type": "integer",
+      "required": true,
+      "description": "expires in time seconds"
+    },
+    "signature": {
+      "type": "string",
+      "required": true,
+      "description": "signature"
+    },
+    "time": {
+      "type": "string",
+      "required": true,
+      "description": "Origination time of the alert"
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "sspl_ll_msg_header": {
+          "type": "object",
+          "properties": {
+            "msg_version": {
+              "type": "string",
+              "required": true,
+              "description": "signature"
+            },
+            "schema_version": {
+              "type": "string",
+              "required": true,
+              "description": "Origination time of the alert"
+            },
+            "sspl_version": {
+              "type": "string",
+              "required": true,
+              "description": "Origination time of the alert"
+            }
+          }
+        },
+        "sensor_response_type": {
+          "type": "object",
+          "properties": {
+            "enclosure_psu_alert": {
+              "type": "object",
+              "properties": {
+
+                "info": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "required": true,
+                      "status": "status"
+                    },
+                    "dc12v": {
+                      "type": "integer",
+                      "required": true,
+                      "description": "dc12v"
+                    },
+                    "dctemp": {
+                      "type": "integer",
+                      "required": true,
+                      "description": "dctemp"
+                    },
+                    "vendor": {
+                      "type": "string",
+                      "required": true,
+                      "description": "vendor"
+                    },
+                    "description": {
+                      "type": "string",
+                      "required": true,
+                      "description": "description"
+                    }
+                  }
+                },
+                "alert_type": {
+                  "type": "string",
+                  "required": true,
+                  "description": "Origination time of the alert"
+                },
+                "extended_info": {
+                  "type": "object",
+                  "properties": {
+                    "position": {
+                      "type": "string",
+                      "required": true,
+                      "status": "status"
+                    },
+                    "durable_id": {
+                      "type": "string",
+                      "required": true,
+                      "description": "dc12v"
+                    }
+                  }
+                },
+                "resource_type": {
+                  "type": "string",
+                  "required": true,
+                  "description": "resource type"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
