@@ -203,7 +203,7 @@ class Payload:
 
     def _concat_payload_info(self, info_list):
         """
-        Concatinates the key's values(as list) mentioned in the mapping file.
+        Concatenates the key's values(as list) mentioned in the mapping file.
         :param info_list: List containging key's to be concatinated. Read from
         the mapping file.
         :return: concatinated values as string

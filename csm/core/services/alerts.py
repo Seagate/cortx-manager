@@ -247,52 +247,110 @@ class AlertMonitorService(Service):
         Before storing the alert let us fisrt try to resolve it.
         We will only resolve the alert if it is a good one.
         Logic implemented for resolving or updating alerts -
-        1.) If a good alert comes we search of previous alert for the same hw.
-        2.) If there is no previous alert we save and publish the alert.
-        3.) If a good previous alert(another state) is found we update the 
+        1.) If there is no previous alert we save and publish the alert.
+        2.) If there is a previous alert we will only proceed if the state of the
+        new alert is different from the previous one (check for duplicate).
+        3.) If a good alert comes we search of previous alert for the same hw.
+        4.) If a good previous alert(another state) is found we update the 
         previous alert.
-        4.) If a bad previous alert is found we resolve the previous alert.
-        5.) If a bad alert comes we search for previous alert for the same hw.
-        6.) If there is no previous alert we save and publish the alert.
+        5.) If a bad previous alert is found we resolve the previous alert.
+        6.) If a bad alert comes we search for previous alert for the same hw.
         7.) If a bad previous alert(another state) is found we update
         the previous alert.
-        8.) If a good previous alert is found we update the previous alert.
+        8.) If a good previous alert is found we update the previous alert and
+        set the resolved state to False.
         """
-        if alert.data().get(const.ALERT_STATE, "") in const.GOOD_ALERT:
-            prev_alert = self._get_prev_alert(alert)
-            if not prev_alert == None:
-                state = prev_alert.data().get('state', "")
-                if state in const.GOOD_ALERT:
-                    if not alert.data().get('state', "") == state:
-                        self._update_prev_alert(alert, prev_alert)
-                        self.save_alert(prev_alert)
+        """ Fetching the previous alert. """
+        prev_alert = self._get_prev_alert(alert)
+        if prev_alert is None:
+            """ Previous alert not found means it is a new one fo store and
+            publish it to WS."""
+            self._save_and_publish(alert)
+            """ Checking for duplicate alert. """
+        elif not self._is_duplicate_alert(alert, prev_alert):
+            if self._is_good_alert(alert):
+                """
+                If it is a good alert checking the state of previous alert.
+                """
+                if self._is_good_alert(prev_alert):
+                    """ Previous alert is a good one so updating. """ 
+                    self._update_and_save(alert, prev_alert)
                 else:
-                    self._resolve(prev_alert)
-                    self._update_prev_alert(alert, prev_alert)
-                    self.save_alert(prev_alert)
-            else:
-                self.save_alert(alert)
-                self._publish(alert)
-        elif alert.data().get(const.ALERT_STATE, "") in const.BAD_ALERT:
-            prev_alert = self._get_prev_alert(alert)
-            if not prev_alert == None:
-                state = prev_alert.data().get('state', "")
-                if state in const.BAD_ALERT:
-                    if not alert.data().get('state', "") == state:
-                        prev_alert.data()['resolved'] = alert.data()['resolved']
-                        prev_alert.resolved(False)
-                        self._update_prev_alert(alert, prev_alert)
-                        self.save_alert(prev_alert)
+                    """ Previous alert is a bad one so resolving it. """
+                    self._resolve(alert, prev_alert)
+            elif self._is_bad_alert(alert):
+                """
+                If it is a bad alert checking the state of previous alert.
+                """
+                if self._is_bad_alert(prev_alert):
+                    """ Previous alert is a bad one so updating. """ 
+                    self._update_and_save(alert, prev_alert)
                 else:
-                    prev_alert.data()['resolved'] = alert.data()['resolved']
-                    prev_alert.resolved(False)
-                    self._update_prev_alert(alert, prev_alert)
-                    self.save_alert(prev_alert)
-            else:
-                self.save_alert(alert)
-                self._publish(alert)
-
+                    """ 
+                    Previous alert is a good one so updating and marking the
+                    resolved status to False. 
+                    """ 
+                    self._update_and_save(alert, prev_alert, True)
         return True
+
+    def _save_and_publish(self, alert):
+        """
+        Save the alerts to storage and publish them onto WS.
+        :param alert : Alert object
+        :return: None
+        """
+        self.save_alert(alert)
+        self._publish(alert)
+
+    def _update_and_save(self, alert, prev_alert, update_resolve=False):
+        """
+        Update the alerts to storage.
+        :param alert : Alert object
+        :param prev_alert : Previous Alert object
+        :param update_resolve : If set to True, we will mark resolved state to
+        False
+        :return: None
+        """
+        if update_resolve:
+            prev_alert.data()['resolved'] = alert.data()['resolved']
+            prev_alert.resolved(False)
+        self._update_prev_alert(alert, prev_alert)
+        self.save_alert(prev_alert)
+
+    def _is_duplicate_alert(self, alert, prev_alert):
+        """
+        Check whether the alerts is duplicate or not based on state.
+        :param alert : Alert object
+        :param prev_alert : Previous Alert object
+        :return: boolean (True or False) 
+        """
+        ret = False
+        if alert.data().get('state', "") == \
+                prev_alert.data().get('state', ""):
+            ret = True
+        return ret
+
+    def _is_good_alert(self, alert):
+        """
+        Check whether the alert is good or not.
+        :param alert : Alert object
+        :return: boolean (True or False) 
+        """
+        ret = False
+        if alert.data().get('state', "") in const.GOOD_ALERT:
+            ret = True
+        return ret
+
+    def _is_bad_alert(self, alert):
+        """
+        Check whether the alert is bad or not.
+        :param alert : Alert object
+        :return: boolean (True or False) 
+        """
+        ret = False
+        if alert.data().get('state', "") in const.BAD_ALERT:
+            ret = True
+        return ret
 
     def _get_prev_alert(self, alert):
         """
@@ -323,23 +381,20 @@ class AlertMonitorService(Service):
             prev_alert.data()['updated_time'] = int(time.time())
 
 
-    def _resolve(self, prev_alert):
+    def _resolve(self, alert, prev_alert):
         """
         Get the previous alert with the same alert_uuid.
         :param alert: Alert Object.
         :return: None
         """
-        #prev_alert = self._get_prev_alert(alert)
-        if not prev_alert == None:
-            if prev_alert.data().get('state', "") \
-                in const.BAD_ALERT and not prev_alert.is_resolved():
-                """
-                Try to resolve the alert if the previous alert is bad and
-                the current alert is good.
-                """
-                prev_alert.data()['resolved'] = True 
-                prev_alert.resolved(True)
-        #return prev_alert
+        if not prev_alert.is_resolved():
+            """
+            Try to resolve the alert if the previous alert is bad and
+            the current alert is good.
+            """
+            prev_alert.data()['resolved'] = True 
+            prev_alert.resolved(True)
+            self._update_and_save(alert, prev_alert)
 
     def _publish(self, alert):
         if self._handle_alert(alert.data()):
