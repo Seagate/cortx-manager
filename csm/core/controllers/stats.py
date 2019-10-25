@@ -17,7 +17,6 @@
  ****************************************************************************
 """
 from .view import CsmView
-from aiohttp import web
 from csm.core.services.stats import StatsAppService
 
 

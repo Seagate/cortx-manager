@@ -18,7 +18,10 @@
 """
 # To add new route import from view file
 from .view import CsmView
-from .stats import *
+from .stats import StatsView
+from .system_config import SystemConfigView
+from csm.core.data.storage.system_config import SystemConfigStorage
+from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 
 
 class CsmRoutes():
@@ -31,4 +34,11 @@ class CsmRoutes():
         """
         Add routes to Web application
         """
+        #TODO Following lines will be removed once integrated with DB
+        system_config_storage = SystemConfigStorage(SyncInMemoryKeyValueStorage())
+        app["system_config_storage"] = system_config_storage
+
         app.add_routes(CsmView._app_routes)
+
+
+
