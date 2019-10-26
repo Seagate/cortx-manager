@@ -64,8 +64,8 @@ class Alert(object):
     def is_published(self):
         return self._published
 
-    def resolved(self):
-        self._resolved = True
+    def resolved(self, value):
+        self._resolved = value
 
     def is_resolved(self):
         return self._resolved

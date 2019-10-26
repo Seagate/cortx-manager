@@ -89,6 +89,7 @@ ALERT_TRUE = 1
 ALERT_FALSE = 0
 ALERT_SENSOR_TYPE = 'sensor_response_type'
 ALERT_MESSAGE = 'message'
+ALERT_COMMENT = 'comment'
 
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'

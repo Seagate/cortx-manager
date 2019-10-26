@@ -190,8 +190,29 @@ class Payload:
         :param map: mapping dictionary :type:Dict
         :param payload: Payload Class Object with desired Source.
         :return: :type: Dict
+        Mapping file example - 
+        key <output schema> : value <input schema>
         """
-        for key in map.keys():
-            val = self.get(key)
-            payload.set(map[key], val)
+        for key, value in map.items():
+            if not type(value) is list:
+                val = self.get(value)
+                payload.set(key, val)
+            else:
+                payload.set(key, self._concat_payload_info(value))
         return payload
+
+    def _concat_payload_info(self, info_list):
+        """
+        Concatenates the key's values(as list) mentioned in the mapping file.
+        :param info_list: List containging key's to be concatinated. Read from
+        the mapping file.
+        :return: concatinated values as string
+        """
+        value = ""
+        for count in range(0, len(info_list)):
+            val = self.get(info_list[count])
+            if count == len(info_list) - 1:
+                value = value + str(val)
+            else:
+                value = value + str(val) + "-"
+        return value
