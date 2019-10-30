@@ -227,7 +227,10 @@ class ConsulDB(GenericDataBase):
 
         if not all((cls.consul_client, cls.thread_pool, cls.loop)):
             cls.loop = asyncio.get_event_loop()
-            cls.consul_client = Consul(host=config.host, port=config.port, loop=cls.loop)
+            try:
+                cls.consul_client = Consul(host=config.host, port=config.port, loop=cls.loop)
+            except ConnectionRefusedError as e:
+                raise DataAccessExternalError(f"{e}")
             # needed to perform tree traversal in non-blocking mode
             cls.thread_pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
 
