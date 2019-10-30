@@ -201,9 +201,6 @@ class ConsulDB(GenericDataBase):
 
         self._query_converter = ConsulQueryConverterWithData(model)
 
-        # We are associating index name in Consul with given collection
-        self._collection = self._collection
-
         if not isinstance(model, type) or CsmModel not in model.__bases__:
             raise DataAccessInternalError("Model parameter is not a Class object or not inherited "
                                           "from csm.core.blogic.models.CsmModel")
