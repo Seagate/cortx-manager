@@ -1,12 +1,32 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          storage.py
+ _description:      Interface for Databases
+
+ Creation Date:     6/10/2019
+ Author:            Alexander Nogikh
+                    Dmitry Didenko
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 from abc import ABC, abstractmethod
 from typing import Type, Union
 from csm.core.data.access import Query
 from csm.core.data.access import ExtQuery
-from csm.core.data.access import IFilterQuery
+from csm.core.data.access import IFilter
 from csm.core.blogic.models import CsmModel
 
 
-class IStorage(ABC):
+class IDataBase(ABC):
 
     """Abstract Storage Interface"""
 
@@ -40,10 +60,10 @@ class IStorage(ABC):
         pass
 
     @abstractmethod
-    async def delete(self, filter_obj: IFilterQuery):
+    async def delete(self, filter_obj: IFilter):
         """Delete objects in DB by Query
 
-            :param IFilterQuery filter_obj: filter object to perform delete operation
+            :param IFilter filter_obj: filter object to perform delete operation
 
         """
         pass
@@ -68,11 +88,22 @@ class IStorage(ABC):
         pass
 
     @abstractmethod
-    async def count(self, ext_query: ExtQuery = None):
-        """Count Aggregation function
+    async def count(self, filter_obj: IFilter = None) -> int:
+        """
+        Returns count of entities for given filter_obj
 
-            :param ExtQuery ext_query: Extended query which describes to perform count aggregation
+        :param filter_obj: filter object to perform count operation
+        :return:
+        """
+        pass
 
+    @abstractmethod
+    async def count_by_query(self, ext_query: ExtQuery):
+        """
+        Count Aggregation function
+
+        :param ExtQuery ext_query: Extended query which describes to perform count aggregation
+        :return:
         """
         pass
 
@@ -95,7 +126,7 @@ class IStorage(ABC):
         pass
 
 
-class AbstractDbProvider(ABC):
+class AbstractDataBaseProvider(ABC):
     """
     A class for data storage access.
 
@@ -106,12 +137,12 @@ class AbstractDbProvider(ABC):
     await db(some_model_instance).get(some_query)  # we can avoid passing model class
 
     """
-    def __call__(self, model: Union[CsmModel, Type[CsmModel]]) -> IStorage:
+    def __call__(self, model: Union[CsmModel, Type[CsmModel]]) -> IDataBase:
         if isinstance(model, CsmModel):
             model = type(model)
 
         return self.get_storage(model)
 
     @abstractmethod
-    def get_storage(self, model: Type[CsmModel]) -> IStorage:
+    def get_storage(self, model: Type[CsmModel]) -> IDataBase:
         pass

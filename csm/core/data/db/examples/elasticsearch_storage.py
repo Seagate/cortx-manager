@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          consul_storage.py
+ _description:      Example of Elasticsearch usage
+
+ Creation Date:     06/10/2019
+ Author:            Dmitry Didenko
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 import asyncio
 from datetime import datetime
 from time import sleep
@@ -7,8 +26,7 @@ if __name__ == "__main__":
     # Add "csm" module at top
     sys.path.append("../../../../..") # Adds higher directory to python modules path.
 
-from csm.core.data.db.db_provider import (DbStorageProvider, DbDriverConfig,
-                                          DbDriverProvider, DbModelConfig, DbConfig)
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
@@ -56,12 +74,13 @@ ALERT2 = {'id': 23,
 
 
 async def example():
-    conf = DbConfig({
-        "drivers": {
+    conf = GeneralConfig({
+        "databases": {
             "es_db": {
-                "import_path": "csm.core.data.db.elasticsearch_db.driver.ElasticSearchDriver",
+                "import_path": "ElasticSearchDB",
                 "config": {
-                    "hosts": ["localhost"],
+                    "host": "localhost",
+                    "port": 9200,
                     "login": "",
                     "password": ""
                 }
@@ -70,18 +89,17 @@ async def example():
         "models": [
             {
                 "import_path": "csm.core.blogic.models.alerts.AlertExample",
-                "driver": "es_db",
+                "database": "es_db",
                 "config": {
                     "es_db":
                         {
-                            "index": "alert"
+                            "collection": "alert"
                         }
                 }
             }]
     })
 
-    driver_provider = DbDriverProvider(conf.drivers)
-    db = DbStorageProvider(driver_provider, conf.models)
+    db = DataBaseProvider(conf)
 
     alert1 = AlertExample(ALERT1)
     alert2 = AlertExample(ALERT2)
@@ -109,7 +127,6 @@ async def example():
 
 
 if __name__ == "__main__":
-    sys.path.append("../../../../..") # Adds higher directory to python modules path.
     loop = asyncio.get_event_loop()
     loop.run_until_complete(example())
     loop.close()

@@ -1,22 +1,42 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          filters.py
+ _description       Interface for filters objects
+
+ Creation Date:     6/10/2019
+ Author:            Alexander Nogikh
+                    Dmitry Didenko
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Any
 from csm.common.errors import MalformedQueryError
 
 
-class IFilterQuery(ABC):
+class IFilter(ABC):
     @abstractmethod
     def accept_visitor(self, visitor) -> Any:
         pass
 
 
-class FilterOperationAnd(IFilterQuery):
+class FilterOperationAnd(IFilter):
     """
     Class representing AND condition
     :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
     def __init__(self, *args):
-        if len(args) < 2 or not all(isinstance(x, IFilterQuery) for x in args):
+        if len(args) < 2 or not all(isinstance(x, IFilter) for x in args):
             raise MalformedQueryError("AND operation takes >= 2 arguments of filter type")
 
         self._operands = args
@@ -24,17 +44,17 @@ class FilterOperationAnd(IFilterQuery):
     def accept_visitor(self, visitor):
         return visitor.handle_and(self)
 
-    def get_operands(self) -> List[IFilterQuery]:
+    def get_operands(self) -> List[IFilter]:
         return self._operands
 
 
-class FilterOperationOr(IFilterQuery):
+class FilterOperationOr(IFilter):
     """
     Class representing OR condition
     :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
     def __init__(self, *args):
-        if len(args) < 2 or not all(isinstance(x, IFilterQuery) for x in args):
+        if len(args) < 2 or not all(isinstance(x, IFilter) for x in args):
             raise MalformedQueryError("OR operation takes >= 2 arguments of filter type")
 
         self._operands = args
@@ -42,7 +62,7 @@ class FilterOperationOr(IFilterQuery):
     def accept_visitor(self, visitor):
         return visitor.handle_or(self)
 
-    def get_operands(self) -> List[IFilterQuery]:
+    def get_operands(self) -> List[IFilter]:
         return self._operands
 
 
@@ -54,7 +74,8 @@ class ComparisonOperation(Enum):
     OPERATION_LT = '<'
     OPERATION_EQ = '='
     OPERATION_LEQ = '<='
-    OPERATION_GEQ = '>='
+    OPERATION_GEQ = '>=',
+    OPERATION_NE = "!="  # TODO: Add support to elasticsearch
 
     @classmethod
     def from_standard_representation(cls, op: str):
@@ -63,7 +84,8 @@ class ComparisonOperation(Enum):
             '>': cls.OPERATION_GT,
             '<': cls.OPERATION_LT,
             '>=': cls.OPERATION_GEQ,
-            '<=': cls.OPERATION_LEQ
+            '<=': cls.OPERATION_LEQ,
+            "!=": cls.OPERATION_NE
         }
 
         if op in mapping:
@@ -72,7 +94,7 @@ class ComparisonOperation(Enum):
             raise MalformedQueryError("Invalid comparison operation: {}".format(op))
 
 
-class FilterOperationCompare(IFilterQuery):
+class FilterOperationCompare(IFilter):
     """
     Class representing a comparison operation.
     """
