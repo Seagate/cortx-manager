@@ -57,7 +57,7 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
-        alert = await self._storage.retrieve(int(alert_id))
+        alert = await self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
