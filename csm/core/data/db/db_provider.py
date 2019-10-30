@@ -1,17 +1,40 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          db_provider.py
+ _description:      Generic Database Implementation
+
+ Creation Date:     6/10/2019
+ Author:            Dmitry Didenko
+                    Alexander Nogikh
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 from asyncio import coroutine
-from abc import ABC, abstractmethod
 from pydoc import locate
 from enum import Enum
 from threading import Event
-from typing import Type, Dict, List, Union, Callable, Any
+from typing import Type
 
 from schematics import Model
-from schematics.types import DictType, BaseType, StringType, ListType, ModelType
-from schematics.exceptions import BaseError
+from schematics.types import DictType, StringType, ListType, ModelType, IntType
 
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import MalformedConfigurationError, DataAccessInternalError
-from csm.core.data.access.storage import IStorage, AbstractDbProvider
+from csm.core.data.access.storage import AbstractDataBaseProvider
+
+import csm.core.data.db as db_module
+
+
+DEFAULT_HOST = "127.0.0.1"
 
 
 class ServiceStatus(Enum):
@@ -20,147 +43,54 @@ class ServiceStatus(Enum):
     READY = "Ready"
 
 
-class IDatabaseDriver(ABC):
+class DBSettings(Model):
     """
-    Interface for database drivers.
-    Database drivers are supposed to be responsible for instantiating IStorage objects.
+    Settings for database server
     """
-    @abstractmethod
-    async def get_storage(self, model, config: dict) -> IStorage:
-        pass
 
-    @abstractmethod
-    async def create_storage(self, model, config) -> IStorage:
-        pass
+    host = StringType(required=True, default=DEFAULT_HOST)
+    port = IntType(required=True, default=None)
+    login = StringType()
+    password = StringType()
 
 
-class DbDriverConfig(Model):
-
+class DBConfig(Model):
     """
     Database driver configuration description
     """
 
     import_path = StringType(required=True)
-    config = BaseType(default={})  # driver-specific configuration
+    config = ModelType(DBSettings)  # db-specific configuration
 
 
-class DbModelConfig(Model):
+class ModelSettings(Model):
+    """
+    Configuration for CSM model like collection as example
+    """
+    collection = StringType(required=True)
 
+
+class DBModelConfig(Model):
     """
     Description of how a specific model is expected to be stored
     """
 
     import_path = StringType(required=True)
-    driver = StringType(required=True)
+    database = StringType(required=True)
     # this configuration is specific for each supported by model db driver
-    config = DictType(DictType(BaseType(), str), str)
+    config = DictType(ModelType(ModelSettings), str)
 
 
-class DbConfig(Model):
+class GeneralConfig(Model):
     """
     Layout of full database configuration
     """
-    drivers = DictType(ModelType(DbDriverConfig), str)
-    models = ListType(ModelType(DbModelConfig))
 
-
-class CachedDatabaseDriver(IDatabaseDriver, ABC):
-
-    """
-    Implementation of IDatabaseDriver that allows not to implement storage caching
-    """
-
-    def __init__(self):
-        self.cache = {}
-
-    def get_storage(self, model, config: dict) -> IStorage:
-        if model in self.cache:
-            return self.cache[model]
-        else:
-            raise DataAccessInternalError(f"Storage for {model} is not created")
-
-    @abstractmethod
-    async def _create_storage(self, model: Type[CsmModel], config: DbModelConfig):
-        """
-        Specific Driver storage creation procedure
-
-        :param model:
-        :param config:
-        :return:
-        """
-        pass
-
-    @staticmethod
-    def _convert_config(config: Union[Model, dict], target_model: Type[Model]):
-        if isinstance(config, target_model):
-            return config
-
-        if isinstance(config, dict):
-            try:
-                return target_model(config)
-            except BaseError:
-                raise MalformedConfigurationError("Invalid Consul configuration")
-
-        raise MalformedConfigurationError("Invalid Consul configuration: "
-                                          "unexpected type")
-
-    async def create_storage(self, model: Type[CsmModel], config) -> None:
-        if model.primary_key is None:
-            raise DataAccessInternalError(f"Primary key is not set for model: {model}")
-        elif model.primary_key not in model.fields:
-            raise DataAccessInternalError(f"Primary key should reference to another "
-                                          f"fields of model: {model}")
-        if model not in self.cache:
-            storage = await self._create_storage(model, config)
-            self.cache[model] = storage
-
-
-class DbDriverProvider:
-    """
-    Helper class for database drivers management.
-    It is responsible for instantiating database drivers depending on the configuration.
-    """
-    def __init__(self, driver_config: Dict[str, DbDriverConfig]):
-        self.driver_config = driver_config
-        self.instances = dict()
-        self._driver_status = dict()
-
-    def get_driver(self, key: str) -> IDatabaseDriver:
-        """
-        Returns a database driver instance depending on the string identifier of
-        the driver that was passed as a part of configuration.
-
-        :param key: Database driver key
-        :returns: Database driver instance
-        """
-        if key in self.instances:
-            return self.instances[key]
-        else:
-            raise DataAccessInternalError(f"Driver {key} is not created")
-
-    async def _create_driver(self, key: str) -> IDatabaseDriver:
-        if key not in self.driver_config:
-            raise MalformedConfigurationError(f"No driver configuration for '{key}'")
-
-        driver = locate(self.driver_config[key].import_path)
-        if not driver:
-            raise MalformedConfigurationError(f"Cannot import driver class for '{key}'")
-
-        # TODO: consider adding some async drive initialization routine
-        return driver(self.driver_config[key].config)
-
-    async def create_driver(self, key: str) -> None:
-        self._driver_status[key] = ServiceStatus.IN_PROGRESS
-        res = await self._create_driver(key)
-        self._driver_status[key] = ServiceStatus.READY
-        self.instances[key] = res
-
-    def get_driver_status(self, key: str) -> ServiceStatus:
-        return self._driver_status.get(key, ServiceStatus.NOT_CREATED)
+    databases = DictType(ModelType(DBConfig), str)
+    models = ListType(ModelType(DBModelConfig))
 
 
 class ProxyStorageCallDecorator:
-
     """Class to decorate proxy call"""
 
     def __init__(self, async_storage, model: Type[CsmModel], attr_name: str, event: Event):
@@ -173,13 +103,16 @@ class ProxyStorageCallDecorator:
     def __call__(self, *args, **kwargs) -> coroutine:
         async def async_wrapper():
             if self._async_storage.storage_status == ServiceStatus.NOT_CREATED:
-                await self._async_storage.create_storage()
+                # Note: Should be called once
+                await self._async_storage.create_database()
                 self._event.set()
             elif self._async_storage.storage_status == ServiceStatus.IN_PROGRESS:
                 await self._event.wait()
 
-            storage = self._async_storage.get_storage()
-            attr = storage.__getattribute__(self._attr_name)
+            database = self._async_storage.get_database()
+            if database is None:
+                raise DataAccessInternalError("Database is not created")
+            attr = database.__getattribute__(self._attr_name)
             if callable(attr):
                 # may be, first call the function and then check whether we need to await it
                 # DD: I think, we assume that all storage API are async
@@ -200,55 +133,51 @@ class ProxyStorageCallDecorator:
             self._proxy_call_coroutine.close()
 
 
-# TODO: class can't be inherited from IStorage
-class AsyncStorage:
-
+# TODO: class can't be inherited from IDataBase
+class AsyncDataBase:
     """
     Decorates all storage async calls and async db drivers and db storages initializations
     """
 
-    def __init__(self, model: Type[CsmModel], model_config: DbModelConfig, driver_provider: DbDriverProvider):
+    def __init__(self, model: Type[CsmModel], model_config: DBModelConfig,
+                 db_config: GeneralConfig):
         self._event = Event()
-        # TODO: create event for driver creation
         self._model = model
-        self._model_config = model_config
-        self._storage_status = ServiceStatus.NOT_CREATED
-        self._driver_provider = driver_provider
+        self._model_settings = model_config.config.get(model_config.database)
+        self._db_config = db_config.databases.get(model_config.database)
+        self._database_status = ServiceStatus.NOT_CREATED
+        self._database_module = getattr(db_module, self._db_config.import_path)
+        self._database = None
 
     def __getattr__(self, attr_name: str) -> coroutine:
         _proxy_call = ProxyStorageCallDecorator(self, self._model, attr_name, self._event)
         return _proxy_call
 
-    async def create_storage(self) -> None:
-        self._storage_status = ServiceStatus.IN_PROGRESS
-        if self._driver_provider.get_driver_status(self._model_config.driver) == ServiceStatus.NOT_CREATED:
-            # NOTE: Assume that only one coroutine can create a storage driver and storage
-            await self._driver_provider.create_driver(self._model_config.driver)
-        driver = self._driver_provider.get_driver(self._model_config.driver)
+    async def create_database(self) -> None:
+        self._database_status = ServiceStatus.IN_PROGRESS
+        self._database = await self._database_module.create_database(self._db_config.config,
+                                                                     self._model_settings.collection,
+                                                                     self._model)
+        self._database_status = ServiceStatus.READY
 
-        await driver.create_storage(self._model,
-                                    self._model_config.config.get(self._model_config.driver))
-        self._storage_status = ServiceStatus.READY
-
-    def get_storage(self):
-        driver = self._driver_provider.get_driver(self._model_config.driver)
-
-        return driver.get_storage(self._model, self._model_config.config)
+    def get_database(self):
+        # Note: database can be None
+        return self._database
 
     @property
     def storage_status(self):
-        return self._storage_status
+        return self._database_status
 
 
-class DbStorageProvider(AbstractDbProvider):
+class DataBaseProvider(AbstractDataBaseProvider):
 
     _cached_async_decorators = dict()  # Global for all DbStorageProvider instances
 
-    def __init__(self, driver_provider: DbDriverProvider, model_config: List[DbModelConfig]):
-        self.driver_provider = driver_provider
-        self.model_config = {}
+    def __init__(self, config: GeneralConfig):
+        self.general_config = config
+        self.model_settings = {}
 
-        for model in model_config:
+        for model in config.models:
             # TODO: improve model loading
             model_class = locate(model.import_path)
 
@@ -259,15 +188,15 @@ class DbStorageProvider(AbstractDbProvider):
                 raise MalformedConfigurationError(f"'{model.import_path}'"
                                                   f" must be a subclass of CsmModel")
 
-            self.model_config[model_class] = model
+            self.model_settings[model_class] = model
 
     def get_storage(self, model: Type[CsmModel]):
-        if model not in self.model_config:
+        if model not in self.model_settings:
             raise MalformedConfigurationError(f"No configuration for {model}")
 
         if model in self._cached_async_decorators:
             return self._cached_async_decorators[model]
 
-        self._cached_async_decorators[model] = AsyncStorage(model, self.model_config[model],
-                                                            self.driver_provider)
+        self._cached_async_decorators[model] = AsyncDataBase(model, self.model_settings[model],
+                                                             self.general_config)
         return self._cached_async_decorators[model]

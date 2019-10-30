@@ -1,7 +1,26 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          storage.py
+ _description:      ElasticSearch storage implementation
+
+ Creation Date:     6/10/2019
+ Author:            Dmitry Didenko
+                    Alexander Nogikh
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from typing import List, Type, Union
 
 from elasticsearch_dsl import Q, Search
@@ -10,22 +29,20 @@ from elasticsearch import ElasticsearchException, RequestError, ConflictError
 from schematics.models import Model
 from schematics.types import (StringType, DecimalType, DateType, IntType, BaseType, BooleanType,
                               DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType)
-from schematics.exceptions import ConversionError, ValidationError
+from schematics.exceptions import ConversionError
 
 from csm.common.errors import CsmInternalError
-from csm.core.data.access import Query, SortOrder
+from csm.core.data.access import Query, SortOrder, IDataBase
 from csm.core.data.access import ExtQuery
-from csm.core.data.db import BaseAbstractStorage
-from csm.core.blogic.models.alerts import AlertExample
+from csm.core.data.db import GenericDataBase, GenericQueryConverter
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
-from csm.core.data.access.filters import (IFilterTreeVisitor, FilterOperationAnd,
-                                          FilterOperationOr, FilterOperationCompare)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access.filters import ComparisonOperation, IFilterQuery
+from csm.core.data.access.filters import FilterOperationCompare
+from csm.core.data.access.filters import Compare
+from csm.core.data.access.filters import ComparisonOperation, IFilter
 
 
-__all__ = ["ElasticSearchStorage"]
+__all__ = ["ElasticSearchDB"]
 
 
 class ESWords:
@@ -76,7 +93,7 @@ def field_to_str(field: Union[str, BaseType]) -> str:
         raise DataAccessInternalError("Failed to process left side of comparison operation")
 
 
-class ElasticSearchQueryConverter(IFilterTreeVisitor):
+class ElasticSearchQueryConverter(GenericQueryConverter):
     """
     Implementation of filter tree visitor that converts the tree into the Query
     object of elasticsearch-dsl library.
@@ -119,34 +136,14 @@ class ElasticSearchQueryConverter(IFilterTreeVisitor):
 
         return _make_query
 
-    def build(self, root: IFilterQuery):
+    def build(self, root: IFilter):
         # TODO: may be, we should move this method to the entity that processes
         # Query objects
         return root.accept_visitor(self)
 
-    def handle_and(self, entry: FilterOperationAnd):
-        operands = entry.get_operands()
-        if len(operands) < 2:
-            raise Exception("Malformed AND operation: fewer than two arguments")
-
-        ret = operands[0].accept_visitor(self)
-        for operand in operands[1:]:
-            ret = ret & operand.accept_visitor(self)
-
-        return ret
-
-    def handle_or(self, entry: FilterOperationOr):
-        operands = entry.get_operands()
-        if len(operands) < 2:
-            raise Exception("Malformed OR operation: fewer than two arguments")
-
-        ret = operands[0].accept_visitor(self)
-        for operand in operands[1:]:
-            ret = ret | operand.accept_visitor(self)
-
-        return ret
-
     def handle_compare(self, entry: FilterOperationCompare):
+        super().handle_compare(entry)  # Call generic code
+
         field = entry.get_left_operand()
 
         field_str = field_to_str(field)
@@ -209,7 +206,6 @@ class ElasticSearchDataMapper:
 
 
 class ElasticSearchQueryService:
-
     """Query service-helper for Elasticsearch"""
 
     def __init__(self, index: str, es_client: Elasticsearch,
@@ -253,9 +249,12 @@ class ElasticSearchQueryService:
         return search
 
 
-class ElasticSearchStorage(BaseAbstractStorage):
-
+class ElasticSearchDB(GenericDataBase):
     """ElasticSearch Storage Interface Implementation"""
+
+    elastic_instance = None
+    thread_pool = None
+    loop = None
 
     def __init__(self, es_client: Elasticsearch, model: Type[CsmModel], collection: str,
                  thread_pool_exec: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
@@ -283,10 +282,30 @@ class ElasticSearchStorage(BaseAbstractStorage):
         self._model = model  # Needed to build returning objects
 
         self._index_info = None
-        self._properties = None
+        self._model_scheme = None
 
         self._query_service = ElasticSearchQueryService(self._index, self._es_client,
                                                         self._query_converter)
+
+    @classmethod
+    async def create_database(cls, config, collection, model: Type[CsmModel]) -> IDataBase:
+        # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
+        # model
+        if not all((cls.elastic_instance, cls.thread_pool, cls.loop)):
+            auth = None
+            if config.login:
+                auth = (config.login, config.password)
+
+            node = {"host": config.host, "port": config.port}
+            cls.elastic_instance = Elasticsearch(hosts=[node], http_auth=auth)
+            cls.pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
+            cls.loop = asyncio.get_event_loop()
+
+        es_db = cls(cls.elastic_instance, model, collection, cls.thread_pool, cls.loop)
+
+        await es_db.attach_to_index()
+
+        return es_db
 
     async def attach_to_index(self) -> None:
         """
@@ -313,7 +332,8 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
         self._index_info = await self._loop.run_in_executor(self._tread_pool_exec,
                                                             _get, self._index)
-        self._properties = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
+        self._model_scheme = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
+        self._model_scheme = {k.lower(): v for k, v in self._model_scheme.items()}
 
     async def store(self, obj: CsmModel):
         """
@@ -333,24 +353,11 @@ class ElasticSearchStorage(BaseAbstractStorage):
             _result = self._es_client.index(index=self._index, id=_id, body=_doc)
             return _result
 
-        doc = dict()
-        if self._properties.keys() - obj.fields.keys():
-            missing_keys = self._properties.keys() - obj.fields.keys()
-            raise DataAccessInternalError(f"Store object doesn't have necessary model properties:"
-                                          f"{','.join([k for k in missing_keys])}")
-        elif obj.fields.keys() - self._properties.keys():
-            extra_keys = obj.fields.keys() - self._properties.keys()
-            raise DataAccessInternalError(f"Object to store has new model properties:"
-                                          f"{','.join([k for k in extra_keys])}")
+        await super().store(obj)  # Call generic code
 
-        for key in self._properties:
-            schematic_type = self._model.fields.get(key)
-            try:
-                doc[key] = schematic_type.validate(getattr(obj, key))  # convert into necessary type
-            except ValidationError as e:
-                raise DataAccessInternalError(f"Field '{key}' validation error: {e}")
-            except ConversionError as e:
-                raise DataAccessInternalError(f"Field '{key}' conversion error: {e}")
+        doc = dict()
+        for key in self._model_scheme:
+            doc[key] = getattr(obj, key)
 
         obj_id = str(obj.primary_key_val)  # convert primary key value into string
 
@@ -409,7 +416,6 @@ class ElasticSearchStorage(BaseAbstractStorage):
         :param dict to_update: dictionary with fields and values which should be updated
 
         """
-        """TODO: it also should take fields to update"""
         pass
 
     async def _refresh_index(self):
@@ -423,11 +429,11 @@ class ElasticSearchStorage(BaseAbstractStorage):
 
         await self._loop.run_in_executor(self._tread_pool_exec, _refresh)
 
-    async def delete(self, filter_obj: IFilterQuery) -> int:
+    async def delete(self, filter_obj: IFilter) -> int:
         """
         Delete objects in DB by Query
 
-        :param IFilterQuery filter_obj: filter object to perform delete operation
+        :param IFilter filter_obj: filter object to perform delete operation
         :return: number of deleted entries
         """
         def _delete(_by_filter):
@@ -440,37 +446,17 @@ class ElasticSearchStorage(BaseAbstractStorage):
         #       after store operation
         await self._refresh_index()
         try:
-            # TODO: it is possible to return a number of deleted
             result = await self._loop.run_in_executor(self._tread_pool_exec, _delete, filter_by)
         except ConflictError as e:
             raise DataAccessExternalError(f"{e}")
 
         return result[ESWords.DELETED]
 
-    async def sum(self, ext_query: ExtQuery):
-        """
-        Sum Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform sum aggregation
-        :return:
-        """
-        pass
-
-    async def avg(self, ext_query: ExtQuery):
-        """
-        Average Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform average
-                                   aggregation
-        :return:
-        """
-        pass
-
-    async def count(self, filter_obj: IFilterQuery = None) -> int:
+    async def count(self, filter_obj: IFilter = None) -> int:
         """
         Returns count of entities for given filter_obj
 
-        :param IFilterQuery filter_obj: filter to perform count aggregation
+        :param IFilter filter_obj: filter to perform count aggregation
         :return: count of entries which satisfy the `filter_obj`
         """
 
@@ -492,24 +478,6 @@ class ElasticSearchStorage(BaseAbstractStorage):
         Count Aggregation function
 
         :param ExtQuery ext_query: Extended query which describes to perform count aggregation
-        :return:
-        """
-        pass
-
-    async def max(self, ext_query: ExtQuery):
-        """
-        Max Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform Max aggregation
-        :return:
-        """
-        pass
-
-    async def min(self, ext_query: ExtQuery):
-        """
-        Min Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform Min aggregation
         :return:
         """
         pass
