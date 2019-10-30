@@ -1,4 +1,24 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          storage.py
+ _description:      Consul KV storage implementation
+
+ Creation Date:     18/10/2019
+ Author:            Dmitry Didenko
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
 import asyncio
+import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from string import Template
 from typing import List, Type, Union, Dict
@@ -11,15 +31,13 @@ from schematics.models import Model
 from schematics.types import BaseType, StringType
 from schematics.exceptions import ConversionError, ValidationError
 
-from csm.core.data.access import Query, SortOrder
+from csm.core.data.access import Query, SortOrder, IDataBase
 from csm.core.data.access import ExtQuery
-from csm.core.data.db import BaseAbstractStorage
+from csm.core.data.db import GenericDataBase, GenericQueryConverter
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
-from csm.core.data.access.filters import (IFilterTreeVisitor, FilterOperationAnd,
-                                          FilterOperationOr, FilterOperationCompare)
-from csm.core.data.access.filters import ComparisonOperation, IFilterQuery
-
+from csm.core.data.access.filters import FilterOperationCompare
+from csm.core.data.access.filters import ComparisonOperation, IFilter
 
 CONSUL_ROOT = "eos/csm"
 OBJECT_DIR = "obj"
@@ -48,7 +66,7 @@ def field_to_str(field: Union[str, BaseType]) -> str:
         raise DataAccessInternalError("Failed to process left side of comparison operation")
 
 
-class ConsulQueryConverterWithData(IFilterTreeVisitor):
+class ConsulQueryConverterWithData(GenericQueryConverter):
     """
     Implementation of filter tree visitor which performs query tree traversal in parallel with
     data filtering based on given filter logical and comparison operations
@@ -76,7 +94,7 @@ class ConsulQueryConverterWithData(IFilterTreeVisitor):
     def _filter(self, suitable_keys: List[str]):
         return filter(lambda x: x[ConsulWords.KEY] in suitable_keys, self._raw_data)
 
-    def build(self, root: IFilterQuery, raw_data: List[Dict]):
+    def build(self, root: IFilter, raw_data: List[Dict]):
         # TODO: may be, we should move this method to the entity that processes
         # Query objects
         self._raw_data = raw_data
@@ -85,29 +103,9 @@ class ConsulQueryConverterWithData(IFilterTreeVisitor):
             self._raw_data}
         return self._filter(root.accept_visitor(self))
 
-    def handle_and(self, entry: FilterOperationAnd):
-        operands = entry.get_operands()
-        if len(operands) < 2:
-            raise Exception("Malformed AND operation: fewer than two arguments")
-
-        ret = operands[0].accept_visitor(self)
-        for operand in operands[1:]:
-            ret = ret & operand.accept_visitor(self)  # Operation between python's sets
-
-        return ret
-
-    def handle_or(self, entry: FilterOperationOr):
-        operands = entry.get_operands()
-        if len(operands) < 2:
-            raise Exception("Malformed OR operation: fewer than two arguments")
-
-        ret = operands[0].accept_visitor(self)
-        for operand in operands[1:]:
-            ret = ret | operand.accept_visitor(self)  # Operation between python's sets
-
-        return ret
-
     def handle_compare(self, entry: FilterOperationCompare):
+        super().handle_compare(entry)  # Call the generic code
+
         field = entry.get_left_operand()
 
         field_str = field_to_str(field)
@@ -124,7 +122,7 @@ class ConsulQueryConverterWithData(IFilterTreeVisitor):
                           self._object_data.keys()))
 
 
-def query_converter_build(model: CsmModel, filter_obj: IFilterQuery, raw_data: List[Dict]):
+def query_converter_build(model: CsmModel, filter_obj: IFilter, raw_data: List[Dict]):
     query_converter = ConsulQueryConverterWithData(model)
     return query_converter.build(filter_obj, raw_data)
 
@@ -181,8 +179,12 @@ class ConsulKeyTemplate:
                                      PROPERTY_VALUE=property_value)
 
 
-class ConsulStorage(BaseAbstractStorage):
+class ConsulDB(GenericDataBase):
     """Consul Storage Interface Implementation"""
+
+    consul_client = None
+    thread_pool = None
+    loop = None
 
     def __init__(self, consul_client: Consul, model: Type[CsmModel], collection: str,
                  process_pool: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
@@ -216,6 +218,24 @@ class ConsulStorage(BaseAbstractStorage):
 
         self._templates = ConsulKeyTemplate()
         self._templates.set_object_type(self._collection)
+        self._model_scheme = list()
+
+    @classmethod
+    async def create_database(cls, config, collection: str, model: Type[CsmModel]) -> IDataBase:
+        # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
+        # model
+
+        if not all((cls.consul_client, cls.thread_pool, cls.loop)):
+            cls.loop = asyncio.get_event_loop()
+            cls.consul_client = Consul(host=config.host, port=config.port, loop=cls.loop)
+            # needed to perform tree traversal in non-blocking mode
+            cls.thread_pool = ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
+
+        consul_db = cls(cls.consul_client, model, collection, cls.thread_pool, cls.loop)
+
+        await consul_db.create_object_root()
+
+        return consul_db
 
     async def create_object_root(self) -> None:
         """
@@ -223,8 +243,24 @@ class ConsulStorage(BaseAbstractStorage):
 
         :return:
         """
+        async def _create_obj_dir():
+            """
+            Create obj dir if it does not exist and load model_scheme
+            :return:
+            """
+            _index, _data = await self._consul_client.kv.get(obj_dir)
+            if _data is None:
+                self._model_scheme = dict.fromkeys(self._model.fields.keys())
+                _response = await self._consul_client.kv.put(obj_dir,
+                                                             json.dumps(self._model_scheme))
+                if not _response:
+                    raise DataAccessExternalError(f"Can't put key={obj_root} and "
+                                                  f"value={str(creation_time)}")
+            else:
+                self._model_scheme = json.loads(_data[ConsulWords.VALUE])
 
         obj_root = self._templates.get_object_root()
+        obj_dir = self._templates.get_object_dir()
         index, data = await self._consul_client.kv.get(obj_root)
         if data is None:
             # maybe need to post creation time
@@ -234,6 +270,8 @@ class ConsulStorage(BaseAbstractStorage):
                 raise DataAccessExternalError(f"Can't put key={obj_root} and "
                                               f"value={str(creation_time)}")
 
+        await _create_obj_dir()  # create if it is not exists
+
     async def store(self, obj: CsmModel):
         """
         Store object into Storage
@@ -241,15 +279,10 @@ class ConsulStorage(BaseAbstractStorage):
         :param Model obj: Arbitrary CSM object for storing into DB
 
         """
+        await super().store(obj)  # Call the generic code
+
         obj_path = self._templates.get_object_path(obj.primary_key_val)
         obj_path = obj_path.lower()
-
-        try:
-            obj.validate()  # validate that object is correct and perform necessary type conversions
-        except ValidationError as e:
-            raise DataAccessInternalError(f"{e}")
-        except ConversionError as e:
-            raise DataAccessInternalError(f"{e}")
 
         obj_val = json.dumps(obj.to_primitive())
         response = await self._consul_client.kv.put(obj_path, obj_val)
@@ -258,7 +291,7 @@ class ConsulStorage(BaseAbstractStorage):
 
     async def _get_all_raw(self) -> Union[None, List[Dict]]:
         obj_dir = self._templates.get_object_dir()
-        obj_dir = obj_dir.lower()
+        obj_dir = obj_dir.lower() + "/"  # exclude key eos/csm/type/obj without trailing "/"
         index, data = await self._consul_client.kv.get(obj_dir, recurse=True, consistency=True)
         if data is None:
             return None
@@ -299,7 +332,8 @@ class ConsulStorage(BaseAbstractStorage):
                                                                query.filter_by,
                                                                suitable_models)
 
-        csm_models = [self._model(json.loads(entry[ConsulWords.VALUE])) for entry in suitable_models]
+        csm_models = [self._model(json.loads(entry[ConsulWords.VALUE]))
+                      for entry in suitable_models]
         if query.order_by is not None:
             field_str = field_to_str(query.order_by.field)
             field_type = type(getattr(self._model, field_str))
@@ -343,11 +377,11 @@ class ConsulStorage(BaseAbstractStorage):
         """TODO: it also should take fields to update"""
         pass
 
-    async def delete(self, filter_obj: IFilterQuery) -> int:
+    async def delete(self, filter_obj: IFilter) -> int:
         """
         Delete objects in DB by Query
 
-        :param IFilterQuery filter_obj: filter object to perform delete operation
+        :param IFilter filter_obj: filter object to perform delete operation
         :return: number of deleted entries
         """
         raw_data = await self._get_all_raw()
@@ -377,30 +411,11 @@ class ConsulStorage(BaseAbstractStorage):
         if not response:
             raise DataAccessExternalError(f"Error happens during object deleting with id={obj_id}")
 
-    async def sum(self, ext_query: ExtQuery):
-        """
-        Sum Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform sum aggregation
-        :return:
-        """
-        pass
-
-    async def avg(self, ext_query: ExtQuery):
-        """
-        Average Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform average
-                                   aggregation
-        :return:
-        """
-        pass
-
-    async def count(self, filter_obj: IFilterQuery = None) -> int:
+    async def count(self, filter_obj: IFilter = None) -> int:
         """
         Returns count of entities for given filter_obj
 
-        :param IFilterQuery filter_obj: filter to perform count aggregation
+        :param IFilter filter_obj: filter to perform count aggregation
         :return: count of entries which satisfy the `filter_obj`
         """
         raw_data = await self._get_all_raw()
@@ -421,24 +436,6 @@ class ConsulStorage(BaseAbstractStorage):
         Count Aggregation function
 
         :param ExtQuery ext_query: Extended query which describes to perform count aggregation
-        :return:
-        """
-        pass
-
-    async def max(self, ext_query: ExtQuery):
-        """
-        Max Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform Max aggregation
-        :return:
-        """
-        pass
-
-    async def min(self, ext_query: ExtQuery):
-        """
-        Min Aggregation function
-
-        :param ExtQuery ext_query: Extended query which describes how to perform Min aggregation
         :return:
         """
         pass
