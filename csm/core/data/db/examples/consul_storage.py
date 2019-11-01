@@ -170,10 +170,23 @@ async def example():
 
     res = await db(AlertExample)._get_all_raw()
     print([model for model in res])
+
     _id = 2
     res = await db(AlertExample).get_by_id(_id)
     if res is not None:
         print(f"Get by id = {_id}: {res.to_primitive()}")
+
+    to_update = {
+        'type': "Hardware",
+        'location': "USA"
+    }
+
+    await db(AlertExample).update_by_id(_id, to_update)
+
+    res = await db(AlertExample).get_by_id(_id)
+    if res is not None:
+        print(f"Get by id after update = {_id}: {res.to_primitive()}")
+
     filter_obj = Or(And(Compare(AlertExample.id, ">=", 23),
                         Compare(AlertExample.status, "=", "Success")),
                     And(Compare(AlertExample.alert_uuid, "<=", 3),
@@ -184,6 +197,13 @@ async def example():
 
     for model in res:
         print(f"Get by query ={model.to_primitive()}")
+
+    await db(AlertExample).update(filter_obj, to_update)
+
+    res = await db(AlertExample).get(query)
+
+    for model in res:
+        print(f"Get by query after update={model.to_primitive()}")
 
     query = Query().filter_by(filter_obj).order_by(AlertExample.location)
     res = await db(AlertExample).get(query)
