@@ -17,6 +17,7 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
+from typing import Any, Union
 
 from schematics.exceptions import ValidationError, ConversionError
 
@@ -26,7 +27,7 @@ from csm.core.data.access import IDataBase, Query, IFilterTreeVisitor
 from csm.core.data.access import ExtQuery
 from csm.core.data.access import IFilter
 from csm.core.data.access.filters import (FilterOperationCompare, FilterOperationOr,
-                                          FilterOperationAnd)
+                                          FilterOperationAnd, Compare)
 
 
 class GenericDataBase(IDataBase):
@@ -67,6 +68,37 @@ class GenericDataBase(IDataBase):
         # Put Generic code here. We can't find it
         pass
 
+    async def get_by_id(self, obj_id: Any) -> Union[CsmModel, None]:
+        """
+        Simple implementation of get function.
+        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
+        contains 'id' field please use ordinary get call. For example,
+
+            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
+
+        This API call is equivalent to
+
+            await db(YourCsmModel).get(Query().filter_by(
+                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
+
+        :param Any obj_id:
+        :return: CsmModel if object was found by its id and None otherwise
+        """
+        id_field = getattr(self._model, self._model.primary_key)
+        try:
+            converted = id_field.to_native(obj_id)
+        except ConversionError as e:
+            raise DataAccessInternalError(f"{e}")
+
+        query = Query().filter_by(Compare(self._model.primary_key, "=", converted))
+
+        result = await self.get(query)
+
+        if result:
+            return result.pop()
+
+        return None
+
     async def delete(self, filter_obj: IFilter):
         """
         Delete objects in DB by Query
@@ -77,15 +109,44 @@ class GenericDataBase(IDataBase):
         # Put Generic code here. We can't find it
         pass
 
-    async def update(self, query: Query, to_update: dict):
+    async def update(self, filter_obj: IFilter, to_update: dict) -> int:
         """
-        Update object in Storage by Query
+        Update object in Storage by filter
 
-        :param Query query: query object which describes what objects need to update
+        :param IFilter filter_obj: filter which specifies what objects need to update
         :param dict to_update: dictionary with fields and values which should be updated
+        :return: number of entries updated
         """
-        # Put Generic code here. We can't find it
-        pass
+        # Generic code for update method of particular storage
+        unnecessary_fields = set(to_update.keys()) - set(self._model_scheme.keys())
+        if unnecessary_fields:
+            raise DataAccessInternalError(f"to_update dictionary contains fields which are not "
+                                          f"presented in model:{unnecessary_fields}")
+
+        try:
+            for key in to_update:
+                to_update[key] = getattr(self._model, key).to_native(to_update[key])
+        except ConversionError as e:
+            raise DataAccessInternalError(f"{e}")
+
+    async def update_by_id(self, obj_id: Any, to_update: dict) -> None:
+        """
+        Update csm model in db by id (primary key)
+
+        :param Any obj_id: id-value of the object which should be updated (primary key value)
+        :param dict to_update: dictionary with fields and values which should be updated
+        :return:
+        """
+        # Generic code for update_by_id method of particular method
+        id_field = getattr(self._model, self._model.primary_key)
+        try:
+            converted = id_field.to_native(obj_id)
+        except ConversionError as e:
+            raise DataAccessInternalError(f"{e}")
+
+        filter = Compare(self._model.primary_key, "=", converted)
+
+        await self.update(filter, to_update)
 
     async def sum(self, ext_query: ExtQuery):
         """
@@ -105,7 +166,7 @@ class GenericDataBase(IDataBase):
         """
         pass
 
-    async def count(self, filter_obj: IFilter) -> int:
+    async def count(self, filter_obj: IFilter = None) -> int:
         """
         Returns count of entities for given filter_obj
 

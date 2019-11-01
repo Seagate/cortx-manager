@@ -19,7 +19,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Type, Union
+from typing import Type, Union, Any
 from csm.core.data.access import Query
 from csm.core.data.access import ExtQuery
 from csm.core.data.access import IFilter
@@ -49,14 +49,44 @@ class IDataBase(ABC):
         pass
 
     @abstractmethod
-    async def update(self, query: Query, to_update: dict):
-        """Update object in Storage by Query
-
-            :param Query query: query object which describes what objects need to update
-            :param dict to_update: dictionary with fields and values which should be updated
-
+    async def get_by_id(self, obj_id: Any) -> Union[CsmModel, None]:
         """
-        """TODO: it also should take fields to update"""
+        Simple implementation of get function.
+        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
+        contains 'id' field please use ordinary get call. For example,
+
+            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
+
+        This API call is equivalent to
+
+            await db(YourCsmModel).get(Query().filter_by(
+                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
+
+        :param Any obj_id:
+        :return: CsmModel if object was found by its id and None otherwise
+        """
+        pass
+
+    @abstractmethod
+    async def update(self, filter_obj: IFilter, to_update: dict) -> int:
+        """
+        Update object in Storage by filter
+
+        :param IFilter filter_obj: filter object which describes what objects need to update
+        :param dict to_update: dictionary with fields and values which should be updated
+        :return: number of entries updated
+        """
+        pass
+
+    @abstractmethod
+    async def update_by_id(self, obj_id: Any, to_update: dict) -> None:
+        """
+        Update csm model in db by id (primary key)
+
+        :param Any obj_id: id-value of the object which should be updated (primary key value)
+        :param dict to_update: dictionary with fields and values which should be updated
+        :return:
+        """
         pass
 
     @abstractmethod

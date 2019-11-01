@@ -32,6 +32,7 @@ from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
 
 
+
 ALERT1 = {'id': 22,
           'alert_uuid': 1,
           'status': "Success",
@@ -42,8 +43,8 @@ ALERT1 = {'id': 22,
           'health': "Good",
           'health_recommendation': "Replace Disk",
           'location': "USA",
-          'resolved': 1,
-          'acknowledged': 0,
+          'resolved': True,
+          'acknowledged': True,
           'severity': 1,
           'state': "Unknown",
           'extended_info': "No",
@@ -62,8 +63,48 @@ ALERT2 = {'id': 23,
           'health': "Good",
           'health_recommendation': "Replace Disk",
           'location': "India",
-          'resolved': 0,
-          'acknowledged': 0,
+          'resolved': False,
+          'acknowledged': False,
+          'severity': 1,
+          'state': "Unknown",
+          'extended_info': "No",
+          'module_type': "FAN",
+          'updated_time': datetime.now(),
+          'created_time': datetime.now()
+          }
+
+ALERT3 = {'id': 24,
+          'alert_uuid': 3,
+          'status': "Failed",
+          'type': "Software",
+          'enclosure_id': 1,
+          'module_name': "SSPL",
+          'description': "Some Description",
+          'health': "Bad",
+          'health_recommendation': "Replace Disk",
+          'location': "Russia",
+          'resolved': True,
+          'acknowledged': True,
+          'severity': 1,
+          'state': "Unknown",
+          'extended_info': "No",
+          'module_type': "FAN",
+          'updated_time': datetime.now(),
+          'created_time': datetime.now()
+          }
+
+ALERT4 = {'id': 25,
+          'alert_uuid': 4,
+          'status': "Success",
+          'type': "Software",
+          'enclosure_id': 1,
+          'module_name': "SSPL",
+          'description': "Some Description",
+          'health': "Greate",
+          'health_recommendation': "Replace Unity",
+          'location': "Russia",
+          'resolved': False,
+          'acknowledged': False,
           'severity': 1,
           'state': "Unknown",
           'extended_info': "No",
@@ -103,22 +144,49 @@ async def example():
 
     alert1 = AlertExample(ALERT1)
     alert2 = AlertExample(ALERT2)
+    alert3 = AlertExample(ALERT3)
+    alert4 = AlertExample(ALERT4)
 
     await db(AlertExample).store(alert1)
     await db(AlertExample).store(alert2)
+    await db(AlertExample).store(alert3)
+    await db(AlertExample).store(alert4)
 
-    filter = And(Compare(AlertExample.id, "=", 22), And(Compare(AlertExample.status, "=", "Success"),
-                                                 Compare(AlertExample.id, ">", 1)))
+    filter = And(Compare(AlertExample.id, "=", 22),
+                 And(Compare(AlertExample.status, "=", "Success"),
+                     Compare(AlertExample.id, ">", 1)))
+
     query = Query().filter_by(filter).order_by(AlertExample.id, SortOrder.DESC)
     res = await db(AlertExample).get(query)
     print(f"Get by query: {[alert.to_primitive() for alert in res]}")
+
+    to_update = {
+        'type': "Software",
+        'location': "Russia",
+        'alert_uuid': 22,
+        'resolved': False,
+        'created_time': datetime.now()
+    }
+
+    await db(AlertExample).update(filter, to_update)
+
+    res = await db(AlertExample).get(query)
+    print(f"Get by query after update: {[alert.to_primitive() for alert in res]}")
 
     _id = 2
     res = await db(AlertExample).get_by_id(_id)
     if res is not None:
         print(f"Get by id = {_id}: {res.to_primitive()}")
 
-    filter_obj = Or(Compare(AlertExample.id, "=", 1), Compare(AlertExample.id, "=", 2), Compare(AlertExample.id, "=", 22))
+    await db(AlertExample).update_by_id(_id, to_update)
+
+    updated_id = to_update['alert_uuid']
+    res = await db(AlertExample).get_by_id(updated_id)
+    if res is not None:
+        print(f"Get by id after update = {_id}: {res.to_primitive()}")
+
+    filter_obj = Or(Compare(AlertExample.id, "=", 1), Compare(AlertExample.id, "=", 2),
+                    Compare(AlertExample.id, "=", 22))
     res = await db(AlertExample).count(filter_obj)
     print(f"Count by filter: {res}")
 
