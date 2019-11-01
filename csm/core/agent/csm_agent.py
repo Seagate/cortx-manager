@@ -34,7 +34,11 @@ class CsmAgent:
         # alerts_storage.add_data()
         alerts_service = AlertsAppService(alerts_storage)
 
-        CsmRestApi.init(alerts_service)
+        #Stats service creation
+        sp = import_plugin_module('stats').StatsPlugin(StatsAggregation, "http://localhost:5601")
+        stats_service = StatsAppService(sp)
+
+        CsmRestApi.init(alerts_service, stats_service)
         pm = import_plugin_module('alert')
 
         CsmAgent.alert_monitor = AlertMonitorService(alerts_storage,
@@ -101,11 +105,15 @@ if __name__ == '__main__':
         from csm.core.repositories.alerts import AlertSimpleStorage
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
+        from csm.core.services.stats import StatsAppService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 
+        from csm.eos.aggregation import stats as StatsAggregation
+
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)
-    except:
+    except Exception as e:
+        raise e
         Log.error(traceback.format_exc())
         os._exit(1)
