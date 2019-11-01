@@ -21,7 +21,7 @@ import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from string import Template
-from typing import List, Type, Union, Dict
+from typing import List, Type, Union, Dict, Any
 from datetime import datetime
 import json
 import operator
@@ -36,7 +36,7 @@ from csm.core.data.access import ExtQuery
 from csm.core.data.db import GenericDataBase, GenericQueryConverter
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
-from csm.core.data.access.filters import FilterOperationCompare
+from csm.core.data.access.filters import FilterOperationCompare, Compare
 from csm.core.data.access.filters import ComparisonOperation, IFilter
 
 CONSUL_ROOT = "eos/csm"
@@ -63,7 +63,7 @@ def field_to_str(field: Union[str, BaseType]) -> str:
     elif isinstance(field, BaseType):
         return field.name
     else:
-        raise DataAccessInternalError("Failed to process left side of comparison operation")
+        raise DataAccessInternalError("Failed to convert field to string representation")
 
 
 class ConsulQueryConverterWithData(GenericQueryConverter):
@@ -215,13 +215,20 @@ class ConsulDB(GenericDataBase):
 
         self._templates = ConsulKeyTemplate()
         self._templates.set_object_type(self._collection)
-        self._model_scheme = list()
+        self._model_scheme = dict()
 
     @classmethod
     async def create_database(cls, config, collection: str, model: Type[CsmModel]) -> IDataBase:
+        """
+        Creates new instance of Consul KV DB and performs necessary initializations
+
+        :param DBSettings config: configuration for consul kv server
+        :param str collection: collection for storing model onto db
+        :param Type[CsmModel] model: model which instances will be stored in DB
+        :return:
+        """
         # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
         # model
-
         if not all((cls.consul_client, cls.thread_pool, cls.loop)):
             cls.loop = asyncio.get_event_loop()
             try:
@@ -342,40 +349,35 @@ class ConsulDB(GenericDataBase):
 
         return csm_models
 
-    async def get_by_id(self, obj_id: Union[int, str]) -> Union[Model, None]:
+    async def update(self, filter_obj: IFilter, to_update: dict) -> int:
         """
-        Simple implementation of get function.
-        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
-        contains 'id' field please use ordinary get call. For example,
+        Update object in Storage by filter
 
-            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
-
-        This API call is equivalent to
-
-            await db(YourCsmModel).get(Query().filter_by(
-                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
-
-        :param Union[int, str] obj_id:
-        :return: CsmModel if object was found by its id and None otherwise
-        """
-        obj_path = self._templates.get_object_path(str(obj_id))
-        obj_path = obj_path.lower()
-        index, data = await self._consul_client.kv.get(obj_path, consistency=True)
-        if data is None:
-            return None
-
-        return self._model(json.loads(data[ConsulWords.VALUE]))
-
-    async def update(self, query: Query, to_update: dict):
-        """
-        Update object in Storage by Query
-
-        :param Query query: query object which describes what objects need to update
+        :param IFilter filter_obj: filter which specifies what objects need to update
         :param dict to_update: dictionary with fields and values which should be updated
-
+        :return: number of entries updated
         """
-        """TODO: it also should take fields to update"""
-        pass
+        await super().update(filter_obj, to_update)  # Call the generic code
+
+        raw_data = await self._get_all_raw()
+
+        # NOTE: use processes for parallel data calculations and make true asynchronous work
+        suitable_models = await self._loop.run_in_executor(self._process_pool,
+                                                           query_converter_build,
+                                                           self._model,
+                                                           filter_obj,
+                                                           raw_data)
+        csm_models = [self._model(json.loads(entry[ConsulWords.VALUE]))
+                      for entry in suitable_models]
+
+        for model in csm_models:
+            # use any to invoke map over each parameter
+            any(map(setattr, (model for _i in range(len(to_update))),
+                    to_update.keys(),
+                    to_update.values()))
+            await self.store(model)
+
+        return len(csm_models)  # return number of entries updated
 
     async def delete(self, filter_obj: IFilter) -> int:
         """
@@ -393,6 +395,9 @@ class ConsulDB(GenericDataBase):
                                                            filter_obj,
                                                            raw_data)
         suitable_models = list(suitable_models)
+        if not suitable_models:
+            return 0  # No models are deleted
+
         tasks = [asyncio.ensure_future(self._consul_client.kv.delete(model[ConsulWords.KEY])) for
                  model in suitable_models]
 
