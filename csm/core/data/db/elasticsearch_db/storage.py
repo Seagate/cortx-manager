@@ -21,12 +21,14 @@
 import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Type, Union
+from datetime import datetime
+from typing import List, Type, Union, Any
+from string import Template
 
-from elasticsearch_dsl import Q, Search
+from elasticsearch_dsl import Q, Search, UpdateByQuery, Date
+from elasticsearch_dsl.response import UpdateByQueryResponse
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException, RequestError, ConflictError
-from schematics.models import Model
 from schematics.types import (StringType, DecimalType, DateType, IntType, BaseType, BooleanType,
                               DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType)
 from schematics.exceptions import ConversionError
@@ -38,7 +40,6 @@ from csm.core.data.db import GenericDataBase, GenericQueryConverter
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
 from csm.core.data.access.filters import FilterOperationCompare
-from csm.core.data.access.filters import Compare
 from csm.core.data.access.filters import ComparisonOperation, IFilter
 
 
@@ -60,6 +61,7 @@ class ESWords:
     ORDER = "order"
     COUNT = "count"
     DELETED = "deleted"
+    PAINLESS = "painless"
 
 
 # TODO: Add remaining schematics data types
@@ -90,7 +92,7 @@ def field_to_str(field: Union[str, BaseType]) -> str:
     elif isinstance(field, BaseType):
         return field.name
     else:
-        raise DataAccessInternalError("Failed to process left side of comparison operation")
+        raise DataAccessInternalError("Failed to convert field to string representation")
 
 
 class ElasticSearchQueryConverter(GenericQueryConverter):
@@ -256,6 +258,14 @@ class ElasticSearchDB(GenericDataBase):
     thread_pool = None
     loop = None
 
+    _default_template = Template("ctx._source.$FIELD_NAME = '$FIELD_VALUE';")
+    _inline_templates = {
+        bool: Template("ctx._source.$FIELD_NAME = $FIELD_VALUE;"),
+        int: Template("ctx._source.$FIELD_NAME = $FIELD_VALUE;"),
+        float: Template("ctx._source.$FIELD_NAME = $FIELD_VALUE;"),
+    }
+    _default_date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+
     def __init__(self, es_client: Elasticsearch, model: Type[CsmModel], collection: str,
                  thread_pool_exec: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
         """
@@ -289,6 +299,14 @@ class ElasticSearchDB(GenericDataBase):
 
     @classmethod
     async def create_database(cls, config, collection, model: Type[CsmModel]) -> IDataBase:
+        """
+        Creates new instance of ElasticSearch DB and performs necessary initializations
+
+        :param DBSettings config: configuration for elasticsearch server
+        :param str collection: collection for storing model onto db
+        :param Type[CsmModel] model: model which instances will be stored in DB
+        :return:
+        """
         # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
         # model
         if not all((cls.elastic_instance, cls.thread_pool, cls.loop)):
@@ -339,7 +357,7 @@ class ElasticSearchDB(GenericDataBase):
         """
         Store object into Storage
 
-        :param Model obj: Arbitrary CSM object for storing into DB
+        :param CsmModel obj: Arbitrary CSM object for storing into DB
 
         """
         def _store(_id, _doc: dict):
@@ -371,7 +389,7 @@ class ElasticSearchDB(GenericDataBase):
         await self._refresh_index()
         return result
 
-    async def get(self, query: Query) -> List[Model]:
+    async def get(self, query: Query) -> List[CsmModel]:
         """
         Get object from Storage by Query
 
@@ -385,38 +403,64 @@ class ElasticSearchDB(GenericDataBase):
         result = await self._loop.run_in_executor(self._tread_pool_exec, _get, query)
         return [self._model(hit.to_dict()) for hit in result]
 
-    async def get_by_id(self, obj_id: Union[int, str]) -> Union[Model, None]:
-        """
-        Simple implementation of get function.
-        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
-        contains 'id' field please use ordinary get call. For example,
-
-            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
-
-        This API call is equivalent to
-
-            await db(YourCsmModel).get(Query().filter_by(
-                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
-
-        :param Union[int, str] obj_id:
-        :return: CsmModel if object was found by its id and None otherwise
-        """
-        query = Query().filter_by(Compare(self._model.primary_key, "=", str(obj_id)))
-        result = await self.get(query)
-        if result:
-            return result.pop()
-
-        return None
-
-    async def update(self, query: Query, to_update: dict):
+    async def update(self, filter_obj: IFilter, to_update: dict) -> int:
         """
         Update object in Storage by Query
 
-        :param Query query: query object which describes what objects need to update
+        :param IFilter filter_obj: filter object which describes what objects need to update
         :param dict to_update: dictionary with fields and values which should be updated
-
+        :return: number of updated entries
         """
-        pass
+        def dict_to_source(__to_update: dict) -> str:
+            """
+            Convert __to_update dict into elasticsearch source representation
+            :param __to_update: dictionary with fields and values which should be updated
+            :return: elasticsearch inline representation
+            """
+
+            def _value_converter(_value: Any) -> Any:
+                """
+                Convert value if it is necessary
+                :param _value:
+                :return:
+                """
+                if isinstance(_value, bool):
+                    return str(_value).lower()
+                elif isinstance(_value, datetime):
+                    return _value.strftime(self._default_date_format)
+
+                return _value
+
+            return " ".join(
+                (self._inline_templates.get(type(value), self._default_template).substitute(
+                    FIELD_NAME=key, FIELD_VALUE=_value_converter(value))
+                 for key, value in __to_update.items()))
+
+        def _update(_ubq) -> UpdateByQueryResponse:
+            """
+            Perform Update by Query in separate thread
+            :param UpdateByQuery _ubq: UpdateByQuery instance
+            :return: Response object of ElasticSearch DSL module
+            """
+            return _ubq.execute()
+
+        _to_update = to_update.copy()  # Copy because it will be change below
+
+        # NOTE: Important: call of the parent update method changes _to_update dict!
+        await super().update(filter_obj, _to_update)  # Call the generic code
+
+        ubq = UpdateByQuery(index=self._index, using=self._es_client)
+
+        filter_by = self._query_converter.build(filter_obj)
+        ubq = ubq.query(filter_by)
+
+        source = dict_to_source(_to_update)
+        ubq = ubq.script(inline=source, lang=ESWords.PAINLESS)
+
+        result = await self._loop.run_in_executor(self._tread_pool_exec, _update, ubq)
+
+        await self._refresh_index()  # ensure that updated results will be ready immediately
+        return result.updated
 
     async def _refresh_index(self):
         """
