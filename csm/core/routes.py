@@ -27,13 +27,12 @@ from csm.core.controllers import *
 
 class ApiRoutes:
     @staticmethod
-    def add_rest_api_routes(router, alerts_ctrl, stats_ctrl):
+    def add_rest_api_routes(router, alerts_ctrl):
         # todo: Will be restructuring this part on Tuesday Morning.
         # self._app.router.add_view("/csm", CsmCliView),
         # self._app.web.get("/ws", self.process_websocket),
         router.add_view("/api/v1/alerts", alerts_ctrl.get_list_view_class()),
         router.add_view("/api/v1/alerts/{alert_id}", alerts_ctrl.get_view_class()),
-        router.add_view("/api/v1/stats/{panel}", stats_ctrl.get_view_class()),
         # self._app.router.add_view('/{path:.*}', self.process_dbg_static_page)
 
     @staticmethod

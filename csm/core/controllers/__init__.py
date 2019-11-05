@@ -18,7 +18,6 @@
 """
 
 from .alerts import AlertsHttpController
-from .stats import StatsHttpController
 from .routes import CsmRoutes
 
 # from .csm import CsmCliView

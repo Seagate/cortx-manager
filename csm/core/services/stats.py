@@ -28,18 +28,12 @@
 # processing architecture
 import asyncio
 import re
-#from typing import Optional
 from datetime import datetime, timedelta
 from typing import Dict
-#from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
-#from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
-#from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
-#from csm.core.blogic import const
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
-
 
 class StatsAppService(ApplicationService):
     """
@@ -59,7 +53,7 @@ class StatsAppService(ApplicationService):
         utc_to_t = str(datetime.utcfromtimestamp(int(to_t)).isoformat())+'.000Z'
         interval_with_s = str(interval)+'s'
 
-        return await self._plugin.process_request(stats_id = stats_id, panal = panel,
+        return await self._plugin.process_request(stats_id = stats_id, panel = panel,
                                                   from_t = utc_from_t, duration_t = utc_to_t,
                                                   metric_list = metric_list,
                                                   interval = interval_with_s,
