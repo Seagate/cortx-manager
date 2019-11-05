@@ -27,6 +27,39 @@ import json
 import threading
 import errno
 
+from schematics.models import Model
+from schematics.types import IntType, StringType, DateType
+
+from .base import CsmModel
+
+
+# This is an example of how Alert model can look like
+class AlertExample(CsmModel):
+
+    """
+    Alert model example
+    """
+
+    _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
+    id = IntType()
+    alert_uuid = IntType()
+    status = StringType()
+    type = StringType()
+    enclosure_id = IntType()
+    module_name = StringType()
+    description = StringType()
+    health = StringType()
+    health_recommendation = StringType()
+    location = StringType()
+    resolved = IntType()
+    acknowledged = IntType()
+    severity = IntType()
+    state = StringType()
+    extended_info = StringType()  # May be a Nested object
+    module_type = StringType()
+    updated_time = DateType()  # TODO: Set date format
+    created_time = DateType()  # TODO: Set date format
+
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
 # the class, rather than storing Alert as a dictionary in the _data field
@@ -40,7 +73,6 @@ class Alert(object):
         self._data = data
         self._published = False
         self._timestamp = datetime.utcnow()
-        self._resolved = False
 
     def key(self):
         return self._key
@@ -79,7 +111,7 @@ class IAlertStorage(ABC):
     async def store(self, alert: Alert):
         """
         Store an alert.
-        It is supposed that the passed object already has the unique key 
+        It is supposed that the passed object already has the unique key
 
         :param alert: Alert object
         :return: nothing
@@ -122,9 +154,9 @@ class IAlertStorage(ABC):
     @abstractmethod
     async def count_by_range(self, time_range: DateTimeRange) -> int:
         """
-        Retrieves the number of alerts that occured within the specified time range
+        Retrieves the number of alerts that occurred within the specified time range
 
-        :param time_range: Alerts will be filered according to this parameter.
+        :param time_range: Alerts will be filtered according to this parameter.
         :return: the number of suitable alerts
         """
         pass

@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          __init__.py
- _description:      Init file for db module
+ _description:      Init file for access module
 
  Creation Date:     6/10/2019
  Author:            Dmitry Didenko
@@ -18,6 +18,7 @@
  ****************************************************************************
 """
 
-from csm.core.data.db.generic_storage import GenericDataBase, GenericQueryConverter
-from csm.core.data.db.elasticsearch_db import ElasticSearchDB
-from csm.core.data.db.consul_db import ConsulDB
+from csm.core.data.access.filters import IFilter, IFilterTreeVisitor
+from csm.core.data.access.filters import And, Or, Compare
+from csm.core.data.access.queries import Query, ExtQuery, SortOrder
+from csm.core.data.access.storage import IDataBase
