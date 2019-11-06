@@ -5,7 +5,7 @@
     {
       "name": "show",
       "description": "Displays Alerts On the cli",
-      "need_confirmation": true,
+      "need_confirmation": false,
       "args": [
         {
           "flag": "-d",
@@ -116,7 +116,7 @@
     {
       "name": "comment",
       "description": "Comment on a given alert id",
-      "need_confirmation": true,
+      "need_confirmation": false,
       "args": [
         {
           "flag": "alerts_id",
