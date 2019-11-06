@@ -26,7 +26,7 @@ import asyncio
 import json
 import traceback
 from weakref import WeakSet
-from aiohttp import web
+from aiohttp import web, web_exceptions
 from abc import ABC
 
 from csm.core.providers.provider_factory import ProviderFactory
@@ -101,27 +101,34 @@ class CsmRestApi(CsmApi, ABC):
         ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
-        ApiRoutes.add_debug_routes(CsmRestApi._app.router)
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
     @staticmethod
-    def error_response(err: Exception) -> dict:
+    def is_debug(request) -> bool:
+        return 'debug' in request.rel_url.query
+
+    @staticmethod
+    def error_response(err: Exception, request) -> dict:
         resp = {
             "error_code": None,
             "message_id": None,
             "message": None,
             "error_format_args": {},  # Empty for now
-            # TODO: Should we send trace only when we are in debug mode?
-            "stacktrace": traceback.format_exc().splitlines()
         }
+
+        if CsmRestApi.is_debug(request):
+            resp["stacktrace"] = traceback.format_exc().splitlines()
 
         if isinstance(err, CsmError):
             resp["error_code"] = err.rc()
             resp["message_id"] = err.message_id()
             resp["message"] = err.error()
             resp["error_format_args"] = err.message_args()
+        elif isinstance(err, web_exceptions.HTTPError):
+            resp["message"] = str(err)
+            resp["error_code"] = err.status
         else:
             resp["message"] = str(err)
 
@@ -153,11 +160,13 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(resp_obj, 200)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=404)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=400)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
+        except web_exceptions.HTTPError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
         except Exception as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e), status=422)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
     @staticmethod
     def run(port):

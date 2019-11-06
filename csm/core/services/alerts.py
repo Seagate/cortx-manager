@@ -92,10 +92,6 @@ class AlertsAppService(ApplicationService):
             time_duration = int(re.split(r'[a-z]', duration)[0])
             time_format = re.split(r'[0-9]', duration)[-1]
             dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
-            if time_format not in dur.keys():
-                raise InvalidRequest(
-                    "Invalid Parameter for Duration", ALERTS_MSG_INVALID_DURATION)
-            
             start_time = (datetime.utcnow() - timedelta(
                 **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
