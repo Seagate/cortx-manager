@@ -38,24 +38,3 @@ class ApiRoutes:
     @staticmethod
     def add_websocket_routes(router, ws_handler):
         router.add_get("/ws", ws_handler)
-
-    @staticmethod
-    async def _process_dbg_static_page(request):
-        """
-        Static page handler is for debugging purposes only. To be
-        deleted later when we have tests for aiohttp web sockets.
-        HTML and JS debug files are loaded from 'dbgwbi' directory
-        (which will be deleted later completely too).
-        """
-        base = "src/core/agent/dbgwbi"
-        path = request.match_info.get('path', '.')
-        realpath = os.path.abspath(f'{base}/{path}')
-        if os.path.exists(realpath) and os.path.isdir(realpath):
-            realpath = os.path.abspath(f'{realpath}/index.html')
-        if os.path.exists(realpath):
-            return web.FileResponse(realpath)
-        return web.FileResponse(f'{base}/error.html')
-
-    @staticmethod
-    def add_debug_routes(router):
-        router.add_view('/{path:.*}', ApiRoutes._process_dbg_static_page)

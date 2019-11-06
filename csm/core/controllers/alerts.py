@@ -17,9 +17,39 @@
  ****************************************************************************
 """
 
+import json
+import re
 from aiohttp import web
+from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.services.alerts import AlertsAppService
+from csm.common.errors import InvalidRequest
 
+ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
+"""
+this will go into models
+"""
+
+
+class AlertsQueryParameter(Schema):
+    duration = fields.Str(default=None, missing=None)
+    offset = fields.Number(validate=validate.Range(min=2), allow_none=True, default=None,
+                           missing=None)
+    limit = fields.Number(default=None, missing=None)
+    sort_by = fields.Str(default="created_time", missing=None)
+    direction = fields.Str(validate=validate.OneOf(['desc', 'asc']), missing=None)
+
+    @validates('duration')
+    def validate_duration(self, value):
+        if value:
+            time_duration = int(re.split(r'[a-z]', value)[0])
+            time_format = re.split(r'[0-9]', value)[-1]
+            dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
+            if time_format not in dur.keys():
+                raise InvalidRequest(
+                    "Invalid Parameter for Duration", ALERTS_MSG_INVALID_DURATION)
+
+    class Meta:
+        strict = False
 
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
@@ -29,20 +59,16 @@ class AlertsListView(web.View):
 
     async def get(self):
         """Calling Alerts Get Method"""
-        duration = self.request.rel_url.query.get("duration", None)
-        offset = self.request.rel_url.query.get("offset", None)
-        page_limit = self.request.rel_url.query.get("limit", None)
-        sort_by = self.request.rel_url.query.get("sortby", "created_time")
-        direction = self.request.rel_url.query.get("dir", "desc")
-
-        if offset is not None:
-            offset = int(offset)
-        
-        if page_limit is not None:
-            page_limit = int(page_limit)
+        alerts_qp = AlertsQueryParameter()
+        try:
+            alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid Parameter for alerts", str(val_err))
 
         return await self.alerts_service.fetch_all_alerts(
-            duration, direction, sort_by, offset, page_limit)
+            alert_data["duration"], alert_data["direction"], alert_data["sort_by"],
+            alert_data["offset"], alert_data["limit"])
 
 
 class AlertsView(web.View):
@@ -53,7 +79,10 @@ class AlertsView(web.View):
     async def patch(self):
         """ Update Alert """
         alert_id = self.request.match_info["alert_id"]
-        body = await self.request.json()
+        try:
+            body = await self.request.json()
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
 
 
