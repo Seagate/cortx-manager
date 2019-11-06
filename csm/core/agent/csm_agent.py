@@ -113,7 +113,6 @@ if __name__ == '__main__':
 
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)
-    except Exception as e:
-        raise e
+    except:
         Log.error(traceback.format_exc())
         os._exit(1)
