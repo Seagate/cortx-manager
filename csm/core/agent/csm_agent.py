@@ -41,6 +41,10 @@ class CsmAgent:
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
+        #Stats service creation
+        sp = import_plugin_module('stats.stats').StatsPlugin(TimelionProvider())
+        CsmRestApi._app["stat_service"] = StatsAppService(sp)
+
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -101,8 +105,11 @@ if __name__ == '__main__':
         from csm.core.repositories.alerts import AlertSimpleStorage
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
+        from csm.core.services.stats import StatsAppService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
+
+        from csm.common.timeseries import TimelionProvider
 
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)
