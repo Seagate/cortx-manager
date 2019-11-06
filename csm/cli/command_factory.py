@@ -19,9 +19,17 @@
 
 import argparse
 import sys
-from csm.cli.commands import SupportBundleCommand
-from csm.cli.commands import EmailConfigCommand
-from csm.cli.commands import AlertsCommand
+import os
+from csm.core.blogic import const
+from csm.common.payload import Json
+from csm.cli.commands import CommandParser
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        # todo:  Need to Modify the changes for Fetching Error Messages from config file
+        self.print_usage(sys.stderr)
+        self.exit(2, f'Error: {message.capitalize()}\n')
 
 
 class CommandFactory(object):
@@ -30,24 +38,32 @@ class CommandFactory(object):
     a generic skeleton.
     """
 
-    commands = {SupportBundleCommand, EmailConfigCommand, AlertsCommand}
-
     @staticmethod
     def get_command(argv):
         """
         Parse the command line as per the syntax and retuns
         returns command representing the command line.
         """
-
-        parser = argparse.ArgumentParser(description='RAS CLI command')
-        subparsers = parser.add_subparsers()
-
-        for each_command in CommandFactory.commands:
-            each_command.add_args(subparsers)
-
+        # Todo: Fetch Messages from Message ile for localization. & implement Marshmallow for Schema Validation.
+        commands = os.listdir(const.COMMAND_DIRECTORY)
+        commands = [command.split(".json")[0] for command in commands]
+        commands.remove(const.CSM_SETUP_CMD)
+        parser = ArgumentParser(description='CSM CLI command')
+        subparsers = parser.add_subparsers(metavar=commands)
+        if not argv:
+            argv = ['-h']
+        if argv[0] != '-h' and argv[0] in commands:
+            cmd_obj = CommandParser(
+                Json(os.path.join(const.COMMAND_DIRECTORY, f"{argv[0]}.json")).load())
+            cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(argv)
         sys_module = sys.modules[__name__]
-        for attr in ['command', 'action', 'args']:
-            setattr(sys_module, attr, getattr(namespace, attr))
-            delattr(namespace, attr)
-        return command(action, vars(namespace), args)
+        try:
+            for attr in ['command', 'action', 'args']:
+                setattr(sys_module, attr, getattr(namespace, attr))
+                delattr(namespace, attr)
+            return command(action, vars(namespace), args)
+        except AttributeError:
+            sys.stderr.write(f"Please See Usage Below. \n")
+            argv.append('-h')
+            parser.parse_args(argv)

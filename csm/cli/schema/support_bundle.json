@@ -1,0 +1,23 @@
+{
+  "name": "support_bundle",
+  "description": "Support Bundle",
+  "args": [
+        {
+          "flag": "action",
+          "choices": ["create", "list", "delete"],
+           "help" : "action"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+       "comm": {
+       "type": "rest"
+        "method": "get",
+        "target": "/{version}/",
+        "version": "v1"
+      }
+
+    }

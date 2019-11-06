@@ -19,35 +19,27 @@
  ****************************************************************************
 """
 
-import abc
 import argparse
-import errno
-
-from csm.core.blogic import const
+from typing import Dict, Any
+from copy import deepcopy
 from csm.cli.csm_client import Output
-from csm.common.errors import CsmError
 
 
 class Command:
-    """ Base class for all commands supported by RAS CLI """
-
-    def __init__(self, action, options, args):
-        self._action = action
+    def __init__(self, name, options, args):
+        self._method = options['comm']['method']
+        self._target = options['comm']['target']
+        self._comm = options['comm']
         self._options = options
         self._args = args
-        self._method = {}
-        if not hasattr(self, '_cmd_action_map'):
-            self._cmd_action_map = {}
-        self.validate_command()
-        self.update_options()
+        self._name = name
+        self._output = options["output"]
+        self._need_confirmation = options['need_confirmation']
+        self._sub_command_name = options['sub_command_name']
 
     @property
     def name(self):
         return self._name
-
-    @property
-    def action(self):
-        return self._action
 
     @property
     def options(self):
@@ -57,129 +49,125 @@ class Command:
     def args(self):
         return self._args
 
-    def get_method(self, action):
-        return self._method.get(action, 'get')
+    @property
+    def method(self):
+        return self._method
 
-    def validate_command(self):
-        if self._action in self._cmd_action_map:
-            if len(self.args) != len(self._cmd_action_map[self._action]):
-                argstr = str(arg for arg in self._args)
-                raise CsmError(errno.EINVAL,
-                               f'For "{self._action}" action you must specify ' + ' and '.join(f'"{a}"' for a in self._cmd_action_map[self._action].keys()) + ' arguments')
-            for i, (k, v) in enumerate(self._cmd_action_map[self._action].items()):
-                if v is int:
-                    try:
-                        int(self.args[i])
-                    except ValueError:
-                        raise CsmError(errno.EINVAL,
-                                       f'"{k}" argument must be integer, got {self.args[i]} instead')
+    @property
+    def target(self):
+        return self._target
 
-    def update_options(self):
-        pass
+    @property
+    def comm(self):
+        return self._comm
+
+    @property
+    def need_confirmation(self):
+        return self._need_confirmation
+
+    @property
+    def sub_command_name(self):
+        return self._sub_command_name
 
     def process_response(self, response, out, err):
         """Process Response as per display method in format else normal display"""
         output_obj = Output(self, response)
-        return output_obj.dump(out, err,
-                               headers=self._headers, filters=self._filter,
-                               output_format=self._options.get('format', None))
+        return output_obj.dump(out, err, **self._output,
+                               output_type=self._options.get('format',
+                                                               "success"))
 
 
-class SetupCommand(Command):
-    """ Contains functionality to initialization CSM """
-
-    _name = const.CSM_SETUP_CMD
+class Validatiors:
+    """CLI Validatiors Class"""
 
     @staticmethod
-    def add_args(parser):
-        sbparser = parser.add_parser(const.CSM_SETUP_CMD, help='Setup csm.')
-        sbparser.add_argument('action', help='action',
-                              choices=const.CSM_SETUP_ACTIONS)
-        sbparser.add_argument('-f', help='force',
-                              action="store_true", default=False)
-        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=SetupCommand)
+    def positive_int(value):
+        try:
+            if int(value) > -1:
+                return int(value)
+            raise argparse.ArgumentError("Value Must be Positive Integer")
+        except ValueError:
+            raise argparse.ArgumentError("Value Must be Positive Integer")
 
 
-class SupportBundleCommand(Command):
-    """ Contains functionality to handle support bundle """
+class CommandParser:
+    """
+    This Class Parses the Commands from the dictionary object
+    """
 
-    _name = const.SUPPORT_BUNDLE
+    def __init__(self, cmd_data: Dict):
+        self.command = cmd_data
+        self._communication_obj = {"params": {},
+                                   "json": {}}
 
-    @staticmethod
-    def add_args(parser):
-        sbparser = parser.add_parser(const.SUPPORT_BUNDLE,
-                                     help='Create, list or delete support bundle.')
-        sbparser.add_argument('action', help='action',
-                              choices=['create', 'list', 'delete'])
-        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=SupportBundleCommand)
+    def handle_main_parse(self, subparsers):
+        """
+        This Function Handles the Parsing of Single-Level and Multi-Level Command Arguments
+        :param subparsers: argparser Object
+        :return:
+        """
+        if "sub_commands" in self.command:
+            self.handle_subparsers(subparsers, self.command,
+                                   self.command["name"])
+        elif "args" in self.command:
+            self.add_args(self.command, subparsers, self.command["name"])
 
+    def handle_subparsers(self, sub_parser, data: Dict, name):
+        """
+        This Function will handle multiple sub-parsing commands
+        :param sub_parser: Arg-parser Object
+        :param data: Data for parsing the commands :type: Dict
+        :param name: Name of the Command :type:Str
+        :return: None
+        """
+        arg_parser = sub_parser.add_parser(data['name'],
+                                           help=data['description'])
+        parser = arg_parser.add_subparsers()
+        for each_data in data['sub_commands']:
+            self.add_args(each_data, parser, name)
 
-class EmailConfigCommand(Command):
-    """ Contains functionality to handle Email Configuration """
+    def handle_comm(self, each_args):
+        """
+        This method will handle the rest params and create the necessary object.
+        :param each_args:
+        :return:
+        """
+        if each_args.get("params", False):
+            each_args.pop("params")
+            self._communication_obj['params'][
+                each_args.get('dest') or each_args.get('flag')] = ""
+        if each_args.get("json", False):
+            each_args.pop("json")
+            self._communication_obj['json'][
+                each_args.get('dest') or each_args.get('flag')] = ""
 
-    _name = const.EMAIL_CONFIGURATION
+    def add_args(self, sub_command: Dict, parser: Any, name):
+        """
+        This Function will add the cmd_args from the Json to the structure.
+        :param sub_command: Action for which the command needs to be added :type: str
+        :param parser: ArgParse Parser Object :type: Any
+        :param name: Name of the Command :type: str
+        :return: None
+        """
+        sub_parser = parser.add_parser(sub_command["name"],
+                                       help=sub_command["description"])
+        # Check if the command has any arguments.
+        if "args" in sub_command:
+            self._communication_obj.update(sub_command['comm'])
+            for each_args in sub_command["args"]:
+                flag = each_args.pop("flag")
+                if each_args.get("type", None):
+                    each_args["type"] = eval(each_args["type"])
+                self.handle_comm(each_args)
+                sub_parser.add_argument(flag, **each_args)
+            sub_parser.set_defaults(command=Command,
+                                    action=deepcopy(name),
+                                    comm=deepcopy(self._communication_obj),
+                                    output=deepcopy(sub_command.get('output', {})),
+                                    need_confirmation=sub_command.get('need_confirmation', False),
+                                    sub_command_name=sub_command.get('name'))
 
-    @staticmethod
-    def add_args(parser):
-        sbparser = parser.add_parser(const.EMAIL_CONFIGURATION,
-                                     help='Perform | reset  email configuration, \
-                                     show, subscribe or unsubscribe for email \
-                                     alerts.')
-        sbparser.add_argument('action', help='action',
-                              choices=['config', 'reset', 'show', 'subscribe',
-                                       'unsubscribe'])
-        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=EmailConfigCommand)
-
-
-class AlertsCommand(Command):
-    """ Contains functionality to handle Alerts """
-
-    _name = const.ALERTS_COMMAND
-    _method = {'show': 'get', 'acknowledge': 'patch'}
-    _headers = const.ALERTS_CLI_HEADERS
-    _filter = const.ALERTS_COMMAND
-
-    def __init__(self, action, options, args):
-        self._cmd_action_map = {'acknowledge': {'id': int}}
-        super().__init__(action, options, args)
-        self._method = AlertsCommand._method
-
-    @staticmethod
-    def add_args(parser):
-        sbparser = parser.add_parser(const.ALERTS_COMMAND,
-                                     help='Show | Acknowledge system alerts')
-        sbparser.add_argument('action', help='Action',
-                              choices=['show', 'acknowledge'])
-        sbparser.add_argument('-d', help='Seconds', dest='duration', nargs='?',
-                              default="60s")
-        sbparser.add_argument('-c', help='No. of Alerts', dest='limit',
-                              nargs='?', default=1000)
-        sbparser.add_argument('-a', help='Display All Alerts', dest='all',
-                              action='store_const', default='false', const='true')
-        sbparser.add_argument('-f', help='Format', dest='format', nargs='?',
-                              default='table', choices=['json', 'xml', 'table'])
-        sbparser.add_argument('args', nargs='*', default=[], help='bar help')
-        sbparser.set_defaults(command=AlertsCommand)
-
-    def standard_output(self):
-        if self._action == 'acknowledge':
-            return f"Alert with id {self.options['alert_id']} has been acknowledged. \n"
-
-    def error_output(self, output):
-        if self._action == 'acknowledge':
-            output = f"Alert with id {self.options['alert_id']} wasn't acknowledged."
-            if 'message' in output:
-                output += f" Error: {output['message']}."
-            if 'error_id' in output:
-                output += f"Error code: {output['error_code']}."
-            return output + "\n"
-        return ''
-
-    def update_options(self):
-        if not self.args:
-            return
-        self.options['alert_id'] = self.args[0]
-        self.options['acknowledged'] = True
+        # Check if the command has any Commands.
+        elif "sub_commands" in sub_command:
+            for each_command in sub_command['sub_commands']:
+                self.handle_subparsers(sub_parser, each_command, name)

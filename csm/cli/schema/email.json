@@ -1,0 +1,23 @@
+{
+  "name": "email",
+  "description": "Perform | reset  email configuration, show, subscribe or unsubscribe for email alerts.",
+  "args": [
+        {
+          "flag": "action",
+          "choices": ["config", "reset", "show", "subscribe", "unsubscribe"],
+           "help" : "action"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+       "comm": {
+         "type": "rest",
+        "method": "get",
+        "target": "/{version}/",
+        "version": "v1"
+      }
+
+    }

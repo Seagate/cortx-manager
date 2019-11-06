@@ -1,0 +1,151 @@
+{
+  "name": "alerts",
+  "description": "Alerts",
+  "sub_commands": [
+    {
+      "name": "show",
+      "description": "Displays Alerts On the cli",
+      "need_confirmation": true,
+      "args": [
+        {
+          "flag": "-d",
+          "dest": "duration",
+          "nargs": "?",
+          "type": "str",
+          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
+          "default": "60s",
+          "params": true
+        },
+        {
+          "flag": "-c",
+          "dest": "limit",
+          "nargs": "?",
+          "type": "Validatiors.positive_int",
+          "help": "No. of Alerts",
+          "default": "1000",
+          "params": true
+        },
+        {
+          "flag": "-a",
+          "dest": "all",
+          "action": "store_const",
+          "help": "Display All Alerts",
+          "default": "false",
+          "const": "true",
+          "params": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+      "type":"rest",
+        "method": "get",
+        "target": "/{version}/alerts",
+        "version": "v1"
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "alert_uuid": "Alert Id",
+            "health": "Health",
+            "description": "Description",
+            "severity": "Severity",
+            "state": "State",
+            "acknowledged": "Acknowledged",
+            "resolved": "Resolved"
+          },
+          "filters": "alerts"
+        }
+      }
+    },
+    {
+      "name": "acknowledge",
+      "description": "Acknowledged all the Alerts",
+      "need_confirmation": true,
+      "args": [
+        {
+          "flag": "alerts_id",
+          "type": "int",
+          "help": "Alert Id",
+          "json": true
+        },
+        {
+          "flag": "-ack",
+          "dest": "acknowledge",
+          "action": "store_const",
+          "help": "Marks Alert as Acknowledge, Un-acknowledge when missing.",
+          "default": "false",
+          "const": "true",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "patch",
+        "target": "/{version}/alerts/{alerts_id}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Alert has been acknowledged.",
+        "error": "Alert wasn't acknowledged."
+      }
+    },
+    {
+      "name": "comment",
+      "description": "Comment on a given alert id",
+      "need_confirmation": true,
+      "args": [
+        {
+          "flag": "alerts_id",
+          "type": "int",
+          "help": "Alert Id",
+          "json": true
+        },
+        {
+          "flag": "comment",
+          "type": "str",
+          "help": "Comment to be given to Alert.",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+      "type": "rest",
+        "method": "patch",
+        "target": "/{version}/alerts/{alerts_id}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Comment Updated.",
+        "error": "Comment Could Not Be Updated."
+      }
+    }
+  ]
+}
