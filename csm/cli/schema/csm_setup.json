@@ -1,0 +1,23 @@
+{
+      "name": "init",
+      "description": "",
+      "args": [
+        {
+          "flag": "-f",
+          "action": "store_true",
+          "default": false,
+          "help": "force"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+        "comm": {
+          "type": "rest",
+        "method": "get",
+        "target": "/{version}/",
+        "version": "v1"
+      }
+    }

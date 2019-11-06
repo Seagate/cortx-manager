@@ -23,7 +23,7 @@ import pprint
 import sys
 import time
 import errno
-from typing import ClassVar, Dict, Any
+from typing import ClassVar, Dict, Any, Tuple
 
 import aiohttp
 from dict2xml import dict2xml
@@ -32,8 +32,7 @@ from prettytable import PrettyTable
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
-from csm.common.errors import CsmError
-
+from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE
 
 class CsmClient:
     """ Base class for invoking business logic functionality """
@@ -46,7 +45,6 @@ class CsmClient:
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
-
 
 class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
@@ -80,59 +78,58 @@ class CsmApiClient(CsmClient):
     def process_response(self, response):
         self._response = response
 
-
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
 
     def __init__(self, url):
         super(CsmRestClient, self).__init__(url)
 
-    async def process_request(self, session, cmd, action, options, args, method):
-        request_url = f"{self._url}/{cmd}"
-        rest_obj = RestRequest(request_url, action, session, options, args,
-                               method)
-        return await rest_obj.get_request()
+    async def process_request(self, session, cmd):
+        rest_obj = RestRequest(self._url, session, cmd)
+        return await rest_obj.request()
 
     async def call(self, cmd):
         async with aiohttp.ClientSession() as session:
-            response = await self.process_request(session, cmd.name,
-                                                  cmd.action, cmd.options,
-                                                  cmd.args,
-                                                  cmd.get_method(cmd.action))
+            response = await self.process_request(session, cmd)
         try:
             data = json.loads(response[0])
         except ValueError:
             raise CsmError(errno.EINVAL, 'Could not parse the response')
-        return Response(rc=response[1],
-                        output=data)
+        return Response(rc=response[1], output=data)
 
     def __cleanup__(self):
         self._loop.close()
 
-
 class RestRequest(Request):
     """Cli Rest Request Class """
 
-    def __init__(self, url: str, action: str, session: ClassVar, options: Dict,
-                 args: ClassVar, method: str):
-        super(RestRequest, self).__init__(args, action)
-        self._method = method
-        self._url = url
+    def __init__(self, url, session, command):
+        super(RestRequest, self).__init__(command.args, command.name)
+        self._method = command.method
+        self._options = command.options
         self._session = session
-        self._options = options
+        self._rest = command.comm
+        self._url = url + command.target
 
-    async def _get(self) -> tuple:
-        async with self._session.get(self._url, params=self._options) as response:
-            return await response.text(), response.status
+    def format(self, data, key):
+        return {k: data.get(k, self._rest[key][k]) for k, v in
+                self._rest.get(key, {}).items()}
 
-    async def _patch(self) -> tuple:
-        async with self._session.patch(
-                self._url + f'/{self._options["alert_id"]}', json=self._options) as response:
-            return await response.text(), response.status
-
-    async def get_request(self) -> str:
-        return await getattr(self, f'_{self._method}')()
-
+    async def request(self) -> Tuple:
+        try:
+            async with self._session.request(method=self._method,
+                                             url=self._url.format(**self._rest,
+                                                                  **self._options),
+                                             params=self.format(self._options,
+                                                                'params'),
+                                             json=self.format(self._options,
+                                                              'json'),
+                                             timeout=const.TIMEOUT) as response:
+                return await response.text(), response.status
+        except aiohttp.ClientConnectionError as exception:
+            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+                                  'Cannot connect to csm agent\'s host {0}:{1}'
+                                  .format(exception.host, exception.port))
 
 class Output:
     """CLI Response Display Class"""
@@ -142,37 +139,41 @@ class Output:
         self.rc = response.rc()
         self.output = response.output()
 
-    def dump(self, out, err, output_format, **kwargs) -> None:
+    def dump(self, out, err, output_type, **kwargs) -> None:
         """Dump the Output on CLI"""
+        # Todo: Need to fetch the response messages from a file for localization.
         if self.rc != 200:
-            if hasattr(self.command, 'error_output') and self.command.error_output(self.output):
-                errstr = self.command.error_output(self.output)
-            else:
-                errstr = Output.error(self.rc, self.output) + '\n'
+            errstr = Output.error(self.rc, kwargs.get("error"), self.output) + '\n'
             err.write(errstr or "")
             return None
-        if hasattr(self.command, 'standard_output') and self.command.standard_output():
-            output = self.command.standard_output()
-        elif output_format:
-            output = getattr(Output, f'dump_{output_format}')(self.output,
-                                                              **kwargs) + '\n'
-        else:
-            output = str(self.output) + '\n'
-        out.write(output)
+        elif output_type:
+            output = getattr(Output, f'dump_{output_type}')(self.output,
+                                                            **kwargs) + '\n'
+            out.write(output)
 
     @staticmethod
-    def error(rc: int, message: str) -> str:
+    def dump_success(output: dict, success: str, **kwargs):
+        """
+        :param output:
+        :param success:
+        :return:
+        """
+        return str(success)
+
+    @staticmethod
+    def error(rc: int, message: str, stacktrace) -> str:
         """Format for Error message"""
-        return f'error({rc}): {message}\n'
+        if message:
+            return f'error({rc}): {message}\n'
+        return f"error({rc}): Error Found :- {stacktrace.get('message')}"
 
     @staticmethod
-    def dump_table(data: Any, headers: Dict, filters: str,
-                   **kwargs: Dict) -> str:
+    def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
         """Format for Table Data"""
         table_obj = PrettyTable()
-        table_obj.field_names = headers.values()
-        for each_row in data[filters]:
-            table_obj.add_row([each_row.get(x) for x in headers.keys()])
+        table_obj.field_names = table["headers"].values()
+        for each_row in data[table["filters"]]:
+            table_obj.add_row([each_row.get(x) for x in table["headers"].keys()])
         return "{0}".format(table_obj)
 
     @staticmethod

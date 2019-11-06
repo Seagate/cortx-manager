@@ -4,15 +4,14 @@ CSM_SETUP_ACTIONS = ['init']
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-ALERTS_CLI_HEADERS = {'alert_uuid': 'Alert Id',
-                      'health': 'Health',
-                      'description': 'Description',
-                      'severity': 'Severity',
-                      'state': 'State',
-                      'acknowledged': 'Acknowledged',
-                      'resolved': 'Resolved'}
+COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
+
 # CSM Agent Port
+CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8082
+CSM_AGENT_BASE_URL = "http://"
+TIMEOUT = 300
+CLI_SUPPORTED_PROTOCOLS = ["rest"]
 
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
@@ -94,3 +93,4 @@ ALERT_COMMENT = 'comment'
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
+CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'

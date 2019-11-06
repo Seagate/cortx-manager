@@ -30,7 +30,6 @@ class CsmSetup:
     def __init__(self, argv):
         Log.init("csm_setup", "/var/log/csm")
         self._args = argv[1:]
-        self._args.insert(0, 'csm_setup')
         Conf.init()
         self._load_conf()
         self._config_cluster()
@@ -60,7 +59,8 @@ class CsmSetup:
     def _get_command(self):
         parser = argparse.ArgumentParser(description='CSM Setup CLI')
         subparsers = parser.add_subparsers()
-        SetupCommand.add_args(subparsers)
+        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load())
+        cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
         for attr in ['command', 'action', 'args']:
@@ -72,7 +72,7 @@ class CsmSetup:
         ''' Parse args for csm_setup and execute cmd to print output '''
         self._cmd = self._get_command()
         self._response = None
-        self._request = Request(self._cmd.action, self._cmd.args, self._cmd.options)
+        self._request = Request(self._cmd._name, self._cmd.args, self._cmd.options)
         self.process_request(self._process_response)
         while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
         if self._response.rc() != 0:
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.common.errors import CsmError
-    from csm.cli.commands import SetupCommand
+    from csm.cli.commands import CommandParser
     from csm.core.blogic import const
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
@@ -104,10 +104,11 @@ if __name__ == '__main__':
     from csm.common.ha_framework import PcsHAFramework
     from csm.common.cluster import Cluster
     from csm.core.agent.api import CsmApi
+    import time
 
     try:
         csm_setup = CsmSetup(sys.argv)
-        sys.stdout.write('%s\n' %csm_setup.process())
+        sys.stdout.write('%s\n' % csm_setup.process())
     except CsmError as exception:
-        sys.stderr.write('%s\n' %exception)
+        sys.stderr.write('%s\n' % exception)
         Log.error(traceback.format_exc())
