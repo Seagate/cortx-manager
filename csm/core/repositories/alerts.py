@@ -60,7 +60,8 @@ class AlertSimpleStorage(IAlertStorage):
         alerts = await self._retrieve_by_range(time_range)
         if sort is not None:
             alerts = sorted(alerts,
-                            key=lambda item: item.data()[sort.field],
+                            key=lambda item: item.data().get(sort.field,
+                                "created_time"),
                             reverse=(sort.order == SortOrder.ASC))
 
         if limits is not None:

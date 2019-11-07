@@ -32,11 +32,11 @@ this will go into models
 
 class AlertsQueryParameter(Schema):
     duration = fields.Str(default=None, missing=None)
-    offset = fields.Number(validate=validate.Range(min=2), allow_none=True, default=None,
-                           missing=None)
-    limit = fields.Number(default=None, missing=None)
-    sort_by = fields.Str(default="created_time", missing=None)
-    direction = fields.Str(validate=validate.OneOf(['desc', 'asc']), missing=None)
+    offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
+            default=0, missing=0)
+    limit = fields.Int(default=5, validate=validate.Range(min=0), missing=5)
+    sortby = fields.Str(default="created_time", missing="created_time")
+    dir = fields.Str(validate=validate.OneOf(['desc', 'asc']), missing='asc')
 
     @validates('duration')
     def validate_duration(self, value):
@@ -67,7 +67,7 @@ class AlertsListView(web.View):
                 "Invalid Parameter for alerts", str(val_err))
 
         return await self.alerts_service.fetch_all_alerts(
-            alert_data["duration"], alert_data["direction"], alert_data["sort_by"],
+            alert_data["duration"], alert_data["dir"], alert_data["sortby"],
             alert_data["offset"], alert_data["limit"])
 
 
@@ -83,7 +83,7 @@ class AlertsView(web.View):
             body = await self.request.json()
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        return await self.alerts_service.update_alert(alert_id, body)
+        return await self.alerts_service.update_alert(int(alert_id), body)
 
 
 # AIOHTTP does not provide a way to pass custom parameters to its views.

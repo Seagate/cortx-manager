@@ -83,16 +83,15 @@
         {
           "flag": "alerts_id",
           "type": "int",
-          "help": "Alert Id",
-          "json": true
+          "help": "Alert Id"
         },
         {
           "flag": "-ack",
-          "dest": "acknowledge",
+          "dest": "acknowledged",
           "action": "store_const",
           "help": "Marks Alert as Acknowledge, Un-acknowledge when missing.",
-          "default": "false",
-          "const": "true",
+          "default": false,
+          "const": true,
           "json": true
         },
         {
@@ -121,8 +120,7 @@
         {
           "flag": "alerts_id",
           "type": "int",
-          "help": "Alert Id",
-          "json": true
+          "help": "Alert Id"
         },
         {
           "flag": "comment",
