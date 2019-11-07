@@ -108,8 +108,7 @@
         "version": "v1"
       },
       "output": {
-        "success": "Alert has been acknowledged.",
-        "error": "Alert wasn't acknowledged."
+        "success": "Alert has been acknowledged."
       }
     },
     {
@@ -141,8 +140,7 @@
         "version": "v1"
       },
       "output": {
-        "success": "Comment Updated.",
-        "error": "Comment Could Not Be Updated."
+        "success": "Comment Updated."
       }
     }
   ]
