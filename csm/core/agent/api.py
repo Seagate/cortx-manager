@@ -97,10 +97,8 @@ class CsmRestApi(CsmApi, ABC):
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
-
         CsmRoutes.add_routes(CsmRestApi._app)
-        ApiRoutes.add_rest_api_routes(
-            CsmRestApi._app.router, alerts_ctrl)
+        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
 
