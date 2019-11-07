@@ -7,7 +7,6 @@
 
  Creation Date:     10/16/2019
  Author:            Naval Patel
-                    Eduard Aleksandrov
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -20,7 +19,7 @@
 
 
 """
-    This is Stats service implementation
+    This is sample service implementation
 """
 
 
@@ -28,34 +27,48 @@
 # processing architecture
 import asyncio
 import re
+from typing import Optional
 from datetime import datetime, timedelta
 from typing import Dict
+from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
+from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
+from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
+from csm.core.blogic import const
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
+
 
 class StatsAppService(ApplicationService):
     """
     Provides operations on stats without involving the domain specifics
     """
 
-    def __init__(self, plugin):
-        self._plugin = plugin
+    """
+    def __init__(self, storage: IAlertStorage):
+        self._storage = storage
+    """
 
-    async def get(self, stats_id, panel, from_t, to_t,
-                  metric_list, interval, output_format, query) -> Dict:
+    async def get_all(self, **kwargs) -> Dict:
+        """
+        Fetch All stats
+        :param kwargs
+        :return: :type:Dict
+        """
+        return {
+            "total_records": "1",
+            "stats": "success",
+            "duration": kwargs.get('duration', None),
+            "offset": kwargs.get('offset', None)
+        }
+
+    async def get(self, **kwargs) -> Dict:
         """
         Fetch specific stat
         :return: :type:list
         """
-        utc_from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
-        utc_to_t = str(datetime.utcfromtimestamp(int(to_t)).isoformat())+'.000Z'
-        interval_with_s = str(interval)+'s'
-
-        return await self._plugin.process_request(stats_id = stats_id, panel = panel,
-                                                  from_t = utc_from_t, duration_t = utc_to_t,
-                                                  metric_list = metric_list,
-                                                  interval = interval_with_s,
-                                                  output_format = output_format,
-                                                  query = query)
+        return {
+            "stat_id": kwargs['stat_id'],
+            "stats": "success"
+        }

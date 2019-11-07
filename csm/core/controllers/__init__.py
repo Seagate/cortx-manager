@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Description:       Module for exposing controllers as a single package 
 
  Creation Date:     09/10/2019
  Author:            Alexander Nogikh
