@@ -34,29 +34,19 @@
       "description": "Updation time of the alert"
     },
     "resolved": {
-      "type": "integer",
+      "type": "boolean",
       "required": false,
-      "description": "Resolution status of an alert. (e.g. 0 | 1)"
+      "description": "Resolution status of an alert. (e.g. True | False)"
     },
     "acknowledged": {
-      "type": "integer",
+      "type": "boolean",
       "required": false,
-      "description": "Alert is acknowldeged by the user or not. (e.g. 0 | 1)"
+      "description": "Alert is acknowldeged by the user or not. (e.g. True | False)"
     },
     "severity": {
-      "type": "number",
-      "enum": [
-        1,
-        2,
-        3
-      ],
+      "type": "string",
       "required": true,
       "description": "Severity of an alert.(e.g. TBD)"
-    },
-    "enclosure_id": {
-      "type": "integer",
-      "required": true,
-      "description": "Enclosure ID. (e.g. TBD)"
     },
     "module_type": {
       "type": "string",
@@ -75,19 +65,12 @@
     },
     "health": {
       "type": "string",
-      "required": true,
-      "enum": [
-        "OK",
-        "Degraded",
-        "Fault",
-        "N/A",
-        "Unknown"
-      ],
+      "required": false,
       "description": "Describes the health of PSU, Controller, Disk etc."
     },
     "health_recommendation": {
       "type": "string",
-      "required": true,
+      "required": false,
       "description": "This is the health recommendation string."
     },
     "extended_info": {

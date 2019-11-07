@@ -73,6 +73,7 @@ class Alert(object):
         self._data = data
         self._published = False
         self._timestamp = datetime.utcnow()
+        self._resolved = False
 
     def key(self):
         return self._key

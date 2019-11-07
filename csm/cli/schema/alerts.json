@@ -83,16 +83,15 @@
         {
           "flag": "alerts_id",
           "type": "int",
-          "help": "Alert Id",
-          "json": true
+          "help": "Alert Id"
         },
         {
           "flag": "-ack",
-          "dest": "acknowledge",
+          "dest": "acknowledged",
           "action": "store_const",
           "help": "Marks Alert as Acknowledge, Un-acknowledge when missing.",
-          "default": "false",
-          "const": "true",
+          "default": false,
+          "const": true,
           "json": true
         },
         {
@@ -109,8 +108,7 @@
         "version": "v1"
       },
       "output": {
-        "success": "Alert has been acknowledged.",
-        "error": "Alert wasn't acknowledged."
+        "success": "Alert Updated."
       }
     },
     {
@@ -121,8 +119,7 @@
         {
           "flag": "alerts_id",
           "type": "int",
-          "help": "Alert Id",
-          "json": true
+          "help": "Alert Id"
         },
         {
           "flag": "comment",
@@ -143,8 +140,7 @@
         "version": "v1"
       },
       "output": {
-        "success": "Comment Updated.",
-        "error": "Comment Could Not Be Updated."
+        "success": "Comment Updated."
       }
     }
   ]

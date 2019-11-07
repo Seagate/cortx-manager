@@ -97,8 +97,8 @@ class CommandParser:
 
     def __init__(self, cmd_data: Dict):
         self.command = cmd_data
-        self._communication_obj = {"params": {},
-                                   "json": {}}
+        self._communication_obj = {}
+                                 
 
     def handle_main_parse(self, subparsers):
         """
@@ -135,11 +135,11 @@ class CommandParser:
         if each_args.get("params", False):
             each_args.pop("params")
             self._communication_obj['params'][
-                each_args.get('dest') or each_args.get('flag')] = ""
+                each_args.get('dest', None) or each_args.get('flag')] = ""
         if each_args.get("json", False):
             each_args.pop("json")
             self._communication_obj['json'][
-                each_args.get('dest') or each_args.get('flag')] = ""
+                each_args.get('dest', None) or each_args.get('flag')] = ""
 
     def add_args(self, sub_command: Dict, parser: Any, name):
         """
@@ -154,11 +154,13 @@ class CommandParser:
         # Check if the command has any arguments.
         if "args" in sub_command:
             self._communication_obj.update(sub_command['comm'])
+            self._communication_obj['params'] = {}
+            self._communication_obj['json'] = {}
             for each_args in sub_command["args"]:
-                flag = each_args.pop("flag")
                 if each_args.get("type", None):
                     each_args["type"] = eval(each_args["type"])
                 self.handle_comm(each_args)
+                flag = each_args.pop("flag")
                 sub_parser.add_argument(flag, **each_args)
             sub_parser.set_defaults(command=Command,
                                     action=deepcopy(name),
