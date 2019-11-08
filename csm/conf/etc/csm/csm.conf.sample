@@ -35,3 +35,9 @@ CHANNEL:
     exchange_queue: "sensor-queue"
     routing_key: "sensor-key"
     retry_count: "1"
+
+# Stats
+STATS:
+    PROVIDER:
+        name: "timelion"
+        url: "http://localhost:5601/api/timelion/run"
