@@ -1,8 +1,8 @@
 {
     "throughput": {
-        "read": "(.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val).movingstd(12)).abs().label(read)",
-        "write": "(.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val).movingstd(12)).abs().label(write)",
-        "total": "(((.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val).movingstd(12).abs()), (.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val).movingstd(12).abs())).sum()).label(total)"
+        "read": "(.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val)).abs().label(read)",
+        "write": "(.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val)).abs().label(write)",
+        "total": "(((.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val).abs()), (.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val).abs())).abs().sum()).label(total)"
     },
     "latency": {
         "total_request_time": ".es(q=act:total_request_time, timefield=@timestamp, index=statsd-*, metric=avg:mean).abs().label(total_request_time)",

@@ -8,7 +8,7 @@ COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
-CSM_AGENT_PORT = 8082
+CSM_AGENT_PORT = 8101
 CSM_AGENT_BASE_URL = "http://"
 TIMEOUT = 300
 CLI_SUPPORTED_PROTOCOLS = ["rest"]

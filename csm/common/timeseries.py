@@ -122,7 +122,7 @@ class TimelionProvider(TimeSeriesProvider):
         total_li = []
         time_li = []
         data_li = []
-        if len(li) > 0:
+        if len(li) > 1:
             li.pop(0)
         for item in li:
             time_li.append(item[0])
