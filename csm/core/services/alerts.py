@@ -47,13 +47,56 @@ ALERTS_MSG_NOT_FOUND = "alerts_not_found"
 ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
 
 
+
+class AlertRepository():
+    def __init__(self, storage: DataBaseProvider):
+        self.db = storage
+
+    async def retrieve(self, alert_id) -> AlertModel:
+        query = Query().filter_by(Compare(Alert.alert_uuid, '=', alert_id))
+        return next(iter(await self.db(AlertModel).get(query)), None)
+
+    async def update(self, alert: AlertModel):
+        await self.db(AlertModel).store(alert)
+
+    def _prepare_filters(self, time_range: DateTimeRange):
+        query_conditions = []
+
+        if time_range.start:
+            query_conditions.append(Compare(AlertModel.updated_time, '>=', time_range.start))
+        if time_range.end:
+            query_conditions.append(Compare(AlertModel.updated_time, '<=', time_range.end))
+
+        return And(*query_conditions) if query_conditions else None
+
+    async def retrieve_by_range(
+            self, time_range: DateTimeRange, sort: Optional[SortBy],
+            limits: Optional[QueryLimits]) -> Iterable[AlertModel]:
+        query_filter = self._prepare_filters(time_range)
+        query = Query().filter_by(query_filter)
+
+        if limits and limits.offset:
+            query = query.offset(limits.offset)
+
+        if limits and limits.limit:
+            query = query.limit(limits.limit)
+
+        if sort:
+            query = query.order_by(getattr(AlertModel, params.sort_by), sort.order)
+
+        return await self.db(AlertModel).get(query)
+
+    async def count_by_range(self, time_range: DateTimeRange):
+        return await self.db(AlertModel).count(self._prepare_filters(time_range))
+
+
 class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics
     """
 
-    def __init__(self, storage: DataBaseProvider):
-        self._storage = storage
+    def __init__(self, repo: AlertRepository):
+        self.repo = repo
 
     async def update_alert(self, alert_id, fields):
         """
@@ -65,24 +108,21 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
-        """
-        alert = await self._storage.retrieve(alert_id)
+
+        alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
         if "comment" in fields:
-            # TODO: Alert should contain such fields directly, not as a
-            #   dictionary accessible by data() method
-            alert.data()["comment"] = fields["comment"]
+            alert.comment = fields["comment"]
+
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
                 raise TypeError("Acknowledged Value Must Be of Type Boolean.")
-            alert.data()["acknowledged"] = fields["acknowledged"]
+            alert.acknowledged = Alert.acknowledged.to_native(fields["acknowledged"])
 
-        await self._storage.update(alert)
-        return alert.data()
-        """
-        return None
+        await self.repo.update(alert)
+        return alert.to_primitive()
 
     async def fetch_all_alerts(self, duration, direction, sort_by,
                                offset: Optional[int],
@@ -95,7 +135,6 @@ class AlertsAppService(ApplicationService):
         :param offset: offset page (1-based indexing)
         :param page_limit: no of records to be displayed on a page.
         :return: :type:list
-        """
         """
         time_range = None
         if duration:  # Filter
@@ -114,19 +153,17 @@ class AlertsAppService(ApplicationService):
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
-        alerts_list = await self._storage.retrieve_by_range(
+        alerts_list = await self.repo.retrieve_by_range(
             time_range,
             SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
             limits
         )
 
-        alerts_count = await self._storage.count_by_range(time_range)
+        alerts_count = await self.repo.count_by_range(time_range)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.data() for alert in alerts_list]
+            "alerts": [alert.to_primitive() for alert in alerts_list]
         }
-        """
-        return {}
 
     async def fetch_alert(self, alert_id):
         """
@@ -136,13 +173,10 @@ class AlertsAppService(ApplicationService):
             :returns: Alert object or None
         """
         # This method is for debugging purposes only
-        """
-        alert = await self._storage.retrieve(alert_id)
+        alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.data()
-        """
-        return None
+        return alert.to_primitive()
 
 
 class AlertMonitorService(Service):
