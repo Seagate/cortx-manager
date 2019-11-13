@@ -29,15 +29,45 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
-        alerts_storage = AlertSimpleStorage(SyncInMemoryKeyValueStorage())
+        from csm.core.data.db.db_provider import (DataBaseProvider,
+                GeneralConfig)        
+
+        conf = GeneralConfig({
+            "databases": {
+                "es_db": {
+                    "import_path": "ElasticSearchDB",
+                    "config": {
+                        "host": "localhost",
+                        "port": 9200,
+                        "login": "",
+                        "password": ""
+                    }
+                }
+            },
+            "models": [
+                {
+                    "import_path": "csm.core.blogic.models.alerts.AlertModel",
+                    "database": "es_db",
+                    "config": {
+                        "es_db":
+                        {
+                            "collection": "alert1"
+                        }
+                    }
+                }
+            ]
+        })
+ 
+        db = DataBaseProvider(conf)
+      
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
-        alerts_service = AlertsAppService(alerts_storage)
+        alerts_service = AlertsAppService(db)
 
         CsmRestApi.init(alerts_service)
         pm = import_plugin_module('alert')
 
-        CsmAgent.alert_monitor = AlertMonitorService(alerts_storage,
+        CsmAgent.alert_monitor = AlertMonitorService(db,
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
@@ -102,7 +132,6 @@ if __name__ == '__main__':
         from csm.common.conf import Conf
         from csm.common.payload import Yaml
         from csm.core.blogic import const
-        from csm.core.repositories.alerts import AlertSimpleStorage
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
         from csm.core.services.stats import StatsAppService
@@ -110,9 +139,11 @@ if __name__ == '__main__':
         from csm.core.agent.api import CsmRestApi
 
         from csm.common.timeseries import TimelionProvider
+        from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
 
         CsmAgent.init()
         CsmAgent.run(const.CSM_AGENT_PORT)
-    except:
+    except Exception as e:
+        raise e
         Log.error(traceback.format_exc())
         os._exit(1)

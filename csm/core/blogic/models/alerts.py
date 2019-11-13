@@ -28,13 +28,13 @@ import threading
 import errno
 
 from schematics.models import Model
-from schematics.types import IntType, StringType, DateType
+from schematics.types import IntType, StringType, DateType, BooleanType, DateTimeType
 
 from .base import CsmModel
 
 
 # This is an example of how Alert model can look like
-class AlertExample(CsmModel):
+class AlertModel(CsmModel):
 
     """
     Alert model example
@@ -51,14 +51,16 @@ class AlertExample(CsmModel):
     health = StringType()
     health_recommendation = StringType()
     location = StringType()
-    resolved = IntType()
-    acknowledged = IntType()
-    severity = IntType()
+    resolved = BooleanType()
+    acknowledged = BooleanType()
+    severity = StringType()
     state = StringType()
     extended_info = StringType()  # May be a Nested object
     module_type = StringType()
-    updated_time = DateType()  # TODO: Set date format
-    created_time = DateType()  # TODO: Set date format
+    updated_time = DateTimeType()
+    created_time = DateTimeType()
+    hw_identifier = StringType()
+    comment = StringType()
 
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of

@@ -23,16 +23,24 @@
 import asyncio
 import re
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict
 from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
-from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
-from csm.core.blogic.models.alerts import IAlertStorage, Alert
+#from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
+from csm.core.blogic.models.alerts import Alert#IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
 import time
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.core.data.access.filters import Compare, And, Or
+from csm.core.data.access import Query, SortOrder
+from csm.core.blogic.models.alerts import AlertModel
+from csm.common import queries
+from schematics import Model
+from schematics.types import StringType, BooleanType, IntType
+
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_MSG_NOT_FOUND = "alerts_not_found"
@@ -44,7 +52,7 @@ class AlertsAppService(ApplicationService):
         Provides operations on alerts without involving the domain specifics
     """
 
-    def __init__(self, storage: IAlertStorage):
+    def __init__(self, storage: DataBaseProvider):
         self._storage = storage
 
     async def update_alert(self, alert_id, fields):
@@ -56,6 +64,7 @@ class AlertsAppService(ApplicationService):
                 "comment" - string, can be empty
                 "acknowledged" - boolean
         :return:
+        """
         """
         alert = await self._storage.retrieve(alert_id)
         if not alert:
@@ -72,6 +81,8 @@ class AlertsAppService(ApplicationService):
 
         await self._storage.update(alert)
         return alert.data()
+        """
+        return None
 
     async def fetch_all_alerts(self, duration, direction, sort_by,
                                offset: Optional[int],
@@ -84,6 +95,7 @@ class AlertsAppService(ApplicationService):
         :param offset: offset page (1-based indexing)
         :param page_limit: no of records to be displayed on a page.
         :return: :type:list
+        """
         """
         time_range = None
         if duration:  # Filter
@@ -113,6 +125,8 @@ class AlertsAppService(ApplicationService):
             "total_records": alerts_count,
             "alerts": [alert.data() for alert in alerts_list]
         }
+        """
+        return {}
 
     async def fetch_alert(self, alert_id):
         """
@@ -122,10 +136,13 @@ class AlertsAppService(ApplicationService):
             :returns: Alert object or None
         """
         # This method is for debugging purposes only
+        """
         alert = await self._storage.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.data()
+        """
+        return None
 
 
 class AlertMonitorService(Service):
@@ -140,7 +157,7 @@ class AlertMonitorService(Service):
     web server. 
     """
 
-    def __init__(self, storage: IAlertStorage, plugin, alert_handler_cb):
+    def __init__(self, storage: DataBaseProvider, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
@@ -157,12 +174,14 @@ class AlertMonitorService(Service):
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
-
+        """
         def nonpublished(_, alert):
             return not alert.is_published()
 
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
+        """
+        print("Inside Init")
 
     def _monitor(self):
         """
@@ -205,6 +224,10 @@ class AlertMonitorService(Service):
 
         alert_task.result()  # wait for completion
 
+    def _run_coro(self, coro):
+        task = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return task.result()
+
     def get_alert(self, alert_id) -> Optional[Alert]:
         """
         Get the single from the DB for the alert_id
@@ -237,7 +260,8 @@ class AlertMonitorService(Service):
             3. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
-        alert = Alert(message)
+        #alert = AlertModel(message)
+        print("Incoming Alert ---", message)
         prev_alert = None
         """
         Before storing the alert let us fisrt try to resolve it.
@@ -257,36 +281,18 @@ class AlertMonitorService(Service):
         set the resolved state to False.
         """
         """ Fetching the previous alert. """
-        prev_alert = self._get_prev_alert(alert)
-        if prev_alert is None:
-            """ Previous alert not found means it is a new one fo store and
-            publish it to WS."""
-            self._save_and_publish(alert)
-            """ Checking for duplicate alert. """
-        elif not self._is_duplicate_alert(alert, prev_alert):
-            if self._is_good_alert(alert):
-                """
-                If it is a good alert checking the state of previous alert.
-                """
-                if self._is_good_alert(prev_alert):
-                    """ Previous alert is a good one so updating. """ 
-                    self._update_and_save(alert, prev_alert)
-                else:
-                    """ Previous alert is a bad one so resolving it. """
-                    self._resolve(alert, prev_alert)
-            elif self._is_bad_alert(alert):
-                """
-                If it is a bad alert checking the state of previous alert.
-                """
-                if self._is_bad_alert(prev_alert):
-                    """ Previous alert is a bad one so updating. """ 
-                    self._update_and_save(alert, prev_alert)
-                else:
-                    """ 
-                    Previous alert is a good one so updating and marking the
-                    resolved status to False. 
-                    """ 
-                    self._update_and_save(alert, prev_alert, True)
+        try:
+            message['extended_info'] = str(message.get('extended_info'))
+            filter = Compare(AlertModel.hw_identifier, '=',
+                    message.get(const.ALERT_HW_IDENTIFIER, ""))
+            query = Query().filter_by(filter)
+            alert = next(iter(self._run_coro(self._storage(AlertModel).get(query))), None)
+            if not alert:
+                alert = AlertModel(message)
+                self._save_and_publish(alert)
+        except Exception as e:
+            Log.exception(e)
+
         return True
 
     def _save_and_publish(self, alert):
@@ -295,8 +301,8 @@ class AlertMonitorService(Service):
         :param alert : Alert object
         :return: None
         """
-        self.save_alert(alert)
-        self._publish(alert)
+        self._run_coro(self._storage(AlertModel).store(alert))
+        #self._publish(alert)
 
     def _update_and_save(self, alert, prev_alert, update_resolve=False):
         """
@@ -357,8 +363,8 @@ class AlertMonitorService(Service):
         prev_alert = None
         alert_list = self.get_all_alerts()
         for value in alert_list:
-            if value.data().get("hw_identifier_list", '') == \
-                    alert.data().get("hw_identifier_list", ''):
+            if value.data().get("hw_identifier", '') == \
+                    alert.data().get("hw_identifier", ''):
                 prev_alert = value
                 break
 
