@@ -48,9 +48,12 @@ ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
 
 
 
-class AlertRepository():
+class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
+
+    async def store(self, alert: AlertModel):
+        await self.db(Alert).store(alert)
 
     async def retrieve(self, alert_id) -> AlertModel:
         query = Query().filter_by(Compare(Alert.alert_uuid, '=', alert_id))
