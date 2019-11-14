@@ -33,10 +33,11 @@ this will go into models
 class AlertsQueryParameter(Schema):
     duration = fields.Str(default=None, missing=None)
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
-            default=0, missing=0)
+        default=0, missing=0)
     page_limit = fields.Int(data_key='limit', default=5, validate=validate.Range(min=0), missing=5)
     sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
-    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), missing='asc')
+    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
+        missing='desc', default='desc')
     show_all = fields.Boolean(default=True, missing=True, allow_none=True)
     severity = fields.Str(default=None, missing=None, allow_none=True)
 
