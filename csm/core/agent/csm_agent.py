@@ -33,8 +33,9 @@ class CsmAgent:
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
         alerts_service = AlertsAppService(alerts_storage)
+        usl_service = UslService()
 
-        CsmRestApi.init(alerts_service)
+        CsmRestApi.init(alerts_service, usl_service)
         pm = import_plugin_module('alert')
 
         CsmAgent.alert_monitor = AlertMonitorService(alerts_storage,
@@ -106,6 +107,7 @@ if __name__ == '__main__':
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
         from csm.core.services.stats import StatsAppService
+        from csm.core.services.usl import UslService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 

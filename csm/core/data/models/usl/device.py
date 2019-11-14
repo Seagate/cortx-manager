@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
-
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Filename:          device.py
+ Description:       Model of connected storage device for USL
 
- Creation Date:     09/10/2019
- Author:            Alexander Nogikh
+ Creation Date:     10/22/2019
+ Author:            Alexander Voronov
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -17,8 +15,6 @@
  ****************************************************************************
 """
 
-from .alerts import AlertsHttpController
-from .usl import UslController
-from .routes import CsmRoutes
-
-# from .csm import CsmCliView
+class Device(object):
+    def __init__(self):
+        pass
