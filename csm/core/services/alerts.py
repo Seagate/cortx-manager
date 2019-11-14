@@ -77,9 +77,9 @@ class AlertRepository(IAlertStorage):
             severity: str = None):
         query_conditions = []
 
-        if time_range.start:
+        if time_range and time_range.start:
             query_conditions.append(Compare(AlertModel.updated_time, '>=', time_range.start))
-        if time_range.end:
+        if time_range and time_range.end:
             query_conditions.append(Compare(AlertModel.updated_time, '<=', time_range.end))
 
         if not show_all:
@@ -145,19 +145,20 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
         if alert.resolved and alert.acknowledged:
-            raise CsmError("The alert is both resolved and acknowledged, it cannot be modified",
+            raise InvalidRequest(
+                "The alert is both resolved and acknowledged, it cannot be modified",
                 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
 
         if "comment" in fields:
             alert.comment = fields["comment"]
             max_len = const.ALERT_MAX_COMMENT_LENGTH
             if len(alert.comment) > max_len:
-                raise CsmError("Alert size exceeds the maximum length of {}!".format(max_len),
+                raise InvalidRequest("Alert size exceeds the maximum length of {}".format(max_len),
                     ALERTS_MSG_TOO_LONG_COMMENT, {"max_length": max_len})
 
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
-                raise TypeError("Acknowledged Value Must Be of Type Boolean.")
+                raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
             alert.acknowledged = Alert.acknowledged.to_native(fields["acknowledged"])
 
         await self.repo.update(alert)
@@ -188,7 +189,7 @@ class AlertsAppService(ApplicationService):
             time_range = DateTimeRange(start_time, None)
 
         if sort_by and sort_by not in const.ALERT_SORTABLE_FIELDS:
-            raise CsmError("The specified column cannot be used for sorting",
+            raise InvalidRequest("The specified column cannot be used for sorting",
                 ALERTS_MSG_NON_SORTABLE_COLUMN)
 
         limits = None

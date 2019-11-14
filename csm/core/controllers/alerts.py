@@ -34,8 +34,8 @@ class AlertsQueryParameter(Schema):
     duration = fields.Str(default=None, missing=None)
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
             default=0, missing=0)
-    limit = fields.Int(default=5, validate=validate.Range(min=0), missing=5)
-    sort_by = fields.Str(data_key='sort_by', default="created_time", missing="created_time")
+    page_limit = fields.Int(data_key='limit', default=5, validate=validate.Range(min=0), missing=5)
+    sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
     direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), missing='asc')
     show_all = fields.Boolean(default=True, missing=True, allow_none=True)
     severity = fields.Str(default=None, missing=None, allow_none=True)
