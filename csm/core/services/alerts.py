@@ -48,6 +48,7 @@ ALERTS_MSG_NOT_FOUND = "alerts_not_found"
 ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
 ALERTS_MSG_TOO_LONG_COMMENT = "alerts_too_long_comment"
 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR = "alerts_resolved_and_acked"
+ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 
 
@@ -173,6 +174,10 @@ class AlertsAppService(ApplicationService):
             start_time = (datetime.utcnow() - timedelta(
                 **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
+
+        if sort_by and sort_by not in const.ALERT_SORTABLE_FIELDS:
+            raise CsmError("The specified column cannot be used for sorting",
+                ALERTS_MSG_NON_SORTABLE_COLUMN)
 
         limits = None
         if offset is not None and offset > 1:
