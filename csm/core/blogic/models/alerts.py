@@ -62,6 +62,19 @@ class AlertModel(CsmModel):
     hw_identifier = StringType()
     comment = StringType()
 
+    def to_primitive(self) -> dict:
+        obj = super().to_primitive()
+
+        if self.updated_time:
+            obj["updated_time"] = self.updated_time.replace(tzinfo=timezone.utc).timestamp()
+        if self.created_time:
+            obj["created_time"] = self.created_time.replace(tzinfo=timezone.utc).timestamp()
+        return obj
+
+    def __hash__(self):
+        return hash(self.alert_uuid)
+
+
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
 # the class, rather than storing Alert as a dictionary in the _data field

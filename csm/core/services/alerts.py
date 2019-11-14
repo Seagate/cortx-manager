@@ -218,7 +218,7 @@ class AlertMonitorService(Service):
         self._thread_running = False
         self._loop = asyncio.get_event_loop()
         self.repo = repo
-        self.unpublished_alerts = [] 
+        self.unpublished_alerts = set() 
 
     def init(self):
         """
@@ -232,8 +232,11 @@ class AlertMonitorService(Service):
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
         """
-        for alerts in self.unpublished_alerts:
-            self._publish(alerts)
+        while self.unpublished_alerts:
+            self._publish(self.pop())
+
+        #for alerts in self.unpublished_alerts:
+        #    self._publish(alerts)
         print("Inside Init")
 
     def _monitor(self):
@@ -348,7 +351,7 @@ class AlertMonitorService(Service):
             #print("Prev - ", prev_alert.alert_uuid, prev_alert.hw_identifier)
             if not prev_alert:
                 alert = AlertModel(message)
-                self.unpublished_alerts.append(alert.to_primitive())
+                self.unpublished_alerts.add(alert)
                 self._save_and_publish(alert)
                 print("Alert Saved")
             else:
@@ -463,4 +466,4 @@ class AlertMonitorService(Service):
 
     def _publish(self, alert):
         if self._handle_alert(alert):
-            self.unpublished_alerts.pop(alert)
+            self.unpublished_alerts.discard(alert)
