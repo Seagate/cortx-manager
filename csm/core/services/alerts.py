@@ -93,7 +93,7 @@ class AlertRepository(IAlertStorage):
             query = query.limit(limits.limit)
 
         if sort:
-            query = query.order_by(getattr(AlertModel, params.sort_by), sort.order)
+            query = query.order_by(getattr(AlertModel, sort.field), sort.order)
 
         return await self.db(AlertModel).get(query)
 
@@ -114,7 +114,7 @@ class AlertsAppService(ApplicationService):
     def __init__(self, repo: AlertRepository):
         self.repo = repo
 
-    async def update_alert(self, alert_id, fields):
+    async def update_alert(self, alert_id, fields: dict):
         """
         Update the Data of Specific Alerts
         :param alert_id: id for the alert
@@ -128,6 +128,9 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
+
+        if alert.resolved and alert.acknowledged:
+            raise CsmError("The alert is both resolved and acknowledged, it cannot be modified")
 
         if "comment" in fields:
             alert.comment = fields["comment"]
