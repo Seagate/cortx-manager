@@ -73,6 +73,9 @@ class AlertRepository(IAlertStorage):
     async def update(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
 
+    async def update_new(self, filter, update_params):
+        await self.db(AlertModel).update(filter, update_params)
+
     def _prepare_filters(self, time_range: DateTimeRange, show_all: bool = True,
             severity: str = None):
         query_conditions = []
@@ -383,14 +386,55 @@ class AlertMonitorService(Service):
             if not prev_alert:
                 alert = AlertModel(message)
                 self.unpublished_alerts.add(alert)
-                self._save_and_publish(alert)
+                self._run_coro(self.repo.store(alert))
+                self._publish(alert)
                 print("Alert Saved")
             else:
                 print("Alert found")
+                resolved = self._can_be_resolved(message, prev_alert)
+                print(resolved)
         except Exception as e:
             Log.exception(e)
 
         return True
+
+    def _can_be_resolved(self, new_alert, prev_alert):
+        if not self._is_duplicate_alert(new_alert, prev_alert):
+            if self._is_good_alert(new_alert):
+                """
+                If it is a good alert checking the state of previous alert.
+                """
+                if self._is_good_alert(prev_alert):
+                    """ Previous alert is a good one so updating. """
+                    self._update_and_save(new_alert, prev_alert)
+                else:
+                    """ Previous alert is a bad one so resolving it. """
+                    self._resolve(new_alert, prev_alert)
+            elif self._is_bad_alert(new_alert):
+                """
+                If it is a bad alert checking the state of previous alert.
+                """
+                if self._is_bad_alert(prev_alert):
+                    """ Previous alert is a bad one so updating. """
+                    self._update_and_save(new_alert, prev_alert)
+                else:
+                    """
+                    Previous alert is a good one so updating and marking the
+                    resolved status to False.
+                    """
+                    self._update_and_save(new_alert, prev_alert, True)        
+
+    def _is_duplicate_alert(self, new_alert, prev_alert):
+        """
+        Check whether the alerts is duplicate or not based on state.
+        :param alert : New Alert Dict
+        :param prev_alert : Previous Alert object
+        :return: boolean (True or False) 
+        """
+        ret = False
+        if new_alert.get('state', "") == prev_alert.state:
+            ret = True
+        return ret
 
     def _save_and_publish(self, alert):
         """
@@ -410,24 +454,17 @@ class AlertMonitorService(Service):
         False
         :return: None
         """
+        update_params = {}
         if update_resolve:
-            prev_alert.data()['resolved'] = alert.data()['resolved']
-            prev_alert.resolved(False)
-        self._update_prev_alert(alert, prev_alert)
-        self.save_alert(prev_alert)
-
-    def _is_duplicate_alert(self, alert, prev_alert):
-        """
-        Check whether the alerts is duplicate or not based on state.
-        :param alert : Alert object
-        :param prev_alert : Previous Alert object
-        :return: boolean (True or False) 
-        """
-        ret = False
-        if alert.data().get('state', "") == \
-                prev_alert.data().get('state', ""):
-            ret = True
-        return ret
+            update_params["resolved"] = alert['resolved']
+        else:
+            update_params["resolved"] = prev_alert.resolved
+        update_params["state"] = alert['state']
+        update_params["severity"] = alert['severity']
+        update_params["updated_time"] = int(time.time())
+        print(update_params, prev_alert.hw_identifier) 
+        filter = Compare(AlertModel.hw_identifier, '=', prev_alert.hw_identifier)
+        self._run_coro(self.repo.update_new(filter, update_params))
 
     def _is_good_alert(self, alert):
         """
@@ -436,7 +473,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.data().get('state', "") in const.GOOD_ALERT:
+        if alert.get('state', "") in const.GOOD_ALERT:
             ret = True
         return ret
 
@@ -447,7 +484,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.data().get('state', "") in const.BAD_ALERT:
+        if alert.get('state', "") in const.BAD_ALERT:
             ret = True
         return ret
 
@@ -475,9 +512,9 @@ class AlertMonitorService(Service):
         :return: None
         """
         if not prev_alert == None:
-            prev_alert.data()['state'] = alert.data()['state'] 
-            prev_alert.data()['severity'] = alert.data()['severity'] 
-            prev_alert.data()['updated_time'] = int(time.time())
+            prev_alert.state = alert['state'] 
+            prev_alert.severity = alert['severity'] 
+            prev_alert.updated_time = int(time.time())
 
 
     def _resolve(self, alert, prev_alert):
@@ -486,15 +523,16 @@ class AlertMonitorService(Service):
         :param alert: Alert Object.
         :return: None
         """
-        if not prev_alert.is_resolved():
+        print(prev_alert.resolved)
+        if not prev_alert.resolved:
             """
             Try to resolve the alert if the previous alert is bad and
             the current alert is good.
             """
-            prev_alert.data()['resolved'] = True 
-            prev_alert.resolved(True)
+            prev_alert.resolved = True 
+            #prev_alert.resolved(True)
             self._update_and_save(alert, prev_alert)
 
     def _publish(self, alert):
-        if self._handle_alert(alert):
+        if self._handle_alert(alert.to_primitive()):
             self.unpublished_alerts.discard(alert)
