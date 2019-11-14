@@ -19,7 +19,7 @@ from typing import List
 from enum import Enum
 
 
-class IamConnectionConfig:
+class S3ConnectionConfig:
     """
     Configuration options for IAM server access
     """

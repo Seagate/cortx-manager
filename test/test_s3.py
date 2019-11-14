@@ -1,17 +1,17 @@
 import asyncio
 from csm.common.log import Log
-from csm.eos.plugins.s3 import IamConnectionConfig, S3Plugin
+from csm.eos.plugins.s3 import S3ConnectionConfig, S3Plugin
 from csm.eos.plugins.s3 import ExtendedIamAccount, IamAccountListResponse
 
 Log.init('test', '.')
 
 if __name__ == '__main__':
-    config = IamConnectionConfig()
+    config = S3ConnectionConfig()
     config.host = "sati10b-m08.mero.colo.seagate.com"
     config.port = 9080
 
     pl = S3Plugin()
-    client = pl.get_client("sgiamadmin", "ldapadmin", config)
+    client = pl.get_iam_client("sgiamadmin", "ldapadmin", config)
     loop = asyncio.get_event_loop()
 
     async def _test_account_management():
@@ -29,7 +29,7 @@ if __name__ == '__main__':
             print("There is no account in the account list")
             return
 
-        delete_client = pl.get_client(account.access_key_id, account.secret_key_id, config)
+        delete_client = pl.get_iam_Sclient(account.access_key_id, account.secret_key_id, config)
         result = await delete_client.delete_account(account.account_name)
 
         if isinstance(result, bool) and result:
