@@ -21,6 +21,7 @@
 import os, errno
 import logging.handlers
 import inspect
+from functools import wraps
 
 class Log:
     CRITICAL = logging.CRITICAL
@@ -92,3 +93,63 @@ class Log:
         caller = inspect.stack()[1][3]
         Log.logger.debug('[%s] %s' %(caller, msg), *args, **kwargs)
         print('[%s] %s' %(caller, msg))
+
+    @staticmethod
+    def trace_method(level, exclude_args=[], truncate_at=35):
+        """
+        A wrapper method that logs each invocation and exit of the wrapped function.
+        :param: level - Level of logging (e.g. Logger.DEBUG)
+        :param: exclude_args - Array of arguments to exclude from the logging 
+                (it can be useful e.g. for hiding passwords from the log file)
+        :param: truncate_at - Allows to truncate the printed argument values. 35 by default.
+
+        Example usage:
+        @Logger.trace_method(Logger.DEBUG)
+        def some_function(arg_1, arg_2):
+            pass
+
+        """
+        def _fmt_value(obj):
+            str_value = repr(obj)
+            if len(str_value) < truncate_at:
+                return str_value
+            else:
+                return str_value[:truncate_at] + "..."
+
+        def _print_start(func, *args, **kwargs):
+            pos_args = [_fmt_value(arg) for arg in args]
+            # TODO: handle exclusion of positional arguments as well
+            kw_args = [key + "=" + _fmt_value(kwargs[key]) for key in kwargs 
+                if key not in exclude_args]
+
+            message = "[{}] Invoked with ({})".format(
+                func.__qualname__, ",".join(pos_args + kw_args))
+            Log.logger.log(level, message)
+
+        def _print_end(func, response):
+            message = "[{}] Returned {}".format(func.__qualname__, _fmt_value(response))
+            Log.logger.log(level, message)
+
+        # This function will be used as a decorator
+        def decorator(func):
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                _print_start(func, *args, **kwargs)
+                resp = func(*args, **kwargs)
+                _print_end(func, resp)
+                return resp
+
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                _print_start(func, *args, **kwargs)
+                resp = await func(*args, **kwargs)
+                _print_end(func, resp)
+                return resp
+
+            # If the function is async, it needs special treatment
+            if inspect.iscoroutinefunction(func):
+                return async_wrapper
+            else:
+                return sync_wrapper
+
+        return decorator
