@@ -28,8 +28,8 @@ from typing import Dict
 from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
-#from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
-from csm.core.blogic.models.alerts import Alert#IAlertStorage, Alert
+from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
+from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
 import time
@@ -40,6 +40,7 @@ from csm.core.blogic.models.alerts import AlertModel
 from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
+from typing import Optional, Iterable
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -53,10 +54,17 @@ class AlertRepository(IAlertStorage):
         self.db = storage
 
     async def store(self, alert: AlertModel):
-        await self.db(Alert).store(alert)
+        await self.db(AlertModel).store(alert)
 
     async def retrieve(self, alert_id) -> AlertModel:
-        query = Query().filter_by(Compare(Alert.alert_uuid, '=', alert_id))
+        query = Query().filter_by(Compare(AlertModel.alert_uuid, '=', alert_id))
+        return next(iter(await self.db(AlertModel).get(query)), None)
+
+    async def retrieve_by_hw(self, hw_id) -> AlertModel:
+        #import pdb
+        #pdb.set_trace()
+        query = Query().filter_by(Compare(AlertModel.hw_identifier, '=',
+            str(hw_id)))
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def update(self, alert: AlertModel):
@@ -92,6 +100,11 @@ class AlertRepository(IAlertStorage):
     async def count_by_range(self, time_range: DateTimeRange):
         return await self.db(AlertModel).count(self._prepare_filters(time_range))
 
+    async def retrieve_all(self) -> list:
+        """
+        Retrieves all the
+        """
+        pass
 
 class AlertsAppService(ApplicationService):
     """
@@ -194,7 +207,7 @@ class AlertMonitorService(Service):
     web server. 
     """
 
-    def __init__(self, storage: DataBaseProvider, plugin, alert_handler_cb):
+    def __init__(self, repo: AlertRepository, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
@@ -204,7 +217,8 @@ class AlertMonitorService(Service):
         self._thread_started = False
         self._thread_running = False
         self._loop = asyncio.get_event_loop()
-        self._storage = storage
+        self.repo = repo
+        self.unpublished_alerts = [] 
 
     def init(self):
         """
@@ -218,6 +232,8 @@ class AlertMonitorService(Service):
         for alert in self._storage.select(nonpublished):
             self._publish(alert)
         """
+        for alerts in self.unpublished_alerts:
+            self._publish(alerts)
         print("Inside Init")
 
     def _monitor(self):
@@ -320,13 +336,23 @@ class AlertMonitorService(Service):
         """ Fetching the previous alert. """
         try:
             message['extended_info'] = str(message.get('extended_info'))
+            """
             filter = Compare(AlertModel.hw_identifier, '=',
                     message.get(const.ALERT_HW_IDENTIFIER, ""))
             query = Query().filter_by(filter)
             alert = next(iter(self._run_coro(self._storage(AlertModel).get(query))), None)
-            if not alert:
+            """
+            #print(message.get(const.ALERT_HW_IDENTIFIER, ""))
+            prev_alert = self._run_coro(self.repo.retrieve_by_hw\
+                    (message.get(const.ALERT_HW_IDENTIFIER, "")))
+            #print("Prev - ", prev_alert.alert_uuid, prev_alert.hw_identifier)
+            if not prev_alert:
                 alert = AlertModel(message)
+                self.unpublished_alerts.append(alert.to_primitive())
                 self._save_and_publish(alert)
+                print("Alert Saved")
+            else:
+                print("Alert found")
         except Exception as e:
             Log.exception(e)
 
@@ -338,8 +364,8 @@ class AlertMonitorService(Service):
         :param alert : Alert object
         :return: None
         """
-        self._run_coro(self._storage(AlertModel).store(alert))
-        #self._publish(alert)
+        self._run_coro(self.repo.store(alert))
+        self._publish(alert)
 
     def _update_and_save(self, alert, prev_alert, update_resolve=False):
         """
@@ -436,5 +462,5 @@ class AlertMonitorService(Service):
             self._update_and_save(alert, prev_alert)
 
     def _publish(self, alert):
-        if self._handle_alert(alert.data()):
-            alert.publish()
+        if self._handle_alert(alert):
+            self.unpublished_alerts.pop(alert)

@@ -214,5 +214,5 @@ class Payload:
             if count == len(info_list) - 1:
                 value = value + str(val)
             else:
-                value = value + str(val) + "-"
+                value = value + str(val) + "_"
         return value

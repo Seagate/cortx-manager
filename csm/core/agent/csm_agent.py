@@ -51,7 +51,7 @@ class CsmAgent:
                     "config": {
                         "es_db":
                         {
-                            "collection": "alert1"
+                            "collection": "alert2"
                         }
                     }
                 }
@@ -62,12 +62,13 @@ class CsmAgent:
       
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
-        alerts_service = AlertsAppService(db)
+        alerts_repository = AlertRepository(db)
+        alerts_service = AlertsAppService(alerts_repository)
 
         CsmRestApi.init(alerts_service)
         pm = import_plugin_module('alert')
 
-        CsmAgent.alert_monitor = AlertMonitorService(db,
+        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
@@ -133,7 +134,7 @@ if __name__ == '__main__':
         from csm.common.payload import Yaml
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, \
-                                            AlertMonitorService
+                                            AlertMonitorService, AlertRepository
         from csm.core.services.stats import StatsAppService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
