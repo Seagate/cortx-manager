@@ -46,6 +46,8 @@ from typing import Optional, Iterable
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_MSG_NOT_FOUND = "alerts_not_found"
 ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
+ALERTS_MSG_TOO_LONG_COMMENT = "alerts_too_long_comment"
+ALERTS_MSG_RESOLVED_AND_ACKED_ERROR = "alerts_resolved_and_acked"
 
 
 
@@ -106,6 +108,7 @@ class AlertRepository(IAlertStorage):
         """
         pass
 
+
 class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics
@@ -130,10 +133,15 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
         if alert.resolved and alert.acknowledged:
-            raise CsmError("The alert is both resolved and acknowledged, it cannot be modified")
+            raise CsmError("The alert is both resolved and acknowledged, it cannot be modified",
+                ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
 
         if "comment" in fields:
             alert.comment = fields["comment"]
+            max_len = const.ALERT_MAX_COMMENT_LENGTH
+            if len(alert.comment) > max_len:
+                raise CsmError("Alert size exceeds the maximum length of {}!".format(max_len),
+                    ALERTS_MSG_TOO_LONG_COMMENT, {"max_length": max_len})
 
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):

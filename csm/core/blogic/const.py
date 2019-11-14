@@ -90,6 +90,7 @@ ALERT_SENSOR_TYPE = 'sensor_response_type'
 ALERT_MESSAGE = 'message'
 ALERT_COMMENT = 'comment'
 ALERT_HW_IDENTIFIER = 'hw_identifier'
+ALERT_MAX_COMMENT_LENGTH = 255
 
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
