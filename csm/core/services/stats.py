@@ -40,8 +40,8 @@ class StatsAppService(ApplicationService):
     Provides operations on stats without involving the domain specifics
     """
 
-    def __init__(self, plugin):
-        self._plugin = plugin
+    def __init__(self, stats_provider):
+        self._stats_provider = stats_provider
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, output_format, query) -> Dict:
@@ -49,12 +49,9 @@ class StatsAppService(ApplicationService):
         Fetch specific stat
         :return: :type:list
         """
-        utc_from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
-        utc_to_t = str(datetime.utcfromtimestamp(int(to_t)).isoformat())+'.000Z'
-        interval_with_s = str(interval)+'s'
-        return await self._plugin.process_request(stats_id = stats_id, panel = panel,
-                                                  from_t = utc_from_t, duration_t = utc_to_t,
+        return await self._stats_provider.process_request(stats_id = stats_id, panel = panel,
+                                                  from_t = from_t, duration_t = to_t,
                                                   metric_list = metric_list,
-                                                  interval = interval_with_s,
+                                                  interval = interval,
                                                   output_format = output_format,
                                                   query = query)

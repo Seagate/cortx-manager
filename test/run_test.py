@@ -46,7 +46,7 @@ def tmain(argp, argv):
         if not os.path.exists(csm_conf):
             raise TestFailed('%s not present. Refer to samples directory' %csm_conf)
 
-        Log.init('csm', '/tmp')
+        Log.init('csm_test', '/tmp')
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf))
 
