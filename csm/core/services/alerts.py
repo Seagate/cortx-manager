@@ -64,8 +64,11 @@ class AlertRepository(IAlertStorage):
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def retrieve_by_hw(self, hw_id) -> AlertModel:
-        query = Query().filter_by(Compare(AlertModel.hw_identifier, '=',
-            str(hw_id)))
+        filter = And(Compare(AlertModel.hw_identifier, '=',
+                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
+                        False), Compare(AlertModel.resolved, '=', False)))
+                
+        query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def update(self, alert: AlertModel):
@@ -80,9 +83,9 @@ class AlertRepository(IAlertStorage):
         query_conditions = []
 
         if time_range and time_range.start:
-            query_conditions.append(Compare(AlertModel.updated_time, '>=', time_range.start))
+            query_conditions.append(Compare(AlertModel.created_time, '>=', time_range.start))
         if time_range and time_range.end:
-            query_conditions.append(Compare(AlertModel.updated_time, '<=', time_range.end))
+            query_conditions.append(Compare(AlertModel.created_time, '<=', time_range.end))
 
         if not show_all:
             query_conditions.append(
@@ -161,7 +164,7 @@ class AlertsAppService(ApplicationService):
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
                 raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
-            alert.acknowledged = Alert.acknowledged.to_native(fields["acknowledged"])
+            alert.acknowledged = AlertModel.acknowledged.to_native(fields["acknowledged"])
 
         await self.repo.update(alert)
         return alert.to_primitive()
@@ -327,7 +330,12 @@ class AlertMonitorService(Service):
         """
         """ Fetching the previous alert. """
         try:
+            Log.debug("Incoming alert : [%s]" %(message))
             message['extended_info'] = str(message.get('extended_info'))
+            for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
+                message[key] = datetime.utcfromtimestamp(message[key])\
+                        .replace(tzinfo=timezone.utc)
+
             prev_alert = self._run_coro(self.repo.retrieve_by_hw\
                     (message.get(const.ALERT_HW_IDENTIFIER, "")))
             if not prev_alert:

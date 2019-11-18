@@ -66,9 +66,11 @@ class AlertModel(CsmModel):
         obj = super().to_primitive()
 
         if self.updated_time:
-            obj["updated_time"] = self.updated_time.replace(tzinfo=timezone.utc).timestamp()
+            obj["updated_time"] =\
+                    int(self.updated_time.replace(tzinfo=timezone.utc).timestamp())
         if self.created_time:
-            obj["created_time"] = self.created_time.replace(tzinfo=timezone.utc).timestamp()
+            obj["created_time"] =\
+                    int(self.created_time.replace(tzinfo=timezone.utc).timestamp())
         return obj
 
     def __hash__(self):

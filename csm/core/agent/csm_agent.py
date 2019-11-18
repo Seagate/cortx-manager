@@ -51,7 +51,7 @@ class CsmAgent:
                     "config": {
                         "es_db":
                         {
-                            "collection": "alert7"
+                            "collection": "alert13"
                         }
                     }
                 }

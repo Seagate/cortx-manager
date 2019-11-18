@@ -84,7 +84,7 @@ class AlertsView(web.View):
             body = await self.request.json()
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        return await self.alerts_service.update_alert(int(alert_id), body)
+        return await self.alerts_service.update_alert(alert_id, body)
 
 
 # AIOHTTP does not provide a way to pass custom parameters to its views.
