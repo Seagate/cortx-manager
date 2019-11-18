@@ -9,7 +9,7 @@
       "description": "Id for an alert which identifies alerts of specific type."
     },
     "alert_uuid": {
-      "type": "integer",
+      "type": "string",
       "required": true,
       "description": "uuid to identify an alert."
     },

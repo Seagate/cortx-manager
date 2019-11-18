@@ -64,8 +64,6 @@ class AlertRepository(IAlertStorage):
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def retrieve_by_hw(self, hw_id) -> AlertModel:
-        #import pdb
-        #pdb.set_trace()
         query = Query().filter_by(Compare(AlertModel.hw_identifier, '=',
             str(hw_id)))
         return next(iter(await self.db(AlertModel).get(query)), None)
@@ -73,7 +71,8 @@ class AlertRepository(IAlertStorage):
     async def update(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
 
-    async def update_new(self, filter, update_params):
+    async def update_by_hw_id(self, hw_id, update_params):
+        filter = Compare(AlertModel.hw_identifier, '=', hw_id)
         await self.db(AlertModel).update(filter, update_params)
 
     def _prepare_filters(self, time_range: DateTimeRange, show_all: bool = True,
@@ -259,19 +258,8 @@ class AlertMonitorService(Service):
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
-        """
-        def nonpublished(_, alert):
-            return not alert.is_published()
-
-        for alert in self._storage.select(nonpublished):
-            self._publish(alert)
-        """
         while self.unpublished_alerts:
             self._publish(self.pop())
-
-        #for alerts in self.unpublished_alerts:
-        #    self._publish(alerts)
-        print("Inside Init")
 
     def _monitor(self):
         """
@@ -305,40 +293,9 @@ class AlertMonitorService(Service):
         except Exception as e:
             Log.exception(e)
 
-    def save_alert(self, alert):
-        # This implementation uses threads, but storage is supposed to be async
-        # So we put the task onto the main event loop and wait for its completion
-
-        alert_task = asyncio.run_coroutine_threadsafe(
-            self._storage.store(alert), self._loop)
-
-        alert_task.result()  # wait for completion
-
     def _run_coro(self, coro):
         task = asyncio.run_coroutine_threadsafe(coro, self._loop)
         return task.result()
-
-    def get_alert(self, alert_id) -> Optional[Alert]:
-        """
-        Get the single from the DB for the alert_id
-        :param alert_id: ID for Alerts.
-        :return: Alert Object
-        """
-        alert_task = asyncio.run_coroutine_threadsafe(
-            self._storage.retrieve(alert_id, {}), self._loop)
-        result = alert_task.result(timeout=2)
-        return  result # wait for completion
-
-    def get_all_alerts(self):
-        """
-        Get the list of all the alerts from storage
-        :param None
-        :return: list of Alert objects
-        """
-        alert_task = asyncio.run_coroutine_threadsafe\
-                (self._storage.retrieve_all(), self._loop)
-        result = alert_task.result(timeout=2)
-        return result
 
     def _consume(self, message):
         """
@@ -350,8 +307,6 @@ class AlertMonitorService(Service):
             3. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
-        #alert = AlertModel(message)
-        print("Incoming Alert ---", message)
         prev_alert = None
         """
         Before storing the alert let us fisrt try to resolve it.
@@ -373,32 +328,21 @@ class AlertMonitorService(Service):
         """ Fetching the previous alert. """
         try:
             message['extended_info'] = str(message.get('extended_info'))
-            """
-            filter = Compare(AlertModel.hw_identifier, '=',
-                    message.get(const.ALERT_HW_IDENTIFIER, ""))
-            query = Query().filter_by(filter)
-            alert = next(iter(self._run_coro(self._storage(AlertModel).get(query))), None)
-            """
-            #print(message.get(const.ALERT_HW_IDENTIFIER, ""))
             prev_alert = self._run_coro(self.repo.retrieve_by_hw\
                     (message.get(const.ALERT_HW_IDENTIFIER, "")))
-            #print("Prev - ", prev_alert.alert_uuid, prev_alert.hw_identifier)
             if not prev_alert:
                 alert = AlertModel(message)
                 self.unpublished_alerts.add(alert)
                 self._run_coro(self.repo.store(alert))
                 self._publish(alert)
-                print("Alert Saved")
             else:
-                print("Alert found")
-                resolved = self._can_be_resolved(message, prev_alert)
-                print(resolved)
+                self._resolve_alert(message, prev_alert)
         except Exception as e:
             Log.exception(e)
 
         return True
 
-    def _can_be_resolved(self, new_alert, prev_alert):
+    def _resolve_alert(self, new_alert, prev_alert):
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -406,7 +350,7 @@ class AlertMonitorService(Service):
                 """
                 if self._is_good_alert(prev_alert):
                     """ Previous alert is a good one so updating. """
-                    self._update_and_save(new_alert, prev_alert)
+                    self._update_alert(new_alert, prev_alert)
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
@@ -416,13 +360,13 @@ class AlertMonitorService(Service):
                 """
                 if self._is_bad_alert(prev_alert):
                     """ Previous alert is a bad one so updating. """
-                    self._update_and_save(new_alert, prev_alert)
+                    self._update_alert(new_alert, prev_alert)
                 else:
                     """
                     Previous alert is a good one so updating and marking the
                     resolved status to False.
                     """
-                    self._update_and_save(new_alert, prev_alert, True)        
+                    self._update_alert(new_alert, prev_alert, True)        
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
         """
@@ -436,16 +380,7 @@ class AlertMonitorService(Service):
             ret = True
         return ret
 
-    def _save_and_publish(self, alert):
-        """
-        Save the alerts to storage and publish them onto WS.
-        :param alert : Alert object
-        :return: None
-        """
-        self._run_coro(self.repo.store(alert))
-        self._publish(alert)
-
-    def _update_and_save(self, alert, prev_alert, update_resolve=False):
+    def _update_alert(self, alert, prev_alert, update_resolve=False):
         """
         Update the alerts to storage.
         :param alert : Alert object
@@ -462,9 +397,8 @@ class AlertMonitorService(Service):
         update_params["state"] = alert['state']
         update_params["severity"] = alert['severity']
         update_params["updated_time"] = int(time.time())
-        print(update_params, prev_alert.hw_identifier) 
-        filter = Compare(AlertModel.hw_identifier, '=', prev_alert.hw_identifier)
-        self._run_coro(self.repo.update_new(filter, update_params))
+        self._run_coro(self.repo.update_by_hw_id\
+                (prev_alert.hw_identifier, update_params))
 
     def _is_good_alert(self, alert):
         """
@@ -488,35 +422,6 @@ class AlertMonitorService(Service):
             ret = True
         return ret
 
-    def _get_prev_alert(self, alert):
-        """
-        Get the previously stored alert for the hw
-        :param alert: Alert's object.
-        :return: Alert Object
-        """
-        prev_alert = None
-        alert_list = self.get_all_alerts()
-        for value in alert_list:
-            if value.data().get("hw_identifier", '') == \
-                    alert.data().get("hw_identifier", ''):
-                prev_alert = value
-                break
-
-        return prev_alert
-
-    def _update_prev_alert(self, alert, prev_alert):
-        """
-        Update the previously stored alert for the hw
-        :param alert: Alert's object.
-        :param prev_alert: Previous Alert's object.
-        :return: None
-        """
-        if not prev_alert == None:
-            prev_alert.state = alert['state'] 
-            prev_alert.severity = alert['severity'] 
-            prev_alert.updated_time = int(time.time())
-
-
     def _resolve(self, alert, prev_alert):
         """
         Get the previous alert with the same alert_uuid.
@@ -531,7 +436,7 @@ class AlertMonitorService(Service):
             """
             prev_alert.resolved = True 
             #prev_alert.resolved(True)
-            self._update_and_save(alert, prev_alert)
+            self._update_alert(alert, prev_alert)
 
     def _publish(self, alert):
         if self._handle_alert(alert.to_primitive()):

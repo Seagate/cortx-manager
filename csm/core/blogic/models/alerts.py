@@ -42,7 +42,7 @@ class AlertModel(CsmModel):
 
     _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
     id = IntType()
-    alert_uuid = IntType()
+    alert_uuid = StringType()
     status = StringType()
     type = StringType()
     enclosure_id = IntType()
@@ -65,12 +65,10 @@ class AlertModel(CsmModel):
     def to_primitive(self) -> dict:
         obj = super().to_primitive()
 
-        """
         if self.updated_time:
             obj["updated_time"] = self.updated_time.replace(tzinfo=timezone.utc).timestamp()
         if self.created_time:
             obj["created_time"] = self.created_time.replace(tzinfo=timezone.utc).timestamp()
-        """
         return obj
 
     def __hash__(self):
