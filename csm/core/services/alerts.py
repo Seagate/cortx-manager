@@ -428,7 +428,6 @@ class AlertMonitorService(Service):
         :param alert: Alert Object.
         :return: None
         """
-        print(prev_alert.resolved)
         if not prev_alert.resolved:
             """
             Try to resolve the alert if the previous alert is bad and
