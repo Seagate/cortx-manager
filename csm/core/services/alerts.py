@@ -75,11 +75,14 @@ class AlertRepository(IAlertStorage):
         await self.db(AlertModel).store(alert)
 
     async def update_by_hw_id(self, hw_id, update_params):
-        filter = Compare(AlertModel.hw_identifier, '=', hw_id)
+        filter = And(Compare(AlertModel.hw_identifier, '=',
+                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
+                        False), Compare(AlertModel.resolved, '=', False)))
         await self.db(AlertModel).update(filter, update_params)
 
     def _prepare_filters(self, time_range: DateTimeRange, show_all: bool = True,
-            severity: str = None):
+            severity: str = None, resolved: bool = False, acknowledged: bool =
+            False):
         query_conditions = []
 
         if time_range and time_range.start:
@@ -89,7 +92,15 @@ class AlertRepository(IAlertStorage):
 
         if not show_all:
             query_conditions.append(
-                Or(Compare(AlertModel.resolved, '=', False), Compare(AlertModel.acknowledged, '=', False)))
+                Or(Compare(AlertModel.resolved, '=', False),
+                    Compare(AlertModel.acknowledged, '=', False)))
+        else:
+            if resolved:
+                query_conditions.append(Compare(AlertModel.resolved, '=',
+                    resolved))
+            if acknowledged:
+                query_conditions.append(Compare(AlertModel.acknowledged, '=',
+                    acknowledged))
 
         if severity:
             query_conditions.append(Compare(AlertModel.severity, '=', severity))
@@ -99,8 +110,10 @@ class AlertRepository(IAlertStorage):
     async def retrieve_by_range(
             self, time_range: DateTimeRange, show_all: bool=True,
             severity: str=None, sort: Optional[SortBy]=None,
-            limits: Optional[QueryLimits]=None) -> Iterable[AlertModel]:
-        query_filter = self._prepare_filters(time_range, show_all, severity)
+            limits: Optional[QueryLimits]=None, resolved: bool = False,
+            acknowledged: bool = False) -> Iterable[AlertModel]:
+        query_filter = self._prepare_filters(time_range, show_all, severity,
+                resolved, acknowledged)
         query = Query().filter_by(query_filter)
 
         if limits and limits.offset:
@@ -115,9 +128,11 @@ class AlertRepository(IAlertStorage):
         return await self.db(AlertModel).get(query)
 
     async def count_by_range(self, time_range: DateTimeRange, show_all: bool = True,
-            severity: str = None) -> int:
+            severity: str = None, resolved: bool = False,
+                        acknowledged: bool = False) -> int:
         return await self.db(AlertModel).count(
-            self._prepare_filters(time_range, show_all, severity))
+            self._prepare_filters(time_range, show_all, severity, resolved,
+                acknowledged))
 
     async def retrieve_all(self) -> list:
         """
@@ -171,7 +186,8 @@ class AlertsAppService(ApplicationService):
 
     async def fetch_all_alerts(self, duration, direction, sort_by, severity: Optional[str] = None,
                                offset: Optional[int] = None, show_all: Optional[bool] = True,
-                               page_limit: Optional[int] = None) -> Dict:
+                               page_limit: Optional[int] = None, resolved: bool =
+                               False, acknowledged: bool = False) -> Dict:
         """
         Fetch All Alerts
         :param duration: time duration for range of alerts
@@ -211,7 +227,8 @@ class AlertsAppService(ApplicationService):
             limits
         )
 
-        alerts_count = await self.repo.count_by_range(time_range, show_all, severity)
+        alerts_count = await self.repo.count_by_range(time_range, show_all,
+                severity, resolved, acknowledged)
         return {
             "total_records": alerts_count,
             "alerts": [alert.to_primitive() for alert in alerts_list]
