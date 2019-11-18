@@ -39,7 +39,9 @@ from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
+from csm.core.services.usl import UslService
 from csm.core.controllers import AlertsHttpController
+from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
 
 class CsmApi(ABC):
@@ -87,7 +89,7 @@ class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
 
     @staticmethod
-    def init(alerts_service):
+    def init(alerts_service, usl_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
@@ -97,10 +99,9 @@ class CsmRestApi(CsmApi, ABC):
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
-
+        usl_ctrl = UslController(usl_service)
         CsmRoutes.add_routes(CsmRestApi._app)
-        ApiRoutes.add_rest_api_routes(
-            CsmRestApi._app.router, alerts_ctrl)
+        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl, usl_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
 

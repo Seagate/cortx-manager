@@ -2,10 +2,10 @@
 
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Filename:          iam_users.py
+ Description:       Services for IAM user management
 
- Creation Date:     09/10/2019
+ Creation Date:     11/04/2019
  Author:            Alexander Nogikh
 
  Do NOT modify or remove this copyright and confidentiality notice!
@@ -17,8 +17,21 @@
  ****************************************************************************
 """
 
-from .alerts import AlertsHttpController
-from .usl import UslController
-from .routes import CsmRoutes
+from csm.common.services import Service, ApplicationService
 
-# from .csm import CsmCliView
+
+class IamUsersService(ApplicationService):
+    """
+    Service for IAM user management
+    """
+    def create_user(self, user_name: str, path: str):
+        pass
+
+    def list_users(self):
+        pass
+
+    def delete_user(self, user_name: str):
+        pass
+
+    def update_user(self, user_name: str):
+        pass

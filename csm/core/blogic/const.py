@@ -108,3 +108,6 @@ STATS_METRIC_LIST = {
     'latency': ["total_request_time", "create_object", "delete_object", "write_object", "read_object", "getkv", "putkv", "deletekv"],
     'iops': ["read_object", "write_object", "read_bucket", "write_bucket"]
 }
+
+# UDS Server
+UDS_SERVER_URL = 'http://localhost:5000'

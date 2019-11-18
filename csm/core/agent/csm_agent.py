@@ -64,8 +64,9 @@ class CsmAgent:
         # alerts_storage.add_data()
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
+        usl_service = UslService()
 
-        CsmRestApi.init(alerts_service)
+        CsmRestApi.init(alerts_service, usl_service)
         pm = import_plugin_module('alert')
 
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
@@ -136,6 +137,7 @@ if __name__ == '__main__':
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService, AlertRepository
         from csm.core.services.stats import StatsAppService
+        from csm.core.services.usl import UslService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 

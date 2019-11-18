@@ -2,10 +2,10 @@
 
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Filename:          s3_accounts.py
+ Description:       Services for S3 account management
 
- Creation Date:     09/10/2019
+ Creation Date:     11/04/2019
  Author:            Alexander Nogikh
 
  Do NOT modify or remove this copyright and confidentiality notice!
@@ -17,8 +17,19 @@
  ****************************************************************************
 """
 
-from .alerts import AlertsHttpController
-from .usl import UslController
-from .routes import CsmRoutes
+from csm.common.services import Service, ApplicationService
+from csm.core.blogic.models.iam import IamUser
 
-# from .csm import CsmCliView
+
+class S3AccountService(ApplicationService):
+    """
+    Service for S3 account management
+    """
+    def create_account(self, account_name: str, account_email: str, account_password: str):
+        pass
+
+    def list_accounts(self):
+        pass
+
+    def delete_account(self, account_name: str):
+        pass
