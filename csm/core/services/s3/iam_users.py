@@ -67,17 +67,15 @@ class IamUsersService(ApplicationService):
                                     self.iam_connection_config,
                                     asyncio.get_event_loop(),
                                     session_token)
-
+        # Create Iam User in System.
         user_creation_resp = await s3_client_object.create_user(user_name, path)
-        print(vars(user_creation_resp))
         if hasattr(user_creation_resp, "error_code"):
             return Response(rc=user_creation_resp.error_code,
                             output=user_creation_resp.error_message)
-
+        # Create Iam User's Login Profile.
         user_login_profile_resp = await s3_client_object.create_user_login_profile(
             user_name, password, require_reset)
-        print(vars(user_login_profile_resp))
-        if hasattr(user_login_profile_resp, "error_code"):
+        if user_login_profile_resp and hasattr(user_login_profile_resp, "error_code"):
             return Response(rc=user_login_profile_resp.error_code,
                             output=user_login_profile_resp.error_message)
 
