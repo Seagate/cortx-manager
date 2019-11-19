@@ -47,3 +47,5 @@ S3:
     host: "localhost"
     port: 9080
     max_retries_num: 1
+    account_name: "test_s3_account"
+    account_password: "test@123"

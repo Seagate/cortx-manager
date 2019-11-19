@@ -48,7 +48,9 @@ class IamUsersService(ApplicationService):
         :return:
         """
         s3_conn_obj = S3Plugin()
-        response = await s3_conn_obj.get_temp_credentials("test_s3_account", "test@123",
+        account_name = Conf.get(const.CSM_GLOBAL_INDEX, "S3.account_name")
+        account_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.account_password")
+        response = await s3_conn_obj.get_temp_credentials(account_name, account_password,
                                                           connection_config=self.iam_connection_config)
         return response.access_key, response.secret_key, response.session_token
 
