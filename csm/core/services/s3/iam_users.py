@@ -129,7 +129,5 @@ class IamUsersService(ApplicationService):
         return Response(rc=200,
                         output="User Deleted Successfully.")
 
-
-
     def update_user(self, user_name: str):
         pass
