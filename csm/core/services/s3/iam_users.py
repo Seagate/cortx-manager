@@ -18,16 +18,72 @@
 """
 
 from csm.common.services import Service, ApplicationService
-
+from csm.eos.plugins.s3 import S3Client, S3Plugin, IamConnectionConfig
+from csm.common.conf import Conf
+from csm.common.log import Log
+from csm.core.blogic import const
+from csm.core.providers.providers import Response
+import asyncio
 
 class IamUsersService(ApplicationService):
     """
     Service for IAM user management
     """
-    def create_user(self, user_name: str, path: str):
-        pass
 
-    def list_users(self):
+    def __init__(self):
+        self.iam_connection_config = IamConnectionConfig()
+        self.iam_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX,
+                                                   "S3.host")
+        self.iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX,
+                                                   "S3.port")
+        self.iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
+                                                              "S3.max_retries_num")
+
+    @Log.trace_method(Log.DEBUG)
+    async def create_s3_connection_obj(self, ):
+        """
+        This Method will create S3 object for connection fetching request headers
+        todo: Will be changing this method once the access_key, secret_key and
+            session_token will be fetched from User's session management.
+        :return:
+        """
+        s3_conn_obj = S3Plugin()
+        response = await s3_conn_obj.get_temp_credentials("test_s3_account", "test@123",
+                                                          connection_config=self.iam_connection_config)
+        return response.access_key, response.secret_key, response.session_token
+
+    @Log.trace_method(Log.DEBUG)
+    async def create_user(self, user_name: str, password: str, path: str = "/",
+                          require_reset=False):
+        """
+        This Method will create an IAM User in S3 user Account.
+        :param user_name: User name for New user. :type: str
+        :param password: Password for new IAM user :type: str
+        :param path: path for he user if defined else "/" :type: str
+        :return: {"msg": "User Created Successfully."}
+        """
+        access_key_id, secret_key_id, session_token = await self.create_s3_connection_obj()
+        s3_client_object = S3Client(access_key_id, secret_key_id,
+                                    self.iam_connection_config,
+                                    asyncio.get_event_loop(),
+                                    session_token)
+
+        user_creation_resp = await s3_client_object.create_user(user_name, path)
+        print(vars(user_creation_resp))
+        if hasattr(user_creation_resp, "error_code"):
+            return Response(rc=user_creation_resp.error_code,
+                            output=user_creation_resp.error_message)
+
+        user_login_profile_resp = await s3_client_object.create_user_login_profile(
+            user_name, password, require_reset)
+        print(vars(user_login_profile_resp))
+        if hasattr(user_login_profile_resp, "error_code"):
+            return Response(rc=user_login_profile_resp.error_code,
+                            output=user_login_profile_resp.error_message)
+
+        return Response(rc=200, output="User Created Successfully.")
+
+    def list_users(self, user_name: str = None):
         pass
 
     def delete_user(self, user_name: str):

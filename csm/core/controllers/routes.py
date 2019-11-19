@@ -20,6 +20,7 @@
 from .view import CsmView
 from .stats import StatsView
 from .system_config import SystemConfigView
+from .iam_users import IamUserCreateView
 from csm.core.data.storage.system_config import SystemConfigStorage
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 

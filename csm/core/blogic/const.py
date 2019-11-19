@@ -108,3 +108,6 @@ STATS_METRIC_LIST = {
 
 # UDS Server
 UDS_SERVER_URL = 'http://localhost:5000'
+
+#IAM User Related
+PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
