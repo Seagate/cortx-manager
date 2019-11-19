@@ -84,6 +84,7 @@ class IamUsersService(ApplicationService):
 
         return Response(rc=200, output="User Created Successfully.")
 
+    @Log.trace_method(Log.DEBUG)
     async def list_users(self, path_prefix=None, marker=None, max_items=None) -> Union[Response, List]:
         """
         This Method Fetches Iam User's
@@ -106,8 +107,29 @@ class IamUsersService(ApplicationService):
         iam_users_list["iam_users"] = [vars(each_user) for each_user in iam_users_list["iam_users"]]
         return iam_users_list
 
-    def delete_user(self, user_name: str):
-        pass
+    @Log.trace_method(Log.DEBUG)
+    async def delete_user(self, user_name: str):
+        """
+
+        :param user_name:
+        :return:
+        """
+        access_key_id, secret_key_id, session_token = await self.create_s3_connection_obj()
+        s3_client_object = S3Client(access_key_id, secret_key_id,
+                                    self.iam_connection_config,
+                                    asyncio.get_event_loop(),
+                                    session_token)
+        #Delete Given Iam User
+        user_delete_response =  s3_client_object.delete_user(user_name)
+
+        if hasattr(user_delete_response, "error_code"):
+            return Response(rc=user_delete_response.error_code,
+                            output=user_delete_response.error_message)
+
+        return Response(rc=200,
+                        output="User Deleted Successfully.")
+
+
 
     def update_user(self, user_name: str):
         pass

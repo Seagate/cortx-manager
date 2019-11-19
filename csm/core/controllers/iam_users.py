@@ -71,10 +71,13 @@ class IamUserListSchema(BaseValidatorIamUser):
     marker = fields.Str()
     max_items = fields.Integer()
 
+class IamUserDeleteSchema(BaseValidatorIamUser):
+    user_name = fields.Str(required=True)
+
 @CsmView._app_routes.view("/api/v1/iam_users")
-class IamUserCreateView(CsmView):
+class IamUserView(CsmView):
     async def get(self):
-        schema = IamUserListSchema()
+        schema = IamUserDeleteSchema()
         try:
             schema.load(self.request.query, unknown='EXCLUDE')
         except ValidationError as val_err:
@@ -91,3 +94,13 @@ class IamUserCreateView(CsmView):
             return InvalidRequest(str(val_err))
         iam_user_service_obj = IamUsersService()
         return await iam_user_service_obj.create_user(**body)
+
+
+@CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
+class IamUserSpecificView(CsmView):
+
+    async def delete(self):
+        user_name = self.request.match_info["user_name"]
+        iam_user_service_obj = IamUsersService()
+        return await iam_user_service_obj.delete_user
+
