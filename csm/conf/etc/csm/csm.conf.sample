@@ -41,6 +41,7 @@ STATS:
     PROVIDER:
         name: "timelion"
         url: "http://localhost:5601/api/timelion/run"
+        interval: 5 # Flush interval in sec (Rate at which stats is stored)
 
 #S3
 S3:
