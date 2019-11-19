@@ -24,6 +24,7 @@ from csm.common.log import Log
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 import asyncio
+from typing import Union, List
 
 class IamUsersService(ApplicationService):
     """
@@ -56,7 +57,7 @@ class IamUsersService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def create_user(self, user_name: str, password: str, path: str = "/",
-                          require_reset=False):
+                          require_reset=False) -> [Response]:
         """
         This Method will create an IAM User in S3 user Account.
         :param user_name: User name for New user. :type: str
@@ -83,8 +84,27 @@ class IamUsersService(ApplicationService):
 
         return Response(rc=200, output="User Created Successfully.")
 
-    def list_users(self, user_name: str = None):
-        pass
+    async def list_users(self, path_prefix=None, marker=None, max_items=None) -> Union[Response, List]:
+        """
+        This Method Fetches Iam User's
+        :param path_prefix: Path For user's Search "/account/sub_account/" :type:str
+        :param marker: marker for pagination :type:str
+        :param max_items: maximum number of Items :type: Int
+        :return:
+        """
+        access_key_id, secret_key_id, session_token = await self.create_s3_connection_obj()
+        s3_client_object = S3Client(access_key_id, secret_key_id,
+                                    self.iam_connection_config,
+                                    asyncio.get_event_loop(),
+                                    session_token)
+        #Fetch Iam Users
+        users_list_response = await s3_client_object.list_users(path_prefix, marker, max_items)
+        if hasattr(users_list_response, "error_code"):
+            return Response(rc=users_list_response.error_code,
+                            output=users_list_response.error_message)
+        iam_users_list = vars(users_list_response)
+        iam_users_list["iam_users"] = [vars(each_user) for each_user in iam_users_list["iam_users"]]
+        return iam_users_list
 
     def delete_user(self, user_name: str):
         pass

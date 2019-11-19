@@ -20,7 +20,7 @@
 
 import re
 from typing import Dict
-from marshmallow import Schema, fields, ValidationError, validates_schema
+from marshmallow import Schema, fields, ValidationError, validates_schema, validate
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView
 from csm.core.services.s3.iam_users import IamUsersService
@@ -62,12 +62,26 @@ class BaseValidatorIamUser(Schema):
 
 class IamUserCreateSchema(BaseValidatorIamUser):
     user_name = fields.Str(required=True)
-    password = fields.Str()
+    password = fields.Str(required=True)
     path = fields.Str(default='/')
     require_reset = fields.Boolean(default=False)
 
+class IamUserListSchema(BaseValidatorIamUser):
+    path_prefix = fields.Str(default="/", validate=validate.Length(min=1, max=512))
+    marker = fields.Str()
+    max_items = fields.Integer()
+
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserCreateView(CsmView):
+    async def get(self):
+        schema = IamUserListSchema()
+        try:
+            schema.load(self.request.query, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            return InvalidRequest(str(val_err))
+        iam_user_service_obj = IamUsersService()
+        return await iam_user_service_obj.list_users()
+
     async def post(self):
         schema = IamUserCreateSchema()
         try:
@@ -76,6 +90,4 @@ class IamUserCreateView(CsmView):
         except ValidationError as val_err:
             return InvalidRequest(str(val_err))
         iam_user_service_obj = IamUsersService()
-        data = await iam_user_service_obj.create_user(**body)
-        print(vars(data))
-        return data
+        return await iam_user_service_obj.create_user(**body)
