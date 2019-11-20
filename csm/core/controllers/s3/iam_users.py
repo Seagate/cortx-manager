@@ -3,8 +3,7 @@
 """
  ****************************************************************************
  Filename:          iam_users.py
- Description:       Infrastructure for invoking business logic locally or
-                    remotely or various available channels like REST.
+ Description:       Handles Routing for various operations done on S3 IAM users.
 
  Creation Date:     13/11/2019
  Author:            Prathamesh Rodi
@@ -20,17 +19,19 @@
 
 import re
 from typing import Dict
-from marshmallow import Schema, fields, ValidationError, validates_schema, validate
+from marshmallow import (Schema, fields, ValidationError, validates_schema, \
+    validate)
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView
 from csm.core.services.s3.iam_users import IamUsersService
 from csm.common.errors import InvalidRequest
 
 class BaseValidatorIamUser(Schema):
+
     @validates_schema
     def validate_password(self, data: Dict, *args, **kwargs):
         """
-        Validates the password subbmitted in Api as per S3 Standards.
+        Validates the password submitted in Api as per S3 Standards.
         :return:
         """
 
@@ -52,7 +53,8 @@ class BaseValidatorIamUser(Schema):
         if not re.search(r"[0-9]", password):
             raise ValidationError(
                 "Password must contain at least one Numeric value.")
-        if not re.search(r"["+"\\".join(const.PASSWORD_SPECIAL_CHARACTER) + "]" , password):
+        if not re.search(r"[" + "\\".join(const.PASSWORD_SPECIAL_CHARACTER) + "]",
+                         password):
             raise ValidationError(
                 f"Password must include at lease one of the {''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters.")
         if password == data.get('username', "") or password == data.get("email",
@@ -67,7 +69,8 @@ class IamUserCreateSchema(BaseValidatorIamUser):
     require_reset = fields.Boolean(default=False)
 
 class IamUserListSchema(BaseValidatorIamUser):
-    path_prefix = fields.Str(default="/", validate=validate.Length(min=1, max=512))
+    path_prefix = fields.Str(default="/",
+                             validate=validate.Length(min=1, max=512))
     marker = fields.Str()
     max_items = fields.Integer()
 
@@ -77,7 +80,7 @@ class IamUserDeleteSchema(BaseValidatorIamUser):
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserView(CsmView):
     async def get(self):
-        schema = IamUserDeleteSchema()
+        schema = IamUserListSchema()
         try:
             schema.load(self.request.query, unknown='EXCLUDE')
         except ValidationError as val_err:
@@ -95,12 +98,10 @@ class IamUserView(CsmView):
         iam_user_service_obj = IamUsersService()
         return await iam_user_service_obj.create_user(**body)
 
-
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
 class IamUserSpecificView(CsmView):
 
     async def delete(self):
         user_name = self.request.match_info["user_name"]
         iam_user_service_obj = IamUsersService()
-        return await iam_user_service_obj.delete_user
-
+        return await iam_user_service_obj.delete_user(user_name)
