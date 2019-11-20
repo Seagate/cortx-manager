@@ -113,7 +113,8 @@ class CsmAgent:
             f.write(str(os.getpid()))
 
     @staticmethod
-    def run(port):
+    def run():
+        port = Conf.get(const.CSM_GLOBAL_INDEX, 'RESOURCES.APPSV.port') or const.CSM_AGENT_PORT
         if not opt.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
@@ -153,7 +154,7 @@ if __name__ == '__main__':
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
 
         CsmAgent.init()
-        CsmAgent.run(const.CSM_AGENT_PORT)
+        CsmAgent.run()
     except Exception as e:
         raise e
         Log.error(traceback.format_exc())
