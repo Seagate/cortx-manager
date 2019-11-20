@@ -155,12 +155,14 @@ class CsmRestApi(CsmApi, ABC):
             if isinstance(resp, web.FileResponse):
                 return resp
 
+            status = 200
             if isinstance(resp, Response):
-                resp_obj = {'status': resp.rc(), 'message': resp.output()}
+                resp_obj = {'message': resp.output()}
+                status = resp.rc()
             else:
                 resp_obj = resp
 
-            return CsmRestApi.json_response(resp_obj, 200)
+            return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)

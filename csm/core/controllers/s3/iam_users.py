@@ -17,91 +17,93 @@
  ****************************************************************************
 """
 
-import re
-from typing import Dict
-from marshmallow import (Schema, fields, ValidationError, validates_schema, \
-    validate)
-from csm.core.blogic import const
+from marshmallow import (Schema, fields, ValidationError, validate, validates_schema)
+from csm.core.blogic.validators import StartsWith, Password
 from csm.core.controllers.view import CsmView
 from csm.core.services.s3.iam_users import IamUsersService
-from csm.common.errors import InvalidRequest
+from csm.core.providers.providers import Response
 
-class BaseValidatorIamUser(Schema):
-
-    @validates_schema
-    def validate_password(self, data: Dict, *args, **kwargs):
+class BaseSchema(Schema):
+    @staticmethod
+    def format_error(validation_error_obj: ValidationError) -> str:
         """
-        Validates the password submitted in Api as per S3 Standards.
-        :return:
+        This Method will Format Validation Error messages to Proper Error messages.
+        :param validation_error_obj: Validation Error Object :type: ValidationError
+        :return: String for all Validation Error Messages
         """
+        error_messages = []
+        for each_key in validation_error_obj.messages.keys():
+            error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
+        return "\n".join(error_messages)
 
-        # Check is password key exists else do not validates.
-        try:
-            password = data['password']
-        except KeyError:
-            return None
-
-        if len(password) < 8:
-            raise ValidationError(
-                "Password must be of more than 8 characters.")
-        if not re.search(r"[A-Z]", password):
-            raise ValidationError(
-                "Password must contain at least one Uppercase Alphabet.")
-        if not re.search(r"[a-z]", password):
-            raise ValidationError(
-                "Password must contain at least one Lowercase Alphabet.")
-        if not re.search(r"[0-9]", password):
-            raise ValidationError(
-                "Password must contain at least one Numeric value.")
-        if not re.search(r"[" + "\\".join(const.PASSWORD_SPECIAL_CHARACTER) + "]",
-                         password):
-            raise ValidationError(
-                f"Password must include at lease one of the {''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters.")
-        if password == data.get('username', "") or password == data.get("email",
-                                                                        ""):
-            raise ValidationError(
-                "Password should not be your username or email.")
-
-class IamUserCreateSchema(BaseValidatorIamUser):
-    user_name = fields.Str(required=True)
-    password = fields.Str(required=True)
-    path = fields.Str(default='/')
+class IamUserCreateSchema(BaseSchema):
+    user_name = fields.Str(required=True, validate=validate.Length(min=1,  max=64))
+    password = fields.Str(required=True, validate=[validate.Length(min=8, max=64), Password()])
+    path = fields.Str(default='/', validate=validate.Length(max=512))
     require_reset = fields.Boolean(default=False)
 
-class IamUserListSchema(BaseValidatorIamUser):
-    path_prefix = fields.Str(default="/",
-                             validate=validate.Length(min=1, max=512))
-    marker = fields.Str()
-    max_items = fields.Integer()
+    @validates_schema
+    def check_password(self, data, *args, **kwargs):
+        if data["password"] == data["user_name"]:
+            raise ValidationError("Password should not be your username or email.", field_name="password")
 
-class IamUserDeleteSchema(BaseValidatorIamUser):
-    user_name = fields.Str(required=True)
+class IamUserListSchema(BaseSchema):
+    path_prefix = fields.Str(default="/", validate=[validate.Length(max=512), StartsWith("/", True)])
+
+class IamUserDeleteSchema(BaseSchema):
+    user_name = fields.Str(required=True, validate=validate.Length(min=1, max=64))
 
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserView(CsmView):
     async def get(self):
+        """
+        Fetch list of IAM User's
+        """
         schema = IamUserListSchema()
         try:
-            schema.load(self.request.query, unknown='EXCLUDE')
+            data = schema.load(dict(self.request.query), unknown='EXCLUDE')
         except ValidationError as val_err:
-            return InvalidRequest(str(val_err))
-        iam_user_service_obj = IamUsersService()
-        return await iam_user_service_obj.list_users()
+            return Response(rc=400,
+                            output=schema.format_error(val_err))
+        # Fetch S3 access_key, secret_key and session_token from session
+        s3_session = self.request.session.data.s3_session
+        if not s3_session:
+            raise Response(rc=401, output="This user is not an S3 User")
+        # Execute List User Task
+        iam_user_service_obj = IamUsersService(s3_session)
+        return await iam_user_service_obj.list_users(**data)
 
     async def post(self):
+        """
+        Create's new IAM User.
+        """
         schema = IamUserCreateSchema()
         try:
             body = await self.request.json()
-            schema.load(body, unknown='EXCLUDE')
+            request_data = schema.load(body, unknown='EXCLUDE')
         except ValidationError as val_err:
-            return InvalidRequest(str(val_err))
-        iam_user_service_obj = IamUsersService()
-        return await iam_user_service_obj.create_user(**body)
+            return Response(rc=400,
+                            output=schema.format_error(val_err))
+        # Fetch S3 access_key, secret_key and session_token from session
+        s3_session = self.request.session.data.s3_session
+        if not s3_session:
+            raise Response(rc=401, output="This user is not an S3 User")
+        # Execute Create User Task
+        iam_user_service_obj = IamUsersService(s3_session)
+        return await iam_user_service_obj.create_user(**request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
 class IamUserSpecificView(CsmView):
 
     async def delete(self):
+        """
+        Delete IAM user
+        """
         user_name = self.request.match_info["user_name"]
-        iam_user_service_obj = IamUsersService()
+        #Fetch S3 access_key, secret_key and session_token from session
+        s3_session = self.request.session.data.s3_session
+        if not s3_session:
+            raise Response(rc=401, output="This user is not an S3 User")
+        # Execute Create Delete Task
+        iam_user_service_obj = IamUsersService(s3_session)
         return await iam_user_service_obj.delete_user(user_name)
