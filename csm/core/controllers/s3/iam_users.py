@@ -93,13 +93,19 @@ class IamUserView(CsmView):
         return await iam_user_service_obj.create_user(**request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
-class IamUserSpecificView(CsmView):
+class IamUserDeleteView(CsmView):
 
     async def delete(self):
         """
         Delete IAM user
         """
         user_name = self.request.match_info["user_name"]
+        schema = IamUserDeleteSchema()
+        try:
+            schema.load({"user_name": user_name}, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            return Response(rc=400,
+                            output=schema.format_error(val_err))
         #Fetch S3 access_key, secret_key and session_token from session
         s3_session = self.request.session.data.s3_session
         if not s3_session:
