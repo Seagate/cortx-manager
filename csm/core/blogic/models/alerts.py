@@ -41,7 +41,6 @@ class AlertModel(CsmModel):
     """
 
     _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
-    id = IntType()
     alert_uuid = StringType()
     status = StringType()
     type = StringType()

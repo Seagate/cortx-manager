@@ -68,9 +68,10 @@ NON_ROOT_USER_PASS = 'csm'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
-GOOD_ALERT = ['insertion', 'fault_resolved']
-BAD_ALERT = ['missing', 'fault']
-ALERT_ID = 'id'
+GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+SW = 'SW'
+HW = 'HW'
 ALERT_TYPE = 'type'
 ALERT_UUID = 'alert_uuid'
 ALERT_STATE = 'state'

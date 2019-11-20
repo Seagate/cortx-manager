@@ -13,7 +13,7 @@
     "extended_info.info": "message.sensor_response_type.info",
     "alert_uuid": "message.sensor_response_type.alert_id",
     "severity": "message.sensor_response_type.severity",
-    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.resource_id"]
+    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.cluster_id", "message.sensor_response_type.info.resource_id"]
   },
   "controller": {
     "created_time": "message.sensor_response_type.info.event_time",
@@ -29,7 +29,7 @@
     "extended_info.info": "message.sensor_response_type.info",
     "alert_uuid": "message.sensor_response_type.alert_id",
     "severity": "message.sensor_response_type.severity",
-    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.resource_id"]
+    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.cluster_id", "message.sensor_response_type.info.resource_id"]
   },
   "disk": {
     "created_time": "message.sensor_response_type.info.event_time",
@@ -45,7 +45,7 @@
     "extended_info.info": "message.sensor_response_type.info",
     "alert_uuid": "message.sensor_response_type.alert_id",
     "severity": "message.sensor_response_type.severity",
-    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.resource_id"]
+    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.cluster_id", "message.sensor_response_type.info.resource_id"]
   },
   "psu": {
     "created_time": "message.sensor_response_type.info.event_time",
@@ -61,6 +61,22 @@
     "extended_info.info": "message.sensor_response_type.info",
     "alert_uuid": "message.sensor_response_type.alert_id",
     "severity": "message.sensor_response_type.severity",
-    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.resource_id"]
+    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.cluster_id", "message.sensor_response_type.info.resource_id"]
+  },
+  "sideplane": {
+    "created_time": "message.sensor_response_type.info.event_time",
+    "state": "message.sensor_response_type.alert_type",
+    "module_name": "message.sensor_response_type.resource_type",
+    "status": "message.sensor_response_type.specific_info.status",
+    "health": "message.sensor_response_type.specific_info.health",
+    "description": "message.sensor_response_type.specific_info.health-reason",
+    "location": "message.sensor_response_type.specific_info.location",
+    "health_recommendation": "message.sensor_response_type.specific_info.health-recommendation",
+    "enclosure_id": "message.sensor_response_type.specific_info.enclosure-id",
+    "extended_info": "message.sensor_response_type.specific_info",
+    "extended_info.info": "message.sensor_response_type.info",
+    "alert_uuid": "message.sensor_response_type.alert_id",
+    "severity": "message.sensor_response_type.severity",
+    "hw_identifier": ["message.sensor_response_type.info.site_id", "message.sensor_response_type.info.rack_id", "message.sensor_response_type.info.node_id", "message.sensor_response_type.info.cluster_id", "message.sensor_response_type.info.resource_id"]
   }
 }
