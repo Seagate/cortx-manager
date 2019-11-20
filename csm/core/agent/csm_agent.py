@@ -74,8 +74,9 @@ class CsmAgent:
                                               CsmAgent._push_alert)
 
         #Stats service creation
-        sp = import_plugin_module('stats.stats').StatsPlugin(TimelionProvider())
-        CsmRestApi._app["stat_service"] = StatsAppService(sp)
+        time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
+        time_series_provider.init()
+        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
     @staticmethod
     def _daemonize():

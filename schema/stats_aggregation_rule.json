@@ -1,23 +1,539 @@
 {
     "throughput": {
-        "read": "(.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val)).abs().label(read)",
-        "write": "(.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val)).abs().label(write)",
-        "total": "(((.es(q=act:*BACKEND.bin, timefield=@timestamp, index=statsd-*, metric=avg:val).abs()), (.es(q=act:*BACKEND.bout, timefield=@timestamp, index=statsd*, metric=avg:val).abs())).abs().sum()).label(total)"
+        "axis": {
+            "y": "bytes",
+            "x": "timestamp"
+        },
+        "metrics": [
+            {
+                "name": "read",
+                "node": [
+                    {
+                        "val": {
+                            "index": "statsd-*",
+                            "metric": "*BACKEND.bin",
+                            "timestamp": "@timestamp",
+                            "method": "avg:val"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "write",
+                "node": [
+                    {
+                        "val": {
+                            "index": "statsd-*",
+                            "metric": "*BACKEND.bout",
+                            "timestamp": "@timestamp",
+                            "method": "avg:val"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "total",
+                "node": [
+                    {
+                        "val": "+",
+                        "node": [
+                            {
+                                "val": {
+                                    "index": "statsd-*",
+                                    "metric": "*BACKEND.bin",
+                                    "timestamp": "@timestamp",
+                                    "method": "avg:val"
+                                }
+                            },
+                            {
+                                "val": {
+                                    "index": "statsd-*",
+                                    "metric": "*BACKEND.bout",
+                                    "timestamp": "@timestamp",
+                                    "method": "avg:val"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     },
     "latency": {
-        "total_request_time": ".es(q=act:total_request_time, timefield=@timestamp, index=statsd-*, metric=avg:mean).abs().label(total_request_time)",
-        "create_object": "((.es(q=act:create_object_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:multipart_create_object_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:chunkupload_create_object_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:create_object_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:multipart_create_object_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:chunkupload_create_object_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(6)).label(create_object)",
-        "delete_object": "((.es(q=act:delete_object_from_clovis_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:delete_objects_from_clovis_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:delete_object_from_clovis_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:delete_objects_from_clovis_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(4)).label(delete_object)",
-        "write_object": "((.es(q=act:write_to_clovis_op_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:write_to_clovis_op_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(2)).label(write_object)",
-        "read_object": "((.es(q=act:read_object_data_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:read_object_data_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(2)).label(read_object)",
-        "getkv": "((.es(q=act:get_keyval_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:get_keyval_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(2)).label(getkv)",
-        "putkv": "((.es(q=act:put_keyval_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:put_keyval_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(2)).label(putkv)",
-        "deletekv": "((.es(q=act:delete_keyval_success, timefield=@timestamp, index=statsd-*, metric=avg:mean), .es(q=act:delete_keyval_failed, timefield=@timestamp, index=statsd-*, metric=avg:mean)).abs().sum().divide(2)).label(deletekv)"
+        "axis": {
+            "y": "miliseconds",
+            "x": "timestamp"
+        },
+        "metrics": [
+            {
+                "name": "total_request_time",
+                "node": [
+                    {
+                        "val": {
+                            "index": "statsd-*",
+                            "metric": "total_request_time",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "create_object",
+                "node": [
+                    {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "create_object_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "multipart_create_object_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "chunkupload_create_object_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "create_object_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "multipart_create_object_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "chunkupload_create_object_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 6
+                    }
+                ]
+            },
+            {
+                "name": "delete_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_object_from_clovis_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_objects_from_clovis_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_object_from_clovis_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_objects_from_clovis_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 4
+                    }
+                ]
+            },
+            {
+                "name": "write_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "write_to_clovis_op_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "write_to_clovis_op_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            },
+            {
+                "name": "read_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "read_object_data_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "read_object_data_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            },
+            {
+                "name": "read_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "read_object_data_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "read_object_data_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            },
+            {
+                "name": "getkv",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_keyval_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_keyval_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            },
+            {
+                "name": "putkv",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "put_keyval_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "put_keyval_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            },
+            {
+                "name": "deletekv",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_keyval_success",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "delete_keyval_failed",
+                                            "timestamp": "@timestamp",
+                                            "method": "avg:mean"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": 2
+                    }
+                ]
+            }
+        ]
     },
     "iops": {
-        "read_object": "(((.es(q=act:get_object_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs(), .es(q=act:get_multipart_parts_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs()).sum()).divide(10)).label(read_object)",
-        "write_object": "(((.es(q=act:put_object_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs(), .es(q=act:put_multipart_part_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs()).sum()).divide(10)).label(write_object)",
-        "read_bucket": "(((.es(q=act:get_bucket_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs(), .es(q=act:get_multipart_bucket_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs()).sum()).divide(10)).label(read_bucket)",
-        "write_bucket": "((.es(q=act:put_bucket_request_count, timefield=@timestamp, index=statsd-*, metric=sum:val).abs()).divide(10)).label(write_bucket)"
+        "axis": {
+            "y": "iops",
+            "x": "timestamp"
+        },
+        "metrics": [
+            {
+                "name": "read_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_object_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_multipart_parts_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            },
+            {
+                "name": "write_object",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "put_object_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "put_multipart_part_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            },
+            {
+                "name": "read_bucket",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_bucket_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "get_multipart_bucket_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            },
+            {
+                "name": "write_bucket",
+                "node": [
+                   {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd-*",
+                                            "metric": "put_bucket_request_count",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            }
+        ]
     }
 }
