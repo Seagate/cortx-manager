@@ -2,7 +2,7 @@
 
 """
  ****************************************************************************
- Filename:          s3_iam_users.py
+ Filename:          iam_users.py
  Description:       Handles Routing for various operations done on S3 IAM users.
 
  Creation Date:     13/11/2019
