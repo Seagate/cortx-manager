@@ -102,8 +102,8 @@ class TimelionProvider(TimeSeriesProvider):
                                         "mode":"quick", \
                                         "to":"$to_t" \
                                 }}')
-        self._timelion_query = Template('.es(q=act:$metric, timefield=$timestamp, \
-                                index=$index, metric=$method).abs()')
+        self._timelion_query = Template('.es(q=act:$metric, timefield=$timestamp, ' +
+                                'index=$index, metric=$method).abs()')
 
     def init(self):
         try:
@@ -133,7 +133,10 @@ class TimelionProvider(TimeSeriesProvider):
                     output = self._parse(node["node"], output)
                     output = "(" + output + ")." + self._metric_set[node["val"]]
                 elif node["val"] in self._config_list.keys():
-                    output = output[:-1] + str(self._config_list["interval"]) + ")"
+                    cv = self._config_list[node["val"]]
+                    if cv is None:
+                        raise CsmInternalError('Can not load config parameter "%s"' %node["val"])
+                    output = output[:-1] + str(cv) + ")"
                 else:
                     raise CsmInternalError("Invalid value %s " %node["val"])
             elif type(node["val"]) is int:
@@ -142,7 +145,7 @@ class TimelionProvider(TimeSeriesProvider):
                 if output is "":
                     output = self._parse_query(node["val"])
                 else:
-                    output = output + " , " + self._parse_query(node["val"])
+                    output = "(" + output + "),(" + self._parse_query(node["val"])+")"
         return output
 
     def _parse_query(self, val):
@@ -235,7 +238,7 @@ class TimelionProvider(TimeSeriesProvider):
                 operation_stats = { 'data' : datapoint, 'label': str(s["label"]) }
                 li.append(operation_stats)
         else:
-            raise CsmInternalError("Failed to convert timelion responce  %s" %timelion_payload)
+            raise CsmInternalError("Failed to convert timelion response  %s" %timelion_payload)
         res_payload["list"] = li
         return json.dumps(res_payload)
 
