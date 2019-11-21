@@ -20,5 +20,5 @@
 from .alerts import AlertsHttpController
 from .usl import UslController
 from .routes import CsmRoutes
-
+from .s3_iam_users import IamUserListView, IamUserView
 # from .csm import CsmCliView
