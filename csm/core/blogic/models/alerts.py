@@ -19,7 +19,7 @@
 import sys
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from abc import ABC, abstractmethod
 from csm.common.queries import SortBy, QueryLimits, DateTimeRange
 from typing import Optional, Iterable
@@ -28,37 +28,63 @@ import threading
 import errno
 
 from schematics.models import Model
-from schematics.types import IntType, StringType, DateType
+from schematics.types import IntType, StringType, DateType, BooleanType, DateTimeType
 
 from .base import CsmModel
 
 
 # This is an example of how Alert model can look like
-class AlertExample(CsmModel):
+class AlertModel(CsmModel):
 
     """
     Alert model example
     """
 
     _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
-    id = IntType()
-    alert_uuid = IntType()
+    alert_uuid = StringType()
     status = StringType()
+    #TODO
+    """
+    1. Currently we are not consuming alert_type so keeping the 
+    placeholder for now.
+    2. alert_type should be derived from SSPL message's
+    info.resource_type field
+    3. Once a requirement comes for consuming alert_type, we should
+    make use of info.resource_type and derive the alert type. 
     type = StringType()
+    """
     enclosure_id = IntType()
     module_name = StringType()
     description = StringType()
     health = StringType()
     health_recommendation = StringType()
     location = StringType()
-    resolved = IntType()
-    acknowledged = IntType()
-    severity = IntType()
+    resolved = BooleanType()
+    acknowledged = BooleanType()
+    severity = StringType()
     state = StringType()
     extended_info = StringType()  # May be a Nested object
     module_type = StringType()
-    updated_time = DateType()  # TODO: Set date format
-    created_time = DateType()  # TODO: Set date format
+    updated_time = DateTimeType()
+    created_time = DateTimeType()
+    hw_identifier = StringType()
+    comment = StringType()
+
+    def to_primitive(self) -> dict:
+        obj = super().to_primitive()
+
+        if self.updated_time:
+            obj["updated_time"] =\
+                    int(self.updated_time.replace(tzinfo=timezone.utc).timestamp())
+        if self.created_time:
+            obj["created_time"] =\
+                    int(self.created_time.replace(tzinfo=timezone.utc).timestamp())
+        return obj
+
+    def __hash__(self):
+        return hash(self.alert_uuid)
+
+
 
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of

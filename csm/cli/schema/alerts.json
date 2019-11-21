@@ -27,7 +27,7 @@
         },
         {
           "flag": "-a",
-          "dest": "all",
+          "dest": "show_all",
           "action": "store_const",
           "help": "Display All Alerts",
           "default": "false",
@@ -82,7 +82,7 @@
       "args": [
         {
           "flag": "alerts_id",
-          "type": "int",
+          "type": "str",
           "help": "Alert Id"
         },
         {
@@ -118,7 +118,7 @@
       "args": [
         {
           "flag": "alerts_id",
-          "type": "int",
+          "type": "str",
           "help": "Alert Id"
         },
         {

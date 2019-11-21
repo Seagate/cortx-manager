@@ -12,3 +12,6 @@ jsonschema==3.0.2
 boto==2.49.0
 marshmallow==3.2.1
 schematics==2.1.0
+python-consul==1.1.0
+elasticsearch==7.0.4
+elasticsearch-dsl==7.0.0
