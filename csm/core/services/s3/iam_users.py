@@ -24,7 +24,7 @@ from csm.common.log import Log
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from typing import Union, Dict
-from csm.core.blogic.models.s3 import IamErrors, IamError
+from csm.core.data.models.s3 import IamErrors, IamError
 from csm.common.errors import CsmInternalError
 
 class IamUsersService(ApplicationService):
