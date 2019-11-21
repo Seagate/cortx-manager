@@ -101,6 +101,7 @@ class IamErrors(Enum):
     InvalidAccessKeyId = 'InvalidAccessKeyId'
     InvalidParameterValue = 'InvalidParameterValue'
     NoSuchEntity = 'NoSuchEntity'
+    ExpiredCredential = 'ExpiredCredential'
 
 
 class IamError:

@@ -107,12 +107,3 @@ UDS_SERVER_URL = 'http://localhost:5000'
 
 #IAM User Related
 PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
-
-
-WINDOWS_PATH = "H:\\727892\\Documents\\"
-INVENTORY_FILE = WINDOWS_PATH+"cluster.conf" #'/etc/csm/cluster.conf'
-CSM_CONF = WINDOWS_PATH+"csm.conf" #'/etc/csm/csm.conf'
-CSM_CLUSTER_CONF = WINDOWS_PATH+"cluster.conf" #'/etc/csm/cluster.conf'
-COMPONENTS_CONF = WINDOWS_PATH+"components.yaml" #'/etc/csm/components.yaml'
-COMMAND_DIRECTORY = ".\\commands"
-AGGREGATION_RULE = WINDOWS_PATH + "csm\\schema\\stats_aggregation_rule.json"

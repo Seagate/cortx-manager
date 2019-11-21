@@ -34,6 +34,7 @@ class IamUsersService(ApplicationService):
 
     def __init__(self, s3plugin):
         self._s3plugin = s3plugin
+        #S3 Connection Object.
         self._iam_connection_config = IamConnectionConfig()
         self._iam_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
         self._iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.port")
@@ -46,8 +47,6 @@ class IamUsersService(ApplicationService):
         :param s3_session:  S3 Account Logged in info. :type: Dict
         :return:
         """
-        # Create Connection Object for S3
-
         #Create S3 Client Connection Object
         s3_client_object = self._s3plugin.get_client(s3_session["access_key_id"],
                                     s3_session["secret_key_id"],
@@ -57,19 +56,18 @@ class IamUsersService(ApplicationService):
         return s3_client_object
 
     @Log.trace_method(Log.DEBUG)
-    async def create_user(self, user_name: str, password: str, s3_session: Dict, path: str = "/",
-                          require_reset=False) -> [Response, Dict]:
+    async def create_user(self,  s3_session: Dict, user_name: str, password: str, path: str = "/", require_reset=False) -> [Response, Dict]:
         """
         This Method will create an IAM User in S3 user Account.
+        :param s3_session: S3 session's details. :type: dict
         :param user_name: User name for New user. :type: str
         :param password: Password for new IAM user :type: str
         :param path: path for he user if defined else "/" :type: str
         :param require_reset: Required to reset Password :type: bool
-        :return: {"msg": "User Created Successfully."}
         """
 
         # Create Iam User in System.
-        s3_client = self.fetch_s3_client(s3_session)
+        s3_client = await self.fetch_s3_client(s3_session)
         user_creation_resp = await s3_client.create_user(user_name, path)
         if hasattr(user_creation_resp, "error_code"):
             return await  self._handle_error(user_creation_resp)
@@ -86,10 +84,11 @@ class IamUsersService(ApplicationService):
     async def list_users(self,  s3_session: Dict, path_prefix="/") -> Union[Response, Dict]:
         """
         This Method Fetches Iam User's
+        :param s3_session: S3 session's details. :type: dict
         :param path_prefix: Path For user's Search "/account/sub_account/" :type:str
         :return:
         """
-        s3_client = self.fetch_s3_client(s3_session)
+        s3_client = await  self.fetch_s3_client(s3_session)
         #Fetch IAM Users
         users_list_response = await s3_client.list_users(path_prefix)
         if hasattr(users_list_response, "error_code"):
@@ -102,10 +101,11 @@ class IamUsersService(ApplicationService):
     async def delete_user(self,  s3_session: Dict, user_name: str) -> Dict:
         """
         This method deletes the s3 Iam user.
+        :param s3_session: S3 session's details. :type: dict
         :param user_name: S3 User Name :type: str
         :return:
         """
-        s3_client = self.fetch_s3_client(s3_session)
+        s3_client = await  self.fetch_s3_client(s3_session)
         #Delete Given Iam User
         user_delete_response = await  s3_client.delete_user(user_name)
         if hasattr(user_delete_response, "error_code"):
@@ -117,12 +117,19 @@ class IamUsersService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def _handle_error(self, iam_error_obj:  IamError):
+        """
+        This Method Handles various responses returned  by S3 and convert's them
+        Rest API format
+        :param iam_error_obj: Error object.
+        :return:
+        """
         status_code_mapping = {
             IamErrors.EntityAlreadyExists.value : 409,
             IamErrors.OperationNotSupported.value : 404,
             IamErrors.InvalidAccessKeyId.value : 422,
             IamErrors.InvalidParameterValue.value : 400,
-            IamErrors.NoSuchEntity.value : 404
+            IamErrors.NoSuchEntity.value : 404,
+            IamErrors.ExpiredCredential.value : 401
         }
         if iam_error_obj.error_code not in status_code_mapping.keys():
             return CsmInternalError(iam_error_obj)
