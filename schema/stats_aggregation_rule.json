@@ -10,7 +10,7 @@
                 "node": [
                     {
                         "val": {
-                            "index": "statsd-*",
+                            "index": "statsd_guage-*",
                             "metric": "*BACKEND.bin",
                             "timestamp": "@timestamp",
                             "method": "avg:val"
@@ -23,7 +23,7 @@
                 "node": [
                     {
                         "val": {
-                            "index": "statsd-*",
+                            "index": "statsd_guage-*",
                             "metric": "*BACKEND.bout",
                             "timestamp": "@timestamp",
                             "method": "avg:val"
@@ -39,7 +39,7 @@
                         "node": [
                             {
                                 "val": {
-                                    "index": "statsd-*",
+                                    "index": "statsd_guage-*",
                                     "metric": "*BACKEND.bin",
                                     "timestamp": "@timestamp",
                                     "method": "avg:val"
@@ -47,7 +47,7 @@
                             },
                             {
                                 "val": {
-                                    "index": "statsd-*",
+                                    "index": "statsd_guage-*",
                                     "metric": "*BACKEND.bout",
                                     "timestamp": "@timestamp",
                                     "method": "avg:val"
@@ -70,7 +70,7 @@
                 "node": [
                     {
                         "val": {
-                            "index": "statsd-*",
+                            "index": "statsd_timerdata-*",
                             "metric": "total_request_time",
                             "timestamp": "@timestamp",
                             "method": "avg:mean"
@@ -89,7 +89,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "create_object_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -97,40 +97,8 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
-                                            "metric": "multipart_create_object_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
-                                            "metric": "chunkupload_create_object_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "create_object_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
-                                            "metric": "multipart_create_object_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
-                                            "metric": "chunkupload_create_object_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
                                         }
@@ -140,7 +108,7 @@
                         ]
                     },
                     {
-                        "val": 6
+                        "val": 2
                     }
                 ]
             },
@@ -155,7 +123,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_object_from_clovis_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -163,7 +131,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_objects_from_clovis_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -171,7 +139,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_object_from_clovis_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -179,7 +147,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_objects_from_clovis_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -205,7 +173,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "write_to_clovis_op_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -213,7 +181,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "write_to_clovis_op_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -239,7 +207,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "read_object_data_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -247,41 +215,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
-                                            "metric": "read_object_data_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
-                    }
-                ]
-            },
-            {
-                "name": "read_object",
-                "node": [
-                   {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
-                                            "metric": "read_object_data_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "read_object_data_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -307,7 +241,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "get_keyval_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -315,7 +249,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "get_keyval_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -341,7 +275,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "put_keyval_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -349,7 +283,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "put_keyval_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -375,7 +309,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_keyval_success",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -383,7 +317,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_timerdata-*",
                                             "metric": "delete_keyval_failed",
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
@@ -417,7 +351,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "get_object_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -425,7 +359,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "get_multipart_parts_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -451,7 +385,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "put_object_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -459,7 +393,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "put_multipart_part_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -485,7 +419,7 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "get_bucket_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -493,7 +427,7 @@
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd-*",
+                                            "index": "statsd_counter-*",
                                             "metric": "get_multipart_bucket_request_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
@@ -515,17 +449,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd-*",
-                                            "metric": "put_bucket_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "put_bucket_request_count",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },
