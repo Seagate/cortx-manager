@@ -104,3 +104,6 @@ AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 
 # UDS Server
 UDS_SERVER_URL = 'http://localhost:5000'
+
+#IAM User Related
+PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]

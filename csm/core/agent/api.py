@@ -162,12 +162,14 @@ class CsmRestApi(CsmApi, ABC):
             if isinstance(resp, web.FileResponse):
                 return resp
 
+            status = 200
             if isinstance(resp, Response):
-                resp_obj = {'status': resp.rc(), 'message': resp.output()}
+                resp_obj = {'message': resp.output()}
+                status = resp.rc()
             else:
                 resp_obj = resp
 
-            return CsmRestApi.json_response(resp_obj, 200)
+            return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
@@ -175,6 +177,9 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except web_exceptions.HTTPError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
+        except KeyError as e:
+            message = f"Missing Key for {e}"
+            return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request), status=422)
         except Exception as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
