@@ -78,6 +78,10 @@ class CsmAgent:
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
+        #S3 plugin creation
+        s3 = import_plugin_module('s3').S3Plugin()
+        CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
+
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -138,6 +142,7 @@ if __name__ == '__main__':
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService, AlertRepository
         from csm.core.services.stats import StatsAppService
+        from csm.core.services.s3.s3_accounts import S3AccountService
         from csm.core.services.usl import UslService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi

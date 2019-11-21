@@ -100,6 +100,8 @@ class IamErrors(Enum):
     OperationNotSupported = 'OperationNotSupported'
     InvalidAccessKeyId = 'InvalidAccessKeyId'
     InvalidParameterValue = 'InvalidParameterValue'
+    InvalidLdapUserId = 'InvalidLdapUserId'
+    NoSuchEntity = 'NoSuchEntity'
 
 
 class IamError:
