@@ -55,3 +55,23 @@ class StatsAppService(ApplicationService):
                                                   interval = interval,
                                                   output_format = output_format,
                                                   query = query)
+
+    async def get_operations(self, panel):
+        """
+        Fetch available operations list for panel
+        """
+        operation_list_dict_keys = await self._stats_provider.get_operations(panel)
+        return {"operation_list": list(operation_list_dict_keys)}
+
+    async def get_axis(self, panel):
+        """
+        Fetch axis unit for selected panel
+        """
+        return {"axis_unit": await self._stats_provider.get_axis(panel)}
+
+    async def get_panel_list(self):
+        """
+        Fetch Panels list
+        """
+        panels_list_dict_keys = await self._stats_provider.get_panels()
+        return {"panel_list": list(panels_list_dict_keys)}
