@@ -2,7 +2,7 @@
 
 """
  ****************************************************************************
- Filename:          iam_users.py
+ Filename:          s3_iam_users.py
  Description:       Handles Routing for various operations done on S3 IAM users.
 
  Creation Date:     13/11/2019
@@ -60,11 +60,12 @@ class IamUserListView(CsmView):
         Instantiation Method for Iam user view class
         """
         super(IamUserListView, self).__init__(request)
+        # Fetch S3 access_key, secret_key and session_token from session
         s3_session = self.request.session.data.s3_session
         if not s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
-        # Execute List User Task
-        self._iam_user_client = IamUsersService(s3_session)
+
+        self._service = self.request.app["s3_account_service"]
 
 
     async def get(self):
@@ -77,9 +78,8 @@ class IamUserListView(CsmView):
         except ValidationError as val_err:
             return Response(rc=400,
                             output=schema.format_error(val_err))
-        # Fetch S3 access_key, secret_key and session_token from session
-
-        return await self._iam_user_client.list_users(**data)
+        # Execute List User Task
+        return await self._service.list_users(**data)
 
     async def post(self):
         """
@@ -93,7 +93,7 @@ class IamUserListView(CsmView):
             return Response(rc=400,
                             output=schema.format_error(val_err))
         # Fetch S3 access_key, secret_key and session_token from session
-        return await self._iam_user_client.create_user(**request_data)
+        return await self._service.create_user(**request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
 class IamUserView(CsmView):
@@ -103,11 +103,11 @@ class IamUserView(CsmView):
         Instantiation Method for Iam user view class
         """
         super(IamUserView, self).__init__(request)
+        # Fetch S3 access_key, secret_key and session_token from session
         s3_session = self.request.session.data.s3_session
         if not s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
-        # Execute List User Task
-        self._iam_user_client = IamUsersService(s3_session)
+        self._service = self.request.app["s3_account_service"]
 
     async def delete(self):
         """
@@ -120,5 +120,5 @@ class IamUserView(CsmView):
         except ValidationError as val_err:
             return Response(rc=400,
                             output=schema.format_error(val_err))
-        #Fetch S3 access_key, secret_key and session_token from session
-        return await self._iam_user_client.delete_user(user_name)
+        # Delete Iam User
+        return await self._service.delete_user(user_name)
