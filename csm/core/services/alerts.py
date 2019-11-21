@@ -23,7 +23,7 @@
 import asyncio
 import re
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict
 from threading import Event, Thread
 from csm.common.log import Log
@@ -33,10 +33,111 @@ from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
 import time
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.core.data.access.filters import Compare, And, Or
+from csm.core.data.access import Query, SortOrder
+from csm.core.blogic.models.alerts import AlertModel
+from csm.common import queries
+from schematics import Model
+from schematics.types import StringType, BooleanType, IntType
+from typing import Optional, Iterable
+
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 ALERTS_MSG_NOT_FOUND = "alerts_not_found"
 ALERTS_MSG_NOT_RESOLVED = "alerts_not_resolved"
+ALERTS_MSG_TOO_LONG_COMMENT = "alerts_too_long_comment"
+ALERTS_MSG_RESOLVED_AND_ACKED_ERROR = "alerts_resolved_and_acked"
+ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
+
+
+
+class AlertRepository(IAlertStorage):
+    def __init__(self, storage: DataBaseProvider):
+        self.db = storage
+
+    async def store(self, alert: AlertModel):
+        await self.db(AlertModel).store(alert)
+
+    async def retrieve(self, alert_id) -> AlertModel:
+        query = Query().filter_by(Compare(AlertModel.alert_uuid, '=', alert_id))
+        return next(iter(await self.db(AlertModel).get(query)), None)
+
+    async def retrieve_by_hw(self, hw_id) -> AlertModel:
+        filter = And(Compare(AlertModel.hw_identifier, '=',
+                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
+                        False), Compare(AlertModel.resolved, '=', False)))
+                
+        query = Query().filter_by(filter)
+        return next(iter(await self.db(AlertModel).get(query)), None)
+
+    async def update(self, alert: AlertModel):
+        await self.db(AlertModel).store(alert)
+
+    async def update_by_hw_id(self, hw_id, update_params):
+        filter = And(Compare(AlertModel.hw_identifier, '=',
+                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
+                        False), Compare(AlertModel.resolved, '=', False)))
+        await self.db(AlertModel).update(filter, update_params)
+
+    def _prepare_filters(self, time_range: DateTimeRange, show_all: bool = True,
+            severity: str = None, resolved: bool = None, acknowledged: bool =
+            None):
+        query_conditions = []
+
+        if time_range and time_range.start:
+            query_conditions.append(Compare(AlertModel.created_time, '>=', time_range.start))
+        if time_range and time_range.end:
+            query_conditions.append(Compare(AlertModel.created_time, '<=', time_range.end))
+
+        if not show_all:
+            query_conditions.append(
+                Or(Compare(AlertModel.resolved, '=', False),
+                    Compare(AlertModel.acknowledged, '=', False)))
+        else:
+            if resolved is not None:
+                query_conditions.append(Compare(AlertModel.resolved, '=', resolved))
+            if acknowledged is not None:
+                query_conditions.append(Compare(AlertModel.acknowledged, '=',
+                    acknowledged))
+
+        if severity:
+            query_conditions.append(Compare(AlertModel.severity, '=', severity))
+
+        return And(*query_conditions) if query_conditions else None
+
+    async def retrieve_by_range(
+            self, time_range: DateTimeRange, show_all: bool=True,
+            severity: str=None, sort: Optional[SortBy]=None,
+            limits: Optional[QueryLimits]=None, resolved: bool = None,
+            acknowledged: bool = None) -> Iterable[AlertModel]:
+        query_filter = self._prepare_filters(time_range, show_all, severity,
+                resolved, acknowledged)
+        query = Query().filter_by(query_filter)
+
+        if limits and limits.offset:
+            query = query.offset(limits.offset)
+
+        if limits and limits.limit:
+            query = query.limit(limits.limit)
+
+        if sort:
+            query = query.order_by(getattr(AlertModel, sort.field), sort.order)
+
+        return await self.db(AlertModel).get(query)
+
+    async def count_by_range(self, time_range: DateTimeRange, show_all: bool = True,
+            severity: str = None, resolved: bool = None,
+                        acknowledged: bool = None) -> int:
+        return await self.db(AlertModel).count(
+            self._prepare_filters(time_range, show_all, severity, resolved,
+                acknowledged))
+
+    async def retrieve_all(self) -> list:
+        """
+        Retrieves all the alerts
+        """
+        pass
 
 
 class AlertsAppService(ApplicationService):
@@ -44,10 +145,10 @@ class AlertsAppService(ApplicationService):
         Provides operations on alerts without involving the domain specifics
     """
 
-    def __init__(self, storage: IAlertStorage):
-        self._storage = storage
+    def __init__(self, repo: AlertRepository):
+        self.repo = repo
 
-    async def update_alert(self, alert_id, fields):
+    async def update_alert(self, alert_id, fields: dict):
         """
         Update the Data of Specific Alerts
         :param alert_id: id for the alert
@@ -57,32 +158,46 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
-        alert = await self._storage.retrieve(alert_id)
+
+        alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
 
+        if alert.resolved and alert.acknowledged:
+            raise InvalidRequest(
+                "The alert is both resolved and acknowledged, it cannot be modified",
+                ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
+
         if "comment" in fields:
-            # TODO: Alert should contain such fields directly, not as a
-            #   dictionary accessible by data() method
-            alert.data()["comment"] = fields["comment"]
+            alert.comment = fields["comment"]
+            max_len = const.ALERT_MAX_COMMENT_LENGTH
+            if len(alert.comment) > max_len:
+                raise InvalidRequest("Alert size exceeds the maximum length of {}".format(max_len),
+                    ALERTS_MSG_TOO_LONG_COMMENT, {"max_length": max_len})
+
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
-                raise TypeError("Acknowledged Value Must Be of Type Boolean.")
-            alert.data()["acknowledged"] = fields["acknowledged"]
+                raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
+            alert.acknowledged = AlertModel.acknowledged.to_native(fields["acknowledged"])
 
-        await self._storage.update(alert)
-        return alert.data()
+        await self.repo.update(alert)
+        return alert.to_primitive()
 
-    async def fetch_all_alerts(self, duration, direction, sort_by,
-                               offset: Optional[int],
-                               page_limit: Optional[int]) -> Dict:
+    async def fetch_all_alerts(self, duration, direction, sort_by, severity: Optional[str] = None,
+                               offset: Optional[int] = None, show_all: Optional[bool] = True,
+                               page_limit: Optional[int] = None, resolved: bool =
+                               None, acknowledged: bool = None) -> Dict:
         """
         Fetch All Alerts
         :param duration: time duration for range of alerts
         :param direction: direction of sorting asc/desc
+        :param severity: if passed, alerts will be filtered by the passed severity
         :param sort_by: key by which sorting needs to be performed.
         :param offset: offset page (1-based indexing)
         :param page_limit: no of records to be displayed on a page.
+        :param resolved: alerts filtered by resolved status when show_all is true.
+        :param acknowledged: alerts filtered by acknowledged status when 
+        show_all is true.
         :return: :type:list
         """
         time_range = None
@@ -96,22 +211,31 @@ class AlertsAppService(ApplicationService):
                 **{dur[time_format]: time_duration}))
             time_range = DateTimeRange(start_time, None)
 
+        if sort_by and sort_by not in const.ALERT_SORTABLE_FIELDS:
+            raise InvalidRequest("The specified column cannot be used for sorting",
+                ALERTS_MSG_NON_SORTABLE_COLUMN)
+
         limits = None
         if offset is not None and offset > 1:
             limits = QueryLimits(page_limit, (offset - 1) * page_limit)
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
-        alerts_list = await self._storage.retrieve_by_range(
+        alerts_list = await self.repo.retrieve_by_range(
             time_range,
+            show_all,
+            severity,
             SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
-            limits
+            limits,
+            resolved,
+            acknowledged
         )
 
-        alerts_count = await self._storage.count_by_range(time_range)
+        alerts_count = await self.repo.count_by_range(time_range, show_all,
+                severity, resolved, acknowledged)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.data() for alert in alerts_list]
+            "alerts": [alert.to_primitive() for alert in alerts_list]
         }
 
     async def fetch_alert(self, alert_id):
@@ -122,10 +246,10 @@ class AlertsAppService(ApplicationService):
             :returns: Alert object or None
         """
         # This method is for debugging purposes only
-        alert = await self._storage.retrieve(alert_id)
+        alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.data()
+        return alert.to_primitive()
 
 
 class AlertMonitorService(Service):
@@ -140,7 +264,7 @@ class AlertMonitorService(Service):
     web server. 
     """
 
-    def __init__(self, storage: IAlertStorage, plugin, alert_handler_cb):
+    def __init__(self, repo: AlertRepository, plugin, alert_handler_cb):
         """
         Initializes the Alert Plugin
         """
@@ -150,19 +274,16 @@ class AlertMonitorService(Service):
         self._thread_started = False
         self._thread_running = False
         self._loop = asyncio.get_event_loop()
-        self._storage = storage
+        self.repo = repo
+        self.unpublished_alerts = set() 
 
     def init(self):
         """
         This function will scan the DB for pending alerts and send it over the
         back channel.
         """
-
-        def nonpublished(_, alert):
-            return not alert.is_published()
-
-        for alert in self._storage.select(nonpublished):
-            self._publish(alert)
+        while self.unpublished_alerts:
+            self._publish(self.pop())
 
     def _monitor(self):
         """
@@ -196,36 +317,9 @@ class AlertMonitorService(Service):
         except Exception as e:
             Log.exception(e)
 
-    def save_alert(self, alert):
-        # This implementation uses threads, but storage is supposed to be async
-        # So we put the task onto the main event loop and wait for its completion
-
-        alert_task = asyncio.run_coroutine_threadsafe(
-            self._storage.store(alert), self._loop)
-
-        alert_task.result()  # wait for completion
-
-    def get_alert(self, alert_id) -> Optional[Alert]:
-        """
-        Get the single from the DB for the alert_id
-        :param alert_id: ID for Alerts.
-        :return: Alert Object
-        """
-        alert_task = asyncio.run_coroutine_threadsafe(
-            self._storage.retrieve(alert_id, {}), self._loop)
-        result = alert_task.result(timeout=2)
-        return  result # wait for completion
-
-    def get_all_alerts(self):
-        """
-        Get the list of all the alerts from storage
-        :param None
-        :return: list of Alert objects
-        """
-        alert_task = asyncio.run_coroutine_threadsafe\
-                (self._storage.retrieve_all(), self._loop)
-        result = alert_task.result(timeout=2)
-        return result
+    def _run_coro(self, coro):
+        task = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return task.result()
 
     def _consume(self, message):
         """
@@ -237,7 +331,6 @@ class AlertMonitorService(Service):
             3. Return a boolean value to signal whether the plugin
                should acknowledge the alert to the RabbitMQ.
         """
-        alert = Alert(message)
         prev_alert = None
         """
         Before storing the alert let us fisrt try to resolve it.
@@ -257,48 +350,66 @@ class AlertMonitorService(Service):
         set the resolved state to False.
         """
         """ Fetching the previous alert. """
-        prev_alert = self._get_prev_alert(alert)
-        if prev_alert is None:
-            """ Previous alert not found means it is a new one fo store and
-            publish it to WS."""
-            self._save_and_publish(alert)
-            """ Checking for duplicate alert. """
-        elif not self._is_duplicate_alert(alert, prev_alert):
-            if self._is_good_alert(alert):
+        try:
+            Log.debug("Incoming alert : [%s]" %(message))
+            message['extended_info'] = str(message.get('extended_info'))
+            for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
+                message[key] = datetime.utcfromtimestamp(message[key])\
+                        .replace(tzinfo=timezone.utc)
+
+            prev_alert = self._run_coro(self.repo.retrieve_by_hw\
+                    (message.get(const.ALERT_HW_IDENTIFIER, "")))
+            if not prev_alert:
+                alert = AlertModel(message)
+                self.unpublished_alerts.add(alert)
+                self._run_coro(self.repo.store(alert))
+                self._publish(alert)
+            else:
+                self._resolve_alert(message, prev_alert)
+        except Exception as e:
+            Log.exception(e)
+
+        return True
+
+    def _resolve_alert(self, new_alert, prev_alert):
+        if not self._is_duplicate_alert(new_alert, prev_alert):
+            if self._is_good_alert(new_alert):
                 """
                 If it is a good alert checking the state of previous alert.
                 """
                 if self._is_good_alert(prev_alert):
-                    """ Previous alert is a good one so updating. """ 
-                    self._update_and_save(alert, prev_alert)
+                    """ Previous alert is a good one so updating. """
+                    self._update_alert(new_alert, prev_alert)
                 else:
                     """ Previous alert is a bad one so resolving it. """
-                    self._resolve(alert, prev_alert)
-            elif self._is_bad_alert(alert):
+                    self._resolve(new_alert, prev_alert)
+            elif self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
                 """
                 if self._is_bad_alert(prev_alert):
-                    """ Previous alert is a bad one so updating. """ 
-                    self._update_and_save(alert, prev_alert)
+                    """ Previous alert is a bad one so updating. """
+                    self._update_alert(new_alert, prev_alert)
                 else:
-                    """ 
+                    """
                     Previous alert is a good one so updating and marking the
-                    resolved status to False. 
-                    """ 
-                    self._update_and_save(alert, prev_alert, True)
-        return True
+                    resolved status to False.
+                    """
+                    self._update_alert(new_alert, prev_alert, True)        
 
-    def _save_and_publish(self, alert):
+    def _is_duplicate_alert(self, new_alert, prev_alert):
         """
-        Save the alerts to storage and publish them onto WS.
-        :param alert : Alert object
-        :return: None
+        Check whether the alerts is duplicate or not based on state.
+        :param alert : New Alert Dict
+        :param prev_alert : Previous Alert object
+        :return: boolean (True or False) 
         """
-        self.save_alert(alert)
-        self._publish(alert)
+        ret = False
+        if new_alert.get('state', "") == prev_alert.state:
+            ret = True
+        return ret
 
-    def _update_and_save(self, alert, prev_alert, update_resolve=False):
+    def _update_alert(self, alert, prev_alert, update_resolve=False):
         """
         Update the alerts to storage.
         :param alert : Alert object
@@ -307,24 +418,16 @@ class AlertMonitorService(Service):
         False
         :return: None
         """
+        update_params = {}
         if update_resolve:
-            prev_alert.data()['resolved'] = alert.data()['resolved']
-            prev_alert.resolved(False)
-        self._update_prev_alert(alert, prev_alert)
-        self.save_alert(prev_alert)
-
-    def _is_duplicate_alert(self, alert, prev_alert):
-        """
-        Check whether the alerts is duplicate or not based on state.
-        :param alert : Alert object
-        :param prev_alert : Previous Alert object
-        :return: boolean (True or False) 
-        """
-        ret = False
-        if alert.data().get('state', "") == \
-                prev_alert.data().get('state', ""):
-            ret = True
-        return ret
+            update_params["resolved"] = alert['resolved']
+        else:
+            update_params["resolved"] = prev_alert.resolved
+        update_params["state"] = alert['state']
+        update_params["severity"] = alert['severity']
+        update_params["updated_time"] = int(time.time())
+        self._run_coro(self.repo.update_by_hw_id\
+                (prev_alert.hw_identifier, update_params))
 
     def _is_good_alert(self, alert):
         """
@@ -333,7 +436,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.data().get('state', "") in const.GOOD_ALERT:
+        if alert.get('state', "") in const.GOOD_ALERT:
             ret = True
         return ret
 
@@ -344,38 +447,9 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.data().get('state', "") in const.BAD_ALERT:
+        if alert.get('state', "") in const.BAD_ALERT:
             ret = True
         return ret
-
-    def _get_prev_alert(self, alert):
-        """
-        Get the previously stored alert for the hw
-        :param alert: Alert's object.
-        :return: Alert Object
-        """
-        prev_alert = None
-        alert_list = self.get_all_alerts()
-        for value in alert_list:
-            if value.data().get("hw_identifier_list", '') == \
-                    alert.data().get("hw_identifier_list", ''):
-                prev_alert = value
-                break
-
-        return prev_alert
-
-    def _update_prev_alert(self, alert, prev_alert):
-        """
-        Update the previously stored alert for the hw
-        :param alert: Alert's object.
-        :param prev_alert: Previous Alert's object.
-        :return: None
-        """
-        if not prev_alert == None:
-            prev_alert.data()['state'] = alert.data()['state'] 
-            prev_alert.data()['severity'] = alert.data()['severity'] 
-            prev_alert.data()['updated_time'] = int(time.time())
-
 
     def _resolve(self, alert, prev_alert):
         """
@@ -383,15 +457,15 @@ class AlertMonitorService(Service):
         :param alert: Alert Object.
         :return: None
         """
-        if not prev_alert.is_resolved():
+        if not prev_alert.resolved:
             """
             Try to resolve the alert if the previous alert is bad and
             the current alert is good.
             """
-            prev_alert.data()['resolved'] = True 
-            prev_alert.resolved(True)
-            self._update_and_save(alert, prev_alert)
+            prev_alert.resolved = True 
+            #prev_alert.resolved(True)
+            self._update_alert(alert, prev_alert)
 
     def _publish(self, alert):
-        if self._handle_alert(alert.data()):
-            alert.publish()
+        if self._handle_alert(alert.to_primitive()):
+            self.unpublished_alerts.discard(alert)

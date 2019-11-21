@@ -68,9 +68,10 @@ NON_ROOT_USER_PASS = 'csm'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
-GOOD_ALERT = ['insertion', 'fault_resolved']
-BAD_ALERT = ['missing', 'fault']
-ALERT_ID = 'id'
+GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+SW = 'SW'
+HW = 'HW'
 ALERT_TYPE = 'type'
 ALERT_UUID = 'alert_uuid'
 ALERT_STATE = 'state'
@@ -89,6 +90,9 @@ ALERT_FALSE = 0
 ALERT_SENSOR_TYPE = 'sensor_response_type'
 ALERT_MESSAGE = 'message'
 ALERT_COMMENT = 'comment'
+ALERT_HW_IDENTIFIER = 'hw_identifier'
+ALERT_MAX_COMMENT_LENGTH = 255
+ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved', 'acknowledged']
 
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
