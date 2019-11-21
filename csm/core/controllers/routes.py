@@ -22,7 +22,7 @@ from .stats import StatsView
 from .system_config import SystemConfigView
 from csm.core.data.storage.system_config import SystemConfigStorage
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-from csm.core.controllers.s3.iam_users import IamUserView,  IamUserDeleteView
+from csm.core.controllers.s3_iam_users import IamUserView,  IamUserListView
 
 
 class CsmRoutes():

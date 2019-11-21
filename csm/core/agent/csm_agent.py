@@ -112,7 +112,7 @@ if __name__ == '__main__':
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService
         from csm.core.services.stats import StatsAppService
-        from csm.core.services.s3.iam_users import IamUsersService
+        from csm.core.services.s3.s3_iam_users import IamUsersService
         from csm.core.services.usl import UslService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi

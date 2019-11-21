@@ -18,14 +18,16 @@
 """
 
 import os
-import pwd
-import crypt
+# import pwd
+# import crypt
 import errno
 from csm.common.errors import CsmError
 from csm.common.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
+
+pwd =crypt ={}
 
 class SetupProvider(Provider):
     """ Provider implementation for csm initialization """

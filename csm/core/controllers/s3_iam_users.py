@@ -20,7 +20,6 @@
 from marshmallow import (Schema, fields, ValidationError, validate, validates_schema)
 from csm.core.blogic.validators import StartsWith, Password
 from csm.core.controllers.view import CsmView
-from csm.core.services.s3.iam_users import IamUsersService
 from csm.core.providers.providers import Response
 
 class BaseSchema(Schema):
@@ -61,11 +60,11 @@ class IamUserListView(CsmView):
         """
         super(IamUserListView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        s3_session = self.request.session.data.s3_session
-        if not s3_session:
+        self._s3_session = {"access_key_id": "sbuYSnuPT4KMA35wjzqU-g", "secret_key_id": "//8HG/nhb45J+Z9s8A4xqAAW8pGD4SDs25dFvtTU",
+                      "session_token": "Gok8y3lL4XYhM0vR4Fg4m31ZJSj03h4zswp/4x+m"}  # self.request.session.data.s3_session
+        if not self._s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
 
-        self._service = self.request.app["s3_iam_users_service"]
 
     async def get(self):
         """
@@ -78,7 +77,8 @@ class IamUserListView(CsmView):
             return Response(rc=400,
                             output=schema.format_error(val_err))
         # Execute List User Task
-        return await self._service.list_users(**data)
+        _service = await self.request.app["s3_iam_users_service"]
+        return await _service.list_users(**data, s3_session=self._s3_session)
 
     async def post(self):
         """
@@ -92,6 +92,7 @@ class IamUserListView(CsmView):
             return Response(rc=400,
                             output=schema.format_error(val_err))
         # Create User
+        _service = await self.request.app["s3_iam_users_service"]
         return await self._service.create_user(**request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
@@ -102,10 +103,11 @@ class IamUserView(CsmView):
         """
         super(IamUserView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        s3_session = self.request.session.data.s3_session
+        s3_session = {"access_key_id": "sbuYSnuPT4KMA35wjzqU-g",
+                      "secret_key_id": "//8HG/nhb45J+Z9s8A4xqAAW8pGD4SDs25dFvtTU",
+                      "session_token": "Gok8y3lL4XYhM0vR4Fg4m31ZJSj03h4zswp/4x+m"}  # self.request.session.data.s3_session
         if not s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
-        self._service = self.request.app["s3_iam_users_service"]
 
     async def delete(self):
         """
@@ -119,4 +121,5 @@ class IamUserView(CsmView):
             return Response(rc=400,
                             output=schema.format_error(val_err))
         # Delete Iam User
-        return await self._service.delete_user(user_name)
+        _service = await self.request.app["s3_iam_users_service"]
+        return await _service.delete_user(user_name)
