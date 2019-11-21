@@ -240,7 +240,7 @@ class TimelionProvider(TimeSeriesProvider):
         else:
             raise CsmInternalError("Failed to convert timelion response  %s" %timelion_payload)
         res_payload["list"] = li
-        return json.dumps(res_payload)
+        return res_payload
 
     async def _get_list(self, li):
         """
