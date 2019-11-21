@@ -28,7 +28,7 @@ import traceback
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from abc import ABC
-
+from secure import SecureHeaders
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.common.payload import *
@@ -95,7 +95,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.rest_middleware]
+            middlewares=[CsmRestApi.set_secure_headers, CsmRestApi.rest_middleware]
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
@@ -146,6 +146,13 @@ class CsmRestApi(CsmApi, ABC):
     def json_response(resp_obj, status=200):
         return web.json_response(
             resp_obj, status=status, dumps=CsmRestApi.json_serializer)
+
+    @staticmethod
+    @web.middleware
+    async def set_secure_headers(request, handler):
+        resp = await handler(request)
+        SecureHeaders(csp=True).aiohttp(resp)
+        return resp
 
     @staticmethod
     @web.middleware

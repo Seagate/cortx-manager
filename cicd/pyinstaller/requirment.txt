@@ -15,3 +15,5 @@ schematics==2.1.0
 python-consul==1.1.0
 elasticsearch==7.0.4
 elasticsearch-dsl==7.0.0
+secure==0.2.1
+
