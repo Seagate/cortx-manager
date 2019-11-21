@@ -170,6 +170,9 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except web_exceptions.HTTPError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
+        except KeyError as e:
+            message = f"Missing Key for {e}"
+            return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request), status=422)
         except Exception as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
