@@ -102,7 +102,7 @@
                                             "timestamp": "@timestamp",
                                             "method": "avg:mean"
                                         }
-                                    },
+                                    }
                                 ]
                             }
                         ]
@@ -449,17 +449,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "put_bucket_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "put_bucket_request_count",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },

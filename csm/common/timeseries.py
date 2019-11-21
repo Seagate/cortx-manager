@@ -102,8 +102,8 @@ class TimelionProvider(TimeSeriesProvider):
                                         "mode":"quick", \
                                         "to":"$to_t" \
                                 }}')
-        self._timelion_query = Template(".es(q=act:$metric, timefield=$timestamp, " +
-                                "index=$index, metric=$method).abs()")
+        self._timelion_query = Template('.es(q=act:$metric, timefield=$timestamp, ' +
+                                'index=$index, metric=$method).abs()')
 
     def init(self):
         try:
