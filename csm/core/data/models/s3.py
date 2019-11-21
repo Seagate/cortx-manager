@@ -102,6 +102,7 @@ class IamErrors(Enum):
     InvalidParameterValue = 'InvalidParameterValue'
     NoSuchEntity = 'NoSuchEntity'
     ExpiredCredential = 'ExpiredCredential'
+    InvalidLdapUserId = 'InvalidLdapUserId'
 
 
 class IamError:

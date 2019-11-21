@@ -81,6 +81,7 @@ class CsmAgent:
         #S3 Plugin creation
         s3 = import_plugin_module('s3').S3Plugin()
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
+        CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
 
     @staticmethod
     def _daemonize():
@@ -143,6 +144,7 @@ if __name__ == '__main__':
                                             AlertMonitorService, AlertRepository
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
+        from csm.core.services.s3.s3_accounts import S3AccountService
         from csm.core.services.usl import UslService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
