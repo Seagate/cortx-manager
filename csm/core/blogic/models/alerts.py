@@ -43,7 +43,16 @@ class AlertModel(CsmModel):
     _id = "alert_uuid"  # reference to another Alert model field to consider it as primary key
     alert_uuid = StringType()
     status = StringType()
+    #TODO
+    """
+    1. Currently we are not consuming alert_type so keeping the 
+    placeholder for now.
+    2. alert_type should be derived from SSPL message's
+    info.resource_type field
+    3. Once a requirement comes for consuming alert_type, we should
+    make use of info.resource_type and derive the alert type. 
     type = StringType()
+    """
     enclosure_id = IntType()
     module_name = StringType()
     description = StringType()

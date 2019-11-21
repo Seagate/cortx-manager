@@ -7,10 +7,6 @@
       "type": "string",
       "description": "Unique id to identify an alert."
     },
-    "type": {
-      "type": "string",
-      "description": "Type of alert (e.g. HW|SW)"
-    },
     "state": {
       "type": "string",
       "description": "State of the alert (e.g. missing| insertion etc.)"
