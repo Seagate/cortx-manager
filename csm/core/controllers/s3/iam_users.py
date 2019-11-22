@@ -45,8 +45,8 @@ class IamUserCreateSchema(BaseSchema):
     """
     user_name = fields.Str(required=True,
                            validate=[validate.Length(min=1, max=64),
-                                     validate.Regexp(r".*[^ ].*",
-                                                     error="Value is required.")])
+                                     validate.Regexp(r"^[a-zA-Z0-9_-]*$",
+                                                     error="Username can only contain Alphanumeric, - and  _ .")])
     password = fields.Str(required=True, validate=[validate.Length(min=8, max=64), Password()])
     path = fields.Str(default='/', validate=[validate.Length(max=512), StartsWith("/", True)])
     require_reset = fields.Boolean(default=False)
@@ -66,7 +66,9 @@ class IamUserDeleteSchema(BaseSchema):
     """
     IAM user delete schema validation class
     """
-    user_name = fields.Str(required=True, validate=[validate.Length(min=1, max=64), validate.Regexp(r".*[^ ].*", error="Value is required.")])
+    user_name = fields.Str(required=True, validate=[validate.Length(min=1, max=64),
+                                                    validate.Regexp(r"^[a-zA-Z0-9_-]*$",
+                                                        error="Username can only contain Alphanumeric, - and  _ .")])
 
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserListView(CsmView):
