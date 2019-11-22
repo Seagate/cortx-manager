@@ -28,7 +28,7 @@ import traceback
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from abc import ABC
-
+from secure import SecureHeaders
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.common.payload import *
@@ -95,7 +95,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.rest_middleware]
+            middlewares=[CsmRestApi.set_secure_headers, CsmRestApi.rest_middleware]
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
@@ -149,18 +149,27 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     @web.middleware
+    async def set_secure_headers(request, handler):
+        resp = await handler(request)
+        SecureHeaders(csp=True).aiohttp(resp)
+        return resp
+
+    @staticmethod
+    @web.middleware
     async def rest_middleware(request, handler):
         try:
             resp = await handler(request)
             if isinstance(resp, web.FileResponse):
                 return resp
 
+            status = 200
             if isinstance(resp, Response):
-                resp_obj = {'status': resp.rc(), 'message': resp.output()}
+                resp_obj = {'message': resp.output()}
+                status = resp.rc()
             else:
                 resp_obj = resp
 
-            return CsmRestApi.json_response(resp_obj, 200)
+            return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
@@ -168,6 +177,9 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except web_exceptions.HTTPError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
+        except KeyError as e:
+            message = f"Missing Key for {e}"
+            return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request), status=422)
         except Exception as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 

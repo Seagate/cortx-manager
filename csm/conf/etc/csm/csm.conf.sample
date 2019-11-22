@@ -41,3 +41,11 @@ STATS:
     PROVIDER:
         name: "timelion"
         url: "http://localhost:5601/api/timelion/run"
+        interval: 10 # Flush interval in sec (Rate at which stats is stored)
+
+#S3
+    host: "localhost"
+    port: 9080
+    max_retries_num: 1
+    ldap_login: "sgiamadmin"
+    ldap_password: "ldapadmin"

@@ -33,10 +33,15 @@ this will go into models
 class AlertsQueryParameter(Schema):
     duration = fields.Str(default=None, missing=None)
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
-            default=0, missing=0)
-    limit = fields.Int(default=5, validate=validate.Range(min=0), missing=5)
-    sortby = fields.Str(default="created_time", missing="created_time")
-    dir = fields.Str(validate=validate.OneOf(['desc', 'asc']), missing='asc')
+        default=0, missing=0)
+    page_limit = fields.Int(data_key='limit', default=5, validate=validate.Range(min=0), missing=5)
+    sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
+    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
+        missing='desc', default='desc')
+    show_all = fields.Boolean(default=True, missing=True, allow_none=True)
+    severity = fields.Str(default=None, missing=None, allow_none=True)
+    resolved = fields.Boolean(default=None, missing=None)
+    acknowledged = fields.Boolean(default=None, missing=None)
 
     @validates('duration')
     def validate_duration(self, value):
@@ -66,9 +71,7 @@ class AlertsListView(web.View):
             raise InvalidRequest(
                 "Invalid Parameter for alerts", str(val_err))
 
-        return await self.alerts_service.fetch_all_alerts(
-            alert_data["duration"], alert_data["dir"], alert_data["sortby"],
-            alert_data["offset"], alert_data["limit"])
+        return await self.alerts_service.fetch_all_alerts(**alert_data)
 
 
 class AlertsView(web.View):
@@ -83,7 +86,7 @@ class AlertsView(web.View):
             body = await self.request.json()
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        return await self.alerts_service.update_alert(int(alert_id), body)
+        return await self.alerts_service.update_alert(alert_id, body)
 
 
 # AIOHTTP does not provide a way to pass custom parameters to its views.

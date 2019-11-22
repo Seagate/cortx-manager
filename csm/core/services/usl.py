@@ -17,7 +17,7 @@
  ****************************************************************************
 """
 
-from aiohttp import ClientSession
+from aiohttp import web, ClientSession
 from random import SystemRandom
 from typing import Any, Dict, List
 from uuid import UUID, uuid5, NAMESPACE_URL
@@ -172,31 +172,28 @@ class UslService(ApplicationService):
         async with ClientSession() as session:
             endpoint_url = const.UDS_SERVER_URL + '/uds/v1/registration/RegisterDevice'
             params = {'url': url, 'regPin': pin, 'regToken': self._token}
+            Log.info(f'Start device registration at {const.UDS_SERVER_URL}')
             async with session.put(endpoint_url, params=params) as response:
-                Log.info(f'Start device registration at {const.UDS_SERVER_URL}')
                 if response.status != 201:
-                    desc = 'Could not start device registration (status code {response.status})'
-                    Log.error(desc)
-                    raise CsmError(desc=desc)
-                Log.info('Device registration is in process---waiting for confirmation')
-            # Confirm registration with a exponential backoff strategy, 10 attempts
-            for n in range(10):
-                wait_seconds = 0b1 << n
-                Log.info(f'Attempt #{n + 1} to confirm device registration, wait {wait_seconds}s')
-                await asyncio.sleep(wait_seconds)
+                    reason = 'Could not start device registration'
+                    Log.error(f'{reason}---unexpected status code {response.status}')
+                    raise web.HTTPInternalServerError(reason=reason)
+            Log.info('Device registration in process---waiting for confirmation')
+            timeout_limit = time.time() + 60
+            while time.time() < timeout_limit:
                 async with session.get(endpoint_url) as response:
-                    if response.status == 201:
-                        continue
-                    elif response.status == 200:
-                        Log.info('Device was successfully registered.')
-                        break
-                    desc = f'Device registration failed (status code {response.status})'
-                    Log.error(desc)
-                    raise CsmError(desc=desc)
+                    if response.status == 200:
+                        Log.info('Device registration successful')
+                        return
+                    elif response.status != 201:
+                        reason = 'Device registration failed'
+                        Log.error(f'{reason}---unexpected status code {response.status}')
+                        raise web.HTTPInternalServerError(reason=reason)
+                await asyncio.sleep(1)
             else:
-                desc = 'Could not confirm device registration status'
-                Log.error(desc)
-                raise CsmError(desc=desc)
+                reason = 'Could not confirm device registration status'
+                Log.error(reason)
+                raise web.HTTPGatewayTimeout(reason=reason)
 
     # TODO replace stub
     async def get_registration_token(self) -> Dict[str, str]:

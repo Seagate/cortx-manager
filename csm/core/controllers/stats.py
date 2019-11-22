@@ -36,13 +36,32 @@ class StatsView(CsmView):
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug("Handling stats request")
-        stats_id = self.request.rel_url.query.get("id", None)
+        getopt = self.request.rel_url.query.get("get", None)
         panel = self.request.match_info["panel"]
-        from_t = self.request.rel_url.query.get("from", None)
-        to_t = self.request.rel_url.query.get("to", None)
-        metric_list = self.request.rel_url.query.getall("metric_list", [])
-        interval = self.request.rel_url.query.get("interval", None)
-        output_format = self.request.rel_url.query.get("output_format", "gui")
-        query = self.request.rel_url.query.get("query", "")
-        return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
-                                        interval, output_format, query)
+        if getopt == "operation":
+            return await self._service.get_operations(panel)
+        elif getopt == "axis_unit":
+            return await self._service.get_axis(panel)
+        else:
+            stats_id = self.request.rel_url.query.get("id", None)
+            from_t = self.request.rel_url.query.get("from", None)
+            to_t = self.request.rel_url.query.get("to", None)
+            metric_list = self.request.rel_url.query.getall("metric_list", [])
+            interval = self.request.rel_url.query.get("interval", "")
+            output_format = self.request.rel_url.query.get("output_format", "gui")
+            query = self.request.rel_url.query.get("query", "")
+            return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
+                                           interval, output_format, query)
+
+@CsmView._app_routes.view("/api/v1/stats")
+class StatsPanelListView(CsmView):
+    def __init__(self, request):
+        super(StatsPanelListView, self).__init__(request)
+        self._service = self.request.app["stat_service"]
+    """
+    GET REST implementation for Statistics Get Panel List request
+    """
+    async def get(self):
+        """Calling Stats Get Method"""
+        Log.debug("Handling Stats Get Panel List request")
+        return await self._service.get_panel_list()
