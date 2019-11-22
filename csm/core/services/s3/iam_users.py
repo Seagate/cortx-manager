@@ -25,7 +25,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from typing import Union, Dict
 from csm.core.data.models.s3 import IamErrors, IamError
-from csm.common.errors import CsmInternalError
+from csm.common.errors import CsmError
 
 class IamUsersService(ApplicationService):
     """
@@ -68,6 +68,8 @@ class IamUsersService(ApplicationService):
 
         # Create Iam User in System.
         s3_client = await self.fetch_s3_client(s3_session)
+        if path and path[-1] != "/":
+            path = f"{path}/"
         user_creation_resp = await s3_client.create_user(user_name, path)
         if hasattr(user_creation_resp, "error_code"):
             return await  self._handle_error(user_creation_resp)
@@ -89,6 +91,8 @@ class IamUsersService(ApplicationService):
         :return:
         """
         s3_client = await  self.fetch_s3_client(s3_session)
+        if path_prefix and path_prefix[-1] != "/":
+            path_prefix = f"{path_prefix}/"
         #Fetch IAM Users
         users_list_response = await s3_client.list_users(path_prefix)
         if hasattr(users_list_response, "error_code"):
@@ -131,7 +135,5 @@ class IamUsersService(ApplicationService):
             IamErrors.NoSuchEntity.value : 404,
             IamErrors.ExpiredCredential.value : 401
         }
-        if iam_error_obj.error_code not in status_code_mapping.keys():
-            return CsmInternalError(iam_error_obj)
-        return Response(rc=status_code_mapping.get(iam_error_obj.error_code),
+        return Response(rc=status_code_mapping.get(iam_error_obj.error_code.value, 500),
                     output=iam_error_obj.error_message)

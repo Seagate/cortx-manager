@@ -172,15 +172,20 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except CsmNotFoundError as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmError as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except web_exceptions.HTTPError as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
         except KeyError as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request), status=422)
         except Exception as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
     @staticmethod
