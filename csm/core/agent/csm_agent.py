@@ -33,7 +33,9 @@ class CsmAgent:
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
         alerts_service = AlertsAppService(alerts_storage)
-        usl_service = UslService()
+
+        s3_plugin = import_plugin_module('s3')
+        usl_service = UslService(s3_plugin.S3Plugin())
 
         CsmRestApi.init(alerts_service, usl_service)
         pm = import_plugin_module('alert')

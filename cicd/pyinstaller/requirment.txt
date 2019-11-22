@@ -13,3 +13,5 @@ jsonschema==3.0.2
 boto==2.49.0
 marshmallow==3.2.1
 schematics==2.1.0
+dataclasses==0.7
+salt==2019.2.2

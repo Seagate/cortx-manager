@@ -108,3 +108,6 @@ STATS_METRIC_LIST = {
 
 # UDS Server
 UDS_SERVER_URL = 'http://localhost:5000'
+
+# USL S3 configuration (CES2020 only!)
+USL_S3_CONF = '/etc/uds/uds_s3.toml'

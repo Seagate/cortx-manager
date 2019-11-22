@@ -20,15 +20,22 @@
 from aiohttp import ClientSession
 from random import SystemRandom
 from typing import Any, Dict, List
-from uuid import UUID
+from uuid import UUID, uuid5, NAMESPACE_URL
 import asyncio
 import time
+import salt.config
+import salt.minion
+import toml
 
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError, CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+from csm.core.blogic.models.s3 import S3ConnectionConfig
+from csm.core.blogic.models.usl import Device, Volume, MountResponse
 
+DEFAULT_EOS_DEVICE_NAME = 'cloudstore'
+DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 
 class UslService(ApplicationService):
     """
@@ -37,33 +44,80 @@ class UslService(ApplicationService):
     # FIXME improve token management
     _token: str
     _fake_system_serial_number: str
+    _s3cli: Any
+    _device: Device
+    _volumes: Dict[str, Dict[str, Any]]
 
-    def __init__(self) -> None:
+    def __init__(self, s3_plugin) -> None:
         """
         Constructor.
         """
         self._token = ''
         self._fake_system_serial_number = 'EES%012d' % time.time()
+        self._s3cli = self._create_s3cli(s3_plugin)
+        self._device = Device(DEFAULT_EOS_DEVICE_NAME, '0000', self._fake_system_serial_number,
+            'internal', self._get_device_uuid(), DEFAULT_EOS_DEVICE_VENDOR)
+        self._volumes = {}
+        self._buckets = {}
 
-    # TODO replace stub
+    def _create_s3cli(self, s3_plugin):
+        """Hard coded workaround to pass S3 server details to USL. Only for CES!"""
+
+        toml_conf = toml.load(const.USL_S3_CONF)
+        s3_conf = S3ConnectionConfig()
+        s3_conf.host = toml_conf['server']['host']
+        s3_conf.port = toml_conf['server']['port']
+        return s3_plugin.get_s3_client(toml_conf['credentials']['access_key_id'],
+            toml_conf['credentials']['secret_key'], s3_conf)
+
+    def _get_device_uuid(self) -> UUID:
+        """Obtains the EOS device UUID from config."""
+
+        opts = salt.config.minion_config('/etc/salt/minion')
+        grains = salt.loader.grains(opts)
+        return UUID(grains['cluster_id'])
+
+    def _get_volume_uuid(self, bucket_name: str) -> UUID:
+        """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
+
+        return uuid5(self._device.uuid, bucket_name)
+
+    async def _update_volumes_cache(self):
+        """
+        Updates the internal buckets cache.
+
+        Obtains the fresh buckets list from S3 server and updates cache with it.
+        Keeps cache the same if the server is not available.
+        """
+
+        try:
+            buckets = await self._s3cli.get_all_buckets()
+
+            fresh_buckets =  [b.name for b in buckets]
+            cached_buckets = [v['bucketName'] for _,v in self._volumes.items()]
+
+            # Remove staled volumes
+            self._volumes = {k:v for k,v in self._volumes.items()
+                             if v['bucketName'] in fresh_buckets}
+            # Add new volumes
+            for b in fresh_buckets:
+                if not b in cached_buckets:
+                    volume_uuid = self._get_volume_uuid(b)
+                    self._volumes[volume_uuid] = {'bucketName' : b,
+                                                  'volume' : Volume(self._device.uuid, 's3', 0, 0,
+                                                                    volume_uuid)}
+        except Exception as e:
+            raise CsmInternalError(desc=f'Unable to update buckets cache: {str(e)}')
+
+
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
-        return [
-            {
-                'name': 'a_name',
-                'productID': 'a_product_id',
-                'serialNumber': '000000000000',
-                'type': 'Internal',
-                'uuid': '00000000-0000-0000-0000-000000000000',
-                'vendorID': 'a_vendor_id',
-            },
-        ]
+        return [vars(self._device)]
 
-    # TODO replace stub
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
         """
         Provides a list of all volumes associated to a specific device.
@@ -71,17 +125,11 @@ class UslService(ApplicationService):
         :param device_id: Device UUID
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-        return [
-            {
-                'deviceUuid': '00000000-0000-0000-0000-000000000000',
-                'filesystem': 'a_filesystem',
-                'size': 0,
-                'used': 0,
-                'uuid': '00000000-0000-0000-0000-000000000001',
-            },
-        ]
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+        await self._update_volumes_cache()
+        return [vars(v['volume']) for uuid,v in self._volumes.items()]
 
-    # TODO replace stub
     async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
         """
         Attaches a volume associated to a specific device to a mount point.
@@ -90,10 +138,14 @@ class UslService(ApplicationService):
         :param volume_id: Volume UUID
         :return: A dictionary containing the mount handle and the mount path.
         """
-        return {
-            'handle': 'handle',
-            'mountPath': '/mnt',
-        }
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+
+        if not volume_id in self._volumes:
+            await self._update_volumes_cache()
+            if not volume_id in self._volumes:
+                raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
+        return vars(MountResponse('handle', '/mnt', self._volumes[volume_id]['bucketName']))
 
     # TODO replace stub
     async def post_device_volume_unmount(self, device_id: UUID, volume_id: UUID) -> str:
