@@ -31,7 +31,7 @@ from csm.common.errors import CsmError, CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.blogic.models.s3 import S3ConnectionConfig
+from csm.core.data.models.s3 import S3ConnectionConfig
 from csm.core.blogic.models.usl import Device, Volume, MountResponse
 
 DEFAULT_EOS_DEVICE_NAME = 'cloudstore'

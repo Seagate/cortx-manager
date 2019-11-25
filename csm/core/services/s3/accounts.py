@@ -23,7 +23,7 @@ from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import Service, ApplicationService
-from csm.core.data.models.s3 import IamConnectionConfig, IamError, IamErrors
+from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
 
 
 S3_MSG_REMOTE_ERROR = 's3_remote_error'
@@ -52,7 +52,7 @@ class S3AccountService(ApplicationService):
         if isinstance(account, IamError):
             self._raise_remote_error(account)
 
-        account_client = self._s3plugin.get_client(account.access_key_id,
+        account_client = self._s3plugin.get_iam_client(account.access_key_id,
             account.secret_key_id, self._get_connection_config())
         profile = await account_client.create_account_login_profile(account.account_name, password)
         if isinstance(account, IamError):
@@ -127,7 +127,7 @@ class S3AccountService(ApplicationService):
             response["access_key"] = new_creds.access_key_id
             response["secret_key"] = new_creds.secret_key_id
 
-            client = self._s3plugin.get_client(new_creds.access_key_id,
+            client = self._s3plugin.get_iam_client(new_creds.access_key_id,
                 new_creds.secret_key_id, self._get_connection_config())
 
         if password and not reset_access_key:
@@ -167,7 +167,7 @@ class S3AccountService(ApplicationService):
                 raise CsmNotFoundError("The entity is not found", S3_ACCOUNT_NOT_FOUND)
             self._raise_remote_error(new_creds)
 
-        account_s3_client = self._s3plugin.get_client(new_creds.access_key_id,
+        account_s3_client = self._s3plugin.get_iam_client(new_creds.access_key_id,
             new_creds.secret_key_id, self._get_connection_config())
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
@@ -184,7 +184,7 @@ class S3AccountService(ApplicationService):
 
     def _get_connection_config(self):
         # TODO: share the code below with other s3 services once they all get merged 
-        s3_connection_config = IamConnectionConfig()
+        s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
         s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.port")
         s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 
@@ -196,4 +196,4 @@ class S3AccountService(ApplicationService):
         config = self._get_connection_config()
         ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
         ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_password")
-        return self._s3plugin.get_client(ldap_login, ldap_password, config)
+        return self._s3plugin.get_iam_client(ldap_login, ldap_password, config)

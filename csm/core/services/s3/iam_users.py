@@ -18,7 +18,7 @@
 """
 
 from csm.common.services import ApplicationService
-from csm.eos.plugins.s3 import S3Client, IamConnectionConfig
+from csm.eos.plugins.s3 import S3Client, S3ConnectionConfig
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
@@ -35,7 +35,7 @@ class IamUsersService(ApplicationService):
     def __init__(self, s3plugin):
         self._s3plugin = s3plugin
         #S3 Connection Object.
-        self._iam_connection_config = IamConnectionConfig()
+        self._iam_connection_config = S3ConnectionConfig()
         self._iam_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
         self._iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.port")
         self._iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -48,7 +48,7 @@ class IamUsersService(ApplicationService):
         :return:
         """
         #Create S3 Client Connection Object
-        s3_client_object = self._s3plugin.get_client(s3_session["access_key_id"],
+        s3_client_object = self._s3plugin.get_iam_client(s3_session["access_key_id"],
                                     s3_session["secret_key_id"],
                                     self._iam_connection_config,
                                     s3_session["session_token"])
