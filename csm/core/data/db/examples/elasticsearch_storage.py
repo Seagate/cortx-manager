@@ -2,7 +2,7 @@
 
 """
  ****************************************************************************
- Filename:          consul_storage.py
+ Filename:          elasticsearch_storage.py
  _description:      Example of Elasticsearch usage
 
  Creation Date:     06/10/2019
@@ -24,13 +24,12 @@ import sys
 
 if __name__ == "__main__":
     # Add "csm" module at top
-    sys.path.append("../../../../..") # Adds higher directory to python modules path.
+    sys.path.append("../../../../..")  # Adds higher directory to python modules path.
 
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertExample
-
 
 
 ALERT1 = {'id': 22,
@@ -192,6 +191,10 @@ async def example():
 
     res = await db(AlertExample).delete(filter_obj)
     print(f"Deleted by filter: {res}")
+
+    _id = 3
+    is_deleted = await db(AlertExample).delete_by_id(_id)
+    print(f"Object by id = {_id} was deleted: {is_deleted}")
 
 
 if __name__ == "__main__":
