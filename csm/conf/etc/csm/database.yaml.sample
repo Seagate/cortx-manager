@@ -1,0 +1,26 @@
+databases:
+    es_db:
+        import_path: "ElasticSearchDB"
+        config:
+            host: "localhost"
+            port: 9200
+            login: ""
+            password: ""
+    consul_db:
+        import_path: "ConsulDB"
+        config:
+            host: "127.0.0.1"
+            port: 8500
+            login: ""
+            password: ""
+models:
+-   import_path: "csm.core.blogic.models.alerts.AlertModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "alerts"
+-   import_path: "csm.core.data.models.users.User"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "user_collection"

@@ -32,32 +32,7 @@ class CsmAgent:
         from csm.core.data.db.db_provider import (DataBaseProvider,
                 GeneralConfig)        
 
-        conf = GeneralConfig({
-            "databases": {
-                "es_db": {
-                    "import_path": "ElasticSearchDB",
-                    "config": {
-                        "host": "localhost",
-                        "port": 9200,
-                        "login": "",
-                        "password": ""
-                    }
-                }
-            },
-            "models": [
-                {
-                    "import_path": "csm.core.blogic.models.alerts.AlertModel",
-                    "database": "es_db",
-                    "config": {
-                        "es_db":
-                        {
-                            "collection": "alerts"
-                        }
-                    }
-                }
-            ]
-        })
- 
+        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
       
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
@@ -77,6 +52,10 @@ class CsmAgent:
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
+
+        user_mgr = UserManager(db)
+        user_service = CsmUserService(user_mgr)
+        CsmRestApi._app["csm_user_service"] = user_service
 
         #S3 Plugin creation
         s3 = import_plugin_module('s3').S3Plugin()
@@ -147,6 +126,7 @@ if __name__ == '__main__':
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService
         from csm.core.services.usl import UslService
+        from csm.core.services.users import CsmUserService, UserManager
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 
