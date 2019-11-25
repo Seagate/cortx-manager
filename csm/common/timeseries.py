@@ -34,7 +34,7 @@ class TimeSeriesProvider:
 
     def init(self):
         """
-        Parse aggregarion rule payload and convert to generic template
+        Parse aggregation rule payload and convert to generic template
         """
         with open(self._agg_rule_file, 'r') as stats_aggr:
             self._agg_rule = json.loads(stats_aggr.read())
@@ -61,9 +61,9 @@ class TimeSeriesProvider:
         Log.debug("Validate %s panel"  %panel)
         return True if panel in self._panels else False
 
-    async def get_operations(self, panel):
+    async def get_labels(self, panel):
         """
-        Return operation of panels
+        Return labels of panels
         """
         if not await self._validate_panel(panel):
             raise CsmInternalError("Invalid panel request for stats %s"  %panel)
@@ -166,7 +166,7 @@ class TimelionProvider(TimeSeriesProvider):
             panel: Which type metric throughput, iops, etc.
             from_t: Starting time of stats
             duration_t: Ending time of stats
-            metric_list: List of operation
+            metric_list: List of labels
             interval: Difference between two datapoint [default: auto]
             output_format: Json format either redable or gui. [default: gui]
             query: Optional direct query to timelion_api
@@ -191,12 +191,12 @@ class TimelionProvider(TimeSeriesProvider):
             raise CsmInternalError("Invalid panel request for stats %s"  %panel)
         aggr_panel = self._aggr_rule[panel.lower()]["metrics"]
         if len(metric_list) == 0:
-            metric_list = await self.get_operations(panel.lower())
+            metric_list = await self.get_labels(panel.lower())
         if query is "":
             query = '('
             for metric in metric_list:
                 if metric not in aggr_panel:
-                    raise CsmInternalError("Invalid operation %s for %s" %(metric,panel))
+                    raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
                 query = query + aggr_panel[metric] + ','
             query = query[:-1] + ')'
         body = self._timelion_req_body.substitute(query=query, from_t=from_t,

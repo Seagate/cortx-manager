@@ -10,7 +10,7 @@
                 "node": [
                     {
                         "val": {
-                            "index": "statsd_guage-*",
+                            "index": "statsd_gauge-*",
                             "metric": "*BACKEND.bin",
                             "timestamp": "@timestamp",
                             "method": "avg:val"
@@ -23,7 +23,7 @@
                 "node": [
                     {
                         "val": {
-                            "index": "statsd_guage-*",
+                            "index": "statsd_gauge-*",
                             "metric": "*BACKEND.bout",
                             "timestamp": "@timestamp",
                             "method": "avg:val"
@@ -39,7 +39,7 @@
                         "node": [
                             {
                                 "val": {
-                                    "index": "statsd_guage-*",
+                                    "index": "statsd_gauge-*",
                                     "metric": "*BACKEND.bin",
                                     "timestamp": "@timestamp",
                                     "method": "avg:val"
@@ -47,7 +47,7 @@
                             },
                             {
                                 "val": {
-                                    "index": "statsd_guage-*",
+                                    "index": "statsd_gauge-*",
                                     "metric": "*BACKEND.bout",
                                     "timestamp": "@timestamp",
                                     "method": "avg:val"
@@ -61,7 +61,7 @@
     },
     "latency": {
         "axis": {
-            "y": "miliseconds",
+            "y": "milliseconds",
             "x": "timestamp"
         },
         "metrics": [
