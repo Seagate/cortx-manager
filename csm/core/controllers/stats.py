@@ -38,8 +38,8 @@ class StatsView(CsmView):
         Log.debug("Handling stats request")
         getopt = self.request.rel_url.query.get("get", None)
         panel = self.request.match_info["panel"]
-        if getopt == "operation":
-            return await self._service.get_operations(panel)
+        if getopt == "label":
+            return await self._service.get_labels(panel)
         elif getopt == "axis_unit":
             return await self._service.get_axis(panel)
         else:
