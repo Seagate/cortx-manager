@@ -20,13 +20,12 @@
 from aiohttp import web, ClientSession
 from random import SystemRandom
 from typing import Any, Dict, List
-from uuid import UUID, uuid5, NAMESPACE_URL
+from uuid import UUID, uuid4, uuid5
 import asyncio
 import time
-import salt.config
-import salt.minion
 import toml
 
+from csm.common.conf import Conf
 from csm.common.errors import CsmError, CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
@@ -73,9 +72,7 @@ class UslService(ApplicationService):
     def _get_device_uuid(self) -> UUID:
         """Obtains the EOS device UUID from config."""
 
-        opts = salt.config.minion_config('/etc/salt/minion')
-        grains = salt.loader.grains(opts)
-        return UUID(grains['cluster_id'])
+        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
@@ -125,6 +122,7 @@ class UslService(ApplicationService):
         :param device_id: Device UUID
         :return: A list with dictionaries, each containing information about a specific volume.
         """
+
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         await self._update_volumes_cache()
