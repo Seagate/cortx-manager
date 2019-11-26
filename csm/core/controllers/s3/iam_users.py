@@ -78,7 +78,7 @@ class IamUserListView(CsmView):
         """
         super(IamUserListView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.data.s3_session
+        self._s3_session = self.request.session.credentials
         if not self._s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
         self._service = self.request.app["s3_iam_users_service"]
@@ -119,7 +119,7 @@ class IamUserView(CsmView):
         """
         super(IamUserView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.data.s3_session
+        self._s3_session = self.request.session.credentials
         if not self._s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
         self._service = self.request.app["s3_iam_users_service"]
