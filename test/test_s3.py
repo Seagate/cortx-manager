@@ -54,7 +54,7 @@ if __name__ == '__main__':
             print("The bucket has not been created")
             return
 
-        await s3cli.delete_bucket(bucket_name)
+        await s3cli.delete_bucket(bucket)
 
         bucket_list = await s3cli.get_all_buckets()
         if bucket_list is None:
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         s3cli = pl.get_s3_client(account.access_key_id, account.secret_key_id, s3_conf)
 
         test_bucket_name = 'tests3cachebucket'
-        await s3cli.create_bucket(test_bucket_name)
+        bucket = await s3cli.create_bucket(test_bucket_name)
         await asyncio.sleep(3)
         buckets = cache.get_cache()
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
             return
 
         print("Bucket cache verified successfully")
-        await s3cli.delete_bucket(test_bucket_name)
+        await s3cli.delete_bucket(bucket)
 
 
     async def _test_delete_account(account: ExtendedIamAccount):
