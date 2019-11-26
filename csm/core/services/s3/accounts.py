@@ -39,6 +39,22 @@ class S3AccountService(ApplicationService):
         self._s3plugin = s3plugin
         self._s3_root_client = self._get_root_client()
 
+    @Log.trace_method(Log.DEBUG)
+    async def _create_udx_bucket(self, account):
+        # TODO: probably, it would be better to move this function to USL
+        bucket_name = account.account_name + '-udx'
+        bucket_tags = {
+            "udx": "enabled"
+        }
+
+        try:
+            s3_client = self._s3plugin.get_s3_client(account.access_key_id,
+                account.secret_key_id, self._get_s3_connection_config())
+            new_bucket = await s3_client.create_bucket(bucket_name)
+            await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
+        except:
+            raise CsmInternalError("UDX bucket creation failed")
+
     @Log.trace_method(Log.INFO)
     async def create_account(self, account_name: str, account_email: str, password: str):
         """
@@ -53,11 +69,16 @@ class S3AccountService(ApplicationService):
             self._raise_remote_error(account)
 
         account_client = self._s3plugin.get_iam_client(account.access_key_id,
-            account.secret_key_id, self._get_connection_config())
-        profile = await account_client.create_account_login_profile(account.account_name, password)
-        if isinstance(account, IamError):
+            account.secret_key_id, self._get_iam_connection_config())
+
+        try:
+            await self._create_udx_bucket(account)
+            profile = await account_client.create_account_login_profile(account.account_name, password)
+            if isinstance(profile, IamError):
+                self._raise_remote_error(account)
+        except Exception as e:
             await account_client.delete_account(account.account_name)
-            self._raise_remote_error(account)
+            raise e
 
         return {
             "account_name": account.account_name,
@@ -128,7 +149,7 @@ class S3AccountService(ApplicationService):
             response["secret_key"] = new_creds.secret_key_id
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
-                new_creds.secret_key_id, self._get_connection_config())
+                new_creds.secret_key_id, self._get_iam_connection_config())
 
         if password and not reset_access_key:
             # TODO: currently IAM server does not allow us to update password
@@ -168,7 +189,7 @@ class S3AccountService(ApplicationService):
             self._raise_remote_error(new_creds)
 
         account_s3_client = self._s3plugin.get_iam_client(new_creds.access_key_id,
-            new_creds.secret_key_id, self._get_connection_config())
+            new_creds.secret_key_id, self._get_iam_connection_config())
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
             self._raise_remote_error(result)
@@ -182,7 +203,7 @@ class S3AccountService(ApplicationService):
                 's3_error_message': resp.error_message
             })
 
-    def _get_connection_config(self):
+    def _get_iam_connection_config(self):
         # TODO: share the code below with other s3 services once they all get merged 
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
@@ -191,9 +212,14 @@ class S3AccountService(ApplicationService):
             "S3.max_retries_num")
         return s3_connection_config
 
+    def _get_s3_connection_config(self):
+        # TODO: share the code below with other s3 services once they all get merged 
+        s3_connection_config = self._get_iam_connection_config()
+        s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.s3_port")
+        return s3_connection_config
+
     def _get_root_client(self):
-        # TODO: take the information somewhere instead of hard-coding it
-        config = self._get_connection_config()
+        config = self._get_iam_connection_config()
         ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
         ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_password")
         return self._s3plugin.get_iam_client(ldap_login, ldap_password, config)

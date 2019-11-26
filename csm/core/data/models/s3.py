@@ -103,6 +103,7 @@ class IamErrors(Enum):
     NoSuchEntity = 'NoSuchEntity'
     ExpiredCredential = 'ExpiredCredential'
     InvalidLdapUserId = 'InvalidLdapUserId'
+    PasswordPolicyVoilation = 'PasswordPolicyVoilation'
 
 
 class IamError:
