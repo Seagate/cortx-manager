@@ -51,6 +51,8 @@ PRODUCT=<PRODUCT>
 	cp $CFG_DIR/etc/csm/cluster.conf.sample /etc/csm/cluster.conf.sample
 [ -f /etc/csm/components.yaml ] || \
     cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
+[ -f /etc/csm/database.yaml ] || \
+    cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
 
 [ -d "${CSM_DIR}/${PRODUCT}/gui" ] && {
     cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
