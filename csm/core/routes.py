@@ -21,15 +21,15 @@
 # process_dbg_static_page() method.
 
 from aiohttp import web
-
 from csm.core.controllers import AlertsHttpController, UslController
+
 
 class ApiRoutes:
     @staticmethod
     def add_rest_api_routes(
         router: web.UrlDispatcher,
         alerts_ctrl: AlertsHttpController,
-        usl_ctrl: UslController,
+        usl_ctrl: UslController
     ) -> None:
         # todo: Will be restructuring this part on Tuesday Morning.
         # self._app.router.add_view("/csm", CsmCliView),
@@ -50,7 +50,7 @@ class ApiRoutes:
                         usl_ctrl.get_network_interfaces_view_class())
         # router.add_view("/usl/v1/system/network/mounts",
         #                  usl_ctrl.get_network_mounts_list_view_class())
-        # router.add_view("/usl/v1/system/network/mounts/{mount_id}", 
+        # router.add_view("/usl/v1/system/network/mounts/{mount_id}",
         #                 usl_ctrl.get_network_mount_view_class())
         # router.add_view("/usl/v1/system/network/shares",
         #                  usl_ctrl.get_network_shares_list_view_class())

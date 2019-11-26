@@ -16,7 +16,33 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
+import json
 from aiohttp import web
+
+class CsmAuth:
+    HDR = 'Authorization'
+    TYPE = 'Bearer'
+    UNAUTH = { 'WWW-Authenticate': TYPE }
+    ATTR = '_no_auth_'
+
+    @classmethod
+    def public(cls, handler):
+        setattr(handler, cls.ATTR, True)
+        return handler
+
+    @classmethod
+    def is_public(cls, handler):
+        return getattr(handler, cls.ATTR, False)
+
+
+class CsmResponse(web.Response):
+    def __init__(self, res={}, headers=None,
+                 content_type='application/json',
+                 **kwargs):
+        body = json.dumps(res)
+        super().__init__(body=body, headers=headers,
+                         content_type=content_type,
+                         **kwargs)
 
 
 class CsmView(web.View):
