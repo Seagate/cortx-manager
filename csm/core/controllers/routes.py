@@ -19,6 +19,7 @@
 # To add new route import from view file
 from .view import CsmView
 from .stats import StatsView
+from .login import LoginView, LogoutView
 from .system_config import SystemConfigView
 from csm.core.data.storage.system_config import SystemConfigStorage
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage

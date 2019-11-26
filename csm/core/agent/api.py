@@ -40,6 +40,7 @@ from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
+from csm.core.controllers.view import CsmResponse, CsmAuth
 from csm.core.controllers import AlertsHttpController
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
@@ -94,8 +95,11 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
         CsmRestApi._wsclients = WeakSet()
+
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers, CsmRestApi.rest_middleware]
+            middlewares=[CsmRestApi.set_secure_headers,
+                         CsmRestApi.rest_middleware,
+                         CsmRestApi.session_middleware]
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
@@ -147,6 +151,34 @@ class CsmRestApi(CsmApi, ABC):
         return web.json_response(
             resp_obj, status=status, dumps=CsmRestApi.json_serializer)
 
+    @classmethod
+    def _unauthorised(cls, reason):
+        Log.debug(f'Unautorized: {reason}')
+        raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
+
+    @classmethod
+    @web.middleware
+    async def session_middleware(cls, request, handler):
+        is_public = CsmAuth.is_public(handler)
+        if not is_public:
+            hdr = request.headers.get(CsmAuth.HDR)
+            if not hdr:
+                cls._unauthorised(f'No {CsmAuth.HDR} header')
+            auth_type, session_id = hdr.split(' ')
+            if auth_type != CsmAuth.TYPE:
+                cls._unauthorised(f'Invalid auth type {auth_type}')
+            Log.debug(f'Non-Public: {request} session {session_id}')
+            try:
+                session = await request.app.login_service.auth_session(session_id)
+            except CsmError as e:
+                cls._unauthorised(e.error())
+            if not session:
+                cls._unauthorised('Invalid auth token')
+            request.session = session
+        else:
+            Log.debug(f'Public: {request}')
+        return await handler(request)
+
     @staticmethod
     @web.middleware
     async def set_secure_headers(request, handler):
@@ -159,7 +191,7 @@ class CsmRestApi(CsmApi, ABC):
     async def rest_middleware(request, handler):
         try:
             resp = await handler(request)
-            if isinstance(resp, web.FileResponse):
+            if isinstance(resp, web.StreamResponse):
                 return resp
 
             status = 200
@@ -171,15 +203,15 @@ class CsmRestApi(CsmApi, ABC):
 
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
+        except web.HTTPException as e:
+            Log.error(f'HTTP Exception {e.status}: {e.reason}')
+            raise e
         except CsmNotFoundError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
-        except web_exceptions.HTTPError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=e.status_code)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"

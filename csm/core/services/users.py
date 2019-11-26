@@ -142,7 +142,7 @@ class CsmUserService(ApplicationService):
         :returns: A dictionary describing the newly created user.
         In case of error, an exception is raised.
         """
-        user = User.create_csm_user(user_id, password)
+        user = User.instantiate_csm_user(user_id, password)
         user.update(kwargs)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
