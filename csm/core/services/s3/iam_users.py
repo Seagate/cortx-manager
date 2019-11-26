@@ -37,7 +37,7 @@ class IamUsersService(ApplicationService):
         #S3 Connection Object.
         self._iam_connection_config = S3ConnectionConfig()
         self._iam_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
-        self._iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.port")
+        self._iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
         self._iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
                                                          "S3.max_retries_num")
     @Log.trace_method(Log.DEBUG)

@@ -186,7 +186,7 @@ class S3AccountService(ApplicationService):
         # TODO: share the code below with other s3 services once they all get merged 
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
-        s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.port")
+        s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
         s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 
             "S3.max_retries_num")
         return s3_connection_config

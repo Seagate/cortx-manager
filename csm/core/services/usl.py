@@ -59,15 +59,18 @@ class UslService(ApplicationService):
         self._volumes = {}
         self._buckets = {}
 
+    # TODO: pass S3 server credentials to the server instead of reading from a file
     def _create_s3cli(self, s3_plugin):
-        """Hard coded workaround to pass S3 server details to USL. Only for CES!"""
+        """Creates the S3 client for USL service"""
+
+        s3_conf = S3ConnectionConfig()
+        s3_conf.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
+        s3_conf.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
 
         toml_conf = toml.load(const.USL_S3_CONF)
-        s3_conf = S3ConnectionConfig()
-        s3_conf.host = toml_conf['server']['host']
-        s3_conf.port = toml_conf['server']['port']
         return s3_plugin.get_s3_client(toml_conf['credentials']['access_key_id'],
-            toml_conf['credentials']['secret_key'], s3_conf)
+                                       toml_conf['credentials']['secret_key'],
+                                       s3_conf)
 
     def _get_device_uuid(self) -> UUID:
         """Obtains the EOS device UUID from config."""

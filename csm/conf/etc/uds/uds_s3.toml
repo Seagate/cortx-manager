@@ -1,11 +1,3 @@
-[account]
-name = ""
-email = ""
-
-[server]
-host = "localhost"
-port = 80 
-
 [credentials]
 access_key_id = ""
 secret_key = ""
