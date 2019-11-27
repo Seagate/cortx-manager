@@ -25,8 +25,10 @@ from typing import Any, Callable, Dict, List, Type
 from csm.common.errors import CsmError
 from csm.common.log import Log
 from csm.core.services.usl import UslService
+from .view import CsmAuth
 
-
+# TODO: make USL views inherit CSM view, handle authorization
+@CsmAuth.public
 class View(web.View):
     """
     Generic view class for USL API views. Binds a view to an USL service.

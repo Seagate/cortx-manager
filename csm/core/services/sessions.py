@@ -27,7 +27,7 @@ from typing import Optional
 from csm.common.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
-from csm.eos.plugins.s3 import S3Plugin, IamConnectionConfig, IamError
+from csm.eos.plugins.s3 import S3Plugin, S3ConnectionConfig, IamError
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
@@ -179,7 +179,7 @@ class S3AuthPolicy(AuthPolicy):
     """ S3 account authentication policy """
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
-        cfg = IamConnectionConfig()
+        cfg = S3ConnectionConfig()
         cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
         cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.port')
         cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.max_retries_num')

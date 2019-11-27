@@ -18,7 +18,7 @@
 """
 
 from csm.common.services import ApplicationService
-from csm.eos.plugins.s3 import S3Client, S3ConnectionConfig
+from csm.eos.plugins.s3 import IamClient, S3ConnectionConfig
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.blogic import const
@@ -41,14 +41,14 @@ class IamUsersService(ApplicationService):
         self._iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
                                                          "S3.max_retries_num")
     @Log.trace_method(Log.DEBUG)
-    async def fetch_s3_client(self, s3_session: Dict) -> S3Client:
+    async def fetch_iam_client(self, s3_session: Dict) -> IamClient:
         """
         This Method will create S3 object for connection fetching request headers
         :param s3_session:  S3 Account Logged in info. :type: Dict
         :return:
         """
         #Create S3 Client Connection Object
-        s3_client_object = self._s3plugin.get_client(s3_session.access_key,
+        s3_client_object = self._s3plugin.get_iam_client(s3_session.access_key,
                                     s3_session.secret_key,
                                     self._iam_connection_config,
                                     s3_session.session_token)
@@ -67,7 +67,7 @@ class IamUsersService(ApplicationService):
         """
 
         # Create Iam User in System.
-        s3_client = await self.fetch_s3_client(s3_session)
+        s3_client = await self.fetch_iam_client(s3_session)
         if path and path[-1] != "/":
             path = f"{path}/"
         user_creation_resp = await s3_client.create_user(user_name, path)
@@ -90,7 +90,7 @@ class IamUsersService(ApplicationService):
         :param path_prefix: Path For user's Search "/account/sub_account/" :type:str
         :return:
         """
-        s3_client = await  self.fetch_s3_client(s3_session)
+        s3_client = await  self.fetch_iam_client(s3_session)
         if path_prefix and path_prefix[-1] != "/":
             path_prefix = f"{path_prefix}/"
         #Fetch IAM Users
@@ -109,7 +109,7 @@ class IamUsersService(ApplicationService):
         :param user_name: S3 User Name :type: str
         :return:
         """
-        s3_client = await  self.fetch_s3_client(s3_session)
+        s3_client = await  self.fetch_iam_client(s3_session)
         #Delete Given Iam User
         user_delete_response = await  s3_client.delete_user(user_name)
         if hasattr(user_delete_response, "error_code"):
