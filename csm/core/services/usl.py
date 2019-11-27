@@ -82,6 +82,16 @@ class UslService(ApplicationService):
 
         return uuid5(self._device.uuid, bucket_name)
 
+    async def _is_bucket_udx_enabled(self, bucket):
+        """
+        Checks if bucket is UDX enabled
+
+        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
+        """
+
+        tags = await self._s3cli.get_bucket_tagging(bucket)
+        return tags.get('udx', 'disabled') == 'enabled'
+
     async def _update_volumes_cache(self):
         """
         Updates the internal buckets cache.
@@ -91,9 +101,8 @@ class UslService(ApplicationService):
         """
 
         try:
-            buckets = await self._s3cli.get_all_buckets()
-
-            fresh_buckets =  [b.name for b in buckets]
+            fresh_buckets = [b.name for b in await self._s3cli.get_all_buckets()
+                             if await self._is_bucket_udx_enabled(b)]
             cached_buckets = [v['bucketName'] for _,v in self._volumes.items()]
 
             # Remove staled volumes
