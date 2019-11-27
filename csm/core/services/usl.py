@@ -19,11 +19,14 @@
 
 from aiohttp import web, ClientSession
 from random import SystemRandom
+from marshmallow import ValidationError
+from marshmallow.validate import URL
 from typing import Any, Dict, List
 from uuid import UUID
 import asyncio
 import time
 
+from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -115,11 +118,19 @@ class UslService(ApplicationService):
         :param url: Registration URL as provided by the UDX portal
         :param pin: Registration PIN as provided by the UDX portal
         """
+        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        try:
+            validate_url = URL(schemes=('http', 'https'))
+            validate_url(uds_url)
+        except ValidationError:
+            reason = 'UDS base URL is not valid'
+            Log.error(reason)
+            raise web.HTTPInternalServerError(reason=reason)
+        endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
         # TODO use a single client session object; manage life cycle correctly
         async with ClientSession() as session:
-            endpoint_url = const.UDS_SERVER_URL + '/uds/v1/registration/RegisterDevice'
             params = {'url': url, 'regPin': pin, 'regToken': self._token}
-            Log.info(f'Start device registration at {const.UDS_SERVER_URL}')
+            Log.info(f'Start device registration at {uds_url}')
             async with session.put(endpoint_url, params=params) as response:
                 if response.status != 201:
                     reason = 'Could not start device registration'
