@@ -26,6 +26,7 @@ from datetime import datetime
 import json
 import operator
 
+from aiohttp import ClientConnectorError
 from consul.aio import Consul
 from schematics.models import Model
 from schematics.types import BaseType, StringType
@@ -129,12 +130,12 @@ def query_converter_build(model: CsmModel, filter_obj: IFilter, raw_data: List[D
 
 class ConsulKeyTemplate:
     """Class-helper for storing consul key structure"""
-    
+
     _OBJECT_ROOT = f"{CONSUL_ROOT}/$OBJECT_TYPE"
     _OBJECT_DIR = _OBJECT_ROOT + f"/{OBJECT_DIR}"
     _OBJECT_PATH = _OBJECT_DIR + "/$OBJECT_UUID"
     _PROPERTY_DIR = _OBJECT_ROOT + f"/{PROPERTY_DIR}/$PROPERTY_NAME/$PROPERTY_VALUE"
-    
+
     def __init__(self):
         self._object_root = Template(self._OBJECT_ROOT)
         self._object_dir = Template(self._OBJECT_DIR)
@@ -240,7 +241,10 @@ class ConsulDB(GenericDataBase):
 
         consul_db = cls(cls.consul_client, model, collection, cls.thread_pool, cls.loop)
 
-        await consul_db.create_object_root()
+        try:
+            await consul_db.create_object_root()
+        except ClientConnectorError as e:
+            raise DataAccessExternalError(f"{e}")
 
         return consul_db
 
@@ -296,12 +300,12 @@ class ConsulDB(GenericDataBase):
         if not response:
             raise DataAccessExternalError(f"Can't put key={obj_path} and value={obj_val}")
 
-    async def _get_all_raw(self) -> Union[None, List[Dict]]:
+    async def _get_all_raw(self) -> List[Dict]:
         obj_dir = self._templates.get_object_dir()
         obj_dir = obj_dir.lower() + "/"  # exclude key eos/csm/type/obj without trailing "/"
         index, data = await self._consul_client.kv.get(obj_dir, recurse=True, consistency=True)
         if data is None:
-            return None
+            return list()
         return data
 
     async def get(self, query: Query) -> List[CsmModel]:
@@ -325,11 +329,11 @@ class ConsulDB(GenericDataBase):
             return lambda x: wrapper(getattr(x, _by_field))
 
         query = query.data
-        if not any((query.order_by, query.filter_by)):
-            raise DataAccessInternalError("Only filter_by and order_by query parameters are "
-                                          "now supported")
 
         suitable_models = await self._get_all_raw()
+
+        if not suitable_models:
+            return list()
 
         # NOTE: use processes for parallel data calculations and make true asynchronous work
         if query.filter_by is not None:
@@ -341,13 +345,28 @@ class ConsulDB(GenericDataBase):
 
         csm_models = [self._model(json.loads(entry[ConsulWords.VALUE]))
                       for entry in suitable_models]
-        if query.order_by is not None:
-            field_str = field_to_str(query.order_by.field)
-            field_type = type(getattr(self._model, field_str))
-            key = _sorted_key_func(field_str, field_type)
-            return sorted(csm_models, key=key, reverse=(SortOrder.DESC == query.order_by.order))
 
-        return csm_models
+        # NOTE: if offset parameter is set in Query then order_by option is enabled automatically
+        if any((query.order_by, query.offset)):
+            field = query.order_by.field if query.order_by else getattr(self._model,
+                                                                        self._model.primary_key)
+            field_str = field_to_str(field)
+
+            field_type = type(getattr(self._model, field_str))
+
+            reverse = SortOrder.DESC == query.order_by.order if query.order_by else False
+            key = _sorted_key_func(field_str, field_type)
+            csm_models = sorted(csm_models, key=key, reverse=reverse)
+
+        offset = query.offset or 0
+        limit = offset + query.limit if query.limit is not None else len(csm_models)
+        # NOTE: if query.limit is None then slice will be from offset to the end of array
+        #  slice(0, None) means that start is 0 and stop is not specified
+        if offset > limit:
+            raise DataAccessInternalError("Wrong offset and limit parameters of Query object: "
+                                          f"offset={query.offset}, limit={query.limit}")
+        model_slice = slice(offset, limit)
+        return csm_models[model_slice]
 
     async def update(self, filter_obj: IFilter, to_update: dict) -> int:
         """
@@ -360,6 +379,9 @@ class ConsulDB(GenericDataBase):
         await super().update(filter_obj, to_update)  # Call the generic code
 
         raw_data = await self._get_all_raw()
+
+        if not raw_data:
+            return 0
 
         # NOTE: use processes for parallel data calculations and make true asynchronous work
         suitable_models = await self._loop.run_in_executor(self._process_pool,
@@ -387,6 +409,9 @@ class ConsulDB(GenericDataBase):
         :return: number of deleted entries
         """
         raw_data = await self._get_all_raw()
+
+        if not raw_data:
+            return 0
 
         # NOTE: use processes for parallel data calculations and make true asynchronous work
         suitable_models = await self._loop.run_in_executor(self._process_pool,
@@ -424,6 +449,10 @@ class ConsulDB(GenericDataBase):
         :return: count of entries which satisfy the `filter_obj`
         """
         raw_data = await self._get_all_raw()
+        
+        if not raw_data:
+            return 0
+
         if filter_obj is None:
             return len(raw_data)
 

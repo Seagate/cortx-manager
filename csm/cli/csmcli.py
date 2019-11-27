@@ -76,7 +76,6 @@ def main(argv):
     except Exception as exception:
         sys.stderr.write(str(exception) + '\n')
         Log.error(traceback.format_exc())
-        traceback.print_exc()
         # TODO - Extract rc from exception
         return 1
 

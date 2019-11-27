@@ -56,12 +56,12 @@ class StatsAppService(ApplicationService):
                                                   output_format = output_format,
                                                   query = query)
 
-    async def get_operations(self, panel):
+    async def get_labels(self, panel):
         """
-        Fetch available operations list for panel
+        Fetch available labels for panel
         """
-        operation_list_dict_keys = await self._stats_provider.get_operations(panel)
-        return {"operation_list": list(operation_list_dict_keys)}
+        label_list_dict_keys = await self._stats_provider.get_labels(panel)
+        return {"label_list": list(label_list_dict_keys)}
 
     async def get_axis(self, panel):
         """
@@ -73,5 +73,5 @@ class StatsAppService(ApplicationService):
         """
         Fetch Panels list
         """
-        panels_list_dict_keys = await self._stats_provider.get_panels()
-        return {"panel_list": list(panels_list_dict_keys)}
+        panel_list_dict_keys = await self._stats_provider.get_panels()
+        return {"panel_list": list(panel_list_dict_keys)}

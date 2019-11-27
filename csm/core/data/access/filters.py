@@ -25,6 +25,10 @@ from csm.common.errors import MalformedQueryError
 
 
 class IFilter(ABC):
+    """
+    Abstract class for IFilter
+    """
+
     @abstractmethod
     def accept_visitor(self, visitor) -> Any:
         pass
@@ -35,6 +39,7 @@ class FilterOperationAnd(IFilter):
     Class representing AND condition
     :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
+
     def __init__(self, *args):
         if len(args) < 2 or not all(isinstance(x, IFilter) for x in args):
             raise MalformedQueryError("AND operation takes >= 2 arguments of filter type")
@@ -53,6 +58,7 @@ class FilterOperationOr(IFilter):
     Class representing OR condition
     :param *args: List of nested filter conditions (each must be of type IFilterQuery)
     """
+
     def __init__(self, *args):
         if len(args) < 2 or not all(isinstance(x, IFilter) for x in args):
             raise MalformedQueryError("OR operation takes >= 2 arguments of filter type")
@@ -70,11 +76,12 @@ class ComparisonOperation(Enum):
     """
     Enumeration that represents possible comparison operations
     """
+
     OPERATION_GT = '>'
     OPERATION_LT = '<'
     OPERATION_EQ = '='
     OPERATION_LEQ = '<='
-    OPERATION_GEQ = '>=',
+    OPERATION_GEQ = '>='
     OPERATION_NE = "!="  # TODO: Add support to elasticsearch
 
     @classmethod
@@ -98,6 +105,7 @@ class FilterOperationCompare(IFilter):
     """
     Class representing a comparison operation.
     """
+
     def __init__(self, left_operand, operation: ComparisonOperation, right_operand):
         self.left_operand = left_operand
         self.operation = operation

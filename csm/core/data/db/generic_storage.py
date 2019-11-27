@@ -99,7 +99,7 @@ class GenericDataBase(IDataBase):
 
         return None
 
-    async def delete(self, filter_obj: IFilter):
+    async def delete(self, filter_obj: IFilter) -> int:
         """
         Delete objects in DB by Query
 
@@ -108,6 +108,26 @@ class GenericDataBase(IDataBase):
         """
         # Put Generic code here. We can't find it
         pass
+
+    async def delete_by_id(self, obj_id: Any) -> bool:
+        """
+        Delete CSM model by its id
+
+        :param Any obj_id: id of the object to be deleted
+        :return: CsmModel if object was found by its id and None otherwise
+        :return: `True` if object was deleted successfully and `False` otherwise
+        """
+        # Generic implementation of delete by id functionality
+        id_field = getattr(self._model, self._model.primary_key)
+        try:
+            converted = id_field.to_native(obj_id)
+        except ConversionError as e:
+            raise DataAccessInternalError(f"{e}")
+
+        filter = Compare(self._model.primary_key, "=", converted)
+
+        result = await self.delete(filter)
+        return result > 0
 
     async def update(self, filter_obj: IFilter, to_update: dict) -> int:
         """
@@ -129,13 +149,13 @@ class GenericDataBase(IDataBase):
         except ConversionError as e:
             raise DataAccessInternalError(f"{e}")
 
-    async def update_by_id(self, obj_id: Any, to_update: dict) -> None:
+    async def update_by_id(self, obj_id: Any, to_update: dict) -> bool:
         """
         Update csm model in db by id (primary key)
 
         :param Any obj_id: id-value of the object which should be updated (primary key value)
         :param dict to_update: dictionary with fields and values which should be updated
-        :return:
+        :return: `True` if object was updated and `False` otherwise
         """
         # Generic code for update_by_id method of particular method
         id_field = getattr(self._model, self._model.primary_key)
@@ -146,7 +166,9 @@ class GenericDataBase(IDataBase):
 
         filter = Compare(self._model.primary_key, "=", converted)
 
-        await self.update(filter, to_update)
+        result = await self.update(filter, to_update)
+
+        return result > 0
 
     async def sum(self, ext_query: ExtQuery):
         """

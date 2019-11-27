@@ -20,6 +20,7 @@
 from .alerts import AlertsHttpController
 from .usl import UslController
 from .routes import CsmRoutes
+from .users import CsmUsersListView, CsmUsersView
 from .s3.iam_users import IamUserListView, IamUserView
 from .s3.accounts import S3AccountsListView, S3AccountsView
 # from .csm import CsmCliView

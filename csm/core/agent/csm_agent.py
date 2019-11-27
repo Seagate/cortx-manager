@@ -7,19 +7,28 @@ import json
 from aiohttp import web
 from importlib import import_module
 
-# Global options for debugging purposes
-# It is quick and dirty temporary solution
+
 class Opt:
-    def __init__(self, argv):
-        self.debug = len(argv) > 1 and argv[1] == '--debug'
+    """
+    Global options for debugging purposes.
+    It is quick and dirty temporary solution.
+    """
 
-global opt
+    debug = False
 
+    @classmethod
+    def init(cls, argv):
+        cls.debug = len(argv) > 1 and argv[1] == '--debug'
+
+
+
+# TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
 
     product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'eos'
     return import_module(f'csm.{product}.plugins.{name}')
+
 
 class CsmAgent:
     """ CSM Core Agent / Deamon """
@@ -32,32 +41,7 @@ class CsmAgent:
         from csm.core.data.db.db_provider import (DataBaseProvider,
                 GeneralConfig)        
 
-        conf = GeneralConfig({
-            "databases": {
-                "es_db": {
-                    "import_path": "ElasticSearchDB",
-                    "config": {
-                        "host": "localhost",
-                        "port": 9200,
-                        "login": "",
-                        "password": ""
-                    }
-                }
-            },
-            "models": [
-                {
-                    "import_path": "csm.core.blogic.models.alerts.AlertModel",
-                    "database": "es_db",
-                    "config": {
-                        "es_db":
-                        {
-                            "collection": "alerts"
-                        }
-                    }
-                }
-            ]
-        })
- 
+        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
       
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
@@ -76,10 +60,20 @@ class CsmAgent:
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
 
-        #Stats service creation
+        # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
+
+        # User/Session management services
+        auth_service = AuthService()
+        CsmRestApi._app.user_manager = UserManager(db)
+        CsmRestApi._app.session_manager = SessionManager()
+        CsmRestApi._app.login_service = LoginService(auth_service,
+                                                     CsmRestApi._app.user_manager,
+                                                     CsmRestApi._app.session_manager)
+        user_service = CsmUserService(CsmRestApi._app.user_manager)
+        CsmRestApi._app["csm_user_service"] = user_service
 
         #S3 Plugin creation
         s3 = import_plugin_module('s3').S3Plugin()
@@ -104,9 +98,8 @@ class CsmAgent:
 
             pid = os.fork()
             if pid > 0:
-                print("CSM agent started with pid %d" %pid)
+                print("CSM agent started with pid %d" % pid)
                 os._exit(0)
-
 
         except OSError as e:
             print("Unable to fork.\nerror(%d): %s" % (e.errno, e.strerror))
@@ -118,7 +111,7 @@ class CsmAgent:
     @staticmethod
     def run():
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'RESOURCES.APPSV.port') or const.CSM_AGENT_PORT
-        if not opt.debug:
+        if not Opt.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port)
@@ -128,13 +121,14 @@ class CsmAgent:
     def _push_alert(alert):
         return CsmRestApi.push(alert)
 
+
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..'))
-    opt = Opt(sys.argv)
+    Opt.init(sys.argv)
     try:
         from csm.common.log import Log
 
-        log_path = "." if opt.debug else "/var/log/csm"
+        log_path = "." if Opt.debug else "/var/log/csm"
         Log.init("csm_agent", log_path)
     except:
         print("Can not initialize csm.common.log.Log")
@@ -150,6 +144,8 @@ if __name__ == '__main__':
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService
         from csm.core.services.usl import UslService
+        from csm.core.services.users import CsmUserService, UserManager
+        from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi
 
@@ -159,6 +155,7 @@ if __name__ == '__main__':
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:
-        raise e
         Log.error(traceback.format_exc())
+        if Opt.debug:
+            raise e
         os._exit(1)

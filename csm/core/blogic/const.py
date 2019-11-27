@@ -55,6 +55,7 @@ TYPE_S3_SERVER = 'S3_SERVER'
 CSM_CONF = '/etc/csm/csm.conf'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
+DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = '/opt/seagate/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
@@ -103,9 +104,17 @@ CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 
 # UDS Server
-UDS_SERVER_URL = 'http://localhost:5000'
+UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
 
 # USL S3 configuration (CES2020 only!)
 USL_S3_CONF = '/etc/uds/uds_s3.toml'
 #IAM User Related
 PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
+
+# CSM Users
+CSM_USER_NAME_MIN_LEN = 3
+CSM_USER_NAME_MAX_LEN = 64
+CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time', 'updated_time']
+CSM_USER_DEFAULT_TIMEOUT = 0
+CSM_USER_DEFAULT_LANGUAGE = 'English'
+CSM_USER_DEFAULT_TEMPERATURE = 'celcius'

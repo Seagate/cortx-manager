@@ -20,10 +20,18 @@
 import asyncio
 from datetime import datetime
 
+if __name__ == "__main__":
+    # Add "csm" module at top
+    import sys
+    sys.path.append("../../../../..")  # Adds higher directory to python modules path.
+
+from aiohttp import ClientConnectorError
+
+# from csm.core.blogic.models import CsmUser
 from csm.core.data.db.db_provider import DataBaseProvider, GeneralConfig
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
-from csm.core.blogic.models.alerts import AlertExample
+from csm.core.blogic.models.alerts import AlertModel
 
 
 ALERT1 = {'id': 22,
@@ -106,6 +114,117 @@ ALERT4 = {'id': 25,
           'created_time': datetime.now()
           }
 
+USER1 = {
+    "id": 1,
+    "login": "Admin",
+    "passwd": "Admin",
+    "is_superuser": True,
+    "disabled": False
+}
+
+USER2 = {
+    "id": 2,
+    "login": "NewUser",
+    "passwd": "NewPassword",
+    "is_superuser": False,
+    "disabled": True
+}
+
+
+async def user_example():
+    conf = GeneralConfig({
+        "databases": {
+            "es_db": {
+                "import_path": "ElasticSearchDB",
+                "config": {
+                    "host": "localhost",
+                    "port": 9200,
+                    "login": "",
+                    "password": ""
+                }
+            },
+            "consul_db":
+                {
+                    "import_path": "ConsulDB",
+                    "config":
+                        {
+                            "host": "127.0.0.1",
+                            "port": 8500,  # HTTP API Port
+                            "login": "",
+                            "password": ""
+                        }
+                }
+        },
+        "models": [
+            {
+                "import_path": "csm.core.blogic.models.alerts.AlertModel",
+                "database": "consul_db",
+                "config": {
+                    "es_db": {
+                        "collection": "alerts"
+                    },
+                    "consul_db": {
+                        "collection": "alerts"
+                    }
+                }
+            },
+            {
+                "import_path": "csm.core.blogic.models.users.CsmUser",
+                "database": "consul_db",
+                "config": {
+                    "es_db": {
+                        "collection": "user"
+                    },
+                    "consul_db": {
+                        "collection": "user"
+                    }
+                }
+            },
+            {
+                "import_path": "csm.core.blogic.models.users.Permissions",
+                "database": "consul_db",
+                "config": {
+                    "es_db": {
+                        "collection": "permissions"
+                    },
+                    "consul_db": {
+                        "collection": "permissions"
+                    }
+                }
+            }
+        ]
+    })
+
+    async def list_all_users():
+        _all_users = await db(CsmUser).get(Query().filter_by(Compare(CsmUser.id, ">=", 0)))
+        for _user in _all_users:
+            print(f"Get by query with order_by ={_user.to_primitive()}")
+        print("*" * 20)
+
+    db = DataBaseProvider(conf)
+
+    user1 = CsmUser(USER1)
+    user2 = CsmUser(USER2)
+
+    await db(CsmUser).store(user1)
+    await db(CsmUser).store(user2)
+
+    await list_all_users()
+
+    to_update = {
+        "passwd": "NewPassword1234"
+    }
+
+    user1_id = USER1['id']
+    user2_id = USER2['id']
+
+    res = await db(CsmUser).update_by_id(user1_id, to_update)
+    await list_all_users()
+
+    res = await db(CsmUser).delete_by_id(user2_id)
+
+    await list_all_users()
+
 
 async def example():
     conf = GeneralConfig({
@@ -133,7 +252,7 @@ async def example():
         },
         "models": [
             {
-                "import_path": "csm.core.blogic.models.alerts.AlertExample",
+                "import_path": "csm.core.blogic.models.alerts.AlertModel",
                 "database": "consul_db",
                 "config": {
                     "es_db": {
@@ -145,11 +264,26 @@ async def example():
                 }
             },
             # {
-            #     "import_path": "Events",
-            #     "driver": "consul_db",
+            #     "import_path": "csm.core.blogic.models.users.CsmUser",
+            #     "database": "consul_db",
             #     "config": {
+            #         "es_db": {
+            #             "collection": "user"
+            #         },
             #         "consul_db": {
-            #             "collection": "event"
+            #             "collection": "user"
+            #         }
+            #     }
+            # },
+            # {
+            #     "import_path": "csm.core.blogic.models.users.Permissions",
+            #     "database": "consul_db",
+            #     "config": {
+            #         "es_db": {
+            #             "collection": "permissions"
+            #         },
+            #         "consul_db": {
+            #             "collection": "permissions"
             #         }
             #     }
             # }
@@ -158,21 +292,29 @@ async def example():
 
     db = DataBaseProvider(conf)
 
-    alert1 = AlertExample(ALERT1)
-    alert2 = AlertExample(ALERT2)
-    alert3 = AlertExample(ALERT3)
-    alert4 = AlertExample(ALERT4)
+    alert1 = AlertModel(ALERT1)
+    alert2 = AlertModel(ALERT2)
+    alert3 = AlertModel(ALERT3)
+    alert4 = AlertModel(ALERT4)
 
-    await db(AlertExample).store(alert1)
-    await db(AlertExample).store(alert2)
-    await db(AlertExample).store(alert3)
-    await db(AlertExample).store(alert4)
+    await db(AlertModel).store(alert1)
+    await db(AlertModel).store(alert2)
+    await db(AlertModel).store(alert3)
+    await db(AlertModel).store(alert4)
 
-    res = await db(AlertExample)._get_all_raw()
+    limit = 1
+    offset = 0
+    for i in range(4):
+        res = await db(AlertModel).get(Query().offset(offset).limit(limit))
+        for model in res:
+            print(f"Get by offset = {offset}, limit = {limit} : {model.to_primitive()}")
+            offset += 1
+
+    res = await db(AlertModel)._get_all_raw()
     print([model for model in res])
 
     _id = 2
-    res = await db(AlertExample).get_by_id(_id)
+    res = await db(AlertModel).get_by_id(_id)
     if res is not None:
         print(f"Get by id = {_id}: {res.to_primitive()}")
 
@@ -181,46 +323,48 @@ async def example():
         'location': "USA"
     }
 
-    await db(AlertExample).update_by_id(_id, to_update)
+    await db(AlertModel).update_by_id(_id, to_update)
 
-    res = await db(AlertExample).get_by_id(_id)
+    res = await db(AlertModel).get_by_id(_id)
     if res is not None:
         print(f"Get by id after update = {_id}: {res.to_primitive()}")
 
-    filter_obj = Or(And(Compare(AlertExample.id, ">=", 23),
-                        Compare(AlertExample.status, "=", "Success")),
-                    And(Compare(AlertExample.alert_uuid, "<=", 3),
-                        Compare(AlertExample.status, "=", "Success")))
+    filter_obj = Or(And(Compare(AlertModel.id, ">=", 23),
+                        Compare(AlertModel.status, "=", "Success")),
+                    And(Compare(AlertModel.alert_uuid, "<=", 3),
+                        Compare(AlertModel.status, "=", "Success")))
 
     query = Query().filter_by(filter_obj)
-    res = await db(AlertExample).get(query)
+    res = await db(AlertModel).get(query)
 
     for model in res:
         print(f"Get by query ={model.to_primitive()}")
 
-    await db(AlertExample).update(filter_obj, to_update)
+    await db(AlertModel).update(filter_obj, to_update)
 
-    res = await db(AlertExample).get(query)
+    res = await db(AlertModel).get(query)
 
     for model in res:
         print(f"Get by query after update={model.to_primitive()}")
 
-    query = Query().filter_by(filter_obj).order_by(AlertExample.location)
-    res = await db(AlertExample).get(query)
+    query = Query().filter_by(filter_obj).order_by(AlertModel.location)
+    res = await db(AlertModel).get(query)
 
     for model in res:
         print(f"Get by query with order_by ={model.to_primitive()}")
 
-    count = await db(AlertExample).count(filter_obj)
+    count = await db(AlertModel).count(filter_obj)
 
     print(f"Count by filter = {count}")
 
-    num = await db(AlertExample).delete(filter_obj)
+    num = await db(AlertModel).delete(filter_obj)
     print(f"Deleted by filter={num}")
 
-    await db(AlertExample).delete_by_id(4)
+    _id = 2
+    is_deleted = await db(AlertModel).delete_by_id(_id)
+    print(f"Object by id = {_id} was deleted: {is_deleted}")
 
-    count = await db(AlertExample).count()
+    count = await db(AlertModel).count()
 
     print(f"Remaining objects in consul = {count}")
 
@@ -228,4 +372,5 @@ async def example():
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(example())
+    # loop.run_until_complete(user_example())
     loop.close()

@@ -27,7 +27,6 @@ from csm.core.blogic.models import CsmModel
 
 
 class IDataBase(ABC):
-
     """Abstract Storage Interface"""
 
     @abstractmethod
@@ -79,22 +78,34 @@ class IDataBase(ABC):
         pass
 
     @abstractmethod
-    async def update_by_id(self, obj_id: Any, to_update: dict) -> None:
+    async def update_by_id(self, obj_id: Any, to_update: dict) -> bool:
         """
         Update csm model in db by id (primary key)
 
         :param Any obj_id: id-value of the object which should be updated (primary key value)
         :param dict to_update: dictionary with fields and values which should be updated
-        :return:
+        :return: `True` if object was updated and `False` otherwise
         """
         pass
 
     @abstractmethod
-    async def delete(self, filter_obj: IFilter):
-        """Delete objects in DB by Query
+    async def delete(self, filter_obj: IFilter) -> int:
+        """
+        Delete objects in DB by Query
 
-            :param IFilter filter_obj: filter object to perform delete operation
+        :param IFilter filter_obj: filter object to perform delete operation
+        :return: number of deleted entries
+        """
+        pass
 
+    @abstractmethod
+    async def delete_by_id(self, obj_id: Any) -> bool:
+        """
+        Delete CSM model by its id
+
+        :param Any obj_id: id of the object to be deleted
+        :return: CsmModel if object was found by its id and None otherwise
+        :return: `True` if object was deleted successfully and `False` otherwise
         """
         pass
 

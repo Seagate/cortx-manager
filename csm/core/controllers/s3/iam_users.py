@@ -45,8 +45,8 @@ class IamUserCreateSchema(BaseSchema):
     """
     user_name = fields.Str(required=True,
                            validate=[validate.Length(min=1, max=64),
-                                     validate.Regexp(r".*[^ ].*",
-                                                     error="Value is required.")])
+                                     validate.Regexp(r"^[a-zA-Z0-9_-]*$",
+                                                     error="Username can only contain Alphanumeric, - and  _ .")])
     password = fields.Str(required=True, validate=[validate.Length(min=8, max=64), Password()])
     path = fields.Str(default='/', validate=[validate.Length(max=512), StartsWith("/", True)])
     require_reset = fields.Boolean(default=False)
@@ -66,7 +66,9 @@ class IamUserDeleteSchema(BaseSchema):
     """
     IAM user delete schema validation class
     """
-    user_name = fields.Str(required=True, validate=[validate.Length(min=1, max=64), validate.Regexp(r".*[^ ].*", error="Value is required.")])
+    user_name = fields.Str(required=True, validate=[validate.Length(min=1, max=64),
+                                                    validate.Regexp(r"^[a-zA-Z0-9_-]*$",
+                                                        error="Username can only contain Alphanumeric, - and  _ .")])
 
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserListView(CsmView):
@@ -76,7 +78,7 @@ class IamUserListView(CsmView):
         """
         super(IamUserListView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.data.s3_session
+        self._s3_session = self.request.session.credentials
         if not self._s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
         self._service = self.request.app["s3_iam_users_service"]
@@ -117,7 +119,7 @@ class IamUserView(CsmView):
         """
         super(IamUserView, self).__init__(request)
         # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.data.s3_session
+        self._s3_session = self.request.session.credentials
         if not self._s3_session:
             raise Response(rc=401, output="This user is not an S3 User")
         self._service = self.request.app["s3_iam_users_service"]
