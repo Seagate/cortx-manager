@@ -44,7 +44,6 @@ class UslService(ApplicationService):
     """
     # FIXME improve token management
     _token: str
-    _fake_system_serial_number: str
     _s3cli: Any
     _device: Device
     _volumes: Dict[str, Dict[str, Any]]
@@ -54,10 +53,10 @@ class UslService(ApplicationService):
         Constructor.
         """
         self._token = ''
-        self._fake_system_serial_number = 'EES%012d' % time.time()
         self._s3cli = self._create_s3cli(s3_plugin)
-        self._device = Device(DEFAULT_EOS_DEVICE_NAME, '0000', self._fake_system_serial_number,
-            'internal', self._get_device_uuid(), DEFAULT_EOS_DEVICE_VENDOR)
+        dev_uuid = self._get_device_uuid()
+        self._device = Device(DEFAULT_EOS_DEVICE_NAME, '0000', dev_uuid,
+            'internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
         self._volumes = {}
         self._buckets = {}
 
@@ -235,7 +234,7 @@ class UslService(ApplicationService):
         return {
             'model': 'EES',
             'type': 'ees',
-            'serialNumber': self._fake_system_serial_number,
+            'serialNumber': self._device.uuid,
             'friendlyName': 'EESFakeSystem',
             'firmwareVersion': '0.00',
         }
