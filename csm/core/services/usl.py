@@ -68,9 +68,9 @@ class UslService(ApplicationService):
         s3_conf.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
         s3_conf.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
 
-        toml_conf = toml.load(const.USL_S3_CONF)
-        return s3_plugin.get_s3_client(toml_conf['credentials']['access_key_id'],
-                                       toml_conf['credentials']['secret_key'],
+        usl_s3_conf = toml.load(const.USL_S3_CONF)
+        return s3_plugin.get_s3_client(usl_s3_conf['credentials']['access_key_id'],
+                                       usl_s3_conf['credentials']['secret_key'],
                                        s3_conf)
 
     def _get_device_uuid(self) -> UUID:
