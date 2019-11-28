@@ -106,6 +106,8 @@ AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 # UDS Server
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
 
+# USL S3 configuration (CES2020 only!)
+USL_S3_CONF = '/etc/uds/uds_s3.toml'
 #IAM User Related
 PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
 

@@ -22,15 +22,20 @@ from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
 from typing import Any, Dict, List
-from uuid import UUID
+from uuid import UUID, uuid4, uuid5
 import asyncio
 import time
+import toml
 
 from csm.common.conf import Conf
+from csm.common.errors import CsmError, CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+from csm.core.data.models.s3 import S3ConnectionConfig
+from csm.core.blogic.models.usl import Device, Volume, MountResponse
 
+DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 
 class UslService(ApplicationService):
     """
@@ -38,34 +43,91 @@ class UslService(ApplicationService):
     """
     # FIXME improve token management
     _token: str
-    _fake_system_serial_number: str
+    _s3cli: Any
+    _device: Device
+    _volumes: Dict[str, Dict[str, Any]]
 
-    def __init__(self) -> None:
+    def __init__(self, s3_plugin) -> None:
         """
         Constructor.
         """
         self._token = ''
-        self._fake_system_serial_number = 'EES%012d' % time.time()
+        self._s3cli = self._create_s3cli(s3_plugin)
+        dev_uuid = self._get_device_uuid()
+        self._device = Device(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
+                              '0000', dev_uuid,
+                              'internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
+        self._volumes = {}
+        self._buckets = {}
 
-    # TODO replace stub
+    # TODO: pass S3 server credentials to the server instead of reading from a file
+    def _create_s3cli(self, s3_plugin):
+        """Creates the S3 client for USL service"""
+
+        s3_conf = S3ConnectionConfig()
+        s3_conf.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
+        s3_conf.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
+
+        usl_s3_conf = toml.load(const.USL_S3_CONF)
+        return s3_plugin.get_s3_client(usl_s3_conf['credentials']['access_key_id'],
+                                       usl_s3_conf['credentials']['secret_key'],
+                                       s3_conf)
+
+    def _get_device_uuid(self) -> UUID:
+        """Obtains the EOS device UUID from config."""
+
+        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
+
+    def _get_volume_uuid(self, bucket_name: str) -> UUID:
+        """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
+
+        return uuid5(self._device.uuid, bucket_name)
+
+    async def _is_bucket_udx_enabled(self, bucket):
+        """
+        Checks if bucket is UDX enabled
+
+        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
+        """
+
+        tags = await self._s3cli.get_bucket_tagging(bucket)
+        return tags.get('udx', 'disabled') == 'enabled'
+
+    async def _update_volumes_cache(self):
+        """
+        Updates the internal buckets cache.
+
+        Obtains the fresh buckets list from S3 server and updates cache with it.
+        Keeps cache the same if the server is not available.
+        """
+
+        try:
+            fresh_buckets = [b.name for b in await self._s3cli.get_all_buckets()
+                             if await self._is_bucket_udx_enabled(b)]
+            cached_buckets = [v['bucketName'] for _,v in self._volumes.items()]
+
+            # Remove staled volumes
+            self._volumes = {k:v for k,v in self._volumes.items()
+                             if v['bucketName'] in fresh_buckets}
+            # Add new volumes
+            for b in fresh_buckets:
+                if not b in cached_buckets:
+                    volume_uuid = self._get_volume_uuid(b)
+                    self._volumes[volume_uuid] = {'bucketName' : b,
+                                                  'volume' : Volume(self._device.uuid, 's3', 0, 0,
+                                                                    volume_uuid)}
+        except Exception as e:
+            raise CsmInternalError(desc=f'Unable to update buckets cache: {str(e)}')
+
+
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
-        return [
-            {
-                'name': 'a_name',
-                'productID': 'a_product_id',
-                'serialNumber': '000000000000',
-                'type': 'Internal',
-                'uuid': '00000000-0000-0000-0000-000000000000',
-                'vendorID': 'a_vendor_id',
-            },
-        ]
+        return [vars(self._device)]
 
-    # TODO replace stub
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
         """
         Provides a list of all volumes associated to a specific device.
@@ -73,17 +135,12 @@ class UslService(ApplicationService):
         :param device_id: Device UUID
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-        return [
-            {
-                'deviceUuid': '00000000-0000-0000-0000-000000000000',
-                'filesystem': 'a_filesystem',
-                'size': 0,
-                'used': 0,
-                'uuid': '00000000-0000-0000-0000-000000000001',
-            },
-        ]
 
-    # TODO replace stub
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+        await self._update_volumes_cache()
+        return [vars(v['volume']) for uuid,v in self._volumes.items()]
+
     async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
         """
         Attaches a volume associated to a specific device to a mount point.
@@ -92,10 +149,14 @@ class UslService(ApplicationService):
         :param volume_id: Volume UUID
         :return: A dictionary containing the mount handle and the mount path.
         """
-        return {
-            'handle': 'handle',
-            'mountPath': '/mnt',
-        }
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+
+        if not volume_id in self._volumes:
+            await self._update_volumes_cache()
+            if not volume_id in self._volumes:
+                raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
+        return vars(MountResponse('handle', '/mnt', self._volumes[volume_id]['bucketName']))
 
     # TODO replace stub
     async def post_device_volume_unmount(self, device_id: UUID, volume_id: UUID) -> str:
@@ -173,7 +234,7 @@ class UslService(ApplicationService):
         return {
             'model': 'EES',
             'type': 'ees',
-            'serialNumber': self._fake_system_serial_number,
+            'serialNumber': self._device.uuid,
             'friendlyName': 'EESFakeSystem',
             'firmwareVersion': '0.00',
         }

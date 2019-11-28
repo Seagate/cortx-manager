@@ -19,7 +19,7 @@ from typing import List
 from enum import Enum
 
 
-class IamConnectionConfig:
+class S3ConnectionConfig:
     """
     Configuration options for IAM server access
     """
@@ -103,6 +103,7 @@ class IamErrors(Enum):
     NoSuchEntity = 'NoSuchEntity'
     ExpiredCredential = 'ExpiredCredential'
     InvalidLdapUserId = 'InvalidLdapUserId'
+    PasswordPolicyVoilation = 'PasswordPolicyVoilation'
 
 
 class IamError:

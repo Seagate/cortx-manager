@@ -1,6 +1,7 @@
 # PRODUCT
 PRODUCT:
     name: "eos"
+    uuid: "bae4b468-565d-49df-9495-a43a5d89babc"
 
 # CSM HA
 HA:
@@ -43,10 +44,11 @@ STATS:
         url: "http://localhost:5601/api/timelion/run"
         interval: 10 # Flush interval in sec (Rate at which stats is stored)
 
-#S3
+# S3
 S3:
     host: "localhost"
-    port: 9080
+    iam_port: 9080
+    s3_port: 80
     max_retries_num: 1
     ldap_login: "sgiamadmin"
     ldap_password: "ldapadmin"
