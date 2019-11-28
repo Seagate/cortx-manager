@@ -76,6 +76,8 @@ class CsmAgent:
         s3 = import_plugin_module('s3').S3Plugin()
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
+        
+        CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
     @staticmethod
     def _daemonize():
@@ -148,6 +150,7 @@ if __name__ == '__main__':
 
         from csm.common.timeseries import TimelionProvider
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
+        from csm.core.services.storage_capacity import StorageCapacityService
 
         CsmAgent.init()
         CsmAgent.run()
