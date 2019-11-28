@@ -152,9 +152,9 @@ class AdminUserView(CsmView):
 
     async def post(self):
         """
-        POST REST implementation of creating an admin csm user
+        POST REST implementation of creating a root user for preboarding
         """
-        Log.debug("Handling create admin post request")
+        Log.debug("Creating root user")
 
         try:
             schema = CsmUserCreateSchema()
@@ -165,13 +165,13 @@ class AdminUserView(CsmView):
             raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
 
         status = self.STATUS_CREATED
-        response = await self._service.create_admin_user(**user_body)
+        response = await self._service.create_root_user(**user_body)
         if not response:
-            Log.error("Admin user already exists")
+            Log.error("Root user already exists")
             status = self.STATUS_CONFLICT
             response = {
-                'message_id': 'admin_already_exists',
-                'message_text': 'Admin user already exists',
+                'message_id': 'root_already_exists',
+                'message_text': 'Root user already exists',
                 'extended_message': user_body['user_id']
             }
 
