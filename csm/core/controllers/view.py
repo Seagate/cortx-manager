@@ -36,13 +36,12 @@ class CsmAuth:
 
 
 class CsmResponse(web.Response):
-    def __init__(self, res={}, headers=None,
+    def __init__(self, res={}, status=200, headers=None,
                  content_type='application/json',
                  **kwargs):
         body = json.dumps(res)
-        super().__init__(body=body, headers=headers,
-                         content_type=content_type,
-                         **kwargs)
+        super().__init__(body=body, status=status, headers=headers,
+                         content_type=content_type, **kwargs)
 
 
 class CsmView(web.View):
