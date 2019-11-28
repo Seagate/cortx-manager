@@ -20,7 +20,7 @@ import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
 from csm.core.blogic import const
-from csm.core.controllers.view import CsmView
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
@@ -137,3 +137,44 @@ class CsmUsersView(CsmView):
                 "Invalid request body: {}".format(val_err))
 
         return await self._service.update_user(user_id, user_body)
+
+
+@CsmView._app_routes.view("/api/v1/preboarding/user")
+@CsmAuth.public
+class AdminUserView(CsmView):
+
+    STATUS_CREATED = 201
+    STATUS_CONFLICT = 409
+
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app["csm_user_service"]
+
+    async def post(self):
+        """
+        POST REST implementation of creating an admin csm user
+        """
+        Log.debug("Handling create admin post request")
+
+        try:
+            schema = CsmUserCreateSchema()
+            user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        except ValidationError as val_err:
+            raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
+
+        status = self.STATUS_CREATED
+        response = await self._service.create_admin_user(**user_body)
+        if not response:
+            Log.error("Admin user already exists")
+            status = self.STATUS_CONFLICT
+            response = {
+                'message_id': 'admin_already_exists',
+                'message_text': 'Admin user already exists',
+                'extended_message': user_body['user_id']
+            }
+
+        # TODO: We need to return specific HTTP codes here.
+        # Change this after we have proper exception hierarchy.
+        return CsmResponse(response, status=status)

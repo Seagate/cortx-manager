@@ -147,6 +147,22 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
+    async def create_admin_user(self, user_id: str, password: str) -> dict:
+        """
+        Handles the csm user creation
+        :param user_id: User identifier
+        :param password: User password (not hashed)
+        :returns: A dictionary describing the newly created user.
+        In case of error, an exception is raised.
+        """
+        if await self.user_mgr.count() != 0:
+            # Admin user can be created only once during onboarding.
+            # Non-zero user count means that the admin user was already created.
+            return None
+        user = User.instantiate_csm_user(user_id, password, roles=['admin'])
+        await self.user_mgr.create(user)
+        return self._user_to_dict(user)
+
     async def get_user(self, user_id: str):
         """
         Fetches a single user.

@@ -21,6 +21,7 @@ from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
 from .system_config import SystemConfigView
+from .storage_capacity import StorageCapacityView
 from csm.core.data.storage.system_config import SystemConfigStorage
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
