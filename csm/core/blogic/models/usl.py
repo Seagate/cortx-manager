@@ -38,7 +38,7 @@ class Volume:
 class MountResponse:
     handle: str
     mountPath: str
-    bucketName: str
+    volumeName: str
 
 
 
