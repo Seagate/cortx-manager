@@ -51,7 +51,9 @@ class S3AccountService(ApplicationService):
             s3_client = self._s3plugin.get_s3_client(account.access_key_id,
                 account.secret_key_id, self._get_s3_connection_config())
             new_bucket = await s3_client.create_bucket(bucket_name)
+            Log.info(f'UDX bucket {bucket_name} is created')
             await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
+            Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
         except:
             raise CsmInternalError("UDX bucket creation failed")
 
@@ -91,7 +93,7 @@ class S3AccountService(ApplicationService):
     async def list_accounts(self, continue_marker=None, page_limit=None) -> dict:
         """
         Fetch a list of s3 accounts.
-        :param continue_marker: Marker that must be used in order to fetch another 
+        :param continue_marker: Marker that must be used in order to fetch another
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
                            returned in one batch
@@ -204,16 +206,16 @@ class S3AccountService(ApplicationService):
             })
 
     def _get_iam_connection_config(self):
-        # TODO: share the code below with other s3 services once they all get merged 
+        # TODO: share the code below with other s3 services once they all get merged
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
         s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
-        s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 
+        s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
             "S3.max_retries_num")
         return s3_connection_config
 
     def _get_s3_connection_config(self):
-        # TODO: share the code below with other s3 services once they all get merged 
+        # TODO: share the code below with other s3 services once they all get merged
         s3_connection_config = self._get_iam_connection_config()
         s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.s3_port")
         return s3_connection_config
