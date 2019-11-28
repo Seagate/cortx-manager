@@ -5,6 +5,7 @@ from csm.eos.plugins.s3 import ExtendedIamAccount, IamAccountListResponse
 
 Log.init('test', '.')
 
+# TODO: integrate the test into testing framework
 if __name__ == '__main__':
     iam_conf = S3ConnectionConfig()
     iam_conf.host = "sati10b-m08.mero.colo.seagate.com"
