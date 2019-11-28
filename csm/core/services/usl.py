@@ -35,7 +35,6 @@ from csm.core.blogic import const
 from csm.core.data.models.s3 import S3ConnectionConfig
 from csm.core.blogic.models.usl import Device, Volume, MountResponse
 
-DEFAULT_EOS_DEVICE_NAME = 'cloudstore'
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 
 class UslService(ApplicationService):
@@ -55,8 +54,9 @@ class UslService(ApplicationService):
         self._token = ''
         self._s3cli = self._create_s3cli(s3_plugin)
         dev_uuid = self._get_device_uuid()
-        self._device = Device(DEFAULT_EOS_DEVICE_NAME, '0000', dev_uuid,
-            'internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
+        self._device = Device(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
+                              '0000', dev_uuid,
+                              'internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
         self._volumes = {}
         self._buckets = {}
 
