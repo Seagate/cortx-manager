@@ -56,7 +56,7 @@ class UslService(ApplicationService):
         dev_uuid = self._get_device_uuid()
         self._device = Device(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
                               '0000', dev_uuid,
-                              'internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
+                              'Internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
         self._volumes = {}
         self._buckets = {}
 
