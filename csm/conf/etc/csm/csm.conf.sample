@@ -32,7 +32,7 @@ CHANNEL:
     username: "sspluser"
     password: "sspl4ever"
     exchange_type: "topic"
-    exchange: "sspl_out"
+    exchange: "sspl-out"
     exchange_queue: "sensor-queue"
     routing_key: "sensor-key"
     retry_count: "1"
