@@ -362,7 +362,7 @@ class ConsulDB(GenericDataBase):
         limit = offset + query.limit if query.limit is not None else len(csm_models)
         # NOTE: if query.limit is None then slice will be from offset to the end of array
         #  slice(0, None) means that start is 0 and stop is not specified
-        if offset > limit:
+        if offset < 0 or limit < 0:
             raise DataAccessInternalError("Wrong offset and limit parameters of Query object: "
                                           f"offset={query.offset}, limit={query.limit}")
         model_slice = slice(offset, limit)
