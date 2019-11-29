@@ -27,7 +27,8 @@ from typing import Optional
 from csm.common.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
-from csm.eos.plugins.s3 import S3Plugin, S3ConnectionConfig, IamError
+from csm.eos.plugins.s3 import S3Plugin
+from csm.core.data.models.s3 import S3ConnectionConfig, IamError
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager

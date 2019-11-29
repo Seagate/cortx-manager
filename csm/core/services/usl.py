@@ -28,7 +28,7 @@ import time
 import toml
 
 from csm.common.conf import Conf
-from csm.common.errors import CsmError, CsmInternalError, CsmNotFoundError
+from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const

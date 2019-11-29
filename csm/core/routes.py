@@ -22,6 +22,8 @@
 
 from aiohttp import web
 from csm.core.controllers import AlertsHttpController, UslController
+from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView
+
 
 
 class ApiRoutes:

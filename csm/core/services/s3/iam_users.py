@@ -49,9 +49,9 @@ class IamUsersService(ApplicationService):
         """
         #Create S3 Client Connection Object
         s3_client_object = self._s3plugin.get_iam_client(s3_session.access_key,
-                                    s3_session.secret_key,
-                                    self._iam_connection_config,
-                                    s3_session.session_token)
+                                                         s3_session.secret_key,
+                                                         self._iam_connection_config,
+                                                         s3_session.session_token)
 
         return s3_client_object
 
