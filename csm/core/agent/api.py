@@ -237,8 +237,20 @@ class CsmRestApi(CsmApi, ABC):
         return response
 
     @staticmethod
+    @CsmAuth.public
     async def process_websocket(request):
-        """ Handles websocket connection """
+        """
+        The method handles websocket connection.
+
+        TODO: Implement authentication mechanism for websockets.
+        As JavaScript WebSocket API does not support sending
+        any custom headers during HTTP handshake stage, the
+        'Authorization' header can not be used for websocket
+        connection authentication. Some other authentication
+        scheme should be designed for this case.
+        For the time being the handler is marked as 'public'
+        to disable authentication for websockets completely.
+        """
         ws = web.WebSocketResponse()
         await ws.prepare(request)
         Log.debug('REST API websock connection opened')
