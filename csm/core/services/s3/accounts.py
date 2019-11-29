@@ -37,6 +37,10 @@ class S3AccountService(ApplicationService):
     """
     def __init__(self, s3plugin):
         self._s3plugin = s3plugin
+        #TODO
+        """
+        Password should be taken as input and not read from conf file directly.
+        """
         self._s3_root_client = self._get_root_client()
 
     @Log.trace_method(Log.DEBUG)
@@ -223,5 +227,9 @@ class S3AccountService(ApplicationService):
     def _get_root_client(self):
         config = self._get_iam_connection_config()
         ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
+        #TODO
+        """
+        Password should be taken as input and not read from conf file directly.
+        """
         ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_password")
         return self._s3plugin.get_iam_client(ldap_login, ldap_password, config)
