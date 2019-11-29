@@ -62,11 +62,42 @@ class ESWords:
     COUNT = "count"
     DELETED = "deleted"
     PAINLESS = "painless"
+    FIELD_DATA = "fielddata"
+    INDEX_SETTINGS = "settings"
+
+
+class ESDataType:
+    """Enumeration for ElasticSearch data types"""
+
+    TEXT = "text"
+    KEYWORD = "keyword"
+    INTEGER = "integer"
+    DATE = "date"
+    BOOLEAN = "boolean"
+    FLOAT = "float"
+    LONG = "long"
+    SHORT = "short"
+
+
+LOWERCASE_NORMALIZER = "lowercase_normalizer"
+
+# Specific for ElasticSearch setting to perform case insensitive search
+INDEX_SETTINGS = {
+    "analysis": {
+        "normalizer": {
+            LOWERCASE_NORMALIZER: {
+                "type": "custom",
+                "char_filter": [],
+                "filter": ["lowercase"]
+            }
+        }
+    }
+}
 
 
 # TODO: Add remaining schematics data types
 DATA_MAP = {
-    StringType: "text",  # TODO: keyword
+    StringType: "keyword",  # TODO: keyword
     IntType: "integer",
     DateType: "date",
     BooleanType: "boolean",
@@ -98,7 +129,7 @@ def field_to_str(field: Union[str, BaseType]) -> str:
 class ElasticSearchQueryConverter(GenericQueryConverter):
     """
     Implementation of filter tree visitor that converts the tree into the Query
-    object of elasticsearch-dsl library.
+    object of ElasticSearch-dsl library.
 
     Usage:
     converter = ElasticSearchQueryConverter()
@@ -172,6 +203,7 @@ class ElasticSearchDataMapper:
         """
         self._model = model
         self._mapping = {
+            ESWords.INDEX_SETTINGS: INDEX_SETTINGS,
             ESWords.MAPPINGS: {
                 ESWords.PROPERTIES: {
                 }
@@ -193,7 +225,9 @@ class ElasticSearchDataMapper:
 
         properties[name] = dict()
         properties[name][ESWords.DATA_TYPE] = DATA_MAP[property_type]
-        # properties[name]["index"] = "false"
+        # NOTE: to perform case insensitive search we need to use custom normalizer for keywords
+        if properties[name][ESWords.DATA_TYPE] == ESDataType.KEYWORD:
+            properties[name]["normalizer"] = LOWERCASE_NORMALIZER
 
     def build_index_mappings(self) -> dict:
         """
@@ -239,7 +273,7 @@ class ElasticSearchQueryService:
         if q.offset is not None:
             extra_params["from_"] = q.offset
         if q.limit is not None:
-            extra_params["size"] = q.limit + extra_params.get("from_", 0)
+            extra_params["size"] = q.limit
 
         if any((i is not None for i in (q.offset, q.limit))):
             search = search.extra(**extra_params)

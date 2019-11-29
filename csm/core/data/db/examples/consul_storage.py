@@ -34,10 +34,8 @@ from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel
 
 
-ALERT1 = {'id': 22,
-          'alert_uuid': 1,
+ALERT1 = {'alert_uuid': 1,
           'status': "Success",
-          'type': "Hardware",
           'enclosure_id': 1,
           'module_name': "SSPL",
           'description': "Some Description",
@@ -54,10 +52,8 @@ ALERT1 = {'id': 22,
           'created_time': datetime.now()
           }
 
-ALERT2 = {'id': 23,
-          'alert_uuid': 2,
+ALERT2 = {'alert_uuid': 2,
           'status': "Failed",
-          'type': "Hardware",
           'enclosure_id': 1,
           'module_name': "SSPL",
           'description': "Some Description",
@@ -74,10 +70,8 @@ ALERT2 = {'id': 23,
           'created_time': datetime.now()
           }
 
-ALERT3 = {'id': 24,
-          'alert_uuid': 3,
+ALERT3 = {'alert_uuid': 3,
           'status': "Failed",
-          'type': "Software",
           'enclosure_id': 1,
           'module_name': "SSPL",
           'description': "Some Description",
@@ -94,10 +88,8 @@ ALERT3 = {'id': 24,
           'created_time': datetime.now()
           }
 
-ALERT4 = {'id': 25,
-          'alert_uuid': 4,
+ALERT4 = {'alert_uuid': 4,
           'status': "Success",
-          'type': "Software",
           'enclosure_id': 1,
           'module_name': "SSPL",
           'description': "Some Description",
@@ -319,7 +311,7 @@ async def example():
         print(f"Get by id = {_id}: {res.to_primitive()}")
 
     to_update = {
-        'type': "Hardware",
+        'state': "Good",
         'location': "USA"
     }
 
@@ -329,8 +321,7 @@ async def example():
     if res is not None:
         print(f"Get by id after update = {_id}: {res.to_primitive()}")
 
-    filter_obj = Or(And(Compare(AlertModel.id, ">=", 23),
-                        Compare(AlertModel.status, "=", "Success")),
+    filter_obj = Or(Compare(AlertModel.status, "=", "Success"),
                     And(Compare(AlertModel.alert_uuid, "<=", 3),
                         Compare(AlertModel.status, "=", "Success")))
 
