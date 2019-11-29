@@ -79,6 +79,7 @@ class CsmAgent:
         s3 = import_plugin_module('s3').S3Plugin()
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
+        CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
         
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
@@ -145,6 +146,7 @@ if __name__ == '__main__':
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService
+        from csm.core.services.s3.buckets import S3BucketService
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
