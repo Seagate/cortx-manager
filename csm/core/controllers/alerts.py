@@ -38,7 +38,7 @@ class AlertsQueryParameter(Schema):
     sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
     direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
         missing='desc', default='desc')
-    show_all = fields.Boolean(default=True, missing=True, allow_none=True)
+    show_all = fields.Boolean(default=False, missing=False, allow_none=True)
     severity = fields.Str(default=None, missing=None, allow_none=True)
     resolved = fields.Boolean(default=None, missing=None)
     acknowledged = fields.Boolean(default=None, missing=None)
