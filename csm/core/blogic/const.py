@@ -5,6 +5,7 @@ SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
+HCTL_COMMAND = ['hctl', 'mero', 'status']
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -119,3 +120,6 @@ CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time', 'up
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
+
+#CONSTANT
+UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
