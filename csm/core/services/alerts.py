@@ -80,39 +80,49 @@ class AlertRepository(IAlertStorage):
                         False), Compare(AlertModel.resolved, '=', False)))
         await self.db(AlertModel).update(filter, update_params)
 
-    def _prepare_filters(self, time_range: DateTimeRange, show_all: bool = True,
-            severity: str = None, resolved: bool = None, acknowledged: bool =
-            None):
-        query_conditions = []
-
+    def _prepare_time_range(self, field, time_range: DateTimeRange):
+        db_conditions = []
         if time_range and time_range.start:
-            query_conditions.append(Compare(AlertModel.created_time, '>=', time_range.start))
+            db_conditions.append(Compare(field, '>=', time_range.start))
         if time_range and time_range.end:
-            query_conditions.append(Compare(AlertModel.created_time, '<=', time_range.end))
+            db_conditions.append(Compare(field, '<=', time_range.end))
+        return db_conditions
+
+    def _prepare_filters(self, create_time_range: DateTimeRange, show_all: bool = True,
+            severity: str = None, resolved: bool = None, acknowledged: bool =
+            None, show_update_range: DateTimeRange = None):
+        and_conditions = [*self._prepare_time_range(AlertModel.created_time, create_time_range)]
 
         if not show_all:
-            query_conditions.append(
-                Or(Compare(AlertModel.resolved, '=', False),
-                    Compare(AlertModel.acknowledged, '=', False)))
-        else:
-            if resolved is not None:
-                query_conditions.append(Compare(AlertModel.resolved, '=', resolved))
-            if acknowledged is not None:
-                query_conditions.append(Compare(AlertModel.acknowledged, '=',
-                    acknowledged))
+            or_conditions = []
+            or_conditions.append(Compare(AlertModel.resolved, '=', False))
+            or_conditions.append(Compare(AlertModel.acknowledged, '=', False))
+            range_condition = self._prepare_time_range(AlertModel.updated_time, show_update_range)
+            if range_condition:
+                or_conditions.extend(range_condition)
+
+            and_conditions.append(Or(*or_conditions))
+
+        if resolved is not None:
+            and_conditions.append(Compare(AlertModel.resolved, '=', resolved))
+
+        if acknowledged is not None:
+            and_conditions.append(Compare(AlertModel.acknowledged, '=',
+                acknowledged))
 
         if severity:
-            query_conditions.append(Compare(AlertModel.severity, '=', severity))
+            and_conditions.append(Compare(AlertModel.severity, '=', severity))
 
-        return And(*query_conditions) if query_conditions else None
+        return And(*and_conditions) if and_conditions else None
 
     async def retrieve_by_range(
-            self, time_range: DateTimeRange, show_all: bool=True,
+            self, create_time_range: DateTimeRange, show_all: bool=True,
             severity: str=None, sort: Optional[SortBy]=None,
-            limits: Optional[QueryLimits]=None, resolved: bool = None,
-            acknowledged: bool = None) -> Iterable[AlertModel]:
-        query_filter = self._prepare_filters(time_range, show_all, severity,
-                resolved, acknowledged)
+            limits: Optional[QueryLimits]=None, resolved: bool = None, acknowledged: bool = None,
+            show_update_range: DateTimeRange = None) -> Iterable[AlertModel]:
+
+        query_filter = self._prepare_filters(create_time_range, show_all, severity,
+                resolved, acknowledged, show_update_range)
         query = Query().filter_by(query_filter)
 
         if limits and limits.offset:
@@ -126,12 +136,12 @@ class AlertRepository(IAlertStorage):
 
         return await self.db(AlertModel).get(query)
 
-    async def count_by_range(self, time_range: DateTimeRange, show_all: bool = True,
+    async def count_by_range(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None,
-                        acknowledged: bool = None) -> int:
+            acknowledged: bool = None, show_update_range: DateTimeRange = None) -> int:
         return await self.db(AlertModel).count(
-            self._prepare_filters(time_range, show_all, severity, resolved,
-                acknowledged))
+            self._prepare_filters(create_time_range, show_all, severity, resolved,
+                acknowledged, show_update_range))
 
     async def retrieve_all(self) -> list:
         """
@@ -221,6 +231,10 @@ class AlertsAppService(ApplicationService):
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
+        show_time_range = DateTimeRange(datetime.utcnow() - timedelta(
+            hours=const.ALERT_SHOW_TIME_HOURS), None)
+
+        # TODO: the function takes too many parameters
         alerts_list = await self.repo.retrieve_by_range(
             time_range,
             show_all,
@@ -228,11 +242,12 @@ class AlertsAppService(ApplicationService):
             SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
             limits,
             resolved,
-            acknowledged
+            acknowledged,
+            show_time_range
         )
 
         alerts_count = await self.repo.count_by_range(time_range, show_all,
-                severity, resolved, acknowledged)
+                severity, resolved, acknowledged, show_time_range)
         return {
             "total_records": alerts_count,
             "alerts": [alert.to_primitive() for alert in alerts_list]
@@ -283,7 +298,7 @@ class AlertMonitorService(Service):
         back channel.
         """
         while self.unpublished_alerts:
-            self._publish(self.pop())
+            self._publish(self.unpublished_alerts.pop())
 
     def _monitor(self):
         """

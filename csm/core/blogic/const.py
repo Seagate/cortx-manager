@@ -94,6 +94,7 @@ ALERT_COMMENT = 'comment'
 ALERT_HW_IDENTIFIER = 'hw_identifier'
 ALERT_MAX_COMMENT_LENGTH = 255
 ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved', 'acknowledged']
+ALERT_SHOW_TIME_HOURS = 24
 
 # CSM Schema Path
 CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
