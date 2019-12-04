@@ -1,3 +1,7 @@
 ########################################
 # CSM Test Parameters (YAML Format)
 ########################################
+S3:
+  host: "sati10b-m08.mero.colo.seagate.com"
+  login: "sgiamadmin"
+  password: "ldapadmin"
