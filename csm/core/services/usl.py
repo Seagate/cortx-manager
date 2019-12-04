@@ -156,7 +156,13 @@ class UslService(ApplicationService):
             await self._update_volumes_cache()
             if not volume_id in self._volumes:
                 raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
-        return vars(MountResponse('handle', '/mnt', self._volumes[volume_id]['bucketName']))
+        return vars(
+            MountResponse(
+                'handle',
+                self._volumes[volume_id]['bucketName'],
+                self._volumes[volume_id]['bucketName'],
+            ),
+        )
 
     # TODO replace stub
     async def post_device_volume_unmount(self, device_id: UUID, volume_id: UUID) -> str:
