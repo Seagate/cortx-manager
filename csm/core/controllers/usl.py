@@ -158,6 +158,35 @@ class SystemView(View):
         return await self._usl_service.get_system()
 
 
+class SystemCertificatesByTypeView(View):
+    """
+    System certificates view by type.
+    """
+    async def get(self) -> bytes:
+
+        class MethodSchema(Schema):
+            type = fields.Str(required=True)
+
+            @validates('type')
+            def validate_type(self, value: str) -> None:
+                valid_values = (
+                    'nativeCertificate',
+                    'domainCertificate',
+                    'nativePrivateKey',
+                    'domainPrivateKey',
+                )
+                if value not in valid_values:
+                    raise ValidationError('Invalid certificate type')
+
+        try:
+            params = MethodSchema().load(self.request.match_info)
+            return await self._usl_service.get_system_certificates_by_type(params['type'])
+        except ValidationError as e:
+            desc = 'Malformed path'
+            Log.error(f'{desc}: {e}')
+            raise CsmError(desc=desc)
+
+
 class NetworkInterfacesView(View):
     """
     Network interfaces list view.
@@ -196,6 +225,10 @@ class UslController:
     @View.as_generic_view_class
     def get_system_view_class(self) -> Type[SystemView]:
         return SystemView
+
+    @View.as_generic_view_class
+    def get_system_certificates_by_type_view_class(self) -> Type[SystemCertificatesByTypeView]:
+        return SystemCertificatesByTypeView
 
     @View.as_generic_view_class
     def get_network_interfaces_view_class(self) -> Type[NetworkInterfacesView]:
