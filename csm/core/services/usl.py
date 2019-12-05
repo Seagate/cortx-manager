@@ -241,11 +241,12 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
+        friendly_name = Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local'
         return {
             'model': 'EES',
             'type': 'ees',
             'serialNumber': self._device.uuid,
-            'friendlyName': 'EESFakeSystem',
+            'friendlyName': str(friendly_name),
             'firmwareVersion': '0.00',
         }
 
