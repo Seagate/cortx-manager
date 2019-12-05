@@ -46,6 +46,8 @@ class UslService(ApplicationService):
     _s3cli: Any
     _device: Device
     _volumes: Dict[str, Dict[str, Any]]
+    # FIXME improve device registration status management
+    _is_device_registered: bool
 
     def __init__(self, s3_plugin) -> None:
         """
@@ -59,6 +61,7 @@ class UslService(ApplicationService):
                               'Internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
         self._volumes = {}
         self._buckets = {}
+        self._is_device_registered = False
 
     # TODO: pass S3 server credentials to the server instead of reading from a file
     def _create_s3cli(self, s3_plugin):
@@ -208,6 +211,7 @@ class UslService(ApplicationService):
             while time.time() < timeout_limit:
                 async with session.get(endpoint_url) as response:
                     if response.status == 200:
+                        self._is_device_registered = True
                         Log.info('Device registration successful')
                         return
                     elif response.status != 201:
@@ -244,6 +248,20 @@ class UslService(ApplicationService):
             'friendlyName': 'EESFakeSystem',
             'firmwareVersion': '0.00',
         }
+
+    # TODO replace stub
+    async def get_system_certificates_by_type(self, certificate_type: str) -> bytes:
+        """
+        Provides one of the available system certificates according to the specified type.
+
+        :param certificate_type: Certificate type
+        :return: The corresponding system certificate
+        """
+        if certificate_type != 'domainCertificate':
+            raise web.HTTPNotImplemented()
+        elif not self._is_device_registered:
+            raise web.HTTPNotFound()
+        return bytes()
 
     # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
