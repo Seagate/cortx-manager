@@ -2,6 +2,7 @@
 PRODUCT:
     name: "eos"
     uuid: "bae4b468-565d-49df-9495-a43a5d89babc"
+    friendly_name: "local"
 
 # CSM HA
 HA:
