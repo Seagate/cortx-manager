@@ -56,9 +56,14 @@ class UslService(ApplicationService):
         self._token = ''
         self._s3cli = self._create_s3cli(s3_plugin)
         dev_uuid = self._get_device_uuid()
-        self._device = Device(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
-                              '0000', dev_uuid,
-                              'Internal', dev_uuid, DEFAULT_EOS_DEVICE_VENDOR)
+        self._device = Device(
+            Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
+            '0000',
+            dev_uuid,
+            'S3',
+            dev_uuid,
+            DEFAULT_EOS_DEVICE_VENDOR,
+        )
         self._volumes = {}
         self._buckets = {}
         self._is_device_registered = False
@@ -76,10 +81,16 @@ class UslService(ApplicationService):
                                        usl_s3_conf['credentials']['secret_key'],
                                        s3_conf)
 
+    def _get_system_friendly_name(self) -> str:
+        return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
+
     def _get_device_uuid(self) -> UUID:
         """Obtains the EOS device UUID from config."""
 
         return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
+
+    def _get_volume_name(self, bucket_name: str) -> UUID:
+        return self._get_system_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
@@ -116,9 +127,17 @@ class UslService(ApplicationService):
             for b in fresh_buckets:
                 if not b in cached_buckets:
                     volume_uuid = self._get_volume_uuid(b)
-                    self._volumes[volume_uuid] = {'bucketName' : b,
-                                                  'volume' : Volume(self._device.uuid, 's3', 0, 0,
-                                                                    volume_uuid)}
+                    self._volumes[volume_uuid] = {
+                        'bucketName' : b,
+                        'volume' : Volume(
+                            self._get_volume_name(b),
+                            self._device.uuid,
+                            's3',
+                            0,
+                            0,
+                            volume_uuid,
+                        ),
+                    }
         except Exception as e:
             raise CsmInternalError(desc=f'Unable to update buckets cache: {str(e)}')
 
@@ -161,7 +180,6 @@ class UslService(ApplicationService):
                 raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
         return vars(
             MountResponse(
-                'handle',
                 self._volumes[volume_id]['bucketName'],
                 self._volumes[volume_id]['bucketName'],
             ),
@@ -241,12 +259,12 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
-        friendly_name = Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local'
+        friendly_name = self._get_system_friendly_name()
         return {
             'model': 'EES',
             'type': 'ees',
             'serialNumber': self._device.uuid,
-            'friendlyName': str(friendly_name),
+            'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
         }
 
