@@ -45,6 +45,7 @@ class TimeSeriesProvider:
                 metrics[metric["name"]] = ""
             self._template_agg_rule[panel] = {
                     "axis": self._agg_rule[panel]["axis"],
+                    "processing": self._agg_rule[panel]["processing"],
                     "metrics": metrics}
         self._panels = self._template_agg_rule.keys()
 
@@ -103,7 +104,7 @@ class TimelionProvider(TimeSeriesProvider):
                                         "to":"$to_t" \
                                 }}')
         self._timelion_query = Template('.es(q=act:$metric, timefield=$timestamp, ' +
-                                'index=$index, metric=$method).abs()')
+                                'index=$index, metric=$method).$processing()')
 
     def init(self):
         try:
@@ -118,7 +119,7 @@ class TimelionProvider(TimeSeriesProvider):
             for panel in self._agg_rule.keys():
                 template_metrics = self._template_agg_rule[panel]["metrics"]
                 for metric in self._agg_rule[panel]["metrics"]:
-                    query = "(" + self._parse(metric["node"], output="") +\
+                    query = "(" + self._parse(metric["node"], panel, output="") +\
                                 ").label(" + metric["name"] + ")"
                     template_metrics[metric["name"]] = query
             self._aggr_rule = self._template_agg_rule
@@ -126,11 +127,11 @@ class TimelionProvider(TimeSeriesProvider):
             Log.debug("Failed to parse stats aggregation rule %s" %e)
             raise CsmInternalError("Failed to parse stats aggregation rule")
 
-    def _parse(self, nodes, output):
+    def _parse(self, nodes, panel, output):
         for node in nodes:
             if type(node["val"]) is str:
                 if node["val"] in self._metric_set.keys():
-                    output = self._parse(node["node"], output)
+                    output = self._parse(node["node"], panel, output)
                     output = "(" + output + ")." + self._metric_set[node["val"]]
                 elif node["val"] in self._config_list.keys():
                     cv = self._config_list[node["val"]]
@@ -143,16 +144,17 @@ class TimelionProvider(TimeSeriesProvider):
                 output = output[:-1] + str(node["val"]) + ")"
             else:
                 if output is "":
-                    output = self._parse_query(node["val"])
+                    output = self._parse_query(node["val"], panel)
                 else:
-                    output = "(" + output + "),(" + self._parse_query(node["val"])+")"
+                    output = "(" + output + "),(" + self._parse_query(node["val"], panel)+")"
         return output
 
-    def _parse_query(self, val):
+    def _parse_query(self, val, panel):
         query = self._timelion_query.substitute(
                     index=val["index"],
                     metric=val["metric"],
                     timestamp=val["timestamp"],
+                    processing=self._template_agg_rule[panel]["processing"],
                     method=val["method"])
         return query
 

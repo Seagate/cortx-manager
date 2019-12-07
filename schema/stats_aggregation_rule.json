@@ -4,6 +4,7 @@
             "y": "bytes",
             "x": "timestamp"
         },
+        "processing": "derivative",
         "metrics": [
             {
                 "name": "read",
@@ -11,9 +12,9 @@
                     {
                         "val": {
                             "index": "statsd_gauge-*",
-                            "metric": "*BACKEND.bin",
+                            "metric": "*BACKEND.bout",
                             "timestamp": "@timestamp",
-                            "method": "avg:val"
+                            "method": "sum:val"
                         }
                     }
                 ]
@@ -24,9 +25,9 @@
                     {
                         "val": {
                             "index": "statsd_gauge-*",
-                            "metric": "*BACKEND.bout",
+                            "metric": "*BACKEND.bin",
                             "timestamp": "@timestamp",
-                            "method": "avg:val"
+                            "method": "sum:val"
                         }
                     }
                 ]
@@ -42,7 +43,7 @@
                                     "index": "statsd_gauge-*",
                                     "metric": "*BACKEND.bin",
                                     "timestamp": "@timestamp",
-                                    "method": "avg:val"
+                                    "method": "sum:val"
                                 }
                             },
                             {
@@ -50,7 +51,7 @@
                                     "index": "statsd_gauge-*",
                                     "metric": "*BACKEND.bout",
                                     "timestamp": "@timestamp",
-                                    "method": "avg:val"
+                                    "method": "sum:val"
                                 }
                             }
                         ]
@@ -64,6 +65,7 @@
             "y": "milliseconds",
             "x": "timestamp"
         },
+        "processing": "abs",
         "metrics": [
             {
                 "name": "total_request_time",
@@ -339,6 +341,7 @@
             "y": "iops",
             "x": "timestamp"
         },
+        "processing": "abs",
         "metrics": [
             {
                 "name": "read_object",
