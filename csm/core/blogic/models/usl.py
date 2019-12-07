@@ -28,6 +28,7 @@ class Device:
 
 @dataclass
 class Volume:
+    name: str
     deviceUuid: UUID
     filesystem: str
     size: int
@@ -38,7 +39,3 @@ class Volume:
 class MountResponse:
     handle: str
     mountPath: str
-    volumeName: str
-
-
-
