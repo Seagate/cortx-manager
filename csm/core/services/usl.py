@@ -57,7 +57,7 @@ class UslService(ApplicationService):
         self._s3cli = self._create_s3cli(s3_plugin)
         dev_uuid = self._get_device_uuid()
         self._device = Device(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.name'),
+            self._get_system_friendly_name(),
             '0000',
             dev_uuid,
             'S3',
