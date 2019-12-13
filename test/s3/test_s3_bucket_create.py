@@ -39,7 +39,7 @@ def test_1(*args):
 
 
 def test_2(*args):
-    expected_output = EXPECTED_OUTPUT.get("buckets")[0]
+    expected_output = EXPECTED_OUTPUT.get("buckets", [{}])[0]
     actual_output = buckets_command.options
     t.assertDictEqual(actual_output, expected_output)
 

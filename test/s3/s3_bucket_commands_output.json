@@ -1,3 +1,22 @@
 {
-
+  "buckets": [
+    {
+      "bucket_name": "s3-bucket1",
+      "comm": {
+        "json": {
+          "bucket_name": ""
+        },
+        "method": "post",
+        "params": {},
+        "target": "/{version}/s3/bucket",
+        "type": "rest",
+        "version": "v1"
+      },
+      "need_confirmation": false,
+      "output": {
+        "success": "Bucket created."
+      },
+      "sub_command_name": "create"
+    }
+  ]
 }
