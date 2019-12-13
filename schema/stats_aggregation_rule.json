@@ -10,42 +10,8 @@
                 "name": "read",
                 "node": [
                     {
-                        "val": {
-                            "index": "statsd_gauge-*",
-                            "metric": "*BACKEND.bout",
-                            "timestamp": "@timestamp",
-                            "method": "sum:val"
-                        }
-                    }
-                ]
-            },
-            {
-                "name": "write",
-                "node": [
-                    {
-                        "val": {
-                            "index": "statsd_gauge-*",
-                            "metric": "*BACKEND.bin",
-                            "timestamp": "@timestamp",
-                            "method": "sum:val"
-                        }
-                    }
-                ]
-            },
-            {
-                "name": "total",
-                "node": [
-                    {
-                        "val": "+",
+                        "val": "/",
                         "node": [
-                            {
-                                "val": {
-                                    "index": "statsd_gauge-*",
-                                    "metric": "*BACKEND.bin",
-                                    "timestamp": "@timestamp",
-                                    "method": "sum:val"
-                                }
-                            },
                             {
                                 "val": {
                                     "index": "statsd_gauge-*",
@@ -55,6 +21,64 @@
                                 }
                             }
                         ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            },
+            {
+                "name": "write",
+                "node": [
+                    {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": {
+                                    "index": "statsd_gauge-*",
+                                    "metric": "*BACKEND.bin",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
+                    }
+                ]
+            },
+            {
+                "name": "total",
+                "node": [
+                    {
+                        "val": "/",
+                        "node": [
+                            {
+                                "val": "+",
+                                "node": [
+                                    {
+                                        "val": {
+                                            "index": "statsd_gauge-*",
+                                            "metric": "*BACKEND.bin",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    },
+                                    {
+                                        "val": {
+                                            "index": "statsd_gauge-*",
+                                            "metric": "*BACKEND.bout",
+                                            "timestamp": "@timestamp",
+                                            "method": "sum:val"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "val": "interval"
                     }
                 ]
             }

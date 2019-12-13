@@ -44,7 +44,7 @@ class StatsAppService(ApplicationService):
         self._stats_provider = stats_provider
 
     async def get(self, stats_id, panel, from_t, to_t,
-                  metric_list, interval, output_format, query) -> Dict:
+                  metric_list, interval, total_sample, unit, output_format, query) -> Dict:
         """
         Fetch specific stat
         :return: :type:list
@@ -53,6 +53,8 @@ class StatsAppService(ApplicationService):
                                                   from_t = from_t, duration_t = to_t,
                                                   metric_list = metric_list,
                                                   interval = interval,
+                                                  total_sample = total_sample,
+                                                  unit = unit.lower(),
                                                   output_format = output_format,
                                                   query = query)
 
