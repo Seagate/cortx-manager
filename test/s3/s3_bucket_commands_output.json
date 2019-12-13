@@ -1,6 +1,45 @@
 {
-  "buckets": [
-    {
+  "buckets": {
+    "show_test_2": {
+      "comm": {
+        "json": {},
+        "method": "get",
+        "params": {
+
+        },
+        "target": "/{version}/s3/bucket",
+        "type": "rest",
+        "version": "v1"
+      },
+      "format": "table",
+      "need_confirmation": false,
+      "output": {
+        "table": {
+          "headers": {
+            "name": "Bucket Name"
+          },
+          "filters": "buckets"
+        }
+      },
+      "sub_command_name": "show"
+    },
+    "delete_test_2": {
+      "bucket_name": "s3-bucket1",
+      "comm": {
+        "json": {},
+        "method": "delete",
+        "params": {},
+        "target": "/{version}/s3/bucket/{bucket_name}",
+        "type": "rest",
+        "version": "v1"
+      },
+      "need_confirmation": false,
+      "output": {
+        "success": "Bucket deleted."
+      },
+      "sub_command_name": "delete"
+    },
+    "create_test_2": {
       "bucket_name": "s3-bucket1",
       "comm": {
         "json": {
@@ -18,5 +57,5 @@
       },
       "sub_command_name": "create"
     }
-  ]
+  }
 }
