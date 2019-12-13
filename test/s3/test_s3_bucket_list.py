@@ -1,7 +1,7 @@
 """
  ****************************************************************************
- Filename:          test_s3_bucket_create.py
- Description:       Test S3 bucket create CLI.
+ Filename:          test_s3_bucket_list.py
+ Description:       Test S3 bucket list CLI.
 
  Creation Date:     12/13/2019
  Author:            Soniya Moholkar
@@ -15,13 +15,17 @@
  ****************************************************************************
 """
 
+from csm.core.blogic import const
 from csm.cli.command_factory import CommandFactory
+from csm.core.blogic import const
+from csm.cli.command_factory import CommandFactory
+from argparse import ArgumentError
 import unittest
 import json
 import os
 
-buckets_command = CommandFactory.get_command(
-    ["bucket", 'create', "s3-bucket1"])
+accounts_command = CommandFactory.get_command(
+    ["bucket", 'show'])
 t = unittest.TestCase()
 
 with open(os.path.dirname(os.path.realpath(__file__)) + "/s3_bucket_commands_output.json") as fp:
@@ -30,19 +34,19 @@ with open(os.path.dirname(os.path.realpath(__file__)) + "/s3_bucket_commands_out
 
 def test_1(*args):
     expected_output = 'bucket'
-    actual_output = buckets_command.name
+    actual_output = accounts_command.name
     t.assertEqual(actual_output, expected_output)
 
 
 def test_2(*args):
-    expected_output = EXPECTED_OUTPUT.get("buckets", [{}])[0]
-    actual_output = buckets_command.options
+    expected_output = EXPECTED_OUTPUT.get("buckets").get("show_test_2", {})
+    actual_output = accounts_command.options
     t.assertDictEqual(actual_output, expected_output)
 
 
 def test_3(*args):
-    expected_output = 'post'
-    actual_output = buckets_command.method
+    expected_output = 'get'
+    actual_output = accounts_command.method
     t.assertEqual(actual_output, expected_output)
 
 
