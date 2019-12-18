@@ -159,8 +159,8 @@ class TimelionProvider(TimeSeriesProvider):
         return query
 
     async def process_request(self, stats_id, panel, from_t, duration_t,
-                    metric_list, interval,
-                    output_format, query):
+                    metric_list, interval, total_sample,
+                    unit, output_format, query):
         """
         Process request comming from csm stats api
         Parameter:
@@ -174,15 +174,32 @@ class TimelionProvider(TimeSeriesProvider):
             query: Optional direct query to timelion_api
         """
         try:
+            interval = await self._parse_interval(from_t, duration_t, interval, total_sample)
+            unit = (await self.get_axis(panel))["y"] if unit is "" else unit
             from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
             duration_t = str(datetime.utcfromtimestamp(int(duration_t)).isoformat())+'.000Z'
-            interval = "auto" if interval is "" else str(interval)+'s'
             res = await self._aggregate_metric(panel, from_t, duration_t,
                                             interval, metric_list, query)
-            return await self._convert_payload(res, stats_id, panel, output_format)
+            return await self._convert_payload(res, stats_id, panel, output_format, unit)
         except Exception as e:
             Log.debug("Failed to request stats %s" %e)
-            raise CsmInternalError("id: %s, Error: Failed to process timelion request %s" %(stats_id,e))
+            raise CsmInternalError("id: %s, Error: Failed to process timelion \
+                request %s" %(stats_id,e))
+
+    async def _parse_interval(self, from_t, duration_t, interval, total_sample):
+        try:
+            diff_sec = int(duration_t) - int(from_t)
+            if total_sample != "":
+                interval = str(int(diff_sec/int(total_sample))) + 's'
+            elif interval != "":
+                interval = str(int(interval)) + 's'
+            elif total_sample == "" and interval == "":
+                interval = "auto"
+            else:
+                raise
+            return interval
+        except Exception as e:
+            raise CsmInternalError("Unable to parse interval")
 
     async def _aggregate_metric(self, panel, from_t, duration_t,
                                     interval, metric_list, query):
@@ -222,7 +239,7 @@ class TimelionProvider(TimeSeriesProvider):
             Log.debug("Timelion connection error: %s" %e)
             raise CsmInternalError("Connection failed to timelion %s" %self._url)
 
-    async def _convert_payload(self, res, stats_id, panel, output_format):
+    async def _convert_payload(self, res, stats_id, panel, output_format, unit):
         """
         Convert timelion response to redable or gui format
         """
@@ -233,16 +250,38 @@ class TimelionProvider(TimeSeriesProvider):
         res_payload['stats'] = panel
         if "sheet" in timelion_payload:
             for s in timelion_payload["sheet"][0]["list"]:
+                datapoint = await self._modify_panel_val(s["data"], panel, unit)
                 if output_format == "gui":
-                    datapoint = await self._get_list(s['data'])
-                elif output_format == "readable":
-                    datapoint = s['data']
+                    datapoint = await self._get_list(datapoint)
                 operation_stats = { 'data' : datapoint, 'label': str(s["label"]) }
                 li.append(operation_stats)
         else:
-            raise CsmInternalError("Failed to convert timelion response  %s" %timelion_payload)
+            raise CsmInternalError("Failed to convert timelion response. \
+                %s" %timelion_payload)
         res_payload["list"] = li
         return res_payload
+
+    async def _modify_panel_val(self, datapoint, panel, unit):
+        """
+        Preform panel specific operation
+        """
+        if panel.lower() == "throughput":
+            datapoint = await self._modify_throughput(datapoint, unit)
+        return datapoint
+
+    async def _modify_throughput(self, datapoint, unit):
+        """
+        Modify throughput with unit
+        """
+        li = []
+        size = {"bytes": 1, "kb": 1024, "mb": 1048576, "gb": 1073741824}
+        if unit not in size.keys():
+            raise CsmInternalError("Invalid unit for stats %s" %unit)
+        unit_val = size[unit]
+        for point in datapoint:
+            val = 0 if point[1] is None or point[1] < 0 else point[1]
+            li.append([point[0], val/unit_val])
+        return li
 
     async def _get_list(self, li):
         """
@@ -251,8 +290,6 @@ class TimelionProvider(TimeSeriesProvider):
         total_li = []
         time_li = []
         data_li = []
-        if len(li) > 1:
-            li.pop(0)
         for item in li:
             time_li.append(item[0])
             data_li.append(item[1])

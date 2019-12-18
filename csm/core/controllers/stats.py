@@ -48,10 +48,12 @@ class StatsView(CsmView):
             to_t = self.request.rel_url.query.get("to", None)
             metric_list = self.request.rel_url.query.getall("metric_list", [])
             interval = self.request.rel_url.query.get("interval", "")
+            total_sample = self.request.rel_url.query.get("total_sample", "")
             output_format = self.request.rel_url.query.get("output_format", "gui")
             query = self.request.rel_url.query.get("query", "")
+            unit = self.request.rel_url.query.get("unit", "")
             return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
-                                           interval, output_format, query)
+                interval, total_sample, unit, output_format, query)
 
 @CsmView._app_routes.view("/api/v1/stats")
 class StatsPanelListView(CsmView):
