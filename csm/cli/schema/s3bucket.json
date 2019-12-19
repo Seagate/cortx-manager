@@ -1,5 +1,5 @@
 {
-  "name": "bucket",
+  "name": "s3bucket",
   "description": "Bucket",
   "sub_commands": [
     {

@@ -25,7 +25,7 @@ import json
 import os
 
 accounts_command = CommandFactory.get_command(
-    ["bucket", 'show'])
+    ["s3bucket", 'show'])
 t = unittest.TestCase()
 
 with open(os.path.dirname(os.path.realpath(__file__)) + "/s3_bucket_commands_output.json") as fp:
