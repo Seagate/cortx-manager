@@ -158,6 +158,14 @@ class SystemView(View):
         return await self._usl_service.get_system()
 
 
+class SystemCertificatesView(View):
+    """
+    System certificates view.
+    """
+    async def delete(self) -> None:
+        return await self._usl_service.delete_system_certificates()
+
+
 class SystemCertificatesByTypeView(View):
     """
     System certificates view by type.
@@ -225,6 +233,10 @@ class UslController:
     @View.as_generic_view_class
     def get_system_view_class(self) -> Type[SystemView]:
         return SystemView
+
+    @View.as_generic_view_class
+    def get_system_certificates_view_class(self) -> Type[SystemCertificatesView]:
+        return SystemCertificatesView
 
     @View.as_generic_view_class
     def get_system_certificates_by_type_view_class(self) -> Type[SystemCertificatesByTypeView]:

@@ -29,6 +29,7 @@ import toml
 
 from csm.common.conf import Conf
 from csm.common.errors import CsmInternalError, CsmNotFoundError
+from csm.common.key_manager import KeyManager
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -46,8 +47,6 @@ class UslService(ApplicationService):
     _s3cli: Any
     _device: Device
     _volumes: Dict[str, Dict[str, Any]]
-    # FIXME improve device registration status management
-    _is_device_registered: bool
 
     def __init__(self, s3_plugin) -> None:
         """
@@ -66,7 +65,6 @@ class UslService(ApplicationService):
         )
         self._volumes = {}
         self._buckets = {}
-        self._is_device_registered = False
 
     # TODO: pass S3 server credentials to the server instead of reading from a file
     def _create_s3cli(self, s3_plugin):
@@ -148,6 +146,7 @@ class UslService(ApplicationService):
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
+
         return [vars(self._device)]
 
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
@@ -229,7 +228,8 @@ class UslService(ApplicationService):
             while time.time() < timeout_limit:
                 async with session.get(endpoint_url) as response:
                     if response.status == 200:
-                        self._is_device_registered = True
+                        KeyManager.create_security_material(const.UDS_CERTIFICATES_PATH,
+                                                            const.UDS_DOMAIN_CERTIFICATE_FILENAME)
                         Log.info('Device registration successful')
                         return
                     elif response.status != 201:
@@ -269,6 +269,17 @@ class UslService(ApplicationService):
         }
 
     # TODO replace stub
+    async def delete_system_certificates(self) -> None:
+        try:
+            path = KeyManager.get_security_material(const.UDS_CERTIFICATES_PATH,
+                                                    const.UDS_DOMAIN_CERTIFICATE_FILENAME)
+            path.unlink()
+        except FileNotFoundError:
+            raise web.HTTPForbidden()
+        # Don't return 200 on success, but 204 as USL API specification requires
+        raise web.HTTPNoContent()
+
+    # TODO replace stub
     async def get_system_certificates_by_type(self, certificate_type: str) -> bytes:
         """
         Provides one of the available system certificates according to the specified type.
@@ -278,9 +289,14 @@ class UslService(ApplicationService):
         """
         if certificate_type != 'domainCertificate':
             raise web.HTTPNotImplemented()
-        elif not self._is_device_registered:
+
+        try:
+            cert = KeyManager.get_security_material(const.UDS_CERTIFICATES_PATH,
+                                                    const.UDS_DOMAIN_CERTIFICATE_FILENAME)
+            with cert.open('rb') as f:
+                return f.read()
+        except FileNotFoundError:
             raise web.HTTPNotFound()
-        return bytes()
 
     # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
