@@ -26,13 +26,13 @@ import errno
 from typing import ClassVar, Dict, Any, Tuple
 
 import aiohttp
-from dict2xml import dict2xml
-from prettytable import PrettyTable
 
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE
+from csm.cli.command import Command
+
 
 class CsmClient:
     """ Base class for invoking business logic functionality """
@@ -45,6 +45,7 @@ class CsmClient:
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
+
 
 class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
@@ -78,27 +79,56 @@ class CsmApiClient(CsmClient):
     def process_response(self, response):
         self._response = response
 
+
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
 
     def __init__(self, url):
         super(CsmRestClient, self).__init__(url)
+        self._session_token = None
+
+    def has_open_session(self):
+        return self._session_token is not None
+
+    async def login(self, username, password):
+        response, headers = await self.call(LoginCommand(username, password))
+        token = headers.get('Authorization')
+        if response.rc() != 200 or not token:
+            return False
+        token = token.split(' ')
+        if len(token) != 2 or token[0] != 'Bearer' or not token[1]:
+            return False
+        self._session_token = token[1]
+        return True
+
+    async def logout(self):
+        response, _ = await self.call(LogoutCommand())
+        if response.rc() != 200:
+            return False
+        self._session_token = None
+        return True
+
+    async def call(self, cmd):
+        headers = {'Authorization': f'Bearer {self._session_token}'} if self._session_token else {}
+        async with aiohttp.ClientSession(headers=headers) as session:
+            body, headers, status = await self.process_request(session, cmd)
+        try:
+            data = json.loads(body)
+        except ValueError:
+            if body == '401: Unauthorized':
+                raise CsmError(errno.EINVAL, 'You are unauthorized to do this')
+            else:
+                raise CsmError(errno.EINVAL, 'Could not parse the response')
+        return Response(rc=status, output=data), headers
 
     async def process_request(self, session, cmd):
         rest_obj = RestRequest(self._url, session, cmd)
-        return await rest_obj.request()
-
-    async def call(self, cmd):
-        async with aiohttp.ClientSession() as session:
-            response = await self.process_request(session, cmd)
-        try:
-            data = json.loads(response[0])
-        except ValueError:
-            raise CsmError(errno.EINVAL, 'Could not parse the response')
-        return Response(rc=response[1], output=data)
+        body, headers, status = await rest_obj.request()
+        return body, headers, status
 
     def __cleanup__(self):
         self._loop.close()
+
 
 class RestRequest(Request):
     """Cli Rest Request Class """
@@ -117,71 +147,61 @@ class RestRequest(Request):
 
     async def request(self) -> Tuple:
         try:
+            params_json = self.format(self._options, 'params')
+            params_json = {k: v for k, v in params_json.items() if v is not None}
+            body_json = self.format(self._options, 'json')
+            body_json = {k: v for k, v in body_json.items() if v is not None}
             async with self._session.request(method=self._method,
                                              url=self._url.format(**self._rest,
                                                                   **self._options),
-                                             params=self.format(self._options,
-                                                                'params'),
-                                             json=self.format(self._options,
-                                                              'json'),
+                                             params=params_json,
+                                             json=body_json,
                                              timeout=const.TIMEOUT) as response:
-                return await response.text(), response.status
+                return await response.text(), response.headers, response.status
         except aiohttp.ClientConnectionError as exception:
             raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
-                                  'Cannot connect to csm agent\'s host {0}:{1}'
-                                  .format(exception.host, exception.port))
+                           'Cannot connect to csm agent\'s host {0}:{1}'
+                           .format(exception.host, exception.port))
 
-class Output:
-    """CLI Response Display Class"""
 
-    def __init__(self, command, response):
-        self.command = command
-        self.rc = response.rc()
-        self.output = response.output()
+class LoginCommand(Command):
+    """CLI Default Logout Command"""
 
-    def dump(self, out, err, output_type, **kwargs) -> None:
-        """Dump the Output on CLI"""
-        # Todo: Need to fetch the response messages from a file for localization.
-        if self.rc != 200:
-            errstr = Output.error(self.rc, kwargs.get("error"), self.output) + '\n'
-            err.write(errstr or "")
-            return None
-        elif output_type:
-            output = getattr(Output, f'dump_{output_type}')(self.output,
-                                                            **kwargs) + '\n'
-            out.write(output)
+    def __init__(self, username, password):
+        options = {
+            "username": username,
+            "password": password,
+            "need_confirmation": False,
+            "comm": {
+                "json": {"username": "",
+                         "password": "",
+                         },
+                "type": "rest",
+                "method": "post",
+                "target": "/{version}/login",
+                "version": "v1"
+            },
+            "output": {},
+            "sub_command_name": "login",
+        }
+        args = None
+        super().__init__('session', options, args)
 
-    @staticmethod
-    def dump_success(output: dict, success: str, **kwargs):
-        """
-        :param output:
-        :param success:
-        :return:
-        """
-        return str(success)
 
-    @staticmethod
-    def error(rc: int, message: str, stacktrace) -> str:
-        """Format for Error message"""
-        if message:
-            return f'error({rc}): {message}\n'
-        return f"error({rc}): Error Found :- {stacktrace.get('message')}"
+class LogoutCommand(Command):
+    """CLI Default Login Command"""
 
-    @staticmethod
-    def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
-        """Format for Table Data"""
-        table_obj = PrettyTable()
-        table_obj.field_names = table["headers"].values()
-        for each_row in data[table["filters"]]:
-            table_obj.add_row([each_row.get(x) for x in table["headers"].keys()])
-        return "{0}".format(table_obj)
-
-    @staticmethod
-    def dump_xml(data, **kwargs: Dict) -> str:
-        """Format for XML Data"""
-        return dict2xml(data)
-
-    @staticmethod
-    def dump_json(data, **kwargs: Dict) -> str:
-        """Format for Json Data"""
-        return json.dumps(data, indent=4, sort_keys=True)
+    def __init__(self):
+        options = {
+            "need_confirmation": False,
+            "comm": {
+                "type": "rest",
+                "method": "post",
+                "target": "/{version}/logout",
+                "version": "v1"
+            },
+            "output": {},
+            "sub_command_name": "logout"
+        }
+        args = None
+        super().__init__('session', options, args)

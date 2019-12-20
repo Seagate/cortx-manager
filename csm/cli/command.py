@@ -20,12 +20,17 @@
 """
 
 import argparse
+import json
 from typing import Dict, Any
 from copy import deepcopy
-from csm.cli.csm_client import Output
+
+from dict2xml import dict2xml
+from prettytable import PrettyTable
 
 
 class Command:
+    """CLI Command Base Class"""
+
     def __init__(self, name, options, args):
         self._method = options['comm']['method']
         self._target = options['comm']['target']
@@ -74,7 +79,7 @@ class Command:
         output_obj = Output(self, response)
         return output_obj.dump(out, err, **self._output,
                                output_type=self._options.get('format',
-                                                               "success"))
+                                                             "success"))
 
 
 class Validatiors:
@@ -98,7 +103,6 @@ class CommandParser:
     def __init__(self, cmd_data: Dict):
         self.command = cmd_data
         self._communication_obj = {}
-                                 
 
     def handle_main_parse(self, subparsers):
         """
@@ -173,3 +177,61 @@ class CommandParser:
         elif "sub_commands" in sub_command:
             for each_command in sub_command['sub_commands']:
                 self.handle_subparsers(sub_parser, each_command, name)
+
+
+class Output:
+    """CLI Response Display Class"""
+
+    def __init__(self, command, response):
+        self.command = command
+        self.rc = response.rc()
+        self.output = response.output()
+
+    def dump(self, out, err, output_type, **kwargs) -> None:
+        """Dump the Output on CLI"""
+        # Todo: Need to fetch the response messages from a file for localization.
+        # TODO: Check 201 response code also for creation requests.
+        if self.rc != 200:
+            errstr = Output.error(self.rc, kwargs.get("error"), self.output) + '\n'
+            err.write(errstr or "")
+            return None
+        elif output_type:
+            output = getattr(Output, f'dump_{output_type}')(self.output,
+                                                            **kwargs) + '\n'
+            out.write(output)
+
+    @staticmethod
+    def dump_success(output: dict, success: str, **kwargs):
+        """
+        :param output:
+        :param success:
+        :return:
+        """
+        return str(success)
+
+    @staticmethod
+    def error(rc: int, message: str, stacktrace) -> str:
+        """Format for Error message"""
+        if message:
+            return f'error({rc}): {message}\n'
+        return f"error({rc}): Error Found :- {stacktrace.get('message')}"
+
+    @staticmethod
+    def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
+        """Format for Table Data"""
+        table_obj = PrettyTable()
+        table_obj.field_names = table["headers"].values()
+        rows = data[table["filters"]] if table["filters"] in data else data
+        for each_row in rows:
+            table_obj.add_row([each_row.get(x) for x in table["headers"].keys()])
+        return "{0}".format(table_obj)
+
+    @staticmethod
+    def dump_xml(data, **kwargs: Dict) -> str:
+        """Format for XML Data"""
+        return dict2xml(data)
+
+    @staticmethod
+    def dump_json(data, **kwargs: Dict) -> str:
+        """Format for Json Data"""
+        return json.dumps(data, indent=4, sort_keys=True)
