@@ -33,10 +33,15 @@ from csm.common.key_manager import KeyManager
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+from csm.core.data.access import Query, SortOrder
+from csm.core.data.access.filters import Compare
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.models.s3 import S3ConnectionConfig
-from csm.core.blogic.models.usl import Device, Volume, MountResponse
+from csm.core.data.models.usl import (Device, Volume, Event, NewVolumeEvent, VolumeRemovedEvent,
+                                      MountResponse)
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
+DEFAULT_VOLUME_CACHE_UPDATE_PERIOD = 3
 
 class UslService(ApplicationService):
     """
@@ -45,26 +50,34 @@ class UslService(ApplicationService):
     # FIXME improve token management
     _token: str
     _s3cli: Any
+    _storage: DataBaseProvider
     _device: Device
-    _volumes: Dict[str, Dict[str, Any]]
+    _volumes: Dict[UUID, Volume]
+    _volumes_sustaining_task: asyncio.Task
+    _event_queue: asyncio.Queue
 
-    def __init__(self, s3_plugin) -> None:
+    def __init__(self, s3_plugin, storage) -> None:
         """
         Constructor.
         """
+        loop = asyncio.get_event_loop()
+
         self._token = ''
         self._s3cli = self._create_s3cli(s3_plugin)
         dev_uuid = self._get_device_uuid()
-        self._device = Device(
+        self._device = Device.instantiate(
             self._get_system_friendly_name(),
             '0000',
-            dev_uuid,
+            str(dev_uuid),
             'S3',
             dev_uuid,
             DEFAULT_EOS_DEVICE_VENDOR,
         )
-        self._volumes = {}
-        self._buckets = {}
+        self._storage = storage
+        self._event_queue = asyncio.Queue(0, loop=loop)
+        self._volumes = loop.run_until_complete(self._get_volume_cache())
+        loop.run_until_complete(self._restore_events())
+        self._volumes_sustaining_task = loop.create_task(self._sustain_cache())
 
     # TODO: pass S3 server credentials to the server instead of reading from a file
     def _create_s3cli(self, s3_plugin):
@@ -78,6 +91,14 @@ class UslService(ApplicationService):
         return s3_plugin.get_s3_client(usl_s3_conf['credentials']['access_key_id'],
                                        usl_s3_conf['credentials']['secret_key'],
                                        s3_conf)
+
+    async def _restore_events(self):
+        new_volume_events = await self._storage(NewVolumeEvent).get(Query())
+        volume_removed_events = await self._storage(VolumeRemovedEvent).get(Query())
+        events = new_volume_events + volume_removed_events
+        events.sort(key=lambda e: e.date)
+        for e in events:
+            self._event_queue.put_nowait(e)
 
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
@@ -105,6 +126,32 @@ class UslService(ApplicationService):
         tags = await self._s3cli.get_bucket_tagging(bucket)
         return tags.get('udx', 'disabled') == 'enabled'
 
+    async def _sustain_cache(self):
+        """The infinite asynchronous task that sustains volumes cache"""
+
+        while True:
+            await asyncio.sleep(DEFAULT_VOLUME_CACHE_UPDATE_PERIOD)
+            try:
+                await self._update_volumes_cache()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                reason = "Unpredictable exception during volume cache update" + str(e)
+                # Do not fail here, keep trying to update the cache
+                Log.error(reason)
+
+    async def _get_volume_cache(self) -> Dict[UUID, Volume]:
+        """
+        Creates the internal volumes cache from buckets list retrieved from S3 server
+        """
+        volumes = {}
+        for b in await self._s3cli.get_all_buckets():
+            if await self._is_bucket_udx_enabled(b):
+                volume_uuid = self._get_volume_uuid(b.name)
+                volumes[volume_uuid] = Volume.instantiate(self._get_volume_name(b.name), b.name,
+                                                          self._device.uuid, volume_uuid)
+        return volumes
+
     async def _update_volumes_cache(self):
         """
         Updates the internal buckets cache.
@@ -112,32 +159,22 @@ class UslService(ApplicationService):
         Obtains the fresh buckets list from S3 server and updates cache with it.
         Keeps cache the same if the server is not available.
         """
+        fresh_cache = await self._get_volume_cache()
 
-        try:
-            fresh_buckets = [b.name for b in await self._s3cli.get_all_buckets()
-                             if await self._is_bucket_udx_enabled(b)]
-            cached_buckets = [v['bucketName'] for _,v in self._volumes.items()]
+        new_volume_uuids = fresh_cache.keys() - self._volumes.keys()
+        volume_removed_uuids = self._volumes.keys() - fresh_cache.keys()
 
-            # Remove staled volumes
-            self._volumes = {k:v for k,v in self._volumes.items()
-                             if v['bucketName'] in fresh_buckets}
-            # Add new volumes
-            for b in fresh_buckets:
-                if not b in cached_buckets:
-                    volume_uuid = self._get_volume_uuid(b)
-                    self._volumes[volume_uuid] = {
-                        'bucketName' : b,
-                        'volume' : Volume(
-                            self._get_volume_name(b),
-                            self._device.uuid,
-                            's3',
-                            0,
-                            0,
-                            volume_uuid,
-                        ),
-                    }
-        except Exception as e:
-            raise CsmInternalError(desc=f'Unable to update buckets cache: {str(e)}')
+        for uuid in new_volume_uuids:
+            e = NewVolumeEvent.instantiate(fresh_cache[uuid])
+            await self._storage(NewVolumeEvent).store(e)
+            await self._event_queue.put(e)
+
+        for uuid in volume_removed_uuids:
+            e = VolumeRemovedEvent.instantiate(uuid)
+            await self._storage(VolumeRemovedEvent).store(e)
+            await self._event_queue.put(e)
+
+        self._volumes = fresh_cache
 
 
     async def get_device_list(self) -> List[Dict[str, str]]:
@@ -146,8 +183,7 @@ class UslService(ApplicationService):
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
-
-        return [vars(self._device)]
+        return [self._device.to_primitive()]
 
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
         """
@@ -159,8 +195,7 @@ class UslService(ApplicationService):
 
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        await self._update_volumes_cache()
-        return [vars(v['volume']) for uuid,v in self._volumes.items()]
+        return [v.to_primitive(role='public') for uuid,v in self._volumes.items()]
 
     async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
         """
@@ -174,15 +209,9 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
 
         if not volume_id in self._volumes:
-            await self._update_volumes_cache()
-            if not volume_id in self._volumes:
-                raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
-        return vars(
-            MountResponse(
-                self._volumes[volume_id]['bucketName'],
-                self._volumes[volume_id]['bucketName'],
-            ),
-        )
+            raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
+        return MountResponse.instantiate(self._volumes[volume_id].bucketName,
+                                         self._volumes[volume_id].bucketName).to_primitive()
 
     # TODO replace stub
     async def post_device_volume_unmount(self, device_id: UUID, volume_id: UUID) -> str:
@@ -196,6 +225,15 @@ class UslService(ApplicationService):
         :return: The volume's mount handle
         """
         return 'handle'
+
+    async def get_events(self) -> str:
+        """
+        Returns USL events one-by-one
+        """
+        e = await self._event_queue.get()
+        e_type = type(e)
+        await self._storage(e_type).delete(Compare(e_type.event_id, '=', e.event_id))
+        return e.to_primitive(role='public')
 
     async def register_device(self, url: str, pin: str) -> None:
         """

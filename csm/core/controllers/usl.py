@@ -142,6 +142,14 @@ class DeviceVolumeUnmountView(View):
             raise CsmError(desc=desc)
 
 
+class UdsEventsView(View):
+    """
+    UDS Events view.
+    """
+    async def get(self) -> str:
+        return await self._usl_service.get_events()
+
+
 class RegistrationTokenView(View):
     """
     Registration token generation view.
@@ -225,6 +233,10 @@ class UslController:
     @View.as_generic_view_class
     def get_device_volume_unmount_view_class(self) -> Type[DeviceVolumeUnmountView]:
         return DeviceVolumeUnmountView
+
+    @View.as_generic_view_class
+    def get_uds_events_view_class(self) -> Type[UdsEventsView]:
+        return UdsEventsView
 
     @View.as_generic_view_class
     def get_registration_token_view_class(self) -> Type[RegistrationTokenView]:

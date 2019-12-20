@@ -39,17 +39,17 @@ class CsmAgent:
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
         from csm.core.data.db.db_provider import (DataBaseProvider,
-                GeneralConfig)        
+                GeneralConfig)
 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
-      
+
         #todo: Remove the below line it only dumps the data when server starts. kept for debugging
         # alerts_storage.add_data()
 
         s3_plugin = import_plugin_module('s3')
-        usl_service = UslService(s3_plugin.S3Plugin())
-        
+        usl_service = UslService(s3_plugin.S3Plugin(), db)
+
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
 
@@ -80,7 +80,7 @@ class CsmAgent:
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
-        
+
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
     @staticmethod

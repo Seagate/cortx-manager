@@ -202,7 +202,7 @@ class ConsulDB(GenericDataBase):
 
         self._query_converter = ConsulQueryConverterWithData(model)
 
-        if not isinstance(model, type) or CsmModel not in model.__bases__:
+        if not isinstance(model, type) or not issubclass(model, CsmModel):
             raise DataAccessInternalError("Model parameter is not a Class object or not inherited "
                                           "from csm.core.blogic.models.CsmModel")
         self._model = model  # Needed to build returning objects
@@ -449,7 +449,7 @@ class ConsulDB(GenericDataBase):
         :return: count of entries which satisfy the `filter_obj`
         """
         raw_data = await self._get_all_raw()
-        
+
         if not raw_data:
             return 0
 
