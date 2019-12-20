@@ -105,8 +105,14 @@ CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 
-# UDS Server
+# UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
+UDS_CERTIFICATES_PATH = '/var/csm/tls'
+UDS_NATIVE_PRIVATE_KEY_FILENAME = 'native.key'
+UDS_NATIVE_CERTIFICATE_FILENAME = 'native.crt'
+UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
+UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
+
 
 # USL S3 configuration (CES2020 only!)
 USL_S3_CONF = '/etc/uds/uds_s3.toml'

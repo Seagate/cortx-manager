@@ -48,6 +48,8 @@ class ApiRoutes:
                         usl_ctrl.get_device_volume_unmount_view_class())
         # router.add_view("/usl/v1/events", usl_ctrl.get_events_view_class())
         router.add_view("/usl/v1/system", usl_ctrl.get_system_view_class())
+        router.add_view("/usl/v1/system/certificates",
+                        usl_ctrl.get_system_certificates_view_class())
         router.add_view("/usl/v1/system/certificates/{type}",
                         usl_ctrl.get_system_certificates_by_type_view_class())
         router.add_view("/usl/v1/system/network/interfaces",
