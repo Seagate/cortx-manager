@@ -22,10 +22,12 @@ import sys
 import os
 from csm.core.blogic import const
 from csm.common.payload import Json
-from csm.cli.commands import CommandParser
+from csm.cli.command import CommandParser
 
 
 class ArgumentParser(argparse.ArgumentParser):
+    """Overwritten ArgumentParser class for internal purposes"""
+
     def error(self, message):
         # todo:  Need to Modify the changes for Fetching Error Messages from config file
         self.print_usage(sys.stderr)
@@ -44,15 +46,13 @@ class CommandFactory(object):
         Parse the command line as per the syntax and retuns
         returns command representing the command line.
         """
-        # Todo: Fetch Messages from Message ile for localization. & implement Marshmallow for Schema Validation.
+        # Todo: Fetch Messages from Message file for localization. & implement Marshmallow for Schema Validation.
         commands = os.listdir(const.COMMAND_DIRECTORY)
         commands = [command.split(".json")[0] for command in commands]
         commands.remove(const.CSM_SETUP_CMD)
         parser = ArgumentParser(description='CSM CLI command')
         subparsers = parser.add_subparsers(metavar=commands)
-        if not argv:
-            argv = ['-h']
-        if argv[0] != '-h' and argv[0] in commands:
+        if argv[0] in commands:
             cmd_obj = CommandParser(
                 Json(os.path.join(const.COMMAND_DIRECTORY, f"{argv[0]}.json")).load())
             cmd_obj.handle_main_parse(subparsers)

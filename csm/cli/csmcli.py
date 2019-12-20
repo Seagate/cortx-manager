@@ -21,28 +21,39 @@ import sys
 import os
 import traceback
 import asyncio
+from getpass import getpass
 
 
-def get_quest_answer(name: str) -> bool:
-    """
-    Asks user user a question using stdout
-    Returns True or False, depending on an answer
+class OutputTerminal:
+    @staticmethod
+    def get_quest_answer(name: str) -> bool:
+        """
+        Asks user user a question using stdout
+        Returns True or False, depending on an answer
 
-    :param quest: question string
-    :return: True or False depending on user input
-    """
+        :param quest: question string
+        :return: True or False depending on user input
+        """
 
-    while True:
-        # Postive answer is default
-        sys.stdout.write(f'Are you sure you want to perform "{name}" command? [Y/n] ')
+        while True:
+            # Postive answer is default
+            sys.stdout.write(f'Are you sure you want to perform "{name}" command? [Y/n] ')
 
-        usr_input = input().lower()
-        if usr_input in ['y', 'yes', '']:
-            return True
-        elif usr_input in ['n', 'no']:
-            return False
+            usr_input = input().lower()
+            if usr_input in ['y', 'yes', '']:
+                return True
+            elif usr_input in ['n', 'no']:
+                return False
+            else:
+                sys.stdout.write("Please answer with 'yes' or 'no'\n")
+
+    @staticmethod
+    def logout_alert(is_logged_out: bool):
+        if is_logged_out:
+            sys.stdout.write('Successfully logged out')
         else:
-            sys.stdout.write("Please answer with 'yes' or 'no'\n")
+            Log.error(traceback.format_exc())
+            sys.stderr('Logout failed')
 
 
 def main(argv):
@@ -56,36 +67,90 @@ def main(argv):
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
 
-        command = CommandFactory.get_command(argv[1:])
-        if command.need_confirmation:
-            res = get_quest_answer(" ".join((command.name, command.sub_command_name)))
-            if res is False:
-                return 0
-
-        if not command.comm.get("type", "") in const.CLI_SUPPORTED_PROTOCOLS:
-            raise Exception(
-                f"Invalid Communication Protocol {command.comm.get('type', '')} Selected."
-            )
         csm_agent_url = f"{const.CSM_AGENT_BASE_URL}{const.CSM_AGENT_HOST}:{const.CSM_AGENT_PORT}/api"
-        client = CsmRestClient(csm_agent_url)
-
+        rest_client = CsmRestClient(csm_agent_url)
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(client.call(command))
-        command.process_response(out=sys.stdout, err=sys.stderr,
-                                 response=response)
+
+        start_parser = ArgumentParser(description='CSM CLI command')
+        start_parser.add_argument('--username', required=False)
+        start_parser.add_argument('--command-file', required=False)
+
+        assert len(argv) >= 1
+        username = None
+        command_file = None
+        if len(argv) == 1:
+            username = input('Username: ').strip()
+        else:
+            args = vars(start_parser.parse_args(argv[1:]))
+            username = args.get('username')
+            command_file = args.get('command-file')
+        if username:
+            password = getpass()
+            is_logged_in = loop.run_until_complete(rest_client.login(username, password))
+            if is_logged_in:
+                sys.stdout.write(f'You\'ve logged in as {username}\n')
+            else:
+                raise Exception("Server authentication check failed")
+        else:
+            sys.stdout.write('You\'ve entered csmcli in unathorized mode\n')
+        if command_file:
+            raise Exception("Command file option is not avaliable for now")
+
+        while True:
+            try:
+                args = input('csmcli> ').split()
+                if len(args) == 0:
+                    continue
+                elif len(args) == 1:
+                    if args[0] in ['exit', 'logout']:
+                        if rest_client.has_open_session():
+                            is_logged_out = loop.run_until_complete(rest_client.logout())
+                            OutputTerminal.logout_alert(is_logged_out)
+                            assert isinstance(is_logged_out, bool)
+                            return int(not is_logged_out)
+                        else:
+                            return 0
+                command = CommandFactory.get_command(args)
+                if command.need_confirmation:
+                    res = OutputTerminal.get_quest_answer(
+                        " ".join((command.name, command.sub_command_name)))
+                    if res is False:
+                        continue
+                if not command.comm.get("type", "") in const.CLI_SUPPORTED_PROTOCOLS:
+                    raise Exception(
+                        f"Invalid Communication Protocol {command.comm.get('type', '')} Selected."
+                    )
+                response, _ = loop.run_until_complete(rest_client.call(command))
+                command.process_response(out=sys.stdout, err=sys.stderr,
+                                         response=response)
+            except SystemExit:
+                # Argparse thorws SystemExit on "help" and "show version" actions, so we just ignore it
+                pass
+            except Exception as exception:
+                sys.stderr.write(str(exception) + '\n')
+                Log.error(traceback.format_exc())
+    except KeyboardInterrupt:
+        if rest_client.has_open_session():
+            is_logged_out = loop.run_until_complete(rest_client.logout())
+            OutputTerminal.logout_alert(is_logged_out)
+            assert isinstance(is_logged_out, bool)
+            return int(not is_logged_out)
     except Exception as exception:
         sys.stderr.write(str(exception) + '\n')
         Log.error(traceback.format_exc())
         # TODO - Extract rc from exception
         return 1
+    finally:
+        sys.stdout.write('\n')
 
 
 if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
 
-    from csm.cli.command_factory import CommandFactory
-    from csm.cli.csm_client import CsmRestClient, Output
+    from csm.cli.command_factory import CommandFactory, ArgumentParser
+    from csm.cli.csm_client import CsmRestClient
+    from csm.cli.command import Output
     from csm.common.log import Log
     from csm.common.conf import Conf
     from csm.common.payload import *

@@ -1,0 +1,88 @@
+{
+    "expected_csm_user_create": {
+        "comm": {
+            "json": {
+                "interfaces": "",
+                "language": "",
+                "password": "",
+                "roles": "",
+                "temperature": "",
+                "timeout": "",
+                "user_id": ""
+            },
+            "method": "post",
+            "params": {},
+            "target": "/{version}/user",
+            "type": "rest",
+            "version": "v1"
+        },
+        "interfaces": null,
+        "language": null,
+        "need_confirmation": true,
+        "output": {
+            "success": "User created"
+        },
+        "password": "qwerty123",
+        "roles": null,
+        "sub_command_name": "create",
+        "temperature": null,
+        "timeout": null,
+        "user_id": "user123"
+    },
+    "expected_csm_user_delete": {
+        "comm": {
+            "json": {
+                "user_id": ""
+            },
+            "method": "delete",
+            "params": {},
+            "target": "/{version}/user/{user_id}",
+            "type": "rest",
+            "version": "v1"
+        },
+        "need_confirmation": true,
+        "output": {
+            "success": "User deleted"
+        },
+        "sub_command_name": "delete",
+        "user_id": "user123"
+    },
+    "expected_csm_user_show": {
+        "comm": {
+            "json": {},
+            "method": "get",
+            "params": {
+                "limit": "",
+                "offset": "",
+                "sort_by": "",
+                "sort_dir": ""
+            },
+            "target": "/{version}/user",
+            "type": "rest",
+            "version": "v1"
+        },
+        "format": "table",
+        "limit": null,
+        "need_confirmation": false,
+        "offset": null,
+        "output": {
+            "table": {
+                "filters": "user",
+                "headers": {
+                    "created_time": "Creation time",
+                    "id": "User ID",
+                    "interfaces": "Interfaces",
+                    "language": "Language",
+                    "roles": "Roles",
+                    "temperature": "Temp. type",
+                    "timeout": "Timeout",
+                    "updated_time": "Last update time",
+                    "user_type": "User Type"
+                }
+            }
+        },
+        "sort_by": null,
+        "sort_dir": "asc",
+        "sub_command_name": "show"
+    }
+}

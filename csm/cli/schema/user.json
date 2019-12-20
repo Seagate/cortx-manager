@@ -1,0 +1,189 @@
+{
+    "name": "user",
+    "description": "User",
+    "sub_commands": [
+        {
+            "name": "show",
+            "description": "Shows user list",
+            "need_confirmation": false,
+            "args": [
+                {
+                    "flag": "-o",
+                    "type": "int",
+                    "dest": "offset",
+                    "help": "Amount of users you want to get",
+                    "params": true
+                },
+                {
+                    "flag": "-l",
+                    "type": "str",
+                    "dest": "limit",
+                    "help": "Limit of amout of users you want to get",
+                    "params": true
+                },
+                {
+                    "flag": "-s",
+                    "type": "str",
+                    "dest": "sort_by",
+                    "help": "Parameter by which you want to sort user list",
+                    "choices": [
+                        "user_id",
+                        "created_time",
+                        "updated_time"
+                    ],
+                    "params": true
+                },
+                {
+                    "flag": "-d",
+                    "type": "str",
+                    "dest": "sort_dir",
+                    "default": "asc",
+                    "help": "Order by which you want to sort user list",
+                    "choices": [
+                        "desc",
+                        "asc"
+                    ],
+                    "params": true
+                },
+                {
+                    "flag": "-f",
+                    "dest": "format",
+                    "help": "Format of Output",
+                    "default": "table",
+                    "type": "str",
+                    "choices": [
+                        "table",
+                        "xml",
+                        "json"
+                    ],
+                    "nargs": "?"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?",
+                    "help": "Additional arguments that can be send to csm agent"
+                }
+            ],
+            "comm": {
+                "type": "rest",
+                "method": "get",
+                "target": "/{version}/user",
+                "version": "v1"
+            },
+            "output": {
+                "table": {
+                    "headers": {
+                        "id": "User ID",
+                        "user_type": "User Type",
+                        "interfaces": "Interfaces",
+                        "roles": "Roles",
+                        "temperature": "Temp. type",
+                        "language": "Language",
+                        "timeout": "Timeout",
+                        "created_time": "Creation time",
+                        "updated_time": "Last update time"
+                    },
+                    "filters": "user"
+                }
+            }
+        },
+        {
+            "name": "create",
+            "description": "Creates user",
+            "need_confirmation": true,
+            "args": [
+                {
+                    "flag": "user_id",
+                    "type": "str",
+                    "help": "User id which you want to create",
+                    "json": true
+                },
+                {
+                    "flag": "-p",
+                    "type": "str",
+                    "dest": "password",
+                    "help": "Password for user which you want to create",
+                    "json": true,
+                    "required": true
+                },
+                {
+                    "flag": "-r",
+                    "type": "str",
+                    "dest": "roles",
+                    "help": "List of this user roles",
+                    "choices": [
+                        "monitor",
+                        "manage"
+                    ],
+                    "nargs": "*",
+                    "json": true
+                },
+                {
+                    "flag": "-t",
+                    "type": "str",
+                    "dest": "temperature",
+                    "help": "Temperature type for this user",
+                    "json": true
+                },
+                {
+                    "flag": "-l",
+                    "type": "str",
+                    "dest": "language",
+                    "help": "Language for this user",
+                    "json": true
+                },
+                {
+                    "flag": "-o",
+                    "type": "int",
+                    "dest": "timeout",
+                    "help": "Timeout for this user",
+                    "json": true
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?",
+                    "help": "Additional arguments that can be send to csm agent"
+                }
+            ],
+            "comm": {
+                "type": "rest",
+                "method": "post",
+                "target": "/{version}/user",
+                "version": "v1"
+            },
+            "output": {
+                "success": "User created"
+            }
+        },
+        {
+            "name": "delete",
+            "description": "Delete user",
+            "need_confirmation": true,
+            "args": [
+                {
+                    "flag": "user_id",
+                    "type": "str",
+                    "help": "User id which you want to delete",
+                    "json": true
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?",
+                    "help": "Additional arguments that can be send to csm agent"
+                }
+            ],
+            "comm": {
+                "type": "rest",
+                "method": "delete",
+                "target": "/{version}/user/{user_id}",
+                "version": "v1"
+            },
+            "output": {
+                "success": "User deleted"
+            }
+        }
+    ]
+}

@@ -1,0 +1,3 @@
+cli.csm_user.test_csm_user_create
+cli.csm_user.test_csm_user_delete
+cli.csm_user.test_csm_user_list
