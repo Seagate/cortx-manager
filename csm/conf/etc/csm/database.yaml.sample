@@ -24,3 +24,14 @@ models:
     config:
         consul_db:
             collection: "user_collection"
+-   import_path: "csm.core.data.models.usl.NewVolumeEvent"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "new_volume_event_collection"
+-   import_path: "csm.core.data.models.usl.VolumeRemovedEvent"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "volume_removed_event_collection"
+
