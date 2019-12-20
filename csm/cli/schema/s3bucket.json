@@ -1,0 +1,99 @@
+{
+  "name": "s3bucket",
+  "description": "Bucket",
+  "sub_commands": [
+    {
+      "name": "show",
+      "description": "Displays S3 buckets On The CLI",
+      "need_confirmation": false,
+      "args": [
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "get",
+        "target": "/{version}/s3/bucket",
+        "version": "v1"
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "name": "Bucket Name"
+          },
+          "filters": "buckets"
+        }
+      }
+    },
+    {
+      "name": "create",
+      "description": "Create new S3 bucket",
+      "need_confirmation": false,
+      "args": [
+        {
+          "flag": "bucket_name",
+          "type": "str",
+          "help": "Giva a bucket name to create.",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/s3/bucket",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Bucket created."
+      }
+    },
+    {
+      "name": "delete",
+      "description": "Delete the bucket",
+      "need_confirmation": false,
+      "args": [
+        {
+          "flag": "bucket_name",
+          "type": "str",
+          "help": "Bucket Name"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "delete",
+        "target": "/{version}/s3/bucket/{bucket_name}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Bucket deleted."
+      }
+    }
+  ]
+}
+ 
