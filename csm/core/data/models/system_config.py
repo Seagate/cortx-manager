@@ -1,11 +1,10 @@
 """
  ****************************************************************************
  Filename:          system_config.py
- Description:       Contains the system-config model and the interface for system-config
-                    repository.
+ Description:       Contains System Config models and definitions
 
  Creation Date:     10/14/2019
- Author:            Soniya Moholkar
+ Author:            Soniya Moholkar, Ajay Shingare
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -16,58 +15,144 @@
  ****************************************************************************
 """
 
-from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 
+from schematics.models import Model
+from schematics.types import (StringType, ModelType, ListType,
+                              BooleanType, DateTimeType, IntType)
 
-# the class, rather than storing System-config as a dictionary in the _data field
-class SystemConfig:
-    """
-    Represents an system-config to be sent to front end
-    """
+from csm.common.log import Log
+from csm.core.blogic.models.base import CsmModel
 
-    def __init__(self, data):
-        self._key = "system_config"
-        self._data = data
+# Schematics models to store system configuration settings
+class ManagementNetworkSettingsIpv4(Model):
+    """ Model for management network settings ipv4 """
+    is_dhcp = BooleanType()
+    ip_address = StringType()
+    netmask = StringType()
+    gateway = StringType()
 
-    def key(self):
-        """
-        Method to get key
-        :return: :type:string
-        """
-        return self._key
+class ManagementNetworkSettingsIpv6(Model):
+    """ Model for management network settings ipv6 """
+    is_dhcp = BooleanType()
+    ip_address = ListType(StringType)
+    gateway = StringType()
+    address_label = StringType()
+    type = StringType()
 
-    def data(self):
-        """
-        Method to get data
-        :return: :type:json
-        """
-        return self._data
+class ManagementNetworkSettings(Model):
+    """ Model for management network settings """
+    ipv4 = ModelType(ManagementNetworkSettingsIpv4)
+    ipv6 = ModelType(ManagementNetworkSettingsIpv6)
 
+class DataNetworkSettingsIpv4Nodes(Model):
+    """ Model for data network settings ipv4 nodes """
+    id = IntType()
+    ip_address = StringType()
+    netmask = StringType()
+    gateway = StringType()
 
-# TODO: Consider a more generic approach to storage interfaces
-class ISystemConfigStorage(ABC):
-    """
-    Interface for SystemConfig repository
-    """
-    @abstractmethod
-    async def save(self, system_config: SystemConfig):
-        """
-        Store an systemConfig.
-        :param system_config: SystemConfig object
-        :return: nothing
-        """
+class DataNetworkSettingsIpv6Nodes(Model):
+    """ Model for data network settings ipv6 nodes """
+    id = IntType()
+    ip_address = ListType(StringType)
+    gateway = StringType()
+    address_label = StringType()
+    type = StringType()
 
-    @abstractmethod
-    async def update(self, system_config: SystemConfig):
-        """
-        Saves the systemConfig object
-        :param system_config: SystemConfig object
-        :return: nothing
-        """
+class DataNetworkSettingsIpv4(Model):
+    """ Model for data network settings ipv4 """
+    is_dhcp = BooleanType()
+    nodes = ListType(ModelType(DataNetworkSettingsIpv4Nodes))
 
-    @abstractmethod
-    async def get_all(self) -> list:
+class DataNetworkSettingsIpv6(Model):
+    """ Model for data network settings ipv6 """
+    is_auto = BooleanType()
+    nodes = ListType(ModelType(DataNetworkSettingsIpv6Nodes))
+
+class DataNetworkSettings(Model):
+    """ Model for data network settings """
+    is_external_load_balancer = BooleanType()
+    ipv4 = ModelType(DataNetworkSettingsIpv4)
+    ipv6 = ModelType(DataNetworkSettingsIpv6)
+
+class DnsNetworkSettingsNodes(Model):
+    """ Model for dns network setting nodes """
+    id = IntType()
+    dns_servers = ListType(StringType)
+    search_domain = ListType(StringType)
+
+class DnsNetworkSettings(Model):
+    """ Model for dns network settings """
+    is_external_load_balancer = BooleanType()
+    fqdn_name = StringType()
+    hostname = StringType()
+    nodes = ListType(ModelType(DnsNetworkSettingsNodes))
+
+class Ntp(Model):
+    """ Model for ntp date time settings """
+    ntp_server_address = StringType()
+    ntp_timezone_offset = StringType()
+
+class ManualDateTime(Model):
+    """ Model for manual date time settings """
+    date = StringType()
+    hour = StringType()
+    minute = StringType()
+    clock = StringType()
+
+class DateTimeSettings(Model):
+    """ Model for date time settings """
+    is_ntp = BooleanType()
+    ntp = ModelType(Ntp)
+    date_time = ModelType(ManualDateTime)
+
+class SystemConfigSettings(CsmModel):
+    """ Model for all system configuration settings """
+    _id = "config_id"
+    config_id = StringType()
+    management_network_settings = ModelType(ManagementNetworkSettings)
+    data_network_settings = ModelType(DataNetworkSettings)
+    dns_network_settings = ModelType(DnsNetworkSettings)
+    date_time_settings = ModelType(DateTimeSettings)
+    updated_time = DateTimeType()
+    created_time = DateTimeType()
+
+    async def update(self, new_values: dict):
         """
-        Retrieves the system config
+        Method to update the system config settings model.
+        param: new_values : Dictionary containg system config payload
+        return: 
         """
+        for key in new_values:
+            setattr(self, key, new_values[key])
+        self.updated_time = datetime.now(timezone.utc)
+
+    @staticmethod
+    def instantiate_system_config(config_id):
+        """
+        Instantiate system config settings class.
+        param config_id: ID of the system config.
+        return: SystemConfigSettings model object.
+        """
+        system_config = SystemConfigSettings()
+        system_config.config_id = config_id
+        system_config.created_time = datetime.now(timezone.utc)
+        system_config.updated_time = datetime.now(timezone.utc)
+        return system_config
+
+    def to_primitive(self) -> dict:
+        """
+        Converts the system config settings object to dict.
+        params: None
+        return: system config settings model as a dict .
+        """
+        obj = super().to_primitive()
+        try:
+            if 'created_time' in obj:
+                obj.pop('created_time', None)
+            if 'updated_time' in obj:
+                obj.pop('updated_time', None)
+        except Exception as ex:
+            Log.exception(ex)
+        return obj
