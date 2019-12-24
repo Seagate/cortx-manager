@@ -1,0 +1,51 @@
+{
+	"management_network_settings": {
+		"ipv4": {
+			"is_dhcp": true,
+			"ip_address": "127.1.1.1",
+			"netmask": "255.255.255.0",
+			"gateway": "255.255.255.0"
+		},
+		"ipv6": {
+			"is_dhcp": true,
+			"ip_address": ["10.235.218.212", "10.235.218.212"],
+			"gateway": "255.255.240.0",
+			"address_label": "vlan",
+			"type": "DHCP6"
+		}
+	},
+	"data_network_settings": {
+		"is_external_load_balancer": true,
+		"ipv4": null,
+		"ipv6": null
+	},
+	"dns_network_settings": {
+		"is_external_load_balancer": true,
+		"fqdn_name": "vlan1.seagate.com",
+		"hostname": "seagate",
+		"nodes": [{
+				"id": 0,
+				"dns_servers": ["dns_server1", "dns_server2", "dns_server3"],
+				"search_domain": ["search_domain1", "search_domain2", "search_domain3"]
+			},
+			{
+				"id": 1,
+				"dns_servers": ["dns_server1", "dns_server2", "dns_server3"],
+				"search_domain": ["search_domain1", "search_domain2", "search_domain3"]
+			}
+		]
+	},
+	"date_time_settings": {
+		"is_ntp": true,
+		"ntp": {
+			"ntp_server_address": "10.235.218.212",
+			"ntp_timezone_offset": "UTC"
+		},
+		"date_time": {
+			"date": "12/17/2019",
+			"hour": "10",
+			"minute": "15",
+			"clock": "24hr"
+		}
+	}
+}

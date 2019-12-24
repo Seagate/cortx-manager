@@ -82,6 +82,10 @@ class CsmAgent:
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
 
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
+        
+        # System config storage service
+        system_config_mgr = SystemConfigManager(db)
+        CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr)
 
     @staticmethod
     def _daemonize():
@@ -156,6 +160,7 @@ if __name__ == '__main__':
         from csm.common.timeseries import TimelionProvider
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
+        from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
 
         CsmAgent.init()
         CsmAgent.run()

@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+
 """
  ****************************************************************************
  Filename:          system_config.py
- Description:       controllers for system-config
-                    repository.
+ Description:       controllers for system config settings
 
  Creation Date:     10/14/2019
- Author:            Soniya Moholkar
+ Author:            Soniya Moholkar, Ajay Shingare
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -15,65 +16,69 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-from copy import deepcopy
+import json
+import uuid
 
-from csm.core.services.system_config import SystemConfigAppService
-from .view import CsmView
+from csm.common.errors import InvalidRequest
+from csm.common.log import Log
+from .view import CsmView, CsmAuth
 
-
-@CsmView._app_routes.view("/api/v1/config")
-class SystemConfigView(CsmView):
+@CsmView._app_routes.view("/api/v1/sysconfig")
+class SystemConfigListView(CsmView):
     """
     System Configuration related routes
     """
+
+    def __init__(self, request):
+        super(SystemConfigListView, self).__init__(request)
+        self._service = self.request.app["system_config_service"]
+        self._service_dispatch = {}
+
+    """
+    GET REST implementation for fetching user config
+    """
+    async def get(self):
+        Log.debug("Handling system config fetch request")
+
+        return await self._service.get_system_config_list()
+
+    """
+    POST REST implementation for creating a system config
+    """
+    async def post(self):
+        Log.debug("Handling system config post request")
+        try:
+            config_data = await self.request.json()
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        return await self._service.create_system_config(str(uuid.uuid4()),
+                                                        **config_data)
+
+@CsmView._app_routes.view("/api/v1/sysconfig/{config_id}")
+class SystemConfigView(CsmView):
     def __init__(self, request):
         super(SystemConfigView, self).__init__(request)
-        system_config_storage = self.request.app["system_config_storage"]
-        self._service = SystemConfigAppService(system_config_storage)
-        self._service_dispatch = {
-            "get": self._service.get_all
-        }
+        self._service = self.request.app["system_config_service"]
+        self._service_dispatch = {}
 
-    async def post(self):
-        """
-        Save System Confuration
-        :return: :type:dict
-        """
-        response_obj = await self._service.save(await self.request.json())
-        return response_obj
-
-
-@CsmView._app_routes.view("/api/v1/networkmanagement")
-class ManagementNetwork(SystemConfigView):
     """
-    Management Network Settings related routes
+    GET REST implementation for fetching system config
     """
-    def __init__(self, request):
-        super(ManagementNetwork, self).__init__(request)
-
     async def get(self):
-        """
-        get Management Network Setting
-        :return: :type:dict
-        """
-        response_obj = await super(SystemConfigView, self).get()
-        response = deepcopy(response_obj)
-        try:
-            response["systemconfig"].pop("data_network_setting")
-        except AttributeError as ex:
-            print(ex)
-        return response
+        Log.debug("Handling system config fetch request")
 
-    async def patch(self):
-        """
-        Updated Management Network Settings
-        :return: :type:dict
-        """
-        body = await self.request.json()
-        response_obj = await self._service.update(body)
-        response = deepcopy(response_obj)
+        id = self.request.match_info["config_id"]
+        return await self._service.get_system_config_by_id(id)
+
+    """
+    PUT REST implementation for creating a system config
+    """
+    async def put(self):
+        Log.debug("Handling system config put request")
+
         try:
-            response["systemconfig"].pop("data_network_setting")
-        except AttributeError as ex:
-            print(ex)
-        return response
+            id = self.request.match_info["config_id"]
+            config_data = await self.request.json()
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        return await self._service.update_system_config(id, config_data)

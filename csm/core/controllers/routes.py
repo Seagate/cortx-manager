@@ -20,9 +20,9 @@
 from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
+from .system_config import SystemConfigListView
 from .system_config import SystemConfigView
 from .storage_capacity import StorageCapacityView
-from csm.core.data.storage.system_config import SystemConfigStorage
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
 
@@ -37,11 +37,5 @@ class CsmRoutes():
         """
         Add routes to Web application
         """
-        #TODO Following lines will be removed once integrated with DB
-        system_config_storage = SystemConfigStorage(SyncInMemoryKeyValueStorage())
-        app["system_config_storage"] = system_config_storage
-
         app.add_routes(CsmView._app_routes)
-
-
 
