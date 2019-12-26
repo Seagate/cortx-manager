@@ -17,8 +17,10 @@
  ****************************************************************************
 """
 
-from marshmallow import (Schema, fields, ValidationError, validate, validates_schema)
-from csm.core.blogic.validators import StartsWith, Password
+from marshmallow import (Schema, fields, ValidationError, validate,
+                         validates_schema)
+from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
+                                        UserNameValidator)
 from csm.core.controllers.view import CsmView
 from csm.core.providers.providers import Response
 from typing import Dict
@@ -27,6 +29,7 @@ class BaseSchema(Schema):
     """
     Base Class for IAM User Schema Validation
     """
+
     @staticmethod
     def format_error(validation_error_obj: ValidationError) -> str:
         """
@@ -44,31 +47,29 @@ class IamUserCreateSchema(BaseSchema):
     IAM user Create schema validation class
     """
     user_name = fields.Str(required=True,
-                           validate=[validate.Length(min=1, max=64),
-                                     validate.Regexp(r"^[a-zA-Z0-9_-]*$",
-                                                     error="Username can only contain Alphanumeric, - and  _ .")])
-    password = fields.Str(required=True, validate=[validate.Length(min=8, max=64), Password()])
-    path = fields.Str(default='/', validate=[validate.Length(max=512), StartsWith("/", True)])
+                           validate=[UserNameValidator()])
+    password = fields.Str(required=True, validate=[PasswordValidator()])
+    path = fields.Str(default='/', validate=[PathPrefixValidator()])
     require_reset = fields.Boolean(default=False)
 
     @validates_schema
     def check_password(self, data: Dict, *args, **kwargs):
         if data["password"] == data["user_name"]:
-            raise ValidationError("Password should not be your username or email.", field_name="password")
+            raise ValidationError(
+                "Password should not be your username or email.",
+                field_name="password")
 
 class IamUserListSchema(BaseSchema):
     """
     Fetching IAM user schema validation class
     """
-    path_prefix = fields.Str(default="/", validate=[validate.Length(max=512), StartsWith("/", True)])
+    path_prefix = fields.Str(default="/", validate=[PathPrefixValidator()])
 
 class IamUserDeleteSchema(BaseSchema):
     """
     IAM user delete schema validation class
     """
-    user_name = fields.Str(required=True, validate=[validate.Length(min=1, max=64),
-                                                    validate.Regexp(r"^[a-zA-Z0-9_-]*$",
-                                                        error="Username can only contain Alphanumeric, - and  _ .")])
+    user_name = fields.Str(required=True, validate=[UserNameValidator()])
 
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserListView(CsmView):
@@ -109,7 +110,6 @@ class IamUserListView(CsmView):
                             output=schema.format_error(val_err))
         # Create User
         return await self._service.create_user(self._s3_session, **request_data)
-
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
 class IamUserView(CsmView):
