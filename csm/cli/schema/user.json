@@ -74,7 +74,7 @@
             "output": {
                 "table": {
                     "headers": {
-                        "id": "User ID",
+                        "username": "Username",
                         "user_type": "User Type",
                         "interfaces": "Interfaces",
                         "roles": "Roles",
@@ -94,7 +94,7 @@
             "need_confirmation": true,
             "args": [
                 {
-                    "flag": "user_id",
+                    "flag": "username",
                     "type": "str",
                     "help": "User id which you want to create",
                     "json": true
@@ -163,9 +163,9 @@
             "need_confirmation": true,
             "args": [
                 {
-                    "flag": "user_id",
+                    "flag": "username",
                     "type": "str",
-                    "help": "User id which you want to delete",
+                    "help": "Username which you want to delete",
                     "json": true
                 },
                 {
@@ -178,7 +178,7 @@
             "comm": {
                 "type": "rest",
                 "method": "delete",
-                "target": "/{version}/user/{user_id}",
+                "target": "/{version}/user/{username}",
                 "version": "v1"
             },
             "output": {
