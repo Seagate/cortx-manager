@@ -48,11 +48,13 @@ PRODUCT=<PRODUCT>
 [ -f /etc/csm/csm.conf ] || \
     cp -R $CFG_DIR/etc/csm/csm.conf.sample /etc/csm/csm.conf
 [ -f /etc/csm/cluster.conf ] || \
-	cp $CFG_DIR/etc/csm/cluster.conf.sample /etc/csm/cluster.conf.sample
+	cp $CFG_DIR/etc/csm/cluster.conf.sample /etc/csm/cluster.conf
 [ -f /etc/csm/components.yaml ] || \
     cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
 [ -f /etc/csm/database.yaml ] || \
     cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
+[ -f /etc/uds/uds_s3.toml ] || \
+    cp -R $CFG_DIR/etc/uds/uds_s3.toml /etc/uds/uds_s3.toml
 
 [ -d "${CSM_DIR}/${PRODUCT}/gui" ] && {
     cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
