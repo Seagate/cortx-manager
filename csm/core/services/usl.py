@@ -75,8 +75,7 @@ class UslService(ApplicationService):
         )
         self._storage = storage
         self._event_queue = asyncio.Queue(0, loop=loop)
-        self._volumes = loop.run_until_complete(self._get_volume_cache())
-        loop.run_until_complete(self._restore_events())
+        self._volumes = loop.run_until_complete(self._restore_volume_cache())
         self._volumes_sustaining_task = loop.create_task(self._sustain_cache())
 
     # TODO: pass S3 server credentials to the server instead of reading from a file
@@ -92,13 +91,18 @@ class UslService(ApplicationService):
                                        usl_s3_conf['credentials']['secret_key'],
                                        s3_conf)
 
-    async def _restore_events(self):
-        new_volume_events = await self._storage(NewVolumeEvent).get(Query())
-        volume_removed_events = await self._storage(VolumeRemovedEvent).get(Query())
-        events = new_volume_events + volume_removed_events
-        events.sort(key=lambda e: e.date)
-        for e in events:
-            self._event_queue.put_nowait(e)
+    async def _restore_volume_cache(self) -> Dict[UUID, Volume]:
+        """Restores the volume cache from Consul KVS"""
+
+        try:
+            cache = {volume.uuid:volume
+                     for volume in await self._storage(Volume).get(Query())}
+        except Exception as e:
+            reason = (f"Failed to restore USL volume cache from Consul KVS: {str(e)}\n"
+                      f"All volumes are considered new. Redundant events may appear")
+            Log.error(reason)
+            cache = {}
+        return cache
 
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
@@ -166,12 +170,10 @@ class UslService(ApplicationService):
 
         for uuid in new_volume_uuids:
             e = NewVolumeEvent.instantiate(fresh_cache[uuid])
-            await self._storage(NewVolumeEvent).store(e)
             await self._event_queue.put(e)
 
         for uuid in volume_removed_uuids:
             e = VolumeRemovedEvent.instantiate(uuid)
-            await self._storage(VolumeRemovedEvent).store(e)
             await self._event_queue.put(e)
 
         self._volumes = fresh_cache
@@ -231,8 +233,12 @@ class UslService(ApplicationService):
         Returns USL events one-by-one
         """
         e = await self._event_queue.get()
-        e_type = type(e)
-        await self._storage(e_type).delete(Compare(e_type.event_id, '=', e.event_id))
+        if isinstance(e, NewVolumeEvent):
+            await self._storage(Volume).store(e.volume)
+        elif isinstance(e, VolumeRemovedEvent):
+            await self._storage(Volume).delete(Compare(Volume.uuid, '=', e.uuid))
+        else:
+            raise CsmInternalError("Unknown entry in USL events queue")
         return e.to_primitive(role='public')
 
     async def register_device(self, url: str, pin: str) -> None:
