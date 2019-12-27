@@ -27,7 +27,7 @@ from csm.common.errors import InvalidRequest
 
 # TODO: find out about policies for names and passwords
 class CsmUserCreateSchema(Schema):
-    user_id = fields.Str(data_key='user_id', required=True)
+    user_id = fields.Str(data_key='username', required=True)
     password = fields.Str(required=True, validate=validate.Length(min=1))
     roles = fields.List(fields.String())
     interfaces = fields.List(fields.String())

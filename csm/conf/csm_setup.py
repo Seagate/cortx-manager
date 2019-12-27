@@ -96,7 +96,7 @@ if __name__ == '__main__':
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.common.errors import CsmError
-    from csm.cli.commands import CommandParser
+    from csm.cli.command import CommandParser
     from csm.core.blogic import const
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
