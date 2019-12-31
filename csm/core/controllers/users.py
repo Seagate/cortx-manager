@@ -29,8 +29,8 @@ from csm.common.errors import InvalidRequest
 class CsmUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True)
     password = fields.Str(required=True, validate=validate.Length(min=1))
-    roles = fields.List(fields.String())
-    interfaces = fields.List(fields.String())
+    roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)))
+    interfaces = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_INTERFACES)))
     temperature = fields.Str(default=None)
     language = fields.Str(default=None)
     timeout = fields.Int(default=None)

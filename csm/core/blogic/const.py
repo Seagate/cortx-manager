@@ -63,6 +63,9 @@ SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
 DEFAULT_USER = 'admin'
+CSM_SUPER_USER_ROLE = 'root'
+CSM_USER_ROLES = ['root', 'admin', 'viewer']
+CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
 NON_ROOT_USER = 'csm'
