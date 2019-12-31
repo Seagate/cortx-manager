@@ -92,7 +92,8 @@ class S3AccountsView(CsmView):
         account_id = self.request.match_info["account_id"]
         response_obj = await self._service.delete_account(self._s3_session, account_id)
         if not response_obj:
-            await self.request.app.login_service.logout(self.request.session.session_id)
+            await self.request.app.login_service.delete_all_sessions(
+            self.request.session.session_id)
         return response_obj
 
     """
