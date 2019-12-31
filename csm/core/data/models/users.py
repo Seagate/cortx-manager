@@ -67,7 +67,7 @@ class User(CsmModel):
     def update(self, new_values: dict):
         if 'password' in new_values:
             self.password_hash = Passwd.hash(new_values['password'])
-            new_values.pop(new_values)
+            new_values.pop('password')
         for key in new_values:
             setattr(self, key, new_values[key])
 
