@@ -79,7 +79,7 @@ class S3AccountsView(CsmView):
         super(S3AccountsView, self).__init__(request)
         self._s3_session = self.request.session.credentials
         if not self._s3_session:
-            raise InvalidRequest("This user is not an S3 User")
+            raise InvalidRequest("Not a S3 User")
         self._service = self.request.app["s3_account_service"]
         self._service_dispatch = {}
 
@@ -90,10 +90,10 @@ class S3AccountsView(CsmView):
         """Calling Stats Get Method"""
         Log.debug("Handling s3 accounts delete request")
         account_id = self.request.match_info["account_id"]
-        resp = await self._service.delete_account(self._s3_session, account_id)
-        if not resp:
+        response_obj = await self._service.delete_account(self._s3_session, account_id)
+        if not response_obj:
             await self.request.app.login_service.logout(self.request.session.session_id)
-        return resp
+        return response_obj
 
     """
     PATCH REST implementation for S3 account
