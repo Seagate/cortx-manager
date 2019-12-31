@@ -182,20 +182,17 @@ class S3AccountService(ApplicationService):
         return response
 
     @Log.trace_method(Log.INFO)
-    async def delete_account(self, account_name: str):
+    async def delete_account(self, s3_session, account_name: str):
         """
         S3 account deletion
-        :param account_name:
+        :param s3_session: S3 Accounts Session Details
+        :param account_name: Account Name to Delete Account.
         :returns: empty dictionary in case of success. Otherwise throws an exception.
         """
-        new_creds = await self._s3_root_client.reset_account_access_key(account_name)
-        if isinstance(new_creds, IamError):
-            if new_creds.error_code == IamErrors.NoSuchEntity:
-                raise CsmNotFoundError("The entity is not found", S3_ACCOUNT_NOT_FOUND)
-            self._raise_remote_error(new_creds)
 
-        account_s3_client = self._s3plugin.get_iam_client(new_creds.access_key_id,
-            new_creds.secret_key_id, self._get_iam_connection_config())
+        account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
+                            s3_session.secret_key, self._get_iam_connection_config(),
+                            s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
             self._raise_remote_error(result)
