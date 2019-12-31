@@ -90,8 +90,10 @@ class S3AccountsView(CsmView):
         """Calling Stats Get Method"""
         Log.debug("Handling s3 accounts delete request")
         account_id = self.request.match_info["account_id"]
-
-        return await self._service.delete_account(self._s3_session, account_id)
+        resp = await self._service.delete_account(self._s3_session, account_id)
+        if not resp:
+            await self.request.app.login_service.logout(self.request.session.session_id)
+        return resp
 
     """
     PATCH REST implementation for S3 account
