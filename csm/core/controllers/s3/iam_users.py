@@ -17,14 +17,13 @@
  ****************************************************************************
 """
 
-from marshmallow import (Schema, fields, ValidationError, validate,
-                         validates_schema)
+from typing import Dict
+from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
                                         UserNameValidator)
 from csm.core.controllers.view import CsmView
 from csm.core.providers.providers import Response
 from csm.common.errors import InvalidRequest
-from typing import Dict
 
 class BaseSchema(Schema):
     """
