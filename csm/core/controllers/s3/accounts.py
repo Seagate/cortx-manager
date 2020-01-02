@@ -79,7 +79,7 @@ class S3AccountsView(CsmView):
         super(S3AccountsView, self).__init__(request)
         self._s3_session = self.request.session.credentials
         if not self._s3_session:
-            raise InvalidRequest("Not a S3 User")
+            raise InvalidRequest("Invalid S3 Credentials. Ensure that session is valid")
         self._service = self.request.app["s3_account_service"]
         self._service_dispatch = {}
 
