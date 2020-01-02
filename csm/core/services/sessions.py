@@ -145,6 +145,9 @@ class SessionManager:
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         return self._stg.get(session_id, None)
 
+    async def get_all(self):
+        return list(self._stg.values())
+
     async def update(self, session: Session) -> None:
         self._stg[session.session_id] = session
 
@@ -275,3 +278,19 @@ class LoginService:
         session.expiry_time = self._session_manager.calc_expiry_time()
 
         return session
+
+    async def delete_all_sessions(self, session_id: Session.Id) -> None:
+        """
+        This Function will delete all the current user's active sessions.
+        :param session_id: session_id for user. :type:Str
+        :return: None
+        """
+        session_data = await self._session_manager.get(session_id)
+        if session_data:
+            user_id = session_data.credentials.user_id
+            session_data = await self._session_manager.get_all()
+            for each_session in session_data:
+                if each_session.credentials.user_id == user_id:
+                    await self._session_manager.delete(each_session.session_id)
+        else:
+            await self._session_manager.delete(session_id)

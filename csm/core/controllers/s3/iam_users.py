@@ -23,6 +23,7 @@ from csm.core.controllers.validators import (PathPrefixValidator, PasswordValida
                                         UserNameValidator)
 from csm.core.controllers.view import CsmView
 from csm.core.providers.providers import Response
+from csm.common.errors import InvalidRequest
 
 class BaseSchema(Schema):
     """
@@ -80,7 +81,8 @@ class IamUserListView(CsmView):
         # Fetch S3 access_key, secret_key and session_token from session
         self._s3_session = self.request.session.credentials
         if not self._s3_session:
-            raise Response(rc=401, output="This user is not an S3 User")
+            raise InvalidRequest(
+                "Invalid S3 Credentials. Ensure that session is valid")
         self._service = self.request.app["s3_iam_users_service"]
 
     async def get(self):
@@ -120,7 +122,8 @@ class IamUserView(CsmView):
         # Fetch S3 access_key, secret_key and session_token from session
         self._s3_session = self.request.session.credentials
         if not self._s3_session:
-            raise Response(rc=401, output="This user is not an S3 User")
+            raise InvalidRequest(
+                "Invalid S3 Credentials. Ensure that session is valid")
         self._service = self.request.app["s3_iam_users_service"]
 
     async def delete(self):
