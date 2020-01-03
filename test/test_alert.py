@@ -55,7 +55,8 @@ def send_alerts(args):
     for data in dict:
         count = count + 1
         with open('alert_output_expected.json', 'a+') as out_file:
-            message = create_output_schema(data)
+            message = AlertPlugin()._convert_to_csm_schema(json.dumps(data))
+            message.pop("updated_time")
             json.dump(message, out_file, indent=4)
             if count == expected_count:
                 out_file.write('\n]')
@@ -63,33 +64,6 @@ def send_alerts(args):
                 out_file.write(',\n')
             out_file.close()
         client.send(data)
-        
-def create_output_schema(msg_body):
-    """ 
-    Parsing the alert JSON to create the output schema
-    """
-    data = {'$schema': 'http://json-schema.org/draft-03/schema#', 'id':\
-            'http://json-schema.org/draft-03/schema#', 'title':\
-            'CSM HW Schema', 'type': 'object', 'properties':\
-            {'header': {}, 'hw': {}}}
-    
-    dict = msg_body['message']['sensor_response_type']
-    for values in dict.values():
-        data['properties']['header'] = {'type': 'hw', 'alert_type': '%s'\
-                %(values.get('alert_type', "")), 'type': 'hw', 'status':\
-                '%s' %(values.get('info', {}).get('status', '')),\
-                'resolved': 'no', 'acknowledged': 'no', 'description':\
-                '%s' %(values.get('info', {}).get('health-reason', '')),\
-                 'location': '%s' %(values.get('info', {}).get('location',\
-                 '')), 'severity': '1', 'recommendation': '%s'\
-                 %(values.get('info', {}).get('health-recommendation', ''))}
-        data['properties']['hw'] = {'vendor': '%s' %(values.get('info', {})\
-                .get('vendor', '')), 'enclosure_id': '%s'\
-                %(values.get('info', {}).get('enclosure-id', '')), \
-                'serial_number': '%s' %(values.get('info', {})\
-                .get('serial-number', '')), 'part_number': '%s'\
-                %(values.get('info', {}).get('part-number', ''))}
-    return data
 
 def recv_alerts_test1(args):
     args['alert_plugin_test1'].init(callback_fn=consume_alert_test1)
@@ -111,6 +85,7 @@ def consume_alert_test2(message):
     global count_test2
     global expected_count
     count_test2 = count_test2 + 1
+    message.pop("updated_time")
     with open('alert_output.json', 'a+') as json_file:
         json.dump(message, json_file, indent=4)
         if count_test2 == expected_count:
@@ -150,4 +125,4 @@ def compare_results():
     if not filecmp.cmp('alert_output_expected.json', 'alert_output.json'):
         raise TestFailed('Input and Output alerts do not match.')
 
-test_list = [ test1, test2 ]
+test_list = [ test1, test2]
