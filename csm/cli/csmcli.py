@@ -66,8 +66,13 @@ def main(argv):
     try:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-
-        csm_agent_url = f"{const.CSM_AGENT_BASE_URL}{const.CSM_AGENT_HOST}:{const.CSM_AGENT_PORT}/api"
+        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,
+                        'CSMCLI.csm_agent_port') or const.CSM_AGENT_PORT
+        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,
+                        'CSMCLI.csm_agent_host') or const.CSM_AGENT_HOST
+        csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX,
+                        'CSMCLI.csm_agent_base_url') or const.CSM_AGENT_BASE_URL
+        csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
         rest_client = CsmRestClient(csm_agent_url)
         loop = asyncio.get_event_loop()
 
