@@ -178,6 +178,8 @@ class TimelionProvider(TimeSeriesProvider):
             unit = (await self.get_axis(panel))["y"] if unit is "" else unit
             from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
             duration_t = str(datetime.utcfromtimestamp(int(duration_t)).isoformat())+'.000Z'
+            panel = panel.lower()
+            metric_list = await self._get_metric_list(panel, metric_list)
             res = await self._aggregate_metric(panel, from_t, duration_t,
                                             interval, metric_list, query)
             return await self._convert_payload(res, stats_id, panel, output_format, unit)
@@ -185,6 +187,18 @@ class TimelionProvider(TimeSeriesProvider):
             Log.debug("Failed to request stats %s" %e)
             raise CsmInternalError("id: %s, Error: Failed to process timelion \
                 request %s" %(stats_id,e))
+
+    async def _get_metric_list(self, panel, metric_list):
+        """
+        Validate metric list. If metric list is empty then fetch from schama.
+        """
+        if len(metric_list) == 0:
+            metric_list = await self.get_labels(panel)
+        else:
+            for metric in metric_list:
+                if metric not in aggr_panel:
+                    raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
+        return metric_list
 
     async def _parse_interval(self, from_t, duration_t, interval, total_sample):
         try:
@@ -206,16 +220,12 @@ class TimelionProvider(TimeSeriesProvider):
         """
         Use aggregation rule to create query to timelion
         """
-        if not await self._validate_panel(panel.lower()):
+        if not await self._validate_panel(panel):
             raise CsmInternalError("Invalid panel request for stats %s"  %panel)
-        aggr_panel = self._aggr_rule[panel.lower()]["metrics"]
-        if len(metric_list) == 0:
-            metric_list = await self.get_labels(panel.lower())
+        aggr_panel = self._aggr_rule[panel]["metrics"]
         if query is "":
             query = '('
             for metric in metric_list:
-                if metric not in aggr_panel:
-                    raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
                 query = query + aggr_panel[metric] + ','
             query = query[:-1] + ')'
         body = self._timelion_req_body.substitute(query=query, from_t=from_t,
@@ -265,7 +275,7 @@ class TimelionProvider(TimeSeriesProvider):
         """
         Preform panel specific operation
         """
-        if panel.lower() == "throughput":
+        if panel == "throughput":
             datapoint = await self._modify_throughput(datapoint, unit)
         return datapoint
 
