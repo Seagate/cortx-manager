@@ -125,7 +125,7 @@ class S3AccountService(ApplicationService):
 
     @Log.trace_method(Log.INFO)
     async def patch_account(self, account_name: str, password: str = None,
-                            reset_access_key: bool = False) -> dict:
+                            reset_access_key: bool = False, account_email: str = None) -> dict:
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
@@ -139,10 +139,10 @@ class S3AccountService(ApplicationService):
         client = self._s3_root_client
         response = {
             "account_name": account_name,
-            "account_email": "not-available@not.available"
+            "account_email": account_email
         }
 
-        # TODO: currently there is no way to fetch email of an already existing account
+        # # TODO: currently there is no way to fetch email of an already existing account
 
         if reset_access_key:
             new_creds = await client.reset_account_access_key(account_name)
