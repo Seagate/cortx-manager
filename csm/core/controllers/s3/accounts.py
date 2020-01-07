@@ -34,6 +34,7 @@ class S3AccountCreationSchema(Schema):
 class S3AccountPatchSchema(Schema):
     reset_access_key = fields.Boolean(default=False)
     password = fields.Str(default="", validate=validate.Length(min=1))
+    account_email = fields.Email(required=True)
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts")
@@ -57,6 +58,7 @@ class S3AccountsListView(CsmView):
     """
     POST REST implementation for S3 account fetch request
     """
+    @Log.trace_method(Log.INFO)
     async def post(self):
         """Calling Stats Post Method"""
         Log.debug("Handling s3 accounts post request")
@@ -100,11 +102,12 @@ class S3AccountsView(CsmView):
     PATCH REST implementation for S3 account
     """
     async def patch(self):
-        """Calling Stats Post Method"""
         Log.debug("Handling s3 accounts patch request")
-
         try:
-            account_id = self.request.match_info["account_id"]
+            account_id = self.request.match_info["account_id"] 
+            if not self._s3_session.user_id == account_id:
+                raise InvalidRequest("Access Denied. Account can not be deleted"
+                                     " by users other than owner.")            
             schema = S3AccountPatchSchema()
             patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
@@ -112,6 +115,4 @@ class S3AccountsView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(
                 "Invalid request body: {}".format(val_err))
-
-        # TODO: add validation
         return await self._service.patch_account(account_id, **patch_body)
