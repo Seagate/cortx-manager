@@ -90,3 +90,51 @@ class BucketNameValidator(Validator):
                 ("Bucket Name should be between 3-36 Characters long." 
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))
+
+class Ipv4(Validator):
+    """
+    Validator class for ipv4 address validation.
+    """
+    @staticmethod
+    def validate_ipv4(ip):
+        ip_regex = ("^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$")
+        return re.search(ip_regex, ip)
+
+    def __call__(self, ip):
+        if not self.validate_ipv4(ip):
+            raise ValidationError(
+                "Invalid IP4 address.")
+
+class DomainName(Validator):
+    """
+    Validator class for domain name validation.
+    """
+    @staticmethod
+    def validate_domain_name(domain_name):
+        domain_regex = "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$"
+        return re.search(domain_regex, domain_name)
+
+    def __call__(self, domain_name):
+        if len(domain_name) > 253:
+            raise ValidationError(
+                "Domain name should be less than 253 characters")
+        if not self.validate_domain_name(domain_name):
+            raise ValidationError(
+                "Invalid domain name.")
+
+class Server(Validator):
+    """
+    Validator class for both ipv4 address and domain name validation.
+    """
+    def __call__(self, server_name):
+        if len(server_name) > 253:
+            raise ValidationError(
+                "Server name should be less than 253 characters")
+        if not (Ipv4.validate_ipv4(server_name) or
+                DomainName.validate_domain_name(server_name)):
+            raise ValidationError(
+                "Invalid server name.")
+
