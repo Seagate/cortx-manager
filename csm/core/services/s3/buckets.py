@@ -163,3 +163,72 @@ class S3BucketService(ApplicationService):
             Log.debug(f'{e}')
             error = Boto3Error(e)
             return Response(rc=error.http_status_code, output=str(error.message))
+
+    @Log.trace_method(Log.INFO)
+    async def get_bucket_policy(self, s3_session: S3Credentials,
+                                bucket_name: str) -> dict:
+        """
+        Retrieve the policy of existing bucket
+
+        :param s3_session: s3 user session
+        :type s3_session: S3Credentials
+        :param bucket_name: s3 bucket name
+        :type bucket_name: str
+        :returns: A dict of bucket policy
+        """
+        Log.debug(f"Retrieve bucket bucket by name = {bucket_name}")
+        s3_client = await self.get_s3_client(s3_session)  # type: S3Client
+        try:
+            bucket_policy = await s3_client.get_bucket_policy(bucket_name)
+        except ClientError as e:
+            Log.debug(f'{e}')
+            error = Boto3Error(e)
+            return Response(rc=error.http_status_code, output=str(error.message))
+        return bucket_policy
+
+    @Log.trace_method(Log.INFO)
+    async def put_bucket_policy(self, s3_session: S3Credentials, bucket_name: str,
+                                policy: dict) -> dict:
+        """
+        Create or update the policy of existing bucket
+
+        :param s3_session: s3 user session
+        :type s3_session: S3Credentials
+        :param bucket_name: s3 bucket name
+        :type bucket_name: str
+        :returns: Success message
+        """
+        Log.debug(
+            f"Requested to put bucket policy for bucket name = {bucket_name}")
+        s3_client = await self.get_s3_client(s3_session)  # type: S3Client
+        try:
+            bucket_policy = await s3_client.put_bucket_policy(bucket_name, policy)
+        except ClientError as e:
+            Log.debug(f'{e}')
+            error = Boto3Error(e)
+            return Response(rc=error.http_status_code, output=str(error.message))
+        return {"message": "Bucket Policy Updated Successfully."}
+
+    @Log.trace_method(Log.INFO)
+    async def delete_bucket_policy(self, s3_session: S3Credentials,
+                                bucket_name: str) -> dict:
+        """
+        Delete the policy of existing bucket
+
+        :param s3_session: s3 user session
+        :type s3_session: S3Credentials
+        :param bucket_name: s3 bucket name
+        :type bucket_name: str
+        :returns: Success message
+        """
+        Log.debug(
+            f"Requested to delete bucket policy for bucket name = {bucket_name}")
+        s3_client = await self.get_s3_client(s3_session)  # type: S3Client
+        try:
+            bucket_policy = await s3_client.delete_bucket_policy(bucket_name)
+        except ClientError as e:
+            Log.debug(f'{e}')
+            error = Boto3Error(e)
+            return Response(rc=error.http_status_code, output=str(error.message))
+        return {"message": "Bucket Policy Deleted Successfully."}
+
