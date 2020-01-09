@@ -109,3 +109,51 @@ class S3BucketView(CsmView):
         bucket_name = self.request.match_info["bucket_name"]
 
         return await self._service.delete_bucket(bucket_name, self._s3_session)
+
+
+@CsmView._app_routes.view("/api/v1/s3/bucket_policy/{bucket_name}")
+class S3BucketPolicyView(CsmView):
+    """
+    S3 Bucket Policy View for GET, PUT and DELETE REST API implementation:
+        1. Get bucket policy of existing bucket
+        2. Create or update bucket policy by given bucket name
+        3. Delete bucket policy by given bucket name
+    """
+
+    def __init__(self, request):
+        super(S3BucketPolicyView, self).__init__(request)
+        self._service = self.request.app["s3_bucket_service"]
+        self._service_dispatch = {}
+        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+
+    """
+    GET REST implementation for S3 bucket policy fetch request
+    """
+    async def get(self):
+        Log.debug("Handling s3 bucket policy fetch request")
+        bucket_name = self.request.match_info["bucket_name"]
+
+        return await self._service.get_bucket_policy(self._s3_session,
+                                                     bucket_name)
+
+    """
+    PUT REST implementation for S3 bucket policy put request
+    """
+    async def put(self):
+        Log.debug("Handling s3 bucket policy put request")
+        bucket_name = self.request.match_info["bucket_name"]
+        bucket_policy_body = await self.request.json()
+
+        return await self._service.put_bucket_policy(self._s3_session,
+                                                     bucket_name,
+                                                     bucket_policy_body)
+
+    """
+    DELETE REST implementation for s3 bucket policy delete request
+    """
+    async def delete(self):
+        Log.debug("Handling s3 bucket policy delete request")
+        bucket_name = self.request.match_info["bucket_name"]
+
+        return await self._service.delete_bucket_policy(self._s3_session,
+                                                        bucket_name)
