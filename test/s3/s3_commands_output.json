@@ -1,0 +1,135 @@
+{
+    "accounts": {
+        "show_test_2": {
+            "comm": {
+                "json": {},
+                "method": "get",
+                "params": {
+                    "limit": ""
+                },
+                "target": "/{version}/s3_accounts",
+                "type": "rest",
+                "version": "v1"
+            },
+            "format": "table",
+            "limit": 1000,
+            "need_confirmation": false,
+            "output": {
+                "table": {
+                    "headers": {
+                        "account_email": "Account Email",
+                        "account_name": "Account Name"
+                    }
+                }
+            },
+            "sub_command_name": "show"
+        },
+        "delete_test_2": {
+            "account_name": "csm_user",
+            "comm": {
+                "json": {},
+                "method": "delete",
+                "params": {},
+                "target": "/{version}/s3_accounts/{account_id}",
+                "type": "rest",
+                "version": "v1"
+            },
+            "need_confirmation": true,
+            "output": {
+                "success": "Account Deleted."
+            },
+            "sub_command_name": "delete"
+        },
+        "create_test_2":{
+            "account_email": "csm_user@seagate.com",
+            "account_name": "csm_user",
+            "comm": {"json": {"account_email": "", "account_name": "", "password": ""},
+                     "method": "post",
+                     "params": {},
+                     "target": "/{version}/s3_accounts",
+                     "type": "rest",
+                     "version": "v1"},
+            "need_confirmation": true,
+            "output": {"table": {"headers": {"access_key": "Permanent Access Key",
+                                             "account_email": "Account Email",
+                                             "account_name": "Account Name",
+                                             "secret_key": "Permanent Secret Key"}}},
+            "password": "",
+            "sub_command_name": "create"}
+           
+    },
+    "iamuser": {
+        "delete_test_2": {
+            "comm": {
+                "json": {},
+                "method": "delete",
+                "params": {},
+                "target": "/{version}/iam_users/{user_name}",
+                "type": "rest",
+                "version": "v1"
+            },
+            "need_confirmation": true,
+            "output": {
+                "success": "IAM User Deleted."
+            },
+            "sub_command_name": "delete",
+            "user_name": "csm_user"
+        },
+        "show_test_2": {
+            "comm": {
+                "json": {},
+                "method": "get",
+                "params": {
+                    "limit": ""
+                },
+                "target": "/{version}/iamusers",
+                "type": "rest",
+                "version": "v1"
+            },
+            "format": "table",
+            "limit": 1000,
+            "need_confirmation": false,
+            "output": {
+                "table": {
+                    "filters": "iam_users",
+                    "headers": {
+                        "arn": "ARN",
+                        "path": "PATH",
+                        "user_id": "User ID",
+                        "user_name": "User Name"
+                    }
+                }
+            },
+            "sub_command_name": "show"
+        },
+        "create_test_2": {
+            "comm": {
+                "json": {
+                    "password": "",
+                    "path": "",
+                    "user_name": ""
+                },
+                "method": "post",
+                "params": {},
+                "target": "/{version}/iam_user",
+                "type": "rest",
+                "version": "v1"
+            },
+            "need_confirmation": true,
+            "output": {
+                "table": {
+                    "headers": {
+                        "arn": "ARN",
+                        "path": "Path",
+                        "user_id": "User ID",
+                        "user_name": "User Name"
+                    }
+                }
+            },
+            "password": "",
+            "path": "/",
+            "sub_command_name": "create",
+            "user_name": "csm_user"
+        }
+    }
+}

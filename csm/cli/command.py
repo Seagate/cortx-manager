@@ -20,13 +20,13 @@
 """
 
 import argparse
+import getpass
 import json
 from typing import Dict, Any
 from copy import deepcopy
-
 from dict2xml import dict2xml
 from prettytable import PrettyTable
-
+from csm.cli.csmcli import Terminal
 
 class Command:
     """CLI Command Base Class"""
@@ -84,7 +84,6 @@ class Command:
 
 class Validatiors:
     """CLI Validatiors Class"""
-
     @staticmethod
     def positive_int(value):
         try:
@@ -93,7 +92,6 @@ class Validatiors:
             raise argparse.ArgumentError("Value Must be Positive Integer")
         except ValueError:
             raise argparse.ArgumentError("Value Must be Positive Integer")
-
 
 class CommandParser:
     """
@@ -106,7 +104,8 @@ class CommandParser:
 
     def handle_main_parse(self, subparsers):
         """
-        This Function Handles the Parsing of Single-Level and Multi-Level Command Arguments
+        This Function Handles the Parsing of Single-Level and Multi-Level
+        Command Arguments
         :param subparsers: argparser Object
         :return:
         """
@@ -148,7 +147,8 @@ class CommandParser:
     def add_args(self, sub_command: Dict, parser: Any, name):
         """
         This Function will add the cmd_args from the Json to the structure.
-        :param sub_command: Action for which the command needs to be added :type: str
+        :param sub_command: Action for which the command needs to be added
+        :type: str
         :param parser: ArgParse Parser Object :type: Any
         :param name: Name of the Command :type: str
         :return: None
@@ -163,6 +163,9 @@ class CommandParser:
             for each_args in sub_command["args"]:
                 if each_args.get("type", None):
                     each_args["type"] = eval(each_args["type"])
+                if each_args.get("suppress_help", False):
+                    each_args.pop("suppress_help")
+                    each_args['help'] = argparse.SUPPRESS
                 self.handle_comm(each_args)
                 flag = each_args.pop("flag")
                 sub_parser.add_argument(flag, **each_args)
@@ -178,10 +181,8 @@ class CommandParser:
             for each_command in sub_command['sub_commands']:
                 self.handle_subparsers(sub_parser, each_command, name)
 
-
 class Output:
     """CLI Response Display Class"""
-
     def __init__(self, command, response):
         self.command = command
         self.rc = response.rc()
@@ -192,13 +193,14 @@ class Output:
         # Todo: Need to fetch the response messages from a file for localization.
         # TODO: Check 201 response code also for creation requests.
         if self.rc != 200:
-            errstr = Output.error(self.rc, kwargs.get("error"), self.output) + '\n'
-            err.write(errstr or "")
+            errstr = Output.error(self.rc, kwargs.get("error"),
+                                  self.output)
+            err.write(f"{errstr}\n" or "")
             return None
         elif output_type:
             output = getattr(Output, f'dump_{output_type}')(self.output,
-                                                            **kwargs) + '\n'
-            out.write(output)
+                                                            **kwargs)
+            out.write(f"{output}\n")
 
     @staticmethod
     def dump_success(output: dict, success: str, **kwargs):
@@ -214,16 +216,19 @@ class Output:
         """Format for Error message"""
         if message:
             return f'error({rc}): {message}\n'
-        return f"error({rc}): Error Found :- {stacktrace.get('message')}"
+        return f"error({rc}): Error:- {stacktrace.get('message')}"
 
     @staticmethod
     def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
         """Format for Table Data"""
         table_obj = PrettyTable()
         table_obj.field_names = table["headers"].values()
-        rows = data[table["filters"]] if table["filters"] in data else data
-        for each_row in rows:
-            table_obj.add_row([each_row.get(x) for x in table["headers"].keys()])
+        if table.get("filters", False):
+            for each_row in data[table["filters"]]:
+                table_obj.add_row(
+                    [each_row.get(x) for x in table["headers"].keys()])
+        else:
+            table_obj.add_row([data.get(x) for x in table["headers"].keys()])
         return "{0}".format(table_obj)
 
     @staticmethod

@@ -54,7 +54,15 @@ S3:
     ldap_login: "sgiamadmin"
     ldap_password: "ldapadmin"
 
+#Logging
+Log:
+    log_level: "info"
+    log_path: "/var/log"
+    file_size: 10
+    total_files: 10
+
 #CSMCLI
     csm_agent_host: "127.0.0.1"
     csm_agent_port: 8101
     csm_agent_base_url: "http://"
+

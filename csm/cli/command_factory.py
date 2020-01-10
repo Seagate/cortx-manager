@@ -58,12 +58,7 @@ class CommandFactory(object):
             cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(argv)
         sys_module = sys.modules[__name__]
-        try:
-            for attr in ['command', 'action', 'args']:
-                setattr(sys_module, attr, getattr(namespace, attr))
-                delattr(namespace, attr)
-            return command(action, vars(namespace), args)
-        except AttributeError:
-            sys.stderr.write(f"Please See Usage Below. \n")
-            argv.append('-h')
-            parser.parse_args(argv)
+        for attr in ['command', 'action', 'args']:
+            setattr(sys_module, attr, getattr(namespace, attr))
+            delattr(namespace, attr)
+        return command(action, vars(namespace), args)

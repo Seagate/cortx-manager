@@ -111,6 +111,8 @@ def tmain(argp, argv):
             init = getattr(ts_module, 'init')
             init(args)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print('FAILED: Error: %s #@#@#@' %e)
             fail_count += 1
             Log.exception(e)

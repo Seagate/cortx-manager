@@ -135,12 +135,13 @@ class IamUsersService(ApplicationService):
         :return:
         """
         status_code_mapping = {
-            IamErrors.EntityAlreadyExists.value: 409,
-            IamErrors.OperationNotSupported.value: 404,
-            IamErrors.InvalidAccessKeyId.value: 422,
-            IamErrors.InvalidParameterValue.value: 400,
-            IamErrors.NoSuchEntity.value: 404,
-            IamErrors.ExpiredCredential.value: 401
+            IamErrors.EntityAlreadyExists.value : 409,
+            IamErrors.OperationNotSupported.value : 404,
+            IamErrors.InvalidAccessKeyId.value : 422,
+            IamErrors.AccountNotEmpty.value : 422,
+            IamErrors.InvalidParameterValue.value : 400,
+            IamErrors.NoSuchEntity.value : 404,
+            IamErrors.ExpiredCredential.value : 401
         }
         return Response(rc=status_code_mapping.get(iam_error_obj.error_code.value, 500),
                     output=iam_error_obj.error_message)
