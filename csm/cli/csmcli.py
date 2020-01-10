@@ -24,7 +24,7 @@ import asyncio
 from getpass import getpass
 
 
-class OutputTerminal:
+class Terminal:
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
@@ -55,6 +55,14 @@ class OutputTerminal:
             Log.error(traceback.format_exc())
             sys.stderr('Logout failed')
 
+    @staticmethod
+    def get_password(value):
+        """
+        Fetches the Password from Terminal in Non-Echo Mode.
+        :return:
+        """
+        password = value or getpass(prompt="Password: ")
+        return password
 
 def main(argv):
     """
@@ -62,10 +70,13 @@ def main(argv):
     command and print the result back to the terminal.
     """
 
-    Log.init("csm", "/var/log/csm")
     try:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        Log.init("csm", Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
+                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,
                         'CSMCLI.csm_agent_port') or const.CSM_AGENT_PORT
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -90,7 +101,7 @@ def main(argv):
             username = args.get('username')
             command_file = args.get('command-file')
         if username:
-            password = getpass()
+            password = getpass(prompt="Password: ")
             is_logged_in = loop.run_until_complete(rest_client.login(username, password))
             if is_logged_in:
                 sys.stdout.write(f'You\'ve logged in as {username}\n')
@@ -110,14 +121,14 @@ def main(argv):
                     if args[0] in ['exit', 'logout']:
                         if rest_client.has_open_session():
                             is_logged_out = loop.run_until_complete(rest_client.logout())
-                            OutputTerminal.logout_alert(is_logged_out)
+                            Terminal.logout_alert(is_logged_out)
                             assert isinstance(is_logged_out, bool)
                             return int(not is_logged_out)
                         else:
                             return 0
                 command = CommandFactory.get_command(args)
                 if command.need_confirmation:
-                    res = OutputTerminal.get_quest_answer(
+                    res = Terminal.get_quest_answer(
                         " ".join((command.name, command.sub_command_name)))
                     if res is False:
                         continue
@@ -137,7 +148,7 @@ def main(argv):
     except KeyboardInterrupt:
         if rest_client.has_open_session():
             is_logged_out = loop.run_until_complete(rest_client.logout())
-            OutputTerminal.logout_alert(is_logged_out)
+            Terminal.logout_alert(is_logged_out)
             assert isinstance(is_logged_out, bool)
             return int(not is_logged_out)
     except Exception as exception:

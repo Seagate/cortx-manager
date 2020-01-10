@@ -104,6 +104,7 @@ class IamErrors(Enum):
     ExpiredCredential = 'ExpiredCredential'
     InvalidLdapUserId = 'InvalidLdapUserId'
     PasswordPolicyVoilation = 'PasswordPolicyVoilation'
+    AccountNotEmpty = 'AccountNotEmpty'
 
 
 class IamError:

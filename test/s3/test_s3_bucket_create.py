@@ -29,7 +29,7 @@ with open(os.path.dirname(os.path.realpath(__file__)) + "/s3_bucket_commands_out
 
 
 def test_1(*args):
-    expected_output = 'bucket'
+    expected_output = 's3bucket'
     actual_output = buckets_command.name
     t.assertEqual(actual_output, expected_output)
 
