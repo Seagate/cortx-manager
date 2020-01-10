@@ -37,6 +37,11 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        Log.init("csm_agent", 
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -124,14 +129,6 @@ if __name__ == '__main__':
     Opt.init(sys.argv)
     try:
         from csm.common.log import Log
-
-        log_path = "." if Opt.debug else "/var/log/csm"
-        Log.init("csm_agent", log_path)
-    except:
-        print("Can not initialize csm.common.log.Log")
-        os._exit(1)
-
-    try:
         from csm.common.conf import Conf
         from csm.common.payload import Yaml
         from csm.core.blogic import const

@@ -31,75 +31,90 @@ class Log:
     INFO = logging.INFO
     DEBUG = logging.DEBUG
     NOTSET = logging.NOTSET
-
     logger = None
 
     @staticmethod
-    def init(service_name, log_path='/var/log', level=DEBUG):
+    def init(service_name, log_path='/var/log', level="DEBUG", file_size_in_mb=10,
+             backup_count=10):
         """ Initialize logging to log to syslog """
-
         try:
             if not os.path.exists(log_path): os.makedirs(log_path)
         except OSError as err:
             if err.errno != errno.EEXIST: raise
+        max_bytes = file_size_in_mb * 1024 * 1024
+        Log.logger = Log._get_logger(log_path, service_name, max_bytes,
+                                         backup_count, getattr(Log, level))
 
-        format = '%(asctime)s: %(name)s %(levelname)s %(message)s'
-        formatter = logging.Formatter(format)
-
-        log_file = os.path.join(log_path, '%s.log' %service_name)
-        fileHandler = logging.FileHandler(log_file)
-        fileHandler.setFormatter(formatter)
-
-        Log.logger = logging.getLogger(service_name)
-        Log.logger.setLevel(level)
-
-        Log.logger.addHandler(fileHandler)
+    @staticmethod
+    def _get_logger(log_path: str, file_name: str, max_bytes: int,
+                        backup_count: int, log_level):
+        """
+        This Function Creates the Logger for Log Files.
+        :param log_path: Log Path for Log File :type: Str
+        :param file_name: File name for Log Files. :type: Str
+        :param max_bytes: Max Size for each rotating File. :type: int
+        :param backup_count: Number of Files to be kept for backup :type: int
+        :param log_level: Log Class Instance :type: Class(Log)
+        :return: Logger Object
+        """
+        log_format = '%(asctime)s: %(name)s %(levelname)s %(message)s'
+        formatter = logging.Formatter(log_format)
+        log_file = os.path.join(log_path, f"{file_name}.log")
+        file_handler = logging.handlers.RotatingFileHandler(log_file,
+                                                            maxBytes=max_bytes,
+                                                            backupCount=backup_count)
+        file_handler.setFormatter(formatter)
+        file_handler.doRollover()
+        logger = logging.getLogger(f"{file_name}")
+        logger.setLevel(log_level)
+        logger.addHandler(file_handler)
+        return logger
 
     @staticmethod
     def debug(msg, *args, **kwargs):
         caller = inspect.stack()[1][3]
-        Log.logger.debug('[%s] %s' %(caller, msg), *args, **kwargs)
+        Log.logger.debug(f'[{caller}] {msg}', *args, **kwargs)
 
     @staticmethod
     def info(msg, *args, **kwargs):
         caller = inspect.stack()[1][3]
-        Log.logger.info('[%s] %s' %(caller, msg), *args, **kwargs)
+        Log.logger.info(f'[{caller}] {msg}', *args, **kwargs)
 
     @staticmethod
     def warn(msg, *args, **kwargs):
         caller = inspect.stack()[1][3]
-        Log.logger.warn('[%s] %s' %(caller, msg), *args, **kwargs)
+        Log.logger.warn(f'[{caller}] {msg}', *args, **kwargs)
 
     @staticmethod
     def error(msg, *args, **kwargs):
         caller = inspect.stack()[1][3]
-        Log.logger.error('[%s] %s' %(caller, msg), *args, **kwargs)
+        Log.logger.error(f'[{caller}] {msg}', *args, **kwargs)
 
     @staticmethod
     def critical(msg, *args, **kwargs):
         """ Logs a message with level CRITICAL on this logger. """
         caller = inspect.stack()[1][3]
-        Log.logger.critical('[%s] %s' %(caller, msg), *args, **kwargs)
+        Log.logger.critical(f'[{caller}] {msg}', *args, **kwargs)
 
     @staticmethod
     def exception(e, *args, **kwargs):
         """ Logs a message with level ERROR on this logger. """
         caller = inspect.stack()[1][3]
-        Log.logger.exception('[%s] [%s] %s' %(caller, e.__class__.__name__, e))
+        Log.logger.exception(f'[{caller}] [{e.__class__.__name__}] e')
 
     @staticmethod
     def console(msg, *args, **kwargs):
         """ Logs a message with level ERROR on this logger. """
         caller = inspect.stack()[1][3]
-        Log.logger.debug('[%s] %s' %(caller, msg), *args, **kwargs)
-        print('[%s] %s' %(caller, msg))
+        Log.logger.debug(f'[{caller}] {msg}', *args, **kwargs)
+        print(f'[{caller}] {msg}')
 
     @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=35):
         """
         A wrapper method that logs each invocation and exit of the wrapped function.
         :param: level - Level of logging (e.g. Logger.DEBUG)
-        :param: exclude_args - Array of arguments to exclude from the logging 
+        :param: exclude_args - Array of arguments to exclude from the logging
                 (it can be useful e.g. for hiding passwords from the log file)
         :param: truncate_at - Allows to truncate the printed argument values. 35 by default.
 
@@ -107,7 +122,6 @@ class Log:
         @Logger.trace_method(Logger.DEBUG)
         def some_function(arg_1, arg_2):
             pass
-
         """
         def _fmt_value(obj):
             str_value = repr(obj)
@@ -119,7 +133,7 @@ class Log:
         def _print_start(func, *args, **kwargs):
             pos_args = [_fmt_value(arg) for arg in args]
             # TODO: handle exclusion of positional arguments as well
-            kw_args = [key + "=" + _fmt_value(kwargs[key]) for key in kwargs 
+            kw_args = [key + "=" + _fmt_value(kwargs[key]) for key in kwargs
                 if key not in exclude_args]
 
             message = "[{}] Invoked with ({})".format(
