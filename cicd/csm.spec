@@ -22,7 +22,7 @@ cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
 exit 0
 
 %post
-mkdir -p /var/csm/bundle /var/log/csm /etc/csm
+mkdir -p /var/csm/bundle /var/log/csm /etc/csm /etc/uds
 CSM_DIR=/opt/seagate/csm
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
@@ -54,7 +54,7 @@ PRODUCT=<PRODUCT>
 [ -f /etc/csm/database.yaml ] || \
     cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
 [ -f /etc/uds/uds_s3.toml ] || \
-    cp -R $CFG_DIR/etc/uds/uds_s3.toml /etc/uds/uds_s3.toml
+    cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
 
 [ -d "${CSM_DIR}/${PRODUCT}/gui" ] && {
     cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
