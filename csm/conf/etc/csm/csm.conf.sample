@@ -56,8 +56,8 @@ S3:
 
 #Logging
 Log:
-    log_level: "info"
-    log_path: "/var/log"
+    log_level: "INFO"
+    log_path: "/var/log/csm"
     file_size: 10
     total_files: 10
 
