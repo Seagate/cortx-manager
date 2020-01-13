@@ -28,7 +28,8 @@ import threading
 import errno
 
 from schematics.models import Model
-from schematics.types import IntType, StringType, DateType, BooleanType, DateTimeType
+from schematics.types import IntType, StringType, DateType, BooleanType\
+, DateTimeType, ListType, DictType
 
 from .base import CsmModel
 
@@ -67,8 +68,9 @@ class AlertModel(CsmModel):
     module_type = StringType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
-    hw_identifier = StringType()
+    sensor_info = StringType()
     comment = StringType()
+    event_details = StringType() 
 
     def to_primitive(self) -> dict:
         obj = super().to_primitive()

@@ -9,6 +9,7 @@
  Author:            Alexander Nogikh
                     Prathamesh Rodi
                     Oleg Babin
+                    Pawan Kumar Srivastava
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -64,10 +65,9 @@ class AlertRepository(IAlertStorage):
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def retrieve_by_hw(self, hw_id) -> AlertModel:
-        filter = And(Compare(AlertModel.hw_identifier, '=',
+        filter = And(Compare(AlertModel.sensor_info, '=',
                         str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))
-                
+                        False), Compare(AlertModel.resolved, '=', False)))        
         query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
@@ -75,7 +75,7 @@ class AlertRepository(IAlertStorage):
         await self.db(AlertModel).store(alert)
 
     async def update_by_hw_id(self, hw_id, update_params):
-        filter = And(Compare(AlertModel.hw_identifier, '=',
+        filter = And(Compare(AlertModel.sensor_info, '=',
                         str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
                         False), Compare(AlertModel.resolved, '=', False)))
         await self.db(AlertModel).update(filter, update_params)
@@ -367,13 +367,15 @@ class AlertMonitorService(Service):
         """ Fetching the previous alert. """
         try:
             Log.debug("Incoming alert : [%s]" %(message))
-            message['extended_info'] = str(message.get('extended_info'))
+            message[const.ALERT_EXTENDED_INFO] = \
+                    str(message.get(const.ALERT_EXTENDED_INFO))
+            message[const.ALERT_EVENT_DETAILS] = \
+                    str(message.get(const.ALERT_EVENT_DETAILS))
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
-
             prev_alert = self._run_coro(self.repo.retrieve_by_hw\
-                    (message.get(const.ALERT_HW_IDENTIFIER, "")))
+                    (message.get(const.ALERT_SENSOR_INFO, "")))
             if not prev_alert:
                 alert = AlertModel(message)
                 self.unpublished_alerts.add(alert)
@@ -420,7 +422,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if new_alert.get('state', "") == prev_alert.state:
+        if new_alert.get(const.ALERT_STATE, "") == prev_alert.state:
             ret = True
         return ret
 
@@ -435,14 +437,14 @@ class AlertMonitorService(Service):
         """
         update_params = {}
         if update_resolve:
-            update_params["resolved"] = alert['resolved']
+            update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
-            update_params["resolved"] = prev_alert.resolved
-        update_params["state"] = alert['state']
-        update_params["severity"] = alert['severity']
-        update_params["updated_time"] = int(time.time())
+            update_params[ALERT_RESOLVED] = prev_alert.resolved
+        update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
+        update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
+        update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         self._run_coro(self.repo.update_by_hw_id\
-                (prev_alert.hw_identifier, update_params))
+                (prev_alert.sensor_info, update_params))
 
     def _is_good_alert(self, alert):
         """
@@ -451,7 +453,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.get('state', "") in const.GOOD_ALERT:
+        if alert.get(const.ALERT_STATE, "") in const.GOOD_ALERT:
             ret = True
         return ret
 
@@ -462,7 +464,7 @@ class AlertMonitorService(Service):
         :return: boolean (True or False) 
         """
         ret = False
-        if alert.get('state', "") in const.BAD_ALERT:
+        if alert.get(const.ALERT_STATE, "") in const.BAD_ALERT:
             ret = True
         return ret
 
@@ -478,7 +480,6 @@ class AlertMonitorService(Service):
             the current alert is good.
             """
             prev_alert.resolved = True 
-            #prev_alert.resolved(True)
             self._update_alert(alert, prev_alert)
 
     def _publish(self, alert):
