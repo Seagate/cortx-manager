@@ -4,18 +4,18 @@
             "y": "bytes",
             "x": "timestamp"
         },
-        "processing": "derivative",
+        "processing": "abs",
         "metrics": [
             {
                 "name": "read",
                 "node": [
-                    {
+                   {
                         "val": "/",
                         "node": [
                             {
                                 "val": {
-                                    "index": "statsd_gauge-*",
-                                    "metric": "*BACKEND.bout",
+                                    "index": "statsd_counter-*",
+                                    "metric": "outcoming_object_bytes_count",
                                     "timestamp": "@timestamp",
                                     "method": "sum:val"
                                 }
@@ -30,13 +30,13 @@
             {
                 "name": "write",
                 "node": [
-                    {
+                   {
                         "val": "/",
                         "node": [
                             {
                                 "val": {
-                                    "index": "statsd_gauge-*",
-                                    "metric": "*BACKEND.bin",
+                                    "index": "statsd_counter-*",
+                                    "metric": "incoming_object_bytes_count",
                                     "timestamp": "@timestamp",
                                     "method": "sum:val"
                                 }
@@ -51,7 +51,7 @@
             {
                 "name": "total",
                 "node": [
-                    {
+                   {
                         "val": "/",
                         "node": [
                             {
@@ -59,16 +59,16 @@
                                 "node": [
                                     {
                                         "val": {
-                                            "index": "statsd_gauge-*",
-                                            "metric": "*BACKEND.bin",
+                                            "index": "statsd_counter-*",
+                                            "metric": "outcoming_object_bytes_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
                                         }
                                     },
                                     {
                                         "val": {
-                                            "index": "statsd_gauge-*",
-                                            "metric": "*BACKEND.bout",
+                                            "index": "statsd_counter-*",
+                                            "metric": "incoming_object_bytes_count",
                                             "timestamp": "@timestamp",
                                             "method": "sum:val"
                                         }
