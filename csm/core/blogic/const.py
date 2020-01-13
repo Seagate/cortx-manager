@@ -95,13 +95,22 @@ ALERT_FALSE = 0
 ALERT_SENSOR_TYPE = 'sensor_response_type'
 ALERT_MESSAGE = 'message'
 ALERT_COMMENT = 'comment'
-ALERT_HW_IDENTIFIER = 'hw_identifier'
+ALERT_SENSOR_INFO = 'sensor_info'
 ALERT_MAX_COMMENT_LENGTH = 255
 ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved', 'acknowledged']
 ALERT_SHOW_TIME_HOURS = 24
+ALERT_EVENT_DETAILS = 'event_details'
+ALERT_EXTENDED_INFO = 'extended_info'
+ALERT_SENSOR_INFO = 'sensor_info'
+ALERT_EVENTS = 'events'
+ALERT_NAME = 'name'
+ALERT_COMPONENET_ID = 'component-id'
+ALERT_EVENT_REASON = 'event_reason'
+ALERT_EVENT_RECOMMENDATION = 'event_recommendation'
+ALERT_HEALTH_REASON = 'health-reason'
+ALERT_HEALTH_RECOMMENDATION = 'health-recommendation'
 
 # CSM Schema Path
-CSM_HW_SCHEMA = '/opt/seagate/csm/schema/csm_hw_alert.json'
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
 CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 
