@@ -10,8 +10,8 @@ images: docker-image-latest \
         docker-image-7.6 \
         docker-image-eos
 
-.PHONY: docker-image-latest
-docker-image-latest: csm-devel-image
+.PHONY: docker-image-latest docker-image-7
+docker-image-latest docker-image-7: csm-devel-image
 
 .PHONY: docker-image-7.6
 docker-image-7.6: CENTOS_RELEASE := 7.6
