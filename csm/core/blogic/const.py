@@ -1,6 +1,8 @@
 # Commands
-CSM_SETUP_CMD = "csm_setup"
-CSM_SETUP_ACTIONS = ['init']
+CSM_SETUP_CMD = 'csm_setup'
+CSM_SETUP_CONF = '/etc/csm/setup.yaml'
+CSM_SETUP_INDEX = 'CSM_SETUP'
+
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
