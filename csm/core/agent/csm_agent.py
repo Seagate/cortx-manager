@@ -64,9 +64,11 @@ class CsmAgent:
         # User/Session management services
         auth_service = AuthService()
         CsmRestApi._app.user_manager = UserManager(db)
+        CsmRestApi._app.role_manager = RoleManager()
         CsmRestApi._app.session_manager = SessionManager()
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      CsmRestApi._app.user_manager,
+                                                     CsmRestApi._app.role_manager,
                                                      CsmRestApi._app.session_manager)
         user_service = CsmUserService(CsmRestApi._app.user_manager)
         CsmRestApi._app["csm_user_service"] = user_service
@@ -140,6 +142,7 @@ if __name__ == '__main__':
         from csm.core.services.s3.buckets import S3BucketService
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
+        from csm.core.services.roles import RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.agent.api import CsmRestApi

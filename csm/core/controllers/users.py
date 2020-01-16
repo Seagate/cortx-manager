@@ -21,6 +21,7 @@ from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from csm.core.services.permissions import R, A
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
@@ -65,6 +66,7 @@ class CsmUsersListView(CsmView):
     """
     GET REST implementation for fetching csm users
     """
+    @CsmAuth.permissions({R.USER: {A.LIST}})
     async def get(self):
         Log.debug("Handling csm users fetch request")
         csm_schema = CsmGetUsersSchema()
@@ -79,6 +81,7 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
+    @CsmAuth.permissions({R.USER: {A.CREATE}})
     async def post(self):
         Log.debug("Handling users post request")
 
@@ -104,6 +107,7 @@ class CsmUsersView(CsmView):
     """
     GET REST implementation for csm account get request
     """
+    @CsmAuth.permissions({R.USER: {A.LIST}})
     async def get(self):
         Log.debug("Handling get csm account request")
         user_id = self.request.match_info["user_id"]
@@ -113,6 +117,7 @@ class CsmUsersView(CsmView):
     """
     DELETE REST implementation for csm account delete request
     """
+    @CsmAuth.permissions({R.USER: {A.DELETE}})
     async def delete(self):
         Log.debug("Handling delete csm account request")
         user_id = self.request.match_info["user_id"]
@@ -122,6 +127,7 @@ class CsmUsersView(CsmView):
     """
     POST PUT implementation for creating a csm user
     """
+    @CsmAuth.permissions({R.USER: {A.UPDATE}})
     async def put(self):
         Log.debug("Handling users put request")
         user_id = self.request.match_info["user_id"]

@@ -40,7 +40,7 @@ from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
-from csm.core.controllers.view import CsmResponse, CsmAuth
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import AlertsHttpController
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
@@ -99,7 +99,8 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app = web.Application(
             middlewares=[CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
-                         CsmRestApi.session_middleware]
+                         CsmRestApi.session_middleware,
+                         CsmRestApi.authz_middleware]
         )
 
         alerts_ctrl = AlertsHttpController(alerts_service)
@@ -156,10 +157,26 @@ class CsmRestApi(CsmApi, ABC):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
+    @staticmethod
+    async def _resolve_handler(request):
+        match_info = await request.app.router.resolve(request)
+        return match_info.handler
+
+    @classmethod
+    async def _is_public(cls, request):
+        handler = await cls._resolve_handler(request)
+        return CsmView.is_public(handler, request.method)
+
+    @classmethod
+    async def _get_permissions(cls, request):
+        handler = await cls._resolve_handler(request)
+        return CsmView.get_permissions(handler, request.method)
+
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        is_public = CsmAuth.is_public(handler)
+        session = None
+        is_public = await cls._is_public(request)
         if not is_public:
             hdr = request.headers.get(CsmAuth.HDR)
             if not hdr:
@@ -174,9 +191,23 @@ class CsmRestApi(CsmApi, ABC):
                 cls._unauthorised(e.error())
             if not session:
                 cls._unauthorised('Invalid auth token')
-            request.session = session
         else:
             Log.debug(f'Public: {request}')
+        request.session = session
+        return await handler(request)
+
+    @classmethod
+    @web.middleware
+    async def authz_middleware(cls, request, handler):
+        if request.session is not None:
+            # Check user permissions
+            required = await cls._get_permissions(request)
+            verdict = (request.session.permissions & required) == required
+            Log.debug(f'Required permissions: {required}')
+            Log.debug(f'User permissions: {request.session.permissions}')
+            Log.debug(f'Allow access: {verdict}')
+            if not verdict:
+                cls._unauthorised('User has no permission to access the URL')
         return await handler(request)
 
     @staticmethod

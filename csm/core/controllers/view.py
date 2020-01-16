@@ -18,21 +18,36 @@
 """
 import json
 from aiohttp import web
+from csm.core.services.permissions import Permissions
 
 class CsmAuth:
     HDR = 'Authorization'
     TYPE = 'Bearer'
     UNAUTH = { 'WWW-Authenticate': TYPE }
-    ATTR = '_no_auth_'
+    ATTR_PUBLIC = '_csm_auth_public_'
+    ATTR_PERMISSIONS = '_csm_auth_permissions_'
 
     @classmethod
     def public(cls, handler):
-        setattr(handler, cls.ATTR, True)
+        setattr(handler, cls.ATTR_PUBLIC, True)
         return handler
 
     @classmethod
     def is_public(cls, handler):
-        return getattr(handler, cls.ATTR, False)
+        return getattr(handler, cls.ATTR_PUBLIC, False)
+
+    @classmethod
+    def permissions(cls, permissions):
+        if not issubclass(type(permissions), Permissions):
+            permissions = Permissions(permissions)
+        def decorator(handler):
+            setattr(handler, cls.ATTR_PERMISSIONS, permissions)
+            return handler
+        return decorator
+
+    @classmethod
+    def get_permissions(cls, handler):
+        return getattr(handler, cls.ATTR_PERMISSIONS, Permissions())
 
 
 class CsmResponse(web.Response):
@@ -55,6 +70,50 @@ class CsmView(web.View):
 
     def __init__(self, request):
         super(CsmView, self).__init__(request)
+
+    @classmethod
+    def route(cls, name):
+        return cls._app_routes.view(name)
+
+    @classmethod
+    def is_subclass(cls, handler):
+        return issubclass(type(handler), type) and issubclass(handler, cls)
+
+    @classmethod
+    def _get_method_handler(cls, handler, name):
+        result = None
+        if cls.is_subclass(handler):
+            result = getattr(handler, name.lower(), None)
+        return result
+
+    @classmethod
+    def is_public(cls, handler, method):
+        ''' Check whether a particular method of the CsmView subclass has
+            the 'public' attribute. If not then check whether the handler
+            itself has the 'public' attribute '''
+
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            if CsmAuth.is_public(method_handler):
+                return True
+        return CsmAuth.is_public(handler)
+
+    @classmethod
+    def get_permissions(cls, handler, method):
+        ''' Obtain the list of required permissions associated with
+            the handler. Combine required pesmissions from the individual
+            method handler (like get/post/...) and from the whole view '''
+
+        view_permissions = CsmAuth.get_permissions(handler)
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            method_permissions = CsmAuth.get_permissions(method_handler)
+            # TODO: Merge view and method permissions?
+            # permissions = view_permissions | method_permissions
+            permissions = method_permissions
+        else:
+            permissions = view_permissions
+        return permissions
 
     def validate_get(self):
         pass
