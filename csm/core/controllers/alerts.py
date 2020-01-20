@@ -23,6 +23,7 @@ from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.services.alerts import AlertsAppService
 from csm.common.errors import InvalidRequest
+from csm.core.controllers.view import CsmView
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 """
@@ -56,11 +57,12 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
+@CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
-    def __init__(self, request, alerts_service: AlertsAppService):
+    def __init__(self, request):
         super().__init__(request)
-        self.alerts_service = alerts_service
+        self.alerts_service = self.request.app["alerts_service"]
 
     async def get(self):
         """Calling Alerts Get Method"""
@@ -73,36 +75,26 @@ class AlertsListView(web.View):
 
         return await self.alerts_service.fetch_all_alerts(**alert_data)
 
-
-class AlertsView(web.View):
-    def __init__(self, request, alerts_service: AlertsAppService):
-        super().__init__(request)
-        self.alerts_service = alerts_service
-
     async def patch(self):
-        """ Update Alert """
+        try:
+            body = await self.request.json()
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+
+        return await self.alerts_service.update_all_alerts(body)
+
+
+@CsmView._app_routes.view("/api/v1/alerts/{alert_id}")
+class AlertsView(web.View):
+    def __init__(self, request):
+        super().__init__(request)
+        self.alerts_service = self.request.app["alerts_service"]
+
+    async def patch(self):        
+        """ Update Alert """    
         alert_id = self.request.match_info["alert_id"]
         try:
             body = await self.request.json()
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
-
-
-# AIOHTTP does not provide a way to pass custom parameters to its views.
-# It is a workaround.
-class AlertsHttpController:
-    def __init__(self, alerts_service: AlertsAppService):
-        self.alerts_service = alerts_service
-
-    def get_list_view_class(self):
-        class Child(AlertsListView):
-            def __init__(child_self, request):
-                super().__init__(request, self.alerts_service)
-        return Child
-
-    def get_view_class(self):
-        class Child(AlertsView):
-            def __init__(child_self, request):
-                super().__init__(request, self.alerts_service)
-        return Child
