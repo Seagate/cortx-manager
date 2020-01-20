@@ -109,6 +109,15 @@ class CsmNotFoundError(CsmError):
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
 
+class CsmPermissionDenied(CsmError):
+    """
+    This error is raised for all cases when we don't have permissions
+    """
+
+    def __init__(self, desc=None, message_id=None, message_args=None):
+        super(CsmPermissionDenied, self).__init__(
+            CSM_INTERNAL_ERROR, desc,
+            message_id, message_args)
 
 class DataAccessError(CsmInternalError):
 
