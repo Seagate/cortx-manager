@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
  ****************************************************************************
  Filename:          test_s3_bucket_create.py
@@ -19,12 +21,14 @@ from csm.cli.command_factory import CommandFactory
 import unittest
 import json
 import os
+from csm.test.common import Const
 
 buckets_command = CommandFactory.get_command(
     ["s3bucket", 'create', "s3-bucket1"])
 t = unittest.TestCase()
+file_path = Const.MOCK_PATH
 
-with open(os.path.dirname(os.path.realpath(__file__)) + "/s3_bucket_commands_output.json") as fp:
+with open(file_path + "s3_bucket_commands_output.json") as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
 

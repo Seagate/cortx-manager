@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """
  ****************************************************************************
@@ -28,6 +28,7 @@ from csm.core.agent.api import CsmApi
 class Const:
     INVENTORY_FILE = 'INVENTORY_FILE'
     CLUSTER = 'cluster'
+    MOCK_PATH = '/opt/seagate/csm/test/test_data/'
 
 class TestFailed(Exception):
     def __init__(self, desc):
