@@ -56,6 +56,7 @@ class CsmAgent:
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
                                               pm.AlertPlugin(),
                                               CsmAgent._push_alert)
+        CsmRestApi._app["alerts_service"] = alerts_service
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()

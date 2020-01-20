@@ -21,7 +21,7 @@
 # process_dbg_static_page() method.
 
 from aiohttp import web
-from csm.core.controllers import AlertsHttpController, UslController
+from csm.core.controllers import UslController
 from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView
 
 
@@ -30,14 +30,11 @@ class ApiRoutes:
     @staticmethod
     def add_rest_api_routes(
         router: web.UrlDispatcher,
-        alerts_ctrl: AlertsHttpController,
         usl_ctrl: UslController
     ) -> None:
         # todo: Will be restructuring this part on Tuesday Morning.
         # self._app.router.add_view("/csm", CsmCliView),
         # self._app.web.get("/ws", self.process_websocket),
-        router.add_view("/api/v1/alerts", alerts_ctrl.get_list_view_class()),
-        router.add_view("/api/v1/alerts/{alert_id}", alerts_ctrl.get_view_class()),
         # self._app.router.add_view('/{path:.*}', self.process_dbg_static_page)
         router.add_view("/usl/v1/devices", usl_ctrl.get_device_view_class())
         router.add_view("/usl/v1/devices/{device_id}/volumes",

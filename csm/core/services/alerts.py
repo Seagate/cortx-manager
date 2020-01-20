@@ -192,6 +192,29 @@ class AlertsAppService(ApplicationService):
 
         await self.repo.update(alert)
         return alert.to_primitive()
+    
+    async def update_all_alerts(self, fields: dict):
+        """
+        Update the Data of Specific Alerts
+        :param fields: A dictionary containing alert ids.
+                It will acknowledge all the alerts of the specified ids.
+        :return:
+        """
+        if not isinstance(fields, list):
+            raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
+        
+        alerts = []
+        
+        for alert_id in fields:
+            alert = await self.repo.retrieve(alert_id)
+            if not alert:
+                raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
+
+            alert.acknowledged = AlertModel.acknowledged.to_native(True)
+            await self.repo.update(alert)
+            alerts.append(alert.to_primitive())
+        
+        return alerts
 
     async def fetch_all_alerts(self, duration, direction, sort_by, severity: Optional[str] = None,
                                offset: Optional[int] = None, show_all: Optional[bool] = True,
