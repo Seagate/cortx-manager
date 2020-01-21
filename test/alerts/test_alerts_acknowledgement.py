@@ -7,17 +7,20 @@ alerts_command = CommandFactory.get_command(
     [const.ALERTS_COMMAND, 'acknowledge', '1', 'comment_1'])
 t = unittest.TestCase()
 
-def test_patch_action():
+def init(args):
+    pass
+
+def test_patch_action(args):
     expected_output = 'acknowledge'
     actual_output = alerts_command.action()
     t.assertEqual(actual_output, expected_output)
 
-def test_patch_options():
+def test_patch_options(args):
     expected_output = {'alert_id': '1', 'comment': 'comment_1'}
     actual_output = alerts_command.options()
     t.assertDictEqual(actual_output, expected_output)
 
-def test_patch_method():
+def test_patch_method(args):
     expected_output = 'patch'
     actual_output = alerts_command.method('acknowledge')
     t.assertEqual(actual_output, expected_output)

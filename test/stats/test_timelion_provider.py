@@ -58,7 +58,8 @@ def test1(args):
     req_param = { "stats_id": 1, "panel": "",
                 "from_t": from_t, "duration_t": to_t,
                 "metric_list": [], "interval": 10,
-                "output_format": "gui", "query": ""}
+                "output_format": "gui", "query": "",
+                "total_sample": "", "unit": ""}
 
     panels = tp.get_panels()
     for panel in panels:

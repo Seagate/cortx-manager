@@ -29,9 +29,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.log import Log
 from csm.common.email import EmailConfiguration, EmailSender, OutOfAttemptsEmailError
 
-Log.init('test', '.')
-
-
 class TestSMTPServer(SMTPServer):
     """ Helper class - STMP server that puts messages into a queue """
     def __init__(self, *args, queue=None, **kwargs):
@@ -148,7 +145,10 @@ async def test_local_email_wo_server():
     except:
         t.assertTrue(False, 'Unexpected exception')
 
-def run_tests():
+def init(args):
+    pass
+
+def run_tests(args):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_local_multipart_email())
     loop.run_until_complete(test_local_email_wo_server())
@@ -156,4 +156,6 @@ def run_tests():
 test_list = [run_tests]
 
 if __name__ == '__main__':
+    Log.init('test', '.')
     run_tests()
+

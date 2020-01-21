@@ -1,17 +1,19 @@
-from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
+#!/usr/bin/env python3
+
 from csm.core.blogic import const
 from csm.cli.command_factory import CommandFactory
 from argparse import ArgumentError
 import unittest
 import json
 import os 
+from csm.test.common import Const
 
 accounts_command = CommandFactory.get_command(
     ["s3iamuser", 'show'])
 t = unittest.TestCase()
+file_path = Const.MOCK_PATH
 
-with open(os.path.dirname(os.path.realpath(__file__))+"/s3_commands_output.json") as fp:
+with open(file_path + "s3_commands_output.json") as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
 def test_1(*args):
