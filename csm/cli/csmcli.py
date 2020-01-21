@@ -22,6 +22,7 @@ import os
 import traceback
 import asyncio
 from getpass import getpass
+from csm.common.errors import InvalidRequest
 
 
 class Terminal:
@@ -56,12 +57,16 @@ class Terminal:
             sys.stderr('Logout failed')
 
     @staticmethod
-    def get_password(value):
+    def get_password(value, confirm_pass_flag=True):
         """
         Fetches the Password from Terminal in Non-Echo Mode.
         :return:
         """
         password = value or getpass(prompt="Password: ")
+        if confirm_pass_flag:
+            confirm_password = getpass(prompt="Confirm Password: ")
+            if not confirm_password==password:  
+                raise InvalidRequest("Password do not match.")    
         return password
 
 def main(argv):
