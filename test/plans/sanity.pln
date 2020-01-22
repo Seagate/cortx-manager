@@ -1,1 +1,2 @@
-service.test_systemd_service
+service.test_dependent_service
+service.test_csm_service
