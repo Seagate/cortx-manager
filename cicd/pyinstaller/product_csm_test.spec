@@ -128,7 +128,7 @@ csm_setup_exe = EXE(csm_setup_pyz,
           console=True )
 
 # csm_test
-csm_test = PYZ(csm_test.pure, csm_test.zipped_data,
+csm_test_pyz = PYZ(csm_test.pure, csm_test.zipped_data,
              cipher=block_cipher)
 
 csm_test_exe = EXE(csm_test_pyz,
