@@ -131,6 +131,8 @@ class IamUserView(CsmView):
         Delete IAM user
         """
         user_name = self.request.match_info["user_name"]
+        if user_name == "root":
+            raise InvalidRequest("Root IAM user cannot be deleted.")
         schema = IamUserDeleteSchema()
         try:
             schema.load({"user_name": user_name}, unknown='EXCLUDE')
