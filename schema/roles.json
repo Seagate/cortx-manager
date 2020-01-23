@@ -1,0 +1,29 @@
+{
+    "manage":{
+        "permissions": {
+            "alert": ["list", "update", "delete"],
+            "stats": ["list"],
+            "capacity": ["list"],
+            "sysconfig": ["list", "update", "delete"],
+            "user": ["list", "update", "delete", "create"],
+            "s3_accounts": ["list", "update", "create"]
+        }
+    },
+    "monitor": {
+        "permissions": {
+            "alert": ["list"],
+            "stats": ["list"],
+            "capacity": ["list"],
+            "sysconfig": ["list"],
+            "user": ["list"],
+            "s3_accounts": ["list"]
+        }
+    },
+    "s3": {
+        "permissions": {
+            "s3_accounts": ["list", "update", "delete"],
+            "iam_users": ["list", "delete", "create"],
+            "bucket": ["list", "update", "delete", "create"]
+        }
+    }
+}

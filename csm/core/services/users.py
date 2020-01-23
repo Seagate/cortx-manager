@@ -164,7 +164,7 @@ class CsmUserService(ApplicationService):
         # TODO: Decide the default preboarding user roles once we
         # implement user role management. Replace this hardcoded values
         # with proper constants.
-        roles = ['root', 'admin']
+        roles = ['root', 'manage']
         interfaces = ['web', 'cli', 'api']
         user = User.instantiate_csm_user(user_id, password, roles=roles,
                                          interfaces=interfaces)
