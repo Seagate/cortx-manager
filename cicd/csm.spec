@@ -41,8 +41,8 @@ PRODUCT=<PRODUCT>
 }
 
 [ -d "${CSM_DIR}/test" ] && {
-    ln -sf $CSM_DIR/lib/run_test /usr/bin/run_test
-    ln -sf $CSM_DIR/lib/run_test $CSM_DIR/bin/run_test
+    ln -sf $CSM_DIR/lib/csm_test /usr/bin/csm_test
+    ln -sf $CSM_DIR/lib/csm_test $CSM_DIR/bin/csm_test
 }
 
 [ -f /etc/csm/csm.conf ] || \
@@ -71,6 +71,8 @@ rm -f /usr/bin/csm_setup 2> /dev/null;
 rm -f /usr/bin/csmcli 2> /dev/null;
 rm -f /usr/bin/csm_web 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
+rm -f /usr/bin/csm_test 2> /dev/null;
+rm -rf /opt/seagate/csm/bin/ 2> /dev/null;
 exit 0
 
 %clean

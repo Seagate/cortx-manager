@@ -125,7 +125,7 @@ class S3AccountService(ApplicationService):
 
     @Log.trace_method(Log.INFO)
     async def patch_account(self, account_name: str, password: str = None,
-                            reset_access_key: bool = False, account_email: str = None) -> dict:
+                            reset_access_key: bool = False) -> dict:
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
@@ -138,12 +138,10 @@ class S3AccountService(ApplicationService):
         """
         client = self._s3_root_client
         response = {
-            "account_name": account_name,
-            "account_email": account_email
+            "account_name": account_name
         }
 
         # # TODO: currently there is no way to fetch email of an already existing account
-
         if reset_access_key:
             new_creds = await client.reset_account_access_key(account_name)
             if isinstance(new_creds, IamError):
@@ -156,12 +154,6 @@ class S3AccountService(ApplicationService):
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
                 new_creds.secret_key_id, self._get_iam_connection_config())
-
-        if password and not reset_access_key:
-            # TODO: currently IAM server does not allow us to update password
-            # without s3 account credentials.
-            raise CsmInternalError("For now it is not possible to reset password without " +
-                "resetting access key")
 
         if password:
             # We will try to create login profile in case it doesn't exist

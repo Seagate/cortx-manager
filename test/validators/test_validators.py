@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
  ****************************************************************************
  Filename:          test_validators.py
@@ -22,10 +24,12 @@ from csm.common.log import Log
 import os
 import json
 import unittest
+from csm.test.common import Const
 
 t = unittest.TestCase()
+file_path = Const.MOCK_PATH
 
-with open(os.path.dirname(os.path.realpath(__file__))+"/validator_data.json") as fp:
+with open(file_path + "validator_data.json") as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
 def init(args):

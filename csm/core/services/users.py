@@ -28,7 +28,7 @@ from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.data.models.users import User, UserType
-from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
+from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest, CsmPermissionDenied
 import time
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
@@ -106,6 +106,7 @@ class UserManager:
 
 
 USERS_MSG_USER_NOT_FOUND = "users_not_found"
+USERS_MSG_PERMISSION_DENIED = "user_permission_denied"
 USERS_MSG_ALREADY_EXISTS = "users_already_exists"
 USERS_MSG_CANNOT_SORT = "users_non_sortable_field"
 
@@ -203,6 +204,9 @@ class CsmUserService(ApplicationService):
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+        if self.is_super_user(user):
+            raise CsmPermissionDenied("Permission Denied. %s User can not be deleted." % 
+                user_id, USERS_MSG_PERMISSION_DENIED)
         await self.user_mgr.delete(user_id)
         return {}
 
@@ -219,3 +223,7 @@ class CsmUserService(ApplicationService):
         else:
             await self.user_mgr.save(user)
         return self._user_to_dict(user)
+    
+    def is_super_user(self, user: User):
+        """ Check if user is super user """        
+        return const.CSM_SUPER_USER_ROLE in user.roles

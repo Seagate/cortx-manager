@@ -41,7 +41,6 @@ from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
 from csm.core.controllers.view import CsmResponse, CsmAuth
-from csm.core.controllers import AlertsHttpController
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
 
@@ -102,10 +101,9 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.session_middleware]
         )
 
-        alerts_ctrl = AlertsHttpController(alerts_service)
         usl_ctrl = UslController(usl_service)
         CsmRoutes.add_routes(CsmRestApi._app)
-        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, alerts_ctrl, usl_ctrl)
+        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, usl_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
 

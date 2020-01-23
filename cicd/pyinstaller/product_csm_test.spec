@@ -20,7 +20,7 @@ product_path = '<CSM_PATH>' + '/' + product
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
 test_module_list = import_list(csm_path, test_path)
-test_module_list.remove('csm.test.run_test')
+test_module_list.remove('csm.test.csm_test')
 
 block_cipher = None
 
@@ -64,11 +64,10 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              cipher=block_cipher,
              noarchive=False)
 
-run_test = Analysis([csm_path + '/test/run_test.py'],
+csm_test = Analysis([csm_path + '/test/csm_test.py'],
              pathex=[csm_path + '/dist/csm'],
              binaries=[],
-             datas=[(csm_path + '/test/*.yaml','.'),
-                    (csm_path + '/test/*.json','.')],
+             datas=[],
              hiddenimports=test_module_list,
              hookspath=[],
              runtime_hooks=[],
@@ -81,7 +80,7 @@ run_test = Analysis([csm_path + '/test/run_test.py'],
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
        (csmcli, 'csmcli', 'csmcli'),
        (csm_setup, 'csm_setup', 'csm_setup'),
-       (run_test, 'run_test', 'run_test') )
+       (csm_test, 'csm_test', 'csm_test') )
 
 # csm_agent
 csm_agent_pyz = PYZ(csm_agent.pure, csm_agent.zipped_data,
@@ -128,15 +127,15 @@ csm_setup_exe = EXE(csm_setup_pyz,
           upx=True,
           console=True )
 
-# run_test
-run_test_pyz = PYZ(run_test.pure, run_test.zipped_data,
+# csm_test
+csm_test_pyz = PYZ(csm_test.pure, csm_test.zipped_data,
              cipher=block_cipher)
 
-run_test_exe = EXE(run_test_pyz,
-          run_test.scripts,
+csm_test_exe = EXE(csm_test_pyz,
+          csm_test.scripts,
           [],
           exclude_binaries=True,
-          name='run_test',
+          name='csm_test',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -162,11 +161,11 @@ coll = COLLECT(
                csm_setup.zipfiles,
                csm_setup.datas,
 
-               # run_test
-               run_test_exe,
-               run_test.binaries,
-               run_test.zipfiles,
-               run_test.datas,
+               # csm_test
+               csm_test_exe,
+               csm_test.binaries,
+               csm_test.zipfiles,
+               csm_test.datas,
 
                strip=False,
                upx=True,
