@@ -21,43 +21,29 @@ import sys
 import os
 import argparse
 import traceback
+import time
 
-class CsmSetup:
+class CsmSetupCommand:
     """
         Provide cli to setup csm. Create user for csm to allow basic
         permission like log, bundle path.
     """
     def __init__(self, argv):
+        ''' Check csm setup command and initialize '''
         Log.init("csm_setup", "/var/log/csm")
-        self._args = argv[1:]
+        self._args = argv
+        self._args[0] = 'csm_setup'
+        self._validate()
         Conf.init()
-        self._load_conf()
-        self._config_cluster()
 
-    def _load_conf(self):
-        ''' Load all configuration file and through error if file is missing '''
-        if not os.path.exists(const.CSM_CONF):
-            raise CsmError(-1, "%s file is missing for csm setup" %const.CSM_CONF)
-        if not os.path.exists(const.INVENTORY_FILE):
-            raise CsmError(-1, "%s file is missing for csm setup" %const.INVENTORY_FILE)
-        if not os.path.exists(const.COMPONENTS_CONF):
-            raise CsmError(-1, "%s file is missing for csm setup" %const.COMPONENTS_CONF)
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Conf.load(const.INVENTORY_INDEX, Yaml(const.INVENTORY_FILE))
-        Conf.load(const.COMPONENTS_INDEX, Yaml(const.COMPONENTS_CONF))
-
-    def _config_cluster(self):
-        ''' Instantiation of csm cluster with resources '''
-        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
-        self._csm_ra = {
-            "csm_resource_agent": CsmResourceAgent(self._csm_resources)
-        }
-        self._ha_framework = PcsHAFramework(self._csm_ra)
-        self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-        CsmApi.set_cluster(self._cluster)
+    def _validate(self):
+        ''' Validate setup command '''
+        if len(self._args) < 2:
+            raise Exception('Usage: csm_setup -h')
 
     def _get_command(self):
-        parser = argparse.ArgumentParser(description='CSM Setup CLI')
+        ''' Parse csm setup command '''
+        parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
         cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load())
         cmd_obj.handle_main_parse(subparsers)
@@ -80,9 +66,9 @@ class CsmSetup:
         return self._response.output()
 
     def process_request(self, callback=None):
-        Log.info('command=%s action=%s args=%s options=%s' %(self._cmd.name,
+        Log.debug('command=%s action=%s args=%s options=%s' %(self._cmd.name,
             self._request.action, self._request.args, self._request.options))
-        self._providers = SetupProvider(self._cluster, self._request.options)
+        self._providers = SetupProvider()
         return self._providers.process_request(self._request, callback)
 
     def _process_response(self, response):
@@ -100,15 +86,10 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
-    from csm.core.blogic.csm_ha import CsmResourceAgent
-    from csm.common.ha_framework import PcsHAFramework
-    from csm.common.cluster import Cluster
-    from csm.core.agent.api import CsmApi
-    import time
 
     try:
-        csm_setup = CsmSetup(sys.argv)
+        csm_setup = CsmSetupCommand(sys.argv)
         sys.stdout.write('%s\n' % csm_setup.process())
-    except CsmError as exception:
-        sys.stderr.write('%s\n' % exception)
+    except Exception as exception:
         Log.error(traceback.format_exc())
+        sys.stderr.write('csm_setup command failed: %s\n' %exception)
