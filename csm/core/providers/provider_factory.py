@@ -22,8 +22,6 @@ from csm.core.providers.providers import EmailProvider
 from csm.common.errors import CsmError
 from csm.core.blogic import const
 
-from csm.conf import setup
-
 class ProviderFactory(object):
     """ Factory for representing and instantiating providers """
 
