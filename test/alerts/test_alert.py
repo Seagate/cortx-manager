@@ -23,14 +23,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import AmqpComm
 from csm.test.common import TestFailed
 from csm.eos.plugins.alert import AlertPlugin
+from csm.test.common import Const
 import json, time
 import filecmp
-import json
 import threading
 
 actual_count = 0
 expected_count = 2
 count_test2 = 0
+file_path = Const.MOCK_PATH
 
 def init(args):
     args['amqp_client'] = AmqpComm()
@@ -45,7 +46,7 @@ def send_alerts(args):
     client = args['amqp_client']
     client.init()
     global expected_count
-    with open('alert_input.json', 'r') as json_file:
+    with open(file_path + 'alert_input.json', 'r') as json_file:
         dict = json.load(json_file)
     """ Creating CSM Schema Output for COmparision """
     with open('alert_output_expected.json', 'w+') as out_file:
@@ -54,7 +55,7 @@ def send_alerts(args):
     count = 0
     for data in dict:
         count = count + 1
-        with open('alert_output_expected.json', 'a+') as out_file:
+        with open(file_path + 'alert_output_expected.json', 'a+') as out_file:
             message = AlertPlugin()._convert_to_csm_schema(json.dumps(data))
             message.pop("updated_time")
             json.dump(message, out_file, indent=4)
@@ -70,7 +71,7 @@ def recv_alerts_test1(args):
     args['alert_plugin_test1'].process_request(cmd='listen')
 
 def recv_alerts_test2(args):
-    with open('alert_output.json', 'w+') as json_file:
+    with open(file_path + 'alert_output.json', 'w+') as json_file:
         json_file.write('[\n')
         json_file.close()
     args['alert_plugin_test2'].init(callback_fn=consume_alert_test2)
@@ -86,7 +87,7 @@ def consume_alert_test2(message):
     global expected_count
     count_test2 = count_test2 + 1
     message.pop("updated_time")
-    with open('alert_output.json', 'a+') as json_file:
+    with open(file_path + 'alert_output.json', 'a+') as json_file:
         json.dump(message, json_file, indent=4)
         if count_test2 == expected_count:
             json_file.write('\n]')
@@ -122,7 +123,8 @@ def test2(args):
     args['thread_test2'].join()
 
 def compare_results():
-    if not filecmp.cmp('alert_output_expected.json', 'alert_output.json'):
+    if not filecmp.cmp(file_path + 'alert_output_expected.json',
+                        file_path + 'alert_output.json'):
         raise TestFailed('Input and Output alerts do not match.')
 
 test_list = [ test1, test2]

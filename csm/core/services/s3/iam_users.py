@@ -104,8 +104,10 @@ class IamUsersService(ApplicationService):
         if hasattr(users_list_response, "error_code"):
             return await  self._handle_error(users_list_response)
         iam_users_list = vars(users_list_response)
-        iam_users_list["iam_users"] = [vars(each_user) for each_user in
-                                       iam_users_list["iam_users"]]
+        iam_users_list["iam_users"] = [vars(each_user) 
+                                       for each_user in iam_users_list["iam_users"] 
+                                       if not vars(each_user)["user_name"] == "root" ]
+
         return iam_users_list
 
     @Log.trace_method(Log.DEBUG)

@@ -55,7 +55,7 @@ class CsmGetUsersSchema(Schema):
     sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
         missing='asc', default='asc')
 
-
+@CsmView._app_routes.view("/api/v1/csm/users")
 @CsmView._app_routes.view("/api/v1/user")
 class CsmUsersListView(CsmView):
     def __init__(self, request):
@@ -96,7 +96,7 @@ class CsmUsersListView(CsmView):
 
         return await self._service.create_user(**user_body)
 
-
+@CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
 @CsmView._app_routes.view("/api/v1/user/{user_id}")
 class CsmUsersView(CsmView):
     def __init__(self, request):
@@ -113,7 +113,6 @@ class CsmUsersView(CsmView):
         user_id = self.request.match_info["user_id"]
 
         return await self._service.get_user(user_id)
-
     """
     DELETE REST implementation for csm account delete request
     """

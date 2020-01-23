@@ -8,6 +8,7 @@ from aiohttp import web
 from importlib import import_module
 
 
+
 class Opt:
     """
     Global options for debugging purposes.
@@ -63,6 +64,8 @@ class CsmAgent:
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
         # User/Session management services
+        roles = Json(const.ROLES_MANAGEMENT).load()
+        CsmRestApi._app["roles_service"] = RolesManagementService(roles)
         auth_service = AuthService()
         CsmRestApi._app.user_manager = UserManager(db)
         CsmRestApi._app.role_manager = RoleManager()
@@ -71,6 +74,7 @@ class CsmAgent:
                                                      CsmRestApi._app.user_manager,
                                                      CsmRestApi._app.role_manager,
                                                      CsmRestApi._app.session_manager)
+
         user_service = CsmUserService(CsmRestApi._app.user_manager)
         CsmRestApi._app["csm_user_service"] = user_service
 
@@ -134,6 +138,7 @@ if __name__ == '__main__':
         from csm.common.log import Log
         from csm.common.conf import Conf
         from csm.common.payload import Yaml
+        from csm.common.payload import Payload, Json, JsonMessage, Dict
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, \
                                             AlertMonitorService, AlertRepository
@@ -152,7 +157,8 @@ if __name__ == '__main__':
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
-
+        from csm.core.services.roles_management import RolesManagementService
+        
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:

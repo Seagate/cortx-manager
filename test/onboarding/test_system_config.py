@@ -28,16 +28,18 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
 from csm.core.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.test.common import Const
 
 t = unittest.TestCase()
+file_path = Const.MOCK_PATH
 
 def _read_system_config_json(test_type):
     """ utility function to read test data from json file"""
     if test_type == "create":
-        with open(os.path.join(os.path.dirname(__file__), "system_config.json")) as system_config_file:
+        with open(file_path + "system_config.json")) as system_config_file:
             return json.load(system_config_file)
     else:
-        with open(os.path.join(os.path.dirname(__file__), "update_system_config.json")) as system_config_file:
+        with open(file_path + "update_system_config.json")) as system_config_file:
             return json.load(system_config_file)
 
 async def _create_system_config(system_config_service):

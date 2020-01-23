@@ -7,33 +7,36 @@ alerts_command = CommandFactory.get_command(
     [const.ALERTS_COMMAND, 'show', '-f', 'json'])
 t = unittest.TestCase()
 
-def test_get_name():
+def init(args):
+    pass
+
+def test_get_name(args):
     expected_output = "csm.cli.commands"
     actual_output = alerts_command.__module__
     t.assertEqual(actual_output, expected_output)
 
-def test_get_action():
+def test_get_action(args):
     expected_output = 'show'
     actual_output = alerts_command.action()
     t.assertEqual(actual_output, expected_output)
 
-def test_get_options():
+def test_get_options(args):
     expected_output = {'all': 'false', 'duration': '60s', 'format': 'json',
                        'no_of_alerts': 1000}
     actual_output = alerts_command.options()
     t.assertDictEqual(actual_output, expected_output)
 
-def test_get_method():
+def test_get_method(args):
     expected_output = 'get'
     actual_output = alerts_command.method('show')
     t.assertEqual(actual_output, expected_output)
 
-def test_invalid_arg():
+def test_invalid_arg(args):
     with t.assertRaises(ArgumentError) as context:
         CommandFactory.get_command(
             [const.ALERTS_COMMAND, 'show', '-b', 'json'])
 
-def test_incorrect_format():
+def test_incorrect_format(args):
     with t.assertRaises(ArgumentError) as context:
         CommandFactory.get_command(
             [const.ALERTS_COMMAND, 'show', '-f', 'abc'])

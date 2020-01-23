@@ -74,6 +74,7 @@ class S3Credentials(SessionCredentials):
         self._secret_key = secret_key
         self._session_token = session_token
 
+
     @property
     def access_key(self):
         return self._access_key
@@ -250,11 +251,13 @@ class LoginService:
         Log.debug(f'Logging in user {user_id}')
 
         user = await self._user_manager.get(user_id)
+        ### Get roles from user and permissions
+        permissions = {}
         if not user:
             # TODO: Try to search Customer LDAP or S3 account
             # and create corresponding user record if found.
             Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
-            user = User.instantiate_s3_account_user(user_id)
+            user = User.instantiate_s3_account_user(user_id, roles=['s3'])
 
         credentials = await self._auth_service.authenticate(user, password)
         if credentials:

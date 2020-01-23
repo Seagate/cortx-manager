@@ -28,6 +28,7 @@ from csm.common.cluster import Cluster, Node
 import json, time
 
 client = None
+file_path = Const.MOCK_PATH
 
 def init(args):
     args[Const.CLUSTER] = Cluster(args[Const.INVENTORY_FILE])
@@ -73,7 +74,7 @@ def test3(args):
             raise TestFailed('File Copy failed')
 
 def amqp_callback(body):
-    with open('output.text', 'w+') as json_file:
+    with open(file_path + 'output.text', 'w+') as json_file:
         json.dump(json.loads(body), json_file, indent=4)
         json_file.close()
         compare_results()
@@ -82,7 +83,7 @@ def amqp_callback(body):
         client.stop()
 
 def compare_results():
-    if not filecmp.cmp('input.text', 'output.text'):
+    if not filecmp.cmp(file_path + 'input.text', file_path + 'output.text'):
         raise TestFailed('Input and Output alerts do not match.')
 
 def send_recv(args):
@@ -90,7 +91,7 @@ def send_recv(args):
 
     global client
     client.init() 
-    with open('input.text') as json_file:
+    with open(file_path + 'input.text') as json_file:
         data = json.load(json_file)
         client.send(data)
     client.recv(amqp_callback)
