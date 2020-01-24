@@ -154,6 +154,19 @@ class CsmRestApi(CsmApi, ABC):
     def _unauthorised(cls, reason):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
+    
+    @staticmethod
+    def http_request_to_log_string(request):
+        url = request.path
+        method = request.method
+        query = dict(request.query) if not request.has_body else {}
+        body = {}
+        if request.has_body:
+            body = json.loads(request.content._buffer[0].decode('utf-8')) 
+            for key in body.keys():
+                if "password" in key:
+                    body[key] = '*****'
+        return f"Url:{url}\n Method:{method}\n Query:{query}\n Body:{body}"
 
     @staticmethod
     async def _resolve_handler(request):
@@ -173,6 +186,7 @@ class CsmRestApi(CsmApi, ABC):
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
+        Log.info(cls.http_request_to_log_string(request))
         session = None
         is_public = await cls._is_public(request)
         if not is_public:
@@ -182,9 +196,10 @@ class CsmRestApi(CsmApi, ABC):
             auth_type, session_id = hdr.split(' ')
             if auth_type != CsmAuth.TYPE:
                 cls._unauthorised(f'Invalid auth type {auth_type}')
-            Log.debug(f'Non-Public: {request} session {session_id}')
+            Log.debug(f'Non-Public: {request}')
             try:
                 session = await request.app.login_service.auth_session(session_id)
+                Log.info(f'Username: {session.credentials.user_id}')
             except CsmError as e:
                 cls._unauthorised(e.error())
             if not session:
@@ -229,7 +244,7 @@ class CsmRestApi(CsmApi, ABC):
                 status = resp.rc()
             else:
                 resp_obj = resp
-
+            Log.info(f'Response: {resp_obj} \n Status: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except web.HTTPException as e:
@@ -246,7 +261,7 @@ class CsmRestApi(CsmApi, ABC):
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request), status=422)
         except Exception as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
+            Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
     @staticmethod

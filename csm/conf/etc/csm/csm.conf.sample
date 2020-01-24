@@ -42,7 +42,8 @@ CHANNEL:
 STATS:
     PROVIDER:
         name: "timelion"
-        url: "http://localhost:5601/api/timelion/run"
+        host: "localhost"
+        port: 5601
         interval: 10 # Flush interval in sec (Rate at which stats is stored)
 
 # S3

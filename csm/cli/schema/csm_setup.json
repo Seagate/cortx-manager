@@ -1,23 +1,150 @@
 {
-      "name": "init",
-      "description": "",
-      "args": [
+    "name": "csm_setup",
+    "description": "CSM Setup Command",
+    "sub_commands": [
         {
-          "flag": "-f",
-          "action": "store_true",
-          "default": false,
-          "help": "force"
+            "name": "init",
+            "description": "Initialize CSM",
+            "need_confirmation": false,
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "ees",
+                  "type": "str",
+                  "choices": [
+                    "ees",
+                    "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
         },
         {
-          "flag": "args",
-          "default": [],
-          "nargs": "?"
+            "name": "post_install",
+            "description": "Perform post_install for csm",
+            "need_confirmation": false,
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "ees",
+                  "type": "str",
+                  "choices": [
+                    "ees",
+                    "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "config",
+            "description": "Config CSM",
+            "need_confirmation": false,
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "ees",
+                  "type": "str",
+                  "choices": [
+                    "ees",
+                    "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "reset",
+            "description": "Perform reset for csm",
+            "need_confirmation": false,
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "ees",
+                  "type": "str",
+                  "choices": [
+                    "ees",
+                    "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "--hard",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "Hard Reset"
+                },
+                {
+                    "flag": "--soft",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "Soft reset"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
         }
-      ],
-        "comm": {
-          "type": "rest",
-        "method": "get",
-        "target": "/{version}/",
-        "version": "v1"
-      }
-    }
+    ]
+}

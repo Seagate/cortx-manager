@@ -45,7 +45,7 @@ class LoginView(CsmView):
         if not session_id:
             raise InvalidRequest(message_args="Invalid username or password")
 
-        Log.debug(f'User {username} successfully logged in, session {session_id}')
+        Log.debug(f'User: {username} successfully logged in.')
         headers = { CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}' }
         return CsmResponse(headers=headers)
 
@@ -59,5 +59,5 @@ class LogoutView(CsmView):
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
-        Log.debug(f'Session {session_id} ended')
+        Log.info(f'Session ended')
         return CsmResponse()

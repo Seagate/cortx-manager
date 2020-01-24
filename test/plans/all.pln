@@ -1,4 +1,5 @@
-service.test_systemd_service
+service.test_csm_service
+service.test_dependent_service
 alerts.test_alerts_command
 alerts.test_alerts_acknowledgement
 cli.csm_user.test_csm_user_create
