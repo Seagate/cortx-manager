@@ -149,7 +149,7 @@ def main(argv):
                 pass
             except Exception as exception:
                 sys.stderr.write(str(exception) + '\n')
-                Log.error(traceback.format_exc())
+                Log.critical(traceback.format_exc())
     except KeyboardInterrupt:
         if rest_client.has_open_session():
             is_logged_out = loop.run_until_complete(rest_client.logout())
@@ -158,7 +158,7 @@ def main(argv):
             return int(not is_logged_out)
     except Exception as exception:
         sys.stderr.write(str(exception) + '\n')
-        Log.error(traceback.format_exc())
+        Log.critical(traceback.format_exc())
         # TODO - Extract rc from exception
         return 1
     finally:
