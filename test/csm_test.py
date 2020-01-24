@@ -35,39 +35,29 @@ from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 
+def is_file_exists(fi):
+    if not os.path.exists(fi):
+        raise TestFailed('%s file is not present...' %fi)
+    return fi
+
 def tmain(argp, argv):
     # Import required TEST modules
     ts_path = os.path.dirname(argv)
     sys.path.append(os.path.join(ts_path, '..', '..'))
 
-    # Perform validation of setup before tests are run
+    # Perform validation and Initialization
     try:
-        csm_conf = const.CSM_CONF
-        if not os.path.exists(csm_conf):
-            raise TestFailed('%s not present. Refer to samples directory' %csm_conf)
-
-        Log.init('csm_test', '/tmp')
         Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf))
-
-        inventory_file = const.INVENTORY_FILE
-        if not os.path.exists(inventory_file):
-            raise TestFailed('Missing config file %s' %inventory_file)
-
-    except TestFailed as e:
-        print('Test Pre-condition failed. %s' %e)
-        sys.exit(errno.ENOENT)
-
-    # Initialization
-    try:
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(is_file_exists(const.CSM_CONF)))
+        Conf.load(const.INVENTORY_INDEX, Yaml(is_file_exists(const.INVENTORY_FILE)))
+        Conf.load(const.COMPONENTS_INDEX, Yaml(is_file_exists(const.COMPONENTS_CONF)))
+        Conf.load(const.DATABASE_INDEX, Yaml(is_file_exists(const.DATABASE_CONF)))
+        Log.init("csm_test")
         test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())
         if args is None: args = {}
-
-        # Read inventory data and collection rules from file
-        args[Const.INVENTORY_FILE] = inventory_file
     except TestFailed as e:
-        print('Test Initialization failed. %s' %e)
+        print('Test Pre-condition failed. %s' %e)
         sys.exit(errno.ENOENT)
 
     # Cluster Instantiation
@@ -90,7 +80,9 @@ def tmain(argp, argv):
             raise TestFailed('Missing file %s' %argp.t)
         with open(argp.t) as f:
             content = f.readlines()
-            ts_list = [x.strip() for x in content]
+            for x in content:
+                if not x.startswith('#'):
+                    ts_list.append(x.strip())
     else:
         file_path = os.path.dirname(os.path.realpath(__file__))
         for root, directories, filenames in os.walk(os.getcwd()):

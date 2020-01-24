@@ -91,7 +91,9 @@ class TimelionProvider(TimeSeriesProvider):
         Initializes data from conf file
         """
         super(TimelionProvider, self).__init__(agg_rule)
-        self._url = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.url')
+        host = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.host')
+        port = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.port')
+        self._url = host + ":" + str(port) + "/api/timelion/run"
         self._header = { 'Content-Type': 'application/json',
                             'Accept': 'application/json, text/plain, */*',
                             'kbn-xsrf': 'anything',
