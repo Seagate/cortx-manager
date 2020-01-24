@@ -65,7 +65,7 @@ class Response(object):
 class Provider(object):
     """ Base Provider class for a given RAS functionality """
 
-    def __init__(self, name, cluster):
+    def __init__(self, name, cluster=None):
         self._name = name
         self._cluster = cluster
 

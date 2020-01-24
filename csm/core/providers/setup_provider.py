@@ -18,72 +18,44 @@
 """
 
 import os
+import sys
 import pwd
-import crypt
 import errno
 from csm.common.errors import CsmError
 from csm.common.log import Log
 from csm.common.conf import Conf
+from csm.conf.setup import CsmSetup
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
 
 class SetupProvider(Provider):
-    """ Provider implementation for csm initialization """
-
-    def __init__(self, cluster, options):
-        super(SetupProvider, self).__init__(const.CSM_SETUP_CMD, cluster)
-        self._options = options
-        self._user = const.NON_ROOT_USER
-        self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
-        self._uid = self._gid = -1
-        self._bundle_path = Conf.get(const.CSM_GLOBAL_INDEX,
-            const.SUPPORT_BUNDLE_ROOT, const.DEFAULT_SUPPORT_BUNDLE_ROOT)
-        self._init_list = {
-            "ha": cluster
-        }
-
-    def _is_user_exist(self):
-        ''' Check if user exists '''
-        try:
-            u = pwd.getpwnam(self._user)
-            self._uid = u.pw_uid
-            self._gid = u.pw_gid
-            return True
-        except KeyError as err:
-            return False
-
-    def _config_user(self):
-        ''' create user and allow permission for csm resources '''
-        if not self._is_user_exist():
-            os.system("useradd -p "+self._password+" "+ self._user)
-            if not self._is_user_exist():
-                raise CsmError(-1, "Unable to create %s user" % self._user)
-        os.makedirs(self._bundle_path, exist_ok=True)
-        os.chown(self._bundle_path, self._uid, self._gid)
-        os.system("chown -R " + self._user + ":" + self._user + " /etc/csm")
-        os.system("chown -R " + self._user + ":" + self._user + " /var/log/csm")
-        os.system("systemctl daemon-reload")
-        os.system("systemctl enable csm_agent")
-        os.system("systemctl enable csm_web")
+    """
+    Provider implementation for csm initialization
+    """
+    def __init__(self):
+        super(SetupProvider, self).__init__(const.CSM_SETUP_CMD)
+        self._csm_setup = CsmSetup()
 
     def _validate_request(self, request):
-        self._actions = const.CSM_SETUP_ACTIONS
-        self._action = request.action()
-        self._force = self._options['f']
+        """
+        Validate setup command request
+        """
+        self._action = request.options["sub_command_name"]
 
-        if self._action not in self._actions:
-            raise CsmError(errno.EINVAL, 'Invalid Action %s' % self._action)
-
-        if len(request.args()) > 1 and 'force' not in request.args():
-            raise CsmError(errno.EINVAL, 'Invalid Option %s' % request.args())
+        if self._action == "init" or self._action == "post_install":
+            self._force = request.options["f"]
+        elif self._action == "reset":
+            self._reset_hard = request.options["hard"]
 
     def _process_request(self, request):
         try:
+            arg_list = {}
             if self._action == "init":
-                self._config_user()
-                for component in self._init_list.values():
-                    component.init(self._force)
-            return Response(0, 'CSM initalized successfully !!!')
+                arg_list["force"] = self._force
+            elif self._action == "reset":
+                arg_list["hard"] = self._reset_hard
+            getattr(self._csm_setup, "%s" %(self._action))(arg_list)
+            return Response(0, "CSM %s : PASS" %self._action)
         except Exception as e:
-            Log.error("CSM initalized failed: %s" %e)
-            return Response(errno.EINVAL, 'CSM initalized failed !!!')
+            Log.error("CSM setup failed: %s" %e)
+            return Response(errno.EINVAL, "CSM %s : Fail" %self._action)

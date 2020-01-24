@@ -72,6 +72,7 @@ class S3Credentials(SessionCredentials):
         self._secret_key = secret_key
         self._session_token = session_token
 
+
     @property
     def access_key(self):
         return self._access_key
@@ -92,10 +93,12 @@ class Session:
 
     def __init__(self, session_id: Id,
                  expiry_time: datetime,
-                 credentials: SessionCredentials) -> None:
+                 credentials: SessionCredentials,
+                 permissions: dict) -> None:
         self._session_id = session_id
         self._expiry_time = expiry_time
         self._credentials = credentials
+        self._permissions = permissions
 
     @property
     def session_id(self) -> Id:
@@ -112,6 +115,10 @@ class Session:
     @property
     def credentials(self) -> SessionCredentials:
         return self._credentials
+
+    @property
+    def permissions(self) -> Id:
+        return self._permissions
 
 
 class SessionManager:
@@ -132,10 +139,10 @@ class SessionManager:
         now = datetime.now(timezone.utc)
         return now + self._expiry_interval
 
-    async def create(self, credentials: SessionCredentials) -> Session:
+    async def create(self, credentials: SessionCredentials, permissions: dict) -> Session:
         session_id = self._generate_sid()
         expiry_time = self.calc_expiry_time()
-        session = Session(session_id, expiry_time, credentials)
+        session = Session(session_id, expiry_time, credentials, permissions)
         self._stg[session_id] = session
         return session
 
@@ -230,24 +237,33 @@ class LoginService:
 
     def __init__(self, auth_service: AuthService,
                  user_manager: UserManager,
-                 session_manager: SessionManager):
+                 session_manager: SessionManager,
+                 roles_service):
         self._auth_service = auth_service
         self._user_manager = user_manager
         self._session_manager = session_manager
+        self._roles_service = roles_service
 
     async def login(self, user_id, password):
         Log.debug(f'Logging in user {user_id}')
 
         user = await self._user_manager.get(user_id)
+        ### Get roles from user and permissions
+        permissions = {}
         if not user:
             # TODO: Try to search Customer LDAP or S3 account
             # and create corresponding user record if found.
             Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
             user = User.instantiate_s3_account_user(user_id)
+            role = ["s3"]
+        else:
+            role = user.roles
+        
+        permissions = self._roles_service.get_permissions(role)
 
         credentials = await self._auth_service.authenticate(user, password)
         if credentials:
-            session = await self._session_manager.create(credentials)
+            session = await self._session_manager.create(credentials, permissions)
             if session:
                 return session.session_id
             else:

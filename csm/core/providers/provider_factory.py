@@ -19,7 +19,6 @@
 import errno
 from csm.core.providers.providers import BundleProvider
 from csm.core.providers.providers import EmailProvider
-from csm.core.providers.setup_provider import SetupProvider
 from csm.common.errors import CsmError
 from csm.core.blogic import const
 

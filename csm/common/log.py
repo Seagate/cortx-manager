@@ -22,6 +22,7 @@ import os, errno
 import logging.handlers
 import inspect
 from functools import wraps
+import json
 
 class Log:
     CRITICAL = logging.CRITICAL

@@ -1,6 +1,8 @@
 # Commands
-CSM_SETUP_CMD = "csm_setup"
-CSM_SETUP_ACTIONS = ['init']
+CSM_SETUP_CMD = 'csm_setup'
+CSM_SETUP_CONF = '/etc/csm/setup.yaml'
+CSM_SETUP_INDEX = 'CSM_SETUP'
+
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
@@ -64,7 +66,7 @@ DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
 DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'root'
-CSM_USER_ROLES = ['root', 'admin', 'viewer']
+CSM_USER_ROLES = ['manage', 'monitor', 's3']
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
@@ -116,6 +118,11 @@ CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
+
+
+# CSM Roles Related
+ROLES_MANAGEMENT = '/opt/seagate/csm/schema/roles.json'
+
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
