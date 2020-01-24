@@ -1,0 +1,8 @@
+# Do not modify or add test case in self_test.pln used for factory testing
+service.test_csm_service
+service.test_dependent_service
+# part 2
+# csm_alert list
+# csm_s3 acc list
+# csm list user
+# haproxy
