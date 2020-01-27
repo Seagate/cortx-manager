@@ -70,7 +70,9 @@ class AlertModel(CsmModel):
     created_time = DateTimeType()
     sensor_info = StringType()
     comment = StringType()
-    event_details = StringType() 
+    event_details = StringType()
+    name = StringType()
+    durable_id = StringType() 
 
     def to_primitive(self) -> dict:
         obj = super().to_primitive()
