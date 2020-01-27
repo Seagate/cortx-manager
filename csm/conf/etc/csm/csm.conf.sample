@@ -67,3 +67,5 @@ Log:
     csm_agent_port: 8101
     csm_agent_base_url: "http://"
 
+#Health
+    health_schema = '/opt/seagate/csm/schema/health_schema.json'
