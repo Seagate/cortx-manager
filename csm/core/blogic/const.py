@@ -112,6 +112,17 @@ ALERT_EVENT_REASON = 'event_reason'
 ALERT_EVENT_RECOMMENDATION = 'event_recommendation'
 ALERT_HEALTH_REASON = 'health-reason'
 ALERT_HEALTH_RECOMMENDATION = 'health-recommendation'
+ALERT_CURRENT='current'
+ALERT_VOLTAGE='voltage'
+ALERT_TEMPERATURE='temperature'
+ALERT_SENSOR_NAME='sensor-name'
+ALERT_CONTAINER='container'
+ALERT_DURABLE_ID='durable-id'
+ALERT_LOGICAL_VOLUME='logical_volume'
+ALERT_VOLUME='volume'
+ALERT_SIDEPLANE='sideplane'
+ALERT_FAN='fan'
+
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
