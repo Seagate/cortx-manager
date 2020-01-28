@@ -49,7 +49,8 @@ class IamUserCreateSchema(BaseSchema):
     user_name = fields.Str(required=True,
                            validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
-    path = fields.Str(default='/', validate=[PathPrefixValidator()])
+    path_prefix = fields.Str(data_key='path',default='/',
+                             validate=[PathPrefixValidator()])
     require_reset = fields.Boolean(default=False)
 
     @validates_schema

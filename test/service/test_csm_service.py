@@ -20,8 +20,10 @@
 import sys, os
 import time
 import asyncio
+import requests
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from csm.common.conf import Conf
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
 from csm.common.log import Log
@@ -30,6 +32,9 @@ from csm.common.errors import CsmError
 def init(args):
     pass
 
+def process_request(url):
+    return requests.get(url)
+
 #################
 # Tests
 #################
@@ -37,18 +42,34 @@ def test1(args):
     """
     Check status for csm agent service
     """
-    Log.console('Testing csm_agent service ...')
-    status = os.system("systemctl is-active --quiet csm_agent")
-    if status != 0:
+    try:
+        Log.console('Testing csm_agent service ...')
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.ssl_check")
+        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.host")
+        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.port")
+        url = "http://" if not ssl_check else "https://"
+        url = url + host + ":" + str(port)
+        resp = process_request(url)
+        if resp.status_code != 401:
+            raise
+    except:
         raise CsmError(status, "csm_agent service is not running...")
 
 def test2(args):
     """
     Check status for csm web service
     """
-    Log.console('Testing csm_web service ...')
-    status = os.system("systemctl is-active --quiet csm_web")
-    if status != 0:
-        raise CsmError(status, "csm_web service is not running...")
+    try:
+        Log.console('Testing csm_web service ...')
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.ssl_check")
+        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.host")
+        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.port")
+        url = "http://" if not ssl_check else "https://"
+        url = url + host + ":" + str(port)
+        resp = process_request(url)
+        if resp.status_code != 200:
+            raise
+    except:
+        raise CsmError(status, "csm_agent service is not running...")
 
 test_list = [ test1, test2 ]
