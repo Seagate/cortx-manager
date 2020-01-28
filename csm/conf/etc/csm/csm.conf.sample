@@ -4,6 +4,18 @@ PRODUCT:
     uuid: "bae4b468-565d-49df-9495-a43a5d89babc"
     friendly_name: "local"
 
+# CSM SERVICE
+CSM_SERVICE:
+    CSM_AGENT:
+        host: "127.0.0.1"
+        port: 8101
+        ssl_check: false
+
+    CSM_WEB:
+        host: "127.0.0.1"
+        port: 8100
+        ssl_check: false
+
 # CSM HA
 HA:
     primary: "node1"
@@ -44,6 +56,7 @@ STATS:
         name: "timelion"
         host: "localhost"
         port: 5601
+        ssl_check: false
         interval: 10 # Flush interval in sec (Rate at which stats is stored)
 
 # S3

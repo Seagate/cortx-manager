@@ -278,12 +278,10 @@ class AlertsAppService(ApplicationService):
 
     async def fetch_alert(self, alert_id):
         """
-            Fetch a single alert by its key
-
-            :param str alert_id: A unique identifier of the requried alert
-            :returns: Alert object or None
+        Fetch a single alert by its key
+        :param str alert_id: A unique identifier of the requried alert
+        :returns: Alert object or None
         """
-        # This method is for debugging purposes only
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
@@ -390,10 +388,6 @@ class AlertMonitorService(Service):
         """ Fetching the previous alert. """
         try:
             Log.debug("Incoming alert : [%s]" %(message))
-            message[const.ALERT_EXTENDED_INFO] = \
-                    str(message.get(const.ALERT_EXTENDED_INFO))
-            message[const.ALERT_EVENT_DETAILS] = \
-                    str(message.get(const.ALERT_EVENT_DETAILS))
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)

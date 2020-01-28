@@ -93,7 +93,9 @@ class TimelionProvider(TimeSeriesProvider):
         super(TimelionProvider, self).__init__(agg_rule)
         host = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.host')
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.port')
-        self._url = host + ":" + str(port) + "/api/timelion/run"
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.ssl_check')
+        protocol = "https://" if ssl_check else "http://"
+        self._url = protocol + host + ":" + str(port) + "/api/timelion/run"
         self._header = { 'Content-Type': 'application/json',
                             'Accept': 'application/json, text/plain, */*',
                             'kbn-xsrf': 'anything',
