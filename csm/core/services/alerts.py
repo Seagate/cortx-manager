@@ -278,12 +278,10 @@ class AlertsAppService(ApplicationService):
 
     async def fetch_alert(self, alert_id):
         """
-            Fetch a single alert by its key
-
-            :param str alert_id: A unique identifier of the requried alert
-            :returns: Alert object or None
+        Fetch a single alert by its key
+        :param str alert_id: A unique identifier of the requried alert
+        :returns: Alert object or None
         """
-        # This method is for debugging purposes only
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)

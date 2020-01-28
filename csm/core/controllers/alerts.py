@@ -98,3 +98,8 @@ class AlertsView(web.View):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
+
+    async def get(self):
+        """ Gets alert by ID """
+        alert_id = self.request.match_info["alert_id"]
+        return await self.alerts_service.fetch_alert(alert_id)
