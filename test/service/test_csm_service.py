@@ -53,7 +53,7 @@ def test1(args):
         if resp.status_code != 401:
             raise
     except:
-        raise CsmError(status, "csm_agent service is not running...")
+        raise CsmError(-1, "csm_agent service is not running...")
 
 def test2(args):
     """
@@ -70,6 +70,6 @@ def test2(args):
         if resp.status_code != 200:
             raise
     except:
-        raise CsmError(status, "csm_agent service is not running...")
+        raise CsmError(-1, "csm_agent service is not running...")
 
 test_list = [ test1, test2 ]
