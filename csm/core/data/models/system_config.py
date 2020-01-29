@@ -23,6 +23,8 @@ from schematics.types import (StringType, ModelType, ListType,
                               BooleanType, DateTimeType, IntType)
 
 from csm.common.log import Log
+from csm.common.email import SmtpServerConfiguration
+from csm.core.blogic import const
 from csm.core.blogic.models.base import CsmModel
 
 # Schematics models to form schema structure for system configuration settings
@@ -142,18 +144,42 @@ class DateTimeSettings(Model):
     ntp = ModelType(Ntp)
     date_time = ModelType(ManualDateTime)
 
+# TODO: figure out exact constants
+EMAIL_CONFIG_SMTP_TLS_PROTOCOL = 'tls'
+EMAIL_CONFIG_SMTP_SSL_PROTOCOL = 'ssl'
+
 class EmailConfig(Model):
     """
     Email config nested model used to form Notification schema.
     """
-    stmp_server = StringType()
+    stmp_server = StringType()  # TODO: rename, fix typo
     smtp_port = IntType()
-    smtp_protocol = StringType()
+    smtp_protocol = StringType()  # TODO: what values can it take?
     smtp_sender_email = StringType()
     smtp_sender_password = StringType()
     email = StringType()
     weekly_email = BooleanType()
-    send_test_mail = BooleanType()
+    send_test_mail = BooleanType()  # TODO: why is it here?
+
+    def update(self, new_values: dict):
+        """
+        A method to update the email config model.
+        param: new_values : Dictionary containg email config payload
+        """
+        for key in new_values:
+            setattr(self, key, new_values[key])
+
+    def to_smtp_config(self) -> SmtpServerConfiguration:
+        config = SmtpServerConfiguration()
+        config.smtp_host = self.stmp_server
+        config.smtp_port = self.smtp_port
+        config.smtp_login = self.smtp_sender_email
+        config.smtp_password = self.smtp_sender_password
+        config.smtp_use_ssl = self.smtp_protocol in [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
+        config.ssl_context = None
+        config.timeout = const.CSM_SMTP_SEND_TIMEOUT_SEC
+        config.reconnect_attempts = const.CSM_SMTP_RECONNECT_ATTEMPTS
+        return config
 
 class SyslogConfig(Model):
     """
@@ -205,30 +231,10 @@ class SystemConfigSettings(CsmModel):
         param: new_values : Dictionary containg system config payload
         return: 
         """
-        sender_password = ""
-        password = ""
-        if self.notifications and self.notifications.email:
-            password = self.notifications.email.smtp_sender_password
         for key in new_values:
             setattr(self, key, new_values[key])
         self.updated_time = datetime.now(timezone.utc)
-        if "notifications" in new_values and new_values["notifications"]:
-            if "email" in new_values.get("notifications") and \
-                    new_values["notifications"]["email"]:
-                sender_password = new_values.get('notifications', {}). \
-                    get('email', {}).get('smtp_sender_password', {})
-        if sender_password and password != sender_password:
-            """
-            Converting the string type password to bytes as required by
-            urlsafe_b64encode
-            """
-            sender_password_bytes = base64.urlsafe_b64encode(
-                sender_password.encode())
-            """
-            Converting to string for saving in KVS. The decode() method converts
-            the encrypted field from binary to string.
-            """
-            self.notifications.email.smtp_sender_password = sender_password_bytes.decode()
+
 
     @staticmethod
     def instantiate_system_config(config_id):

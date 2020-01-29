@@ -43,7 +43,7 @@ class BadEmailMessageError(EmailError):
     pass
 
 
-class EmailConfiguration:
+class SmtpServerConfiguration:
     smtp_host:str
     smtp_port:str
     smtp_login:str  # Set to None if the SMTP server does not require authentication
@@ -61,7 +61,7 @@ class EmailSender:
 
     An example of how to use it:
 
-    config = EmailConfiguration()
+    config = SmtpServerConfiguration()
     config.smtp_host = "smtp.gmail.com"
     config.smtp_port = 465
     config.smtp_login = "some_account@gmail.com"
@@ -78,7 +78,7 @@ class EmailSender:
 
     SEND_MAIL_ATTEMPTS = 1
     
-    def __init__(self, config: EmailConfiguration):
+    def __init__(self, config: SmtpServerConfiguration):
         self._config = config
         self._smtp_obj = self._create_smtp_object()
         self._is_connected = False

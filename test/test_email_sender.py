@@ -1,7 +1,7 @@
 """
  ****************************************************************************
- Filename:          email_example.py
- Description:       An example of Email plugin usage.
+ Filename:          test_email_sender.py
+ Description:       Unit tests related to email sender-related code.
 
  Creation Date:     12/16/2019
  Author:            Alexander Nogikh
@@ -23,11 +23,12 @@ import threading
 import unittest
 from smtpd import SMTPServer
 from email import message_from_bytes
-from queue import Queue
+from queue import Queue, Empty
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.log import Log
-from csm.common.email import EmailConfiguration, EmailSender, OutOfAttemptsEmailError
+from csm.common.email import SmtpServerConfiguration, EmailSender, OutOfAttemptsEmailError
+from csm.core.email.email_queue import EmailSenderQueue
 
 class TestSMTPServer(SMTPServer):
     """ Helper class - STMP server that puts messages into a queue """
@@ -63,7 +64,7 @@ class TestSMTPThread(threading.Thread):
 
 async def remote_email_send_example():
     # TODO: these credentials are not real
-    config = EmailConfiguration()
+    config = SmtpServerConfiguration()
     config.smtp_host = "smtp.gmail.com"
     config.smtp_port = 465
     config.smtp_login = "some_account@gmail.com"
@@ -76,7 +77,7 @@ async def remote_email_send_example():
 
 async def local_email_send_example():
     # Run python3 -m smtpd -c DebuggingServer -n localhost:9999
-    config = EmailConfiguration()
+    config = SmtpServerConfiguration()
     config.smtp_host = "localhost"
     config.smtp_port = 9999
     config.smtp_login = None
@@ -85,7 +86,6 @@ async def local_email_send_example():
     s = EmailSender(config)
     await s.send("some_account@gmail.com", 
         "target@email.com", "Subject", "<html><body>Hi!</body></html>", "Plain text")
-
 
 t = unittest.TestCase()
 
@@ -100,8 +100,7 @@ async def test_local_multipart_email():
     server_thread = TestSMTPThread(queue)
     server_thread.start()
 
-
-    config = EmailConfiguration()
+    config = SmtpServerConfiguration()
     config.smtp_host = "localhost"
     config.smtp_login = None
     config.smtp_use_ssl = False
@@ -129,14 +128,45 @@ async def test_local_multipart_email():
         server_thread.abort()
         server_thread.join()
 
+async def test_local_email_queue():
+    """
+    Check if EmailSenderQueue alows to queue and process 2 email messages
+    """
+    queue_plugin = EmailSenderQueue()
+    await queue_plugin.start_worker()
+
+    queue = Queue()
+    server_thread = TestSMTPThread(queue)
+    server_thread.start()
+
+    config = SmtpServerConfiguration()
+    config.smtp_host = "localhost"
+    config.smtp_login = None
+    config.smtp_use_ssl = False
+    try:
+        config.smtp_port = server_thread.get_port()
+        message = EmailSender.make_multipart(TEST_SENDER, TEST_RECIPIENT,
+            TEST_SUBJECT, TEST_HTML_BODY, TEST_PLAIN_BODY)
+        await queue_plugin.enqueue_email(message, config)
+        await queue_plugin.enqueue_email(message, config)
+        await queue_plugin.join_worker()
+
+        msg = queue.get(True, 0.5)  # half second timeout
+        msg = queue.get(True, 0.5)  # half second timeout
+    except Empty:
+        t.fail('Email messages were not delivered')
+    finally:
+        await queue_plugin.stop_worker()
+        server_thread.abort()
+        server_thread.join()
+
 async def test_local_email_wo_server():
-    config = EmailConfiguration()
+    config = SmtpServerConfiguration()
     config.smtp_host = "localhost"
     config.smtp_port = 25255
     config.smtp_login = None
     config.smtp_use_ssl = False
     try:
-        
         sender = EmailSender(config)
         await sender.send(TEST_SENDER, TEST_RECIPIENT,
             TEST_SUBJECT, TEST_HTML_BODY, TEST_PLAIN_BODY)
@@ -148,9 +178,10 @@ async def test_local_email_wo_server():
 def init(args):
     pass
 
-def run_tests(args):
+def run_tests(args = {}):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_local_multipart_email())
+    loop.run_until_complete(test_local_email_queue())
     loop.run_until_complete(test_local_email_wo_server())
 
 test_list = [run_tests]
