@@ -21,27 +21,27 @@
 """
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
-import asyncio
 import re
-from typing import Optional
+import time
+from csm.common.observer import Observable
 from datetime import datetime, timedelta, timezone
-from typing import Dict
 from threading import Event, Thread
 from csm.common.log import Log
+from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
-import time
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel
+from csm.core.services.system_config import SystemConfigManager
 from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Dict
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -288,7 +288,41 @@ class AlertsAppService(ApplicationService):
         return alert.to_primitive()
 
 
-class AlertMonitorService(Service):
+class AlertEmailNotifier(Service):
+    def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
+        super().__init__()
+        self.email_sender_queue = email_sender_queue
+        self.config_manager = config_manager
+        self.template = template
+
+    @Log.trace_method(Log.DEBUG)
+    async def handle_alert(self, alert):
+        # TODO: check if email notification is enabled for alerts
+        system_config = await self.config_manager.get_current_config()
+        if not system_config:
+            return
+
+        email_config = system_config.notifications.email
+        if not email_config:
+            return  # Nothing to do
+
+        smtp_config = email_config.to_smtp_config()
+        alert_template_params = {
+            'event_time': alert.updated_time.strftime(const.CSM_ALERT_NOTIFICATION_TIME_FORMAT),
+            'alert_target': alert.module_name,
+            'severity': alert.severity,
+            'description': alert.description
+        }
+        html_body = self.template.render(**alert_template_params)
+        subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
+
+        message = EmailSender.make_multipart(email_config.smtp_sender_email,
+            email_config.email, subject, html_body)
+
+        await self.email_sender_queue.enqueue_email(message, smtp_config)
+
+
+class AlertMonitorService(Service, Observable):
     """
     Alert Monitor works with AmqpComm to monitor alerts. 
     When Alert Monitor receives a subscription request, it scans the DB and 
@@ -300,26 +334,17 @@ class AlertMonitorService(Service):
     web server. 
     """
 
-    def __init__(self, repo: AlertRepository, plugin, alert_handler_cb):
+    def __init__(self, repo: AlertRepository, plugin):
         """
         Initializes the Alert Plugin
         """
         self._alert_plugin = plugin
-        self._handle_alert = alert_handler_cb
         self._monitor_thread = None
         self._thread_started = False
         self._thread_running = False
-        self._loop = asyncio.get_event_loop()
         self.repo = repo
-        self.unpublished_alerts = set() 
-
-    def init(self):
-        """
-        This function will scan the DB for pending alerts and send it over the
-        back channel.
-        """
-        while self.unpublished_alerts:
-            self._publish(self.unpublished_alerts.pop())
+       
+        super().__init__()
 
     def _monitor(self):
         """
@@ -352,10 +377,6 @@ class AlertMonitorService(Service):
             self._thread_running = False
         except Exception as e:
             Log.exception(e)
-
-    def _run_coro(self, coro):
-        task = asyncio.run_coroutine_threadsafe(coro, self._loop)
-        return task.result()
 
     def _consume(self, message):
         """
@@ -391,13 +412,12 @@ class AlertMonitorService(Service):
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
-            prev_alert = self._run_coro(self.repo.retrieve_by_hw\
+            prev_alert = self._run_coroutine(self.repo.retrieve_by_hw\
                     (message.get(const.ALERT_SENSOR_INFO, "")))
             if not prev_alert:
                 alert = AlertModel(message)
-                self.unpublished_alerts.add(alert)
-                self._run_coro(self.repo.store(alert))
-                self._publish(alert)
+                self._run_coroutine(self.repo.store(alert))
+                self._notify_listeners(alert, loop=self._loop)
             else:
                 self._resolve_alert(message, prev_alert)
         except Exception as e:
@@ -460,7 +480,7 @@ class AlertMonitorService(Service):
         update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
         update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
-        self._run_coro(self.repo.update_by_hw_id\
+        self._run_coroutine(self.repo.update_by_hw_id\
                 (prev_alert.sensor_info, update_params))
 
     def _is_good_alert(self, alert):
@@ -499,6 +519,3 @@ class AlertMonitorService(Service):
             prev_alert.resolved = True 
             self._update_alert(alert, prev_alert)
 
-    def _publish(self, alert):
-        if self._handle_alert(alert.to_primitive()):
-            self.unpublished_alerts.discard(alert)

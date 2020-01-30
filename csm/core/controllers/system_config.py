@@ -151,7 +151,7 @@ class EmailConfigSchema(Schema):
     stmp_server = fields.Str(validate=Server(), allow_none=True)
     smtp_port = fields.Int(validate=validate.Range(max=65535), allow_none=True)
     smtp_protocol = fields.Str(validate=validate.Length(min=3, max=32),
-                               allow_none=True)
+                               allow_none=True)  # TODO: validate as enum
     smtp_sender_email = fields.Email(allow_none=True)
     smtp_sender_password = fields.Str(validate=validate.Length(min=4, max=64),
                                       allow_none=True)
@@ -274,3 +274,27 @@ class SystemConfigView(CsmView):
             raise InvalidRequest(
                 "Invalid request body: {}".format(val_err))
         return await self._service.update_system_config(id, config_data)
+
+@CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
+class TestEmailView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app["system_config_service"]
+
+    """
+    POST REST implementation for sendting test emails
+    """
+
+    async def post(self):
+        Log.debug("Handling system config email test request")
+
+        try:
+            schema = EmailConfigSchema()
+            config_data = schema.load(await self.request.json(),
+                                      unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid request body: {}".format(val_err))
+        return await self._service.test_email_config(config_data)

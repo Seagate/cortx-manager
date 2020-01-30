@@ -19,12 +19,15 @@
 from typing import List
 
 from csm.common.errors import CsmNotFoundError
+from csm.common.email import EmailSender, EmailError
 from csm.common.queries import SortBy
 from csm.common.services import ApplicationService
+from csm.common.template import Template
+from csm.core.blogic import const
 from csm.core.data.access import Query
 from csm.core.data.access.filters import Compare
 from csm.core.data.db.db_provider import (DataBaseProvider)
-from csm.core.data.models.system_config import SystemConfigSettings
+from csm.core.data.models.system_config import SystemConfigSettings, EmailConfig
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 
@@ -101,13 +104,20 @@ class SystemConfigManager:
             Compare(SystemConfigSettings.config_id, \
                     '=', config_id))
 
+    async def get_current_config(self):
+        # TODO: give it more thought
+        config_list = await self.get_system_config_list(limit=1)
+        return next(iter(config_list)) if config_list else None
+
+
 class SystemConfigAppService(ApplicationService):
     """
     Service that exposes system config management actions.
     """
 
-    def __init__(self, system_config_mgr: SystemConfigManager):
+    def __init__(self, system_config_mgr: SystemConfigManager, email_test_template=None):
         self.system_config_mgr = system_config_mgr
+        self.email_test_template = email_test_template
 
     async def create_system_config(self, config_id: str, **kwargs) -> dict:
         """
@@ -175,3 +185,28 @@ class SystemConfigAppService(ApplicationService):
                                    SYSTEM_CONFIG_NOT_FOUND)
         await self.system_config_mgr.delete(config_id)
         return {}
+
+    async def test_email_config(self, config_data: dict) -> bool:
+        config = EmailConfig()
+        config.update(config_data)
+
+        smtp_config = config.to_smtp_config()
+        smtp_config.timeout = const.CSM_SMTP_TEST_EMAIL_TIMEOUT
+        smtp_config.reconnect_attempts = const.CSM_SMTP_TEST_EMAIL_ATTEMPTS
+
+        target_emails = [x.strip() for x in config.email.split(',')]
+        html_body = self.email_test_template.render()
+        subject = const.CSM_SMTP_TEST_EMAIL_SUBJECT
+
+        message = EmailSender.make_multipart(config.smtp_sender_email,
+            config.email, subject, html_body)
+        try:
+            sender = EmailSender(smtp_config)
+            success = await sender.send_message(message)
+            if len(success) == 0:
+                return {"status": True, "failed_recipients": []}
+            else:
+                return {"status": False, "error": "Some recipients did not receive the message",
+                    "failed_recipients": success.keys()}
+        except EmailError as e:
+            return {"status": False, "error": str(e), "failed_recipients": target_emails}

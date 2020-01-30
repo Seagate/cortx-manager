@@ -31,9 +31,11 @@ from abc import ABC
 from secure import SecureHeaders
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
+from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.log import Log
+from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import CsmError, CsmNotFoundError
@@ -354,3 +356,18 @@ class CsmRestApi(CsmApi, ABC):
         coro = CsmRestApi._async_push(alert)
         asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
         return True
+
+
+class AlertHttpNotifyService(Service):
+    def __init__(self):
+        super().__init__()
+        self.unpublished_alerts = set()
+
+    def push_unpublished(self):
+        while self.unpublished_alerts:
+            self.handle_alert()
+
+    def handle_alert(self, alert):
+        self.unpublished_alerts.add(alert)
+        if CsmRestApi.push(alert):
+            self.unpublished_alerts.discard(alert)
