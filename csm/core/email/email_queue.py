@@ -20,14 +20,14 @@ from csm.common.email import SmtpServerConfiguration, EmailSender, EmailError
 from email.mime.multipart import MIMEMultipart
 
 
-class EmailQueuePlugin:
+class EmailSenderQueue:
     """
     Interface to a worker that performs mass email sending.
     For now it is just a worker coroutine, but later it might end up as an
     interface to some separate worker process.
 
     How to interact with this class:
-    instance = EmailQueuePlugin()
+    instance = EmailSenderQueue()
     await instance.start_worker()
     await instance.enqueue_email(message, smtp_config)
     # ...
