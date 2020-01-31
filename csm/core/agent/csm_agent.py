@@ -66,6 +66,10 @@ class CsmAgent:
         http_notifications = AlertHttpNotifyService()
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
+        
+        # Network file manager registration
+        CsmRestApi._app["file_service"] = NetworkFileManager()
+
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
@@ -169,6 +173,7 @@ if __name__ == '__main__':
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
+        from csm.core.services.file import NetworkFileManager
         
         CsmAgent.init()
         CsmAgent.run()
