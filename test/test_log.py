@@ -27,13 +27,19 @@ def init(args):
     pass
 
 def test1_1(args={}):
-    Log.init('csm', '/tmp', Log.DEBUG)
+    Log.init('csm_agent')
     Log.debug('test1_1: hello world')
     Log.info('test1_1: hello world')
+    Log.audit_log("test1_1: audit log ")
 
 def test1_2(args={}):
-    Log.init('csm', '/tmp', Log.INFO)
+    Log.init('csm_setup', level="INFO")
     Log.debug('test1_2: hello world')
     Log.info('test1_2: hello world')
 
-test_list = [ test1_1, test1_2 ]
+def test1_3(args={}):
+    Log.init('csm_cli', level="INFO")
+    Log.debug('test1_3: hello world')
+    Log.info('test1_3: hello world')
+
+test_list = [ test1_1, test1_2, test1_3]

@@ -39,10 +39,9 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm_agent", 
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
