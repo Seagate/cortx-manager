@@ -33,10 +33,8 @@ class Ipv4Nodes(Model):
     Ipv4 nodes common fields in management network and data network settings.
     """
     id = IntType()
-    vip_address = StringType()
     ip_address = StringType()
-    gateway = StringType()
-    netmask = StringType()
+    hostname = StringType()
 
 class Ipv6Nodes(Model):
     """
@@ -47,23 +45,23 @@ class Ipv6Nodes(Model):
     gateway = StringType()
     address_label = StringType()
     type = StringType()
-
-class ManagementNetworkBase(Model):
+    
+class Ipv4Base(Model):
     """
-    Class hold common fields for management network settings.
+    Class hold common fields in ipv4 for management network and data network settings.
     """
     is_dhcp = BooleanType()
-
-class ManagementNetworkIpv4(ManagementNetworkBase):
-    """
-    Ipv4 nested model used to form management network settings schema.
-    """
+    vip_address = StringType()
+    vip_hostname = StringType()
+    gateway = StringType()
+    netmask = StringType()
     nodes = ListType(ModelType(Ipv4Nodes))
 
-class ManagementNetworkIpv6(ManagementNetworkBase):
+class ManagementNetworkIpv6(Model):
     """
     Ipv6 nested model used to form management network settings schema.
     """
+    is_dhcp = BooleanType()
     ip_address = ListType(StringType)
     gateway = StringType()
     address_label = StringType()
@@ -74,15 +72,8 @@ class ManagementNetworkSettings(Model):
     Model for management network settings grouped with ipv4 and ipv6.
     Model is used to form system config settings schema
     """
-    ipv4 = ModelType(ManagementNetworkIpv4)
+    ipv4 = ModelType(Ipv4Base)
     ipv6 = ModelType(ManagementNetworkIpv6)
-
-class DataNetworkSettingsIpv4(Model):
-    """
-    Ipv4 nested model used to form data network settings schema.
-    """
-    is_dhcp = BooleanType()
-    nodes = ListType(ModelType(Ipv4Nodes))
 
 class DataNetworkSettingsIpv6(Model):
     """
@@ -97,7 +88,7 @@ class DataNetworkSettings(Model):
     Model is used to form system config settings schema
     """
     is_external_load_balancer = BooleanType()
-    ipv4 = ModelType(DataNetworkSettingsIpv4)
+    ipv4 = ModelType(Ipv4Base)
     ipv6 = ModelType(DataNetworkSettingsIpv6)
 
 class DnsNetworkSettingsNodes(Model):
@@ -105,8 +96,6 @@ class DnsNetworkSettingsNodes(Model):
     Dns nodes nested model used to form dns network settings schema.
     """
     id = IntType()
-    dns_servers = ListType(StringType)
-    search_domain = ListType(StringType)
     hostname = StringType()
 
 class DnsNetworkSettings(Model):
@@ -115,8 +104,9 @@ class DnsNetworkSettings(Model):
     Model is used to form system config settings schema
     """
     is_external_load_balancer = BooleanType()
-    fqdn_name = StringType()
     hostname = StringType()
+    dns_servers = ListType(StringType)
+    search_domain = ListType(StringType)
     nodes = ListType(ModelType(DnsNetworkSettingsNodes))
 
 class Ntp(Model):
@@ -152,14 +142,12 @@ class EmailConfig(Model):
     """
     Email config nested model used to form Notification schema.
     """
-    stmp_server = StringType()  # TODO: rename, fix typo
+    smtp_server = StringType()
     smtp_port = IntType()
     smtp_protocol = StringType()  # TODO: what values can it take?
     smtp_sender_email = StringType()
     smtp_sender_password = StringType()
     email = StringType()
-    weekly_email = BooleanType()
-    send_test_mail = BooleanType()  # TODO: why is it here?
 
     def update(self, new_values: dict):
         """
@@ -171,7 +159,7 @@ class EmailConfig(Model):
 
     def to_smtp_config(self) -> SmtpServerConfiguration:
         config = SmtpServerConfiguration()
-        config.smtp_host = self.stmp_server
+        config.smtp_host = self.smtp_server
         config.smtp_port = self.smtp_port
         config.smtp_login = self.smtp_sender_email
         config.smtp_password = self.smtp_sender_password
@@ -187,7 +175,6 @@ class SyslogConfig(Model):
     """
     syslog_server = StringType()
     syslog_port = IntType()
-    send_test_syslog = BooleanType()
 
 class Notification(CsmModel):
     """
