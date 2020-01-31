@@ -1,123 +1,48 @@
 {
-	"management_network_settings": {
+    "management_network_settings": {
 		"ipv4": {
 			"is_dhcp": true,
-			"nodes": [{
+			"vip_address": "127.0.0.1",
+			"vip_hostname": "127.0.0.1",
+			"netmask": "255.255.255.0",
+			"gateway": "255.255.255.0",
+			"nodes": [
+				{
 					"id": 0,
-					"vip_address": "127.0.0.1",
 					"ip_address": "127.0.0.1",
-					"netmask": "255.255.255.0",
-					"gateway": "255.255.255.0"
+					"hostname": "127.0.0.1"
 				},
 				{
 					"id": 1,
-					"vip_address": "127.0.0.1",
 					"ip_address": "127.0.0.1",
-					"netmask": "255.255.255.0",
-					"gateway": "255.255.255.0"
+					"hostname": "127.0.0.1"
 				}
 			]
 		},
-		"ipv6": {
-			"is_dhcp": true,
-			"ip_address": ["10.235.218.212", "10.235.218.212"],
-			"gateway": "255.255.240.0",
-			"address_label": "vlan",
-			"type": "DHCP6"
-		}
+		"ipv6": null
 	},
-	"data_network_settings": {
-		"is_external_load_balancer": true,
-		"ipv4": {
-			"is_dhcp": true,
-			"nodes": [{
-					"id": 0,
-					"vip_address": "127.0.0.1",
-					"ip_address": "127.0.0.1",
-					"netmask": "255.255.255.0",
-					"gateway": "255.255.255.0"
-				},
-				{
-					"id": 1,
-					"vip_address": "127.0.0.1",
-					"ip_address": "127.0.0.1",
-					"netmask": "255.255.255.0",
-					"gateway": "255.255.255.0"
-				}
-			]
-		},
-		"ipv6": {
-			"is_auto": true,
-			"nodes": [{
-					"id": 0,
-					"ip_address": ["10.235.218.212", "10.235.218.212"],
-					"gateway": "255.255.240.0",
-					"address_label": "vlan",
-					"type": "DHCP6"
-				},
-				{
-					"id": 1,
-					"ip_address": ["10.235.218.212", "10.235.218.212"],
-					"gateway": "255.255.240.0",
-					"address_label": "vlan",
-					"type": "DHCP6"
-				}
-			]
-		}
-	},
-	"dns_network_settings": {
-		"is_external_load_balancer": true,
-		"fqdn_name": "vlan1.seagate.com",
-		"hostname": "seagate",
-		"nodes": [{
-				"id": 0,
-				"hostname": "seagate",
-				"dns_servers": ["dns_server1", "dns_server2", "dns_server3"],
-				"search_domain": ["search_domain1", "search_domain2", "search_domain3"]
-			},
-			{
-				"id": 1,
-				"hostname": "seagate",
-				"dns_servers": ["dns_server1", "dns_server2", "dns_server3"],
-				"search_domain": ["search_domain1", "search_domain2", "search_domain3"]
-			}
-		]
-	},
-	"date_time_settings": {
-		"is_ntp": true,
-		"ntp": {
-			"ntp_server_address": "10.235.218.212",
-			"ntp_timezone_offset": "UTC"
-		},
-		"date_time": {
-			"date": "12/17/2019",
-			"hour": "10",
-			"minute": "15",
-			"clock": "24hr"
-		}
-	},
-	"notifications": {
-		"email": {
-			"stmp_server": "192.168.10.9",
-			"smtp_port": 6666,
-			"smtp_protocol": "SSL",
-			"smtp_sender_email": "abc@abc.com",
-			"smtp_sender_password": "abc@123",
-			"email": "abc@abc.com, efg@efg.com",
-			"weekly_email": false,
-			"send_test_mail": false
-		},
-		"syslog": {
-			"syslog_server": "192.168.10.9",
-			"syslog_port": 6666,
-			"send_test_syslog": true
-		}
-	},
-	"ldap": {
-		"user_search_base": "test_user",
-		"server": "192.168.10.9",
-		"port": 6666,
-		"alt_server": "192.168.10.10",
-		"alt_port": 7777
-	}
+    "data_network_settings": null,
+    "dns_network_settings": null,
+    "date_time_settings": null,
+    "notifications": {
+        "email": {
+            "smtp_server": null,
+            "smtp_port": null,
+            "smtp_protocol": null,
+            "smtp_sender_email": null,
+            "smtp_sender_password": null,
+            "email": null
+        },
+        "syslog": {
+            "syslog_server": null,
+            "syslog_port": null
+        }
+    },
+    "ldap": {
+        "user_search_base": null,
+        "server": null,
+        "port": null,
+        "alt_server": null,
+        "alt_port": null
+    }
 }
