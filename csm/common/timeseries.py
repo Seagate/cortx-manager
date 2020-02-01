@@ -55,6 +55,17 @@ class TimeSeriesProvider:
         """
         return self._panels
 
+    async def get_metrics(self):
+        """
+        Return metrics list
+        """
+        metrics = []
+        for panel in self._agg_rule.keys():
+            for metric in self._agg_rule[panel]["metrics"]:
+                metrics.append(str(panel) + '.' + str(metric.get('name')))
+
+        return metrics
+
     async def _validate_panel(self, panel):
         """
         Validate panal from aggregation rule
@@ -85,6 +96,8 @@ class TimelionProvider(TimeSeriesProvider):
     """
     Api for Timelion
     """
+
+    _SIZE_DIV = {"bytes": 1, "kb": 1024, "mb": 1048576, "gb": 1073741824}
 
     def __init__(self, agg_rule):
         """
@@ -192,9 +205,27 @@ class TimelionProvider(TimeSeriesProvider):
             raise CsmInternalError("id: %s, Error: Failed to process timelion \
                 request %s" %(stats_id,e))
 
+    async def get_all_units(self):
+        """
+        Return all combinations of metrics with possible units of measure of each metric
+        """
+        mu = []
+        for panel in self._agg_rule.keys():
+            for metric in self._agg_rule[panel]["metrics"]:
+                st = (str(panel) + '.' + str(metric.get('name')) + '.'
+                       + str((await self.get_axis(panel))["y"]))
+                if st not in mu:
+                    mu.append(st)
+                if panel =="throughput":
+                    for sz in self._SIZE_DIV.keys():
+                        st = (str(panel) + '.' + str(metric.get('name')) + '.' + str(sz))
+                        if st not in mu:
+                            mu.append(st)
+        return mu
+
     async def _get_metric_list(self, panel, metric_list):
         """
-        Validate metric list. If metric list is empty then fetch from schama.
+        Validate metric list. If metric list is empty then fetch from schema.
         """
         if len(metric_list) == 0:
             metric_list = await self.get_labels(panel)
@@ -288,10 +319,9 @@ class TimelionProvider(TimeSeriesProvider):
         Modify throughput with unit
         """
         li = []
-        size = {"bytes": 1, "kb": 1024, "mb": 1048576, "gb": 1073741824}
-        if unit not in size.keys():
+        if unit not in self._SIZE_DIV.keys():
             raise CsmInternalError("Invalid unit for stats %s" %unit)
-        unit_val = size[unit]
+        unit_val = self._SIZE_DIV[unit]
         for point in datapoint:
             val = 0 if point[1] is None or point[1] < 0 else point[1]
             li.append([point[0], val/unit_val])
