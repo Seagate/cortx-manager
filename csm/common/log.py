@@ -34,15 +34,24 @@ class Log:
     logger = None
 
     @staticmethod
-    def init(service_name, syslog_server="localhost", syslog_port=514,
-                                                     level="INFO"):
+    def init(service_name, syslog_server=None, syslog_port=None,
+                   level="INFO", log_path='/var/log/seagate/csm', backup_count=10, 
+                                                    file_size_in_mb=10):
         """ Initialize logging to log to syslog """
+        try:
+            if not os.path.exists(log_path): os.makedirs(log_path)
+        except OSError as err:
+            if err.errno != errno.EEXIST: raise
+        max_bytes = 0
+        if file_size_in_mb:
+            max_bytes = file_size_in_mb * 1024 * 1024
+
         Log.logger = Log._get_logger(syslog_server, syslog_port, service_name,
-                                              getattr(Log, level))
+                                 getattr(Log, level), log_path, backup_count, max_bytes)
 
     @staticmethod
     def _get_logger(syslog_server: str, syslog_port: str, file_name: str, 
-                                                  log_level):
+                                log_level, log_path: str, backup_count: int, max_bytes: int):
         """
         This Function Creates the Logger for Log Files.
         :param syslog_server: syslog server
@@ -54,11 +63,22 @@ class Log:
         log_format = "%(asctime)s: %(name)s %(levelname)s %(message)s"
         logger = logging.getLogger(f"{file_name}")
         formatter = logging.Formatter(log_format)
-        log_handler = logging.handlers.SysLogHandler(address =
+        if syslog_server and syslog_port:
+            log_handler = logging.handlers.SysLogHandler(address =
                                            (syslog_server, syslog_port))
-        logger.setLevel(log_level)
-        log_handler.setFormatter(formatter)
-        logger.addHandler(log_handler)
+            logger.setLevel(log_level)
+            log_handler.setFormatter(formatter)
+            logger.addHandler(log_handler)
+        else:
+            log_file = os.path.join(log_path, f"{file_name}.log")
+            file_handler = logging.handlers.RotatingFileHandler(log_file,
+                                  maxBytes=max_bytes, backupCount=backup_count)
+            file_handler.setFormatter(formatter)
+            file_handler.doRollover()
+            logger = logging.getLogger(f"{file_name}")
+            logger.setLevel(log_level)
+            logger.addHandler(file_handler)
+  
         return logger
 
     @staticmethod
