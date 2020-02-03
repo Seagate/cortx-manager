@@ -71,7 +71,7 @@ class Log:
             logger.addHandler(log_handler)
         else:
             log_file = os.path.join(log_path, f"{file_name}.log")
-            file_handler = logging.handlers.RotatingFileHandler(log_file,
+            file_handler = logging.handlers.RotatingFileHandler(log_file, mode="a",
                                   maxBytes=max_bytes, backupCount=backup_count)
             file_handler.setFormatter(formatter)
             file_handler.doRollover()
