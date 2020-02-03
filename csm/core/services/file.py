@@ -26,17 +26,27 @@ from csm.common.errors import CsmInternalError
 
 
 class FileEntity:
+    """
+    Class for storing and transfering filename and path to file
+    """
+
     def __init__(self, filename, path_to_file):
         self.filename = filename
         self.path_to_file = path_to_file
 
 
 class FileType(Enum):
+    """
+    Enum for indicating group of files
+    """
     SUPPORT_BUNDLE = 1
     AUDIT_LOG = 2
 
 
 class NetworkFileManager:
+    """
+    Class for handling files download and upload
+    """
 
     def __init__(self):
         self.directory_map = {
@@ -45,7 +55,9 @@ class NetworkFileManager:
         }
 
     def get_file_response(self, ftype: FileType, filename) -> FileEntity:
-        "Returns FileEntity by given file type and filename"
+        """
+        Returns FileEntity by given file type and filename
+        """
 
         directory = self.directory_map.get(ftype)
         if directory is None:
