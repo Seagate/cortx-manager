@@ -6,7 +6,7 @@
             "capacity": ["list"],
             "sysconfig": ["list", "update", "delete"],
             "user": ["list", "update", "delete", "create"],
-            "s3_accounts": ["list", "update", "create"]
+            "s3_accounts": ["list", "create"]
         }
     },
     "monitor": {
