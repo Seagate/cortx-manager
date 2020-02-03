@@ -1,3 +1,14 @@
+# DEBUG section setups up settings for development requirements (simplify configuration, testing, etc)
+DEBUG:
+    enabled: false
+    http_enabled: true
+
+# HTTPS setting for CSM Agent
+HTTPS:
+    port: 8302
+    certificate_path: ""
+    private_key_path: ""
+
 # PRODUCT
 PRODUCT:
     name: "eos"
