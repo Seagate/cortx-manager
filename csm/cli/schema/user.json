@@ -83,8 +83,7 @@
                         "timeout": "Timeout",
                         "created_time": "Creation time",
                         "updated_time": "Last update time"
-                    },
-                    "filters": "user"
+                    }
                 }
             }
         },
