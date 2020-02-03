@@ -22,7 +22,6 @@ import os
 import traceback
 import asyncio
 from getpass import getpass
-from csm.common.errors import InvalidRequest
 
 
 class Terminal:
@@ -178,5 +177,6 @@ if __name__ == '__main__':
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.core.blogic import const
+    from csm.common.errors import InvalidRequest
 
     sys.exit(main(sys.argv))
