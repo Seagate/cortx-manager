@@ -70,10 +70,11 @@ S3:
 
 #Logging
 Log:
-    log_level: "INFO"
-    log_path: "/var/log/csm"
-    file_size: 10
+    log_level: "INFO"   
+    #log_server: "localhost"
+    #log_port: 514
     total_files: 10
+    file_size: 10
 
 #CSMCLI
     csm_agent_host: "127.0.0.1"

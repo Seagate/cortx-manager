@@ -22,7 +22,7 @@ cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
 exit 0
 
 %post
-mkdir -p /var/csm/bundle /var/log/csm /etc/csm /etc/uds
+mkdir -p /var/csm/bundle /var/log/seagate/csm /etc/csm /etc/uds
 CSM_DIR=/opt/seagate/csm
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>

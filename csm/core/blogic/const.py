@@ -168,10 +168,10 @@ PORT_MAX_VALUE = 65536
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
 CSM_SMTP_RECONNECT_ATTEMPTS = 2
-CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = '/templates/alert_notification_email.html'
+CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = '/opt/seagate/csm/templates/alert_notification_email.html'
 CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT = 'Alert notification'
 CSM_ALERT_NOTIFICATION_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
-CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/templates/smtp_server_test_email.html'
+CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/opt/seagate/csm/templates/smtp_server_test_email.html'

@@ -36,10 +36,10 @@ file_path = Const.MOCK_PATH
 def _read_system_config_json(test_type):
     """ utility function to read test data from json file"""
     if test_type == "create":
-        with open(file_path + "system_config.json")) as system_config_file:
+        with open(file_path + "system_config.json") as system_config_file:
             return json.load(system_config_file)
     else:
-        with open(file_path + "update_system_config.json")) as system_config_file:
+        with open(file_path + "update_system_config.json") as system_config_file:
             return json.load(system_config_file)
 
 async def _create_system_config(system_config_service):

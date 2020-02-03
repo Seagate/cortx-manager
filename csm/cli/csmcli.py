@@ -78,10 +78,12 @@ def main(argv):
     try:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Log.init("csm", Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
-                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-                  Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
+        Log.init("csm",
+                  syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+                  syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+                  backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                  file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+                  level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,
                         'CSMCLI.csm_agent_port') or const.CSM_AGENT_PORT
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,

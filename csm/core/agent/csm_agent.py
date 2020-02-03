@@ -38,11 +38,12 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Log.init("csm_agent", 
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
+        Log.init("csm_agent",
+               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+                   syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
+                       level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -67,6 +68,10 @@ class CsmAgent:
         http_notifications = AlertHttpNotifyService()
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
+        
+        # Network file manager registration
+        CsmRestApi._app["file_service"] = NetworkFileManager()
+
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
@@ -94,14 +99,16 @@ class CsmAgent:
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
-        global base_path
+        #TODO : This is a temporary fix for build failure.
+        # We need to figure out a better solution.
+        #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
         CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr,
-            Template.from_file(base_path + const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
+            Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
         email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
-            Template.from_file(base_path + const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
+            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
     @staticmethod
@@ -172,6 +179,7 @@ if __name__ == '__main__':
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
+        from csm.core.services.file import NetworkFileManager
         
         CsmAgent.init()
         CsmAgent.run()
