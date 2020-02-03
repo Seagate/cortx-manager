@@ -98,14 +98,16 @@ class CsmAgent:
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
-        global base_path
+        #TODO : This is a temporary fix for build failure.
+        # We need to figure out a better solution.
+        #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
         CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr,
-            Template.from_file(base_path + const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
+            Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
         email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
-            Template.from_file(base_path + const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
+            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
     @staticmethod
