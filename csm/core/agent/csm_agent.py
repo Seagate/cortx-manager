@@ -140,11 +140,14 @@ class CsmAgent:
 
     @staticmethod
     def run():
+        https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
+        debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'RESOURCES.APPSV.port') or const.CSM_AGENT_PORT
+
         if not Opt.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
-        CsmRestApi.run(port)
+        CsmRestApi.run(port, https_conf, debug_conf)
         CsmAgent.alert_monitor.stop()
 
 
@@ -154,7 +157,7 @@ if __name__ == '__main__':
     Opt.init(sys.argv)
     try:
         from csm.common.log import Log
-        from csm.common.conf import Conf
+        from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml
         from csm.common.payload import Payload, Json, JsonMessage, Dict
         from csm.common.template import Template
@@ -178,7 +181,7 @@ if __name__ == '__main__':
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
         from csm.core.services.file import NetworkFileManager
-        
+
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:
