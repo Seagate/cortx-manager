@@ -133,8 +133,13 @@ class UslService(ApplicationService):
     async def _sustain_cache(self):
         """The infinite asynchronous task that sustains volumes cache"""
 
+        volume_cache_update_period = float(
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.volume_cache_update_period_seconds') or
+                DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
+        )
+
         while True:
-            await asyncio.sleep(DEFAULT_VOLUME_CACHE_UPDATE_PERIOD)
+            await asyncio.sleep(volume_cache_update_period)
             try:
                 await self._update_volumes_cache()
             except asyncio.CancelledError:

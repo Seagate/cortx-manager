@@ -104,3 +104,6 @@ SUPPORT_BUNDLE:
     password: ""
     remote_file: ""
     bundle_path: "/var/seagate/eos/support_bundle"
+
+UDS:
+    volume_cache_update_period_seconds: 3
