@@ -34,4 +34,8 @@ models:
     config:
         consul_db:
             collection: "usl_volume_collection"
-
+-   import_path: "csm.core.data.models.onboarding.OnboardingConfig"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "onboarding_config"

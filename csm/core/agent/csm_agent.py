@@ -110,6 +110,8 @@ class CsmAgent:
             Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
+        CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
+
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -173,6 +175,7 @@ if __name__ == '__main__':
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
+        from csm.core.services.onboarding import OnboardingConfigService
         from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
         from csm.common.timeseries import TimelionProvider
