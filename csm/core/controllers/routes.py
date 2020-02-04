@@ -20,6 +20,7 @@
 from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
+from .onboarding import OnboardingStateView
 from .system_config import SystemConfigListView
 from .system_config import SystemConfigView
 from .storage_capacity import StorageCapacityView

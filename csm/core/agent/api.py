@@ -44,7 +44,7 @@ from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
 from csm.core.services.file import FileEntity
-from csm.core.controllers.view import CsmResponse, CsmAuth
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
 
@@ -177,6 +177,8 @@ class CsmRestApi(CsmApi, ABC):
     async def session_middleware(cls, request, handler):
         Log.info(cls.http_request_to_log_string(request))
         is_public = CsmAuth.is_public(handler)
+        if not is_public:
+            is_public = CsmView.is_public(handler, request.method.lower())
         if not is_public:
             hdr = request.headers.get(CsmAuth.HDR)
             if not hdr:

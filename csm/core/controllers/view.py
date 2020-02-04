@@ -56,6 +56,17 @@ class CsmView(web.View):
     def __init__(self, request):
         super(CsmView, self).__init__(request)
 
+    @classmethod
+    def is_public(cls, handler, method):
+        ''' Check whether a particular method of the CsmView
+            subclass has the 'public' attribute '''
+
+        if issubclass(type(handler), type) and issubclass(handler, cls):
+            attr = getattr(handler, method, None)
+            if attr is not None:
+                return CsmAuth.is_public(attr)
+        return False
+
     def validate_get(self):
         pass
 
