@@ -202,8 +202,8 @@ class TimelionProvider(TimeSeriesProvider):
             return await self._convert_payload(res, stats_id, panel, output_format, unit)
         except Exception as e:
             Log.debug("Failed to request stats %s" %e)
-            raise CsmInternalError("id: %s, Error: Failed to process timelion \
-                request %s" %(stats_id,e))
+            raise CsmInternalError("id: %s, Error: Failed to process timelion "
+                "request %s" %(stats_id,e))
 
     async def get_all_units(self):
         """
@@ -230,6 +230,7 @@ class TimelionProvider(TimeSeriesProvider):
         if len(metric_list) == 0:
             metric_list = await self.get_labels(panel)
         else:
+            aggr_panel = self._aggr_rule[panel]["metrics"]
             for metric in metric_list:
                 if metric not in aggr_panel:
                     raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
