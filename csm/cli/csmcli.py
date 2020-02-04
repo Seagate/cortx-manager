@@ -22,7 +22,7 @@ import os
 import traceback
 import asyncio
 from getpass import getpass
-
+from cmd import Cmd
 
 class Terminal:
     @staticmethod
@@ -68,103 +68,116 @@ class Terminal:
                 raise InvalidRequest("Password do not match.")    
         return password
 
-def main(argv):
-    """
-    Parse command line to obtain command structure. Execute the CLI
-    command and print the result back to the terminal.
-    """
 
-    try:
+
+class CsmCli(Cmd):
+    def __init__(self):
+        super(CsmCli, self).__init__(stdout=sys.stdout)
+        self.intro = const.INTERACTIVE_SHELL_HEADER
+        self.prompt = const.CLI_PROMPT
+        self.args = "help"
+        self.loop = asyncio.get_event_loop()
+        self.rest_client = None
+        self.username = ""
+
+    def preloop(self):
+        """
+        Initialize Log for CSM CLI and Set the API for Rest API
+        :return:
+        """
+        #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm",
-                  syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
-                  syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
-                  backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-                  file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-                  level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,
-                        'CSMCLI.csm_agent_port') or const.CSM_AGENT_PORT
-        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,
-                        'CSMCLI.csm_agent_host') or const.CSM_AGENT_HOST
-        csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX,
-                        'CSMCLI.csm_agent_base_url') or const.CSM_AGENT_BASE_URL
+         syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+         syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+         backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+         file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+         level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        #Set Rest API for CLI
+        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
+        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
+        csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_base_url')
         csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
-        rest_client = CsmRestClient(csm_agent_url)
-        loop = asyncio.get_event_loop()
+        self.rest_client = CsmRestClient(csm_agent_url)
+        self.login()
 
-        start_parser = ArgumentParser(description='CSM CLI command')
-        start_parser.add_argument('--username', required=False)
-        start_parser.add_argument('--command-file', required=False)
+    def emptyline(self):
+        pass
 
-        assert len(argv) >= 1
-        username = None
-        command_file = None
-        if len(argv) == 1:
-            username = input('Username: ').strip()
-        else:
-            args = vars(start_parser.parse_args(argv[1:]))
-            username = args.get('username')
-            command_file = args.get('command-file')
-        if username:
-            password = getpass(prompt="Password: ")
-            is_logged_in = loop.run_until_complete(rest_client.login(username, password))
-            if is_logged_in:
-                sys.stdout.write(f'You\'ve logged in as {username}\n')
-            else:
-                raise Exception("Server authentication check failed")
-        else:
-            sys.stdout.write('You\'ve entered csmcli in unathorized mode\n')
-        if command_file:
-            raise Exception("Command file option is not avaliable for now")
+    def login(self):
+        """
+        Function Takes Responsibility for Login into CSM CLI.
+        :return:None
+        """
+        try:
+            self.username = input('Username: ').strip()
+            Log.debug(f"{self.username} attempted to Login.")
+            if self.username:
+                password = getpass(prompt="Password: ")
+                is_logged_in = self.loop.run_until_complete(self.rest_client.login(
+                    self.username, password))
+                if not is_logged_in:
+                    self.do_exit("Server authentication check failed.")
+                Log.info(f"{self.username}: Logged In.")
+        except Exception as e:
+            Log.critical(f"{self.username}:{e}")
+            self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
 
-        while True:
-            try:
-                args = input('csmcli> ').split()
-                if len(args) == 0:
-                    continue
-                elif len(args) == 1:
-                    if args[0] in ['exit', 'logout']:
-                        if rest_client.has_open_session():
-                            is_logged_out = loop.run_until_complete(rest_client.logout())
-                            Terminal.logout_alert(is_logged_out)
-                            assert isinstance(is_logged_out, bool)
-                            return int(not is_logged_out)
-                        else:
-                            return 0
-                command = CommandFactory.get_command(args)
-                if command.need_confirmation:
-                    res = Terminal.get_quest_answer(
-                        " ".join((command.name, command.sub_command_name)))
-                    if res is False:
-                        continue
-                if not command.comm.get("type", "") in const.CLI_SUPPORTED_PROTOCOLS:
-                    raise Exception(
-                        f"Invalid Communication Protocol {command.comm.get('type', '')} Selected."
-                    )
-                response, _ = loop.run_until_complete(rest_client.call(command))
-                command.process_response(out=sys.stdout, err=sys.stderr,
-                                         response=response)
-            except SystemExit:
-                # Argparse thorws SystemExit on "help" and "show version" actions, so we just ignore it
-                pass
-            except Exception as exception:
-                sys.stderr.write(str(exception) + '\n')
-                Log.critical(traceback.format_exc())
-    except KeyboardInterrupt:
-        if rest_client.has_open_session():
-            is_logged_out = loop.run_until_complete(rest_client.logout())
+    def precmd(self, command):
+        """
+        Pre-Process the Entered Command.
+        :param command: Command Entered by User.
+        :return:
+        """
+        if command.strip():
+            self.args = [x.strip() for x in command.split(" ")]
+        return command
+
+    def default(self, cmd):
+        """
+        Default Function for Initializing each Command.
+        :param cmd: Command Entered by User :type:str
+        :return:
+        """
+        try:
+            command = CommandFactory.get_command(self.args)
+            if command.need_confirmation:
+                res = Terminal.get_quest_answer(" ".join((command.name,
+                                                    command.sub_command_name)))
+            if not command.comm.get("type", "") in const.CLI_SUPPORTED_PROTOCOLS:
+                err_str = f"Invalid Communication Protocol {command.comm.get('type','')} Selected."
+                Log.error(f"{self.username}:{err_str}")
+                sys.stderr(err_str)
+            response, _ = self.loop.run_until_complete(self.rest_client.call(command))
+            command.process_response(out=sys.stdout, err=sys.stderr,
+                                     response=response)
+            Log.info(f"{self.username}: {cmd}: Command Executed")
+        except SystemExit:
+            Log.debug(f"{self.username}: Command Executed System Exit")
+            pass
+        except KeyboardInterrupt:
+            Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
+            self.do_exit()
+        except Exception as e:
+            Log.critical(f"{self.username}:{e}")
+            self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
+
+    def do_exit(self, args=""):
+        """
+        This Function Exits the Interactive Shell whenever "EXIT" or "QUIT" or
+        Keyboard Interrupts are called.
+        :return:
+        """
+        if args:
+            sys.stdout.write(f"{args}\n")
+        if self.rest_client.has_open_session():
+            Log.info(f"{self.username}: Logged Out")
+            is_logged_out = self.loop.run_until_complete(self.rest_client.logout())
             Terminal.logout_alert(is_logged_out)
             assert isinstance(is_logged_out, bool)
-            return int(not is_logged_out)
-    except Exception as exception:
-        sys.stderr.write(str(exception) + '\n')
-        Log.critical(traceback.format_exc())
-        # TODO - Extract rc from exception
-        return 1
-    finally:
-        sys.stdout.write('\n')
-
+        Log.info(f"{self.username}: Logged Out")
+        sys.exit()
 
 if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
@@ -172,11 +185,10 @@ if __name__ == '__main__':
 
     from csm.cli.command_factory import CommandFactory, ArgumentParser
     from csm.cli.csm_client import CsmRestClient
-    from csm.cli.command import Output
     from csm.common.log import Log
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
 
-    sys.exit(main(sys.argv))
+    CsmCli().cmdloop()
