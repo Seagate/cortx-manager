@@ -88,6 +88,7 @@ Log:
     file_size: 10
 
 #CSMCLI
+CSMCLI:
     csm_agent_host: "127.0.0.1"
     csm_agent_port: 8101
     csm_agent_base_url: "http://"
