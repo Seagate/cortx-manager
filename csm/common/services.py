@@ -17,13 +17,21 @@
  ****************************************************************************
 """
 
+import asyncio
 
 class Service:
-    pass
+    def __init__(self):
+        super().__init__()
+        self._loop = asyncio.get_event_loop()
+
+    def _run_coroutine(self, coro):
+        task = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return task.result()
 
 
 class ApplicationService(Service):
     """
     A service that is intended to be used by controllers
     """
-    pass
+    def __init_(self):
+        super().__init__()

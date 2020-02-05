@@ -55,3 +55,45 @@ class Conf:
         indexes = [x for x in _payloads.keys()] if index is None else index
         for index in indexes:
             Conf._payloads[index].dump()
+
+
+class ConfSection:
+    """Represents sub-section of config file"""
+
+    def __init__(self, from_dict: dict):
+        """
+        Initialize ConfSection by dictionary object
+
+        :param dict from_dict: base dictionary to create object from its keys and values
+        """
+        for key, value in from_dict.items():
+            if isinstance(value, dict):
+                setattr(self, key, ConfSection(value))
+            else:
+                setattr(self, key, value)
+
+
+class DebugConf:
+    """
+    Class which simplifies work with debug settings in debug mode:
+
+    make easy check whether debug-mode is enabled and requested option is set
+    to desired value
+    """
+
+    def __init__(self, debug_settings: ConfSection):
+        """
+        Initialize debug configuration instance by debug settings
+
+        """
+        self._debug_settings = debug_settings
+
+    def __getattr__(self, attr):
+        return getattr(self._debug_settings, attr)
+
+    @property
+    def http_enabled(self):
+        """
+        Validates if debug mode is enabled and HTTP is chosen
+        """
+        return self._debug_settings.enabled and self._debug_settings.http_enabled

@@ -61,9 +61,47 @@ class StatsPanelListView(CsmView):
         super(StatsPanelListView, self).__init__(request)
         self._service = self.request.app["stat_service"]
     """
-    GET REST implementation for Statistics Get Panel List request
+    GET REST implementation for Statistics Get Panel List or
+             statistics for group of panels with common parameters
+    Sample request:
+        /api/v1/stats - to get list of panels
+
+        /api/v1/stats?panel=throughput&panel=iops&panel=latency&interval=10&
+           from=1579173672&to=1579173772&id=1 - to get statistics for throughput, iops and
+                                                latency panels, reduced set of parameters used:
+                                                    required: id, from, to, interval
+                                                    optional: output_format
+
+        /api/v1/stats?metric=throughput.read&metric=iops.read_object&
+           metric=iops.write_object&metric=latency.delete_object&interval=10&
+           from=1579173672&to=1579173772&id=1&output_format=gui
+           - to get statistics for:
+           * throughput metric read,
+           * iops metric read_object and write_object,
+           * latency metric delete_object,
+             reduced set of parameters used, same as aboove
     """
     async def get(self):
         """Calling Stats Get Method"""
-        Log.debug("Handling Stats Get Panel List request")
-        return await self._service.get_panel_list()
+        Log.debug("Handling stats combined request")
+        panelsopt = self.request.rel_url.query.get("panel", None)   # check if statistics requested
+        metricsopt = self.request.rel_url.query.get("metric", None)  # check if metric requested
+        if panelsopt or metricsopt:
+            stats_id = self.request.rel_url.query.get("id", None)
+            from_t = self.request.rel_url.query.get("from", None)
+            to_t = self.request.rel_url.query.get("to", None)
+            interval = self.request.rel_url.query.get("interval", "")
+            output_format = self.request.rel_url.query.get("output_format", "gui")
+            if panelsopt:
+                panels_list = self.request.rel_url.query.getall("panel", [])
+                Log.debug("Requested panels: %s", str(panels_list))
+                return await self._service.get_panels(stats_id, panels_list, from_t,
+                                                      to_t, interval, output_format)
+            else:
+                metrics_list = self.request.rel_url.query.getall("metric", [])
+                Log.debug("Requested metrics: %s", str(metrics_list))
+                return await self._service.get_metrics(stats_id, metrics_list, from_t,
+                                                      to_t, interval, output_format)
+        else:
+            Log.debug("Handling Stats Get Panel List request")
+            return await self._service.get_panel_list()

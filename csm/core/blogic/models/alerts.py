@@ -72,6 +72,12 @@ class AlertModel(CsmModel):
     comment = StringType()
     event_details = StringType()
     name = StringType()
+    serial_number = StringType()
+    volume_group = StringType()
+    volume_size = StringType()
+    volume_total_size = StringType()
+    version = StringType()
+    disk_slot = IntType()
     durable_id = StringType() 
 
     def to_primitive(self) -> dict:

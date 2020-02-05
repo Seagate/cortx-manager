@@ -22,11 +22,12 @@ cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
 exit 0
 
 %post
-mkdir -p /var/csm/bundle /var/log/csm /etc/csm /etc/uds
+mkdir -p /var/csm/bundle /var/log/seagate/csm /etc/csm /etc/uds
 CSM_DIR=/opt/seagate/csm
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
 
+# Move binary file
 [ -d "${CSM_DIR}/lib" ] && {
     ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
     ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
@@ -37,7 +38,9 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
 
-    cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
+    [ -f /etc/systemd/system/csm_agent.service ] || {
+        cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
+    }
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -57,7 +60,9 @@ PRODUCT=<PRODUCT>
     cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
 
 [ -d "${CSM_DIR}/${PRODUCT}/gui" ] && {
-    cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
+    [ -f /etc/systemd/system/csm_web.service ] || {
+        cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
+    }
 
     ENV=$CSM_DIR/web/web-dist/.env
     sed -i "s|CSM_UI_PATH=\"/\"|CSM_UI_PATH=\"${CSM_DIR}/${PRODUCT}/gui/ui-dist\"|g" $ENV

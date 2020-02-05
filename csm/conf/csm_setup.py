@@ -30,7 +30,7 @@ class CsmSetupCommand:
     """
     def __init__(self, argv):
         ''' Check csm setup command and initialize '''
-        Log.init("csm_setup", "/var/log/csm")
+        Log.init(service_name = "csm_setup")
         self._args = argv
         self._args[0] = 'csm_setup'
         self._validate()

@@ -6,7 +6,7 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-
+import pathlib
 
 
 class Opt:
@@ -38,11 +38,12 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Log.init("csm_agent", 
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-                 Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"))
+        Log.init("csm_agent",
+               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+                   syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
+                       level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -50,14 +51,27 @@ class CsmAgent:
         # kept for debugging alerts_storage.add_data()
         s3_plugin = import_plugin_module('s3')
         usl_service = UslService(s3_plugin.S3Plugin(), db)
+
+        # Alert configuration
+
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
+
         pm = import_plugin_module('alert')
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin(),
-                                              CsmAgent._push_alert)
+                                              pm.AlertPlugin())
+
+        email_queue = EmailSenderQueue()
+        email_queue.start_worker_sync()
+
+        http_notifications = AlertHttpNotifyService()
+        CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
+        
+        # Network file manager registration
+        CsmRestApi._app["file_service"] = NetworkFileManager()
+
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
@@ -74,7 +88,6 @@ class CsmAgent:
                                                      CsmRestApi._app.session_manager,
                                                      CsmRestApi._app["roles_service"])
 
-                                                           
         user_service = CsmUserService(CsmRestApi._app.user_manager)
         CsmRestApi._app["csm_user_service"] = user_service
 
@@ -85,9 +98,19 @@ class CsmAgent:
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
+        #TODO : This is a temporary fix for build failure.
+        # We need to figure out a better solution.
+        #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
-        CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr)
+        CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr,
+            Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
+
+        email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
+            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
+        CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
+
+        CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
 
     @staticmethod
     def _daemonize():
@@ -119,28 +142,29 @@ class CsmAgent:
 
     @staticmethod
     def run():
+        https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
+        debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'RESOURCES.APPSV.port') or const.CSM_AGENT_PORT
+
         if not Opt.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
-        CsmRestApi.run(port)
+        CsmRestApi.run(port, https_conf, debug_conf)
         CsmAgent.alert_monitor.stop()
-
-    @staticmethod
-    def _push_alert(alert):
-        return CsmRestApi.push(alert)
 
 
 if __name__ == '__main__':
-    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
+    sys.path.append(base_path)
     Opt.init(sys.argv)
     try:
         from csm.common.log import Log
-        from csm.common.conf import Conf
+        from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml
         from csm.common.payload import Payload, Json, JsonMessage, Dict
+        from csm.common.template import Template
         from csm.core.blogic import const
-        from csm.core.services.alerts import AlertsAppService, \
+        from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                             AlertMonitorService, AlertRepository
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
@@ -149,15 +173,18 @@ if __name__ == '__main__':
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
+        from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-        from csm.core.agent.api import CsmRestApi
+        from csm.core.services.onboarding import OnboardingConfigService
+        from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
         from csm.common.timeseries import TimelionProvider
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
-        
+        from csm.core.services.file import NetworkFileManager
+
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:

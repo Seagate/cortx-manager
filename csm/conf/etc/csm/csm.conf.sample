@@ -1,8 +1,31 @@
+# DEBUG section setups up settings for development requirements (simplify configuration, testing, etc)
+DEBUG:
+    enabled: false
+    http_enabled: true
+
+# HTTPS setting for CSM Agent
+HTTPS:
+    port: 8302
+    certificate_path: ""
+    private_key_path: ""
+
 # PRODUCT
 PRODUCT:
     name: "eos"
     uuid: "bae4b468-565d-49df-9495-a43a5d89babc"
     friendly_name: "local"
+
+# CSM SERVICE
+CSM_SERVICE:
+    CSM_AGENT:
+        host: "127.0.0.1"
+        port: 8101
+        ssl_check: false
+
+    CSM_WEB:
+        host: "127.0.0.1"
+        port: 8100
+        ssl_check: false
 
 # CSM HA
 HA:
@@ -44,6 +67,7 @@ STATS:
         name: "timelion"
         host: "localhost"
         port: 5601
+        ssl_check: false
         interval: 10 # Flush interval in sec (Rate at which stats is stored)
 
 # S3
@@ -57,12 +81,14 @@ S3:
 
 #Logging
 Log:
-    log_level: "INFO"
-    log_path: "/var/log/csm"
-    file_size: 10
+    log_level: "INFO"   
+    #log_server: "localhost"
+    #log_port: 514
     total_files: 10
+    file_size: 10
 
 #CSMCLI
+CSMCLI:
     csm_agent_host: "127.0.0.1"
     csm_agent_port: 8101
     csm_agent_base_url: "http://"

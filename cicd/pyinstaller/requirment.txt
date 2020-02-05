@@ -19,3 +19,4 @@ elasticsearch==7.0.4
 elasticsearch-dsl==7.0.0
 secure==0.2.1
 requests==2.22.0
+pathlib==1.0.1
