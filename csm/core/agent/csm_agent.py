@@ -155,10 +155,9 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    sys.path.append(base_path)
     Opt.init(sys.argv)
+    from csm.common.log import Log
     try:
-        from csm.common.log import Log
         from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml
         from csm.common.payload import Payload, Json, JsonMessage, Dict
