@@ -6,7 +6,7 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-
+import pathlib
 
 
 class Opt:
@@ -154,7 +154,7 @@ class CsmAgent:
 
 
 if __name__ == '__main__':
-    base_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..')
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     sys.path.append(base_path)
     Opt.init(sys.argv)
     try:
