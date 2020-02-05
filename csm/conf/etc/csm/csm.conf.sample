@@ -5,9 +5,9 @@ DEBUG:
 
 # HTTPS setting for CSM Agent
 HTTPS:
-    port: 8302
-    certificate_path: ""
-    private_key_path: ""
+    port: 8103
+    certificate_path: "/opt/seagate/csm/conf/domain_srv.crt"
+    private_key_path: "/opt/seagate/csm/conf/domain_srv.key"
 
 # PRODUCT
 PRODUCT:
