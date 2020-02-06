@@ -1,11 +1,11 @@
 # DEBUG section setups up settings for development requirements (simplify configuration, testing, etc)
 DEBUG:
-    enabled: false
+    enabled: true
     http_enabled: true
 
 # HTTPS setting for CSM Agent
 HTTPS:
-    port: 8103
+    port: 28103
     certificate_path: "/opt/seagate/csm/conf/domain_srv.crt"
     private_key_path: "/opt/seagate/csm/conf/domain_srv.key"
 
@@ -19,12 +19,12 @@ PRODUCT:
 CSM_SERVICE:
     CSM_AGENT:
         host: "127.0.0.1"
-        port: 8101
+        port: 28101
         ssl_check: false
 
     CSM_WEB:
         host: "127.0.0.1"
-        port: 8100
+        port: 28100
         ssl_check: false
 
 # CSM HA
@@ -90,6 +90,6 @@ Log:
 #CSMCLI
 CSMCLI:
     csm_agent_host: "127.0.0.1"
-    csm_agent_port: 8101
+    csm_agent_port: 28101
     csm_agent_base_url: "http://"
 
