@@ -135,6 +135,7 @@ ALERT_FAN='fan'
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
 CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
+HEALTH_SCHEMA = '/opt/seagate/csm/schema/health_schema.json'
 
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'

@@ -42,6 +42,7 @@ from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
+from csm.common.payload import Payload, Json
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -343,6 +344,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
+        self._health_schema = None
        
         super().__init__()
 
@@ -361,6 +363,7 @@ class AlertMonitorService(Service, Observable):
         This method creats and starts an alert monitor thread
         """
         try:
+            self._init_health_schema()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -368,6 +371,10 @@ class AlertMonitorService(Service, Observable):
                 self._thread_started = True
         except Exception as e:
             Log.exception(e)
+
+    def _init_health_schema(self):
+        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
+        self._health_schema.dump()
 
     def stop(self):
         try:
