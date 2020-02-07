@@ -17,65 +17,119 @@
  ****************************************************************************
 """
 
+from csm.common.log import Log
 from csm.core.services.permissions import Permissions, R, A
 
 class Role:
-    def __init__(self, name, permissions):
+    """
+    User role implementation class.
+    The role conceptually is a set of permissions.
+    """
+
+    def __init__(self, name: str, permissions: Permissions):
         self._name = name
         self._permissions = permissions
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def permissions(self):
+    def permissions(self) -> Permissions:
         return self._permissions
 
 
-PREDEFINED_ROLES = [
-    Role('root', Permissions({
-        R.USER : {A.LIST, A.CREATE, A.DELETE, A.UPDATE},
-        })),
-
-    Role('admin', permissions=Permissions({
-        R.USER : {A.LIST, A.CREATE, A.DELETE, A.UPDATE},
-        R.ALERT: {A.LIST, A.CREATE, A.DELETE, A.UPDATE},
-        R.STAT : {A.LIST, A.CREATE, A.DELETE, A.UPDATE},
-        R.S3ACCOUNT: {A.LIST, A.CREATE},
-        R.S3USER: {},
-        })),
-
-    Role('monitor', Permissions({
-        R.ALERT: {A.LIST},
-        R.USER : {A.LIST},
-        R.STAT : {A.LIST},
-        })),
-
-    Role('s3account', Permissions({
-        R.S3ACCOUNT: {A.UPDATE, A.DELETE},
-        R.S3USER: {A.LIST, A.CREATE, A.UPDATE, A.DELETE},
-        })),
-
-    Role('s3user', Permissions({
-        R.S3USER: {A.UPDATE, A.DELETE},
-        })),
-]
-
-
 class RoleManager:
+    """
+    This class manages user roles.
+    TODO: Use a data base for storing roles persistently.
+    """
 
-    def __init__(self):
+    NO_ROLE = Role(None, Permissions())
+
+    @staticmethod
+    def _validate_type(obj, typ, name):
+        if type(obj) is not typ:
+            raise ValueError(f'Type of {name} should be a {typ.__name__}')
+
+    @classmethod
+    def _validate_name(cls, name):
+        cls._validate_type(name, str, 'role name')
+        # TODO: Validate character set in the string
+
+    @classmethod
+    def _validate_permissions(cls, permissions):
+        cls._validate_type(permissions, dict, 'permission set')
+        for resource, actions in permissions.items():
+            cls._validate_type(resource, str, 'resource name')
+            cls._validate_type(actions, list, 'actions')
+            for action in actions:
+                cls._validate_type(action, str, 'action list element')
+
+    @classmethod
+    def _validate_role(cls, name, permissions):
+        cls._validate_name(name)
+        cls._validate_permissions(permissions)
+
+    @classmethod
+    def _validate_roles(cls, roles):
+        cls._validate_type(roles, dict, 'roles argument')
+        for name, value in roles.items():
+            cls._validate_type(value, dict, 'role value')
+            permissions = value.get('permissions', None)
+            if permissions is None:
+                raise ValueError(f'Permission set should be specified for a role')
+            cls._validate_role(name, permissions)
+
+    def __init__(self, predefined_roles):
+        """
+        Initialize role manager with the predefined set of roles
+        loaded from the json file and passed here.
+        This is a temporary solution, later we will store predefined
+        roles in the RoleDB during the onboarding.
+        """
+
+        Log.info(f'Initializing role manager with predefined roles')
+        self._validate_roles(predefined_roles)
+
         self._roles = {
-            role.name: role
-                for role in PREDEFINED_ROLES
+            name: Role(name, Permissions(value['permissions']))
+                for name, value in predefined_roles.items()
         }
 
     async def calc_effective_permissions(self, *role_names):
+        """
+        Calculate effective set of permissions from a given set of user roles.
+        """
+
         permissions = Permissions()
         for role_name in role_names:
-            role = self._roles.get(role_name, None)
-            if role is None:
-                raise f"Invalid role name '{role_name}'"
+            role = self._roles.get(role_name, self.NO_ROLE)
+            if role.name is None:
+                Log.warn(f"Invalid role name '{role_name}'")
             permissions |= role.permissions
         return permissions
+
+    async def add_role(self, name, permissions):
+        """
+        Add new user role
+        """
+
+        self._validate_role(name, permissions)
+        if name in self._roles:
+            Log.error(f'Role "{name}" is already present')
+            return False
+        self._roles[name] = Role(name, Permissions(permissions))
+        Log.info(f'New role "{name}" has been successfully added')
+        return True
+
+    async def delete_role(self, name):
+        """
+        Delete existing user role
+        """
+
+        self._validate_name(name)
+        if self._roles.pop(name, None) is not None:
+            Log.info(f'Existing role "{name}" has been successfully deleted')
+        else:
+            Log.warn(f'Role "{name}" does not exist')

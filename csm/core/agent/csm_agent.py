@@ -77,12 +77,11 @@ class CsmAgent:
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
-        # User/Session management services
+        # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
-        CsmRestApi._app["roles_service"] = RolesManagementService(roles)
         auth_service = AuthService()
         CsmRestApi._app.user_manager = UserManager(db)
-        CsmRestApi._app.role_manager = RoleManager()
+        CsmRestApi._app.role_manager = RoleManager(roles)
         CsmRestApi._app.session_manager = SessionManager()
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      CsmRestApi._app.user_manager,
@@ -178,7 +177,6 @@ if __name__ == '__main__':
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
-        from csm.core.services.roles_management import RolesManagementService
         from csm.core.services.file import NetworkFileManager
         
         CsmAgent.init()
