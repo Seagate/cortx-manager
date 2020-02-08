@@ -18,14 +18,36 @@
 """
 
 from aiohttp import web
+from functools import wraps
+from ipaddress import ip_address
 from json import JSONDecodeError
 from marshmallow import Schema, ValidationError, fields, validates
 from typing import Any, Callable, Dict, List, Type
 
+from csm.common.decorators import Decorators
 from csm.common.errors import CsmError
 from csm.common.log import Log
+from csm.common.runtime import Options
 from csm.core.services.usl import UslService
 from .view import CsmAuth
+
+
+# TODO replace this hack with a proper firewall, or serve USL on a separate socket
+class Proxy:
+    @staticmethod
+    def on_loopback_only(
+        f: Callable[['View', web.Request, UslService], None]
+    ) -> Callable[['View', web.Request, UslService], None]:
+
+        @wraps(f)
+        def wrapper(obj, request: web.Request, usl_service: UslService) -> None:
+            peername = request.transport.get_extra_info('peername')
+            if peername is None or peername[0] is None or not ip_address(peername[0]).is_loopback:
+                raise web.HTTPNotFound()
+            f(obj, request, usl_service)
+
+        return wrapper
+
 
 # TODO: make USL views inherit CSM view, handle authorization
 @CsmAuth.public
@@ -33,7 +55,8 @@ class View(web.View):
     """
     Generic view class for USL API views. Binds a view to an USL service.
     """
-    def __init__(self, request: web.Request, usl_service: UslService):
+    @Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
+    def __init__(self, request: web.Request, usl_service: UslService) -> None:
         super().__init__(request)
         self._usl_service = usl_service
 
