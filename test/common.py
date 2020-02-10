@@ -26,8 +26,14 @@ import traceback
 from csm.core.agent.api import CsmApi
 
 class Const:
-    INVENTORY_FILE = 'INVENTORY_FILE'
-    CLUSTER = 'cluster'
+    CSM_GLOBAL_INDEX = 'CSM'
+    INVENTORY_INDEX = 'INVENTORY'
+    COMPONENTS_INDEX = 'COMPONENTS'
+    DATABASE_INDEX = 'DATABASE'
+    CSM_CONF = '/etc/csm/csm.conf'
+    INVENTORY_FILE = '/etc/csm/cluster.conf'
+    COMPONENTS_CONF = '/etc/csm/components.yaml'
+    DATABASE_CONF = '/etc/csm/database.yaml'
     MOCK_PATH = '/opt/seagate/csm/test/test_data/'
 
 class TestFailed(Exception):

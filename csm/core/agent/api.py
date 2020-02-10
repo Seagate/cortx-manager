@@ -25,6 +25,7 @@ import yaml
 import asyncio
 import json
 import traceback
+import ssl
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from abc import ABC
@@ -33,7 +34,7 @@ from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.common.observer import Observable
 from csm.common.payload import *
-from csm.common.conf import Conf
+from csm.common.conf import Conf, ConfSection, DebugConf
 from csm.common.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
@@ -46,6 +47,7 @@ from csm.core.services.file import FileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
+
 
 class CsmApi(ABC):
     """ Interface class to communicate with RAS API """
@@ -157,7 +159,7 @@ class CsmRestApi(CsmApi, ABC):
     def _unauthorised(cls, reason):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
-    
+
     @staticmethod
     def http_request_to_log_string(request):
         url = request.path
@@ -165,7 +167,7 @@ class CsmRestApi(CsmApi, ABC):
         query = dict(request.query) if not request.has_body else {}
         body = {}
         if request.has_body:
-            body = json.loads(request.content._buffer[0].decode('utf-8')) 
+            body = json.loads(request.content._buffer[0].decode('utf-8'))
             for key in body.keys():
                 if "password" in key:
                     body[key] = '*****'
@@ -274,8 +276,19 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
 
     @staticmethod
-    def run(port):
-        web.run_app(CsmRestApi._app, port=port)
+    def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
+        if not debug_conf.http_enabled:
+            port = https_conf.port
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            if not all(map(os.path.exists,
+                           (https_conf.certificate_path,
+                            https_conf.private_key_path))):
+                raise CsmError(errno.ENOENT, "Invalid path to certificate/private key")
+            ssl_context.load_cert_chain(https_conf.certificate_path, https_conf.private_key_path)
+        else:
+            ssl_context = None
+
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context)
 
     @staticmethod
     async def process_request(request):

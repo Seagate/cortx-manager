@@ -72,10 +72,6 @@ class CsmView(web.View):
         super(CsmView, self).__init__(request)
 
     @classmethod
-    def route(cls, name):
-        return cls._app_routes.view(name)
-
-    @classmethod
     def is_subclass(cls, handler):
         return issubclass(type(handler), type) and issubclass(handler, cls)
 

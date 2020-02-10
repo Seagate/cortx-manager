@@ -4,7 +4,7 @@ Release: %{dist}
 Summary: CSM Tools
 License: Seagate Proprietary
 URL: http://gitlab.mero.colo.seagate.com/eos/csm
-Source0: <PRODUCT>-csm-%{version}.tar.gz
+Source0: <PRODUCT>-csm_agent-%{version}.tar.gz
 %define debug_package %{nil}
 
 %description
@@ -27,6 +27,7 @@ CSM_DIR=/opt/seagate/csm
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
 
+# Move binary file
 [ -d "${CSM_DIR}/lib" ] && {
     ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
     ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
@@ -37,7 +38,9 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
 
-    cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
+    [ -f /etc/systemd/system/csm_agent.service ] || {
+        cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
+    }
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -55,21 +58,12 @@ PRODUCT=<PRODUCT>
     cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
 [ -f /etc/uds/uds_s3.toml ] || \
     cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
-
-[ -d "${CSM_DIR}/${PRODUCT}/gui" ] && {
-    cp -f $CFG_DIR/service/csm_web.service /etc/systemd/system/csm_web.service
-
-    ENV=$CSM_DIR/web/web-dist/.env
-    sed -i "s|CSM_UI_PATH=\"/\"|CSM_UI_PATH=\"${CSM_DIR}/${PRODUCT}/gui/ui-dist\"|g" $ENV
-    sed -i "s/NODE_ENV=\"development\"/NODE_ENV=\"production\"/g" $ENV
-}
 exit 0
 
 %postun
 [ $1 -eq 1 ] && exit 0
 rm -f /usr/bin/csm_setup 2> /dev/null;
 rm -f /usr/bin/csmcli 2> /dev/null;
-rm -f /usr/bin/csm_web 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -rf /opt/seagate/csm/bin/ 2> /dev/null;

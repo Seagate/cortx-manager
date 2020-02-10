@@ -2,6 +2,14 @@
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'
 CSM_SETUP_INDEX = 'CSM_SETUP'
+INTERACTIVE_SHELL_HEADER = """
+**********************************\n
+CSM Interactive Shell 
+Type -h or --help for help.\n
+***********************************
+"""
+
+CLI_PROMPT = "csmcli$"
 
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'

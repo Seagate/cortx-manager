@@ -6,7 +6,7 @@ import traceback
 import json
 from aiohttp import web
 from importlib import import_module
-
+import pathlib
 
 
 class Opt:
@@ -110,6 +110,8 @@ class CsmAgent:
             Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
+        CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
+
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -140,21 +142,23 @@ class CsmAgent:
 
     @staticmethod
     def run():
-        port = Conf.get(const.CSM_GLOBAL_INDEX, 'RESOURCES.APPSV.port') or const.CSM_AGENT_PORT
+        https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
+        debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
+        port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
+
         if not Opt.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
-        CsmRestApi.run(port)
+        CsmRestApi.run(port, https_conf, debug_conf)
         CsmAgent.alert_monitor.stop()
 
 
 if __name__ == '__main__':
-    base_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), '..', '..', '..')
-    sys.path.append(base_path)
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     Opt.init(sys.argv)
+    from csm.common.log import Log
     try:
-        from csm.common.log import Log
-        from csm.common.conf import Conf
+        from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml
         from csm.common.payload import Payload, Json, JsonMessage, Dict
         from csm.common.template import Template
@@ -171,6 +175,7 @@ if __name__ == '__main__':
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
+        from csm.core.services.onboarding import OnboardingConfigService
         from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
         from csm.common.timeseries import TimelionProvider
@@ -178,7 +183,7 @@ if __name__ == '__main__':
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.file import NetworkFileManager
-        
+
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:

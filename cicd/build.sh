@@ -5,18 +5,29 @@ BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
 DIST=$(realpath $BASE_DIR/dist)
-GUI_DIR="$BASE_DIR/src/eos/gui"
 API_DIR="$BASE_DIR/src/web"
 
 usage() {
-    echo """usage: $PROG_NAME [-v <csm version>]
+    echo """
+usage: $PROG_NAME [-v <csm version>]
                             [-b <build no>] [-k <key>]
                             [-p <product_name>]
-                            [-c <all|backend|frontend>] [-t]""" 1>&2;
+                            [-c <all|backend|frontend>] [-t]
+                            [-d]
+
+Options:
+    -v : Build rpm with version
+    -b : Build rpm with build number
+    -k : Provide key for encryption of code
+    -p : Provide product name default eos
+    -c : Build rpm for [all|backend|frontend]
+    -t : Build rpm with test plan
+    -d : Build dev env
+        """ 1>&2;
     exit 1;
 }
 
-while getopts ":g:v:b:p:k:c:t" o; do
+while getopts ":g:v:b:p:k:c:td" o; do
     case "${o}" in
         v)
             VER=${OPTARG}
@@ -36,6 +47,9 @@ while getopts ":g:v:b:p:k:c:t" o; do
         t)
             TEST=true
             ;;
+        d)
+            DEV=true
+            ;;
         *)
             usage
             ;;
@@ -50,6 +64,7 @@ cd $BASE_DIR
 [ -z "$KEY" ] && KEY="eos@ees@csm@pr0duct"
 [ -z "$COMPONENT" ] && COMPONENT="all"
 [ -z "$TEST" ] && TEST=false
+[ -z "$DEV" ] && DEV=false
 
 echo "Using VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
 
@@ -66,7 +81,7 @@ mkdir -p $DIST/csm/conf $TMPDIR
 
 CONF=$BASE_DIR/src/conf/
 cp -R $CONF/etc $CONF/service $DIST/csm/conf
-cp $BASE_DIR/jenkins/csm.spec $TMPDIR
+cp $BASE_DIR/jenkins/csm_agent.spec $BASE_DIR/jenkins/csm_web.spec $TMPDIR
 COPY_END_TIME=$(date +%s)
 
 ################### Backend ##############################
@@ -77,25 +92,39 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cd $TMPDIR
 
     # Copy Backend files
-    mkdir -p $DIST/csm/lib $DIST/csm/bin $DIST/csm/conf $TMPDIR
-    cp -rs $BASE_DIR/src/ $TMPDIR/csm
+    mkdir -p $DIST/csm/lib $DIST/csm/bin $DIST/csm/conf $TMPDIR/csm
+    cp -rs $BASE_DIR/src/* $TMPDIR/csm
     cp -rs $BASE_DIR/test/ $TMPDIR/csm
 
     # Enable csm package for python import
+    # TODO: Add pythonpath in pyinstaller spec
     export PYTHONPATH=$TMPDIR/csm/:$PYTHONPATH
+
+    # Check python package
+    req_file=$BASE_DIR/jenkins/pyinstaller/requirment.txt
+    echo "Installing python packages..."
+    pip3 install --user -r $req_file  > /dev/null || {
+        echo "Unable to install package from $req_file"; exit 1;
+    };
+
+    echo " $BASE_DIR $DIST"
+    [ "$DEV" == true ] && {
+        echo """
+        ******* Create Dev env *********
+        Follow Instruction for Dev env
+            Copy $BASE_DIR/cli/schema to /opt/seagate/csm/cli
+            Copy $BASE_DIR/schema to /opt/seagate/csm/
+            Copy $BASE_DIR/src/conf/etc/csm/ to /etc/csm/
+        Dev env is created at $DIST/tmp/csm
+        """  1>&2;
+        exit
+    }
 
     CONF=$BASE_DIR/src/conf/
     cp -R $BASE_DIR/schema $DIST/csm/
     cp -R $BASE_DIR/templates $DIST/csm/
     mkdir -p  $DIST/csm/cli/
     cp -R $BASE_DIR/src/cli/schema $DIST/csm/cli/
-
-    # Check python package
-    req_file=$BASE_DIR/jenkins/pyinstaller/requirment.txt
-    echo "Installing python packages..."
-    pip3 install --user -r $req_file  > /dev/null || {
-        echo "Unable to istall package from $req_file"; exit 1;
-    };
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
@@ -120,27 +149,28 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "frontend" ]; then
     WEB_BUILD_START_TIME=$(date +%s)
 
     # Copy frontend files
-    mkdir -p $DIST/csm/eos/gui/
-    cp -R $BASE_DIR/src/web ${DIST}/csm
-    cp -R $BASE_DIR/src/eos/gui/.env ${DIST}/csm/eos/gui/.env
+    GUI_DIR=$DIST/csm_gui
+    mkdir -p $GUI_DIR/eos/gui/
+    cp -R $BASE_DIR/src/web $GUI_DIR/
+    cp -R $BASE_DIR/src/eos/gui/.env $GUI_DIR/eos/gui/.env
 
     echo "Running Web Build"
-    cd ${DIST}/csm/web/
+    cd $GUI_DIR/web/
     npm install --production
     npm run build-ts
 
     #Delete src folder from web
     echo " Deleting web src and eos/gui directory--" ${DIST}/csm/web/src
-    cp -R  ${DIST}/csm/web/.env ${DIST}/csm/web/web-dist
-    rm -rf ${DIST}/csm/web/src
+    cp -R  $GUI_DIR/web/.env $GUI_DIR/web/web-dist
+    rm -rf $GUI_DIR/web/src
     WEB_BUILD_END_TIME=$(date +%s)
 
     UI_BUILD_START_TIME=$(date +%s)
     echo "Running UI Build"
-    cd $GUI_DIR
+    cd $BASE_DIR/src/eos/gui
     npm install
     npm run build
-    cp -R  ${DIST}/csm/eos/gui/.env ${DIST}/csm/eos/gui/ui-dist
+    cp -R  $GUI_DIR/eos/gui/.env $GUI_DIR/eos/gui/ui-dist
 
     UI_BUILD_END_TIME=$(date +%s)
 fi
@@ -154,26 +184,41 @@ cd $BASE_DIR
 mkdir -p ${DIST}/rpmbuild/SOURCES
 
 # Genrate spec file for CSM
-sed -i -e "s/<RPM_NAME>/${PRODUCT}_csm/g" \
-    -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/csm.spec
+sed -i -e "s/<RPM_NAME>/${PRODUCT}-csm_agent/g" \
+    -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/csm_agent.spec
+
+sed -i -e "s/<RPM_NAME>/${PRODUCT}-csm_web/g" \
+    -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/csm_web.spec
 
 cd ${DIST}
 # Create tar for csm
 echo "Creating tar for csm build"
-tar -czf ${DIST}/rpmbuild/SOURCES/${PRODUCT}-csm-${VER}.tar.gz csm
+tar -czf ${DIST}/rpmbuild/SOURCES/${PRODUCT}-csm_agent-${VER}.tar.gz csm
+tar -czf ${DIST}/rpmbuild/SOURCES/${PRODUCT}-csm_web-${VER}.tar.gz csm_gui
 TAR_END_TIME=$(date +%s)
 
 # Generate RPMs
 RPM_BUILD_START_TIME=$(date +%s)
 TOPDIR=$(realpath ${DIST}/rpmbuild)
 
-# CSM RPM
-echo rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb $BASE_DIR/jenkins/csm.spec
-rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb $TMPDIR/csm.spec
+# CSM Backend RPM
+if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
+    echo rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" \
+            -bb $BASE_DIR/jenkins/csm_agent.spec
+    rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb $TMPDIR/csm_agent.spec
+fi
+
+if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "frontend" ]; then
+    # CSM Frontend RPM
+    echo rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" \
+            -bb $BASE_DIR/jenkins/csm_web.spec
+    rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb $TMPDIR/csm_web.spec
+fi
 RPM_BUILD_END_TIME=$(date +%s)
 
 # Remove temporary directory
 \rm -rf ${DIST}/csm
+\rm -rf ${DIST}/csm_gui
 \rm -rf ${TMPDIR}
 BUILD_END_TIME=$(date +%s)
 
