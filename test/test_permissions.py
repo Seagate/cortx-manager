@@ -1,9 +1,5 @@
-import json
-import unittest
+from csm.test.common import assert_equal
 from csm.core.services.permissions import Permissions, A, R
-
-
-t = unittest.TestCase()
 
 
 def test_permissions_union(*args):
@@ -27,7 +23,7 @@ def test_permissions_union(*args):
         R.STAT: {A.LIST}
     })
 
-    t.assertEqual(calculated, expected)
+    assert_equal(calculated, expected)
 
 
 def test_permissions_intersection(*args):
@@ -49,7 +45,7 @@ def test_permissions_intersection(*args):
         R.USER: {A.CREATE, A.DELETE}
     })
 
-    t.assertEqual(calculated, expected)
+    assert_equal(calculated, expected)
 
 
 def init(args):

@@ -44,12 +44,13 @@ class Permissions:
         self._items = {
             resource: set(actions)
                 for resource, actions in items.items()
+                    if len(actions) > 0
         }
 
     def __str__(self) -> str:
         ''' String Representation Operator '''
 
-        return self._items.__str__()
+        return f'{self.__class__.__name__}{self._items.__str__()}'
 
     def __eq__(self, other: 'Permissions') -> bool:
         ''' Equality Operator '''
@@ -64,7 +65,9 @@ class Permissions:
         for resource in resources:
             lhs_actions = self._items.get(resource, set())
             rhs_actions = other._items.get(resource, set())
-            result._items[resource] = lhs_actions | rhs_actions
+            actions = lhs_actions | rhs_actions
+            if len(actions) > 0:
+                result._items[resource] = actions
         return result
 
     def __and__(self, other: 'Permissions') -> 'Permissions':
@@ -75,7 +78,9 @@ class Permissions:
         for resource in resources:
             lhs_actions = self._items.get(resource, set())
             rhs_actions = other._items.get(resource, set())
-            result._items[resource] = lhs_actions & rhs_actions
+            actions = lhs_actions & rhs_actions
+            if len(actions) > 0:
+                result._items[resource] = actions
         return result
 
     def __ior__(self, other: 'Permissions') -> 'Permissions':
@@ -84,17 +89,22 @@ class Permissions:
         for resource in other._items.keys():
             lhs_actions = self._items.get(resource, set())
             rhs_actions = other._items.get(resource, set())
-            self._items[resource] = lhs_actions | rhs_actions
+            actions = lhs_actions | rhs_actions
+            if len(actions) > 0:
+                self._items[resource] = actions
+            else:
+                self._items.pop(resource, None)
         return self
 
     def __iand__(self, other: 'Permissions') -> 'Permissions':
         ''' In-place Intersection Operator '''
 
         for resource in self._items.keys():
-            if resource in other._items.keys():
-                lhs_actions = self._items.get(resource, set())
-                rhs_actions = other._items.get(resource, set())
-                self._items[resource] = lhs_actions & rhs_actions
+            lhs_actions = self._items.get(resource, set())
+            rhs_actions = other._items.get(resource, set())
+            actions = lhs_actions & rhs_actions
+            if len(actions) > 0:
+                self._items[resource] = actions
             else:
-                self._items.pop(resource)
+                self._items.pop(resource, None)
         return self

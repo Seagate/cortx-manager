@@ -18,11 +18,13 @@
  ****************************************************************************
 """
 
+import asyncio
 import inspect
+import traceback
+from functools import wraps
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.blogic import const
-import traceback
 from csm.core.agent.api import CsmApi
 
 class Const:
@@ -58,3 +60,22 @@ class TestProvider(object):
 
     def _process_response(self, response):
         self._response = response
+
+
+def async_test(coro):
+    @wraps(coro)
+    def wrapper(*args):
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(coro(args))
+        return result
+    return wrapper
+
+
+def assert_equal(lhs, rhs):
+    if not (lhs == rhs):
+        raise TestFailed(f'"{lhs}" != "{rhs}"')
+
+
+def assert_not_equal(lhs, rhs):
+    if not (lhs != rhs):
+        raise TestFailed(f'"{lhs}" == "{rhs}"')

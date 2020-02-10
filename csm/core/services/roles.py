@@ -18,7 +18,7 @@
 """
 
 from csm.common.log import Log
-from csm.core.services.permissions import Permissions, R, A
+from csm.core.services.permissions import Permissions
 
 class Role:
     """
