@@ -19,9 +19,9 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
+from csm.common.permission_names import R, A
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.services.permissions import R, A
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 

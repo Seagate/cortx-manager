@@ -18,25 +18,6 @@
  ****************************************************************************
 """
 
-class R:
-    ''' Resource Names '''
-
-    ALERT = 'alert'
-    USER = 'user'
-    STAT = 'stat'
-    S3ACCOUNT = 's3account'
-    S3USER = 's3user'
-
-
-class A:
-    ''' Action Names '''
-
-    LIST = 'list'
-    CREATE = 'create'
-    DELETE = 'delete'
-    UPDATE = 'update'
-
-
 class Permissions:
     ''' Permission Set stored in a compact way as a dictionary '''
 

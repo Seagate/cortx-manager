@@ -1,5 +1,6 @@
 from csm.test.common import assert_equal
-from csm.core.services.permissions import Permissions, A, R
+from csm.common.permission_names import R, A
+from csm.core.services.permissions import Permissions
 
 
 def test_permissions_union(*args):
