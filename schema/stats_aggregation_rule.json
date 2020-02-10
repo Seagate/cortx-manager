@@ -15,7 +15,7 @@
                             {
                                 "val": {
                                     "index": "statsd_counter-*",
-                                    "metric": "outcoming_object_bytes_count",
+                                    "metric": "act:outcoming_object_bytes_count",
                                     "timestamp": "@timestamp",
                                     "method": "sum:val"
                                 }
@@ -36,7 +36,7 @@
                             {
                                 "val": {
                                     "index": "statsd_counter-*",
-                                    "metric": "incoming_object_bytes_count",
+                                    "metric": "act:incoming_object_bytes_count",
                                     "timestamp": "@timestamp",
                                     "method": "sum:val"
                                 }
@@ -55,25 +55,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "outcoming_object_bytes_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "incoming_object_bytes_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "'(act:outcoming_object_bytes_count) OR (act:incoming_object_bytes_count)'",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },
@@ -92,12 +79,12 @@
         "processing": "abs",
         "metrics": [
             {
-                "name": "total_request_time",
+                "name": "create_object",
                 "node": [
                     {
                         "val": {
                             "index": "statsd_timerdata-*",
-                            "metric": "total_request_time",
+                            "metric": "'(act:create_object_success) OR (act:create_object_failed)'",
                             "timestamp": "@timestamp",
                             "method": "avg:mean"
                         }
@@ -105,86 +92,15 @@
                 ]
             },
             {
-                "name": "create_object",
-                "node": [
-                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "create_object_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "create_object_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
-                    }
-                ]
-            },
-            {
                 "name": "delete_object",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_object_from_clovis_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_objects_from_clovis_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_object_from_clovis_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_objects_from_clovis_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 4
+                        "val": {
+                        "index": "statsd_timerdata-*",
+                        "metric": "'(act:delete_object_from_clovis_success) OR (act:delete_objects_from_clovis_success) OR (act:delete_object_from_clovis_failed) OR (act:delete_objects_from_clovis_failed)'",
+                        "timestamp": "@timestamp",
+                        "method": "avg:mean"
+                        }
                     }
                 ]
             },
@@ -192,33 +108,12 @@
                 "name": "write_object",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "write_to_clovis_op_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "write_to_clovis_op_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:write_to_clovis_op_success) OR (act:write_to_clovis_op_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
                     }
                 ]
             },
@@ -226,33 +121,12 @@
                 "name": "read_object",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "read_object_data_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "read_object_data_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:read_object_data_success) OR (act:read_object_data_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
                     }
                 ]
             },
@@ -260,33 +134,12 @@
                 "name": "getkv",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "get_keyval_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "get_keyval_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:get_keyval_success) OR (act:get_keyval_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
                     }
                 ]
             },
@@ -294,33 +147,12 @@
                 "name": "putkv",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "put_keyval_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "put_keyval_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:put_keyval_success) OR (act:put_keyval_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
                     }
                 ]
             },
@@ -328,36 +160,29 @@
                 "name": "deletekv",
                 "node": [
                    {
-                        "val": "/",
-                        "node": [
-                            {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_keyval_success",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_timerdata-*",
-                                            "metric": "delete_keyval_failed",
-                                            "timestamp": "@timestamp",
-                                            "method": "avg:mean"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "val": 2
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:delete_keyval_success) OR (act:delete_keyval_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "avarage_latency",
+                "node": [
+                   {
+                        "val": {
+                            "index": "statsd_timerdata-*",
+                            "metric": "'(act:create_object_success) OR (act:create_object_failed) OR (act:delete_object_from_clovis_success) OR (act:delete_objects_from_clovis_success) OR (act:delete_object_from_clovis_failed) OR (act:delete_objects_from_clovis_failed) OR (act:write_to_clovis_op_success) OR (act:write_to_clovis_op_failed) OR (act:read_object_data_success) OR (act:read_object_data_failed) OR (act:get_keyval_success) OR (act:get_keyval_failed) OR (act:put_keyval_success) OR (act:put_keyval_failed) OR (act:delete_keyval_success) OR (act:delete_keyval_failed)'",
+                            "timestamp": "@timestamp",
+                            "method": "avg:mean"
+                        }
                     }
                 ]
             }
+
         ]
     },
     "iops": {
@@ -374,25 +199,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "get_object_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "get_multipart_parts_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "'(act:get_object_request_count) OR (act:get_multipart_parts_request_count)'",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },
@@ -408,25 +220,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "put_object_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "put_multipart_part_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "'(act:put_object_request_count) OR (act:put_multipart_part_request_count)'",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },
@@ -442,25 +241,12 @@
                         "val": "/",
                         "node": [
                             {
-                                "val": "+",
-                                "node": [
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "get_bucket_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    },
-                                    {
-                                        "val": {
-                                            "index": "statsd_counter-*",
-                                            "metric": "get_multipart_bucket_request_count",
-                                            "timestamp": "@timestamp",
-                                            "method": "sum:val"
-                                        }
-                                    }
-                                ]
+                                "val": {
+                                    "index": "statsd_counter-*",
+                                    "metric": "'(act:get_bucket_request_count) OR (act:get_multipart_bucket_request_count)'",
+                                    "timestamp": "@timestamp",
+                                    "method": "sum:val"
+                                }
                             }
                         ]
                     },
@@ -478,7 +264,7 @@
                             {
                                 "val": {
                                     "index": "statsd_counter-*",
-                                    "metric": "put_bucket_request_count",
+                                    "metric": "act:put_bucket_request_count",
                                     "timestamp": "@timestamp",
                                     "method": "sum:val"
                                 }
