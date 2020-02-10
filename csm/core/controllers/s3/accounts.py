@@ -111,9 +111,8 @@ class S3AccountsView(CsmView):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
-        response_obj =  await self._service.patch_account(account_id, **patch_body)
+            raise InvalidRequest(f"Invalid request body: {val_err}")
+        response_obj =  await self._service.patch_account(self._s3_session, account_id, **patch_body)
         if response_obj:
             await self.request.app.login_service.delete_all_sessions(self.request.session.session_id)
         return response_obj
