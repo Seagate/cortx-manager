@@ -24,6 +24,7 @@ from csm.common.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import Service, ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
+from csm.core.services.sessions import S3Credentials
 
 
 S3_MSG_REMOTE_ERROR = 's3_remote_error'
@@ -93,7 +94,7 @@ class S3AccountService(ApplicationService):
             "secret_key": account.secret_key_id
         }
 
-    @Log.trace_method(Log.INFO)
+    @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, continue_marker=None, page_limit=None) -> dict:
         """
         Fetch a list of s3 accounts.
@@ -124,8 +125,8 @@ class S3AccountService(ApplicationService):
         return resp
 
     @Log.trace_method(Log.INFO)
-    async def patch_account(self, account_name: str, password: str = None,
-                            reset_access_key: bool = False) -> dict:
+    async def patch_account(self, s3_session: S3Credentials, account_name: str, 
+                            password: str = None, reset_access_key: bool = False) -> dict:
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
@@ -154,6 +155,10 @@ class S3AccountService(ApplicationService):
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
                 new_creds.secret_key_id, self._get_iam_connection_config())
+        else:
+            client = self._s3plugin.get_iam_client(s3_session.access_key,
+                        s3_session.secret_key, self._get_iam_connection_config(),
+                            s3_session.session_token)
 
         if password:
             # We will try to create login profile in case it doesn't exist
@@ -174,7 +179,7 @@ class S3AccountService(ApplicationService):
         return response
 
     @Log.trace_method(Log.INFO)
-    async def delete_account(self, s3_session, account_name: str):
+    async def delete_account(self, s3_session: S3Credentials, account_name: str):
         """
         S3 account deletion
         :param s3_session: S3 Accounts Session Details
