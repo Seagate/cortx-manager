@@ -131,6 +131,13 @@ ALERT_VOLUME='volume'
 ALERT_SIDEPLANE='sideplane'
 ALERT_FAN='fan'
 
+#Health
+HEALTH='health'
+OK_HEALTH='ok'
+TOTAL='total'
+GOOD_HEALTH='good'
+HEALTH_SUMMARY='health-summary'
+
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'

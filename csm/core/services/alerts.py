@@ -10,6 +10,7 @@
                     Prathamesh Rodi
                     Oleg Babin
                     Pawan Kumar Srivastava
+                    Soniya Moholkar
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -288,6 +289,45 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
 
+    async def fetch_health_summary(self):
+        health_schema = Json(const.HEALTH_SCHEMA).load()
+        health_count_map = {}
+        leaf_nodes = []
+        self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes)
+        bad_health_count = 0
+        total_leaf_nodes = len(leaf_nodes)
+        health_summary={}
+        health_summary[const.TOTAL] = total_leaf_nodes
+        for x in health_count_map:
+            if(x != const.OK_HEALTH):
+                health_summary[x] = health_count_map[x]
+                bad_health_count += health_count_map[x]
+        good_health_count = total_leaf_nodes - bad_health_count
+        health_summary[const.GOOD_HEALTH] = good_health_count
+        return {const.HEALTH_SUMMARY: {x: health_summary[x] for x in health_summary}}
+        
+
+    def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes):
+        def checkchilddict(health_schema):
+            for k, v in health_schema.items():
+                if isinstance(v, dict):
+                    return True
+        def isempty(health_schema):
+            if(health_schema.items()):
+                return False
+            return True
+        for k, v in health_schema.items():
+            if isinstance(v, dict):
+                if(checkchilddict(v)):
+                    self._get_leaf_node_health(v, health_count_map, leaf_nodes)
+                else:
+                    if(not isempty(v)):
+                        leaf_nodes.append(v)
+                        if (const.HEALTH in v):
+                            if (v[const.HEALTH] in health_count_map):
+                                health_count_map[v[const.HEALTH]] += 1
+                            else:
+                                health_count_map[v[const.HEALTH]] = 1
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
@@ -375,7 +415,7 @@ class AlertMonitorService(Service, Observable):
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
         self._health_schema.dump()
-
+    
     def stop(self):
         try:
             self._alert_plugin.stop()
