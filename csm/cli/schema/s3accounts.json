@@ -158,9 +158,7 @@
         "output": {
           "table":{
             "headers":{
-              "account_name":"Account Name",
-              "access_key":"Permanent Access Key",
-              "secret_key":"Permanent Secret Key"
+              "account_name":"Account Name"
             }
           }
         }
