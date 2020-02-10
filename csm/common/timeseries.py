@@ -120,7 +120,7 @@ class TimelionProvider(TimeSeriesProvider):
                                         "mode":"quick", \
                                         "to":"$to_t" \
                                 }}')
-        self._timelion_query = Template('.es(q=act:$metric, timefield=$timestamp, ' +
+        self._timelion_query = Template('.es(q=$metric, timefield=$timestamp, ' +
                                 'index=$index, metric=$method).$processing()')
 
     def init(self):
@@ -227,6 +227,7 @@ class TimelionProvider(TimeSeriesProvider):
         """
         Validate metric list. If metric list is empty then fetch from schema.
         """
+        aggr_panel = self._aggr_rule[panel]["metrics"]
         if len(metric_list) == 0:
             metric_list = await self.get_labels(panel)
         else:

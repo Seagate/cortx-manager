@@ -7,20 +7,7 @@ import json
 from aiohttp import web
 from importlib import import_module
 import pathlib
-
-
-class Opt:
-    """
-    Global options for debugging purposes.
-    It is quick and dirty temporary solution.
-    """
-
-    debug = False
-
-    @classmethod
-    def init(cls, argv):
-        cls.debug = len(argv) > 1 and argv[1] == '--debug'
-
+from csm.common.runtime import Options
 
 
 # TODO: Implement proper plugin factory design
@@ -146,7 +133,7 @@ class CsmAgent:
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
 
-        if not Opt.debug:
+        if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
@@ -155,7 +142,7 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    Opt.init(sys.argv)
+    Options.parse(sys.argv)
     from csm.common.log import Log
     try:
         from csm.common.conf import Conf, ConfSection, DebugConf
@@ -188,6 +175,6 @@ if __name__ == '__main__':
         CsmAgent.run()
     except Exception as e:
         Log.error(traceback.format_exc())
-        if Opt.debug:
+        if Options.debug:
             raise e
         os._exit(1)
