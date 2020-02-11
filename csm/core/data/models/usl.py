@@ -63,7 +63,7 @@ class Volume(CsmModel):
     name = StringType()
     bucketName = StringType()
     deviceUuid = UUIDType()
-    filesystem: StringType()
+    filesystem = StringType()
     size = IntType()
     used = IntType()
     uuid = UUIDType()
