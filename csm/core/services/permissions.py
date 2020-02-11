@@ -18,7 +18,7 @@
  ****************************************************************************
 """
 
-class Permissions:
+class PermissionSet:
     ''' Permission Set stored in a compact way as a dictionary '''
 
     def __init__(self, items: dict = {}):
@@ -33,15 +33,15 @@ class Permissions:
 
         return f'{self.__class__.__name__}{self._items.__str__()}'
 
-    def __eq__(self, other: 'Permissions') -> bool:
+    def __eq__(self, other: 'PermissionSet') -> bool:
         ''' Equality Operator '''
 
         return self._items == other._items
 
-    def __or__(self, other: 'Permissions') -> 'Permissions':
+    def __or__(self, other: 'PermissionSet') -> 'PermissionSet':
         ''' Union Operator '''
 
-        result = Permissions()
+        result = PermissionSet()
         resources = set(self._items.keys()) | set(other._items.keys())
         for resource in resources:
             lhs_actions = self._items.get(resource, set())
@@ -51,10 +51,10 @@ class Permissions:
                 result._items[resource] = actions
         return result
 
-    def __and__(self, other: 'Permissions') -> 'Permissions':
+    def __and__(self, other: 'PermissionSet') -> 'PermissionSet':
         ''' Intersection Operator '''
 
-        result = Permissions()
+        result = PermissionSet()
         resources = set(self._items.keys()) & set(other._items.keys())
         for resource in resources:
             lhs_actions = self._items.get(resource, set())
@@ -64,7 +64,7 @@ class Permissions:
                 result._items[resource] = actions
         return result
 
-    def __ior__(self, other: 'Permissions') -> 'Permissions':
+    def __ior__(self, other: 'PermissionSet') -> 'PermissionSet':
         ''' In-place Union Operator '''
 
         for resource in other._items.keys():
@@ -77,7 +77,7 @@ class Permissions:
                 self._items.pop(resource, None)
         return self
 
-    def __iand__(self, other: 'Permissions') -> 'Permissions':
+    def __iand__(self, other: 'PermissionSet') -> 'PermissionSet':
         ''' In-place Intersection Operator '''
 
         for resource in self._items.keys():

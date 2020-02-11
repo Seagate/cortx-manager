@@ -33,7 +33,7 @@ from csm.core.data.models.s3 import S3ConnectionConfig, IamError
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
 
 
@@ -96,7 +96,7 @@ class Session:
     def __init__(self, session_id: Id,
                  expiry_time: datetime,
                  credentials: SessionCredentials,
-                 permissions: Permissions) -> None:
+                 permissions: PermissionSet) -> None:
         self._session_id = session_id
         self._expiry_time = expiry_time
         self._credentials = credentials
@@ -119,7 +119,7 @@ class Session:
         return self._credentials
 
     @property
-    def permissions(self) -> Permissions:
+    def permissions(self) -> PermissionSet:
         return self._permissions
 
 
@@ -142,7 +142,7 @@ class SessionManager:
         return now + self._expiry_interval
 
     async def create(self, credentials: SessionCredentials,
-                     permissions: Permissions) -> Session:
+                     permissions: PermissionSet) -> Session:
         session_id = self._generate_sid()
         expiry_time = self.calc_expiry_time()
         session = Session(session_id, expiry_time, credentials, permissions)

@@ -18,7 +18,7 @@
 """
 
 from csm.common.log import Log
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 
 class Role:
     """
@@ -26,7 +26,7 @@ class Role:
     The role conceptually is a set of permissions.
     """
 
-    def __init__(self, name: str, permissions: Permissions):
+    def __init__(self, name: str, permissions: PermissionSet):
         self._name = name
         self._permissions = permissions
 
@@ -35,7 +35,7 @@ class Role:
         return self._name
 
     @property
-    def permissions(self) -> Permissions:
+    def permissions(self) -> PermissionSet:
         return self._permissions
 
 
@@ -45,7 +45,7 @@ class RoleManager:
     TODO: Use a data base for storing roles persistently.
     """
 
-    NO_ROLE = Role(None, Permissions())
+    NO_ROLE = Role(None, PermissionSet())
 
     @staticmethod
     def _validate_type(obj, typ, name):
@@ -93,7 +93,7 @@ class RoleManager:
         self._validate_roles(predefined_roles)
 
         self._roles = {
-            name: Role(name, Permissions(value['permissions']))
+            name: Role(name, PermissionSet(value['permissions']))
                 for name, value in predefined_roles.items()
         }
 
@@ -102,7 +102,7 @@ class RoleManager:
         Calculate effective set of permissions from a given set of user roles.
         """
 
-        permissions = Permissions()
+        permissions = PermissionSet()
         for role_name in role_names:
             role = self._roles.get(role_name, self.NO_ROLE)
             if role.name is None:
@@ -119,7 +119,7 @@ class RoleManager:
         if name in self._roles:
             Log.error(f'Role "{name}" is already present')
             return False
-        self._roles[name] = Role(name, Permissions(permissions))
+        self._roles[name] = Role(name, PermissionSet(permissions))
         Log.info(f'New role "{name}" has been successfully added')
         return True
 

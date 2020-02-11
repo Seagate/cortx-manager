@@ -18,7 +18,7 @@
 """
 from .view import CsmView
 from csm.common.log import Log
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 
 
 class BasePermissionsView(CsmView):
@@ -29,7 +29,7 @@ class BasePermissionsView(CsmView):
     def __init__(self, request):
         super(BasePermissionsView, self).__init__(request)
 
-    def transform_permissions(self, permissions: Permissions) -> dict:
+    def transform_permissions(self, permissions: PermissionSet) -> dict:
         """
         transform permissions dict resources 
         'alert': ['list, 'update']

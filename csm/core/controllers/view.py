@@ -18,7 +18,7 @@
 """
 import json
 from aiohttp import web
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 
 class CsmAuth:
     HDR = 'Authorization'
@@ -38,8 +38,8 @@ class CsmAuth:
 
     @classmethod
     def permissions(cls, permissions):
-        if not issubclass(type(permissions), Permissions):
-            permissions = Permissions(permissions)
+        if not issubclass(type(permissions), PermissionSet):
+            permissions = PermissionSet(permissions)
         def decorator(handler):
             setattr(handler, cls.ATTR_PERMISSIONS, permissions)
             return handler
@@ -47,7 +47,7 @@ class CsmAuth:
 
     @classmethod
     def get_permissions(cls, handler):
-        return getattr(handler, cls.ATTR_PERMISSIONS, Permissions())
+        return getattr(handler, cls.ATTR_PERMISSIONS, PermissionSet())
 
 
 class CsmResponse(web.Response):

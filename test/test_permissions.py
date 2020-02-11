@@ -1,15 +1,15 @@
 from csm.test.common import assert_equal
 from csm.common.permission_names import R, A
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 
 
 def test_permissions_union(*args):
-    lhs = Permissions({
+    lhs = PermissionSet({
         R.ALERT: {A.LIST, A.UPDATE},
         R.USER: {A.CREATE, A.DELETE, A.UPDATE},
         R.S3USER: {A.LIST}
     })
-    rhs = Permissions({
+    rhs = PermissionSet({
         R.ALERT: {A.CREATE, A.LIST},
         R.USER: {A.LIST, A.CREATE, A.DELETE},
         R.STAT: {A.LIST}
@@ -28,12 +28,12 @@ def test_permissions_union(*args):
 
 
 def test_permissions_intersection(*args):
-    lhs = Permissions({
+    lhs = PermissionSet({
         R.ALERT: {A.LIST, A.UPDATE},
         R.USER: {A.CREATE, A.DELETE, A.UPDATE},
         R.S3USER: {A.LIST}
     })
-    rhs = Permissions({
+    rhs = PermissionSet({
         R.ALERT: {A.CREATE, A.LIST},
         R.USER: {A.LIST, A.CREATE, A.DELETE},
         R.STAT: {A.LIST}
@@ -41,7 +41,7 @@ def test_permissions_intersection(*args):
 
     calculated = lhs & rhs
 
-    expected = Permissions({
+    expected = PermissionSet({
         R.ALERT: {A.LIST},
         R.USER: {A.CREATE, A.DELETE}
     })

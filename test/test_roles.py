@@ -1,6 +1,6 @@
 from csm.test.common import assert_equal, async_test
 from csm.core.services.roles import RoleManager
-from csm.core.services.permissions import Permissions
+from csm.core.services.permissions import PermissionSet
 
 
 roles_dict = {
@@ -23,7 +23,7 @@ roles_dict = {
 
 async def test_manage_roles(*args):
     role_manager = RoleManager(roles_dict)
-    expected_permissions = Permissions({
+    expected_permissions = PermissionSet({
         'alert': {'delete', 'list', 'update'},
         'stat': {'delete', 'list', 'update'},
         'user': {'create', 'delete', 'list', 'update'}
@@ -36,7 +36,7 @@ async def test_manage_roles(*args):
 
 async def test_manage_roles_with_root(*args):
     role_manager = RoleManager(roles_dict)
-    expected_permissions = Permissions({
+    expected_permissions = PermissionSet({
         'alert': {'delete', 'list', 'update'},
         'stat': {'delete', 'list', 'update'},
         'user': {'create', 'delete', 'list', 'update'}
@@ -49,7 +49,7 @@ async def test_manage_roles_with_root(*args):
 
 async def test_monitor_roles(*args):
     role_manager = RoleManager(roles_dict)
-    expected_permissions = Permissions({
+    expected_permissions = PermissionSet({
         'alert': {'list', 'update'},
         'stat': {'list', 'update'},
         'user': {'list'}
@@ -62,7 +62,7 @@ async def test_monitor_roles(*args):
 
 async def test_invalid_roles(*args):
     role_manager = RoleManager(roles_dict)
-    expected_permissions = Permissions()
+    expected_permissions = PermissionSet()
 
     actual_permissions = await role_manager.calc_effective_permissions('nfs')
 
