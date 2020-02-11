@@ -130,6 +130,7 @@ ALERT_LOGICAL_VOLUME='logical_volume'
 ALERT_VOLUME='volume'
 ALERT_SIDEPLANE='sideplane'
 ALERT_FAN='fan'
+ALERT_HEALTH = 'health'
 
 
 # CSM Schema Path
