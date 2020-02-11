@@ -9,7 +9,6 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
-
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -89,6 +88,10 @@ class CsmAgent:
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
         CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
+
+        # Plugin for Maintenance
+        #TODO : Replace PcsHAFramework with hare utility
+        CsmRestApi._app["maintenance"] = MaintenanceAppService(PcsHAFramework())
 
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
@@ -171,6 +174,8 @@ if __name__ == '__main__':
         from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
         from csm.common.timeseries import TimelionProvider
+        from csm.common.ha_framework import PcsHAFramework
+        from csm.core.services.maintenance import MaintenanceAppService
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
