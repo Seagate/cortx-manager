@@ -228,8 +228,7 @@ class Output:
                 table_obj.add_row(
                     [each_row.get(x) for x in table["headers"].keys()])
         else:
-            for each_row in data:
-                table_obj.add_row([each_row.get(x) for x in table["headers"].keys()])
+            table_obj.add_row([data.get(x) for x in table["headers"].keys()])
         return "{0}".format(table_obj)
 
     @staticmethod

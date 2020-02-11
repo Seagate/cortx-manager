@@ -73,8 +73,8 @@ class CsmUsersListView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(
                 "Invalid Parameter for alerts", str(val_err))
-
-        return await self._service.get_user_list(**request_data)
+        users = await self._service.get_user_list(**request_data)
+        return {'users': users}
 
     """
     POST REST implementation for creating a csm user
