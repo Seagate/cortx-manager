@@ -48,7 +48,7 @@ class CsmAgent:
         pm = import_plugin_module('alert')
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
                                               pm.AlertPlugin())
-
+        CsmRestApi._app["alert_monitor"] = CsmAgent.alert_monitor
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
