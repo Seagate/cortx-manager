@@ -7,7 +7,6 @@ import json
 from aiohttp import web
 from importlib import import_module
 import pathlib
-from csm.common.runtime import Options
 
 
 # TODO: Implement proper plugin factory design
@@ -143,8 +142,9 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    Options.parse(sys.argv)
     from csm.common.log import Log
+    from csm.common.runtime import Options
+    Options.parse(sys.argv)
     try:
         from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml
