@@ -13,6 +13,6 @@ csm_setup:
 
     reset:
         script: /usr/bin/csm_setup
-        vars:
+        args:
             - reset --soft
             - reset --hard
