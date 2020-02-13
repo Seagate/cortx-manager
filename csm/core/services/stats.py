@@ -87,7 +87,8 @@ class StatsAppService(ApplicationService):
                 "metric_list": list(metric_list_dict_keys),
                 "unit_list": list(units_list_dict_keys)}
 
-    async def get_panels(self, stats_id, panels_list, from_t, to_t, interval, output_format) -> Dict:
+    async def get_panels(self, stats_id, panels_list, from_t, to_t, interval,
+                         total_sample, output_format) -> Dict:
         """
         Fetch statistics for selected panels list (simplified - reduced parameter set)
         """
@@ -103,7 +104,7 @@ class StatsAppService(ApplicationService):
                                                   from_t = from_t, duration_t = to_t,
                                                   metric_list = [],
                                                   interval = interval,
-                                                  total_sample = "",
+                                                  total_sample = total_sample,
                                                   unit = "",
                                                   output_format = output_format,
                                                   query = "")
@@ -125,7 +126,8 @@ class StatsAppService(ApplicationService):
             output.append(prep)
         return output
 
-    async def get_metrics(self, stats_id, metrics_list, from_t, to_t, interval, output_format) -> Dict:
+    async def get_metrics(self, stats_id, metrics_list, from_t, to_t, interval,
+                          total_sample, output_format) -> Dict:
         """
         Fetch statistics for selected panel.metric list (simplified - reduced parameter set)
         """
@@ -166,7 +168,7 @@ class StatsAppService(ApplicationService):
                                                   from_t = from_t, duration_t = to_t,
                                                   metric_list = [],
                                                   interval = interval,
-                                                  total_sample = "",
+                                                  total_sample = total_sample,
                                                   unit = uom_list[panel],
                                                   output_format = output_format,
                                                   query = "")
