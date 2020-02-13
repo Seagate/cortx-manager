@@ -58,8 +58,11 @@ class Setup:
             os.system("useradd -p "+self._password+" "+ self._user)
             if not self._is_user_exist():
                 raise CsmError(-1, "Unable to create %s user" % self._user)
-        os.makedirs(self._bundle_path, exist_ok=True)
-        os.chown(self._bundle_path, self._uid, self._gid)
+        #TODO : replace os.system with subprocess
+        #TODO : move hardcoded path to const
+        os.system("mkdir -p /var/seagate/eos")
+        os.system("setfacl -R -m u:csm:rwx /var/seagate/eos")
+        os.system("mkdir -p /etc/csm /var/log/seagate/csm")
         os.system(f"chown -R {self._user}:{self._user} /etc/csm")
         os.system(f"chown -R {self._user}:{self._user} /var/log/seagate/csm")
         os.system("systemctl daemon-reload")
