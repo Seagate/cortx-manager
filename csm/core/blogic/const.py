@@ -15,7 +15,7 @@ SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
-HCTL_COMMAND = ['hctl', 'mero', 'status']
+HCTL_COMMAND = ['hctl', 'status']
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
