@@ -19,8 +19,10 @@
 """
 
 import os, errno, sys
-import json, toml, yaml
+import json, toml, yaml, tarfile
 import configparser
+from typing import List
+
 
 class Doc:
     _type = dict
@@ -88,6 +90,23 @@ class Yaml(Doc):
     def _dump(self, data):
         with open(self._source, 'w') as f:
             yaml.dump(data, f)
+
+class Tar(Doc):
+    """Represents Tar File"""
+
+    def __init__(self, file_path):
+        Doc.__init__(self, file_path)
+
+    def _dump(self, files: List):
+        """
+        will create a tar file at source path.
+        :param files: Files and Directories to be Included in Tar File.
+        :return: None
+        """
+        with tarfile.open(self._source, "w:gz") as tar:
+            for each_file in files:
+                tar.add(each_file, arcname=os.path.basename(each_file),
+                    recursive=True)
 
 class Ini(Doc):
     ''' Represents a YAML doc '''
