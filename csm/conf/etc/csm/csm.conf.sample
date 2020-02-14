@@ -93,3 +93,13 @@ CSMCLI:
     csm_agent_port: 28101
     csm_agent_base_url: "http://"
 
+#Support Bundle Config.
+SUPPORT_BUNDLE:
+    protocol: FTP
+    base_url : "ftp://"
+    host: "127.0.0.1"
+    port: 21
+    user: ""
+    password: ""
+    remote_file: ""
+    bundle_path: "/var/seagate/eos/support_bundle"

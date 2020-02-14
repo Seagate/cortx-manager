@@ -72,11 +72,11 @@ class Terminal:
 
 
 class CsmCli(Cmd):
-    def __init__(self):
+    def __init__(self, args):
         super(CsmCli, self).__init__(stdout=sys.stdout)
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
-        self.args = "help"
+        self.args = args
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
@@ -101,7 +101,15 @@ class CsmCli(Cmd):
         csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_base_url')
         csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
         self.rest_client = CsmRestClient(csm_agent_url)
-        self.login()
+        self.check_auth_required()
+
+    def check_auth_required(self):
+        if self.args[0] not in const.NO_AUTH_COMMANDS:
+            self.args = "help"
+            self.login()
+        else:
+            self.default(self.args)
+            self.do_exit()
 
     def emptyline(self):
         pass
@@ -135,6 +143,15 @@ class CsmCli(Cmd):
             self.args = [x.strip() for x in command.split(" ")]
         return command
 
+    def process_direct_command(self, command):
+        obj = CsmDirectClient()
+        self.loop.run_until_complete(obj.call(command))
+
+    def process_rest_command(self, command):
+        response, _ = self.loop.run_until_complete(self.rest_client.call(command))
+        command.process_response(out=sys.stdout, err=sys.stderr,
+                                 response=response)
+
     def default(self, cmd):
         """
         Default Function for Initializing each Command.
@@ -146,13 +163,12 @@ class CsmCli(Cmd):
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))
-            if not command.comm.get("type", "") in const.CLI_SUPPORTED_PROTOCOLS:
+            channel_name = f"""process_{command.comm.get("type", "")}_command"""
+            if not hasattr(self, channel_name):
                 err_str = f"Invalid Communication Protocol {command.comm.get('type','')} Selected."
                 Log.error(f"{self.username}:{err_str}")
                 sys.stderr(err_str)
-            response, _ = self.loop.run_until_complete(self.rest_client.call(command))
-            command.process_response(out=sys.stdout, err=sys.stderr,
-                                     response=response)
+            getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command Executed")
         except SystemExit:
             Log.debug(f"{self.username}: Command Executed System Exit")
@@ -162,7 +178,7 @@ class CsmCli(Cmd):
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
+            self.do_exit("Some Error Occurred.\n Please try Re-Login")
 
     def do_exit(self, args=""):
         """
@@ -184,11 +200,11 @@ if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from csm.cli.command_factory import CommandFactory, ArgumentParser
-    from csm.cli.csm_client import CsmRestClient
+    from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from csm.common.log import Log
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
 
-    CsmCli().cmdloop()
+    CsmCli(sys.argv[1:]).cmdloop()

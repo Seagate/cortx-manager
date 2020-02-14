@@ -23,7 +23,6 @@ import errno
 from threading import Thread
 from csm.common.errors import CsmError
 from csm.common.log import Log
-from csm.core.blogic.support_bundle import SupportBundle
 from csm.core.blogic.email_conf import EmailConfig
 from csm.common.conf import Conf
 from csm.core.blogic import const
@@ -93,58 +92,6 @@ class Provider(object):
         """ Process request in background and invoke callback once done """
         response = self.__process_request(request)
         callback(response)
-
-class BundleProvider(Provider):
-    """ Provider implementation for Support Bundle """
-
-    def __init__(self, cluster):
-        super(BundleProvider, self).__init__(const.SUPPORT_BUNDLE, cluster)
-        self._actions = ['create', 'delete', 'list']
-
-        components_file = const.COMPONENTS_CONF
-        self._components = yaml.load(open(components_file).read())
-        self._support_bundle = SupportBundle(cluster, self._components)
-
-    def _validate_request(self, request):
-        action = request.action()
-        if action not in self._actions:
-            raise CsmError(errno.EINVAL, 'Invalid Action %s' % request.action)
-
-        if action == 'delete' and not request.args():
-            raise CsmError(errno.EINVAL, 'insufficent argument')
-
-    def _process_request(self, request):
-        """ Processes request and returns response """
-        _output = ''
-        try:
-            action = request.action()
-
-            if action == 'create':
-                bundle_name = request.args()[0] if request.args() else None
-                _output = self._support_bundle.create(bundle_name)
-
-            elif action == 'list':
-                output = self._support_bundle.list()
-                _output = '\n'.join(output)
-
-            elif action == 'delete':
-                bundle_name = request.args()[0]
-                _output = self._support_bundle.delete(bundle_name)
-
-            response = Response(0, _output)
-
-        except CsmError as e:
-            raise
-
-        except OSError as e:
-            Log.exception(e)
-            raise CsmError(e.errno, '%s' %e)
-
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, '%s' %e)
-
-        return response
 
 class EmailProvider(Provider):
     """ Provider implementation for Email Configuration """
