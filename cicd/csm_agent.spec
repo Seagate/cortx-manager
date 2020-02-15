@@ -22,7 +22,8 @@ cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
 exit 0
 
 %post
-mkdir -p /var/csm/bundle /var/log/seagate/csm /etc/csm /etc/uds
+# Use csm_setup cli for csm directory, permission services
+mkdir -p /etc/uds
 CSM_DIR=/opt/seagate/csm
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
@@ -38,6 +39,9 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
 
+    ln -sf $CSM_DIR/lib/csm_cleanup /usr/bin/csm_cleanup
+    ln -sf $CSM_DIR/lib/csm_cleanup $CSM_DIR/bin/csm_cleanup
+
     cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
 }
 
@@ -46,17 +50,10 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_test $CSM_DIR/bin/csm_test
 }
 
-[ -f /etc/csm/csm.conf ] || \
-    cp -R $CFG_DIR/etc/csm/csm.conf.sample /etc/csm/csm.conf
-[ -f /etc/csm/cluster.conf ] || \
-	cp $CFG_DIR/etc/csm/cluster.conf.sample /etc/csm/cluster.conf
-[ -f /etc/csm/components.yaml ] || \
-    cp $CFG_DIR/etc/csm/components.yaml /etc/csm/
-[ -f /etc/csm/database.yaml ] || \
-    cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
 [ -f /etc/uds/uds_s3.toml ] || \
     cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
 
+#TODO: Move rsyslog and logrotate in csm_setup
 [ -d "/etc/rsyslog.d" ] && {
     cp -f $CFG_DIR/etc/rsyslog.d/csm_logs.conf /etc/rsyslog.d/csm_logs.conf
     cp -f $CFG_DIR/etc/rsyslog.d/support_bundle.conf /etc/rsyslog.d/support_bundle.conf
@@ -69,14 +66,22 @@ PRODUCT=<PRODUCT>
     echo "Csm logs rotation could not be configured. Check & fix it manually." >>/dev/stderr
 exit 0
 
-%postun
+%preun
 [ $1 -eq 1 ] && exit 0
+systemctl disable csm_agent
+systemctl stop csm_agent
+
+%postun
+CSM_DIR=/opt/seagate/csm
+[ $1 -eq 1 ] && exit 0
+rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
 rm -f /usr/bin/csmcli 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
-rm -rf /opt/seagate/csm/bin/ 2> /dev/null;
-rm -rf /etc/systemd/system/csm_agent.service
+rm -f /usr/bin/csm_cleanup 2> /dev/null;
+rm -rf $CSM_DIR/bin/ 2> /dev/null;
+systemctl daemon-reload
 exit 0
 
 %clean

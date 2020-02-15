@@ -22,7 +22,7 @@ import os, errno
 import logging.handlers
 import inspect
 from functools import wraps
-from csm.core.blogic import const 
+from csm.core.blogic import const
 
 class Log:
     CRITICAL = logging.CRITICAL
@@ -36,7 +36,7 @@ class Log:
 
     @staticmethod
     def init(service_name, syslog_server=None, syslog_port=None,
-                   level="INFO", log_path='/var/log/seagate/csm', backup_count=10, 
+                   level="INFO", log_path=const.CSM_LOG_PATH, backup_count=10,
                                                     file_size_in_mb=10):
         """ Initialize logging to log to syslog """
         try:
