@@ -31,10 +31,9 @@ class StatsProducer:
 
     @staticmethod
     def format(keys, value, stats_type):
-    """
-    Format the data into a stats sample so it can be sent to stats framework
-    """
-
+        """
+        Format the data into a stats sample so it can be sent to stats framework
+        """
         data = {}
         value = "{0}|{1}".format(value, stats_type)
         if not isinstance(keys, (list, tuple)):
@@ -45,10 +44,9 @@ class StatsProducer:
 
     @staticmethod
     def send_udp(stats, addr):
-    """
-    Sends stats to a given stats server
-    """
-
+        """
+        Sends stats to a given stats server
+        """
         udp_sock = socket(AF_INET, SOCK_DGRAM)
         for item in stats.items():
             print(item)

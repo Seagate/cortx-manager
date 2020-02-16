@@ -46,7 +46,7 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
 
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
        (csmcli, 'csmcli', 'csmcli'),
-       (csm_setup, 'csm_setup', 'csm_setup') )
+       (csm_setup, 'csm_setup', 'csm_setup'))
 
 # csm_agent
 csm_agent_pyz = PYZ(csm_agent.pure, csm_agent.zipped_data,

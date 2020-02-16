@@ -24,7 +24,7 @@ import sys
 import time
 import errno
 from typing import ClassVar, Dict, Any, Tuple
-
+from importlib import import_module
 import aiohttp
 
 from csm.core.agent.api import CsmApi
@@ -45,7 +45,6 @@ class CsmClient:
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
-
 
 class CsmApiClient(CsmClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
@@ -79,6 +78,21 @@ class CsmApiClient(CsmClient):
     def process_response(self, response):
         self._response = response
 
+class CsmDirectClient(CsmClient):
+    """Class Handles Direct Calls for CSM CLI"""
+    def __init__(self):
+        super(CsmDirectClient, self).__init__(None)
+
+    async def call(self, command):
+        module_obj = import_module(command.comm.get("target"))
+        if command.comm.get("class", None):
+            if command.comm.get("is_static", False):
+                target = getattr(module_obj, command.comm.get("class"))
+            else:
+                target = getattr(module_obj, command.comm.get("class"))()
+        else:
+            target = module_obj
+        return getattr(target, command.comm.get("method"))(command)
 
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
@@ -163,7 +177,6 @@ class RestRequest(Request):
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
 
-
 class LoginCommand(Command):
     """CLI Default Logout Command"""
 
@@ -205,3 +218,4 @@ class LogoutCommand(Command):
         }
         args = None
         super().__init__('session', options, args)
+

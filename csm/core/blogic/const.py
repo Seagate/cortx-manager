@@ -15,14 +15,14 @@ SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
-HCTL_COMMAND = ['hctl', 'mero', 'status']
-
+HCTL_COMMAND = ['hctl', 'status']
+NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate"]
+EXCLUDED_COMMANDS = ['csm_setup']
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8101
 CSM_AGENT_BASE_URL = "http://"
 TIMEOUT = 300
-CLI_SUPPORTED_PROTOCOLS = ["rest"]
 
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
@@ -136,6 +136,11 @@ ALERT_HEALTH = 'health'
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
 CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
+
+#Support Bundle
+CLUSTER_INFO_FILE = "/opt/seagate/eos-prvsnr/pillar/components/cluster.sls"
+SSH_USER_NAME = 'root'
+COMMANDS_FILE = "/opt/seagate/csm/schema/commands.yaml"
 
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
