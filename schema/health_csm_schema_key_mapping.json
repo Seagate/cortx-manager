@@ -1,0 +1,23 @@
+{
+    "enclosure:fru:logical_volume": "cluster.sites.site_id.rack.rack_id.nodes.node_id.encl.sw.logical_volume.resource_id",
+    "enclosure:fru:psu": "",
+    "enclosure:fru:fan": "",
+    "enclosure:fru:disk": "",
+    "enclosure:fru:controller": "",
+    "enclosure:fru:sideplane": "",
+    "enclosure:eos:logical_volume": "",
+    "node:fru:fan": "",
+    "node:fru:psu": "",
+    "node:fru:disk": "",
+    "node:interface:nw": "",
+    "node:os:system": "",
+    "node:os:cpu": "",
+    "node:os:disk_space": "",
+    "enclosure:sensor:current": "",
+    "enclosure:sensor:temperature": "",
+    "enclosure:sensor:voltage": "",
+    "node:sensor:current": "",
+    "node:sensor:temperature": "",
+    "node:sensor:voltage": "cluster.sites.site_id.rack.rack_id.nodes.node_id.node_server_1.hw.platform_sensors.voltage.resource_id"
+}
+  

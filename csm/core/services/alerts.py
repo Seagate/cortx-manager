@@ -404,6 +404,7 @@ class AlertMonitorService(Service, Observable):
         """
         try:
             self._init_health_schema()
+            self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -467,15 +468,45 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
+                self._update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
             else:
-                self._resolve_alert(message, prev_alert)
+                if self._resolve_alert(message, prev_alert):
+                    alert = AlertModel(message)
+                    alert.alert_uuid = prev_alert.alert_uuid
+                    self._update_health_schema(AlertModel(message))
         except Exception as e:
             Log.exception(e)
 
         return True
 
+    def _update_health_schema_after_init(self):
+        import asyncio
+        loop = asyncio.get_event_loop()
+        alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
+        for alert in alerts:
+            self._update_health_schema(alert)
+        print('---- Initializng health schema ----', len(alerts))
+
+    def _update_health_schema(self, alert):
+        mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
+        hw_health_key = mapping_dict[alert.module_name]
+        hw_keys = alert.sensor_info.split('_')
+        hw_health_key = hw_health_key.replace('site_id', hw_keys[0])
+        hw_health_key = hw_health_key.replace('rack_id', hw_keys[1])
+        hw_health_key = hw_health_key.replace('node_id', hw_keys[2])
+        hw_health_key = hw_health_key.replace('resource_id', hw_keys[4])
+        resource_schema_dict = self._health_schema.get(hw_health_key)
+        if(resource_schema_dict):
+            resource_schema_dict['alert_type'] = alert.state
+            resource_schema_dict['severity'] = alert.severity
+            resource_schema_dict['alert_uuid'] = alert.alert_uuid
+            resource_schema_dict['event_time'] = alert.updated_time
+            resource_schema_dict['health'] = alert.state
+            self._health_schema.set(hw_health_key, resource_schema_dict)        
+
     def _resolve_alert(self, new_alert, prev_alert):
+        alert_updated = False
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -487,6 +518,7 @@ class AlertMonitorService(Service, Observable):
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
+                alert_updated = True
             elif self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
@@ -499,7 +531,10 @@ class AlertMonitorService(Service, Observable):
                     Previous alert is a good one so updating and marking the
                     resolved status to False.
                     """
-                    self._update_alert(new_alert, prev_alert, True)        
+                    self._update_alert(new_alert, prev_alert, True)  
+                alert_updated = True
+        return alert_updated
+            
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
         """
@@ -526,7 +561,7 @@ class AlertMonitorService(Service, Observable):
         if update_resolve:
             update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
-            update_params[ALERT_RESOLVED] = prev_alert.resolved
+            update_params[const.ALERT_RESOLVED] = prev_alert.resolved
         update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
         update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())

@@ -141,6 +141,7 @@ HEALTH_SUMMARY='health-summary'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
+HEALTH_CSM_SCHEMA_KEY_MAPPING = '/opt/seagate/csm/schema/health_csm_schema_key_mapping.json'
 CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 HEALTH_SCHEMA = '/opt/seagate/csm/schema/health_schema.json'
 
