@@ -30,7 +30,7 @@ accounts_command = CommandFactory.get_command(
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
-with open(os.path.dirname(file_path + "s3_bucket_commands_output.json") as fp:
+with open(os.path.dirname(file_path + "s3_bucket_commands_output.json")) as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
 

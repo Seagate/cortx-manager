@@ -47,9 +47,10 @@ class CommandFactory(object):
         returns command representing the command line.
         """
         # Todo: Fetch Messages from Message file for localization. & implement Marshmallow for Schema Validation.
+        # Todo: Add Changes to Exclude Some Commands From Help Section.
         commands = os.listdir(const.COMMAND_DIRECTORY)
-        commands = [command.split(".json")[0] for command in commands]
-        commands.remove(const.CSM_SETUP_CMD)
+        commands = [command.split(".json")[0] for command in commands
+                    if command.split(".json")[0] not in const.EXCLUDED_COMMANDS]
         parser = ArgumentParser(description='CSM CLI command')
         subparsers = parser.add_subparsers(metavar=commands)
         if argv[0] in commands:
