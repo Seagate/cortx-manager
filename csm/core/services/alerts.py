@@ -44,6 +44,7 @@ from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
 from csm.common.payload import Payload, Json
+import asyncio
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -417,6 +418,11 @@ class AlertMonitorService(Service, Observable):
         #self._health_schema.dump()
 
     def get_health_schema(self):
+        """
+        Returns the health schema loaded in memory
+        :param None
+        :return: in memory health schema
+        """
         return self._health_schema._data
     
     def stop(self):
@@ -457,6 +463,7 @@ class AlertMonitorService(Service, Observable):
         set the resolved state to False.
         """
         """ Fetching the previous alert. """
+        """ After saving/ updating alert, update the in memory health schema """
         try:
             Log.debug("Incoming alert : [%s]" %(message))
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
@@ -480,13 +487,24 @@ class AlertMonitorService(Service, Observable):
         return True
 
     def _update_health_schema_after_init(self):
-        import asyncio
+        """
+        Updates the in memory health schema after CSM init.
+        1.) Fetches all the non-resolved alerts from DB
+        2.) Update the initialized and loaded in-memory health schema
+        :param None
+        :return: None
+        """
         loop = asyncio.get_event_loop()
         alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
         for alert in alerts:
             self._update_health_schema(alert)        
 
     def _update_health_schema(self, alert):
+        """
+        Updates the in memory health schema after receiving alert.
+        :param AlertModel
+        :return: None
+        """
         mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
         hw_health_key = mapping_dict[alert.module_name]
         hw_keys = alert.sensor_info.split('_')
