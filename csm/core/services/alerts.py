@@ -58,6 +58,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
+        self._health_schema = None     
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -150,6 +151,12 @@ class AlertRepository(IAlertStorage):
         Retrieves all the alerts
         """
         pass
+
+    def set_health_schema(self, health_schema):
+        self._health_schema = health_schema
+
+    def get_health_schema(self):
+        return self._health_schema
 
 
 class AlertsAppService(ApplicationService):
@@ -289,8 +296,8 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
 
-    async def fetch_health_summary(self, alert_monitor):
-        health_schema = alert_monitor.get_health_schema()
+    async def fetch_health_summary(self):
+        health_schema = self.repo.get_health_schema()
         health_count_map = {}
         leaf_nodes = []
         self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes)
@@ -414,10 +421,7 @@ class AlertMonitorService(Service, Observable):
 
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        #self._health_schema.dump()
-
-    def get_health_schema(self):
-        return self._health_schema._data
+        self.repo.set_health_schema(self._health_schema._data)    
     
     def stop(self):
         try:
