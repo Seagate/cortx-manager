@@ -289,6 +289,11 @@ class AlertsAppService(ApplicationService):
         return alert.to_primitive()
 
     async def fetch_health_summary(self, alert_monitor):
+        """
+        Fetch health summary from in-memory health schema
+        :param AlertMonitorService alert_monitor
+        :returns: Health Summary Json
+        """
         health_schema = alert_monitor.get_health_schema()
         health_count_map = {}
         leaf_nodes = []
@@ -307,6 +312,12 @@ class AlertsAppService(ApplicationService):
         
 
     def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes):
+        """
+        Identify non-empty leaf nodes of in-memory health schema
+        and get health summary.
+        :param AlertMonitorService alert_monitor
+        :returns: Health Summary Json
+        """
         def checkchilddict(health_schema):
             for k, v in health_schema.items():
                 if isinstance(v, dict):
