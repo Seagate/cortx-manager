@@ -91,17 +91,18 @@ class StatsPanelListView(CsmView):
             from_t = self.request.rel_url.query.get("from", None)
             to_t = self.request.rel_url.query.get("to", None)
             interval = self.request.rel_url.query.get("interval", "")
+            total_sample = self.request.rel_url.query.get("total_sample", "")
             output_format = self.request.rel_url.query.get("output_format", "gui")
             if panelsopt:
                 panels_list = self.request.rel_url.query.getall("panel", [])
                 Log.debug("Requested panels: %s", str(panels_list))
-                return await self._service.get_panels(stats_id, panels_list, from_t,
-                                                      to_t, interval, output_format)
+                return await self._service.get_panels(stats_id, panels_list, from_t, to_t,
+                                                      interval, total_sample, output_format)
             else:
                 metrics_list = self.request.rel_url.query.getall("metric", [])
                 Log.debug("Requested metrics: %s", str(metrics_list))
-                return await self._service.get_metrics(stats_id, metrics_list, from_t,
-                                                      to_t, interval, output_format)
+                return await self._service.get_metrics(stats_id, metrics_list, from_t, to_t,
+                                                       interval, total_sample, output_format)
         else:
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()

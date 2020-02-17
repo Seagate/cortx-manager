@@ -1,0 +1,35 @@
+{
+  "name": "bundle_generate",
+  "description": "Generate's Support Bundle for all the EOS System.",
+  "need_confirmation": false,
+  "args": [
+    {
+      "flag": "bundle_id",
+      "type": "str",
+      "help": "Support Bundle Id."
+    },
+    {
+      "flag": "comment",
+      "type": "str",
+      "help": "Specified Reason for Generating Support Bundle."
+    },
+    {
+      "flag": "node_name",
+      "type": "str",
+      "help": "Current Node Name."
+    },
+    {
+      "flag": "args",
+      "default": [],
+      "nargs": "?",
+      "help": "Additional arguments that can be send to csm agent"
+    }
+  ],
+  "comm": {
+    "type": "direct",
+    "target": "csm.cli.support_bundle.bundle_generate",
+    "method": "init",
+    "class": "ComponentsBundle",
+    "is_static": true
+  }
+}

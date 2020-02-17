@@ -20,6 +20,7 @@
 """
 import sys, os
 import paramiko, socket
+import ftplib
 import getpass
 import time
 import errno
@@ -75,12 +76,13 @@ class SSHChannel(Channel):
     Communication to node is taken care by this class using paramiko
     """
     def __init__(self, node, user=None, **args):
-        super(SSHChannel, self).__init__(self)
+        super(SSHChannel, self).__init__()
         self._user = user or getpass.getuser()
         self.ftp_enabled = False
         self.allow_agent = True
         self._ssh = None
         self._node = node
+        self._look_for_keys = True
         self._ssh_timeout = Conf.get(const.CSM_GLOBAL_INDEX,
                 const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
         for key, value in args.items():
@@ -94,8 +96,9 @@ class SSHChannel(Channel):
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            self._ssh.connect(self._node, username=self._user,\
-                    timeout=self._ssh_timeout, allow_agent=self.allow_agent)
+            self._ssh.connect(self._node, username=self._user,
+                    timeout=self._ssh_timeout, allow_agent=self.allow_agent,
+                    look_for_keys=self._look_for_keys)
             if not self.ftp_enabled: return 0
             self._sftp = self._ssh.open_sftp()
         except socket.error as e:
@@ -170,7 +173,7 @@ class AmqpChannel(Channel):
     Communication to node is taken care by this class using pika    
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         Channel.__init__(self)
         self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host") 
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
@@ -286,6 +289,72 @@ class AmqpChannel(Channel):
 
     def acknowledge(self, delivery_tag=None):
         self._channel.basic_ack(delivery_tag=delivery_tag)
+
+class FTPChannel(Channel):
+    """
+    Represents FTP channel for communication.
+    Communication to FTP server is taken care by this class using ftplib.
+    """
+
+    def __init__(self, host, user, password, port=21, **kwargs):
+        super(FTPChannel, self).__init__()
+        self._host = host
+        self._port = port
+        self._user = user
+        self._ftp = None
+        self._password = password
+        self._ispassive = kwargs.get("is_passive", False)
+
+    def init(self):
+        raise Exception('init not implemented in FTP Channel class')
+
+    def connect(self):
+        Log.debug('host=%s user=%s' % (self._host, self._user))
+        try:
+            self._ftp = ftplib.FTP()
+            self._ftp.connect(self._host, self._port)
+            self._ftp.login(self._user, self._password)
+            self._ftp.set_pasv(self._ispassive)
+        except ftplib.Error as e:
+            Log.error(f"Cannot Connect to the host {self._host}")
+            rc = errno.EHOSTUNREACH
+            raise CsmError(rc, f"Cannot Connect to the host {self._host}")
+        except Exception as e:
+            Log.exception(e)
+            raise CsmError(-1, f"Cannot Connect to  {self._user}@{self._host}")
+
+    def disconnect(self):
+        try:
+            self._ftp.close()
+        except Exception as e:
+            Log.exception(e)
+
+    def send(self, message):
+        raise Exception('send not implemented in FTP Channel class')
+
+    def send_file(self, local_file_path, remote_directory):
+        """Send Files to FTP server """
+        if not self._ftp:
+            raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
+        try:
+            if remote_directory:
+                self._ftp.cwd(remote_directory)
+            remote_file = os.path.join(remote_directory,
+                           local_file_path.split(os.sep)[-1])
+            with open(local_file_path, 'rb') as file_obj:
+                self._ftp.storbinary(f"STOR {remote_file}", file_obj)
+        except Exception as e:
+            Log.exception(e)
+            raise CsmError(-1, '%s' % e)
+
+    def recv(self, message=None):
+        raise Exception('recv not implemented in Channel class')
+
+    def recv_file(self, remote_file, local_file):
+        raise Exception('recv_file not implemented in Channel class')
+
+    def acknowledge(self, delivery_tag=None):
+        raise Exception('acknowledge not implemented for Channel class')
 
 class Comm(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel """

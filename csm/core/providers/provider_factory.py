@@ -17,7 +17,6 @@
 """
 
 import errno
-from csm.core.providers.providers import BundleProvider
 from csm.core.providers.providers import EmailProvider
 from csm.common.errors import CsmError
 from csm.core.blogic import const
@@ -26,7 +25,6 @@ class ProviderFactory(object):
     """ Factory for representing and instantiating providers """
 
     providers = {
-        const.SUPPORT_BUNDLE: BundleProvider,
         const.EMAIL_CONFIGURATION: EmailProvider,
     }
 

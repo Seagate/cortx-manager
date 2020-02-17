@@ -95,3 +95,14 @@ CSMCLI:
 
 #Health
     health_schema = '/opt/seagate/csm/schema/health_schema.json'
+    
+#Support Bundle Config.
+SUPPORT_BUNDLE:
+    protocol: FTP
+    base_url : "ftp://"
+    host: "127.0.0.1"
+    port: 21
+    user: ""
+    password: ""
+    remote_file: ""
+    bundle_path: "/var/seagate/eos/support_bundle"

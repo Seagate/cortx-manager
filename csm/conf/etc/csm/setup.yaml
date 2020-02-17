@@ -13,6 +13,9 @@ csm_setup:
 
     reset:
         script: /usr/bin/csm_setup
-        vars:
+        args:
             - reset --soft
             - reset --hard
+
+support_bundle:
+    - /usr/bin/csm_bundle_generate
