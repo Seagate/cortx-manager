@@ -108,8 +108,7 @@ class AlertsView(web.View):
 class HealthView(web.View):
     def __init__(self, request):
         super().__init__(request)
-        self.alerts_service = self.request.app["alerts_service"]
-        self.alerts_monitor = self.request.app["alert_monitor"]
+        self.alerts_service = self.request.app["alerts_service"]        
 
     async def get(self):
-        return await self.alerts_service.fetch_health_summary(self.alerts_monitor)
+        return await self.alerts_service.fetch_health_summary()

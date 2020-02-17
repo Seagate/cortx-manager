@@ -59,6 +59,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
+        self._health_schema = None     
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -95,6 +96,7 @@ class AlertRepository(IAlertStorage):
             severity: str = None, resolved: bool = None, acknowledged: bool =
             None, show_update_range: DateTimeRange = None):
         and_conditions = [*self._prepare_time_range(AlertModel.created_time, create_time_range)]
+
         if not show_all:
             or_conditions = []
             or_conditions.append(Compare(AlertModel.resolved, '=', False))
@@ -150,6 +152,22 @@ class AlertRepository(IAlertStorage):
         Retrieves all the alerts
         """
         pass
+
+    def set_health_schema(self, health_schema):
+        """
+        sets health schema
+        :param health_schema
+        :returns: None
+        """
+        self._health_schema = health_schema
+
+    def get_health_schema(self):
+        """
+        returns health schema
+        :param None
+        :returns: health_schema
+        """
+        return self._health_schema
 
 
 class AlertsAppService(ApplicationService):
@@ -289,8 +307,15 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
 
-    async def fetch_health_summary(self, alert_monitor):
-        health_schema = alert_monitor.get_health_schema()
+    async def fetch_health_summary(self):
+        """
+        Fetch health summary from in-memory health schema
+        1.) Gets the health schema from repo
+        2.) Counts the resources as per their health
+        :param None
+        :returns: Health Summary Json
+        """
+        health_schema = self.repo.get_health_schema()
         health_count_map = {}
         leaf_nodes = []
         self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes)
@@ -308,6 +333,20 @@ class AlertsAppService(ApplicationService):
         
 
     def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes):
+        """
+        Identify non-empty leaf nodes of in-memory health schema
+        and get health summary.
+        1.) Checks if the schema has child
+        2.) checks if the child is dict
+        3.) check if the dict is non-empty
+        4.) leaf node is identified based on
+            i.) it doesn't have child dict
+            ii.) it is not empty
+        5.) as leaf node is identified the total count of leaf nodes
+            is increased by 1
+        :param health schema, health_count_map, leaf_nodes
+        :returns: Health Summary Json
+        """
         def checkchilddict(health_schema):
             for k, v in health_schema.items():
                 if isinstance(v, dict):
@@ -415,10 +454,7 @@ class AlertMonitorService(Service, Observable):
 
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        #self._health_schema.dump()
-
-    def get_health_schema(self):
-        return self._health_schema._data
+        self.repo.set_health_schema(self._health_schema._data)    
     
     def stop(self):
         try:
@@ -568,22 +604,14 @@ class AlertMonitorService(Service, Observable):
         """
         update_params = {}
         if update_resolve:
-            update_params[const.ALERT_RESOLVED] = \
-                    alert.get(const.ALERT_RESOLVED, "")
+            update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
-            update_params[const.ALERT_RESOLVED] = prev_alert.resolved
-        update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
-        update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
+            update_params[ALERT_RESOLVED] = prev_alert.resolved
+        update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
+        update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
-        update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
-        self._update_params_cleanup(update_params)
         self._run_coroutine(self.repo.update_by_hw_id\
                 (prev_alert.sensor_info, update_params))
-
-    def _update_params_cleanup(self, update_params):
-        for key, value in update_params.items():
-            if value is None:
-                update_params[key] = ''
 
     def _is_good_alert(self, alert):
         """
