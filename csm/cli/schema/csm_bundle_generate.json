@@ -1,0 +1,29 @@
+{
+  "name": "csm_bundle_generate",
+  "description": "Csm Bundle Generate",
+  "args": [
+    {
+      "flag": "bundle_id",
+      "type": "str",
+      "help": "Specify the Bundle Id for Generating Bundle."
+    },
+    {
+      "flag": "path",
+      "type": "str",
+      "help": "Specify the Path for Generating Bundle."
+    },
+    {
+      "flag": "args",
+      "default": [],
+      "nargs": "?",
+      "help": "Additional arguments that can be send to csm agent"
+    }
+  ],
+  "comm": {
+    "type": "direct",
+    "target": "csm.cli.support_bundle.csm_bundle_generate",
+    "method": "init",
+    "class": "CSMBundle",
+    "is_static": true
+  }
+}
