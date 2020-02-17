@@ -153,9 +153,19 @@ class AlertRepository(IAlertStorage):
         pass
 
     def set_health_schema(self, health_schema):
+        """
+        sets health schema
+        :param health_schema
+        :returns: None
+        """
         self._health_schema = health_schema
 
     def get_health_schema(self):
+        """
+        returns health schema
+        :param None
+        :returns: health_schema
+        """
         return self._health_schema
 
 
@@ -299,7 +309,9 @@ class AlertsAppService(ApplicationService):
     async def fetch_health_summary(self):
         """
         Fetch health summary from in-memory health schema
-        :param AlertMonitorService alert_monitor
+        1.) Gets the health schema from repo
+        2.) Counts the resources as per their health
+        :param None
         :returns: Health Summary Json
         """
         health_schema = self.repo.get_health_schema()
@@ -323,6 +335,14 @@ class AlertsAppService(ApplicationService):
         """
         Identify non-empty leaf nodes of in-memory health schema
         and get health summary.
+        1.) Checks if the schema has child
+        2.) checks if the child is dict
+        3.) check if the dict is non-empty
+        4.) leaf node is identified based on
+            i.) it doesn't have child dict
+            ii.) it is not empty
+        5.) as leaf node is identified the total count of leaf nodes
+            is increased by 1
         :param health schema, health_count_map, leaf_nodes
         :returns: Health Summary Json
         """
