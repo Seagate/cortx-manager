@@ -22,7 +22,7 @@
       "comm": {
         "type": "direct",
         "target": "csm.cli.support_bundle.support_bundle",
-        "method": "init",
+        "method": "bundle_generate",
         "class": "SupportBundle",
         "is_static": true
       }
@@ -49,7 +49,11 @@
           "help": "Additional arguments that can be send to csm agent"
         }
       ],
-      "comm": {}
+      "comm": { "type": "direct",
+        "target": "csm.cli.support_bundle.support_bundle",
+        "method": "bundle_status",
+        "class": "SupportBundle",
+        "is_static": true}
     }
   ]
 }

@@ -126,6 +126,24 @@ class Log:
         print(f"[{caller}] {msg}")
 
     @staticmethod
+    def publish(msg, log_level="info", index="default", *args, **kwargs):
+        """
+        This Method will be a wrapper to Publish logs to elasticsearch via rsyslogs.
+
+        Changes to Be Made for using this method are as follows.
+
+        Send the Index tag for your Feature.
+        Create a syslog config file into /src/etc/rsyslog.d with the same tag.
+
+        :param msg: Message to be Given in ElasticSearch.
+        :param log_level: Level to be sent to Log.
+        :param index: Index Under which the Log needs to be sent.
+        :return:
+        """
+
+        getattr(Log.logger, log_level)(f"{index}: {msg}", *args, **kwargs)
+
+    @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=35):
         """
         A wrapper method that logs each invocation and exit of the wrapped function.

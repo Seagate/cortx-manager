@@ -207,4 +207,4 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
 
-    CsmCli(sys.argv[1:]).cmdloop()
+    CsmCli(sys.argv).cmdloop()

@@ -28,6 +28,7 @@ from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
 from csm.common.errors import CsmError
 from csm.common.conf import Conf
+from csm.common.log import Log
 
 class ComponentsBundle:
     """
@@ -104,8 +105,12 @@ class ComponentsBundle:
             Tar(tar_file_name).dump([path])
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                 "SUPPORT_BUNDLE"),tar_file_name)
+        except Exception as e:
+            Log.publish(const.SUPPORT_BUNDLE_TAG, log_level="error"
+                        f"{e}")
         finally:
             if os.path.exists(tar_file_name):
                 os.remove(tar_file_name)
             if os.path.exists(path):
                 shutil.rmtree(path)
+            Log.publish(const.SUPPORT_BUNDLE_TAG, "Support Bundle Generation Successful.")

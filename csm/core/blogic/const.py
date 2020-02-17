@@ -141,7 +141,7 @@ CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 CLUSTER_INFO_FILE = "/opt/seagate/eos-prvsnr/pillar/components/cluster.sls"
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "/opt/seagate/csm/schema/commands.yaml"
-
+SUPPORT_BUNDLE_TAG = "support_bundle"
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 

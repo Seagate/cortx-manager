@@ -20,10 +20,12 @@
 import sys
 import string
 import random
+import asyncio
 from threading import Thread
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.comm import SSHChannel
+from csm.core.services.support_bundle import SupportBundleRepository
 
 
 class SupportBundle:
@@ -57,7 +59,7 @@ class SupportBundle:
         ssh_conn_object.disconnect()
 
     @staticmethod
-    def init(command) -> sys.stdout:
+    def bundle_generate(command) -> sys.stdout:
         """
         Initializes the process for Generating Support Bundle on Each EOS Node.
         :param command: Csm_cli Command Object :type: command
@@ -87,3 +89,18 @@ class SupportBundle:
         finally:
             for each_thread in threads:
                 each_thread.join(timeout=600)
+
+    @staticmethod
+    def bundle_status(command):
+        """
+        Initializes the process for Displaying the Status for Support Bundle.
+        :param command: Csm_cli Command Object :type: command
+        :return: None
+        """
+        bundle_id = command.options.get("bundle_id")
+        from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+
+        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        db = DataBaseProvider(conf)
+        repo = SupportBundleRepository(db)
+        return repo.retrieve(bundle_id)
