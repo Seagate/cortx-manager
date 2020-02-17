@@ -484,17 +484,15 @@ class AlertMonitorService(Service, Observable):
         loop = asyncio.get_event_loop()
         alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
         for alert in alerts:
-            self._update_health_schema(alert)
-        print('---- Initializng health schema ----', len(alerts))
+            self._update_health_schema(alert)        
 
     def _update_health_schema(self, alert):
         mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
         hw_health_key = mapping_dict[alert.module_name]
         hw_keys = alert.sensor_info.split('_')
-        hw_health_key = hw_health_key.replace('site_id', hw_keys[0])
-        hw_health_key = hw_health_key.replace('rack_id', hw_keys[1])
-        hw_health_key = hw_health_key.replace('node_id', hw_keys[2])
-        hw_health_key = hw_health_key.replace('resource_id', hw_keys[4])
+        hw_health_key = hw_health_key.replace('site_id', 
+            hw_keys[0]).replace('rack_id', hw_keys[1]).replace('node_id',
+            hw_keys[2]).replace('resource_id', hw_keys[4])
         resource_schema_dict = self._health_schema.get(hw_health_key)
         if(resource_schema_dict):
             resource_schema_dict['alert_type'] = alert.state
@@ -505,7 +503,6 @@ class AlertMonitorService(Service, Observable):
             self._health_schema.set(hw_health_key, resource_schema_dict)        
 
     def _resolve_alert(self, new_alert, prev_alert):
-        alert_updated = False
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -517,8 +514,8 @@ class AlertMonitorService(Service, Observable):
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
-                alert_updated = True
-            elif self._is_bad_alert(new_alert):
+                return True
+            if self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
                 """
@@ -531,8 +528,8 @@ class AlertMonitorService(Service, Observable):
                     resolved status to False.
                     """
                     self._update_alert(new_alert, prev_alert, True)  
-                alert_updated = True
-        return alert_updated
+                return True
+        
             
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
