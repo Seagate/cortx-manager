@@ -427,6 +427,11 @@ class AlertMonitorService(Service, Observable):
         #self._health_schema.dump()
 
     def get_health_schema(self):
+        """
+        Returns the health schema loaded in memory
+        :param None
+        :return: in memory health schema
+        """
         return self._health_schema._data
     
     def stop(self):
