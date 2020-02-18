@@ -27,6 +27,8 @@ from csm.core.blogic import const
 from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.core.providers.providers import  Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
 class SupportBundle:
@@ -92,7 +94,7 @@ class SupportBundle:
                 each_thread.join(timeout=600)
 
     @staticmethod
-    def bundle_status(command):
+    async def bundle_status(command):
         """
         Initializes the process for Displaying the Status for Support Bundle.
         :param command: Csm_cli Command Object :type: command
@@ -102,4 +104,6 @@ class SupportBundle:
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)
-        return repo.retrieve(bundle_id)
+        all_nodes_status = await repo.retrieve_all(bundle_id)
+        response = {"status": [each_status.to_primitive() for each_status in all_nodes_status]}
+        return Response(output=response, rc=CSM_OPERATION_SUCESSFUL)

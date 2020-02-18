@@ -26,6 +26,7 @@ from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
 from prettytable import PrettyTable
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.csmcli import Terminal
 
 class Command:
@@ -192,7 +193,7 @@ class Output:
         """Dump the Output on CLI"""
         # Todo: Need to fetch the response messages from a file for localization.
         # TODO: Check 201 response code also for creation requests.
-        if self.rc != 200:
+        if self.rc not in  (200, CSM_OPERATION_SUCESSFUL) :
             errstr = Output.error(self.rc, kwargs.get("error"),
                                   self.output)
             err.write(f"{errstr}\n" or "")

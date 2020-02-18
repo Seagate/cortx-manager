@@ -82,7 +82,7 @@ class ComponentsBundle:
             channel_obj.send_file(file_url, protocol_details.get('remote_file'))
 
     @staticmethod
-    def init(command: List):
+    async def init(command: List):
         """
         Initializes the Process of Support Bundle Generation for Every Component.
         :param command: Csm_cli Command Object :type: command
@@ -126,6 +126,8 @@ class ComponentsBundle:
             Tar(tar_file_name).dump([path])
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 "SUPPORT_BUNDLE"), tar_file_name)
+            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
+                                         node_name, comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
@@ -134,5 +136,3 @@ class ComponentsBundle:
                 os.remove(tar_file_name)
             if os.path.exists(path):
                 shutil.rmtree(path)
-            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
-                                         node_name, comment)

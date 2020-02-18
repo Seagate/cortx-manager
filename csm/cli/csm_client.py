@@ -92,7 +92,7 @@ class CsmDirectClient(CsmClient):
                 target = getattr(module_obj, command.comm.get("class"))()
         else:
             target = module_obj
-        return getattr(target, command.comm.get("method"))(command)
+        return await getattr(target, command.comm.get("method"))(command)
 
 class CsmRestClient(CsmClient):
     """ REST API client for CSM server """
