@@ -530,26 +530,32 @@ class AlertMonitorService(Service, Observable):
         for alert in alerts:
             self._update_health_schema(alert)        
 
-    def _update_health_schema(self, alert):
+    def _update_health_schema(self, alert: AlertModel):
         """
         Updates the in memory health schema after receiving alert.
         :param AlertModel
         :return: None
         """
         mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
-        hw_health_key = mapping_dict[alert.module_name]
-        hw_keys = alert.sensor_info.split('_')
-        hw_health_key = hw_health_key.replace('site_id', 
-            hw_keys[0]).replace('rack_id', hw_keys[1]).replace('node_id',
-            hw_keys[2]).replace('resource_id', hw_keys[4])
-        resource_schema_dict = self._health_schema.get(hw_health_key)
-        if(resource_schema_dict):
-            resource_schema_dict['alert_type'] = alert.state
-            resource_schema_dict['severity'] = alert.severity
-            resource_schema_dict['alert_uuid'] = alert.alert_uuid
-            resource_schema_dict['event_time'] = alert.updated_time
-            resource_schema_dict['health'] = alert.state
-            self._health_schema.set(hw_health_key, resource_schema_dict)        
+        hw_health_key = mapping_dict[alert.get(const.ALERT_MODULE_NAME)]
+        extended_info = eval(alert.get(const.ALERT_EXTENDED_INFO))
+        if (extended_info and extended_info.get(const.ALERT_INFO)):
+            resource_id = alert.get(const.ALERT_MODULE_NAME) + '-' \
+                + extended_info.get(const.ALERT_INFO).get(const.ALERT_RESOURCE_ID)
+            hw_health_key = hw_health_key.replace(const.ALERT_SITE_ID, 
+                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_SITE_ID))).replace(const.ALERT_RACK_ID, 
+                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_RACK_ID))).replace(const.ALERT_NODE_ID,
+                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_NODE_ID))).replace(const.ALERT_CLUSTER_ID,
+                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_CLUSTER_ID))).replace(const.ALERT_RESOURCE_ID, 
+                resource_id)
+            resource_schema_dict = self._health_schema.get(hw_health_key)
+            if(resource_schema_dict):
+                resource_schema_dict['alert_type'] = alert.state
+                resource_schema_dict['severity'] = alert.severity
+                resource_schema_dict['alert_uuid'] = alert.alert_uuid
+                resource_schema_dict['event_time'] = alert.updated_time
+                resource_schema_dict['health'] = alert.state
+                self._health_schema.set(hw_health_key, resource_schema_dict)        
 
     def _resolve_alert(self, new_alert, prev_alert):
         if not self._is_duplicate_alert(new_alert, prev_alert):

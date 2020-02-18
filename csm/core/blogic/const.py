@@ -85,7 +85,7 @@ NON_ROOT_USER_PASS = 'csm'
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
 GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
-BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'degraded']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
@@ -131,6 +131,12 @@ ALERT_VOLUME='volume'
 ALERT_SIDEPLANE='sideplane'
 ALERT_FAN='fan'
 ALERT_HEALTH = 'health'
+ALERT_INFO='info'
+ALERT_SITE_ID='site_id'
+ALERT_CLUSTER_ID='cluster_id'
+ALERT_RACK_ID='rack_id'
+ALERT_NODE_ID='node_id'
+ALERT_RESOURCE_ID='resource_id'
 
 #Health
 HEALTH='health'
