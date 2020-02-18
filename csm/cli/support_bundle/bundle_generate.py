@@ -30,10 +30,31 @@ from csm.common.errors import CsmError
 from csm.common.conf import Conf
 from csm.common.log import Log
 
+ERROR= "error"
+INFO = "info"
+
 class ComponentsBundle:
     """
     This class handles generation for support bundles for different components.
     """
+    @staticmethod
+    def publish_log(msg, level, bundle_id, node_name, comment):
+        """
+        Format and Publish Log to ElasticSearch via Rsyslog.
+        :param msg: Message to Be added :type: str.
+        :param bundle_id: Unique Bundle Id for the Bundle :type:str.
+        :param level: Level for the Log. :type: Log.ERROR/LOG.INFO.
+        :param node_name: Name of the Node where this is running :type:str.
+        :param comment: Comment Added by user to Generate the Bundle :type:str.
+        :return: None.
+        """
+        result = "Success"
+        if level == 'error':
+            result = "Error"
+        Log.publish(index=const.SUPPORT_BUNDLE_TAG,
+                    log_level=level,
+                     args=(bundle_id, node_name, comment, result, msg))
+
     @staticmethod
     def exc_components_cmd(commands: List, bundle_id: str, path: str):
         """
@@ -67,14 +88,15 @@ class ComponentsBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
+        bundle_id = command.options.get("bundle_id", "")
+        node_name = command.options.get("node_name", "")
+        comment = command.options.get("comment", "")
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
-            CsmError(rc=errno.ENOENT,  message_id=_("No Such File {}"),
-                     message_args=(const.COMMANDS_FILE))
-        bundle_id = command.options.get("bundle_id")
-        node_name = command.options.get("node_name")
+            ComponentsBundle.publish_log(f"No Such File {const.COMMANDS_FILE}",
+                                         ERROR, bundle_id, node_name, comment)
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                         "SUPPORT_BUNDLE.bundle_path"),bundle_id)
+                                     "SUPPORT_BUNDLE.bundle_path"), bundle_id)
         if os.path.isdir(path):
             os.rmdir(path)
         os.makedirs(path)
@@ -93,8 +115,7 @@ class ComponentsBundle:
                 threads.append(thread_obj)
 
         tar_file_name = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                         "SUPPORT_BUNDLE.bundle_path"),
-                                     f"{bundle_id}_{node_name}.tar.gz")
+                "SUPPORT_BUNDLE.bundle_path"), f"{bundle_id}_{node_name}.tar.gz")
 
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
@@ -104,13 +125,14 @@ class ComponentsBundle:
         try:
             Tar(tar_file_name).dump([path])
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                "SUPPORT_BUNDLE"),tar_file_name)
+                                                "SUPPORT_BUNDLE"), tar_file_name)
         except Exception as e:
-            Log.publish(const.SUPPORT_BUNDLE_TAG, log_level="error"
-                        f"{e}")
+            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
+                                         comment)
         finally:
             if os.path.exists(tar_file_name):
                 os.remove(tar_file_name)
             if os.path.exists(path):
                 shutil.rmtree(path)
-            Log.publish(const.SUPPORT_BUNDLE_TAG, "Support Bundle Generation Successful.")
+            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
+                                         node_name, comment)

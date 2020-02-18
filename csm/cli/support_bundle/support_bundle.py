@@ -26,6 +26,7 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 
 
 class SupportBundle:
@@ -98,8 +99,6 @@ class SupportBundle:
         :return: None
         """
         bundle_id = command.options.get("bundle_id")
-        from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)

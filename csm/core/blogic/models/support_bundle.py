@@ -2,13 +2,11 @@
 
 """
  ****************************************************************************
- Filename:          api_client.py
- Description:       Infrastructure for invoking business logic locally or
-                    remotely or various available channels like REST.
+ Filename:          support_bundle.py
+ Description:       Model File for Support Bundle Model.
 
- Creation Date:     31/05/2018
- Author:            Malhar Vora
-                    Ujjwal Lanjewar
+ Creation Date:     17/02/2020
+ Author:            Prathamesh Rodi
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - : 2015/01/14 $ Seagate Technology, LLC.
