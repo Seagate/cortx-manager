@@ -104,11 +104,3 @@ class AlertsView(web.View):
         alert_id = self.request.match_info["alert_id"]
         return await self.alerts_service.fetch_alert(alert_id)
 
-@CsmView._app_routes.view("/api/v1/health")
-class HealthView(web.View):
-    def __init__(self, request):
-        super().__init__(request)
-        self.alerts_service = self.request.app["alerts_service"]        
-
-    async def get(self):
-        return await self.alerts_service.fetch_health_summary()
