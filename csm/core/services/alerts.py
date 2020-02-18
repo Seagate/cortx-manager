@@ -472,7 +472,10 @@ class AlertMonitorService(Service, Observable):
     def _update_health_schema(self, alert: AlertModel):
         """
         Updates the in memory health schema after receiving alert.
-        :param AlertModel
+        The health schema will be updated with key generated using
+        health_csm_schema_key_mapping json and getting site_id, cluster_id,
+        node_id, rack_id, resource_type and resource_id from alert.
+        :param AlertModel: alert
         :return: None
         """
         mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
