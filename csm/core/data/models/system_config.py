@@ -33,8 +33,11 @@ class Ipv4Nodes(Model):
     Ipv4 nodes common fields in management network and data network settings.
     """
     id = IntType()
+    name = StringType()
     ip_address = StringType()
     hostname = StringType()
+    gateway = StringType()
+    netmask = StringType()
 
 class Ipv6Nodes(Model):
     """
@@ -51,10 +54,6 @@ class Ipv4Base(Model):
     Class hold common fields in ipv4 for management network and data network settings.
     """
     is_dhcp = BooleanType()
-    vip_address = StringType()
-    vip_hostname = StringType()
-    gateway = StringType()
-    netmask = StringType()
     nodes = ListType(ModelType(Ipv4Nodes))
 
 class ManagementNetworkIpv6(Model):
@@ -96,7 +95,10 @@ class DnsNetworkSettingsNodes(Model):
     Dns nodes nested model used to form dns network settings schema.
     """
     id = IntType()
+    name = StringType()
     hostname = StringType()
+    dns_servers = ListType(StringType)
+    search_domain = ListType(StringType)
 
 class DnsNetworkSettings(Model):
     """
@@ -104,9 +106,6 @@ class DnsNetworkSettings(Model):
     Model is used to form system config settings schema
     """
     is_external_load_balancer = BooleanType()
-    hostname = StringType()
-    dns_servers = ListType(StringType)
-    search_domain = ListType(StringType)
     nodes = ListType(ModelType(DnsNetworkSettingsNodes))
 
 class Ntp(Model):
