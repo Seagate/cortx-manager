@@ -152,15 +152,8 @@ class AlertRepository(IAlertStorage):
         """
         pass
 
-    def set_health_schema(self, health_schema):
-        """
-        sets health schema
-        :param health_schema
-        :returns: None
-        """
-        self._health_schema = health_schema
-
-    def get_health_schema(self):
+    @property
+    def health_schema(self):
         """
         returns health schema
         :param None
@@ -168,6 +161,14 @@ class AlertRepository(IAlertStorage):
         """
         return self._health_schema
 
+    @health_schema.setter
+    def health_schema(self, health_schema):
+        """
+        sets health schema
+        :param health_schema
+        :returns: None
+        """
+        self._health_schema = health_schema    
 
 class AlertsAppService(ApplicationService):
     """
@@ -314,7 +315,7 @@ class AlertsAppService(ApplicationService):
         :param None
         :returns: Health Summary Json
         """
-        health_schema = self.repo.get_health_schema()
+        health_schema = self.repo.health_schema
         health_count_map = {}
         leaf_nodes = []
         self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes)
@@ -452,7 +453,7 @@ class AlertMonitorService(Service, Observable):
 
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        self.repo.set_health_schema(self._health_schema._data)    
+        self.repo.health_schema = self._health_schema._data
     
     def stop(self):
         try:

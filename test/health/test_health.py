@@ -40,7 +40,7 @@ def init(args):
     """ test initialization """
     repo = AlertRepository(None)
     health_schema = Payload(Json(Const.HEALTH_SCHEMA))
-    repo.set_health_schema(health_schema._data)    
+    repo.health_schema = health_schema._data
     service = AlertsAppService(repo)
     loop = asyncio.get_event_loop()
     args["service"] = service
