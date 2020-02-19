@@ -204,13 +204,13 @@ class Output:
             out.write(f"{output}\n")
 
     @staticmethod
-    def dump_success(output: dict, success: str, **kwargs):
+    def dump_success(output: Any, **kwargs):
         """
-        :param output:
-        :param success:
+        Accepts String as Output and Returns the Same.
+        :param output: Output String
         :return:
         """
-        return str(success)
+        return str(kwargs.get("success", output))
 
     @staticmethod
     def error(rc: int, message: str, stacktrace) -> str:

@@ -21,6 +21,7 @@ import sys
 import string
 import random
 import asyncio
+import errno
 from threading import Thread
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -29,6 +30,9 @@ from csm.core.services.support_bundle import SupportBundleRepository
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.providers.providers import  Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.common.errors import CsmError
+from csm.core.providers.providers import Response
+from csm.common import errors
 
 
 class SupportBundle:
@@ -55,14 +59,18 @@ class SupportBundle:
         :param node_name: Name of the NODE in EOS Term :type: str
         :return:
         """
-        ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME)
-        ssh_conn_object.connect()
-        bundle_generate = f"csmcli bundle_generate {bundle_id} {comment} {node_name}"
-        rc, output = ssh_conn_object.execute(bundle_generate)
-        ssh_conn_object.disconnect()
+        try:
+            ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME)
+            ssh_conn_object.connect()
+            bundle_generate = (f"csmcli bundle_generate {bundle_id} {comment} "
+                               f"{node_name}")
+            rc, output = ssh_conn_object.execute(bundle_generate)
+            ssh_conn_object.disconnect()
+        except CsmError:
+            sys.stderr.write(f"Could Not Connect to {node_name}\n")
 
     @staticmethod
-    def bundle_generate(command) -> sys.stdout:
+    async def bundle_generate(command) -> sys.stdout:
         """
         Initializes the process for Generating Support Bundle on Each EOS Node.
         :param command: Csm_cli Command Object :type: command
@@ -72,7 +80,10 @@ class SupportBundle:
         bundle_id = f"SB-{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
         cluster_info = Yaml(const.CLUSTER_INFO_FILE).load().get("cluster", {})
-        active_nodes = cluster_info.get("node_list")
+        active_nodes = cluster_info.get("node_list", [])
+        if not active_nodes:
+            raise CsmError(rc=errno.ENOENT, message_id="{0} not Found",
+                           message_args=[const.CLUSTER_INFO_FILE])
         threads = []
         try:
             for each_node in active_nodes:
@@ -85,8 +96,8 @@ class SupportBundle:
                 threads.append(thread_obj)
 
             output_str = (f"Support Bundle Generation Started.\n"
-                          f"Please use the below ID for Checking the status of Support"
-                          f" Bundle. \n {bundle_id}")
+                          f"Please use the below ID for Checking the status of "
+                          f"Support Bundle. \n {bundle_id}\n")
 
             sys.stdout.write(output_str)
         finally:
@@ -105,5 +116,6 @@ class SupportBundle:
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)
         all_nodes_status = await repo.retrieve_all(bundle_id)
-        response = {"status": [each_status.to_primitive() for each_status in all_nodes_status]}
-        return Response(output=response, rc=CSM_OPERATION_SUCESSFUL)
+        response = {"status": [each_status.to_primitive()
+                               for each_status in all_nodes_status]}
+        return Response(output=response, rc=errors.CSM_OPERATION_SUCESSFUL)

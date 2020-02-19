@@ -137,11 +137,9 @@ class ComponentsBundle:
             each_thread.join(timeout=1800)
         # Generate TAR FILE & Send the File to Given FTP location.
         try:
-            Tar(tar_file_name).dump([path, summary_file_path])
+            Tar(tar_file_name).dump([path])
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 "SUPPORT_BUNDLE"), tar_file_name)
-            shutil.rmtree(path)
-            os.remove(summary_file_path)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
