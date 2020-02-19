@@ -35,6 +35,7 @@ class Const:
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
     MOCK_PATH = '/opt/seagate/csm/test/test_data/'
+    HEALTH_SCHEMA = '/opt/seagate/csm/schema/health_schema.json'
 
 class TestFailed(Exception):
     def __init__(self, desc):
