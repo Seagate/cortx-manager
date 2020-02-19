@@ -76,7 +76,10 @@ class CsmCli(Cmd):
         super(CsmCli, self).__init__(stdout=sys.stdout)
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
-        self.args = args
+        if len(args) > 1:
+            self.args = args[1:]
+        else:
+            self.args = "help"
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
@@ -105,7 +108,6 @@ class CsmCli(Cmd):
 
     def check_auth_required(self):
         if self.args[0] not in const.NO_AUTH_COMMANDS:
-            self.args = "help"
             self.login()
         else:
             self.default(self.args)
@@ -210,4 +212,4 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
 
-    CsmCli(sys.argv[1:]).cmdloop()
+    CsmCli(sys.argv).cmdloop()

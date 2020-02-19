@@ -64,7 +64,7 @@ class EmailSenderQueue:
                 await self.queue.join()
 
             self.worker.cancel()
-            self.worker = Non
+            self.worker = None
 
     @Log.trace_method(Log.DEBUG)
     def start_worker_sync(self):
