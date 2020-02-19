@@ -95,7 +95,6 @@ CSMCLI:
 
 #Support Bundle Config.
 SUPPORT_BUNDLE:
-    protocol: FTP
     base_url : "ftp://"
     host: "127.0.0.1"
     port: 21
