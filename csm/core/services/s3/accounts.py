@@ -192,6 +192,9 @@ class S3AccountService(ApplicationService):
                             s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
+            if result.error_code == IamErrors.NoSuchEntity:
+                raise CsmNotFoundError("The entity is not found",
+                                       S3_ACCOUNT_NOT_FOUND, account_name)
             self._raise_remote_error(result)
         return {}
 
