@@ -39,3 +39,8 @@ models:
     config:
         consul_db:
             collection: "onboarding_config"
+-   import_path: "csm.core.blogic.models.support_bundle.SupportBundleModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "supportbundle"

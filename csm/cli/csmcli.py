@@ -147,7 +147,10 @@ class CsmCli(Cmd):
 
     def process_direct_command(self, command):
         obj = CsmDirectClient()
-        self.loop.run_until_complete(obj.call(command))
+        response = self.loop.run_until_complete(obj.call(command))
+        if response:
+            command.process_response(out=sys.stdout, err=sys.stderr,
+                                 response=response)
 
     def process_rest_command(self, command):
         response, _ = self.loop.run_until_complete(self.rest_client.call(command))
@@ -179,6 +182,8 @@ class CsmCli(Cmd):
             Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
             self.do_exit()
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             Log.critical(f"{self.username}:{e}")
             self.do_exit("Some Error Occurred.\n Please try Re-Login")
 

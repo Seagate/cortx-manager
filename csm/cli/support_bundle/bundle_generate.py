@@ -21,11 +21,11 @@
 import os
 import threading
 import shutil
-import errno
 from typing import Dict, List
 from csm.common import comm
 from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
+from datetime import datetime
 from csm.common.errors import CsmError
 from csm.common.conf import Conf
 from csm.common.log import Log
@@ -68,21 +68,26 @@ class ComponentsBundle:
             os.system(f"{command} {bundle_id} {path}")
 
     @staticmethod
-    def send_file(protocol_details: Dict, file_url: str):
+    def send_file(protocol_details: Dict, file_path: str):
         """
         Method to send the tar files ove FTP Location.
         :param protocol_details: Dictionary of FTP Details. :type:dict
-        :param file_url: Name of tar file to be sent. :type:str
+        :param file_path: Path of tar file to be sent. :type:str
         :return:
         """
-        channel = f"{protocol_details.get('protocol')}Channel"
+        url = protocol_details.get('url')
+        protocol = url.split("://")[0]
+        channel = f"{protocol.upper()}Channel"
         if hasattr(comm, channel):
             channel_obj = getattr(comm, channel)(**protocol_details)
             channel_obj.connect()
-            channel_obj.send_file(file_url, protocol_details.get('remote_file'))
+            channel_obj.send_file(file_path, protocol_details.get('remote_file'))
+            channel_obj.disconnect()
+        else:
+            raise Exception("Invalid Url.")
 
     @staticmethod
-    def init(command: List):
+    async def init(command: List):
         """
         Initializes the Process of Support Bundle Generation for Every Component.
         :param command: Csm_cli Command Object :type: command
@@ -91,16 +96,18 @@ class ComponentsBundle:
         bundle_id = command.options.get("bundle_id", "")
         node_name = command.options.get("node_name", "")
         comment = command.options.get("comment", "")
+        #Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
             ComponentsBundle.publish_log(f"No Such File {const.COMMANDS_FILE}",
                                          ERROR, bundle_id, node_name, comment)
+            return None
+        #Path Location for creating Support Bundle.
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                                     "SUPPORT_BUNDLE.bundle_path"), bundle_id)
+                                     "SUPPORT_BUNDLE.bundle_path"))
         if os.path.isdir(path):
-            os.rmdir(path)
+            shutil.rmtree(path)
         os.makedirs(path)
-
         # Start Execution for each Component Command.
         threads = []
         for each_component in support_bundle_config.get("COMMANDS"):
@@ -113,26 +120,38 @@ class ComponentsBundle:
                     components_commands, bundle_id, path))
                 thread_obj.start()
                 threads.append(thread_obj)
-
-        tar_file_name = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                "SUPPORT_BUNDLE.bundle_path"), f"{bundle_id}_{node_name}.tar.gz")
-
+        directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                  "SUPPORT_BUNDLE.bundle_path")
+        tar_file_name = os.path.join(directory_path,
+                                     f"{bundle_id}_{node_name}.tar.gz")
+        #Create Summary File for Tar.
+        summary_file_path = os.path.join(directory_path, "summary.yaml")
+        summary_data = {
+            "Bundle Id": bundle_id,
+            "Comment": comment,
+            "Time Stamp": str(datetime.isoformat(datetime.now()))
+        }
+        Yaml(summary_file_path).dump(summary_data)
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
             each_thread.join(timeout=1800)
-
         # Generate TAR FILE & Send the File to Given FTP location.
         try:
-            Tar(tar_file_name).dump([path])
+            Tar(tar_file_name).dump([path, summary_file_path])
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 "SUPPORT_BUNDLE"), tar_file_name)
+            shutil.rmtree(path)
+            os.remove(summary_file_path)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
-        finally:
-            if os.path.exists(tar_file_name):
-                os.remove(tar_file_name)
-            if os.path.exists(path):
-                shutil.rmtree(path)
-            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
-                                         node_name, comment)
+            return None
+        #Create Softlink for Generated TAR.
+        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.symlink_path")
+        if os.path.exists(symlink_path):
+            shutil.rmtree(symlink_path)
+
+        os.symlink(tar_file_name, os.path.join(symlink_path,
+                                               f"SupportBundle.{bundle_id}"))
+        ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
+                                     node_name, comment)
