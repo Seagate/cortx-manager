@@ -82,10 +82,11 @@ S3:
 #Logging
 Log:
     log_level: "INFO"   
-    #log_server: "localhost"
-    #log_port: 514
+    #syslog_server: "localhost"
+    #syslog_port: 514
     total_files: 10
     file_size: 10
+    log_path: "/var/log/seagate/csm/"
 
 #CSMCLI
 CSMCLI:
