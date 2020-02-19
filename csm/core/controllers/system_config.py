@@ -33,9 +33,12 @@ class Ipv4NodesSchema(Schema):
     Ipv4 nodes schema class for common fields in management network and
     data network settings.
     """
-    id = fields.Int(allow_none=True)
-    ip_address = fields.Str(validate=Ipv4(), allow_none=True)
-    hostname = fields.Str(allow_none=True)
+    id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    ip_address = fields.Str(validate=Ipv4(), required=True)
+    hostname = fields.Str(required=True)
+    gateway = fields.Str(validate=Ipv4(), required=True)
+    netmask = fields.Str(validate=Ipv4(), required=True)
 
 class Ipv6NodesSchema(Schema):
     """
@@ -54,10 +57,6 @@ class Ipv4BaseSchema(Schema):
     data network settings.
     """
     is_dhcp = fields.Boolean(allow_none=True)
-    vip_address = fields.Str(validate=Ipv4(), allow_none=True)
-    vip_hostname = fields.Str(allow_none=True)
-    netmask = fields.Str(validate=Ipv4(), allow_none=True)
-    gateway = fields.Str(validate=Ipv4(), allow_none=True)
     nodes = fields.List(fields.Nested(Ipv4NodesSchema, allow_none=True,
                                       unknown='EXCLUDE'))
 
@@ -106,8 +105,11 @@ class DnsNetworkSettingsNodes(Schema):
     Dns network setting nodes is nested schema class used to form dns network
     settings schema.
     """
-    id = fields.Int(allow_none=True)
-    hostname = fields.Str(allow_none=True)
+    id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    hostname = fields.Str(required=True)
+    dns_servers = fields.List(fields.Str(required=True))
+    search_domain = fields.List(fields.Str(required=True))
 
 class DnsNetworkSettingsSchema(Schema):
     """
@@ -116,9 +118,6 @@ class DnsNetworkSettingsSchema(Schema):
     Dns network settings schema class is used to form system config settings schema
     """
     is_external_load_balancer = fields.Boolean(allow_none=True)
-    hostname = fields.Str(allow_none=True)
-    dns_servers = fields.List(fields.Str(), allow_none=True)
-    search_domain = fields.List(fields.Str(), allow_none=True)
     nodes = fields.List(fields.Nested(DnsNetworkSettingsNodes,
                                       allow_none=True, unknown='EXCLUDE'))
 
@@ -126,8 +125,8 @@ class NtpSchema(Schema):
     """
     Ntp is nested schema class used to form date time settings schema.
     """
-    ntp_server_address = fields.Str(allow_none=True)
-    ntp_timezone_offset = fields.Str(allow_none=True)
+    ntp_server_address = fields.Str(required=True)
+    ntp_timezone_offset = fields.Str(required=True)
 
 class ManualDateTimeSchema(Schema):
     """
