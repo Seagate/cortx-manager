@@ -1,25 +1,13 @@
 {
     "management_network_settings": {
-		"ipv4": {
+		"ipv4": null,
+		"ipv6": {
 			"is_dhcp": true,
-			"vip_address": "127.0.0.1",
-			"vip_hostname": "127.0.0.1",
-			"netmask": "255.255.255.0",
-			"gateway": "255.255.255.0",
-			"nodes": [
-				{
-					"id": 0,
-					"ip_address": "127.0.0.1",
-					"hostname": "127.0.0.1"
-				},
-				{
-					"id": 1,
-					"ip_address": "127.0.0.1",
-					"hostname": "127.0.0.1"
-				}
-			]
-		},
-		"ipv6": null
+			"ip_address": ["10.235.218.212", "10.235.218.212"],
+			"gateway": "255.255.240.0",
+			"address_label": "vlan",
+			"type": "DHCP6"
+		}
 	},
     "data_network_settings": null,
     "dns_network_settings": null,

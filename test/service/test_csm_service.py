@@ -33,7 +33,7 @@ def init(args):
     pass
 
 def process_request(url):
-    return requests.get(url)
+    return requests.get(url, verify=False)
 
 #################
 # Tests
