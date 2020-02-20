@@ -40,7 +40,6 @@ class CsmAgent:
         usl_service = UslService(s3_plugin.S3Plugin(), db)
 
         # Alert configuration
-
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
@@ -55,6 +54,10 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
         
+        #Heath configuration
+        health_service = HealthAppService(alerts_repository)
+        CsmRestApi._app["health_service"] = health_service
+
         # Network file manager registration
         CsmRestApi._app["file_service"] = NetworkFileManager()
 
@@ -152,6 +155,7 @@ if __name__ == '__main__':
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                             AlertMonitorService, AlertRepository
+        from csm.core.services.health import HealthAppService
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService

@@ -22,11 +22,11 @@ import re
 from aiohttp import web
 from csm.core.controllers.view import CsmView
 
-@CsmView._app_routes.view("/api/v1/health")
+@CsmView._app_routes.view("/api/v1/system/health")
 class HealthView(web.View):
     def __init__(self, request):
         super().__init__(request)
-        self.alerts_service = self.request.app["alerts_service"]        
+        self.health_service = self.request.app["health_service"]        
 
     async def get(self):
-        return await self.alerts_service.fetch_health_summary()
+        return await self.health_service.fetch_health_summary()
