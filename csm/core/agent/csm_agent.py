@@ -7,7 +7,6 @@ import json
 from aiohttp import web
 from importlib import import_module
 import pathlib
-from csm.common.runtime import Options
 
 
 # TODO: Implement proper plugin factory design
@@ -26,11 +25,12 @@ class CsmAgent:
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm_agent",
-               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
-                   syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
-                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
-                       level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
+               syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
+               backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
+               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -141,8 +141,9 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    Options.parse(sys.argv)
     from csm.common.log import Log
+    from csm.common.runtime import Options
+    Options.parse(sys.argv)
     try:
         from csm.common.conf import Conf, ConfSection, DebugConf
         from csm.common.payload import Yaml

@@ -58,6 +58,16 @@ PRODUCT=<PRODUCT>
     cp -R $CFG_DIR/etc/csm/database.yaml.sample /etc/csm/database.yaml
 [ -f /etc/uds/uds_s3.toml ] || \
     cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
+
+[ -d "/etc/rsyslog.d" ] && {
+    cp -f $CFG_DIR/etc/rsyslog.d/csm_logs.conf /etc/rsyslog.d/csm_logs.conf
+    systemctl restart rsyslog
+} || \
+    echo "Csm logs could not be configured. Check & fix it manually." >>/dev/stderr
+[ -d "/etc/logrotate.d" ] && {
+    cp -f $CFG_DIR/etc/logrotate.d/csm_agent_log.conf /etc/logrotate.d/csm_agent_log.conf
+} || \
+    echo "Csm logs rotation could not be configured. Check & fix it manually." >>/dev/stderr
 exit 0
 
 %postun
