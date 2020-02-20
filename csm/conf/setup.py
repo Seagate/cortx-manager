@@ -63,6 +63,8 @@ class Setup:
         os.system("mkdir -p /var/seagate/eos")
         os.system("setfacl -R -m u:csm:rwx /var/seagate/eos")
         os.system("mkdir -p /etc/csm /var/log/seagate/csm")
+        os.system(f"mkdir -p {const.CSM_TMP_FILE_CACHE_DIR}")
+        os.system(f"chown -R {self._user}:{self._user} {const.CSM_TMP_FILE_CACHE_DIR}")
         os.system(f"chown -R {self._user}:{self._user} /etc/csm")
         os.system(f"chown -R {self._user}:{self._user} /var/log/seagate/csm")
         os.system("systemctl daemon-reload")

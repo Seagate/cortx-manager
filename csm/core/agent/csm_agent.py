@@ -2,6 +2,7 @@
 
 import sys
 import os
+import glob
 import traceback
 import json
 from aiohttp import web
@@ -39,8 +40,12 @@ class CsmAgent:
         s3_plugin = import_plugin_module('s3')
         usl_service = UslService(s3_plugin.S3Plugin(), db)
 
-        # Alert configuration
+        # Clearing cached files
+        cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
+        for f in cached_files:
+            os.remove(f)
 
+        # Alert configuration
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
@@ -57,7 +62,7 @@ class CsmAgent:
         CsmRestApi._app["alerts_service"] = alerts_service
         
         # Network file manager registration
-        CsmRestApi._app["file_service"] = NetworkFileManager()
+        CsmRestApi._app["download_service"] = DownloadFileManager()
 
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
@@ -170,7 +175,7 @@ if __name__ == '__main__':
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
-        from csm.core.services.file import NetworkFileManager
+        from csm.core.services.file_transfer import DownloadFileManager
 
         CsmAgent.init()
         CsmAgent.run()

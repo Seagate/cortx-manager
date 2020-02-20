@@ -43,7 +43,7 @@ from csm.common.errors import CsmError, CsmNotFoundError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
-from csm.core.services.file import FileEntity
+from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
@@ -213,7 +213,7 @@ class CsmRestApi(CsmApi, ABC):
         try:
             resp = await handler(request)
 
-            if isinstance(resp, FileEntity):
+            if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
                 file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
                 return file_resp
