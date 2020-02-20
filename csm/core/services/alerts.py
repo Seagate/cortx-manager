@@ -37,6 +37,7 @@ from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel
+from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
 from csm.common import queries
 from schematics import Model
@@ -179,13 +180,6 @@ class AlertsAppService(ApplicationService):
                 "The alert is both resolved and acknowledged, it cannot be modified",
                 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
 
-        if "comment" in fields:
-            alert.comment = fields["comment"]
-            max_len = const.ALERT_MAX_COMMENT_LENGTH
-            if len(alert.comment) > max_len:
-                raise InvalidRequest("Alert size exceeds the maximum length of {}".format(max_len),
-                    ALERTS_MSG_TOO_LONG_COMMENT, {"max_length": max_len})
-
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
                 raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
@@ -193,6 +187,60 @@ class AlertsAppService(ApplicationService):
 
         await self.repo.update(alert)
         return alert.to_primitive()
+
+    @Log.trace_method(Log.DEBUG)
+    async def add_comment_to_alert(self, alert_uuid: str, user_id: str, comment_text: str):
+        """
+        Add comment to alert having alert_uuid. The comment will be saved along with alert_uuid
+        :param str alert_uuid: id of alert to which comment has to be added.
+        :param str user_id: user_id of the user who commented.
+        :param str comment_text: actual comment text
+        :returns: Comment object or None
+        """
+        alert = await self.repo.retrieve(alert_uuid)
+        if not alert:
+            raise CsmNotFoundError(f"Alert not found for id {alert_uuid}", ALERTS_MSG_NOT_FOUND)
+        if alert["comments"] is None:
+            alert["comments"] = []
+        alert_comment = self.build_alert_comment_model(str(len(alert["comments"]) + 1), comment_text, user_id)
+        alert["comments"].append(alert_comment)
+        await self.repo.update(alert)
+
+        return alert_comment.to_primitive()
+
+    @Log.trace_method(Log.DEBUG)
+    def build_alert_comment_model(self, comment_id: str, comment_text: str, created_by: str):
+        """
+        Build and return CommentModel object.
+        :param str comment_id: id of alert comment.
+        :param str created_by: user_id of the user who commented.
+        :param str comment_text: actual comment text
+        :returns: Comment object or None
+        """
+        comment = CommentModel()
+        comment.comment_id = comment_id
+        comment.comment_text = comment_text
+        comment.created_by = created_by
+        comment.created_time = datetime.now(timezone.utc)
+        return comment
+
+    @Log.trace_method(Log.DEBUG)
+    async def fetch_comments_for_alert(self, alert_uuid: str):
+        """
+        Fetch all the comments of the alert with alert_uuid
+        :param str alert_uuid: id of the alert whose comments are to be fetched.
+        :returns: Comment object or None
+        """
+        alert = await self.repo.retrieve(alert_uuid)
+        if not alert:
+            raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
+
+        if alert.comments is None:
+            alert.comments = []
+
+        return {
+            "comments": [comment.to_primitive() for comment in alert.comments]
+        }
 
     async def update_all_alerts(self, fields: dict):
         """
