@@ -66,14 +66,26 @@ class AlertsListView(web.View):
 
     async def get(self):
         """Calling Alerts Get Method"""
-        alerts_qp = AlertsQueryParameter()
+        import time
+        import asyncio
+        import concurrent
+        import aiohttp
+        res = {}
         try:
-            alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid Parameter for alerts", str(val_err))
-
-        return await self.alerts_service.fetch_all_alerts(**alert_data)
+            print("Before sleep")
+            await asyncio.sleep(20)
+            alerts_qp = AlertsQueryParameter()
+            try:
+                alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+                res = await self.alerts_service.fetch_all_alerts(**alert_data)
+            except ValidationError as val_err:
+                raise InvalidRequest(
+                    "Invalid Parameter for alerts", str(val_err))
+        except (concurrent.futures._base.CancelledError, asyncio.CancelledError, aiohttp.ClientConnectionError) as e:
+            print("Cancelled job")
+            print(str(e))
+            # raise
+        return res
 
     async def patch(self):
         try:
