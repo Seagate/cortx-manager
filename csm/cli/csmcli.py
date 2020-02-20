@@ -92,7 +92,7 @@ class CsmCli(Cmd):
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Log.init("csm",
+        Log.init("csm_cli",
          syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
          syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
          backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
