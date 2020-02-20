@@ -55,7 +55,7 @@ class IamUsersService(ApplicationService):
 
         return s3_client_object
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_user(self, s3_session: Dict, user_name: str, password: str,
                           path_prefix: str = "/", require_reset=False) -> [
         Response, Dict]:
@@ -73,6 +73,7 @@ class IamUsersService(ApplicationService):
         path_prefix = path_prefix.strip()
         if path_prefix and path_prefix[-1] != "/":
             path_prefix = f"{path_prefix}/"
+        Log.debug(f"Create IAM User service: \nusername:{user_name}\nPath_prefix:{path_prefix}")
         user_creation_resp = await s3_client.create_user(user_name, path_prefix)
         if hasattr(user_creation_resp, "error_code"):
             return await  self._handle_error(user_creation_resp)
@@ -100,6 +101,7 @@ class IamUsersService(ApplicationService):
         if path_prefix and path_prefix[-1] != "/":
             path_prefix = f"{path_prefix}/"
         # Fetch IAM Users
+        Log.debug(f"List IAM User service: Path_prefix:{path_prefix}")
         users_list_response = await s3_client.list_users(path_prefix)
         if hasattr(users_list_response, "error_code"):
             return await  self._handle_error(users_list_response)
@@ -120,6 +122,7 @@ class IamUsersService(ApplicationService):
         """
         s3_client = await  self.fetch_iam_client(s3_session)
         # Delete Given Iam User
+        Log.debug(f"Delete IAM User service: Username:{user_name}")
         user_delete_response = await  s3_client.delete_user(user_name)
         if hasattr(user_delete_response, "error_code"):
             return await self._handle_error(user_delete_response)
@@ -145,5 +148,6 @@ class IamUsersService(ApplicationService):
             IamErrors.NoSuchEntity.value : 404,
             IamErrors.ExpiredCredential.value : 401
         }
+        # TODO: Response class to be replaced by CsmError type for raising errors
         return Response(rc=status_code_mapping.get(iam_error_obj.error_code.value, 500),
                     output=iam_error_obj.error_message)

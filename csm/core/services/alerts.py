@@ -71,7 +71,7 @@ class AlertRepository(IAlertStorage):
     async def retrieve_by_hw(self, hw_id) -> AlertModel:
         filter = And(Compare(AlertModel.sensor_info, '=',
                         str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))        
+                        False), Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
@@ -137,12 +137,13 @@ class AlertRepository(IAlertStorage):
 
         if sort:
             query = query.order_by(getattr(AlertModel, sort.field), sort.order)
-
+        Log.debug(f"Alerts service Retrive by range: {query_filter}")
         return await self.db(AlertModel).get(query)
 
     async def count_by_range(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None,
             acknowledged: bool = None, show_update_range: DateTimeRange = None) -> int:
+        Log.debug(f"Alerts service count by range: {create_time_range}")
         return await self.db(AlertModel).count(
             self._prepare_filters(create_time_range, show_all, severity, resolved,
                 acknowledged, show_update_range))
@@ -188,6 +189,7 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
+        Log.debug(f"Alerts update service. alert_id:{alert_id}, fields:{fields}")
 
         alert = await self.repo.retrieve(alert_id)
         if not alert:
@@ -212,7 +214,7 @@ class AlertsAppService(ApplicationService):
 
         await self.repo.update(alert)
         return alert.to_primitive()
-    
+
     async def update_all_alerts(self, fields: dict):
         """
         Update the Data of Specific Alerts
@@ -220,11 +222,12 @@ class AlertsAppService(ApplicationService):
                 It will acknowledge all the alerts of the specified ids.
         :return:
         """
+        Log.debug(f"Update all alerts service. fields:{fields}")
         if not isinstance(fields, list):
             raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
-        
+
         alerts = []
-        
+
         for alert_id in fields:
             alert = await self.repo.retrieve(alert_id)
             if not alert:
@@ -233,7 +236,7 @@ class AlertsAppService(ApplicationService):
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
             await self.repo.update(alert)
             alerts.append(alert.to_primitive())
-        
+
         return alerts
 
     async def fetch_all_alerts(self, duration, direction, sort_by, severity: Optional[str] = None,
@@ -254,6 +257,8 @@ class AlertsAppService(ApplicationService):
         :return: :type:list
         """
         time_range = None
+        Log.debug(f"Fetch all alerts service. duration:{duration}, direction:{direction}, "
+                  f"sort_by:{sort_by}, severity:{severity}, offset:{offset}")
         if duration:  # Filter
             # TODO: time format can generally be API-dependent. Better pass here an
             # already parsed TimeDelta object.
@@ -302,6 +307,8 @@ class AlertsAppService(ApplicationService):
         :param str alert_id: A unique identifier of the requried alert
         :returns: Alert object or None
         """
+        Log.debug(f"Fetch alerts service alert_id:{alert_id}" )
+        # This method is for debugging purposes only
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
@@ -380,6 +387,7 @@ class AlertMonitorService(Service, Observable):
         """
         This method creats and starts an alert monitor thread
         """
+        Log.info("Start Alert monitor thread")
         try:
             self._init_health_schema()
             self._update_health_schema_after_init()
@@ -389,7 +397,7 @@ class AlertMonitorService(Service, Observable):
                 self._monitor_thread.start()
                 self._thread_started = True
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in starting alert monitor thread: {e}")
 
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
@@ -397,12 +405,13 @@ class AlertMonitorService(Service, Observable):
     
     def stop(self):
         try:
+            Log.info("Stop Alert monitor thread")
             self._alert_plugin.stop()
             self._monitor_thread.join()
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in stoping alert monitor thread: {e}")
 
     def _consume(self, message):
         """
@@ -435,7 +444,7 @@ class AlertMonitorService(Service, Observable):
         """ Fetching the previous alert. """
         """ After saving/ updating alert, update the in memory health schema """
         try:
-            Log.debug("Incoming alert : [%s]" %(message))
+            Log.debug(f"Incoming alert: {message}")
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
@@ -452,7 +461,7 @@ class AlertMonitorService(Service, Observable):
                     alert.alert_uuid = prev_alert.alert_uuid
                     self._update_health_schema(AlertModel(message))
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in consuming alert: {e}")
 
         return True
 
@@ -594,6 +603,6 @@ class AlertMonitorService(Service, Observable):
             Try to resolve the alert if the previous alert is bad and
             the current alert is good.
             """
-            prev_alert.resolved = True 
+            prev_alert.resolved = True
             self._update_alert(alert, prev_alert)
 
