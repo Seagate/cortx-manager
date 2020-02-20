@@ -52,22 +52,12 @@ class CsmHotfixUploadView(CsmView):
     POST REST implementation for uploading hotfix packages
     """
     async def post(self):
-        # We use FileCache context manager if we expect a file in the incoming request
         with FileCache() as cache:
-
-            # parse_multipart_request parse multipart request and returns dict 
-            # which maps multipart fields names to TextFieldSchema or FileFieldSchema
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
-
-            # validating parsed request
             multipart_data = CsmFileUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
 
-            # This is simple example of how we need save file
-            package_name = multipart_data['package']['filename']
             package_ref = multipart_data['package']['file_ref']
-
-            info = await self._service.upload_package(package_ref)
-            return info
+            return await self._service.upload_package(package_ref)
 
 @CsmView._app_routes.view("/api/v1/upgrade/hotfix/start")
 class CsmHotfixStartView(CsmView):
