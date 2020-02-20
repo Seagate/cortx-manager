@@ -20,6 +20,8 @@
 
 import inspect
 
+from csm.common.log import Log
+
 CSM_OPERATION_SUCESSFUL     = 0x0000
 CSM_ERR_INVALID_VALUE       = 0x1001
 CSM_ERR_INTERRUPTED         = 0x1002
@@ -42,6 +44,11 @@ class CsmError(Exception):
         self._desc = desc or self._desc
         self._message_id = message_id
         self._message_args = message_args
+        # TODO: Log.error message will be changed when desc is removed and
+        #  improved exception handling is implemented.
+        # TODO: self._message_id will be formatted with self._message_args
+        # Common error logging for all kind of CsmError
+        Log.error(f"{self._rc}:{self._desc}:{self._message_id}:{self._message_args}")
 
     def message_id(self):
         return self._message_id

@@ -27,6 +27,7 @@ from csm.core.blogic import const
 from csm.core.data.access import Query
 from csm.core.data.access.filters import Compare
 from csm.core.data.db.db_provider import (DataBaseProvider)
+from csm.common.log import Log
 from csm.core.data.models.system_config import SystemConfigSettings, EmailConfig
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
@@ -81,7 +82,7 @@ class SystemConfigManager:
         if sort:
             query = query.order_by(getattr(SystemConfigSettings, sort.field),
                                    sort.order)
-
+        Log.debug(f"Get system config list query:{query}")
         return await self.storage(SystemConfigSettings).get(query)
 
     async def count(self):
@@ -93,6 +94,7 @@ class SystemConfigManager:
         :param system_config: System config settings model instance
         """
         # TODO: validate the model
+        Log.debug("Save system config")
         await self.storage(SystemConfigSettings).store(system_config)
 
     async def delete(self, config_id: str) -> None:
@@ -100,6 +102,7 @@ class SystemConfigManager:
         Delete system config based on id
         :param config_id: System config identifier
         """
+        Log.debug(f"Delete system config. Config_id:{config_id}")
         await self.storage(SystemConfigSettings).delete(
             Compare(SystemConfigSettings.config_id, \
                     '=', config_id))
