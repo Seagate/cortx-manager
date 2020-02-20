@@ -189,24 +189,3 @@ CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/opt/seagate/csm/templates/smtp_server_test_email.html'
-
-
-WINDOWS_PATH = "H:\\727892\\Documents\\"
-INVENTORY_FILE = WINDOWS_PATH+"cluster.conf" #'/etc/csm/cluster.conf'
-CSM_CONF = WINDOWS_PATH+"csm.conf" #'/etc/csm/csm.conf'
-CSM_CLUSTER_CONF = WINDOWS_PATH+"cluster.conf" #'/etc/csm/cluster.conf'
-COMPONENTS_CONF = WINDOWS_PATH+"components.yaml" #'/etc/csm/components.yaml'
-COMMAND_DIRECTORY = ".\\schema"
-DATABASE_CONF = WINDOWS_PATH + "database.yaml"
-USL_S3_CONF = WINDOWS_PATH + "uds_s3.toml"
-AGGREGATION_RULE = WINDOWS_PATH + "csm\\schema\\stats_aggregation_rule.json"
-SUPPORT_BUNDLE_FILE = WINDOWS_PATH + "csm\\csm\\cli\\schema\\support_bundle.json"
-CSM_SETUP_FILE = WINDOWS_PATH + "csm\\csm\\cli\\schema\\csm_setup.json"
-CLUSTER_INFO_FILE = WINDOWS_PATH + "cluster.sls"
-BUNDLE_GENERATE_FILE = WINDOWS_PATH + "csm\\csm\\cli\\schema\\bundle_generate.json"
-CSM_BUNDLE_GENERATE_FILE = WINDOWS_PATH + "csm\\csm\\cli\\schema\\csm_bundle_generate.json"
-CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = WINDOWS_PATH + "csm\\templates\\smtp_server_test_email.html"
-CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = WINDOWS_PATH + "csm\\templates\\alert_notification_email.html"
-ROLES_MANAGEMENT = WINDOWS_PATH + "csm\\schema\\roles.json"
-SSH_USER_NAME = '727892'
-COMMANDS_FILE = WINDOWS_PATH + "csm\\schema\\commands.yaml"

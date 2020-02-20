@@ -21,7 +21,7 @@
   ],
   "comm": {
     "type": "direct",
-    "target": "csm.cli.support_bundle.csm_bundle_generate",
+    "target": "csm.cli.support_bundle",
     "method": "init",
     "class": "CSMBundle",
     "is_static": true

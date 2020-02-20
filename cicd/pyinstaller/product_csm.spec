@@ -18,6 +18,7 @@ product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
 product_path = '<CSM_PATH>' + '/' + product
 product_module_list = import_list(csm_path, product_path)
+product_module_list.append("csm.cli.support_bundle")
 
 block_cipher = None
 
@@ -39,7 +40,7 @@ csmcli = Analysis([csm_path + '/cli/csmcli.py'],
              pathex=[csm_path + '/dist/csm'],
              binaries=[],
              datas=[],
-             hiddenimports=[product_module_list, csm.cli.support_bundle],
+             hiddenimports=product_module_list,
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
