@@ -68,7 +68,8 @@ class CsmUsersListView(CsmView):
     """
     @CsmAuth.permissions({R.USER: {A.LIST}})
     async def get(self):
-        Log.debug("Handling csm users fetch request")
+        Log.debug(f"Handling csm users fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         csm_schema = CsmGetUsersSchema()
         try:
             request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
@@ -83,17 +84,16 @@ class CsmUsersListView(CsmView):
     """
     @CsmAuth.permissions({R.USER: {A.CREATE}})
     async def post(self):
-        Log.debug("Handling users post request")
+        Log.debug(f"Handling users post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
 
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
-
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.create_user(**user_body)
 
 @CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
@@ -109,9 +109,9 @@ class CsmUsersView(CsmView):
     """
     @CsmAuth.permissions({R.USER: {A.LIST}})
     async def get(self):
-        Log.debug("Handling get csm account request")
+        Log.debug(f"Handling get csm account request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
-
         return await self._service.get_user(user_id)
 
     """
@@ -119,9 +119,9 @@ class CsmUsersView(CsmView):
     """
     @CsmAuth.permissions({R.USER: {A.DELETE}})
     async def delete(self):
-        Log.debug("Handling delete csm account request")
+        Log.debug(f"Handling delete csm account request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
-
         return await self._service.delete_user(user_id)
 
     """
@@ -129,19 +129,18 @@ class CsmUsersView(CsmView):
     """
     @CsmAuth.permissions({R.USER: {A.UPDATE}})
     async def put(self):
-        Log.debug("Handling users put request")
+        Log.debug(f"Handling users put request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
 
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), partial=True,
                 unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
-
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.update_user(user_id, user_body)
 
 
@@ -165,7 +164,7 @@ class AdminUserView(CsmView):
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
@@ -173,7 +172,6 @@ class AdminUserView(CsmView):
         status = self.STATUS_CREATED
         response = await self._service.create_root_user(**user_body)
         if not response:
-            Log.error("Root user already exists")
             status = self.STATUS_CONFLICT
             response = {
                 'message_id': 'root_already_exists',

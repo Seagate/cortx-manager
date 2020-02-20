@@ -16,7 +16,7 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
+from csm.common.log import Log
 from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
@@ -90,6 +90,8 @@ class IamUserListView(CsmView):
         """
         Fetch list of IAM User's
         """
+        Log.debug(f"Handling list IAM USER get request. "
+                  f"user_id: {self.request.session.credentials.user_id}")
         schema = IamUserListSchema()
         try:
             data = schema.load(dict(self.request.query), unknown='EXCLUDE')
@@ -104,6 +106,8 @@ class IamUserListView(CsmView):
         Create's new IAM User.
         """
         schema = IamUserCreateSchema()
+        Log.debug(f"Handling create IAM USER post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
             request_data = schema.load(body, unknown='EXCLUDE')
@@ -131,6 +135,8 @@ class IamUserView(CsmView):
         """
         Delete IAM user
         """
+        Log.debug(f"Handling  IAM USER delete request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         user_name = self.request.match_info["user_name"]
         if user_name == "root":
             raise InvalidRequest("Root IAM user cannot be deleted.")

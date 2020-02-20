@@ -272,7 +272,7 @@ class LoginService:
         return None
 
     async def logout(self, session_id):
-        Log.debug(f'Logging out session {session_id}')
+        Log.debug(f'Logging out session {session_id}.')
         await self._session_manager.delete(session_id)
 
     async def auth_session(self, session_id: Session.Id) -> Session:
@@ -303,7 +303,10 @@ class LoginService:
         session_data = await self._session_manager.get(session_id)
         if session_data:
             user_id = session_data.credentials.user_id
+            Log.debug(f"Delete all active sessions for Userid: {user_id}")
             session_data = await self._session_manager.get_all()
+            Log.debug(f"Delete all active sessions once account is deleted. "
+                      f"Userid: {user_id}")
             for each_session in session_data:
                 if each_session.credentials.user_id == user_id:
                     await self._session_manager.delete(each_session.session_id)
