@@ -142,7 +142,7 @@ class Log:
         :return:
         """
         separator = kwargs.get("separator", "|")
-        getattr(Log.logger, log_level)(f"{index}:{separator}{separator.join(args)}")
+        getattr(Log.logger, log_level)(f"{index}{separator}{separator.join(args)}")
 
     @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=80):
