@@ -65,10 +65,12 @@ class UserManager:
         :param user_id: User identifier
         :returns: User object in case of success. None otherwise.
         """
+        Log.debug(f"Get user service user id:{user_id}")
         query = Query().filter_by(Compare(User.user_id, '=', user_id))
         return next(iter(await self.storage(User).get(query)), None)
 
     async def delete(self, user_id: str) -> None:
+        Log.debug(f"Delete user service user id:{user_id}")
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
     async def get_list(self, offset: int = None, limit: int = None,
@@ -90,7 +92,7 @@ class UserManager:
 
         if sort:
             query = query.order_by(getattr(User, sort.field), sort.order)
-
+        Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
 
     async def count(self):
@@ -143,6 +145,7 @@ class CsmUserService(ApplicationService):
         :returns: A dictionary describing the newly created user.
         In case of error, an exception is raised.
         """
+        Log.debug(f"Create user service. user_id: {user_id}")
         user = User.instantiate_csm_user(user_id, password)
         user.update(kwargs)
         await self.user_mgr.create(user)
@@ -156,6 +159,7 @@ class CsmUserService(ApplicationService):
         :returns: A dictionary describing the newly created user.
         In case of error, an exception is raised.
         """
+        Log.debug(f"Create root user service user_id: {user_id}")
         if await self.user_mgr.count() != 0:
             # The root user is allowed to be created only once during preboarding.
             # Non-zero user count means that such user was already created.
@@ -175,6 +179,7 @@ class CsmUserService(ApplicationService):
         """
         Fetches a single user.
         """
+        Log.debug(f"Get user service user id: {user_id}")
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
@@ -201,16 +206,18 @@ class CsmUserService(ApplicationService):
 
     async def delete_user(self, user_id: str):
         """ User deletion """
+        Log.debug(f"Delete user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
-            raise CsmPermissionDenied("Permission Denied. %s User can not be deleted." % 
-                user_id, USERS_MSG_PERMISSION_DENIED)
+            raise CsmPermissionDenied("Can't delete user %s. No such user" %
+                                      user_id, USERS_MSG_USER_NOT_FOUND)
         await self.user_mgr.delete(user_id)
         return {}
 
     async def update_user(self, user_id: str, new_values: dict) -> dict:
+        Log.debug(f"Update user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)

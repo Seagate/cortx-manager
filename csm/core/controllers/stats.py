@@ -35,7 +35,8 @@ class StatsView(CsmView):
     """
     async def get(self):
         """Calling Stats Get Method"""
-        Log.debug("Handling stats request")
+        Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
+                  f"user_id: {self.request.session.credentials.user_id}")
         getopt = self.request.rel_url.query.get("get", None)
         panel = self.request.match_info["panel"]
         if getopt == "label":
@@ -83,7 +84,8 @@ class StatsPanelListView(CsmView):
     """
     async def get(self):
         """Calling Stats Get Method"""
-        Log.debug("Handling stats combined request")
+        Log.debug(f"Handling Stats Get Panel List request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         panelsopt = self.request.rel_url.query.get("panel", None)   # check if statistics requested
         metricsopt = self.request.rel_url.query.get("metric", None)  # check if metric requested
         if panelsopt or metricsopt:

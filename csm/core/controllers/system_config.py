@@ -221,8 +221,8 @@ class SystemConfigListView(CsmView):
     """
 
     async def get(self):
-        Log.debug("Handling system config fetch request")
-
+        Log.debug(f"Handling system config fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_system_config_list()
 
     """
@@ -230,16 +230,16 @@ class SystemConfigListView(CsmView):
     """
 
     async def post(self):
-        Log.debug("Handling system config post request")
+        Log.debug(f"Handling system config post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = SystemConfigSettingsSchema()
             config_data = schema.load(await self.request.json(),
                                       unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.create_system_config(str(uuid.uuid4()),
                                                         **config_data)
 
@@ -255,7 +255,8 @@ class SystemConfigView(CsmView):
     """
 
     async def get(self):
-        Log.debug("Handling system config fetch request")
+        Log.debug(f"Handling system config fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
 
         id = self.request.match_info["config_id"]
         return await self._service.get_system_config_by_id(id)
@@ -265,18 +266,18 @@ class SystemConfigView(CsmView):
     """
 
     async def put(self):
-        Log.debug("Handling system config put request")
+        Log.debug(f"Handling system config put request."
+                  f" user_id: {self.request.session.credentials.user_id}")
 
         try:
             id = self.request.match_info["config_id"]
             schema = SystemConfigSettingsSchema()
             config_data = schema.load(await self.request.json(),
                                       unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.update_system_config(id, config_data)
 
 @CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
@@ -299,6 +300,5 @@ class TestEmailView(CsmView):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.test_email_config(config_data)

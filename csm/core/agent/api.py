@@ -158,19 +158,20 @@ class CsmRestApi(CsmApi, ABC):
     def _unauthorised(cls, reason):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
-
+    
     @staticmethod
     def http_request_to_log_string(request):
+        remote_ip = request.remote
         url = request.path
         method = request.method
         query = dict(request.query) if not request.has_body else {}
-        body = {}
-        if request.has_body:
-            body = json.loads(request.content._buffer[0].decode('utf-8'))
+        body = {} if not request.has_body \
+            else json.loads(request.content._buffer[0].decode('utf-8'))
+        if body and isinstance(body, dict):
             for key in body.keys():
                 if "password" in key:
                     body[key] = '*****'
-        return f"Url:{url}\n Method:{method}\n Query:{query}\n Body:{body}"
+        return f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query} Body:{body}"
 
     @classmethod
     @web.middleware
@@ -224,9 +225,12 @@ class CsmRestApi(CsmApi, ABC):
             if isinstance(resp, Response):
                 resp_obj = {'message': resp.output()}
                 status = resp.rc()
+                if not 200 <= status <= 299:
+                    Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            Log.info(f'Response: {resp_obj} \n Status: {status}')
+            Log.info(f'Username: {request.session.credentials.user_id} '
+                     f'Request: {request} Response_Status: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except web.HTTPException as e:

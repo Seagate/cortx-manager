@@ -34,7 +34,6 @@ class StorageCapacityView(CsmView):
 
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-
         return await self._service.get_capacity_details()
 
 
