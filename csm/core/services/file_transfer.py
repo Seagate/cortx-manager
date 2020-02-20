@@ -85,13 +85,16 @@ class FileRef():
         self.file_uuid = file_uuid
         self.cache_dir = const.CSM_TMP_FILE_CACHE_DIR
 
-    def save_file(self, dir_to_save, filename, overwrite=False):
+    def get_file_path(self) -> str:
         path_to_cached_file = os.path.join(self.cache_dir, self.file_uuid)
         if not os.path.exists(path_to_cached_file):
             raise CsmInternalError(
                 'File was removed from cache. Ensure that you are calling ' + \
                 'save_file in scope of FileCache context manager.')
+        return path_to_cached_file
 
+    def save_file(self, dir_to_save, filename, overwrite=False):
+        path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
         if os.path.exists(path_to_file_to_save) and not overwrite:
             raise CsmInternalError(

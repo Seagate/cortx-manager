@@ -104,3 +104,6 @@ SUPPORT_BUNDLE:
     password: ""
     remote_file: ""
     bundle_path: "/var/seagate/eos/support_bundle"
+
+UPDATE:
+    firmware_store_path: "/tmp"

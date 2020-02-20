@@ -106,6 +106,8 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
+        CsmRestApi._app["hotfix_service"] = HotfixApplicationService(
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
 
     @staticmethod
     def _daemonize():
@@ -168,6 +170,7 @@ if __name__ == '__main__':
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
+        from csm.core.services.upgrade import HotfixApplicationService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.services.onboarding import OnboardingConfigService
