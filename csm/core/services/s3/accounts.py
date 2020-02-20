@@ -46,6 +46,7 @@ class S3AccountService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def _create_udx_bucket(self, account):
+        Log.debug("Creating UDX bucket for s3 account. account_name: {account.account_name}")
         # TODO: probably, it would be better to move this function to USL
         bucket_name = account.account_name + '-udx'
         bucket_tags = {
@@ -62,7 +63,7 @@ class S3AccountService(ApplicationService):
         except:
             raise CsmInternalError("UDX bucket creation failed")
 
-    @Log.trace_method(Log.INFO)
+    @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_account(self, account_name: str, account_email: str, password: str):
         """
         S3 account creation
@@ -71,6 +72,7 @@ class S3AccountService(ApplicationService):
         :param password:
         :returns: a dictionary describing the newly created S3 account. Exception otherwise.
         """
+        Log.debug(f"Creating s3 account. account_name: {account_name}")
         account = await self._s3_root_client.create_account(account_name, account_email)
         if isinstance(account, IamError):
             self._raise_remote_error(account)
@@ -80,6 +82,7 @@ class S3AccountService(ApplicationService):
 
         try:
             await self._create_udx_bucket(account)
+            Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
                 self._raise_remote_error(account)
@@ -106,6 +109,8 @@ class S3AccountService(ApplicationService):
                   that can be used for fetching subsequent batches
         """
         # TODO: right now the remote server does not seem to support pagination
+        Log.debug(f"Listing accounts. continue_marker:{continue_marker}, "
+                  f"page_limit:{page_limit}")
         accounts = await self._s3_root_client.list_accounts(max_items=page_limit,
             marker=continue_marker)
         if isinstance(accounts, IamError):
@@ -121,11 +126,11 @@ class S3AccountService(ApplicationService):
         resp = {"s3_accounts": accounts_list}
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
-
+        Log.debug(f"List account response: {resp}")
         return resp
 
-    @Log.trace_method(Log.INFO)
-    async def patch_account(self, s3_session: S3Credentials, account_name: str, 
+    @Log.trace_method(Log.DEBUG, exclude_args=['password'])
+    async def patch_account(self, s3_session: S3Credentials, account_name: str,
                             password: str = None, reset_access_key: bool = False) -> dict:
         """
         Patching fields of an existing account.
@@ -137,6 +142,8 @@ class S3AccountService(ApplicationService):
         :returns: a dictionary describing the updated account.
                   In case of an error, an exception is raised.
         """
+        Log.debug(f"Patch accounts. account_name:{account_name}, "
+                  f"reset_access_key:{reset_access_key}")
         client = self._s3_root_client
         response = {
             "account_name": account_name
@@ -169,16 +176,16 @@ class S3AccountService(ApplicationService):
 
             if isinstance(new_profile, IamError):
                 # Profile already exists, we need to set new passord
+                Log.debug(f"Update Login Profile for account {account_name}")
                 new_profile = await client.update_account_login_profile(account_name,
                     password)
 
             if isinstance(new_profile, IamError):
                 # Update failed
                 self._raise_remote_error(new_profile)
-
         return response
 
-    @Log.trace_method(Log.INFO)
+    @Log.trace_method(Log.DEBUG)
     async def delete_account(self, s3_session: S3Credentials, account_name: str):
         """
         S3 account deletion
@@ -186,12 +193,15 @@ class S3AccountService(ApplicationService):
         :param account_name: Account Name to Delete Account.
         :returns: empty dictionary in case of success. Otherwise throws an exception.
         """
-
+        Log.debug(f"Delete account service. account_name:{account_name}")
         account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
                             s3_session.secret_key, self._get_iam_connection_config(),
                             s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
+            if result.error_code == IamErrors.NoSuchEntity:
+                raise CsmNotFoundError("The entity is not found",
+                                       S3_ACCOUNT_NOT_FOUND, account_name)
             self._raise_remote_error(result)
         return {}
 
@@ -205,6 +215,7 @@ class S3AccountService(ApplicationService):
 
     def _get_iam_connection_config(self):
         # TODO: share the code below with other s3 services once they all get merged
+        Log.debug("Get IAM connection config")
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
         s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
@@ -213,12 +224,14 @@ class S3AccountService(ApplicationService):
         return s3_connection_config
 
     def _get_s3_connection_config(self):
+        Log.debug("Get s3 connection config")
         # TODO: share the code below with other s3 services once they all get merged
         s3_connection_config = self._get_iam_connection_config()
         s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.s3_port")
         return s3_connection_config
 
     def _get_root_client(self):
+        Log.debug("Get root client")
         config = self._get_iam_connection_config()
         ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
         #TODO

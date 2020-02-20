@@ -197,3 +197,7 @@ CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/opt/seagate/csm/templates/smtp_server_test_email.html'
+
+# Syslog constants
+LOG_LEVEL="INFO"
+

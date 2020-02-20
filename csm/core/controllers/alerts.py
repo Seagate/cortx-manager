@@ -19,6 +19,7 @@
 
 import json
 import re
+from csm.common.log import Log
 from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.services.alerts import AlertsAppService
@@ -66,19 +67,22 @@ class AlertsListView(web.View):
 
     async def get(self):
         """Calling Alerts Get Method"""
+        Log.debug(f"Handling list alerts get request."
+                  f"user_id: {self.request.session.credentials.user_id}")
         alerts_qp = AlertsQueryParameter()
         try:
             alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
                 "Invalid Parameter for alerts", str(val_err))
-
         return await self.alerts_service.fetch_all_alerts(**alert_data)
 
     async def patch(self):
+        Log.debug(f"Handling update all alerts patch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
 
         return await self.alerts_service.update_all_alerts(body)
@@ -93,9 +97,11 @@ class AlertsView(web.View):
     async def patch(self):        
         """ Update Alert """    
         alert_id = self.request.match_info["alert_id"]
+        Log.debug(f"Handling update alerts patch request for id: {alert_id}."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
 

@@ -47,6 +47,8 @@ class Boto3Error:
 
     def __init__(self, error: ClientError):
         self._error = error
+        Log.error(f"Boto3Error:{self._error['Error']['Code']} "
+                  f"Message:{self._error.response['Error']['Message']}")
 
     @property
     def error_code(self):
@@ -112,8 +114,8 @@ class S3BucketService(ApplicationService):
             bucket = await s3_client.create_bucket(bucket_name)
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
-            Log.debug(f'{e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
 
         return bucket  # Can be None
@@ -134,13 +136,12 @@ class S3BucketService(ApplicationService):
             bucket_list = await s3_client.get_all_buckets()
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
-            Log.error(f'Error occured while listing buckets: {e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
 
         # TODO: create model for response
         bucket_list = [{"name": bucket.name} for bucket in bucket_list]
-        Log.debug(f"List of buckets: {bucket_list}")
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)
@@ -157,13 +158,12 @@ class S3BucketService(ApplicationService):
         Log.debug(f"Requested to delete bucket by name = {bucket_name}")
 
         s3_client = await self.get_s3_client(s3_session)  # TODO: s3_client can't be returned
-
         try:
             # NOTE: returns None if deletion is successful
             await s3_client.delete_bucket(bucket_name)
         except ClientError as e:
-            Log.error(f'Error in deleting bucket: {e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
 
     @Log.trace_method(Log.INFO)
@@ -183,8 +183,8 @@ class S3BucketService(ApplicationService):
         try:
             bucket_policy = await s3_client.get_bucket_policy(bucket_name)
         except ClientError as e:
-            Log.debug(f'{e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
         return bucket_policy
 
@@ -206,8 +206,8 @@ class S3BucketService(ApplicationService):
         try:
             bucket_policy = await s3_client.put_bucket_policy(bucket_name, policy)
         except ClientError as e:
-            Log.debug(f'{e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
         return {"message": "Bucket Policy Updated Successfully."}
 
@@ -229,8 +229,8 @@ class S3BucketService(ApplicationService):
         try:
             bucket_policy = await s3_client.delete_bucket_policy(bucket_name)
         except ClientError as e:
-            Log.debug(f'{e}')
             error = Boto3Error(e)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
         return {"message": "Bucket Policy Deleted Successfully."}
 

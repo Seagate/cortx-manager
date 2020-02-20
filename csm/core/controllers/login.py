@@ -33,7 +33,8 @@ class LoginView(CsmView):
     async def post(self):
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError:
+            Log.debug(f"Handling Login Post request. Username: {body.get('username')}")
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body is missing")
 
         username = body.get('username', None)
@@ -42,6 +43,7 @@ class LoginView(CsmView):
             raise InvalidRequest(message_args="Username or password is missing")
 
         session_id = await self.request.app.login_service.login(username, password)
+        Log.debug(f"Obtained session id for {username}")
         if not session_id:
             raise InvalidRequest(message_args="Invalid username or password")
 
@@ -54,6 +56,8 @@ class LoginView(CsmView):
 class LogoutView(CsmView):
 
     async def post(self):
+        Log.debug(f"Handling Logout Post request. "
+                  f"user_id: {self.request.session.credentials.user_id}")
         """ We use POST method here instead of GET
         to avoid browser prefetching this URL """
         session_id = self.request.session.session_id
