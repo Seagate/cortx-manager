@@ -145,13 +145,13 @@ class Log:
         getattr(Log.logger, log_level)(f"{index}:{separator}{separator.join(args)}")
 
     @staticmethod
-    def trace_method(level, exclude_args=[], truncate_at=35):
+    def trace_method(level, exclude_args=[], truncate_at=80):
         """
         A wrapper method that logs each invocation and exit of the wrapped function.
         :param: level - Level of logging (e.g. Logger.DEBUG)
         :param: exclude_args - Array of arguments to exclude from the logging
                 (it can be useful e.g. for hiding passwords from the log file)
-        :param: truncate_at - Allows to truncate the printed argument values. 35 by default.
+        :param: truncate_at - Allows to truncate the printed argument values. 80 by default.
 
         Example usage:
         @Logger.trace_method(Logger.DEBUG)

@@ -28,6 +28,7 @@ from csm.common.conf import Conf
 from csm.core.blogic import const
 import getpass
 
+
 class Request(object):
     """ Represents a request to be processed by Provider """
 
@@ -45,8 +46,11 @@ class Request(object):
     def options(self):
         return self.options
 
+
 class Response(object):
     """ Represents a response after processing of a request """
+    # TODO:Wherever this class is used for raising the error; that will be
+    #  replaced with proper CsmError type
 
     def __init__(self, rc=0, output=''):
         self._rc = int(rc)
@@ -59,7 +63,8 @@ class Response(object):
         return self._rc
 
     def __str__(self):
-        return '%d: %s' %(self._rc, self._output)
+        return '%d: %s' % (self._rc, self._output)
+
 
 class Provider(object):
     """ Base Provider class for a given RAS functionality """
@@ -85,13 +90,14 @@ class Provider(object):
         try:
             response = self._process_request(request)
         except CsmError as e:
-            response = Response(e.rc(), e.error()) 
+            response = Response(e.rc(), e.error())
         return response
 
     def __process_request_bg(self, request, callback):
         """ Process request in background and invoke callback once done """
         response = self.__process_request(request)
         callback(response)
+
 
 class EmailProvider(Provider):
     """ Provider implementation for Email Configuration """
@@ -120,7 +126,7 @@ class EmailProvider(Provider):
 
             if action == 'config':
                 password = getpass.getpass('Password: ')
-                _output = self._email_conf.configure(request.args(), password = password)
+                _output = self._email_conf.configure(request.args(), password=password)
 
             elif action == 'reset':
                 _output = self._email_conf.unconfigure()
@@ -141,10 +147,10 @@ class EmailProvider(Provider):
 
         except OSError as e:
             Log.exception(e)
-            raise CsmError(e.errno, '%s' %e)
+            raise CsmError(e.errno, '%s' % e)
 
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
 
         return response
