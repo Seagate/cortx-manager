@@ -16,9 +16,11 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
+from typing import Iterable, Text
 from csm.common.log import Log
+from csm.common.services import ApplicationService
 from csm.core.services.permissions import PermissionSet
+
 
 class Role:
     """
@@ -133,3 +135,15 @@ class RoleManager:
             Log.info(f'Existing role "{name}" has been successfully deleted')
         else:
             Log.warn(f'Role "{name}" does not exist')
+
+
+class RoleManagementService(ApplicationService):
+    """
+    Role management application service used by controllers
+    """
+
+    def __init__(self, role_manager: RoleManager):
+        self._role_manager = role_manager
+
+    async def get_permissions(self, role_names: Iterable[Text]) -> PermissionSet:
+        return await self._role_manager.calc_effective_permissions(*role_names)

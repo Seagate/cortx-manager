@@ -67,16 +67,20 @@ class CsmAgent:
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
-        CsmRestApi._app.user_manager = UserManager(db)
-        CsmRestApi._app.role_manager = RoleManager(roles)
-        CsmRestApi._app.session_manager = SessionManager()
+        user_manager = UserManager(db)
+        role_manager = RoleManager(roles)
+        session_manager = SessionManager()
         CsmRestApi._app.login_service = LoginService(auth_service,
-                                                     CsmRestApi._app.user_manager,
-                                                     CsmRestApi._app.role_manager,
-                                                     CsmRestApi._app.session_manager)
+                                                     user_manager,
+                                                     role_manager,
+                                                     session_manager)
 
-        user_service = CsmUserService(CsmRestApi._app.user_manager)
+        user_service = CsmUserService(user_manager)
         CsmRestApi._app["csm_user_service"] = user_service
+
+        roles_service = RoleManagementService(role_manager)
+        CsmRestApi._app["roles_service"] = roles_service
+
 
         #S3 Plugin creation
         s3 = import_plugin_module('s3').S3Plugin()
@@ -158,7 +162,7 @@ if __name__ == '__main__':
         from csm.core.services.s3.buckets import S3BucketService
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
-        from csm.core.services.roles import RoleManager
+        from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage

@@ -84,6 +84,6 @@ class UserPermissionsView(BasePermissionsView):
             roles = localuser['roles']
         except CsmNotFoundError:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND, user_id)
-        permissions_internal = self._roles_service.get_permissions(roles)
+        permissions_internal = await self._roles_service.get_permissions(roles)
         permissions = self.transform_permissions(permissions_internal)
         return permissions

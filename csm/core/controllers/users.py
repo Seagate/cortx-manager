@@ -113,6 +113,7 @@ class CsmUsersView(CsmView):
         user_id = self.request.match_info["user_id"]
 
         return await self._service.get_user(user_id)
+
     """
     DELETE REST implementation for csm account delete request
     """
