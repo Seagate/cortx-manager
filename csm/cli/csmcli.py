@@ -51,10 +51,10 @@ class Terminal:
     @staticmethod
     def logout_alert(is_logged_out: bool):
         if is_logged_out:
-            sys.stdout.write('Successfully logged out')
+            sys.stdout.write('Successfully logged out\n')
         else:
             Log.error(traceback.format_exc())
-            sys.stderr('Logout failed')
+            sys.stderr('Logout failed\n')
 
     @staticmethod
     def get_password(value, confirm_pass_flag=True):
@@ -132,9 +132,11 @@ class CsmCli(Cmd):
                 if not is_logged_in:
                     self.do_exit("Server authentication check failed.")
                 Log.info(f"{self.username}: Logged In.")
+        except KeyboardInterrupt:
+            self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
+            self.do_exit(f"Some Error Occurred.\n")
 
     def precmd(self, command):
         """

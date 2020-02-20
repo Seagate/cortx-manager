@@ -61,6 +61,7 @@ PRODUCT=<PRODUCT>
 
 [ -d "/etc/rsyslog.d" ] && {
     cp -f $CFG_DIR/etc/rsyslog.d/csm_logs.conf /etc/rsyslog.d/csm_logs.conf
+    cp -f $CFG_DIR/etc/rsyslog.d/support_bundle.conf /etc/rsyslog.d/support_bundle.conf
     systemctl restart rsyslog
 } || \
     echo "Csm logs could not be configured. Check & fix it manually." >>/dev/stderr

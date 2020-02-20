@@ -99,6 +99,8 @@ class ComponentsBundle:
         #Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
+            Log.error(f"No Such File {const.COMMANDS_FILE}, {ERROR}, {bundle_id},"
+                      f" {node_name}, {comment}")
             ComponentsBundle.publish_log(f"No Such File {const.COMMANDS_FILE}",
                                          ERROR, bundle_id, node_name, comment)
             return None
@@ -122,14 +124,15 @@ class ComponentsBundle:
                 threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                   "SUPPORT_BUNDLE.bundle_path")
-        tar_file_name = os.path.join(directory_path,
+        tar_file_name = os.path.join(directory_path, '../',
                                      f"{bundle_id}_{node_name}.tar.gz")
         #Create Summary File for Tar.
         summary_file_path = os.path.join(directory_path, "summary.yaml")
         summary_data = {
-            "Bundle Id": bundle_id,
-            "Comment": comment,
-            "Time Stamp": str(datetime.isoformat(datetime.now()))
+            "Bundle Id": str(bundle_id),
+            "Node Name": str(node_name),
+            "Comment": repr(comment),
+            "Generated Time": str(datetime.isoformat(datetime.now()))
         }
         Yaml(summary_file_path).dump(summary_data)
         # Wait Until all the Threads Execution is not Complete.
@@ -141,6 +144,7 @@ class ComponentsBundle:
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 "SUPPORT_BUNDLE"), tar_file_name)
         except Exception as e:
+            Log.error(f"{e}, {ERROR}, {bundle_id}, {node_name}, {comment}")
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
             return None
@@ -148,8 +152,13 @@ class ComponentsBundle:
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.symlink_path")
         if os.path.exists(symlink_path):
             shutil.rmtree(symlink_path)
-
-        os.symlink(tar_file_name, os.path.join(symlink_path,
-                                               f"SupportBundle.{bundle_id}"))
-        ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
-                                     node_name, comment)
+        try:
+            os.symlink(tar_file_name, os.path.join(symlink_path,
+                                                   f"SupportBundle.{bundle_id}"))
+            Log.info(f"Bundle Generated., {INFO}, {bundle_id}, {node_name}, {comment}")
+            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
+                                         node_name, comment)
+        except:
+            Log.error(f"Linking Failed, {ERROR}, {bundle_id}, {node_name}, {comment}")
+            ComponentsBundle.publish_log(f"Linking Failed", ERROR, bundle_id, node_name,
+                                         comment)
