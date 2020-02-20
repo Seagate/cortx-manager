@@ -22,6 +22,7 @@ import os, errno
 import logging.handlers
 import inspect
 from functools import wraps
+from csm.core.blogic import const 
 
 class Log:
     CRITICAL = logging.CRITICAL
@@ -39,7 +40,7 @@ class Log:
                                                     file_size_in_mb=10):
         """ Initialize logging to log to syslog """
         try:
-            if not os.path.exists(log_path): os.makedirs(log_path)
+            if log_path and not os.path.exists(log_path): os.makedirs(log_path)
         except OSError as err:
             if err.errno != errno.EEXIST: raise
         max_bytes = 0

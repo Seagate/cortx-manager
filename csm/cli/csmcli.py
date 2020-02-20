@@ -97,6 +97,7 @@ class CsmCli(Cmd):
          syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
          backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
          file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+         log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
          level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
