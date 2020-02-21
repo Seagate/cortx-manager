@@ -93,12 +93,12 @@ class CsmCli(Cmd):
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm_cli",
-         syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
-         syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-         backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-         file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-         log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-         level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
+             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
+             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+             file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+             log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
