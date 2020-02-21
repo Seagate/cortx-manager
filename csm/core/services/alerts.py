@@ -399,7 +399,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self.health_service = health_service      
+        self._health_service = health_service      
        
         super().__init__()
 
@@ -419,7 +419,6 @@ class AlertMonitorService(Service, Observable):
         """
         Log.info("Start Alert monitor thread")
         try:
-            self.health_service.init_health_schema()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
