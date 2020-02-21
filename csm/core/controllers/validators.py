@@ -20,6 +20,18 @@
 import re
 from marshmallow.validate import Validator, ValidationError
 from csm.core.blogic import const
+from csm.core.services.file_transfer import FileRef
+
+
+class FileRefValidator(Validator):
+    """
+    Validator Class for check FileRef instance
+    """
+
+    def __call__(self, value):
+        if not isinstance(value, FileRef):
+            raise ValidationError('This field must be of instance of a FileRef class')
+
 
 class UserNameValidator(Validator):
     """

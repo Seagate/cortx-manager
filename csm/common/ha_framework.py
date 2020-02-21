@@ -17,7 +17,9 @@
  ****************************************************************************
 """
 
-import sys, os
+import sys
+import os
+import time
 from csm.common.process import SimpleProcess
 
 class HAFramework:
@@ -46,7 +48,7 @@ class HAFramework:
         pass
 
 class PcsHAFramework(HAFramework):
-    def __init__(self, resource_agents):
+    def __init__(self, resource_agents=None):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
 
@@ -55,11 +57,15 @@ class PcsHAFramework(HAFramework):
             Return tuple containing following things:
             1. List of active nodes
             2. List of inactive nodes
+            Output:
+            Corosync Nodes:
+                Online: node1 node2
+                Offline:
         """
         _livenode_cmd = "/usr/sbin/pcs status nodes corosync"
         _proc = SimpleProcess(_livenode_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
-        if _err != '':
+        if _rc != 0:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s"
                             %(_livenode_cmd, _rc, _err))
         _status_list = _output.split('\n')
@@ -67,7 +73,42 @@ class PcsHAFramework(HAFramework):
         _activenodes.pop(0)
         _inactivenodes = _status_list[2].split()
         _inactivenodes.pop(0)
-        return _activenodes, _inactivenodes
+        _allnodes = _activenodes + _inactivenodes
+        return { "nodes": _allnodes, "online": _activenodes, "offline": _inactivenodes }
+
+    def make_node_active(self, node):
+        """
+            Put node on standby node for maintenance use
+        """
+        try:
+            _standby_cmd = "/usr/sbin/pcs node standby "
+            _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
+            _proc = SimpleProcess(_standby_cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            if _rc != 0:
+                raise Exception(_err)
+            node = "all nodes" if node == "all" else node
+            result = "Successfully put " + node + " on active state"
+            return { "message": result}
+        except Exception as e:
+            raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
+
+    def make_node_passive(self, node):
+        """
+            Put node on standby node for maintenance use
+        """
+        try:
+            _standby_cmd = "/usr/sbin/pcs node unstandby "
+            _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
+            _proc = SimpleProcess(_standby_cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            if _rc != 0:
+                raise Exception(_err)
+            node = "all nodes" if node == "all" else node
+            result = "Successfully put " + node + " on passive state"
+            return { "message": result}
+        except Exception as e:
+            raise Exception("Failed to remove %s from passive state. Error: %s" %(node,e))
 
     def get_status(self):
         """
