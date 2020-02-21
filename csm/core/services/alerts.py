@@ -30,6 +30,7 @@ from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
+from csm.core.services.health import HealthAppService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
@@ -58,8 +59,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
-        self.db = storage
-        self._health_schema = None     
+        self.db = storage        
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -152,25 +152,7 @@ class AlertRepository(IAlertStorage):
         """
         Retrieves all the alerts
         """
-        pass
-
-    @property
-    def health_schema(self):
-        """
-        returns health schema
-        :param None
-        :returns: health_schema
-        """
-        return self._health_schema
-
-    @health_schema.setter
-    def health_schema(self, health_schema):
-        """
-        sets health schema
-        :param health_schema
-        :returns: None
-        """
-        self._health_schema = health_schema    
+        pass    
 
 class AlertsAppService(ApplicationService):
     """
@@ -408,7 +390,7 @@ class AlertMonitorService(Service, Observable):
     web server. 
     """
 
-    def __init__(self, repo: AlertRepository, plugin):
+    def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
         """
         Initializes the Alert Plugin
         """
@@ -417,7 +399,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_schema = None
+        self.health_service = health_service      
        
         super().__init__()
 
@@ -437,7 +419,7 @@ class AlertMonitorService(Service, Observable):
         """
         Log.info("Start Alert monitor thread")
         try:
-            self._init_health_schema()
+            self.health_service.init_health_schema()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -446,10 +428,6 @@ class AlertMonitorService(Service, Observable):
         except Exception as e:
             Log.warn(f"Error in starting alert monitor thread: {e}")
 
-    def _init_health_schema(self):
-        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        self.repo.health_schema = self._health_schema._data
-    
     def stop(self):
         try:
             Log.info("Stop Alert monitor thread")

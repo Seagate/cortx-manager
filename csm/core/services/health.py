@@ -20,15 +20,41 @@
 # processing architecture
 from csm.core.blogic import const
 from csm.common.services import Service, ApplicationService
-from csm.core.services.alerts import AlertRepository
+from csm.common.payload import Payload, Json
+
+class HealthRepository:
+    def __init__(self):        
+        self._health_schema = None     
+
+    @property
+    def health_schema(self):
+        """
+        returns health schema
+        :param None
+        :returns: health_schema
+        """
+        return self._health_schema
+
+    @health_schema.setter
+    def health_schema(self, health_schema):
+        """
+        sets health schema
+        :param health_schema
+        :returns: None
+        """
+        self._health_schema = health_schema    
 
 class HealthAppService(ApplicationService):
     """
         Provides operations on in memory health schema
     """
 
-    def __init__(self, repo: AlertRepository):
+    def __init__(self, repo: HealthRepository):
         self.repo = repo
+
+    def init_health_schema(self):
+        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
+        self.repo.health_schema = self._health_schema._data
 
     async def fetch_health_summary(self):
         """
