@@ -30,6 +30,7 @@ from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
+from csm.core.services.health import HealthAppService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
@@ -59,8 +60,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
-        self.db = storage
-        self._health_schema = None     
+        self.db = storage        
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -153,25 +153,7 @@ class AlertRepository(IAlertStorage):
         """
         Retrieves all the alerts
         """
-        pass
-
-    @property
-    def health_schema(self):
-        """
-        returns health schema
-        :param None
-        :returns: health_schema
-        """
-        return self._health_schema
-
-    @health_schema.setter
-    def health_schema(self, health_schema):
-        """
-        sets health schema
-        :param health_schema
-        :returns: None
-        """
-        self._health_schema = health_schema    
+        pass    
 
 class AlertsAppService(ApplicationService):
     """
@@ -409,7 +391,7 @@ class AlertMonitorService(Service, Observable):
     web server. 
     """
 
-    def __init__(self, repo: AlertRepository, plugin):
+    def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
         """
         Initializes the Alert Plugin
         """
@@ -418,7 +400,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_schema = None
+        self.health_service = health_service      
        
         super().__init__()
 
@@ -438,7 +420,7 @@ class AlertMonitorService(Service, Observable):
         """
         Log.info("Start Alert monitor thread")
         try:
-            self._init_health_schema()
+            self.health_service.init_health_schema()
             self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
@@ -448,10 +430,6 @@ class AlertMonitorService(Service, Observable):
         except Exception as e:
             Log.warn(f"Error in starting alert monitor thread: {e}")
 
-    def _init_health_schema(self):
-        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        self.repo.health_schema = self._health_schema._data
-    
     def stop(self):
         try:
             Log.info("Stop Alert monitor thread")
@@ -502,13 +480,13 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
-                self._update_health_schema(alert)
+                self.health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
             else:
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
-                    self._update_health_schema(AlertModel(message))
+                    self.health_service.update_health_schema(AlertModel(message))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
 
@@ -525,37 +503,7 @@ class AlertMonitorService(Service, Observable):
         loop = asyncio.get_event_loop()
         alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
         for alert in alerts:
-            self._update_health_schema(alert)        
-
-    def _update_health_schema(self, alert: AlertModel):
-        """
-        Updates the in memory health schema after receiving alert.
-        The health schema will be updated with key generated using
-        health_csm_schema_key_mapping json and getting site_id, cluster_id,
-        node_id, rack_id, resource_type and resource_id from alert.
-        :param AlertModel: alert
-        :return: None
-        """
-        mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
-        hw_health_key = mapping_dict[alert.get(const.ALERT_MODULE_NAME)]
-        extended_info = eval(alert.get(const.ALERT_EXTENDED_INFO))
-        if (extended_info and extended_info.get(const.ALERT_INFO)):
-            resource_id = alert.get(const.ALERT_MODULE_NAME) + '-' \
-                + extended_info.get(const.ALERT_INFO).get(const.ALERT_RESOURCE_ID)
-            hw_health_key = hw_health_key.replace(const.ALERT_SITE_ID, 
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_SITE_ID))).replace(const.ALERT_RACK_ID, 
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_RACK_ID))).replace(const.ALERT_NODE_ID,
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_NODE_ID))).replace(const.ALERT_CLUSTER_ID,
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_CLUSTER_ID))).replace(const.ALERT_RESOURCE_ID, 
-                resource_id)
-            resource_schema_dict = self._health_schema.get(hw_health_key)
-            if(resource_schema_dict):
-                resource_schema_dict['alert_type'] = alert.state
-                resource_schema_dict['severity'] = alert.severity
-                resource_schema_dict['alert_uuid'] = alert.alert_uuid
-                resource_schema_dict['event_time'] = alert.updated_time
-                resource_schema_dict['health'] = alert.state
-                self._health_schema.set(hw_health_key, resource_schema_dict)        
+            self.health_service.update_health_schema(alert)        
 
     def _resolve_alert(self, new_alert, prev_alert):
         if not self._is_duplicate_alert(new_alert, prev_alert):
