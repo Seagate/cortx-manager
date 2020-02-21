@@ -46,24 +46,31 @@ class Log:
         max_bytes = 0
         if file_size_in_mb:
             max_bytes = file_size_in_mb * 1024 * 1024
+        Log.audit_logger = Log._get_logger(syslog_server, syslog_port, service_name,
+                        "audit", getattr(Log, level), log_path, backup_count, max_bytes)
 
         Log.logger = Log._get_logger(syslog_server, syslog_port, service_name,
-                                 getattr(Log, level), log_path, backup_count, max_bytes)
+                       "system", getattr(Log, level), log_path, backup_count, max_bytes)
 
     @staticmethod
-    def _get_logger(syslog_server: str, syslog_port: str, file_name: str, 
-                                log_level, log_path: str, backup_count: int, max_bytes: int):
+    def _get_logger(syslog_server: str, syslog_port: str, file_name: str, logger_type, 
+                        log_level, log_path: str, backup_count: int, max_bytes: int):
         """
         This Function Creates the Logger for Log Files.
         :param syslog_server: syslog server
         :param syslog_port: syslog port
         :param file_name: File name for Log Files. :type: Str
+        :param logger_type: logging type i.e audit, system :type: Str
         :param log_level: Log Class Instance :type: Class(Log)
         :return: Logger Object
         """
-        log_format = "%(asctime)s: %(name)s %(levelname)s %(message)s"
-        logger = logging.getLogger(f"{file_name}")
-        formatter = logging.Formatter(log_format)
+        log_format = "%(asctime)s %(name)s %(levelname)s %(message)s"
+        logger_name = f"{file_name}"
+        if logger_type == "audit":
+            log_format = " %(asctime)s %(name)s %(message)s"
+            logger_name = f"{file_name}_audit"
+        logger = logging.getLogger(logger_name)
+        formatter = logging.Formatter(log_format,"%Y-%m-%d %H:%M:%S")
         if syslog_server and syslog_port:
             log_handler = logging.handlers.SysLogHandler(address =
                                            (syslog_server, syslog_port))
@@ -95,7 +102,12 @@ class Log:
     @staticmethod
     def audit(msg, *args, **kwargs):
         caller = inspect.stack()[1][3]
-        Log.logger.info(f"audit_log: {msg}", *args, **kwargs)
+        Log.audit_logger.info(f"audit: {msg}", *args, **kwargs)
+
+    @staticmethod
+    def support_bundle(msg, *args, **kwargs):
+        caller = inspect.stack()[1][3]
+        Log.audit_logger.info(f"support_bundle: {msg}", *args, **kwargs)
 
     @staticmethod
     def warn(msg, *args, **kwargs):
@@ -142,7 +154,7 @@ class Log:
         :return:
         """
         Log.info(f"{message}")
-        Log.logger.info(f"{index}{message}")
+        Log.audit_logger.info(f"{index}{message}")
 
     @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=80):

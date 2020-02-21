@@ -141,6 +141,7 @@ class ComponentsBundle:
                                 "SUPPORT_BUNDLE.symlink_path")
         if os.path.exists(symlink_path):
             shutil.rmtree(symlink_path)
+        os.mkdir(symlink_path)
 
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
