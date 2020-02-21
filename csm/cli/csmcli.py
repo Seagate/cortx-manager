@@ -83,6 +83,7 @@ class CsmCli(Cmd):
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
+        self._permissions = None
 
     def preloop(self):
         """
@@ -132,6 +133,7 @@ class CsmCli(Cmd):
                 if not is_logged_in:
                     self.do_exit("Server authentication check failed.")
                 Log.info(f"{self.username}: Logged In.")
+                self._permissions = self.loop.run_until_complete(self.rest_client.permissions())
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
             self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
@@ -162,7 +164,7 @@ class CsmCli(Cmd):
         :return:
         """
         try:
-            command = CommandFactory.get_command(self.args)
+            command = CommandFactory.get_command(self.args, self._permissions)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))

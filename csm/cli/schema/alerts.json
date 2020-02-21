@@ -6,6 +6,7 @@
       "name": "show",
       "description": "Displays Alerts On the cli",
       "need_confirmation": false,
+      "permissions_tag": "list",
       "args": [
         {
           "flag": "-d",
@@ -88,6 +89,7 @@
       "name": "acknowledge",
       "description": "Acknowledged all the Alerts",
       "need_confirmation": true,
+      "permissions_tag": "update",
       "args": [
         {
           "flag": "alerts_id",
@@ -124,6 +126,7 @@
       "name": "comment",
       "description": "Comment on a given alert id",
       "need_confirmation": false,
+      "permissions_tag": "update",
       "args": [
         {
           "flag": "alerts_id",
