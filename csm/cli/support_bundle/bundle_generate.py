@@ -51,9 +51,8 @@ class ComponentsBundle:
         result = "Success"
         if level == 'error':
             result = "Error"
-        Log.publish(index=const.SUPPORT_BUNDLE_TAG,
-                    log_level=level,
-                     args=(bundle_id, node_name, comment, result, msg))
+        data = f"|{bundle_id}|{node_name}|{comment}|{result}|{msg}"
+        Log.publish(message=data, index=const.SUPPORT_BUNDLE_TAG)
 
     @staticmethod
     def exc_components_cmd(commands: List, bundle_id: str, path: str):
@@ -151,10 +150,10 @@ class ComponentsBundle:
             Tar(tar_file_name).dump([path])
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"SupportBundle.{bundle_id}"))
-        except:
+        except Exception as e:
             Log.error(
-                f"Linking Failed, {ERROR}, {bundle_id}, {node_name}, {comment}")
-            ComponentsBundle.publish_log(f"Linking Failed", ERROR, bundle_id,
+                f"Linking Failed, {e} {ERROR}, {bundle_id}, {node_name}, {comment}")
+            ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
                                          node_name,
                                          comment)
             return None

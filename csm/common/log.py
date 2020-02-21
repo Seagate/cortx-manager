@@ -127,7 +127,7 @@ class Log:
         print(f"[{caller}] {msg}")
 
     @staticmethod
-    def publish(log_level="info", index="default", *args, **kwargs):
+    def publish(message, index, *args, **kwargs):
         """
         This Method will be a wrapper to Publish logs to elasticsearch via rsyslogs.
 
@@ -141,9 +141,8 @@ class Log:
         :param index: Index Under which the Log needs to be sent.
         :return:
         """
-        separator = kwargs.get("separator", "|")
-        Log.info(f"{index}{separator}{separator.join(args)}")
-        getattr(Log.logger, log_level)(f"{index}{separator}{separator.join(args)}")
+        Log.info(f"{message}")
+        Log.logger.info(f"{index}{message}")
 
     @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=80):
