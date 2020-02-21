@@ -148,7 +148,7 @@ HEALTH='health'
 OK_HEALTH='ok'
 TOTAL='total'
 GOOD_HEALTH='good'
-HEALTH_SUMMARY='health-summary'
+HEALTH_SUMMARY='health_summary'
 
 
 # CSM Schema Path

@@ -420,7 +420,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self.health_service = health_service      
+        self._health_service = health_service      
        
         super().__init__()
 
@@ -440,7 +440,6 @@ class AlertMonitorService(Service, Observable):
         """
         Log.info("Start Alert monitor thread")
         try:
-            self.health_service.init_health_schema()
             self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
@@ -500,13 +499,13 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
-                self.health_service.update_health_schema(alert)
+                self._health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
             else:
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
-                    self.health_service.update_health_schema(AlertModel(message))
+                    self._health_service.update_health_schema(AlertModel(message))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
 
@@ -523,7 +522,7 @@ class AlertMonitorService(Service, Observable):
         loop = asyncio.get_event_loop()
         alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
         for alert in alerts:
-            self.health_service.update_health_schema(alert)        
+            self._health_service.update_health_schema(alert)        
 
     def _resolve_alert(self, new_alert, prev_alert):
         if not self._is_duplicate_alert(new_alert, prev_alert):

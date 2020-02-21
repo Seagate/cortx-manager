@@ -52,8 +52,9 @@ class HealthAppService(ApplicationService):
 
     def __init__(self, repo: HealthRepository):
         self.repo = repo
+        self._init_health_schema()
 
-    def init_health_schema(self):
+    def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
         self.repo.health_schema = self._health_schema
     
