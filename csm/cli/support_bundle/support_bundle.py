@@ -77,7 +77,7 @@ class SupportBundle:
         :return: None
         """
         alphabet = string.ascii_lowercase + string.digits
-        bundle_id = f"SB-{''.join(random.choices(alphabet, k=8))}"
+        bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
         cluster_info = Yaml(const.CLUSTER_INFO_FILE).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])

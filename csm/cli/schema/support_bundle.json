@@ -70,7 +70,7 @@
             "bundle_id": "Bundle Id",
             "comment": "Comment",
             "node_name": "Node Name",
-            "msg": "Message",
+            "message": "Message",
             "result": "Result"
           },
           "filters": "status"
