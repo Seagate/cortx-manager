@@ -19,7 +19,7 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
-from csm.common.permission_names import R, A
+from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
@@ -66,7 +66,7 @@ class CsmUsersListView(CsmView):
     """
     GET REST implementation for fetching csm users
     """
-    @CsmAuth.permissions({R.USER: {A.LIST}})
+    @CsmAuth.permissions({Resource.USER: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling csm users fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -82,7 +82,7 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
-    @CsmAuth.permissions({R.USER: {A.CREATE}})
+    @CsmAuth.permissions({Resource.USER: {Action.CREATE}})
     async def post(self):
         Log.debug(f"Handling users post request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -107,7 +107,7 @@ class CsmUsersView(CsmView):
     """
     GET REST implementation for csm account get request
     """
-    @CsmAuth.permissions({R.USER: {A.LIST}})
+    @CsmAuth.permissions({Resource.USER: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling get csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -117,7 +117,7 @@ class CsmUsersView(CsmView):
     """
     DELETE REST implementation for csm account delete request
     """
-    @CsmAuth.permissions({R.USER: {A.DELETE}})
+    @CsmAuth.permissions({Resource.USER: {Action.DELETE}})
     async def delete(self):
         Log.debug(f"Handling delete csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -127,7 +127,7 @@ class CsmUsersView(CsmView):
     """
     POST PUT implementation for creating a csm user
     """
-    @CsmAuth.permissions({R.USER: {A.UPDATE}})
+    @CsmAuth.permissions({Resource.USER: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling users put request."
                   f" user_id: {self.request.session.credentials.user_id}")

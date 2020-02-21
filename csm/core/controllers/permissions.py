@@ -34,7 +34,8 @@ class BasePermissionsView(CsmView):
 
     def transform_permissions(self, permissions: PermissionSet) -> dict:
         """
-        transform permissions dict resources 
+        Transform our internal representation of the permission set
+        to the format expected by the UI, e.g.
         'alert': ['list, 'update']
         to 
         'alert': {'list': True, 'update': True}

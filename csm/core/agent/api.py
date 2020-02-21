@@ -104,7 +104,7 @@ class CsmRestApi(CsmApi, ABC):
             middlewares=[CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
-                         CsmRestApi.authz_middleware]
+                         CsmRestApi.permission_middleware]
         )
 
         usl_ctrl = UslController(usl_service)
@@ -217,7 +217,7 @@ class CsmRestApi(CsmApi, ABC):
 
     @classmethod
     @web.middleware
-    async def authz_middleware(cls, request, handler):
+    async def permission_middleware(cls, request, handler):
         if request.session is not None:
             # Check user permissions
             required = await cls._get_permissions(request)
@@ -226,7 +226,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'User permissions: {request.session.permissions}')
             Log.debug(f'Allow access: {verdict}')
             if not verdict:
-                cls._unauthorised('User has no permission to access the URL')
+                raise web.HTTPForbidden()
         return await handler(request)
 
     @staticmethod

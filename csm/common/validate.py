@@ -2,12 +2,12 @@
 
 """
  ****************************************************************************
- Filename:          permission_names.py
- Description:       Permission resources and actions names as constants.
+ Filename:          validate.py
+ Description:       Generic validatior
 
- Creation Date:     02/10/2020
+ Creation Date:     02/21/2020
  Author:            Oleg Babin
- 
+
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
  The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
@@ -17,21 +17,9 @@
  ****************************************************************************
 """
 
+class Validator:
+    @staticmethod
+    def validate_type(obj, typ, name):
+        if type(obj) is not typ:
+            raise ValueError(f'Type of {name} should be a {typ.__name__}')
 
-class Resource:
-    ''' Resource Names '''
-
-    ALERT = 'alert'
-    USER = 'user'
-    STAT = 'stat'
-    S3ACCOUNT = 's3account'
-    S3USER = 's3user'
-
-
-class Action:
-    ''' Action Names '''
-
-    LIST = 'list'
-    CREATE = 'create'
-    DELETE = 'delete'
-    UPDATE = 'update'

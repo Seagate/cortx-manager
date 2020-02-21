@@ -19,6 +19,7 @@
 """
 from typing import Iterable, Text
 from csm.common.log import Log
+from csm.common.validate import Validator
 from csm.common.services import ApplicationService
 from csm.core.services.permissions import PermissionSet
 
@@ -50,24 +51,19 @@ class RoleManager:
 
     NO_ROLE = Role(None, PermissionSet())
 
-    @staticmethod
-    def _validate_type(obj, typ, name):
-        if type(obj) is not typ:
-            raise ValueError(f'Type of {name} should be a {typ.__name__}')
-
     @classmethod
     def _validate_name(cls, name):
-        cls._validate_type(name, str, 'role name')
+        Validator.validate_type(name, str, 'role name')
         # TODO: Validate character set in the string
 
     @classmethod
     def _validate_permissions(cls, permissions):
-        cls._validate_type(permissions, dict, 'permission set')
+        Validator.validate_type(permissions, dict, 'permission set')
         for resource, actions in permissions.items():
-            cls._validate_type(resource, str, 'resource name')
-            cls._validate_type(actions, list, 'actions')
+            Validator.validate_type(resource, str, 'resource name')
+            Validator.validate_type(actions, list, 'actions')
             for action in actions:
-                cls._validate_type(action, str, 'action list element')
+                Validator.validate_type(action, str, 'action list element')
 
     @classmethod
     def _validate_role(cls, name, permissions):
@@ -76,9 +72,9 @@ class RoleManager:
 
     @classmethod
     def _validate_roles(cls, roles):
-        cls._validate_type(roles, dict, 'roles argument')
+        Validator.validate_type(roles, dict, 'roles argument')
         for name, value in roles.items():
-            cls._validate_type(value, dict, 'role value')
+            Validator.validate_type(value, dict, 'role value')
             permissions = value.get('permissions', None)
             if permissions is None:
                 raise ValueError(f'Permission set should be specified for a role')
