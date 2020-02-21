@@ -141,7 +141,8 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = str(err)
-
+        Log.audit(f'User: {request.session.credentials.user_id} '
+                  f'Request: {request} RC: {resp["error_code"]}' )
         return resp
 
     @staticmethod
@@ -158,7 +159,7 @@ class CsmRestApi(CsmApi, ABC):
     def _unauthorised(cls, reason):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
-    
+
     @staticmethod
     def http_request_to_log_string(request):
         remote_ip = request.remote
@@ -173,10 +174,11 @@ class CsmRestApi(CsmApi, ABC):
                     body[key] = '*****'
         return f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query} Body:{body}"
 
+
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        Log.info(cls.http_request_to_log_string(request))
+        Log.audit(cls.http_request_to_log_string(request))
         is_public = CsmAuth.is_public(handler)
         if not is_public:
             is_public = CsmView.is_public(handler, request.method.lower())
@@ -229,8 +231,8 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            Log.info(f'Username: {request.session.credentials.user_id} '
-                     f'Request: {request} Response_Status: {status}')
+            Log.audit(f'User: {request.session.credentials.user_id} '
+                      f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except web.HTTPException as e:
