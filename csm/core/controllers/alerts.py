@@ -46,6 +46,7 @@ class AlertsQueryParameter(Schema):
     severity = fields.Str(default=None, missing=None, allow_none=True)
     resolved = fields.Boolean(default=None, missing=None)
     acknowledged = fields.Boolean(default=None, missing=None)
+    show_active = fields.Boolean(default=False, missing=False, allow_none=True)
 
     @validates('duration')
     def validate_duration(self, value):
