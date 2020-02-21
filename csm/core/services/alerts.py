@@ -560,7 +560,7 @@ class AlertMonitorService(Service, Observable):
         if update_resolve:
             update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
-            update_params[ALERT_RESOLVED] = prev_alert.resolved
+            update_params[const.ALERT_RESOLVED] = prev_alert.resolved
         update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
         update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
