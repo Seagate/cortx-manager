@@ -155,15 +155,8 @@ class AlertRepository(IAlertStorage):
         """
         pass
 
-    def set_health_schema(self, health_schema):
-        """
-        sets health schema
-        :param health_schema
-        :returns: None
-        """
-        self._health_schema = health_schema
-
-    def get_health_schema(self):
+    @property
+    def health_schema(self):
         """
         returns health schema
         :param None
@@ -171,6 +164,14 @@ class AlertRepository(IAlertStorage):
         """
         return self._health_schema
 
+    @health_schema.setter
+    def health_schema(self, health_schema):
+        """
+        sets health schema
+        :param health_schema
+        :returns: None
+        """
+        self._health_schema = health_schema    
 
 class AlertsAppService(ApplicationService):
     """
@@ -360,8 +361,8 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()
-    
+        return alert.to_primitive()    
+
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
         super().__init__()
@@ -449,7 +450,7 @@ class AlertMonitorService(Service, Observable):
 
     def _init_health_schema(self):
         self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
-        self.repo.set_health_schema(self._health_schema._data)    
+        self.repo.health_schema = self._health_schema._data
     
     def stop(self):
         try:

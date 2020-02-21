@@ -36,6 +36,7 @@ class Const:
     DATABASE_CONF = '/etc/csm/database.yaml'
     CSM_INSTALL_BASE_DIR = '/opt/seagate/csm'
     MOCK_PATH = CSM_INSTALL_BASE_DIR + '/test/test_data/'
+    HEALTH_SCHEMA = CSM_INSTALL_BASE_DIR + '/schema/health_schema.json'
 
 class TestFailed(Exception):
     def __init__(self, desc):
