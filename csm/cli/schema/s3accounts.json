@@ -6,6 +6,7 @@
         "name": "show",
         "description": "Displays S3 Accounts On the cli",
         "need_confirmation": false,
+        "permissions_tag": "list",
         "args": [
           {
             "flag": "args",
@@ -47,6 +48,7 @@
         "name": "create",
         "description": "Create a new S3 Account.",
         "need_confirmation": true,
+        "permissions_tag": "create",
         "args": [
           {
             "flag": "account_name",
@@ -111,6 +113,7 @@
         "name": "reset_password",
         "description": "Reset password for S3 Account.",
         "need_confirmation": true,
+        "permissions_tag": "update",
         "args": [
           {
             "flag": "account_name",
@@ -167,6 +170,7 @@
         "name": "delete",
         "description": "Deletes the given S3 account",
         "need_confirmation": true,
+        "permissions_tag": "delete",
         "args": [
           {
             "flag": "account_name",

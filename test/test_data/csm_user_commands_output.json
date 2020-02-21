@@ -2,13 +2,12 @@
     "expected_csm_user_create": {
         "comm": {
             "json": {
-                "interfaces": "",
                 "language": "",
                 "password": "",
                 "roles": "",
                 "temperature": "",
                 "timeout": "",
-                "user_id": ""
+                "username": ""
             },
             "method": "post",
             "params": {},
@@ -16,7 +15,6 @@
             "type": "rest",
             "version": "v1"
         },
-        "interfaces": null,
         "language": null,
         "need_confirmation": true,
         "output": {
@@ -27,16 +25,16 @@
         "sub_command_name": "create",
         "temperature": null,
         "timeout": null,
-        "user_id": "user123"
+        "username": "user123"
     },
     "expected_csm_user_delete": {
         "comm": {
             "json": {
-                "user_id": ""
+                "username": ""
             },
             "method": "delete",
             "params": {},
-            "target": "/{version}/user/{user_id}",
+            "target": "/{version}/user/{username}",
             "type": "rest",
             "version": "v1"
         },
@@ -45,7 +43,7 @@
             "success": "User deleted"
         },
         "sub_command_name": "delete",
-        "user_id": "user123"
+        "username": "user123"
     },
     "expected_csm_user_show": {
         "comm": {
@@ -67,18 +65,18 @@
         "offset": null,
         "output": {
             "table": {
-                "filters": "user",
+                "filters": "users",
                 "headers": {
-                    "created_time": "Creation time",
-                    "id": "User ID",
+                    "username": "Username",
+                    "user_type": "User Type",
                     "interfaces": "Interfaces",
-                    "language": "Language",
                     "roles": "Roles",
                     "temperature": "Temp. type",
+                    "language": "Language",
                     "timeout": "Timeout",
-                    "updated_time": "Last update time",
-                    "user_type": "User Type"
-                }
+                    "created_time": "Creation time",
+                    "updated_time": "Last update time"
+               }
             }
         },
         "sort_by": null,
