@@ -10,7 +10,7 @@ from csm.test.common import Const
 
 file_path = Const.MOCK_PATH
 create_command = CommandFactory.get_command(
-    ["user", 'create', "user123", "-p", "qwerty123"])
+    ["user", 'create', "User1234", "-p", "Qwerty@123"])
 t = unittest.TestCase()
 
 with open(file_path + "csm_user_commands_output.json") as fp:

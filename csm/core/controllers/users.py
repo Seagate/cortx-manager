@@ -19,6 +19,7 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
@@ -27,24 +28,15 @@ from csm.common.errors import InvalidRequest
 
 # TODO: find out about policies for names and passwords
 class CsmUserCreateSchema(Schema):
-    user_id = fields.Str(data_key='username', required=True)
-    password = fields.Str(required=True, validate=validate.Length(min=1))
+    user_id = fields.Str(data_key='username', required=True,
+                         validate=[UserNameValidator()])
+    password = fields.Str(required=True, validate=[PasswordValidator()])
     roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)))
     interfaces = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_INTERFACES)))
     temperature = fields.Str(default=None)
     language = fields.Str(default=None)
     timeout = fields.Int(default=None)
 
-    @validates("user_id")
-    def validate_quantity(self, value):
-        if len(value) < const.CSM_USER_NAME_MIN_LEN:
-            raise ValidationError("User name length must be greater than {}".format(
-                const.CSM_USER_NAME_MIN_LEN))
-        if len(value) > const.CSM_USER_NAME_MAX_LEN:
-            raise ValidationError("User name length must not be greater than {}".format(
-                const.CSM_USER_NAME_MAX_LEN))
-        if not value.isalnum():
-            raise ValidationError("User name must only contain alphanumeric characters")
 
 class CsmGetUsersSchema(Schema):
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,

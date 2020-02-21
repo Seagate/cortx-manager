@@ -210,6 +210,10 @@ CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = CSM_INSTALL_BASE_DIR + '/templates/smtp_server_test_email.html'
 
+# Audit Log
+AUDIT_LOG="/tmp/auditlogs/"
+MAX_RESULT_WINDOW=10000
+
 # Syslog constants
 LOG_LEVEL="INFO"
 
