@@ -21,6 +21,7 @@
 import asyncio
 
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
+from csm.core.controllers.schemas import FileFieldSchema
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
@@ -29,12 +30,6 @@ from csm.core.blogic import const
 
 from aiohttp import web
 from marshmallow import Schema, fields, validate, exceptions
-
-
-class FileFieldSchema(Schema):
-    content_type = fields.Str(required=True)
-    filename = fields.Str(required=True)
-    file_ref = fields.Field(validate=FileRefValidator())
 
 
 class CsmFileUploadSchema(Schema):
