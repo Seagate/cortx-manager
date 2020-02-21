@@ -48,6 +48,7 @@ class ComponentsBundle:
         :param comment: Comment Added by user to Generate the Bundle :type:str.
         :return: None.
         """
+        #Initilize Logger for Uploading the Final Comment to ElasticSearch.
         Log.init("support_bundle",
                  syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
                  syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
@@ -59,7 +60,8 @@ class ComponentsBundle:
         result = "Success"
         if level == 'error':
             result = "Error"
-        message = f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|{result}|{msg}"
+        message = (f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|"
+                   f"{result}|{msg}")
         Log.support_bundle(message)
 
     @staticmethod
@@ -92,9 +94,9 @@ class ComponentsBundle:
                 channel_obj.send_file(file_path, protocol_details.get('remote_file'))
                 channel_obj.disconnect()
             except Exception as e:
-                Log.error(f"File Upload Failed. {e}")
+                Log.error(f"File Upload Failed.")
         else:
-            Log.error("Invalid Url.")
+            Log.error("Invalid Url in csm.conf.")
 
     @staticmethod
     async def init(command: List):
@@ -109,8 +111,6 @@ class ComponentsBundle:
         #Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
-            Log.error(f"No Such File {const.COMMANDS_FILE}, {ERROR}, {bundle_id},"
-                      f" {node_name}, {comment}")
             ComponentsBundle.publish_log(f"No Such File {const.COMMANDS_FILE}",
                                          ERROR, bundle_id, node_name, comment)
             return None
@@ -160,8 +160,6 @@ class ComponentsBundle:
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"SupportBundle.{bundle_id}"))
         except Exception as e:
-            Log.error(
-                f"Linking Failed, {e} {ERROR}, {bundle_id}, {node_name}, {comment}")
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
                                          node_name,
                                          comment)
@@ -171,10 +169,8 @@ class ComponentsBundle:
         try:
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 "SUPPORT_BUNDLE"), tar_file_name)
-            Log.info(f"Bundle Generated., {INFO}, {bundle_id}, {node_name}, {comment}")
             ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
                                          node_name, comment)
         except Exception as e:
-            Log.error(f"{e}, {ERROR}, {bundle_id}, {node_name}, {comment}")
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)

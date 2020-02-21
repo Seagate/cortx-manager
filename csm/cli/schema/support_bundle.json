@@ -16,7 +16,7 @@
           "flag": "args",
           "default": [],
           "nargs": "?",
-          "help": "Additional arguments that can be send to csm agent"
+          "help": "Additional arguments that can be send to csm agent."
         }
       ],
       "comm": {
@@ -35,13 +35,13 @@
         {
           "flag": "bundle_id",
           "type": "str",
-          "help": "Specify the Reason for Generating Support Bundle."
+          "help": "Unique Bundle Id provided while generation."
         },
         {
           "flag": "args",
           "default": [],
           "nargs": "?",
-          "help": "Additional arguments that can be send to csm agent"
+          "help": "Additional arguments that can be send to csm agent."
         },
         {
           "flag": "-f",

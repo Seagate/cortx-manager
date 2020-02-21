@@ -16,7 +16,7 @@
       "flag": "args",
       "default": [],
       "nargs": "?",
-      "help": "Additional arguments that can be send to csm agent"
+      "help": "Additional arguments that can be send to csm agent."
     }
   ],
   "comm": {
