@@ -1,4 +1,4 @@
-csm_setup:
+csm:
     post_install:
         script: /usr/bin/csm_setup post_install
 
