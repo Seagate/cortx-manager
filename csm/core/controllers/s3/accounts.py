@@ -18,22 +18,23 @@
 """
 import json
 from marshmallow import Schema, fields, validate
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView
 from csm.common.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmPermissionDenied
 
 
 # TODO: find out about policies for names and passwords
 class S3AccountCreationSchema(Schema):
-    account_name = fields.Str(required=True, validate=validate.Length(min=1))
+    account_name = fields.Str(required=True, validate=[UserNameValidator()])
     account_email = fields.Email(required=True)
-    password = fields.Str(required=True, validate=validate.Length(min=1))
+    password = fields.Str(required=True, validate=[PasswordValidator()])
 
 
 class S3AccountPatchSchema(Schema):
     reset_access_key = fields.Boolean(default=False)
-    password = fields.Str(default="", validate=validate.Length(min=1))
+    password = fields.Str(required=True, validate=[PasswordValidator()])
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts")
@@ -79,6 +80,9 @@ class S3AccountsView(CsmView):
         self._s3_session = self.request.session.credentials
         if not self._s3_session:
             raise InvalidRequest("Invalid S3 Credentials. Ensure that session is valid")
+        self.account_id = self.request.match_info["account_id"]
+        if not self._s3_session.user_id == self.account_id:
+            raise CsmPermissionDenied("Access denied. Verify account name.")
         self._service = self.request.app["s3_account_service"]
         self._service_dispatch = {}
 
@@ -103,17 +107,14 @@ class S3AccountsView(CsmView):
         Log.debug(f"Handling update s3 accounts patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
-            account_id = self.request.match_info["account_id"]
-            if not self._s3_session.user_id == account_id:
-                raise InvalidRequest("Access Denied. Account can not be deleted"
-                                     " by users other than owner.")
             schema = S3AccountPatchSchema()
             patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        response_obj =  await self._service.patch_account(self._s3_session, account_id, **patch_body)
+        response_obj =  await self._service.patch_account(self._s3_session,
+                                            self.account_id, **patch_body)
         if response_obj:
             await self.request.app.login_service.delete_all_sessions(self.request.session.session_id)
         return response_obj
