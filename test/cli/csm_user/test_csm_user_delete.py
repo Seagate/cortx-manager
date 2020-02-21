@@ -9,7 +9,7 @@ import os
 from csm.test.common import Const
 
 delete_command = CommandFactory.get_command(
-    ["user", 'delete', "user123"])
+    ["user", 'delete', "User1234"])
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
