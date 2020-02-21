@@ -106,6 +106,10 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
+        # audit log download api
+        audit_mngr = AuditLogManager(db)
+        CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
+
 
     @staticmethod
     def _daemonize():
@@ -180,6 +184,7 @@ if __name__ == '__main__':
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.roles_management import RolesManagementService
+        from csm.core.services.audit_log import  AuditLogManager, AuditService
         from csm.core.services.file_transfer import DownloadFileManager
 
         CsmAgent.init()

@@ -23,5 +23,6 @@ from .users import CsmUsersListView, CsmUsersView
 from .s3.iam_users import IamUserListView, IamUserView
 from .s3.accounts import S3AccountsListView, S3AccountsView
 from .alerts import AlertsView, AlertsListView
+from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .csm import CsmCliView
