@@ -32,7 +32,7 @@ t = unittest.TestCase()
 
 async def _create_csm_user(user_service):
     data = {'user_id':'csm_test_user',
-            'password':'csmuser',
+            'password':'Csmuser@123',
             'roles':['root', 'admin']}
     try:
         return await user_service.get_user(data['user_id'])
