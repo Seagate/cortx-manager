@@ -30,7 +30,7 @@ from elasticsearch_dsl.response import UpdateByQueryResponse
 from elasticsearch import Elasticsearch
 from elasticsearch import ElasticsearchException, RequestError, ConflictError
 from schematics.types import (StringType, DecimalType, DateType, IntType, BaseType, BooleanType,
-                              DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType)
+                              DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType, ListType)
 from schematics.exceptions import ConversionError
 
 from csm.common.errors import CsmInternalError
@@ -107,6 +107,7 @@ DATA_MAP = {
     FloatType: "float",  # TODO: it is possible to increase type to elasticsearch's double
     LongType: "long",
     NumberType: "short",  # TODO: Size of ES's type can be increased to 'integer'
+    ListType: "nested"   # TODO: This will serialize only one level of nested objects. Need to implement for multi-level
     # DictType: "nested"
 }
 
@@ -410,6 +411,15 @@ class ElasticSearchDB(GenericDataBase):
         doc = dict()
         for key in self._model_scheme:
             doc[key] = getattr(obj, key)
+            #  TODO: This will serialize only one level of nested objects. Need to implement for multi-level
+            if type(doc[key]) is list:
+                list_nested = []
+                for item in doc[key]:
+                    nested_obj = dict()
+                    for k, v in item.items():
+                        nested_obj[k] = v
+                    list_nested.append(nested_obj)
+                doc[key] = list_nested
 
         obj_id = str(obj.primary_key_val)  # convert primary key value into string
 

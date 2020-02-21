@@ -24,4 +24,5 @@ from .s3.iam_users import IamUserListView, IamUserView
 from .s3.accounts import S3AccountsListView, S3AccountsView
 from .alerts import AlertsView, AlertsListView
 from .health import HealthView
+from .maintenance import MaintenanceView
 # from .csm import CsmCliView

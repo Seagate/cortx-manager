@@ -29,9 +29,10 @@ import errno
 
 from schematics.models import Model
 from schematics.types import IntType, StringType, DateType, BooleanType\
-, DateTimeType, ListType, DictType
+, DateTimeType, ListType, DictType, ModelType
 
 from .base import CsmModel
+from .comments import CommentModel
 
 
 # This is an example of how Alert model can look like
@@ -69,7 +70,7 @@ class AlertModel(CsmModel):
     updated_time = DateTimeType()
     created_time = DateTimeType()
     sensor_info = StringType()
-    comment = StringType()
+    comments = ListType(ModelType(CommentModel))
     event_details = StringType()
     name = StringType()
     serial_number = StringType()
@@ -93,8 +94,6 @@ class AlertModel(CsmModel):
 
     def __hash__(self):
         return hash(self.alert_uuid)
-
-
 
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
@@ -138,6 +137,7 @@ class Alert(object):
 
     def is_resolved(self):
         return self._resolved
+
 
 # TODO: Consider a more generic approach to storage interfaces
 class IAlertStorage(ABC):
