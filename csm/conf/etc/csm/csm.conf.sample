@@ -6,8 +6,8 @@ DEBUG:
 # HTTPS setting for CSM Agent
 HTTPS:
     port: 28103
-    certificate_path: "/opt/seagate/csm/conf/domain_srv.crt"
-    private_key_path: "/opt/seagate/csm/conf/domain_srv.key"
+    certificate_path: "/etc/ssl/stx-s3/s3/ca.crt"
+    private_key_path: "/etc/ssl/stx-s3/s3/ca.key"
 
 # PRODUCT
 PRODUCT:
@@ -104,3 +104,6 @@ SUPPORT_BUNDLE:
     password: ""
     remote_file: ""
     bundle_path: "/var/seagate/eos/support_bundle"
+
+UDS:
+    volume_cache_update_period_seconds: 3

@@ -18,7 +18,6 @@
  ****************************************************************************
 """
 from .view import CsmView
-from csm.core.services.stats import StatsAppService
 from csm.common.log import Log
 
 @CsmView._app_routes.view("/api/v1/stats/{panel}")

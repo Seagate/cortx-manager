@@ -39,11 +39,11 @@ from csm.common.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
-from csm.common.errors import CsmError, CsmNotFoundError
+from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
-from csm.core.services.file import FileEntity
+from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
@@ -142,7 +142,8 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = str(err)
-
+        Log.audit(f'User: {request.session.credentials.user_id} '
+                  f'Request: {request} RC: {resp["error_code"]}' )
         return resp
 
     @staticmethod
@@ -159,7 +160,7 @@ class CsmRestApi(CsmApi, ABC):
     def _unauthorised(cls, reason):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
-    
+
     @staticmethod
     def http_request_to_log_string(request):
         remote_ip = request.remote
@@ -192,7 +193,7 @@ class CsmRestApi(CsmApi, ABC):
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        Log.info(cls.http_request_to_log_string(request))
+        Log.audit(cls.http_request_to_log_string(request))
         session = None
         is_public = await cls._is_public(request)
         if not is_public:
@@ -242,7 +243,7 @@ class CsmRestApi(CsmApi, ABC):
         try:
             resp = await handler(request)
 
-            if isinstance(resp, FileEntity):
+            if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
                 file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
                 return file_resp
@@ -258,8 +259,8 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            Log.info(f'Username: {request.session.credentials.user_id} '
-                     f'Request: {request} Response_Status: {status}')
+            Log.audit(f'User: {request.session.credentials.user_id} '
+                      f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         except web.HTTPException as e:
@@ -268,6 +269,10 @@ class CsmRestApi(CsmApi, ABC):
         except CsmNotFoundError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
+        except CsmPermissionDenied as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request),
+                                            status=403)
         except CsmError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)

@@ -64,8 +64,10 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
+CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
+CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
@@ -189,6 +191,10 @@ CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/opt/seagate/csm/templates/smtp_server_test_email.html'
+
+# Audit Log
+AUDIT_LOG="/tmp/auditlogs/"
+MAX_RESULT_WINDOW=10000
 
 # Syslog constants
 LOG_LEVEL="INFO"

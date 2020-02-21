@@ -20,6 +20,18 @@
 import re
 from marshmallow.validate import Validator, ValidationError
 from csm.core.blogic import const
+from csm.core.services.file_transfer import FileRef
+
+
+class FileRefValidator(Validator):
+    """
+    Validator Class for check FileRef instance
+    """
+
+    def __call__(self, value):
+        if not isinstance(value, FileRef):
+            raise ValidationError('This field must be of instance of a FileRef class')
+
 
 class UserNameValidator(Validator):
     """
@@ -66,17 +78,17 @@ class PasswordValidator(Validator):
         if len(password) < 8:
             raise ValidationError(
                 "Password must be of more than 8 characters.")
-        if not re.search(r"[A-Z]", password):
+        if not any(each_char.is_upper() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Uppercase Alphabet.")
-        if not re.search(r"[a-z]", password):
+        if not any(each_char.is_lower() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Lowercase Alphabet.")
-        if not re.search(r"[0-9]", password):
+        if not any(each_char.is_digit() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Numeric value.")
-        if not re.search(r"[" + "\\".join(const.PASSWORD_SPECIAL_CHARACTER) + "]",
-                         password):
+        if not any(each_char in const.PASSWORD_SPECIAL_CHARACTER
+                   for each_char in password):
             raise ValidationError((f"Password must include at lease one of the "
                 f"{''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters."))
 
@@ -138,3 +150,16 @@ class Server(Validator):
             raise ValidationError(
                 "Invalid server name.")
 
+
+class ValidationErrorFormatter:
+    @staticmethod
+    def format(validation_error_obj: ValidationError) -> str:
+        """
+        This Method will Format Validation Error messages to Proper Error messages.
+        :param validation_error_obj: Validation Error Object :type: ValidationError
+        :return: String for all Validation Error Messages
+        """
+        error_messages = []
+        for each_key in validation_error_obj.messages.keys():
+            error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
+        return "\n".join(error_messages)

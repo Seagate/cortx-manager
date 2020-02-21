@@ -235,5 +235,20 @@
     "message.sensor_response_type.specific_info.sensor-name": "name",
     "message.sensor_response_type.specific_info.durable-id": "durable_id",
     "message.sensor_response_type.info": "extended_info.info"
+  },
+  "raid": {
+    "message.sensor_response_type.info.event_time": "created_time",
+    "message.sensor_response_type.alert_type": "state",
+    "message.sensor_response_type.info.resource_type": "module_name",
+    "message.sensor_response_type.specific_info": "extended_info",
+    "message.sensor_response_type.alert_id": "alert_uuid",
+    "message.sensor_response_type.severity": "severity",
+    "message.sensor_response_type.info.site_id": "sensor_info.site_id",
+    "message.sensor_response_type.info.rack_id": "sensor_info.rack_id",
+    "message.sensor_response_type.info.node_id": "sensor_info.node_id",
+    "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
+    "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.specific_info.device": "name",
+    "message.sensor_response_type.info": "extended_info.info"
   }
 }

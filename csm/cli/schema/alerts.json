@@ -26,10 +26,19 @@
           "params": true
         },
         {
-          "flag": "-a",
+          "flag": "-s",
           "dest": "show_all",
           "action": "store_const",
           "help": "Display All Alerts",
+          "default": "false",
+          "const": "true",
+          "params": true
+        },
+        {
+          "flag": "-a",
+          "dest": "show_active",
+          "action": "store_const",
+          "help": "Display Active Alerts",
           "default": "false",
           "const": "true",
           "params": true
