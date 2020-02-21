@@ -62,8 +62,8 @@ class SupportBundle:
         try:
             ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME)
             ssh_conn_object.connect()
-            bundle_generate = (f"csmcli bundle_generate {bundle_id} {comment} "
-                               f"{node_name}")
+            bundle_generate = (f"csmcli bundle_generate '{bundle_id}' '{comment}' "
+                               f"'{node_name}'")
             rc, output = ssh_conn_object.execute(bundle_generate)
             ssh_conn_object.disconnect()
         except CsmError:

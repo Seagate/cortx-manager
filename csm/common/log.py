@@ -142,6 +142,7 @@ class Log:
         :return:
         """
         separator = kwargs.get("separator", "|")
+        Log.info(f"{index}{separator}{separator.join(args)}")
         getattr(Log.logger, log_level)(f"{index}{separator}{separator.join(args)}")
 
     @staticmethod

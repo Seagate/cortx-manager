@@ -79,12 +79,15 @@ class ComponentsBundle:
         protocol = url.split("://")[0]
         channel = f"{protocol.upper()}Channel"
         if hasattr(comm, channel):
-            channel_obj = getattr(comm, channel)(**protocol_details)
-            channel_obj.connect()
-            channel_obj.send_file(file_path, protocol_details.get('remote_file'))
-            channel_obj.disconnect()
+            try:
+                channel_obj = getattr(comm, channel)(**protocol_details)
+                channel_obj.connect()
+                channel_obj.send_file(file_path, protocol_details.get('remote_file'))
+                channel_obj.disconnect()
+            except Exception as e:
+                Log.error(f"File Upload Failed. {e}")
         else:
-            raise Exception("Invalid Url.")
+            Log.error("Invalid Url.")
 
     @staticmethod
     async def init(command: List):
@@ -135,30 +138,35 @@ class ComponentsBundle:
             "Generated Time": str(datetime.isoformat(datetime.now()))
         }
         Yaml(summary_file_path).dump(summary_data)
+        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                "SUPPORT_BUNDLE.symlink_path")
+        if os.path.exists(symlink_path):
+            shutil.rmtree(symlink_path)
+
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
             each_thread.join(timeout=1800)
-        # Generate TAR FILE & Send the File to Given FTP location.
+        # Generate TAR FILE & Create Softlink for Generated TAR.
         try:
             Tar(tar_file_name).dump([path])
-            ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                "SUPPORT_BUNDLE"), tar_file_name)
-        except Exception as e:
-            Log.error(f"{e}, {ERROR}, {bundle_id}, {node_name}, {comment}")
-            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
-                                         comment)
-            return None
-        #Create Softlink for Generated TAR.
-        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.symlink_path")
-        if os.path.exists(symlink_path):
-            shutil.rmtree(symlink_path)
-        try:
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"SupportBundle.{bundle_id}"))
+        except:
+            Log.error(
+                f"Linking Failed, {ERROR}, {bundle_id}, {node_name}, {comment}")
+            ComponentsBundle.publish_log(f"Linking Failed", ERROR, bundle_id,
+                                         node_name,
+                                         comment)
+            return None
+
+        #Upload the File.
+        try:
+            ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
+                                                "SUPPORT_BUNDLE"), tar_file_name)
             Log.info(f"Bundle Generated., {INFO}, {bundle_id}, {node_name}, {comment}")
             ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
                                          node_name, comment)
-        except:
-            Log.error(f"Linking Failed, {ERROR}, {bundle_id}, {node_name}, {comment}")
-            ComponentsBundle.publish_log(f"Linking Failed", ERROR, bundle_id, node_name,
+        except Exception as e:
+            Log.error(f"{e}, {ERROR}, {bundle_id}, {node_name}, {comment}")
+            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
