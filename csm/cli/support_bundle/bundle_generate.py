@@ -48,11 +48,19 @@ class ComponentsBundle:
         :param comment: Comment Added by user to Generate the Bundle :type:str.
         :return: None.
         """
+        Log.init("support_bundle",
+                 syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX,
+                                          "Log.file_size"),
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+                 level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         result = "Success"
         if level == 'error':
             result = "Error"
-        data = f"|{bundle_id}|{node_name}|{comment}|{result}|{msg}"
-        Log.publish(message=data, index=const.SUPPORT_BUNDLE_TAG)
+        message = f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|{result}|{msg}"
+        Log.support_bundle(message)
 
     @staticmethod
     def exc_components_cmd(commands: List, bundle_id: str, path: str):
