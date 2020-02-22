@@ -165,14 +165,17 @@ class CsmRestApi(CsmApi, ABC):
         remote_ip = request.remote
         url = request.path
         method = request.method
-        query = dict(request.query) if not request.has_body else {}
-        body = {} if not request.has_body \
-            else json.loads(request.content._buffer[0].decode('utf-8'))
+        body = {}
+        query = ()
+        if request.has_body:
+            query = request.query.items()
+            body = json.loads(request.content.readlines())
         if body and isinstance(body, dict):
             for key in body.keys():
                 if "password" in key:
                     body[key] = '*****'
-        return f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query} Body:{body}"
+        return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query}"
+                f" Body:{body}")
 
 
     @classmethod
