@@ -38,9 +38,7 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
 
-    [ -f /etc/systemd/system/csm_agent.service ] || {
-        cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
-    }
+    cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -77,6 +75,7 @@ rm -f /usr/bin/csmcli 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -rf /opt/seagate/csm/bin/ 2> /dev/null;
+rm -rf /etc/systemd/system/csm_agent.service
 exit 0
 
 %clean
