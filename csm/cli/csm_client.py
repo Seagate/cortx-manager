@@ -104,10 +104,18 @@ class CsmRestClient(CsmClient):
     def has_open_session(self):
         return self._session_token is not None
 
+    def _failed(self, respone):
+        """
+        This check if response failed it will return true else false
+        """
+        if respone.rc() != 200:
+            return True
+        return False
+    
     async def login(self, username, password):
         response, headers = await self.call(LoginCommand(username, password))
         token = headers.get('Authorization')
-        if response.rc() != 200 or not token:
+        if self._failed(response) or not token:
             return False
         token = token.split(' ')
         if len(token) != 2 or token[0] != 'Bearer' or not token[1]:
@@ -117,10 +125,21 @@ class CsmRestClient(CsmClient):
 
     async def logout(self):
         response, _ = await self.call(LogoutCommand())
-        if response.rc() != 200:
+        if self._failed(response):
             return False
         self._session_token = None
         return True
+
+    async def permissions(self):
+        url = "/v1/permissions"
+        method = "GET"
+        headers = {'Authorization': f'Bearer {self._session_token}'} if self._session_token else {}
+        async with aiohttp.ClientSession(headers=headers) as session:
+            response, _ = await self.process_direct_request(url, session, method, {}, {})
+        if self._failed(response):
+            raise CsmError(errno.EACCES, 'Could not get permissions from server, check session')
+        return response.output()['permissions']
+
 
     async def call(self, cmd):
         headers = {'Authorization': f'Bearer {self._session_token}'} if self._session_token else {}
@@ -139,6 +158,19 @@ class CsmRestClient(CsmClient):
         rest_obj = RestRequest(self._url, session, cmd)
         body, headers, status = await rest_obj.request()
         return body, headers, status
+
+    async def process_direct_request(self, url, session, method, params_json, body_json):
+        url = self._url + url
+        rest_obj = DirectRestRequest(url, session, method, params_json, body_json)
+        body, headers, status = await rest_obj.request()
+        try:
+            data = json.loads(body)
+        except ValueError:
+            if body == '401: Unauthorized':
+                raise CsmError(errno.EINVAL, 'You are unauthorized to do this')
+            else:
+                raise CsmError(errno.EINVAL, 'Could not parse the response')
+        return Response(rc=status, output=data), headers
 
     def __cleanup__(self):
         self._loop.close()
@@ -177,6 +209,33 @@ class RestRequest(Request):
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
 
+
+class DirectRestRequest(Request):
+    """Cli Rest Request Class """
+
+    def __init__(self, url, session, method, params_json, body_json):
+        super(DirectRestRequest, self).__init__(None, None)
+        self._url = url
+        self._session = session
+        self._method = method
+        self._params_json = params_json
+        self._body_json = body_json
+
+    async def request(self) -> Tuple:
+        try:
+            print(self._url)
+            async with self._session.request(method=self._method,
+                                             url=self._url,
+                                             params=self._params_json,
+                                             json=self._body_json,
+                                             timeout=const.TIMEOUT) as response:
+                return await response.text(), response.headers, response.status
+        except aiohttp.ClientConnectionError as exception:
+            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+                           'Cannot connect to csm agent\'s host {0}:{1}'
+                           .format(exception.host, exception.port))
+            
+            
 class LoginCommand(Command):
     """CLI Default Logout Command"""
 
@@ -218,4 +277,3 @@ class LogoutCommand(Command):
         }
         args = None
         super().__init__('session', options, args)
-

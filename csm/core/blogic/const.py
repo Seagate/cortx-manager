@@ -9,15 +9,18 @@ Type -h or --help for help.\n
 ***********************************
 """
 
-CLI_PROMPT = "csmcli$"
+CLI_PROMPT = "csmcli$ "
 
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
+SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 HCTL_COMMAND = ['hctl', 'status']
-NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate"]
+NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
+                    "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
+
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8101

@@ -28,6 +28,8 @@ from dict2xml import dict2xml
 from prettytable import PrettyTable
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.csmcli import Terminal
+from csm.core.blogic import const
+from csm.common.log import Log
 
 class Command:
     """CLI Command Base Class"""
@@ -99,8 +101,9 @@ class CommandParser:
     This Class Parses the Commands from the dictionary object
     """
 
-    def __init__(self, cmd_data: Dict):
+    def __init__(self, cmd_data: Dict, permissions: Dict):
         self.command = cmd_data
+        self.permissions = permissions
         self._communication_obj = {}
 
     def handle_main_parse(self, subparsers):
@@ -130,6 +133,17 @@ class CommandParser:
         for each_data in data['sub_commands']:
             self.add_args(each_data, parser, name)
 
+    def check_permissions(self, sub_command):
+        """
+        filter subcommand if found any permissions tag
+        if no permissions tag is found it returns true
+        """
+        allowed = False
+        permission_tag =  sub_command.get(const.SUB_COMMANDS_PERMISSIONS, False)
+        if permission_tag and self.permissions.get(permission_tag, False):
+            allowed = True
+        return allowed
+    
     def handle_comm(self, each_args):
         """
         This method will handle the rest params and create the necessary object.
@@ -154,6 +168,8 @@ class CommandParser:
         :param name: Name of the Command :type: str
         :return: None
         """
+        if not self.check_permissions(sub_command):
+            return None
         sub_parser = parser.add_parser(sub_command["name"],
                                        help=sub_command["description"])
         # Check if the command has any arguments.
