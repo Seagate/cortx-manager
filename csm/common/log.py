@@ -138,6 +138,7 @@ class Log:
         Log.logger.debug(f"[{caller}] {msg}", *args, **kwargs)
         print(f"[{caller}] {msg}")
 
+
     @staticmethod
     def trace_method(level, exclude_args=[], truncate_at=80):
         """
