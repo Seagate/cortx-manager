@@ -161,7 +161,7 @@ class CsmRestApi(CsmApi, ABC):
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
     @staticmethod
-    def http_request_to_log_string(request):
+    async def http_request_to_log_string(request):
         remote_ip = request.remote
         url = request.path
         method = request.method
@@ -169,7 +169,7 @@ class CsmRestApi(CsmApi, ABC):
         query = ()
         if request.has_body:
             query = request.query.items()
-            body = json.loads(request.content.readlines())
+            body = await request.json()
         if body and isinstance(body, dict):
             for key in body.keys():
                 if "password" in key:
@@ -181,7 +181,8 @@ class CsmRestApi(CsmApi, ABC):
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        Log.audit(cls.http_request_to_log_string(request))
+        log_message = await cls.http_request_to_log_string(request)
+        Log.audit(log_message)
         is_public = CsmAuth.is_public(handler)
         if not is_public:
             is_public = CsmView.is_public(handler, request.method.lower())
