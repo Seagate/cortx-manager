@@ -1,11 +1,12 @@
 {
-  "name": "s3bucket",
+  "name": "s3buckets",
   "description": "Bucket",
   "sub_commands": [
     {
       "name": "show",
       "description": "Displays S3 buckets On The CLI",
       "need_confirmation": false,
+      "permissions_tag": "list",
       "args": [
         {
           "flag": "-f",
@@ -45,6 +46,7 @@
       "name": "create",
       "description": "Create new S3 bucket",
       "need_confirmation": false,
+      "permissions_tag": "create",
       "args": [
         {
           "flag": "bucket_name",
@@ -72,6 +74,7 @@
       "name": "delete",
       "description": "Delete the bucket",
       "need_confirmation": false,
+      "permissions_tag": "delete",
       "args": [
         {
           "flag": "bucket_name",

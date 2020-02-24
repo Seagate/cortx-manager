@@ -9,7 +9,7 @@ Type -h or --help for help.\n
 ***********************************
 """
 
-CLI_PROMPT = "csmcli$"
+CLI_PROMPT = "csmcli$ "
 
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
@@ -18,9 +18,12 @@ BASE_DIR = '/opt/seagate'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = CSM_INSTALL_BASE_DIR + "/cli/schema"
+SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 HCTL_COMMAND = ['hctl', 'status']
-NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate"]
+NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
+                    "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
+
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8101
@@ -161,7 +164,7 @@ HEALTH_SCHEMA = CSM_SCHEMA_BASE_DIR + '/health_schema.json'
 CLUSTER_INFO_FILE = BASE_DIR + "/eos-prvsnr/pillar/components/cluster.sls"
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = CSM_SCHEMA_BASE_DIR + "/commands.yaml"
-
+SUPPORT_BUNDLE_TAG = "support_bundle"
 # CSM Stats Related
 AGGREGATION_RULE = CSM_SCHEMA_BASE_DIR + '/stats_aggregation_rule.json'
 
@@ -216,4 +219,3 @@ MAX_RESULT_WINDOW=10000
 
 # Syslog constants
 LOG_LEVEL="INFO"
-

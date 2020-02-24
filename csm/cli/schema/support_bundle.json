@@ -16,13 +16,13 @@
           "flag": "args",
           "default": [],
           "nargs": "?",
-          "help": "Additional arguments that can be send to csm agent"
+          "help": "Additional arguments that can be send to csm agent."
         }
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.cli.support_bundle.support_bundle",
-        "method": "init",
+        "target": "csm.cli.support_bundle",
+        "method": "bundle_generate",
         "class": "SupportBundle",
         "is_static": true
       }
@@ -33,23 +33,49 @@
       "need_confirmation": false,
       "args": [
         {
-          "flag": "comment",
-          "type": "str",
-          "help": "Specify the Reason for Generating Support Bundle."
-        },
-        {
           "flag": "bundle_id",
           "type": "str",
-          "help": "Specify the Reason for Generating Support Bundle."
+          "help": "Unique Bundle Id provided while generation."
         },
         {
           "flag": "args",
           "default": [],
           "nargs": "?",
-          "help": "Additional arguments that can be send to csm agent"
+          "help": "Additional arguments that can be send to csm agent."
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
         }
       ],
-      "comm": {}
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.support_bundle",
+        "method": "bundle_status",
+        "class": "SupportBundle",
+        "is_static": true
+      },
+            "output": {
+        "table": {
+          "headers": {
+            "bundle_id": "Bundle Id",
+            "comment": "Comment",
+            "node_name": "Node Name",
+            "message": "Message",
+            "result": "Result"
+          },
+          "filters": "status"
+        }
+      }
     }
   ]
 }
