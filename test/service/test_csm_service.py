@@ -52,8 +52,8 @@ def test1(args):
         resp = process_request(url)
         if resp.status_code != 401:
             raise
-    except:
-        raise CsmError(-1, "csm_agent service is not running...")
+    except Exception as e:
+        raise TestFailed("csm_agent service is not running. Error: %s" %e)
 
 def test2(args):
     """
@@ -69,7 +69,7 @@ def test2(args):
         resp = process_request(url)
         if resp.status_code != 200:
             raise
-    except:
-        raise CsmError(-1, "csm_agent service is not running...")
+    except Exception as e:
+        raise TestFailed("csm_web service is not running. Error: %s" %e)
 
 test_list = [ test1, test2 ]

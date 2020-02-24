@@ -46,7 +46,9 @@ class CsmSetupCommand:
         ''' Parse csm setup command '''
         parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
-        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load())
+        # hardcoded permissions 
+        csm_setup_permissions_dict = {'update': True}
+        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load(), csm_setup_permissions_dict)
         cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]

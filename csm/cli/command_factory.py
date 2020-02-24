@@ -21,6 +21,7 @@ import argparse
 import sys
 import os
 from csm.core.blogic import const
+from csm.common.log import Log
 from csm.common.payload import Json
 from csm.cli.command import CommandParser
 
@@ -41,7 +42,7 @@ class CommandFactory(object):
     """
 
     @staticmethod
-    def get_command(argv):
+    def get_command(argv, permissions):
         """
         Parse the command line as per the syntax and retuns
         returns command representing the command line.
@@ -51,11 +52,16 @@ class CommandFactory(object):
         commands = os.listdir(const.COMMAND_DIRECTORY)
         commands = [command.split(".json")[0] for command in commands
                     if command.split(".json")[0] not in const.EXCLUDED_COMMANDS]
+        if permissions:
+            # common commands both in commands and permissions key list
+            commands = [command for command in commands if command in permissions.keys()]
         parser = ArgumentParser(description='CSM CLI command')
         subparsers = parser.add_subparsers(metavar=commands)
         if argv[0] in commands:
-            cmd_obj = CommandParser(
-                Json(os.path.join(const.COMMAND_DIRECTORY, f"{argv[0]}.json")).load())
+            # get command json file and filter only allowed first level sub_command
+            # create filter_permission_json
+            cmd_from_file = Json(os.path.join(const.COMMAND_DIRECTORY, f"{argv[0]}.json")).load()
+            cmd_obj = CommandParser(cmd_from_file, permissions.get(argv[0], {}))
             cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(argv)
         sys_module = sys.modules[__name__]
