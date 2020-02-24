@@ -556,11 +556,18 @@ class AlertMonitorService(Service, Observable):
             update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
             update_params[const.ALERT_RESOLVED] = prev_alert.resolved
-        update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
-        update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
+        update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
+        update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
+        update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
+        self._update_params_cleanup(update_params)
         self._run_coroutine(self.repo.update_by_hw_id\
                 (prev_alert.sensor_info, update_params))
+
+    def _update_params_cleanup(self, update_params):
+        for key, value in update_params.items():
+            if value is None:
+                update_params[key] = ''
 
     def _is_good_alert(self, alert):
         """

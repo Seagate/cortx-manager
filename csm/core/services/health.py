@@ -16,11 +16,10 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-# Let it all reside in a separate controller until we've all agreed on request
-# processing architecture
 from csm.core.blogic import const
 from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
+from csm.common.conf import Conf
 
 class HealthRepository:
     def __init__(self):        
@@ -54,7 +53,8 @@ class HealthAppService(ApplicationService):
         self._init_health_schema()
 
     def _init_health_schema(self):
-        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
+        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX, 'Health.health_schema')
+        self._health_schema = Payload(Json(health_schema_path))
         self.repo.health_schema = self._health_schema
 
     async def fetch_health_summary(self):
@@ -101,10 +101,12 @@ class HealthAppService(ApplicationService):
             for k, v in health_schema.items():
                 if isinstance(v, dict):
                     return True
+
         def isempty(health_schema):
             if(health_schema.items()):
                 return False
             return True
+
         for k, v in health_schema.items():
             if isinstance(v, dict):
                 if(checkchilddict(v)):
