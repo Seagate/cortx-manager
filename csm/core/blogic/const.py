@@ -160,7 +160,6 @@ HEALTH_SUMMARY='health_summary'
 ALERT_MAPPING_TABLE = CSM_SCHEMA_BASE_DIR + '/alert_mapping_table.json'
 HEALTH_CSM_SCHEMA_KEY_MAPPING = CSM_SCHEMA_BASE_DIR + '/health_csm_schema_key_mapping.json'
 CSM_SETUP_FILE = COMMAND_DIRECTORY + '/csm_setup.json'
-HEALTH_SCHEMA = CSM_SCHEMA_BASE_DIR + '/health_schema.json'
 
 #Support Bundle
 CLUSTER_INFO_FILE = BASE_DIR + "/eos-prvsnr/pillar/components/cluster.sls"
