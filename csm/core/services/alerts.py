@@ -580,7 +580,7 @@ class AlertMonitorService(Service, Observable):
         """
         update_params = {}
         if update_resolve:
-            update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
+            update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
             update_params[const.ALERT_RESOLVED] = prev_alert.resolved
         update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
