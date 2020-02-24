@@ -1,11 +1,12 @@
 {
-  "name": "s3iamuser",
+  "name": "s3iamusers",
   "description": "Create Delete or Display S3 IAM User",
   "sub_commands": [
     {
       "name": "show",
       "description": "Displays S3 iam Users On the cli for logged in account",
       "need_confirmation": false,
+      "permissions_tag": "list",
       "args": [
         {
           "flag": "args",
@@ -49,6 +50,7 @@
       "name": "create",
       "description": "Create a new S3 IAM user in Logged In S3 Account.",
       "need_confirmation": true,
+      "permissions_tag": "create",
       "args": [
         {
           "flag": "user_name",
@@ -115,6 +117,7 @@
       "name": "delete",
       "description": "Deletes the given IAM User in logged in  S3 account",
       "need_confirmation": true,
+      "permissions_tag": "delete",
       "args": [
         {
           "flag": "user_name",

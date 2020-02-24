@@ -1,29 +1,29 @@
 {
     "manage":{
         "permissions": {
-            "alert": ["list", "update", "delete"],
+            "alerts": ["list", "update", "delete"],
             "stats": ["list"],
             "capacity": ["list"],
             "sysconfig": ["list", "update", "delete"],
-            "user": ["list", "update", "delete", "create"],
-            "s3_accounts": ["list", "create"]
+            "users": ["list", "update", "delete", "create"],
+            "s3accounts": ["list", "create"]
         }
     },
     "monitor": {
         "permissions": {
-            "alert": ["list"],
+            "alerts": ["list"],
             "stats": ["list"],
             "capacity": ["list"],
             "sysconfig": ["list"],
-            "user": ["list"],
-            "s3_accounts": ["list"]
+            "users": ["list"],
+            "s3accounts": ["list"]
         }
     },
     "s3": {
         "permissions": {
-            "s3_accounts": ["list", "update", "delete"],
-            "iam_users": ["list", "delete", "create"],
-            "bucket": ["list", "update", "delete", "create"]
+            "s3accounts": ["list", "update", "delete"],
+            "s3iamusers": ["list", "delete", "create"],
+            "s3buckets": ["list", "update", "delete", "create"]
         }
     }
 }

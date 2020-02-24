@@ -9,15 +9,18 @@ Type -h or --help for help.\n
 ***********************************
 """
 
-CLI_PROMPT = "csmcli$"
+CLI_PROMPT = "csmcli$ "
 
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
+SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 HCTL_COMMAND = ['hctl', 'status']
-NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate"]
+NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
+                    "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
+
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8101
@@ -148,10 +151,10 @@ CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
 HEALTH_SCHEMA = '/opt/seagate/csm/schema/health_schema.json'
 
 #Support Bundle
-CLUSTER_INFO_FILE = "/opt/seagate/eos-prvsnr/pillar/components/cluster.sls"
+CLUSTER_INFO_FILE = "/opt/seagate/ees-prvsnr/pillar/components/cluster.sls"
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "/opt/seagate/csm/schema/commands.yaml"
-
+SUPPORT_BUNDLE_TAG = "support_bundle"
 # CSM Stats Related
 AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
 
@@ -206,4 +209,3 @@ MAX_RESULT_WINDOW=10000
 
 # Syslog constants
 LOG_LEVEL="INFO"
-
