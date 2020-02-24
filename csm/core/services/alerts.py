@@ -525,6 +525,7 @@ class AlertMonitorService(Service, Observable):
             self._health_service.update_health_schema(alert)        
 
     def _resolve_alert(self, new_alert, prev_alert):
+        alert_updated = False
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -536,7 +537,7 @@ class AlertMonitorService(Service, Observable):
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
-                return True
+                alert_updated = True
             if self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
@@ -550,7 +551,9 @@ class AlertMonitorService(Service, Observable):
                     resolved status to False.
                     """
                     self._update_alert(new_alert, prev_alert, True)  
-                return True
+                alert_updated = True
+        return alert_updated
+        
         
             
 
@@ -580,11 +583,18 @@ class AlertMonitorService(Service, Observable):
             update_params[const.ALERT_RESOLVED] = alert[const.ALERT_RESOLVED]
         else:
             update_params[const.ALERT_RESOLVED] = prev_alert.resolved
-        update_params[const.ALERT_STATE] = alert[const.ALERT_STATE]
-        update_params[const.ALERT_SEVERITY] = alert[const.ALERT_SEVERITY]
+        update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
+        update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
+        update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
+        self._update_params_cleanup(update_params)
         self._run_coroutine(self.repo.update_by_hw_id\
                 (prev_alert.sensor_info, update_params))
+
+    def _update_params_cleanup(self, update_params):
+        for key, value in update_params.items():
+            if value is None:
+                update_params[key] = ''
 
     def _is_good_alert(self, alert):
         """

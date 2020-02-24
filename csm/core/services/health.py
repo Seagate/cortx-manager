@@ -16,12 +16,11 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-# Let it all reside in a separate controller until we've all agreed on request
-# processing architecture
 from csm.core.blogic import const
 from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
+from csm.common.conf import Conf
 
 class HealthRepository:
     def __init__(self):        
@@ -55,7 +54,8 @@ class HealthAppService(ApplicationService):
         self._init_health_schema()
 
     def _init_health_schema(self):
-        self._health_schema = Payload(Json(const.HEALTH_SCHEMA))
+        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX, 'HEALTH.health_schema')
+        self._health_schema = Payload(Json(health_schema_path))
         self.repo.health_schema = self._health_schema
     
     def update_health_schema(self, alert: AlertModel):
@@ -81,11 +81,11 @@ class HealthAppService(ApplicationService):
                 resource_id)
             resource_schema_dict = self.repo.health_schema.get(hw_health_key)
             if(resource_schema_dict):
-                resource_schema_dict['alert_type'] = alert.state
-                resource_schema_dict['severity'] = alert.severity
-                resource_schema_dict['alert_uuid'] = alert.alert_uuid
-                resource_schema_dict['event_time'] = alert.updated_time
-                resource_schema_dict['health'] = alert.state
+                resource_schema_dict[const.HEALTH_ALERT_TYPE] = alert.get(const.ALERT_STATE, "")
+                resource_schema_dict[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
+                resource_schema_dict[const.ALERT_UUID] = alert.get(const.ALERT_UUID, "")
+                resource_schema_dict[const.ALERT_EVENT_TIME] = alert.get(const.ALERT_UPDATED_TIME, "")
+                resource_schema_dict[const.ALERT_HEALTH] = alert.get(const.ALERT_STATE, "")
                 self._health_schema.set(hw_health_key, resource_schema_dict)
 
     async def fetch_health_summary(self):
@@ -131,10 +131,12 @@ class HealthAppService(ApplicationService):
             for k, v in health_schema.items():
                 if isinstance(v, dict):
                     return True
+
         def isempty(health_schema):
             if(health_schema.items()):
                 return False
             return True
+
         for k, v in health_schema.items():
             if isinstance(v, dict):
                 if(checkchilddict(v)):

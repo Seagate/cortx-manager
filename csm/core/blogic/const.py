@@ -97,6 +97,7 @@ BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'degraded']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
+HEALTH_ALERT_TYPE = 'alert_type'
 ALERT_UUID = 'alert_uuid'
 ALERT_STATE = 'state'
 ALERT_ENCLOSURE_ID = 'enclosure_id'
@@ -145,6 +146,7 @@ ALERT_CLUSTER_ID='cluster_id'
 ALERT_RACK_ID='rack_id'
 ALERT_NODE_ID='node_id'
 ALERT_RESOURCE_ID='resource_id'
+ALERT_EVENT_TIME='event_time'
 
 #Health
 HEALTH='health'
