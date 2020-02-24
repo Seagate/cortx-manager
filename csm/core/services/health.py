@@ -53,7 +53,7 @@ class HealthAppService(ApplicationService):
         self._init_health_schema()
 
     def _init_health_schema(self):
-        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX, 'Health.health_schema')
+        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX, 'HEALTH.health_schema')
         self._health_schema = Payload(Json(health_schema_path))
         self.repo.health_schema = self._health_schema
 
