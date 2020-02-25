@@ -19,11 +19,7 @@
 
 import os
 import sys
-import pwd
 import errno
-from csm.common.errors import CsmError
-from csm.common.log import Log
-from csm.common.conf import Conf
 from csm.conf.setup import CsmSetup
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
@@ -35,6 +31,7 @@ class SetupProvider(Provider):
     def __init__(self):
         super(SetupProvider, self).__init__(const.CSM_SETUP_CMD)
         self._csm_setup = CsmSetup()
+        self.arg_list = {}
 
     def _validate_request(self, request):
         """
@@ -42,20 +39,9 @@ class SetupProvider(Provider):
         """
         self._action = request.options["sub_command_name"]
 
-        if self._action == "init" or self._action == "post_install":
-            self._force = request.options["f"]
-        elif self._action == "reset":
-            self._reset_hard = request.options["hard"]
-
     def _process_request(self, request):
         try:
-            arg_list = {}
-            if self._action == "init":
-                arg_list["force"] = self._force
-            elif self._action == "reset":
-                arg_list["hard"] = self._reset_hard
-            getattr(self._csm_setup, "%s" %(self._action))(arg_list)
+            getattr(self._csm_setup, "%s" %(self._action))(request.options)
             return Response(0, "CSM %s : PASS" %self._action)
         except Exception as e:
-            Log.error("CSM setup failed: %s" %e)
-            return Response(errno.EINVAL, "CSM %s : Fail" %self._action)
+            return Response(errno.EINVAL, "CSM %s : Fail %s" %(self._action,e))

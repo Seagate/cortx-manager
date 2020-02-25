@@ -28,6 +28,7 @@ CSM_ERR_INTERRUPTED         = 0x1002
 CSM_INVALID_REQUEST         = 0x1003
 CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
 CSM_INTERNAL_ERROR          = 0x1005
+CSM_SETUP_ERROR             = 0x1006
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -67,6 +68,15 @@ class CsmError(Exception):
 
     def __str__(self):
         return "error(%s): %s" % (self._rc, self._desc)
+
+class CsmSetupError(CsmError):
+    """
+    This error will be raised when csm setup is failed
+    """
+    _desc = "Csm Setup is failed"
+
+    def __init__(self, _desc=None):
+        super(CsmSetupError, self).__init__(CSM_SETUP_ERROR, _desc)
 
 class CommandTerminated(KeyboardInterrupt):
     """

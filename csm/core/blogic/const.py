@@ -1,3 +1,14 @@
+# Csm Setup
+CSM_PATH = "/opt/seagate/csm"
+CSM_PIDFILE_PATH = "/var/run/csm"
+CSM_CRON_JOB = "/usr/bin/csm_cleanup -d 90"
+CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
+CSM_CONF_PATH = "/etc/csm"
+ETC_PATH = "/etc"
+CSM_CONF_PATH = ETC_PATH + "/csm"
+CSM_LOG_PATH = "/var/log/seagate/csm/"
+CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'
