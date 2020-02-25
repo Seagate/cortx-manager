@@ -36,9 +36,9 @@ class Const:
     INVENTORY_FILE = '/etc/csm/cluster.conf'
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
-    CSM_INSTALL_BASE_DIR = '/opt/seagate/csm'
-    MOCK_PATH = CSM_INSTALL_BASE_DIR + '/test/test_data/'
-    HEALTH_SCHEMA = CSM_INSTALL_BASE_DIR + '/schema/health_schema.json'
+    CSM_PATH = '/opt/seagate/eos/csm'
+    HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
+    MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)
 
 class TestFailed(Exception):
     def __init__(self, desc):
