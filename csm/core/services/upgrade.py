@@ -57,9 +57,13 @@ class HotfixApplicationService(ApplicationService):
             info = await self._provisioner_ops.validate_package(file_ref.get_file_path())
         except PackageValidationError:
             raise InvalidRequest('You have uploaded an invalid hotfix firmware package')
-        
-        file_ref.save_file(os.path.dirname(self._fw_file),
-            os.path.basename(self._fw_file), True)
+
+        try:
+            file_ref.save_file(os.path.dirname(self._fw_file),
+                os.path.basename(self._fw_file), True)
+        except Exception as e:
+            raise CsmInternalError(f'Failed to save the package: {e}')
+
         return {
             "version": info.version
         }
