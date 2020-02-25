@@ -2,5 +2,3 @@
 COMMANDS:
   - '/opt/seagate/csm/conf/setup.yaml'
   - '/opt/seagate/sspl/conf/setup.yaml'
-
-
