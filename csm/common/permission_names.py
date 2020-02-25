@@ -21,11 +21,14 @@
 class Resource:
     ''' Resource Names '''
 
-    ALERT = 'alert'
-    USER = 'user'
-    STAT = 'stat'
-    S3ACCOUNT = 's3account'
-    S3USER = 's3user'
+    ALERTS = 'alerts'
+    STATS = 'stats'
+    USERS = 'users'
+    CAPACITY = 'capacity'
+    SYSCONFIG = 'sysconfig'
+    S3ACCOUNTS = 's3accounts'
+    S3IAMUSERS = 's3iamusers'
+    S3BUCKETS = 's3buckets'
 
 
 class Action:

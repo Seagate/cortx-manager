@@ -58,7 +58,7 @@ class CsmUsersListView(CsmView):
     """
     GET REST implementation for fetching csm users
     """
-    @CsmAuth.permissions({Resource.USER: {Action.LIST}})
+    @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling csm users fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -74,7 +74,7 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
-    @CsmAuth.permissions({Resource.USER: {Action.CREATE}})
+    @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         Log.debug(f"Handling users post request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -99,7 +99,7 @@ class CsmUsersView(CsmView):
     """
     GET REST implementation for csm account get request
     """
-    @CsmAuth.permissions({Resource.USER: {Action.LIST}})
+    @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling get csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -109,7 +109,7 @@ class CsmUsersView(CsmView):
     """
     DELETE REST implementation for csm account delete request
     """
-    @CsmAuth.permissions({Resource.USER: {Action.DELETE}})
+    @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
         Log.debug(f"Handling delete csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -119,7 +119,7 @@ class CsmUsersView(CsmView):
     """
     POST PUT implementation for creating a csm user
     """
-    @CsmAuth.permissions({Resource.USER: {Action.UPDATE}})
+    @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling users put request."
                   f" user_id: {self.request.session.credentials.user_id}")

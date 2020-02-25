@@ -6,16 +6,16 @@ from csm.core.services.permissions import PermissionSet
 roles_dict = {
     'manage': {
           'permissions': {
-               'alert': ['list', 'update', 'delete'],
-               'stat': ['list', 'delete', 'update'],
-               'user': ['create', 'delete', 'update', 'list']
+               'alerts': ['list', 'update', 'delete'],
+               'stats': ['list', 'delete', 'update'],
+               'users': ['create', 'delete', 'update', 'list']
           }
     },
     'monitor': {
           'permissions': {
-              'alert': ['list', 'update'],
-              'stat': ['list', 'update'],
-              'user': ['list']
+              'alerts': ['list', 'update'],
+              'stats': ['list', 'update'],
+              'users': ['list']
           }
     }
 }
@@ -24,9 +24,9 @@ roles_dict = {
 async def test_manage_roles(*args):
     role_manager = RoleManager(roles_dict)
     expected_permissions = PermissionSet({
-        'alert': {'delete', 'list', 'update'},
-        'stat': {'delete', 'list', 'update'},
-        'user': {'create', 'delete', 'list', 'update'}
+        'alerts': {'delete', 'list', 'update'},
+        'stats': {'delete', 'list', 'update'},
+        'users': {'create', 'delete', 'list', 'update'}
     })
 
     actual_permissions = await role_manager.calc_effective_permissions('manage')
@@ -37,9 +37,9 @@ async def test_manage_roles(*args):
 async def test_manage_roles_with_root(*args):
     role_manager = RoleManager(roles_dict)
     expected_permissions = PermissionSet({
-        'alert': {'delete', 'list', 'update'},
-        'stat': {'delete', 'list', 'update'},
-        'user': {'create', 'delete', 'list', 'update'}
+        'alerts': {'delete', 'list', 'update'},
+        'stats': {'delete', 'list', 'update'},
+        'users': {'create', 'delete', 'list', 'update'}
     })
 
     actual_permissions = await role_manager.calc_effective_permissions('root', 'manage')
@@ -50,9 +50,9 @@ async def test_manage_roles_with_root(*args):
 async def test_monitor_roles(*args):
     role_manager = RoleManager(roles_dict)
     expected_permissions = PermissionSet({
-        'alert': {'list', 'update'},
-        'stat': {'list', 'update'},
-        'user': {'list'}
+        'alerts': {'list', 'update'},
+        'stats': {'list', 'update'},
+        'users': {'list'}
     })
 
     actual_permissions = await role_manager.calc_effective_permissions('monitor')
