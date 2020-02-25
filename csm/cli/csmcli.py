@@ -51,10 +51,10 @@ class Terminal:
     @staticmethod
     def logout_alert(is_logged_out: bool):
         if is_logged_out:
-            sys.stdout.write('Successfully logged out')
+            sys.stdout.write('Successfully logged out\n')
         else:
             Log.error(traceback.format_exc())
-            sys.stderr('Logout failed')
+            sys.stderr('Logout failed\n')
 
     @staticmethod
     def get_password(value, confirm_pass_flag=True):
@@ -83,6 +83,7 @@ class CsmCli(Cmd):
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
+        self._permissions = None
 
     def preloop(self):
         """
@@ -92,13 +93,13 @@ class CsmCli(Cmd):
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        Log.init("csm",
-         syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
-         syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
-         backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-         file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-         log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-         level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        Log.init("csm_cli",
+             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
+             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
+             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+             file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+             log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
@@ -132,9 +133,12 @@ class CsmCli(Cmd):
                 if not is_logged_in:
                     self.do_exit("Server authentication check failed.")
                 Log.info(f"{self.username}: Logged In.")
+                self._permissions = self.loop.run_until_complete(self.rest_client.permissions())
+        except KeyboardInterrupt:
+            self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(f"Some Error Occurred.\n Please try Re-Login")
+            self.do_exit(f"Some Error Occurred.\n")
 
     def precmd(self, command):
         """
@@ -148,7 +152,10 @@ class CsmCli(Cmd):
 
     def process_direct_command(self, command):
         obj = CsmDirectClient()
-        self.loop.run_until_complete(obj.call(command))
+        response = self.loop.run_until_complete(obj.call(command))
+        if response:
+            command.process_response(out=sys.stdout, err=sys.stderr,
+                                 response=response)
 
     def process_rest_command(self, command):
         response, _ = self.loop.run_until_complete(self.rest_client.call(command))
@@ -162,7 +169,7 @@ class CsmCli(Cmd):
         :return:
         """
         try:
-            command = CommandFactory.get_command(self.args)
+            command = CommandFactory.get_command(self.args, self._permissions)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))

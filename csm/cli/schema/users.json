@@ -1,11 +1,12 @@
 {
-    "name": "user",
-    "description": "User",
+    "name": "users",
+    "description": "Users",
     "sub_commands": [
         {
             "name": "show",
             "description": "Shows user list",
             "need_confirmation": false,
+            "permissions_tag": "list",
             "args": [
                 {
                     "flag": "-o",
@@ -92,6 +93,7 @@
             "name": "create",
             "description": "Creates user",
             "need_confirmation": true,
+            "permissions_tag": "create",
             "args": [
                 {
                     "flag": "username",
@@ -161,6 +163,7 @@
             "name": "delete",
             "description": "Delete user",
             "need_confirmation": true,
+            "permissions_tag": "delete",
             "args": [
                 {
                     "flag": "username",

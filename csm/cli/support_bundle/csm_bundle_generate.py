@@ -34,7 +34,7 @@ class CSMBundle:
     """
 
     @staticmethod
-    def init(command):
+    async def init(command):
         """
         This method will generate bundle for CSM and include the logs in it.
         :param command: Csm_cli Command Object :type: command

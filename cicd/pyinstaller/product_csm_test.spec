@@ -19,6 +19,7 @@ csm_path = '<CSM_PATH>'
 product_path = '<CSM_PATH>' + '/' + product
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
+product_module_list.append("csm.cli.support_bundle")
 test_module_list = import_list(csm_path, test_path)
 test_module_list.remove('csm.test.csm_test')
 
@@ -64,6 +65,19 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              cipher=block_cipher,
              noarchive=False)
 
+csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
+             pathex=[csm_path + '/dist/csm'],
+             binaries=[],
+             datas=[],
+             hiddenimports=product_module_list,
+             hookspath=[],
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+
 csm_test = Analysis([csm_path + '/test/csm_test.py'],
              pathex=[csm_path + '/dist/csm'],
              binaries=[],
@@ -80,6 +94,7 @@ csm_test = Analysis([csm_path + '/test/csm_test.py'],
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
        (csmcli, 'csmcli', 'csmcli'),
        (csm_setup, 'csm_setup', 'csm_setup'),
+       (csm_cleanup, 'csm_cleanup', 'csm_cleanup'),
        (csm_test, 'csm_test', 'csm_test') )
 
 # csm_agent
@@ -127,6 +142,21 @@ csm_setup_exe = EXE(csm_setup_pyz,
           upx=True,
           console=True )
 
+# csm_cleanup
+csm_cleanup_pyz = PYZ(csm_cleanup.pure, csm_cleanup.zipped_data,
+             cipher=block_cipher)
+
+csm_cleanup_exe = EXE(csm_cleanup_pyz,
+          csm_cleanup.scripts,
+          [],
+          exclude_binaries=True,
+          name='csm_cleanup',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          console=True )
+
 # csm_test
 csm_test_pyz = PYZ(csm_test.pure, csm_test.zipped_data,
              cipher=block_cipher)
@@ -160,6 +190,12 @@ coll = COLLECT(
                csm_setup.binaries,
                csm_setup.zipfiles,
                csm_setup.datas,
+
+               # csm_cleanup
+               csm_cleanup_exe,
+               csm_cleanup.binaries,
+               csm_cleanup.zipfiles,
+               csm_cleanup.datas,
 
                # csm_test
                csm_test_exe,

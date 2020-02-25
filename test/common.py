@@ -18,11 +18,13 @@
  ****************************************************************************
 """
 
+import asyncio
 import inspect
+import traceback
+from functools import wraps
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.blogic import const
-import traceback
 from csm.core.agent.api import CsmApi
 
 class Const:
@@ -34,7 +36,9 @@ class Const:
     INVENTORY_FILE = '/etc/csm/cluster.conf'
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
-    MOCK_PATH = '/opt/seagate/csm/test/test_data/'
+    CSM_INSTALL_BASE_DIR = '/opt/seagate/csm'
+    MOCK_PATH = CSM_INSTALL_BASE_DIR + '/test/test_data/'
+    HEALTH_SCHEMA = CSM_INSTALL_BASE_DIR + '/schema/health_schema.json'
 
 class TestFailed(Exception):
     def __init__(self, desc):
@@ -58,3 +62,22 @@ class TestProvider(object):
 
     def _process_response(self, response):
         self._response = response
+
+
+def async_test(coro):
+    @wraps(coro)
+    def wrapper(*args):
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(coro(args))
+        return result
+    return wrapper
+
+
+def assert_equal(lhs, rhs):
+    if not (lhs == rhs):
+        raise TestFailed(f'"{lhs}" != "{rhs}"')
+
+
+def assert_not_equal(lhs, rhs):
+    if not (lhs != rhs):
+        raise TestFailed(f'"{lhs}" == "{rhs}"')

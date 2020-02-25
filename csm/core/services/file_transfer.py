@@ -60,7 +60,7 @@ class DownloadFileManager:
         self.directory_map = {
             FileType.SUPPORT_BUNDLE: const.DEFAULT_SUPPORT_BUNDLE_ROOT,
             FileType.ETC_CSM: const.CSM_ETC_DIR,
-            # FileType.AUDIT_LOG: "PATH TO AUDIT LOG",
+            FileType.AUDIT_LOG: const.AUDIT_LOG,
         }
 
     def get_file_response(self, ftype: FileType, filename) -> DownloadFileEntity:

@@ -30,12 +30,12 @@ class CsmSetupCommand:
     """
     def __init__(self, argv):
         ''' Check csm setup command and initialize '''
-        Log.init(service_name = "csm_setup",
-                level=const.LOG_LEVEL)
         self._args = argv
         self._args[0] = 'csm_setup'
         self._validate()
         Conf.init()
+        Log.init(service_name = "csm_setup", log_path="/tmp",
+                level=const.LOG_LEVEL)
 
     def _validate(self):
         ''' Validate setup command '''
@@ -46,7 +46,9 @@ class CsmSetupCommand:
         ''' Parse csm setup command '''
         parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
-        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load())
+        # hardcoded permissions 
+        csm_setup_permissions_dict = {'update': True}
+        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load(), csm_setup_permissions_dict)
         cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
@@ -63,12 +65,10 @@ class CsmSetupCommand:
         self.process_request(self._process_response)
         while self._response == None: time.sleep(const.RESPONSE_CHECK_INTERVAL)
         if self._response.rc() != 0:
-            raise CsmError(self._response.rc(), "%s" %self._response.output())
+            raise CsmSetupError("%s" %self._response.output())
         return self._response.output()
 
     def process_request(self, callback=None):
-        Log.debug('command=%s action=%s args=%s options=%s' %(self._cmd.name,
-            self._request.action, self._request.args, self._request.options))
         self._providers = SetupProvider()
         return self._providers.process_request(self._request, callback)
 
@@ -79,18 +79,19 @@ if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
 
-    from csm.common.log import Log
     from csm.common.conf import Conf
     from csm.common.payload import *
-    from csm.common.errors import CsmError
+    from csm.common.errors import CsmSetupError
     from csm.cli.command import CommandParser
     from csm.core.blogic import const
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
+    from csm.common.log import Log
 
     try:
         csm_setup = CsmSetupCommand(sys.argv)
         sys.stdout.write('%s\n' % csm_setup.process())
-    except Exception as exception:
-        Log.error(traceback.format_exc())
-        sys.stderr.write('csm_setup command failed: %s\n' %exception)
+        sys.exit(0)
+    except Exception as e:
+        sys.stderr.write('csm_setup command failed: %s\n' %traceback.format_exc())
+        sys.exit(1)

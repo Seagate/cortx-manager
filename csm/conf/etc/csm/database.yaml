@@ -39,3 +39,20 @@ models:
     config:
         consul_db:
             collection: "onboarding_config"
+-   import_path: "csm.core.blogic.models.support_bundle.SupportBundleModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "supportbundle"
+-   import_path: "csm.core.blogic.models.audit_log.CsmAuditLogModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "csmauditlog"
+
+-   import_path: "csm.core.blogic.models.audit_log.S3AuditLogModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "s3auditlog"
+

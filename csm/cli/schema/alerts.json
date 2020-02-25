@@ -6,6 +6,7 @@
       "name": "show",
       "description": "Displays Alerts On the cli",
       "need_confirmation": false,
+      "permissions_tag": "list",
       "args": [
         {
           "flag": "-d",
@@ -26,10 +27,19 @@
           "params": true
         },
         {
-          "flag": "-a",
+          "flag": "-s",
           "dest": "show_all",
           "action": "store_const",
           "help": "Display All Alerts",
+          "default": "false",
+          "const": "true",
+          "params": true
+        },
+        {
+          "flag": "-a",
+          "dest": "show_active",
+          "action": "store_const",
+          "help": "Display Active Alerts",
           "default": "false",
           "const": "true",
           "params": true
@@ -79,6 +89,7 @@
       "name": "acknowledge",
       "description": "Acknowledged all the Alerts",
       "need_confirmation": true,
+      "permissions_tag": "update",
       "args": [
         {
           "flag": "alerts_id",
@@ -115,6 +126,7 @@
       "name": "comment",
       "description": "Comment on a given alert id",
       "need_confirmation": false,
+      "permissions_tag": "update",
       "args": [
         {
           "flag": "alerts_id",

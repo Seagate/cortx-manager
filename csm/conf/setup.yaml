@@ -1,4 +1,4 @@
-csm_setup:
+csm:
     post_install:
         script: /usr/bin/csm_setup post_install
 
@@ -18,4 +18,4 @@ csm_setup:
             - reset --hard
 
 support_bundle:
-    - /usr/bin/csm_bundle_generate
+    - csmcli csm_bundle_generate

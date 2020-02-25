@@ -9,8 +9,13 @@ import os
 from csm.test.common import Const
 
 file_path = Const.MOCK_PATH
+
+permissions = {
+            'users': { 'list': True, 'update': True, 'create': True }
+}
+            
 create_command = CommandFactory.get_command(
-    ["user", 'create', "user123", "-p", "qwerty123"])
+    ["users", 'create', "user123", "-p", "qwerty123"], permissions )
 t = unittest.TestCase()
 
 with open(file_path + "csm_user_commands_output.json") as fp:
@@ -18,7 +23,7 @@ with open(file_path + "csm_user_commands_output.json") as fp:
 
 
 def test_1(*args):
-    expected_output = 'user'
+    expected_output = 'users'
     actual_output = create_command.name
     t.assertEqual(actual_output, expected_output)
 

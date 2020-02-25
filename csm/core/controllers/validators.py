@@ -78,17 +78,17 @@ class PasswordValidator(Validator):
         if len(password) < 8:
             raise ValidationError(
                 "Password must be of more than 8 characters.")
-        if not re.search(r"[A-Z]", password):
+        if not any(each_char.isupper() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Uppercase Alphabet.")
-        if not re.search(r"[a-z]", password):
+        if not any(each_char.islower() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Lowercase Alphabet.")
-        if not re.search(r"[0-9]", password):
+        if not any(each_char.isdigit() for each_char in password):
             raise ValidationError(
                 "Password must contain at least one Numeric value.")
-        if not re.search(r"[" + "\\".join(const.PASSWORD_SPECIAL_CHARACTER) + "]",
-                         password):
+        if not any(each_char in const.PASSWORD_SPECIAL_CHARACTER
+                   for each_char in password):
             raise ValidationError((f"Password must include at lease one of the "
                 f"{''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters."))
 
