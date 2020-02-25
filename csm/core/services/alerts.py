@@ -520,7 +520,8 @@ class AlertMonitorService(Service, Observable):
         :return: None
         """
         loop = asyncio.get_event_loop()
-        alerts = loop.run_until_complete(self.repo.retrieve_by_range(create_time_range=None, resolved=False))
+        alerts = loop.run_until_complete(self.repo.retrieve_by_range(
+            create_time_range=None, resolved=False))
         for alert in alerts:
             self._health_service.update_health_schema(alert)        
 
@@ -553,9 +554,6 @@ class AlertMonitorService(Service, Observable):
                     self._update_alert(new_alert, prev_alert, True)  
                 alert_updated = True
         return alert_updated
-        
-        
-            
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
         """
