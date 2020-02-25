@@ -27,6 +27,19 @@
                     "help": "force"
                 },
                 {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
                     "flag": "args",
                     "default": [],
                     "nargs": "?"
@@ -54,6 +67,19 @@
                   "choices": [
                     "ees",
                     "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
                   ],
                   "nargs": "?"
                 },
@@ -95,6 +121,25 @@
                   "nargs": "?"
                 },
                 {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
                     "flag": "args",
                     "default": [],
                     "nargs": "?"
@@ -122,6 +167,19 @@
                   "choices": [
                     "ees",
                     "ecs"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
                   ],
                   "nargs": "?"
                 },

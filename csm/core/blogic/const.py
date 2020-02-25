@@ -1,3 +1,14 @@
+# Csm Setup
+CSM_PATH = "/opt/seagate/csm"
+CSM_PIDFILE_PATH = "/var/run/csm"
+CSM_CRON_JOB = "/usr/bin/csm_cleanup -d 90"
+CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
+CSM_CONF_PATH = "/etc/csm"
+ETC_PATH = "/etc"
+CSM_CONF_PATH = ETC_PATH + "/csm"
+CSM_LOG_PATH = "/var/log/seagate/csm/"
+CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'
@@ -14,7 +25,10 @@ CLI_PROMPT = "csmcli$ "
 SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-COMMAND_DIRECTORY = "/opt/seagate/csm/cli/schema"
+BASE_DIR = '/opt/seagate'
+CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
+CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
+COMMAND_DIRECTORY = CSM_INSTALL_BASE_DIR + "/cli/schema"
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 HCTL_COMMAND = ['hctl', 'status']
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
@@ -74,7 +88,7 @@ CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
-DEFAULT_SUPPORT_BUNDLE_ROOT = '/opt/seagate/bundle'
+DEFAULT_SUPPORT_BUNDLE_ROOT =  BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
@@ -94,6 +108,7 @@ BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
+HEALTH_ALERT_TYPE = 'alert_type'
 ALERT_UUID = 'alert_uuid'
 ALERT_STATE = 'state'
 ALERT_ENCLOSURE_ID = 'enclosure_id'
@@ -136,23 +151,38 @@ ALERT_VOLUME='volume'
 ALERT_SIDEPLANE='sideplane'
 ALERT_FAN='fan'
 ALERT_HEALTH = 'health'
+ALERT_INFO='info'
+ALERT_SITE_ID='site_id'
+ALERT_CLUSTER_ID='cluster_id'
+ALERT_RACK_ID='rack_id'
+ALERT_NODE_ID='node_id'
+ALERT_RESOURCE_ID='resource_id'
+ALERT_EVENT_TIME='event_time'
+
+#Health
+HEALTH='health'
+OK_HEALTH='ok'
+TOTAL='total'
+GOOD_HEALTH='good'
+HEALTH_SUMMARY='health_summary'
 
 
 # CSM Schema Path
-ALERT_MAPPING_TABLE = '/opt/seagate/csm/schema/alert_mapping_table.json'
-CSM_SETUP_FILE = '/opt/seagate/csm/cli/schema/csm_setup.json'
+ALERT_MAPPING_TABLE = CSM_SCHEMA_BASE_DIR + '/alert_mapping_table.json'
+HEALTH_CSM_SCHEMA_KEY_MAPPING = CSM_SCHEMA_BASE_DIR + '/health_csm_schema_key_mapping.json'
+CSM_SETUP_FILE = COMMAND_DIRECTORY + '/csm_setup.json'
 
 #Support Bundle
-CLUSTER_INFO_FILE = "/opt/seagate/ees-prvsnr/pillar/components/cluster.sls"
+CLUSTER_INFO_FILE = BASE_DIR + "/eos-prvsnr/pillar/components/cluster.sls"
 SSH_USER_NAME = 'root'
-COMMANDS_FILE = "/opt/seagate/csm/schema/commands.yaml"
+COMMANDS_FILE = CSM_SCHEMA_BASE_DIR + "/commands.yaml"
 SUPPORT_BUNDLE_TAG = "support_bundle"
 # CSM Stats Related
-AGGREGATION_RULE = '/opt/seagate/csm/schema/stats_aggregation_rule.json'
+AGGREGATION_RULE = CSM_SCHEMA_BASE_DIR + '/stats_aggregation_rule.json'
 
 
 # CSM Roles Related
-ROLES_MANAGEMENT = '/opt/seagate/csm/schema/roles.json'
+ROLES_MANAGEMENT = CSM_SCHEMA_BASE_DIR + '/roles.json'
 
 
 # UDS/USL
@@ -187,13 +217,13 @@ PORT_MAX_VALUE = 65536
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
 CSM_SMTP_RECONNECT_ATTEMPTS = 2
-CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = '/opt/seagate/csm/templates/alert_notification_email.html'
+CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = CSM_INSTALL_BASE_DIR + '/templates/alert_notification_email.html'
 CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT = 'Alert notification'
 CSM_ALERT_NOTIFICATION_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
-CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '/opt/seagate/csm/templates/smtp_server_test_email.html'
+CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = CSM_INSTALL_BASE_DIR + '/templates/smtp_server_test_email.html'
 
 # Audit Log
 AUDIT_LOG="/tmp/auditlogs/"
