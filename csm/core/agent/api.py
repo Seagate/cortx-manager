@@ -39,7 +39,7 @@ from csm.common.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
-from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied
+from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied, CsmInternalError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -271,14 +271,12 @@ class CsmRestApi(CsmApi, ABC):
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e
         except CsmNotFoundError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmPermissionDenied as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request),
-                                            status=403)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=403)
+        except CsmInternalError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
         except CsmError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
