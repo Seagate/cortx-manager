@@ -21,6 +21,7 @@ from marshmallow import Schema, fields, validate
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView
+from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied
 
@@ -74,17 +75,11 @@ class S3AccountsListView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts/{account_id}")
-class S3AccountsView(CsmView):
+class S3AccountsView(S3AuthenticatedView):
     def __init__(self, request):
-        super(S3AccountsView, self).__init__(request)
-        self._s3_session = self.request.session.credentials
-        if not self._s3_session:
-            raise InvalidRequest("Invalid S3 Credentials. Ensure that session is valid")
-        self.account_id = self.request.match_info["account_id"]
+        super().__init__(request, 's3_account_service')
         if not self._s3_session.user_id == self.account_id:
             raise CsmPermissionDenied("Access denied. Verify account name.")
-        self._service = self.request.app["s3_account_service"]
-        self._service_dispatch = {}
 
     """
     GET REST implementation for S3 account delete request
