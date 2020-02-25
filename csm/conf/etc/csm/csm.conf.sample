@@ -94,6 +94,10 @@ CSMCLI:
     csm_agent_port: 28101
     csm_agent_base_url: "http://"
 
+#Health
+HEALTH:
+    health_schema : '/opt/seagate/csm/schema/health_schema.json'
+    
 #Support Bundle Config.
 SUPPORT_BUNDLE:
     url : "ftp://"

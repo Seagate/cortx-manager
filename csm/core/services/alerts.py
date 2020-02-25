@@ -30,6 +30,7 @@ from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
+from csm.core.services.health import HealthAppService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
@@ -44,6 +45,8 @@ from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
+from csm.common.payload import Payload, Json
+import asyncio
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -57,7 +60,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
-        self.db = storage
+        self.db = storage        
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -166,8 +169,7 @@ class AlertRepository(IAlertStorage):
         """
         Retrieves all the alerts
         """
-        pass
-
+        pass    
 
 class AlertsAppService(ApplicationService):
     """
@@ -361,8 +363,7 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()
-
+        return alert.to_primitive()    
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
@@ -410,7 +411,7 @@ class AlertMonitorService(Service, Observable):
     web server. 
     """
 
-    def __init__(self, repo: AlertRepository, plugin):
+    def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
         """
         Initializes the Alert Plugin
         """
@@ -419,7 +420,8 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-
+        self._health_service = health_service      
+       
         super().__init__()
 
     def _monitor(self):
@@ -438,6 +440,7 @@ class AlertMonitorService(Service, Observable):
         """
         Log.info("Start Alert monitor thread")
         try:
+            self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -485,6 +488,7 @@ class AlertMonitorService(Service, Observable):
         set the resolved state to False.
         """
         """ Fetching the previous alert. """
+        """ After saving/ updating alert, update the in memory health schema """
         try:
             Log.debug(f"Incoming alert: {message}")
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
@@ -495,15 +499,34 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
+                self._health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
             else:
-                self._resolve_alert(message, prev_alert)
+                if self._resolve_alert(message, prev_alert):
+                    alert = AlertModel(message)
+                    alert.alert_uuid = prev_alert.alert_uuid
+                    self._health_service.update_health_schema(AlertModel(message))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
 
         return True
 
+    def _update_health_schema_after_init(self):
+        """
+        Updates the in memory health schema after CSM init.
+        1.) Fetches all the non-resolved alerts from DB
+        2.) Update the initialized and loaded in-memory health schema
+        :param None
+        :return: None
+        """
+        loop = asyncio.get_event_loop()
+        alerts = loop.run_until_complete(self.repo.retrieve_by_range(
+            create_time_range=None, resolved=False))
+        for alert in alerts:
+            self._health_service.update_health_schema(alert)        
+
     def _resolve_alert(self, new_alert, prev_alert):
+        alert_updated = False
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -515,7 +538,8 @@ class AlertMonitorService(Service, Observable):
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
-            elif self._is_bad_alert(new_alert):
+                alert_updated = True
+            if self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
                 """
@@ -527,7 +551,9 @@ class AlertMonitorService(Service, Observable):
                     Previous alert is a good one so updating and marking the
                     resolved status to False.
                     """
-                    self._update_alert(new_alert, prev_alert, True)
+                    self._update_alert(new_alert, prev_alert, True)  
+                alert_updated = True
+        return alert_updated
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
         """
@@ -552,8 +578,7 @@ class AlertMonitorService(Service, Observable):
         """
         update_params = {}
         if update_resolve:
-            update_params[const.ALERT_RESOLVED] = \
-                    alert.get(const.ALERT_RESOLVED, "")
+            update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
             update_params[const.ALERT_RESOLVED] = prev_alert.resolved
         update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
