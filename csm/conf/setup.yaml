@@ -9,7 +9,7 @@ csm:
         script: /usr/bin/csm_setup config
 
     test:
-        script: /usr/bin/csm_test -t /opt/seagate/csm/test/plans/sanity.pln -f /opt/seagate/csm/test/test_data/args.yaml
+        script: /usr/bin/csm_test -t <CSM_PATH>/test/plans/sanity.pln -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
         script: /usr/bin/csm_setup
