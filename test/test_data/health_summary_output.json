@@ -1,0 +1,7 @@
+{
+    "health_summary": {
+        "total": 56, 
+        "ok|degraded|fault": 38,
+        "good": 18
+    }
+}

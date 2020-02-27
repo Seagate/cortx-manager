@@ -49,10 +49,14 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
 
+        #Heath configuration
+        health_repository = HealthRepository()
+        health_service = HealthAppService(health_repository)
+        CsmRestApi._app["health_service"] = health_service
+
         pm = import_plugin_module('alert')
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin())
-
+                                              pm.AlertPlugin(), health_service)        
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -60,7 +64,7 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
         
-        # Network file manager registration
+       # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
 
         # Stats service creation
@@ -68,19 +72,23 @@ class CsmAgent:
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
-        # User/Session management services
+        # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
-        CsmRestApi._app["roles_service"] = RolesManagementService(roles)
         auth_service = AuthService()
-        CsmRestApi._app.user_manager = UserManager(db)
-        CsmRestApi._app.session_manager = SessionManager()
+        user_manager = UserManager(db)
+        role_manager = RoleManager(roles)
+        session_manager = SessionManager()
         CsmRestApi._app.login_service = LoginService(auth_service,
-                                                     CsmRestApi._app.user_manager,
-                                                     CsmRestApi._app.session_manager,
-                                                     CsmRestApi._app["roles_service"])
+                                                     user_manager,
+                                                     role_manager,
+                                                     session_manager)
 
-        user_service = CsmUserService(CsmRestApi._app.user_manager)
+        user_service = CsmUserService(user_manager)
         CsmRestApi._app["csm_user_service"] = user_service
+
+        roles_service = RoleManagementService(role_manager)
+        CsmRestApi._app["roles_service"] = roles_service
+
 
         #S3 Plugin creation
         s3 = import_plugin_module('s3').S3Plugin()
@@ -165,12 +173,14 @@ if __name__ == '__main__':
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                             AlertMonitorService, AlertRepository
+        from csm.core.services.health import HealthAppService, HealthRepository
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService
         from csm.core.services.s3.buckets import S3BucketService
         from csm.core.services.usl import UslService
         from csm.core.services.users import CsmUserService, UserManager
+        from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
@@ -183,7 +193,6 @@ if __name__ == '__main__':
         from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
-        from csm.core.services.roles_management import RolesManagementService
         from csm.core.services.audit_log import  AuditLogManager, AuditService
         from csm.core.services.file_transfer import DownloadFileManager
 

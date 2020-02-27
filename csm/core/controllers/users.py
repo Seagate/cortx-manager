@@ -19,9 +19,10 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
@@ -57,6 +58,7 @@ class CsmUsersListView(CsmView):
     """
     GET REST implementation for fetching csm users
     """
+    @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling csm users fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -72,6 +74,7 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
+    @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         Log.debug(f"Handling users post request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -92,19 +95,21 @@ class CsmUsersView(CsmView):
         super(CsmUsersView, self).__init__(request)
         self._service = self.request.app["csm_user_service"]
         self._service_dispatch = {}
-        self._roles_service = self.request.app["roles_service"]
 
     """
     GET REST implementation for csm account get request
     """
+    @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling get csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
         return await self._service.get_user(user_id)
+
     """
     DELETE REST implementation for csm account delete request
     """
+    @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
         Log.debug(f"Handling delete csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -114,6 +119,7 @@ class CsmUsersView(CsmView):
     """
     POST PUT implementation for creating a csm user
     """
+    @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling users put request."
                   f" user_id: {self.request.session.credentials.user_id}")

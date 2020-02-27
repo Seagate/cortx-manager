@@ -1,0 +1,588 @@
+{
+    "cluster": {
+        "health": "",
+        "sites": {
+            "site_1": {
+                "health": "",
+                "rack": {
+                    "rack_1": {
+                        "health": "",
+                        "nodes": {
+                            "hostname_1": {
+                                "health": "",
+                                "encl": {
+                                    "health": "",
+                                    "hw": {
+                                        "health": "",
+                                        "fru": {
+                                            "health": "",
+                                            "disks": {
+                                                "health": "",
+                                                "disks_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    }
+                                                }
+                                            },
+                                            "psus": {
+                                                "health": "",
+                                                "psus_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    }
+                                                }
+                                            },
+                                            "controllers": {
+                                                "health": "",
+                                                "controllers_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault"
+                                                    }
+                                                }
+                                            },
+                                            "fans": {
+                                                "health": "",
+                                                "fans_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    }
+                                                }
+                                            },
+                                            "sideplane_expander": {
+                                                "health": "",
+                                                "sideplane_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "sw": {
+                                        "health": "",
+                                        "logical_volume": {
+                                            "resource_id": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time",
+                                                "health": "ok|degraded|fault"
+                                            },
+                                            "resource_id1": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time",
+                                                "health": "ok|degraded|fault"
+                                            }
+                                        }
+                                    },
+                                    "interfaces": {
+                                        "health": "",
+                                        "sas_port": {},
+                                        "fc_port": {}
+                                    },
+                                    "platform_sensors": {
+                                        "health": "",
+                                        "current": {
+                                            "resource_id": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            },
+                                            "resource_id1": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            }
+                                        },
+                                        "temperature": {
+                                            "resource_id": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            },
+                                            "resource_id1": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            }
+                                        },
+                                        "voltage": {
+                                            "resource_id": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            },
+                                            "resource_id1": {
+                                                "alert_type": "fault",
+                                                "severity": "critical",
+                                                "alert_uuid": "1wr13f",
+                                                "event_time": "epoch time"
+                                            }
+                                        }
+                                    }
+                                },
+                                "node_server_1": {
+                                    "hw": {
+                                        "fru": {
+                                            "health": "",
+                                            "disks": {
+                                                "health": "",
+                                                "disks_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    }
+                                                }
+                                            },
+                                            "psus": {
+                                                "health": "",
+                                                "psus_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    }
+                                                }
+                                            },
+                                            "fans": {
+                                                "health": "",
+                                                "fans_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "os": {
+                                            "health": "",
+                                            "host_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "volume_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "network_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "cpu_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "iem": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "mdraid": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "main_memory": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            }
+                                        },
+                                        "platform_sensors": {
+                                            "health": "",
+                                            "current": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            },
+                                            "temperature": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            },
+                                            "voltage": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "node_server_2": {
+                                    "hw": {
+                                        "fru": {
+                                            "health": "",
+                                            "disks": {
+                                                "health": "",
+                                                "disks_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "serial_number": "ZAD01MGM0000R6348P9L",
+                                                        "slot": 82,
+                                                        "isEmpty": false
+                                                    }
+                                                }
+                                            },
+                                            "psus": {
+                                                "health": "",
+                                                "psus_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Left"
+                                                    }
+                                                }
+                                            },
+                                            "fans": {
+                                                "health": "",
+                                                "fans_info": {
+                                                    "resource_id": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    },
+                                                    "resource_id1": {
+                                                        "alert_type": "fault",
+                                                        "severity": "critical",
+                                                        "alert_uuid": "1wr13f",
+                                                        "event_time": "epoch time",
+                                                        "health": "ok|degraded|fault",
+                                                        "location": "Enclosure 0 - Right"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "os": {
+                                            "health": "",
+                                            "host_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "volume_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "network_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "cpu_data": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "iem": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "mdraid": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            },
+                                            "main_memory": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time",
+                                                    "health": "ok|degraded|fault"
+                                                }
+                                            }
+                                        },
+                                        "platform_sensors": {
+                                            "health": "",
+                                            "current": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            },
+                                            "temperature": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            },
+                                            "voltage": {
+                                                "resource_id": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                },
+                                                "resource_id1": {
+                                                    "alert_type": "fault",
+                                                    "severity": "critical",
+                                                    "alert_uuid": "1wr13f",
+                                                    "event_time": "epoch time"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "sw": {
+                                    "services": {
+                                        "sspl": {
+
+                                        },
+                                        "s3": {
+
+                                        }
+                                    }
+                                }
+                            },
+                            "hostname_2": {
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

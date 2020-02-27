@@ -2,11 +2,11 @@
 
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Filename:          validate.py
+ Description:       Generic validatior
 
- Creation Date:     09/10/2019
- Author:            Alexander Nogikh
+ Creation Date:     02/21/2020
+ Author:            Oleg Babin
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -17,13 +17,9 @@
  ****************************************************************************
 """
 
-from .usl import UslController
-from .routes import CsmRoutes
-from .users import CsmUsersListView, CsmUsersView
-from .s3.iam_users import IamUserListView, IamUserView
-from .s3.accounts import S3AccountsListView, S3AccountsView
-from .alerts import AlertsView, AlertsListView
-from .health import HealthView
-from .audit_log import AuditLogShowView, AuditLogDownloadView
-from .maintenance import MaintenanceView
-# from .csm import CsmCliView
+class Validator:
+    @staticmethod
+    def validate_type(obj, typ, name):
+        if type(obj) is not typ:
+            raise ValueError(f'Type of {name} should be a {typ.__name__}')
+

@@ -20,6 +20,7 @@ import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView
+from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.providers.providers import Response
@@ -36,19 +37,15 @@ class S3BucketCreationSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket")
-class S3BucketListView(CsmView):
+class S3BucketListView(S3AuthenticatedView):
     """
     S3 Bucket List View for GET and POST REST API implementation:
         1. Get list of all existing buckets
         2. Create new bucket by given name
-
     """
 
     def __init__(self, request):
-        super().__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
     async def get(self):
         """
@@ -85,7 +82,7 @@ class S3BucketListView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket/{bucket_name}")
-class S3BucketView(CsmView):
+class S3BucketView(S3AuthenticatedView):
     """
     S3 Bucket view for DELETE REST API implementation:
         1. Delete bucket by its given name
@@ -93,10 +90,7 @@ class S3BucketView(CsmView):
     """
 
     def __init__(self, request):
-        super().__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
     async def delete(self):
         """
@@ -110,7 +104,7 @@ class S3BucketView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket_policy/{bucket_name}")
-class S3BucketPolicyView(CsmView):
+class S3BucketPolicyView(S3AuthenticatedView):
     """
     S3 Bucket Policy View for GET, PUT and DELETE REST API implementation:
         1. Get bucket policy of existing bucket
@@ -119,10 +113,7 @@ class S3BucketPolicyView(CsmView):
     """
 
     def __init__(self, request):
-        super(S3BucketPolicyView, self).__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
     """
     GET REST implementation for S3 bucket policy fetch request

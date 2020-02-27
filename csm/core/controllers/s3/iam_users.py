@@ -22,6 +22,7 @@ from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
                                         UserNameValidator)
 from csm.core.controllers.view import CsmView
+from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.providers.providers import Response
 from csm.common.errors import InvalidRequest
 
@@ -73,18 +74,12 @@ class IamUserDeleteSchema(BaseSchema):
     user_name = fields.Str(required=True, validate=[UserNameValidator()])
 
 @CsmView._app_routes.view("/api/v1/iam_users")
-class IamUserListView(CsmView):
+class IamUserListView(S3AuthenticatedView):
     def __init__(self, request):
         """
         Instantiation Method for Iam user view class
         """
-        super(IamUserListView, self).__init__(request)
-        # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.credentials
-        if not self._s3_session:
-            raise InvalidRequest(
-                "Invalid S3 Credentials. Ensure that session is valid")
-        self._service = self.request.app["s3_iam_users_service"]
+        super().__init__(request, 's3_iam_users_service')
 
     async def get(self):
         """
@@ -118,18 +113,12 @@ class IamUserListView(CsmView):
         return await self._service.create_user(self._s3_session, **request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
-class IamUserView(CsmView):
+class IamUserView(S3AuthenticatedView):
     def __init__(self, request):
         """
         Instantiation Method for Iam user view class
         """
-        super(IamUserView, self).__init__(request)
-        # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.credentials
-        if not self._s3_session:
-            raise InvalidRequest(
-                "Invalid S3 Credentials. Ensure that session is valid")
-        self._service = self.request.app["s3_iam_users_service"]
+        super().__init__(request, 's3_iam_users_service')
 
     async def delete(self):
         """

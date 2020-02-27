@@ -2,11 +2,11 @@
 
 """
  ****************************************************************************
- Filename:          __init__.py
- Description:       Module for exposing controllers as a single package
+ Filename:          health.py
+ Description:       Controllers for health
 
- Creation Date:     09/10/2019
- Author:            Alexander Nogikh
+ Creation Date:     02/18/2020
+ Author:            Soniya Moholkar
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -17,13 +17,16 @@
  ****************************************************************************
 """
 
-from .usl import UslController
-from .routes import CsmRoutes
-from .users import CsmUsersListView, CsmUsersView
-from .s3.iam_users import IamUserListView, IamUserView
-from .s3.accounts import S3AccountsListView, S3AccountsView
-from .alerts import AlertsView, AlertsListView
-from .health import HealthView
-from .audit_log import AuditLogShowView, AuditLogDownloadView
-from .maintenance import MaintenanceView
-# from .csm import CsmCliView
+import json
+import re
+from aiohttp import web
+from csm.core.controllers.view import CsmView
+
+@CsmView._app_routes.view("/api/v1/system/health")
+class HealthView(web.View):
+    def __init__(self, request):
+        super().__init__(request)
+        self.health_service = self.request.app["health_service"]        
+
+    async def get(self):
+        return await self.health_service.fetch_health_summary()

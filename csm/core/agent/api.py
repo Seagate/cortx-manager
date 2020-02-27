@@ -39,7 +39,7 @@ from csm.common.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
-from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied
+from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied, CsmInternalError
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -103,7 +103,8 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app = web.Application(
             middlewares=[CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
-                         CsmRestApi.session_middleware]
+                         CsmRestApi.session_middleware,
+                         CsmRestApi.permission_middleware]
         )
 
         usl_ctrl = UslController(usl_service)
@@ -177,15 +178,28 @@ class CsmRestApi(CsmApi, ABC):
         return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query}"
                 f" Body:{body}")
 
+    @staticmethod
+    async def _resolve_handler(request):
+        match_info = await request.app.router.resolve(request)
+        return match_info.handler
+
+    @classmethod
+    async def _is_public(cls, request):
+        handler = await cls._resolve_handler(request)
+        return CsmView.is_public(handler, request.method)
+
+    @classmethod
+    async def _get_permissions(cls, request):
+        handler = await cls._resolve_handler(request)
+        return CsmView.get_permissions(handler, request.method)
 
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
         log_message = await cls.http_request_to_log_string(request)
         Log.audit(log_message)
-        is_public = CsmAuth.is_public(handler)
-        if not is_public:
-            is_public = CsmView.is_public(handler, request.method.lower())
+        session = None
+        is_public = await cls._is_public(request)
         if not is_public:
             hdr = request.headers.get(CsmAuth.HDR)
             if not hdr:
@@ -201,9 +215,23 @@ class CsmRestApi(CsmApi, ABC):
                 cls._unauthorised(e.error())
             if not session:
                 cls._unauthorised('Invalid auth token')
-            request.session = session
         else:
             Log.debug(f'Public: {request}')
+        request.session = session
+        return await handler(request)
+
+    @classmethod
+    @web.middleware
+    async def permission_middleware(cls, request, handler):
+        if request.session is not None:
+            # Check user permissions
+            required = await cls._get_permissions(request)
+            verdict = (request.session.permissions & required) == required
+            Log.debug(f'Required permissions: {required}')
+            Log.debug(f'User permissions: {request.session.permissions}')
+            Log.debug(f'Allow access: {verdict}')
+            if not verdict:
+                raise web.HTTPForbidden()
         return await handler(request)
 
     @staticmethod
@@ -243,14 +271,12 @@ class CsmRestApi(CsmApi, ABC):
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e
         except CsmNotFoundError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmPermissionDenied as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request),
-                                            status=403)
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=403)
+        except CsmInternalError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
         except CsmError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")

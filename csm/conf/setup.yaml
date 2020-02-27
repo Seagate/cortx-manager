@@ -1,20 +1,25 @@
 csm:
     post_install:
-        script: /usr/bin/csm_setup post_install
+        script: /usr/bin/csm_setup
+        args: post_install
 
     init:
-        script: /usr/bin/csm_setup init
+        script: /usr/bin/csm_setup
+        args: init
 
     config:
-        script: /usr/bin/csm_setup config
+        script: /usr/bin/csm_setup
+        args: config
 
     test:
-        script: /usr/bin/csm_test -t /opt/seagate/csm/test/plans/sanity.pln -f /opt/seagate/csm/test/test_data/args.yaml
+        script: /usr/bin/csm_test
+        args:
+            - -t <CSM_PATH>/test/plans/sanity.pln
+            - -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
         script: /usr/bin/csm_setup
         args:
-            - reset --soft
             - reset --hard
 
 support_bundle:
