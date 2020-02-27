@@ -56,3 +56,8 @@ models:
         es_db:
             collection: "s3auditlog"
 
+-   import_path: "csm.core.data.models.secure_storage.NamedEncryptedBytes"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "secure_storage"

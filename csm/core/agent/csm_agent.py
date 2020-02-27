@@ -28,7 +28,7 @@ class CsmAgent:
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
                backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
+               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
@@ -56,14 +56,14 @@ class CsmAgent:
 
         pm = import_plugin_module('alert')
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin(), health_service)        
+                                              pm.AlertPlugin(), health_service)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
         http_notifications = AlertHttpNotifyService()
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
-        
+
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
 
