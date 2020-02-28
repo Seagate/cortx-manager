@@ -17,14 +17,14 @@ CSM Tools
 %build
 
 %install
-mkdir -p ${RPM_BUILD_ROOT}/opt/seagate/csm
-cp -rp . ${RPM_BUILD_ROOT}/opt/seagate/csm
+mkdir -p ${RPM_BUILD_ROOT}<CSM_PATH>
+cp -rp . ${RPM_BUILD_ROOT}<CSM_PATH>
 exit 0
 
 %post
 # Use csm_setup cli for csm directory, permission services
 mkdir -p /etc/uds
-CSM_DIR=/opt/seagate/csm
+CSM_DIR=<CSM_PATH>
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
 
@@ -72,7 +72,6 @@ systemctl disable csm_agent
 systemctl stop csm_agent
 
 %postun
-CSM_DIR=/opt/seagate/csm
 [ $1 -eq 1 ] && exit 0
 rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
@@ -80,7 +79,7 @@ rm -f /usr/bin/csmcli 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;
-rm -rf $CSM_DIR/bin/ 2> /dev/null;
+rm -rf <CSM_PATH>/bin/ 2> /dev/null;
 systemctl daemon-reload
 exit 0
 
@@ -89,7 +88,7 @@ exit 0
 %files
 # TODO - Verify permissions, user and groups for directory.
 %defattr(-, root, root, -)
-/opt/seagate/csm/*
+<CSM_PATH>/*
 
 %changelog
 * Mon Jul 29 2019 Ajay Paratmandali <ajay.paratmandali@seagate.com> - 1.0.0

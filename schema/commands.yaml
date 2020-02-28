@@ -1,4 +1,4 @@
 #Component Commands file Path.
 COMMANDS:
-  - '/opt/seagate/csm/conf/setup.yaml'
+  - '<CSM_PATH>/conf/setup.yaml'
 
