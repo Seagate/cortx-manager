@@ -26,9 +26,11 @@ import asyncio
 import json
 import traceback
 import ssl
+import concurrent
 from weakref import WeakSet
-from aiohttp import web, web_exceptions
+from aiohttp import web, web_exceptions, ClientConnectionError
 from abc import ABC
+from asyncio import CancelledError
 from secure import SecureHeaders
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
@@ -229,6 +231,9 @@ class CsmRestApi(CsmApi, ABC):
             Log.info(f'Response: {resp_obj} \n Status: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
+        except (concurrent.futures._base.CancelledError, CancelledError, ClientConnectionError) as e:
+            Log.debug("Cancelled call")
+            return CsmRestApi.json_response("Call Cancelled", status=500)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e

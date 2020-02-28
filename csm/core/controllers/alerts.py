@@ -20,9 +20,11 @@
 import json
 import re
 from aiohttp import web
+from aiojobs.aiohttp import atomic
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.services.alerts import AlertsAppService
 from csm.common.errors import InvalidRequest
+from csm.common.log import Log
 from csm.core.controllers.view import CsmView
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -57,13 +59,14 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
+@atomic
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
     def __init__(self, request):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
-
+    
     async def get(self):
         """Calling Alerts Get Method"""
         import time
@@ -71,20 +74,22 @@ class AlertsListView(web.View):
         import concurrent
         import aiohttp
         res = {}
+        # await asyncio.sleep(5)
+        # alerts_qp = AlertsQueryParameter()
+        # alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        # res = await self.alerts_service.fetch_all_alerts(**alert_data)
         try:
-            print("Before sleep")
-            await asyncio.sleep(20)
+            #await asyncio.sleep(3)
             alerts_qp = AlertsQueryParameter()
             try:
                 alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
                 res = await self.alerts_service.fetch_all_alerts(**alert_data)
+                Log.debug(res)
             except ValidationError as val_err:
                 raise InvalidRequest(
                     "Invalid Parameter for alerts", str(val_err))
         except (concurrent.futures._base.CancelledError, asyncio.CancelledError, aiohttp.ClientConnectionError) as e:
-            print("Cancelled job")
-            print(str(e))
-            # raise
+            Log.debug("Cancelled get alerts call")
         return res
 
     async def patch(self):

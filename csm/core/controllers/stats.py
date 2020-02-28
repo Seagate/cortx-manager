@@ -20,11 +20,13 @@
 from .view import CsmView
 from csm.core.services.stats import StatsAppService
 from csm.common.log import Log
+from aiojobs.aiohttp import atomic
 
+#@atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
 class StatsView(CsmView):
     def __init__(self, request):
-        super(StatsView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["stat_service"]
         self._service_dispatch = {
             "get": self._service.get
@@ -55,10 +57,11 @@ class StatsView(CsmView):
             return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
                 interval, total_sample, unit, output_format, query)
 
+#@atomic
 @CsmView._app_routes.view("/api/v1/stats")
 class StatsPanelListView(CsmView):
     def __init__(self, request):
-        super(StatsPanelListView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["stat_service"]
     """
     GET REST implementation for Statistics Get Panel List or
