@@ -32,7 +32,7 @@ from aiohttp import web
 from marshmallow import Schema, fields, validate, exceptions
 
 
-class CsmFileUploadSchema(Schema):
+class HotFixUploadSchema(Schema):
     package = fields.Nested(FileFieldSchema(), required=True)
 
 
@@ -49,7 +49,7 @@ class CsmHotfixUploadView(CsmView):
     async def post(self):
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
-            multipart_data = CsmFileUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
+            multipart_data = HotFixUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
 
             package_ref = multipart_data['package']['file_ref']
             return await self._service.upload_package(package_ref)
