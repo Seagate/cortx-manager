@@ -20,7 +20,14 @@ import json
 from csm.core.services.file_transfer import FileType
 from csm.common.log import Log
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from marshmallow import Schema, fields, validate, ValidationError, validates
+from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Resource, Action
 
+class AuditLogRangeQuerySchema(Schema):
+    """ schema to validate date range """
+    start_date = fields.Int(required=True)
+    end_date = fields.Int(required=True)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
 class AuditLogShowView(CsmView):
@@ -32,12 +39,19 @@ class AuditLogShowView(CsmView):
     """
     GET REST implementation for fetching audit logs
     """
+    @CsmAuth.permissions({Resource.AUDITLOG: {Action.LIST}})
     async def get(self):
         Log.debug("Handling audit log fetch request")
-        request_data = self.request.rel_url.query
         component = self.request.match_info["component"]
-        start_date = self.request.rel_url.query["start_date"]
-        end_date = self.request.rel_url.query["end_date"] 
+        audit_log = AuditLogRangeQuerySchema()
+        try:
+            request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid Range query", str(val_err))
+
+        start_date = request_data["start_date"]
+        end_date = request_data["end_date"] 
         return await self._service.get_by_range(component, start_date, end_date)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
@@ -51,12 +65,20 @@ class AuditLogDownloadView(CsmView):
     """
     GET REST implementation for fetching audit logs
     """
+    #Action.READ permission is used for downloading audit logs
+    @CsmAuth.permissions({Resource.AUDITLOG: {Action.READ}})
     async def get(self):
         Log.debug("Handling audit log fetch request")
-        request_data = self.request.rel_url.query
         component = self.request.match_info["component"]
-        start_date = self.request.rel_url.query["start_date"]
-        end_date = self.request.rel_url.query["end_date"]
+        audit_log = AuditLogRangeQuerySchema()
+        try:
+            request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid Range query", str(val_err))
+
+        start_date = request_data["start_date"]
+        end_date = request_data["end_date"]
         zip_file = await self._service.get_audit_log_zip(component, start_date, end_date)
         return self._file_service.get_file_response(FileType.AUDIT_LOG, zip_file)
 

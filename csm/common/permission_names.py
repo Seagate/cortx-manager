@@ -29,12 +29,13 @@ class Resource:
     S3ACCOUNTS = 's3accounts'
     S3IAMUSERS = 's3iamusers'
     S3BUCKETS = 's3buckets'
-
+    AUDITLOG = 'auditlog'
 
 class Action:
     ''' Action Names '''
 
     LIST = 'list'
+    READ = 'read'
     CREATE = 'create'
     DELETE = 'delete'
     UPDATE = 'update'
