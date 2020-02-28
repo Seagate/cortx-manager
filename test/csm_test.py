@@ -113,6 +113,10 @@ def tmain(argp, argv):
     print('TestSuite:%d Tests:%d Passed:%d Failed:%d TimeTaken:%ds' \
         %(ts_count, test_count, pass_count, fail_count, duration))
     print('***************************************')
+    if argp.o is not None:
+        with open(argp.o, "w") as f:
+            status = "Failed" if fail_count != 0 else "Passed"
+            f.write(status)
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
@@ -124,7 +128,7 @@ if __name__ == '__main__':
 
     try:
         argParser = argparse.ArgumentParser(
-            usage = "%(prog)s [-h] [-t] [-f] [-l]",
+            usage = "%(prog)s [-h] [-t] [-f] [-l] [-o]",
             formatter_class = argparse.RawDescriptionHelpFormatter)
         argParser.add_argument("-t",
                 help="Enter path of testlist file")
@@ -132,6 +136,8 @@ if __name__ == '__main__':
                 help="Enter path of args.yaml")
         argParser.add_argument("-l",
                 help="Enter path for log file")
+        argParser.add_argument("-o",
+                help="Print final result in file return fail if any one of test failed.")
         args = argParser.parse_args()
 
         args = argParser.parse_args()

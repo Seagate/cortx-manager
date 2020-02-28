@@ -66,7 +66,7 @@ RUN yum install -y python36-pip \
             paramiko \
             pika \
             prettytable \
-            pyinstaller \
+            pyinstaller==3.5 \
             toml
 
 COPY docker-entrypoint.sh /usr/local/bin/
