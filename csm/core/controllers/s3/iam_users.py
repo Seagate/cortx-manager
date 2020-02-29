@@ -21,7 +21,8 @@ from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
                                         UserNameValidator)
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.providers.providers import Response
 from csm.common.errors import InvalidRequest
@@ -81,6 +82,7 @@ class IamUserListView(S3AuthenticatedView):
         """
         super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.LIST}})
     async def get(self):
         """
         Fetch list of IAM User's
@@ -96,6 +98,7 @@ class IamUserListView(S3AuthenticatedView):
         # Execute List User Task
         return await self._service.list_users(self._s3_session, **data)
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.CREATE}})
     async def post(self):
         """
         Create's new IAM User.
@@ -120,6 +123,7 @@ class IamUserView(S3AuthenticatedView):
         """
         super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.DELETE}})
     async def delete(self):
         """
         Delete IAM user

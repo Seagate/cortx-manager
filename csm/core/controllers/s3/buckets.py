@@ -19,7 +19,8 @@
 import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
@@ -47,6 +48,7 @@ class S3BucketListView(S3AuthenticatedView):
     def __init__(self, request):
         super().__init__(request, 's3_bucket_service')
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
     async def get(self):
         """
         GET REST implementation for S3 buckets fetch request
@@ -59,6 +61,7 @@ class S3BucketListView(S3AuthenticatedView):
 
         return await self._service.list_buckets(self._s3_session)
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.CREATE}})
     async def post(self):
         """
         POST REST implementation for S3 buckets post request
@@ -92,6 +95,7 @@ class S3BucketView(S3AuthenticatedView):
     def __init__(self, request):
         super().__init__(request, 's3_bucket_service')
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.DELETE}})
     async def delete(self):
         """
         DELETE REST implementation for s3 bucket delete request
@@ -118,6 +122,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     GET REST implementation for S3 bucket policy fetch request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling s3 bucket policy fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -128,6 +133,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     PUT REST implementation for S3 bucket policy put request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling s3 bucket policy put request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -140,6 +146,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     DELETE REST implementation for s3 bucket policy delete request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
     async def delete(self):
         Log.debug(f"Handling s3 bucket policy delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
