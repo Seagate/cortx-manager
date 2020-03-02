@@ -59,7 +59,7 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
-@atomic
+#@atomic
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
@@ -79,7 +79,7 @@ class AlertsListView(web.View):
         # alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
         # res = await self.alerts_service.fetch_all_alerts(**alert_data)
         try:
-            #await asyncio.sleep(3)
+            await asyncio.sleep(10)
             alerts_qp = AlertsQueryParameter()
             try:
                 alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')

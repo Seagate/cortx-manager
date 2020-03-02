@@ -105,7 +105,8 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app = web.Application(
             middlewares=[CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
-                         CsmRestApi.session_middleware]
+                         CsmRestApi.session_middleware],
+            logger=Log, debug=True
         )
 
         usl_ctrl = UslController(usl_service)
@@ -264,7 +265,8 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context)
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context,
+                    access_log=Log, access_log_format='%a %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %D')
 
     @staticmethod
     async def process_request(request):
