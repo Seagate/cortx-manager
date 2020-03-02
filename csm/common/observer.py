@@ -34,6 +34,6 @@ class Observable:
     def _notify_listeners(self, *args, loop, **kwargs):
         for observer in self._observers:
             if inspect.iscoroutinefunction(observer):
-                asyncio.ensure_future(observer(*args, **kwargs), loop=loop)
+                asyncio.run_coroutine_threadsafe(observer(*args, **kwargs), loop=loop)
             else:
                 observer(*args, **kwargs)

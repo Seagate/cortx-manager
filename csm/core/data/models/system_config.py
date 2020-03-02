@@ -156,6 +156,14 @@ class EmailConfig(Model):
         for key in new_values:
             setattr(self, key, new_values[key])
 
+    def get_target_emails(self):
+        """
+        Returns a list of emails to send notifications to
+        :returns: list of strings
+        """
+        stripped = (x.strip() for x in self.email.split(','))
+        return [x for x in stripped if x]
+
     def to_smtp_config(self) -> SmtpServerConfiguration:
         config = SmtpServerConfiguration()
         config.smtp_host = self.smtp_server
