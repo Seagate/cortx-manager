@@ -20,7 +20,8 @@ import json
 from marshmallow import Schema, fields, validate
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied
@@ -48,6 +49,7 @@ class S3AccountsListView(CsmView):
     """
     GET REST implementation for S3 account fetch request
     """
+    @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.LIST}})
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling list s3 accounts fetch request."
@@ -59,6 +61,7 @@ class S3AccountsListView(CsmView):
     """
     POST REST implementation for S3 account fetch request
     """
+    @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.CREATE}})
     @Log.trace_method(Log.INFO)
     async def post(self):
         """Calling Stats Post Method"""
@@ -78,12 +81,14 @@ class S3AccountsListView(CsmView):
 class S3AccountsView(S3AuthenticatedView):
     def __init__(self, request):
         super().__init__(request, 's3_account_service')
+        self.account_id = self.request.match_info["account_id"]
         if not self._s3_session.user_id == self.account_id:
             raise CsmPermissionDenied("Access denied. Verify account name.")
 
     """
     GET REST implementation for S3 account delete request
     """
+    @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.DELETE}})
     async def delete(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling s3 accounts delete request."
@@ -98,6 +103,7 @@ class S3AccountsView(S3AuthenticatedView):
     """
     PATCH REST implementation for S3 account
     """
+    @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.UPDATE}})
     async def patch(self):
         Log.debug(f"Handling update s3 accounts patch request."
                   f" user_id: {self.request.session.credentials.user_id}")

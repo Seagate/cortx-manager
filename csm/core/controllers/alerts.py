@@ -23,7 +23,8 @@ from csm.common.log import Log
 from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.common.errors import InvalidRequest
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.common.log import Log
@@ -68,6 +69,7 @@ class AlertsListView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """Calling Alerts Get Method"""
         Log.debug(f"Handling list alerts get request."
@@ -80,6 +82,7 @@ class AlertsListView(web.View):
                 "Invalid Parameter for alerts", str(val_err))
         return await self.alerts_service.fetch_all_alerts(**alert_data)
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     async def patch(self):
         Log.debug(f"Handling update all alerts patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -97,6 +100,7 @@ class AlertsView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     async def patch(self):        
         """ Update Alert """    
         alert_id = self.request.match_info["alert_id"]
@@ -108,6 +112,7 @@ class AlertsView(web.View):
             raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """ Gets alert by ID """
         alert_id = self.request.match_info["alert_id"]
@@ -128,6 +133,7 @@ class AlertCommentsView(web.View):
         self.user_id = self.request.session.credentials.user_id
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         """ Get all the comments of alert having alert_uuid """
@@ -136,6 +142,7 @@ class AlertCommentsView(web.View):
         #  Fetching the alert to make sure that alert exists for the alert_uuid provided
         return await self.alerts_service.fetch_comments_for_alert(alert_uuid)
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
     async def post(self):
         """ Add Comment to Alert having alert_uuid """
