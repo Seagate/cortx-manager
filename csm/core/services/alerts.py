@@ -392,12 +392,10 @@ class AlertEmailNotifier(Service):
         }
         html_body = self.template.render(**alert_template_params)
         subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
-
         message = EmailSender.make_multipart(email_config.smtp_sender_email,
-            email_config.email, subject, html_body)
-
-        await self.email_sender_queue.enqueue_email(message, smtp_config)
-
+            None, subject, html_body)
+        await self.email_sender_queue.enqueue_bulk_email(message,
+            email_config.get_target_emails(), smtp_config)
 
 class AlertMonitorService(Service, Observable):
     """

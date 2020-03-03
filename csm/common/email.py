@@ -47,11 +47,19 @@ class SmtpServerConfiguration:
     smtp_host:str
     smtp_port:str
     smtp_login:str  # Set to None if the SMTP server does not require authentication
-    smtp_password:str
-    smtp_use_ssl:bool
+    smtp_password:str=None
+    smtp_use_ssl:bool=True
     ssl_context=None  # If set to None and smtp_use_ssl is True, default context will be used
     timeout:int=30  # Timeout for a single reconnection attempt
     reconnect_attempts:int=2
+
+    def __hash__(self):
+        data = (self.smtp_host, self.smtp_port, self.smtp_login, self.smtp_password,
+                    self.smtp_use_ssl, self.ssl_context, self.timeout, self.reconnect_attempts)
+        return hash(data)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class EmailSender:
@@ -147,7 +155,7 @@ class EmailSender:
         return await loop.run_in_executor(self._executor, _send)
 
     @staticmethod
-    def make_multipart(from_address, to_address, subject, html_text=None,
+    def make_multipart(from_address=None, to_address=None, subject=None, html_text=None,
             plain_text=None) -> MIMEMultipart:
         """
         Method for multipart email message creation
@@ -158,10 +166,13 @@ class EmailSender:
         :param plain_text: If not None, prepresents a plain text view of the message
         """
         msg = MIMEMultipart("alternative")
-        msg['Subject'] = subject
-        msg['To'] = to_address
-        msg['From'] = from_address
 
+        if subject:
+            msg['Subject'] = subject
+        if to_address:
+            msg['To'] = to_address
+        if from_address:
+            msg['From'] = from_address
         if plain_text:
             msg.attach(MIMEText(plain_text, "plain"))
         if html_text:
