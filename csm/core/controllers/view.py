@@ -182,7 +182,7 @@ class CsmView(web.View):
                 parse_result = {
                     'content_type': ct,
                     'filename': filename,
-                    'file_ref': FileRef(file_uuid)
+                    'file_ref': FileRef(file_uuid, file_cache.cache_dir)
                 }
             else:
                 content = b''
@@ -233,7 +233,7 @@ class CsmView(web.View):
 
         # Content-Disposition filename parse (optional)
         filename = None
-        if len(cd_values) == 3:
+        if len(cd_values) > 2:
             filename_pair = cd_values[2].split('=')
             if (len(filename_pair) != 2 or
                 filename_pair[0].strip() != 'filename' or

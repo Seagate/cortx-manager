@@ -53,7 +53,7 @@ class DownloadFileEntity:
 
 class DownloadFileManager:
     """
-    Class for handling files download and upload
+    Class for handling files download
     """
 
     def __init__(self):
@@ -71,7 +71,7 @@ class DownloadFileManager:
         directory = self.directory_map.get(ftype)
         if directory is None:
             raise CsmInternalError(
-                f'Attempt to get unsupported directory - "{ftype}". ' + \
+                f'Attempt to get unsupported directory - "{ftype}". ' +
                 f'Supported directories: {list(self.directory_map.keys())}')
 
         path_to_file = os.path.join(directory, filename)
@@ -81,21 +81,21 @@ class DownloadFileManager:
 
 
 class FileRef():
-    def __init__(self, file_uuid):
+    def __init__(self, file_uuid, cache_dir=const.CSM_TMP_FILE_CACHE_DIR):
         self.file_uuid = file_uuid
-        self.cache_dir = const.CSM_TMP_FILE_CACHE_DIR
+        self.cache_dir = cache_dir
 
     def save_file(self, dir_to_save, filename, overwrite=False):
         path_to_cached_file = os.path.join(self.cache_dir, self.file_uuid)
         if not os.path.exists(path_to_cached_file):
             raise CsmInternalError(
-                'File was removed from cache. Ensure that you are calling ' + \
+                'File was removed from cache. Ensure that you are calling ' +
                 'save_file in scope of FileCache context manager.')
 
         path_to_file_to_save = os.path.join(dir_to_save, filename)
         if os.path.exists(path_to_file_to_save) and not overwrite:
             raise CsmInternalError(
-                f'File "{path_to_file_to_save}" already exists. Change ' + \
+                f'File "{path_to_file_to_save}" already exists. Change ' +
                 '"overwrite" argument if you want to overwrite file')
 
         copyfile(path_to_cached_file, path_to_file_to_save)
@@ -124,13 +124,16 @@ class FileCache(ContextDecorator):
                 Log.error('Cached file was deleted out of scope of FileCache context manger')
 
     def cache_new_file(self):
+        """
+        Start caching new file to cache directory
+        """
         if self.current_writing_file_stream is not None:
             err_msg = 'Trying to open new file stream for caching while another file is writing'
             Log.error(err_msg)
             raise CsmInternalError(err_msg)
 
         file_uuid = uuid.uuid4().hex
-        # TODO: check for existing file
+        # TODO: check for existing file?
         file_stream = open(os.path.join(self.cache_dir, file_uuid), 'w+b')
 
         self.files_uuids.append(file_uuid)
