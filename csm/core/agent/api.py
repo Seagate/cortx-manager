@@ -142,8 +142,11 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = str(err)
-        Log.audit(f'User: {request.session.credentials.user_id} '
+        if hasattr(request.session, "credentials"):
+            Log.audit(f'User: {request.session.credentials.user_id} '
                   f'Request: {request} RC: {resp["error_code"]}' )
+        else:
+            Log.audit(f'Request: {request} RC: {resp["error_code"]}')
         return resp
 
     @staticmethod
