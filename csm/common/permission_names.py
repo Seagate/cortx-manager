@@ -29,6 +29,7 @@ class Resource:
     S3ACCOUNTS = 's3accounts'
     S3IAMUSERS = 's3iamusers'
     S3BUCKETS = 's3buckets'
+    S3BUCKET_POLICY = 's3bucket_policy'
     AUDITLOG = 'auditlog'
 
 class Action:
