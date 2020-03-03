@@ -173,7 +173,6 @@ HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(C
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 
 #Support Bundle
-CLUSTER_INFO_FILE = "/opt/seagate/eos-prvsnr/pillar/components/cluster.sls"
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle"

@@ -18,6 +18,7 @@
 """
 
 import sys
+import os
 import string
 import random
 import asyncio
@@ -33,7 +34,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.errors import CsmError
 from csm.core.providers.providers import Response
 from csm.common import errors
-
+from csm.common.conf import Conf
 
 class SupportBundle:
     """
@@ -79,7 +80,13 @@ class SupportBundle:
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
-        cluster_info = Yaml(const.CLUSTER_INFO_FILE).load().get("cluster", {})
+        cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                          "SUPPORT_BUNDLE.cluster_file_path")
+        if not os.path.exists(cluster_file_path):
+            raise CsmError(rc=errno.ENOENT,
+                           message_id=(f"{cluster_file_path} not Found. \n "
+                   f"Please Check if Cluster Info File is Correctly Configured."))
+        cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
             raise CsmError(rc=errno.ENOENT, message_id="{0} not Found",

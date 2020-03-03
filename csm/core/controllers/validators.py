@@ -67,7 +67,7 @@ class PathPrefixValidator(Validator):
     def __call__(self, value):
         if len(value) > const.PATH_PREFIX_MAX_VALUE:
             raise ValidationError(f"Path must not be more than {const.PATH_PREFIX_MAX_VALUE} characters.")
-        if not value.startswith("/"):
+        if value and not value.startswith("/"):
             raise ValidationError("Path Must Start with '/'.")
 
 class PasswordValidator(Validator):
