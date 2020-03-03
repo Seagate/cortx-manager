@@ -33,15 +33,17 @@ from csm.common.key_manager import KeyManager
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.data.access import Query, SortOrder
+from csm.core.data.access import Query
 from csm.core.data.access.filters import Compare
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.models.s3 import S3ConnectionConfig
-from csm.core.data.models.usl import (Device, Volume, Event, NewVolumeEvent, VolumeRemovedEvent,
+from csm.core.data.db.db_provider import DataBaseProvider
+from csm.core.data.models.s3 import S3ConnectionConfig, IamError
+from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 DEFAULT_VOLUME_CACHE_UPDATE_PERIOD = 3
+
 
 class UslService(ApplicationService):
     """
@@ -49,7 +51,9 @@ class UslService(ApplicationService):
     """
     # FIXME improve token management
     _token: str
+    _s3plugin: Any
     _s3cli: Any
+    _iamcli: Any
     _storage: DataBaseProvider
     _device: Device
     _volumes: Dict[UUID, Volume]
@@ -63,7 +67,9 @@ class UslService(ApplicationService):
         loop = asyncio.get_event_loop()
 
         self._token = ''
+        self._s3plugin = s3_plugin
         self._s3cli = self._create_s3cli(s3_plugin)
+        self._iamcli = IamRootClient()
         dev_uuid = self._get_device_uuid()
         self._device = Device.instantiate(
             self._get_system_friendly_name(),
@@ -95,7 +101,7 @@ class UslService(ApplicationService):
         """Restores the volume cache from Consul KVS"""
 
         try:
-            cache = {volume.uuid:volume
+            cache = {volume.uuid: volume
                      for volume in await self._storage(Volume).get(Query())}
         except Exception as e:
             reason = (f"Failed to restore USL volume cache from Consul KVS: {str(e)}\n"
@@ -120,6 +126,56 @@ class UslService(ApplicationService):
 
         return uuid5(self._device.uuid, bucket_name)
 
+    async def _create_udx_account(self, account_name, account_email, account_password, bucket_name):
+        """
+        Creates an UDX account with dedicated bucket.
+        """
+
+        Log.debug(f'Creating UDX S3 account. account_name: {account_name}')
+        account = await self._iamcli.create_account(account_name, account_email)
+        if isinstance(account, IamError):
+            raise CsmInternalError(f'Failed to create UDX S3 account {account.error_code}: '
+                                   f'{account.error_message}')
+
+        iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
+        account_client = self._s3plugin.get_iam_client(account.access_key_id, account.secret_key_id,
+                                                       iam_conf)
+
+        try:
+            await self._create_udx_bucket(account, bucket_name)
+            Log.debug(f"Creating Login profile for account: {account}")
+            profile = await account_client.create_account_login_profile(account_name,
+                                                                        account_password)
+            if isinstance(profile, IamError):
+                raise CsmInternalError("Failed to create loging profile for UDX S3 account")
+        except Exception as e:
+            await account_client.delete_account(account.account_name)
+            raise e
+
+        return {
+            "account_name": account.account_name,
+            "account_email": account.account_email,
+            "access_key": account.access_key_id,
+            "secret_key": account.secret_key_id,
+            "bucket_name": bucket_name,
+        }
+
+    async def _create_udx_bucket(self, account, bucket_name):
+        Log.debug(f'Creating UDX bucket {bucket_name} for s3 account: {account.account_name}')
+        postfixed_bucket_name = bucket_name + '-udx'
+        bucket_tags = {"udx": "enabled"}
+
+        try:
+            conn_conf = CsmS3ConfigurationFactory.get_s3_connection_config()
+            s3_client = self._s3plugin.get_s3_client(account.access_key_id, account.secret_key_id,
+                                                     conn_conf)
+            await s3_client.create_bucket(postfixed_bucket_name)
+            Log.info(f'UDX bucket {postfixed_bucket_name} is created')
+            await s3_client.put_bucket_tagging(postfixed_bucket_name, bucket_tags)
+            Log.info(f'UDX bucket {postfixed_bucket_name} is taggged with {bucket_tags}')
+        except Exception as e:
+            raise CsmInternalError(f'UDX bucket creation failed: {str(e)}')
+
     async def _is_bucket_udx_enabled(self, bucket):
         """
         Checks if bucket is UDX enabled
@@ -135,7 +191,7 @@ class UslService(ApplicationService):
 
         volume_cache_update_period = float(
             Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.volume_cache_update_period_seconds') or
-                DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
+            DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
         )
 
         while True:
@@ -183,7 +239,6 @@ class UslService(ApplicationService):
 
         self._volumes = fresh_cache
 
-
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
@@ -202,7 +257,7 @@ class UslService(ApplicationService):
 
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        return [v.to_primitive(role='public') for uuid,v in self._volumes.items()]
+        return [v.to_primitive(role='public') for uuid, v in self._volumes.items()]
 
     async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
         """
@@ -215,7 +270,7 @@ class UslService(ApplicationService):
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
 
-        if not volume_id in self._volumes:
+        if volume_id not in self._volumes:
             raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
         return MountResponse.instantiate(self._volumes[volume_id].bucketName,
                                          self._volumes[volume_id].bucketName).to_primitive()
