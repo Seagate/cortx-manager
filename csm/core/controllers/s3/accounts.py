@@ -56,7 +56,8 @@ class S3AccountsListView(CsmView):
                   f" user_id: {self.request.session.credentials.user_id}")
         limit = self.request.rel_url.query.get("limit", None)
         marker = self.request.rel_url.query.get("continue", None)
-        return await self._service.list_accounts(marker, limit)
+        return await self._service.list_accounts(self.request.session.credentials,
+                                                 marker, limit)
 
     """
     POST REST implementation for S3 account fetch request
