@@ -55,7 +55,8 @@
           "dest": "Id",
           "type": "str",
           "help": "Policy id which you want to create.",
-          "json": true
+          "json": true,
+          "required": true
         },
         {
           "flag": "-v",
