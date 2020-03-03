@@ -63,7 +63,8 @@
           "default": "2012-10-17",
           "type": "str",
           "help": "Policy version",
-          "json": true
+          "json": true,
+          "required": true
         },
         {
           "flag": "-s",
