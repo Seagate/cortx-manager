@@ -20,21 +20,15 @@
 from typing import Union
 
 from botocore.exceptions import ClientError
-from aiohttp.web import (HTTPNotFound, HTTPBadRequest,
-                         HTTPUnprocessableEntity, HTTPConflict)
 from boto.s3.bucket import Bucket
 
 from csm.common.log import Log
-from csm.common.errors import CsmInternalError, CsmNotFoundError
-from csm.common.services import Service, ApplicationService
-from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
-
-from csm.common.conf import Conf
-from csm.core.blogic import const
+from csm.common.services import ApplicationService
 
 from csm.eos.plugins.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
 from csm.core.services.sessions import S3Credentials
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory
 
 
 # TODO: maybe it will be useful for other S3 dependent API
@@ -75,12 +69,7 @@ class S3BucketService(ApplicationService):
 
     def __init__(self, s3plugin: S3Plugin):
         self._s3plugin = s3plugin
-
-        self._s3_connection_config = S3ConnectionConfig()
-        self._s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
-        self._s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.s3_port")
-        self._s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
-                                                              "S3.max_retries_num")
+        self._s3_connection_config = CsmS3ConfigurationFactory.get_s3_connection_config()
 
     async def get_s3_client(self, s3_session: S3Credentials) -> S3Client:
         """
