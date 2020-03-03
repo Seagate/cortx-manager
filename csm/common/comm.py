@@ -23,6 +23,7 @@ import paramiko, socket
 import ftplib
 import getpass
 import time
+import shutil
 import errno
 from paramiko.ssh_exception import SSHException
 from csm.common.payload import *
@@ -289,6 +290,40 @@ class AmqpChannel(Channel):
 
     def acknowledge(self, delivery_tag=None):
         self._channel.basic_ack(delivery_tag=delivery_tag)
+
+class FILEChannel(Channel):
+    def __init__(self, *args, **kwargs):
+        super(FILEChannel, self).__init__()
+
+    def init(self):
+        raise Exception('init not implemented in File Channel class')
+
+    def connect(self):
+        pass
+
+    def send(self, message):
+        raise Exception('send not implemented in FIle Channel class')
+
+    def send_file(self, local_file_path, remote_directory):
+        """
+        Moves the FIle from Local File Path to Path Given
+        :param local_file_path:
+        :param remote_directory:
+        :return:
+        """
+        shutil.move(local_file_path, remote_directory)
+
+    def disconnect(self):
+        pass
+
+    def recv(self, message=None):
+        raise Exception('recv not implemented in Channel class')
+
+    def recv_file(self, remote_file, local_file):
+        raise Exception('recv_file not implemented in Channel class')
+
+    def acknowledge(self, delivery_tag=None):
+        raise Exception('acknowledge not implemented for Channel class')
 
 class FTPChannel(Channel):
     """

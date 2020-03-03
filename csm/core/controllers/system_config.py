@@ -33,9 +33,12 @@ class Ipv4NodesSchema(Schema):
     Ipv4 nodes schema class for common fields in management network and
     data network settings.
     """
-    id = fields.Int(allow_none=True)
-    ip_address = fields.Str(validate=Ipv4(), allow_none=True)
-    hostname = fields.Str(allow_none=True)
+    id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    ip_address = fields.Str(validate=Ipv4(), required=True)
+    hostname = fields.Str(required=True)
+    gateway = fields.Str(validate=Ipv4(), required=True)
+    netmask = fields.Str(validate=Ipv4(), required=True)
 
 class Ipv6NodesSchema(Schema):
     """
@@ -54,10 +57,6 @@ class Ipv4BaseSchema(Schema):
     data network settings.
     """
     is_dhcp = fields.Boolean(allow_none=True)
-    vip_address = fields.Str(validate=Ipv4(), allow_none=True)
-    vip_hostname = fields.Str(allow_none=True)
-    netmask = fields.Str(validate=Ipv4(), allow_none=True)
-    gateway = fields.Str(validate=Ipv4(), allow_none=True)
     nodes = fields.List(fields.Nested(Ipv4NodesSchema, allow_none=True,
                                       unknown='EXCLUDE'))
 
@@ -106,8 +105,11 @@ class DnsNetworkSettingsNodes(Schema):
     Dns network setting nodes is nested schema class used to form dns network
     settings schema.
     """
-    id = fields.Int(allow_none=True)
-    hostname = fields.Str(allow_none=True)
+    id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    hostname = fields.Str(required=True)
+    dns_servers = fields.List(fields.Str(required=True))
+    search_domain = fields.List(fields.Str(required=True))
 
 class DnsNetworkSettingsSchema(Schema):
     """
@@ -116,9 +118,6 @@ class DnsNetworkSettingsSchema(Schema):
     Dns network settings schema class is used to form system config settings schema
     """
     is_external_load_balancer = fields.Boolean(allow_none=True)
-    hostname = fields.Str(allow_none=True)
-    dns_servers = fields.List(fields.Str(), allow_none=True)
-    search_domain = fields.List(fields.Str(), allow_none=True)
     nodes = fields.List(fields.Nested(DnsNetworkSettingsNodes,
                                       allow_none=True, unknown='EXCLUDE'))
 
@@ -126,8 +125,8 @@ class NtpSchema(Schema):
     """
     Ntp is nested schema class used to form date time settings schema.
     """
-    ntp_server_address = fields.Str(allow_none=True)
-    ntp_timezone_offset = fields.Str(allow_none=True)
+    ntp_server_address = fields.Str(required=True)
+    ntp_timezone_offset = fields.Str(required=True)
 
 class ManualDateTimeSchema(Schema):
     """
@@ -222,8 +221,8 @@ class SystemConfigListView(CsmView):
     """
 
     async def get(self):
-        Log.debug("Handling system config fetch request")
-
+        Log.debug(f"Handling system config fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_system_config_list()
 
     """
@@ -231,16 +230,16 @@ class SystemConfigListView(CsmView):
     """
 
     async def post(self):
-        Log.debug("Handling system config post request")
+        Log.debug(f"Handling system config post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = SystemConfigSettingsSchema()
             config_data = schema.load(await self.request.json(),
                                       unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.create_system_config(str(uuid.uuid4()),
                                                         **config_data)
 
@@ -256,7 +255,8 @@ class SystemConfigView(CsmView):
     """
 
     async def get(self):
-        Log.debug("Handling system config fetch request")
+        Log.debug(f"Handling system config fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
 
         id = self.request.match_info["config_id"]
         return await self._service.get_system_config_by_id(id)
@@ -266,18 +266,18 @@ class SystemConfigView(CsmView):
     """
 
     async def put(self):
-        Log.debug("Handling system config put request")
+        Log.debug(f"Handling system config put request."
+                  f" user_id: {self.request.session.credentials.user_id}")
 
         try:
             id = self.request.match_info["config_id"]
             schema = SystemConfigSettingsSchema()
             config_data = schema.load(await self.request.json(),
                                       unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.update_system_config(id, config_data)
 
 @CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
@@ -300,6 +300,5 @@ class TestEmailView(CsmView):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.test_email_config(config_data)

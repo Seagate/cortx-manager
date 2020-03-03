@@ -32,6 +32,8 @@ from csm.core.data.models.s3 import S3ConnectionConfig, IamError
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
+from csm.core.services.roles import RoleManager
+from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
 
 
@@ -94,7 +96,7 @@ class Session:
     def __init__(self, session_id: Id,
                  expiry_time: datetime,
                  credentials: SessionCredentials,
-                 permissions: dict) -> None:
+                 permissions: PermissionSet) -> None:
         self._session_id = session_id
         self._expiry_time = expiry_time
         self._credentials = credentials
@@ -117,7 +119,7 @@ class Session:
         return self._credentials
 
     @property
-    def permissions(self) -> Id:
+    def permissions(self) -> PermissionSet:
         return self._permissions
 
 
@@ -139,7 +141,8 @@ class SessionManager:
         now = datetime.now(timezone.utc)
         return now + self._expiry_interval
 
-    async def create(self, credentials: SessionCredentials, permissions: dict) -> Session:
+    async def create(self, credentials: SessionCredentials,
+                     permissions: PermissionSet) -> Session:
         session_id = self._generate_sid()
         expiry_time = self.calc_expiry_time()
         session = Session(session_id, expiry_time, credentials, permissions)
@@ -237,32 +240,30 @@ class LoginService:
 
     def __init__(self, auth_service: AuthService,
                  user_manager: UserManager,
-                 session_manager: SessionManager,
-                 roles_service):
+                 role_manager: RoleManager,
+                 session_manager: SessionManager):
         self._auth_service = auth_service
         self._user_manager = user_manager
+        self._role_manager = role_manager
         self._session_manager = session_manager
-        self._roles_service = roles_service
 
     async def login(self, user_id, password):
         Log.debug(f'Logging in user {user_id}')
 
         user = await self._user_manager.get(user_id)
-        ### Get roles from user and permissions
-        permissions = {}
-        if not user:
+        credentials = None
+        if user:
+            credentials = await self._auth_service.authenticate(user, password)
+
+        if not credentials:
             # TODO: Try to search Customer LDAP or S3 account
             # and create corresponding user record if found.
             Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
-            user = User.instantiate_s3_account_user(user_id)
-            role = ["s3"]
-        else:
-            role = user.roles
-        
-        permissions = self._roles_service.get_permissions(role)
+            user = User.instantiate_s3_account_user(user_id, roles=['s3'])
+            credentials = await self._auth_service.authenticate(user, password)
 
-        credentials = await self._auth_service.authenticate(user, password)
         if credentials:
+            permissions = await self._role_manager.calc_effective_permissions(*user.roles)
             session = await self._session_manager.create(credentials, permissions)
             if session:
                 return session.session_id
@@ -273,7 +274,7 @@ class LoginService:
         return None
 
     async def logout(self, session_id):
-        Log.debug(f'Logging out session {session_id}')
+        Log.debug(f'Logging out session {session_id}.')
         await self._session_manager.delete(session_id)
 
     async def auth_session(self, session_id: Session.Id) -> Session:
@@ -304,7 +305,10 @@ class LoginService:
         session_data = await self._session_manager.get(session_id)
         if session_data:
             user_id = session_data.credentials.user_id
+            Log.debug(f"Delete all active sessions for Userid: {user_id}")
             session_data = await self._session_manager.get_all()
+            Log.debug(f"Delete all active sessions once account is deleted. "
+                      f"Userid: {user_id}")
             for each_session in session_data:
                 if each_session.credentials.user_id == user_id:
                     await self._session_manager.delete(each_session.session_id)

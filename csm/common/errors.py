@@ -20,12 +20,15 @@
 
 import inspect
 
+from csm.common.log import Log
+
 CSM_OPERATION_SUCESSFUL     = 0x0000
 CSM_ERR_INVALID_VALUE       = 0x1001
 CSM_ERR_INTERRUPTED         = 0x1002
 CSM_INVALID_REQUEST         = 0x1003
 CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
 CSM_INTERNAL_ERROR          = 0x1005
+CSM_SETUP_ERROR             = 0x1006
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -42,6 +45,11 @@ class CsmError(Exception):
         self._desc = desc or self._desc
         self._message_id = message_id
         self._message_args = message_args
+        # TODO: Log.error message will be changed when desc is removed and
+        #  improved exception handling is implemented.
+        # TODO: self._message_id will be formatted with self._message_args
+        # Common error logging for all kind of CsmError
+        Log.error(f"{self._rc}:{self._desc}:{self._message_id}:{self._message_args}")
 
     def message_id(self):
         return self._message_id
@@ -60,6 +68,15 @@ class CsmError(Exception):
 
     def __str__(self):
         return "error(%s): %s" % (self._rc, self._desc)
+
+class CsmSetupError(CsmError):
+    """
+    This error will be raised when csm setup is failed
+    """
+    _desc = "Csm Setup is failed"
+
+    def __init__(self, _desc=None):
+        super(CsmSetupError, self).__init__(CSM_SETUP_ERROR, _desc)
 
 class CommandTerminated(KeyboardInterrupt):
     """

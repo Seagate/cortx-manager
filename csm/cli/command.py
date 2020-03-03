@@ -26,7 +26,10 @@ from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
 from prettytable import PrettyTable
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.csmcli import Terminal
+from csm.core.blogic import const
+from csm.common.log import Log
 
 class Command:
     """CLI Command Base Class"""
@@ -98,8 +101,9 @@ class CommandParser:
     This Class Parses the Commands from the dictionary object
     """
 
-    def __init__(self, cmd_data: Dict):
+    def __init__(self, cmd_data: Dict, permissions: Dict):
         self.command = cmd_data
+        self.permissions = permissions
         self._communication_obj = {}
 
     def handle_main_parse(self, subparsers):
@@ -129,6 +133,17 @@ class CommandParser:
         for each_data in data['sub_commands']:
             self.add_args(each_data, parser, name)
 
+    def check_permissions(self, sub_command):
+        """
+        filter subcommand if found any permissions tag
+        if no permissions tag is found it returns true
+        """
+        allowed = False
+        permission_tag =  sub_command.get(const.SUB_COMMANDS_PERMISSIONS, False)
+        if permission_tag and self.permissions.get(permission_tag, False):
+            allowed = True
+        return allowed
+    
     def handle_comm(self, each_args):
         """
         This method will handle the rest params and create the necessary object.
@@ -153,6 +168,8 @@ class CommandParser:
         :param name: Name of the Command :type: str
         :return: None
         """
+        if not self.check_permissions(sub_command):
+            return None
         sub_parser = parser.add_parser(sub_command["name"],
                                        help=sub_command["description"])
         # Check if the command has any arguments.
@@ -192,7 +209,7 @@ class Output:
         """Dump the Output on CLI"""
         # Todo: Need to fetch the response messages from a file for localization.
         # TODO: Check 201 response code also for creation requests.
-        if self.rc != 200:
+        if self.rc not in  (200, CSM_OPERATION_SUCESSFUL) :
             errstr = Output.error(self.rc, kwargs.get("error"),
                                   self.output)
             err.write(f"{errstr}\n" or "")
@@ -203,13 +220,13 @@ class Output:
             out.write(f"{output}\n")
 
     @staticmethod
-    def dump_success(output: dict, success: str, **kwargs):
+    def dump_success(output: Any, **kwargs):
         """
-        :param output:
-        :param success:
+        Accepts String as Output and Returns the Same.
+        :param output: Output String
         :return:
         """
-        return str(success)
+        return str(kwargs.get("success", output))
 
     @staticmethod
     def error(rc: int, message: str, stacktrace) -> str:

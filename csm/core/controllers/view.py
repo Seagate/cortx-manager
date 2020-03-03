@@ -17,22 +17,43 @@
  ****************************************************************************
 """
 import json
+
+from csm.common.errors import InvalidRequest
+from csm.common.log import Log
+from csm.core.services.file_transfer import FileRef, FileCache
+
 from aiohttp import web
+from csm.core.services.permissions import PermissionSet
+
 
 class CsmAuth:
     HDR = 'Authorization'
     TYPE = 'Bearer'
-    UNAUTH = { 'WWW-Authenticate': TYPE }
-    ATTR = '_no_auth_'
+    UNAUTH = {'WWW-Authenticate': TYPE}
+    ATTR_PUBLIC = '_csm_auth_public_'
+    ATTR_PERMISSIONS = '_csm_auth_permissions_'
 
     @classmethod
     def public(cls, handler):
-        setattr(handler, cls.ATTR, True)
+        setattr(handler, cls.ATTR_PUBLIC, True)
         return handler
 
     @classmethod
     def is_public(cls, handler):
-        return getattr(handler, cls.ATTR, False)
+        return getattr(handler, cls.ATTR_PUBLIC, False)
+
+    @classmethod
+    def permissions(cls, permissions):
+        if not issubclass(type(permissions), PermissionSet):
+            permissions = PermissionSet(permissions)
+        def decorator(handler):
+            setattr(handler, cls.ATTR_PERMISSIONS, permissions)
+            return handler
+        return decorator
+
+    @classmethod
+    def get_permissions(cls, handler):
+        return getattr(handler, cls.ATTR_PERMISSIONS, PermissionSet())
 
 
 class CsmResponse(web.Response):
@@ -57,15 +78,44 @@ class CsmView(web.View):
         super(CsmView, self).__init__(request)
 
     @classmethod
-    def is_public(cls, handler, method):
-        ''' Check whether a particular method of the CsmView
-            subclass has the 'public' attribute '''
+    def is_subclass(cls, handler):
+        return issubclass(type(handler), type) and issubclass(handler, cls)
 
-        if issubclass(type(handler), type) and issubclass(handler, cls):
-            attr = getattr(handler, method, None)
-            if attr is not None:
-                return CsmAuth.is_public(attr)
-        return False
+    @classmethod
+    def _get_method_handler(cls, handler, name):
+        result = None
+        if cls.is_subclass(handler):
+            result = getattr(handler, name.lower(), None)
+        return result
+
+    @classmethod
+    def is_public(cls, handler, method):
+        ''' Check whether a particular method of the CsmView subclass has
+            the 'public' attribute. If not then check whether the handler
+            itself has the 'public' attribute '''
+
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            if CsmAuth.is_public(method_handler):
+                return True
+        return CsmAuth.is_public(handler)
+
+    @classmethod
+    def get_permissions(cls, handler, method):
+        ''' Obtain the list of required permissions associated with
+            the handler. Combine required pesmissions from the individual
+            method handler (like get/post/...) and from the whole view '''
+
+        view_permissions = CsmAuth.get_permissions(handler)
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            method_permissions = CsmAuth.get_permissions(method_handler)
+            # TODO: Merge view and method permissions?
+            # permissions = view_permissions | method_permissions
+            permissions = method_permissions
+        else:
+            permissions = view_permissions
+        return permissions
 
     def validate_get(self):
         pass
@@ -84,3 +134,117 @@ class CsmView(web.View):
             query_parameter.update(self.request.rel_url.query)
             response_obj = await self._service_dispatch['get'](**query_parameter)
         return response_obj
+
+    async def parse_multipart_request(self,
+                                      request,
+                                      file_cache: FileCache,
+                                      content_byte_size_limit=100 * (1024 ** 2),
+                                      file_byte_size_limit=1 * (1024 ** 3)):
+        """
+        Parse multipart request to dict
+        Default limit for non-file content is 100 MB
+        Default limit for file content is 1 GB
+        """
+        Log.debug("Handling file upload request")
+
+        # TODO: make handling in case file_cache is None
+
+        ct = self.request.headers.get('Content-Type')
+        if ct is None or 'multipart/form-data;' not in ct:
+            raise InvalidRequest('"multipart" header is absent')
+
+        parse_results = {}
+
+        reader = await request.multipart()
+        while True:
+            field = await reader.next()
+            if field is None:
+                break
+
+            fieldname, filename = self.__parse_multipart_part(field)
+
+            # TODO: Add support for attribute "multiple" (HTML5)
+            if fieldname in parse_results:
+                raise InvalidRequest(
+                    'Repeated fieldname in multipart request. "multiple" attribute is not supported for now')
+
+            # If field has filename, write it to cache, else place the content in dict
+            parse_result = None
+            size = 0
+            if filename and file_cache is not None:
+                file_uuid = file_cache.cache_new_file()
+                async for chunk in self.aiohttp_body_getter(field):
+                    size += len(chunk)
+                    if size > file_byte_size_limit:
+                        raise InvalidRequest(
+                            f'File "{filename}" is too big. Max size = {file_byte_size_limit} bytes')
+                    file_cache.write_chunck(file_uuid, chunk)
+                parse_result = {
+                    'content_type': ct,
+                    'filename': filename,
+                    'file_ref': FileRef(file_uuid)
+                }
+            else:
+                content = b''
+                async for chunk in self.aiohttp_body_getter(field):
+                    if size > content_byte_size_limit:
+                        raise InvalidRequest(
+                            f'Field "{fieldname}" body is too big. Max size = {content_byte_size_limit} bytes')
+                    size += len(chunk)
+                    content += chunk
+                parse_result = {
+                    'content_type': ct,
+                    'content': content.decode()
+                }
+
+            parse_results[fieldname] = parse_result
+
+        return parse_results
+
+    async def aiohttp_body_getter(self,
+                                  body_reader):
+        while True:
+            # TODO: do aiohttp decode?
+            chunk = await body_reader.read_chunk()
+            yield chunk
+            if chunk == b'':
+                break
+
+    def __parse_multipart_part(self, field):
+        # Content-Disposition parse
+        cd = field.headers.get('Content-Disposition')
+        if not cd:
+            raise InvalidRequest(
+                'Content-Disposition is absent in one of multipart request parts')
+
+        cd_values = cd.split(';')
+        if cd_values[0] != 'form-data':
+            raise InvalidRequest('"form-data" is absent in one of multipart request parts')
+
+        # Content-Disposition fieldname parse
+        if len(cd_values) < 2 or not cd_values[1]:
+            raise InvalidRequest('No filedname in one of multipart request parts')
+        fieldname_pair = cd_values[1].split('=')
+        if (len(fieldname_pair) != 2 or
+            fieldname_pair[0].strip() != 'name' or
+                not fieldname_pair[1]):
+            raise InvalidRequest('Incorrect fieldname directive in Content-Disposition header')
+        fieldname = fieldname_pair[1].strip('"')
+
+        # Content-Disposition filename parse (optional)
+        filename = None
+        if len(cd_values) == 3:
+            filename_pair = cd_values[2].split('=')
+            if (len(filename_pair) != 2 or
+                filename_pair[0].strip() != 'filename' or
+                    not filename_pair[1]):
+                raise InvalidRequest(
+                    'Incorrect filename directive in Content-Disposition header')
+            filename = filename_pair[1].strip('"')
+
+        # Content-Type parse
+        ct = field.headers.get('Content-Type')
+        if not ct:
+            raise InvalidRequest('Content-Type is absent in one of multipart request parts')
+
+        return fieldname, filename

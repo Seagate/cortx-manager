@@ -53,12 +53,13 @@ class StorageCapacityService(ApplicationService):
         This method will return system disk details as per command
         :return: dict
         """
-
+        Log.debug(f"Get capacity details service. command: {const.HCTL_COMMAND}")
         # TODO: 'hctl mero status' command will be changed when HALON is replaced with HARE
         process = subprocess.Popen(const.HCTL_COMMAND, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
+        Log.debug(f"HCTL command output stdout:{stdout} stderr:{stderr}")
         if not stdout:
-            Log.error(stderr)
+            # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=422, output=f"{stderr}")
         console_output = (re.sub(' +', ' ', stdout.decode('utf-8')).split('\n'))
         cropped_console_data = [str(each_element).strip() for each_element in console_output if
@@ -72,5 +73,4 @@ class StorageCapacityService(ApplicationService):
         formatted_output['avail'] = await self.unit_conversion(capacity_info['Free space'])
         formatted_output['usage_percentage'] = str(
             100 - round((capacity_info['Free space'] / capacity_info['Total space']) * 100, 2)) + ' %'
-
         return formatted_output

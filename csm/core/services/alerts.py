@@ -10,6 +10,7 @@
                     Prathamesh Rodi
                     Oleg Babin
                     Pawan Kumar Srivastava
+                    Soniya Moholkar
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -29,6 +30,7 @@ from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
+from csm.core.services.health import HealthAppService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
@@ -37,11 +39,14 @@ from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel
+from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
 from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
+from csm.common.payload import Payload, Json
+import asyncio
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -55,7 +60,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
-        self.db = storage
+        self.db = storage        
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -67,7 +72,7 @@ class AlertRepository(IAlertStorage):
     async def retrieve_by_hw(self, hw_id) -> AlertModel:
         filter = And(Compare(AlertModel.sensor_info, '=',
                         str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))        
+                        False), Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
@@ -87,41 +92,58 @@ class AlertRepository(IAlertStorage):
         if time_range and time_range.end:
             db_conditions.append(Compare(field, '<=', time_range.end))
         return db_conditions
-
+    
     def _prepare_filters(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None, acknowledged: bool =
-            None, show_update_range: DateTimeRange = None):
+            None, show_update_range: DateTimeRange = None, show_active: bool = False):
         and_conditions = [*self._prepare_time_range(AlertModel.created_time, create_time_range)]
-        if not show_all:
-            or_conditions = []
-            or_conditions.append(Compare(AlertModel.resolved, '=', False))
-            or_conditions.append(Compare(AlertModel.acknowledged, '=', False))
-            range_condition = self._prepare_time_range(AlertModel.updated_time, show_update_range)
-            if range_condition:
-                or_conditions.extend(range_condition)
+        if show_active:
+            self._prapare_filters_show_active(and_conditions)            
+        else:
+            if not show_all:
+                or_conditions = []
+                or_conditions.append(Compare(AlertModel.resolved, '=', False))
+                or_conditions.append(Compare(AlertModel.acknowledged, '=', False))
+                range_condition = self._prepare_time_range(AlertModel.updated_time, show_update_range)
+                if range_condition:
+                    or_conditions.extend(range_condition)
 
-            and_conditions.append(Or(*or_conditions))
+                and_conditions.append(Or(*or_conditions))
 
-        if resolved is not None:
-            and_conditions.append(Compare(AlertModel.resolved, '=', resolved))
+            if resolved is not None:
+                and_conditions.append(Compare(AlertModel.resolved, '=', resolved))
 
-        if acknowledged is not None:
-            and_conditions.append(Compare(AlertModel.acknowledged, '=',
-                acknowledged))
+            if acknowledged is not None:
+                and_conditions.append(Compare(AlertModel.acknowledged, '=',
+                    acknowledged))
 
         if severity:
             and_conditions.append(Compare(AlertModel.severity, '=', severity))
-
         return And(*and_conditions) if and_conditions else None
+
+    def _prapare_filters_show_active(self, and_conditions):
+        and_cond1 = []
+        and_cond1.append(Compare(AlertModel.acknowledged, '=', True))
+        and_cond1.append(Compare(AlertModel.resolved, '=', False))
+        ack_and = And(*and_cond1)
+        and_cond2 = []
+        and_cond2.append(Compare(AlertModel.acknowledged, '=', False))
+        and_cond2.append(Compare(AlertModel.resolved, '=', True))
+        resolved_and = And(*and_cond2)
+        or_cond = []
+        or_cond.append(ack_and)
+        or_cond.append(resolved_and)
+        active_alerts_or = Or(*or_cond)
+        and_conditions.append(active_alerts_or)
 
     async def retrieve_by_range(
             self, create_time_range: DateTimeRange, show_all: bool=True,
             severity: str=None, sort: Optional[SortBy]=None,
             limits: Optional[QueryLimits]=None, resolved: bool = None, acknowledged: bool = None,
-            show_update_range: DateTimeRange = None) -> Iterable[AlertModel]:
+            show_update_range: DateTimeRange = None, show_active: bool=False) -> Iterable[AlertModel]:
 
         query_filter = self._prepare_filters(create_time_range, show_all, severity,
-                resolved, acknowledged, show_update_range)
+                resolved, acknowledged, show_update_range, show_active)
         query = Query().filter_by(query_filter)
 
         if limits and limits.offset:
@@ -132,22 +154,22 @@ class AlertRepository(IAlertStorage):
 
         if sort:
             query = query.order_by(getattr(AlertModel, sort.field), sort.order)
-
+        Log.debug(f"Alerts service Retrive by range: {query_filter}")
         return await self.db(AlertModel).get(query)
 
     async def count_by_range(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None,
-            acknowledged: bool = None, show_update_range: DateTimeRange = None) -> int:
+            acknowledged: bool = None, show_update_range: DateTimeRange = None, show_active: bool = False) -> int:
+        Log.debug(f"Alerts service count by range: {create_time_range}")
         return await self.db(AlertModel).count(
             self._prepare_filters(create_time_range, show_all, severity, resolved,
-                acknowledged, show_update_range))
+                acknowledged, show_update_range, show_active))
 
     async def retrieve_all(self) -> list:
         """
         Retrieves all the alerts
         """
-        pass
-
+        pass    
 
 class AlertsAppService(ApplicationService):
     """
@@ -167,6 +189,7 @@ class AlertsAppService(ApplicationService):
                 "acknowledged" - boolean
         :return:
         """
+        Log.debug(f"Alerts update service. alert_id:{alert_id}, fields:{fields}")
 
         alert = await self.repo.retrieve(alert_id)
         if not alert:
@@ -177,13 +200,6 @@ class AlertsAppService(ApplicationService):
                 "The alert is both resolved and acknowledged, it cannot be modified",
                 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
 
-        if "comment" in fields:
-            alert.comment = fields["comment"]
-            max_len = const.ALERT_MAX_COMMENT_LENGTH
-            if len(alert.comment) > max_len:
-                raise InvalidRequest("Alert size exceeds the maximum length of {}".format(max_len),
-                    ALERTS_MSG_TOO_LONG_COMMENT, {"max_length": max_len})
-
         if "acknowledged" in fields:
             if not isinstance(fields["acknowledged"], bool):
                 raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
@@ -191,7 +207,61 @@ class AlertsAppService(ApplicationService):
 
         await self.repo.update(alert)
         return alert.to_primitive()
-    
+
+    @Log.trace_method(Log.DEBUG)
+    async def add_comment_to_alert(self, alert_uuid: str, user_id: str, comment_text: str):
+        """
+        Add comment to alert having alert_uuid. The comment will be saved along with alert_uuid
+        :param str alert_uuid: id of alert to which comment has to be added.
+        :param str user_id: user_id of the user who commented.
+        :param str comment_text: actual comment text
+        :returns: Comment object or None
+        """
+        alert = await self.repo.retrieve(alert_uuid)
+        if not alert:
+            raise CsmNotFoundError(f"Alert not found for id {alert_uuid}", ALERTS_MSG_NOT_FOUND)
+        if alert["comments"] is None:
+            alert["comments"] = []
+        alert_comment = self.build_alert_comment_model(str(len(alert["comments"]) + 1), comment_text, user_id)
+        alert["comments"].append(alert_comment)
+        await self.repo.update(alert)
+
+        return alert_comment.to_primitive()
+
+    @Log.trace_method(Log.DEBUG)
+    def build_alert_comment_model(self, comment_id: str, comment_text: str, created_by: str):
+        """
+        Build and return CommentModel object.
+        :param str comment_id: id of alert comment.
+        :param str created_by: user_id of the user who commented.
+        :param str comment_text: actual comment text
+        :returns: Comment object or None
+        """
+        comment = CommentModel()
+        comment.comment_id = comment_id
+        comment.comment_text = comment_text
+        comment.created_by = created_by
+        comment.created_time = datetime.now(timezone.utc)
+        return comment
+
+    @Log.trace_method(Log.DEBUG)
+    async def fetch_comments_for_alert(self, alert_uuid: str):
+        """
+        Fetch all the comments of the alert with alert_uuid
+        :param str alert_uuid: id of the alert whose comments are to be fetched.
+        :returns: Comment object or None
+        """
+        alert = await self.repo.retrieve(alert_uuid)
+        if not alert:
+            raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
+
+        if alert.comments is None:
+            alert.comments = []
+
+        return {
+            "comments": [comment.to_primitive() for comment in alert.comments]
+        }
+
     async def update_all_alerts(self, fields: dict):
         """
         Update the Data of Specific Alerts
@@ -199,11 +269,12 @@ class AlertsAppService(ApplicationService):
                 It will acknowledge all the alerts of the specified ids.
         :return:
         """
+        Log.debug(f"Update all alerts service. fields:{fields}")
         if not isinstance(fields, list):
             raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
-        
+
         alerts = []
-        
+
         for alert_id in fields:
             alert = await self.repo.retrieve(alert_id)
             if not alert:
@@ -212,13 +283,13 @@ class AlertsAppService(ApplicationService):
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
             await self.repo.update(alert)
             alerts.append(alert.to_primitive())
-        
+
         return alerts
 
     async def fetch_all_alerts(self, duration, direction, sort_by, severity: Optional[str] = None,
                                offset: Optional[int] = None, show_all: Optional[bool] = True,
                                page_limit: Optional[int] = None, resolved: bool =
-                               None, acknowledged: bool = None) -> Dict:
+                               None, acknowledged: bool = None, show_active: Optional[bool] = False) -> Dict:
         """
         Fetch All Alerts
         :param duration: time duration for range of alerts
@@ -230,9 +301,14 @@ class AlertsAppService(ApplicationService):
         :param resolved: alerts filtered by resolved status when show_all is true.
         :param acknowledged: alerts filtered by acknowledged status when 
         show_all is true.
+        :param show_active: active alerts will fetched. Active alerts are
+        identified as only one flag out of acknowledged and resolved flags
+        must be true and the other must be false.
         :return: :type:list
         """
         time_range = None
+        Log.debug(f"Fetch all alerts service. duration:{duration}, direction:{direction}, "
+                  f"sort_by:{sort_by}, severity:{severity}, offset:{offset}")
         if duration:  # Filter
             # TODO: time format can generally be API-dependent. Better pass here an
             # already parsed TimeDelta object.
@@ -265,11 +341,12 @@ class AlertsAppService(ApplicationService):
             limits,
             resolved,
             acknowledged,
-            show_time_range
+            show_time_range,
+            show_active
         )
 
         alerts_count = await self.repo.count_by_range(time_range, show_all,
-                severity, resolved, acknowledged, show_time_range)
+                severity, resolved, acknowledged, show_time_range, show_active)
         return {
             "total_records": alerts_count,
             "alerts": [alert.to_primitive() for alert in alerts_list]
@@ -281,11 +358,12 @@ class AlertsAppService(ApplicationService):
         :param str alert_id: A unique identifier of the requried alert
         :returns: Alert object or None
         """
+        Log.debug(f"Fetch alerts service alert_id:{alert_id}" )
+        # This method is for debugging purposes only
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()
-
+        return alert.to_primitive()    
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
@@ -314,12 +392,10 @@ class AlertEmailNotifier(Service):
         }
         html_body = self.template.render(**alert_template_params)
         subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
-
         message = EmailSender.make_multipart(email_config.smtp_sender_email,
-            email_config.email, subject, html_body)
-
-        await self.email_sender_queue.enqueue_email(message, smtp_config)
-
+            None, subject, html_body)
+        await self.email_sender_queue.enqueue_bulk_email(message,
+            email_config.get_target_emails(), smtp_config)
 
 class AlertMonitorService(Service, Observable):
     """
@@ -333,7 +409,7 @@ class AlertMonitorService(Service, Observable):
     web server. 
     """
 
-    def __init__(self, repo: AlertRepository, plugin):
+    def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
         """
         Initializes the Alert Plugin
         """
@@ -342,6 +418,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
+        self._health_service = health_service      
        
         super().__init__()
 
@@ -359,23 +436,26 @@ class AlertMonitorService(Service, Observable):
         """
         This method creats and starts an alert monitor thread
         """
+        Log.info("Start Alert monitor thread")
         try:
+            self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
                 self._monitor_thread.start()
                 self._thread_started = True
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in starting alert monitor thread: {e}")
 
     def stop(self):
         try:
+            Log.info("Stop Alert monitor thread")
             self._alert_plugin.stop()
             self._monitor_thread.join()
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in stoping alert monitor thread: {e}")
 
     def _consume(self, message):
         """
@@ -406,8 +486,9 @@ class AlertMonitorService(Service, Observable):
         set the resolved state to False.
         """
         """ Fetching the previous alert. """
+        """ After saving/ updating alert, update the in memory health schema """
         try:
-            Log.debug("Incoming alert : [%s]" %(message))
+            Log.debug(f"Incoming alert: {message}")
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
@@ -416,15 +497,34 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
+                self._health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
             else:
-                self._resolve_alert(message, prev_alert)
+                if self._resolve_alert(message, prev_alert):
+                    alert = AlertModel(message)
+                    alert.alert_uuid = prev_alert.alert_uuid
+                    self._health_service.update_health_schema(AlertModel(message))
         except Exception as e:
-            Log.exception(e)
+            Log.warn(f"Error in consuming alert: {e}")
 
         return True
 
+    def _update_health_schema_after_init(self):
+        """
+        Updates the in memory health schema after CSM init.
+        1.) Fetches all the non-resolved alerts from DB
+        2.) Update the initialized and loaded in-memory health schema
+        :param None
+        :return: None
+        """
+        loop = asyncio.get_event_loop()
+        alerts = loop.run_until_complete(self.repo.retrieve_by_range(
+            create_time_range=None, resolved=False))
+        for alert in alerts:
+            self._health_service.update_health_schema(alert)        
+
     def _resolve_alert(self, new_alert, prev_alert):
+        alert_updated = False
         if not self._is_duplicate_alert(new_alert, prev_alert):
             if self._is_good_alert(new_alert):
                 """
@@ -436,7 +536,8 @@ class AlertMonitorService(Service, Observable):
                 else:
                     """ Previous alert is a bad one so resolving it. """
                     self._resolve(new_alert, prev_alert)
-            elif self._is_bad_alert(new_alert):
+                alert_updated = True
+            if self._is_bad_alert(new_alert):
                 """
                 If it is a bad alert checking the state of previous alert.
                 """
@@ -448,7 +549,9 @@ class AlertMonitorService(Service, Observable):
                     Previous alert is a good one so updating and marking the
                     resolved status to False.
                     """
-                    self._update_alert(new_alert, prev_alert, True)        
+                    self._update_alert(new_alert, prev_alert, True)  
+                alert_updated = True
+        return alert_updated
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
         """
@@ -473,8 +576,7 @@ class AlertMonitorService(Service, Observable):
         """
         update_params = {}
         if update_resolve:
-            update_params[const.ALERT_RESOLVED] = \
-                    alert.get(const.ALERT_RESOLVED, "")
+            update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
             update_params[const.ALERT_RESOLVED] = prev_alert.resolved
         update_params[const.ALERT_STATE] = alert.get(const.ALERT_STATE, "")
@@ -523,6 +625,6 @@ class AlertMonitorService(Service, Observable):
             Try to resolve the alert if the previous alert is bad and
             the current alert is good.
             """
-            prev_alert.resolved = True 
+            prev_alert.resolved = True
             self._update_alert(alert, prev_alert)
 

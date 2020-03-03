@@ -19,11 +19,16 @@
 
 import json
 import re
+from csm.common.log import Log
 from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
-from csm.core.services.alerts import AlertsAppService
 from csm.common.errors import InvalidRequest
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.blogic import const
+from csm.core.controllers.validators import ValidationErrorFormatter
+from csm.common.log import Log
+from aiojobs.aiohttp import atomic
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 """
@@ -43,6 +48,7 @@ class AlertsQueryParameter(Schema):
     severity = fields.Str(default=None, missing=None, allow_none=True)
     resolved = fields.Boolean(default=None, missing=None)
     acknowledged = fields.Boolean(default=None, missing=None)
+    show_active = fields.Boolean(default=False, missing=False, allow_none=True)
 
     @validates('duration')
     def validate_duration(self, value):
@@ -57,6 +63,7 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
+@atomic
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
@@ -64,8 +71,11 @@ class AlertsListView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """Calling Alerts Get Method"""
+        Log.debug(f"Handling list alerts get request."
+                  f"user_id: {self.request.session.credentials.user_id}")
         import time
         import asyncio
         import concurrent
@@ -73,7 +83,7 @@ class AlertsListView(web.View):
         res = {}
         try:
             print("Before sleep")
-            await asyncio.sleep(20)
+            await asyncio.sleep(.5)
             alerts_qp = AlertsQueryParameter()
             try:
                 alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
@@ -87,10 +97,13 @@ class AlertsListView(web.View):
             # raise
         return res
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     async def patch(self):
+        Log.debug(f"Handling update all alerts patch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
 
         return await self.alerts_service.update_all_alerts(body)
@@ -102,16 +115,60 @@ class AlertsView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     async def patch(self):        
         """ Update Alert """    
         alert_id = self.request.match_info["alert_id"]
+        Log.debug(f"Handling update alerts patch request for id: {alert_id}."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         return await self.alerts_service.update_alert(alert_id, body)
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """ Gets alert by ID """
         alert_id = self.request.match_info["alert_id"]
         return await self.alerts_service.fetch_alert(alert_id)
+
+
+class AlertCommentsCreateSchema(Schema):
+    """
+    Alert comment create schema
+    """
+    comment_text = fields.Str(required=True, validate=[validate.Length(min=1, max=const.STRING_MAX_VALUE)])
+
+
+@CsmView._app_routes.view("/api/v1/alerts/{alert_uuid}/comments")
+class AlertCommentsView(web.View):
+    def __init__(self, request):
+        super().__init__(request)
+        self.user_id = self.request.session.credentials.user_id
+        self.alerts_service = self.request.app["alerts_service"]
+
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        """ Get all the comments of alert having alert_uuid """
+        alert_uuid = self.request.match_info["alert_uuid"]
+
+        #  Fetching the alert to make sure that alert exists for the alert_uuid provided
+        return await self.alerts_service.fetch_comments_for_alert(alert_uuid)
+
+    @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def post(self):
+        """ Add Comment to Alert having alert_uuid """
+        alert_uuid = self.request.match_info["alert_uuid"]
+
+        try:
+            schema = AlertCommentsCreateSchema()
+            comment_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        except ValidationError as ve:
+            raise InvalidRequest(ValidationErrorFormatter.format(ve))
+
+        return await self.alerts_service.add_comment_to_alert(alert_uuid, self.user_id, comment_body["comment_text"])

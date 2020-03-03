@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+"""
+ ****************************************************************************
+ Filename:          permissions.py
+ Description:       Implementation of permission set.
+                    Definition of resource and action names for permissions.
+
+ Creation Date:     01/16/2020
+ Author:            Oleg Babin
+
+ Do NOT modify or remove this copyright and confidentiality notice!
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
+ The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
+ Portions are also trade secret. Any use, duplication, derivation, distribution
+ or disclosure of this code, for any reason, not expressly authorized is
+ prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
+ ****************************************************************************
+"""
+
+class PermissionSet:
+    ''' Permission Set stored in a compact way as a dictionary '''
+
+    def __init__(self, items: dict = {}):
+        self._items = {
+            resource: set(actions)
+                for resource, actions in items.items()
+                    if len(actions) > 0
+        }
+
+    def __str__(self) -> str:
+        ''' String Representation Operator '''
+
+        return f'{self.__class__.__name__}{self._items.__str__()}'
+
+    def __eq__(self, other: 'PermissionSet') -> bool:
+        ''' Equality Operator '''
+
+        return self._items == other._items
+
+    def __or__(self, other: 'PermissionSet') -> 'PermissionSet':
+        ''' Union Operator '''
+
+        result = PermissionSet()
+        resources = set(self._items.keys()) | set(other._items.keys())
+        for resource in resources:
+            lhs_actions = self._items.get(resource, set())
+            rhs_actions = other._items.get(resource, set())
+            actions = lhs_actions | rhs_actions
+            if len(actions) > 0:
+                result._items[resource] = actions
+        return result
+
+    def __and__(self, other: 'PermissionSet') -> 'PermissionSet':
+        ''' Intersection Operator '''
+
+        result = PermissionSet()
+        resources = set(self._items.keys()) & set(other._items.keys())
+        for resource in resources:
+            lhs_actions = self._items.get(resource, set())
+            rhs_actions = other._items.get(resource, set())
+            actions = lhs_actions & rhs_actions
+            if len(actions) > 0:
+                result._items[resource] = actions
+        return result
+
+    def __ior__(self, other: 'PermissionSet') -> 'PermissionSet':
+        ''' In-place Union Operator '''
+
+        for resource in other._items.keys():
+            lhs_actions = self._items.get(resource, set())
+            rhs_actions = other._items.get(resource, set())
+            actions = lhs_actions | rhs_actions
+            if len(actions) > 0:
+                self._items[resource] = actions
+            else:
+                self._items.pop(resource, None)
+        return self
+
+    def __iand__(self, other: 'PermissionSet') -> 'PermissionSet':
+        ''' In-place Intersection Operator '''
+
+        for resource in self._items.keys():
+            lhs_actions = self._items.get(resource, set())
+            rhs_actions = other._items.get(resource, set())
+            actions = lhs_actions & rhs_actions
+            if len(actions) > 0:
+                self._items[resource] = actions
+            else:
+                self._items.pop(resource, None)
+        return self

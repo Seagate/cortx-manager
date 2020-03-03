@@ -19,7 +19,9 @@
 import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.providers.providers import Response
@@ -36,49 +38,45 @@ class S3BucketCreationSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket")
-class S3BucketListView(CsmView):
+class S3BucketListView(S3AuthenticatedView):
     """
     S3 Bucket List View for GET and POST REST API implementation:
         1. Get list of all existing buckets
         2. Create new bucket by given name
-
     """
 
     def __init__(self, request):
-        super().__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
     async def get(self):
         """
         GET REST implementation for S3 buckets fetch request
 
         :return:
         """
-        Log.debug("Handling s3 buckets fetch request")
+        Log.debug(f"Handling list s3 buckets fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         # TODO: in future we can add some parameters for pagination
 
         return await self._service.list_buckets(self._s3_session)
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.CREATE}})
     async def post(self):
         """
         POST REST implementation for S3 buckets post request
 
         :return:
         """
-        Log.debug("Handling s3 buckets post request")
-
+        Log.debug(f"Handling create s3 buckets post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = S3BucketCreationSchema()
             bucket_creation_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError:
-            Log.debug("Request body missing")
+        except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
-            Log.debug("Invalid request body: {}".format(val_err))
-            raise InvalidRequest(
-                "Invalid request body: {}".format(val_err))
+            raise InvalidRequest(f"Invalid request body: {val_err}")
 
         # NOTE: body is empty
         result = await self._service.create_bucket(self._s3_session, **bucket_creation_body)
@@ -87,7 +85,7 @@ class S3BucketListView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket/{bucket_name}")
-class S3BucketView(CsmView):
+class S3BucketView(S3AuthenticatedView):
     """
     S3 Bucket view for DELETE REST API implementation:
         1. Delete bucket by its given name
@@ -95,24 +93,22 @@ class S3BucketView(CsmView):
     """
 
     def __init__(self, request):
-        super().__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.DELETE}})
     async def delete(self):
         """
         DELETE REST implementation for s3 bucket delete request
         :return:
         """
-        Log.debug("Handling s3 bucket delete request")
+        Log.debug(f"Handling s3 bucket delete request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-
         return await self._service.delete_bucket(bucket_name, self._s3_session)
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket_policy/{bucket_name}")
-class S3BucketPolicyView(CsmView):
+class S3BucketPolicyView(S3AuthenticatedView):
     """
     S3 Bucket Policy View for GET, PUT and DELETE REST API implementation:
         1. Get bucket policy of existing bucket
@@ -121,29 +117,28 @@ class S3BucketPolicyView(CsmView):
     """
 
     def __init__(self, request):
-        super(S3BucketPolicyView, self).__init__(request)
-        self._service = self.request.app["s3_bucket_service"]
-        self._service_dispatch = {}
-        self._s3_session = self.request.session.credentials  # returns a S3Credentials object
+        super().__init__(request, 's3_bucket_service')
 
     """
     GET REST implementation for S3 bucket policy fetch request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
     async def get(self):
-        Log.debug("Handling s3 bucket policy fetch request")
+        Log.debug(f"Handling s3 bucket policy fetch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-
         return await self._service.get_bucket_policy(self._s3_session,
                                                      bucket_name)
 
     """
     PUT REST implementation for S3 bucket policy put request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
     async def put(self):
-        Log.debug("Handling s3 bucket policy put request")
+        Log.debug(f"Handling s3 bucket policy put request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
         bucket_policy_body = await self.request.json()
-
         return await self._service.put_bucket_policy(self._s3_session,
                                                      bucket_name,
                                                      bucket_policy_body)
@@ -151,9 +146,10 @@ class S3BucketPolicyView(CsmView):
     """
     DELETE REST implementation for s3 bucket policy delete request
     """
+    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
     async def delete(self):
-        Log.debug("Handling s3 bucket policy delete request")
+        Log.debug(f"Handling s3 bucket policy delete request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-
         return await self._service.delete_bucket_policy(self._s3_session,
                                                         bucket_name)

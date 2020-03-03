@@ -16,12 +16,14 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-
+from csm.common.log import Log
 from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
                                         UserNameValidator)
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.providers.providers import Response
 from csm.common.errors import InvalidRequest
 
@@ -73,23 +75,20 @@ class IamUserDeleteSchema(BaseSchema):
     user_name = fields.Str(required=True, validate=[UserNameValidator()])
 
 @CsmView._app_routes.view("/api/v1/iam_users")
-class IamUserListView(CsmView):
+class IamUserListView(S3AuthenticatedView):
     def __init__(self, request):
         """
         Instantiation Method for Iam user view class
         """
-        super(IamUserListView, self).__init__(request)
-        # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.credentials
-        if not self._s3_session:
-            raise InvalidRequest(
-                "Invalid S3 Credentials. Ensure that session is valid")
-        self._service = self.request.app["s3_iam_users_service"]
+        super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.LIST}})
     async def get(self):
         """
         Fetch list of IAM User's
         """
+        Log.debug(f"Handling list IAM USER get request. "
+                  f"user_id: {self.request.session.credentials.user_id}")
         schema = IamUserListSchema()
         try:
             data = schema.load(dict(self.request.query), unknown='EXCLUDE')
@@ -99,11 +98,14 @@ class IamUserListView(CsmView):
         # Execute List User Task
         return await self._service.list_users(self._s3_session, **data)
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.CREATE}})
     async def post(self):
         """
         Create's new IAM User.
         """
         schema = IamUserCreateSchema()
+        Log.debug(f"Handling create IAM USER post request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
             request_data = schema.load(body, unknown='EXCLUDE')
@@ -114,23 +116,20 @@ class IamUserListView(CsmView):
         return await self._service.create_user(self._s3_session, **request_data)
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
-class IamUserView(CsmView):
+class IamUserView(S3AuthenticatedView):
     def __init__(self, request):
         """
         Instantiation Method for Iam user view class
         """
-        super(IamUserView, self).__init__(request)
-        # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.credentials
-        if not self._s3_session:
-            raise InvalidRequest(
-                "Invalid S3 Credentials. Ensure that session is valid")
-        self._service = self.request.app["s3_iam_users_service"]
+        super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.DELETE}})
     async def delete(self):
         """
         Delete IAM user
         """
+        Log.debug(f"Handling  IAM USER delete request."
+                  f" user_id: {self.request.session.credentials.user_id}")
         user_name = self.request.match_info["user_name"]
         if user_name == "root":
             raise InvalidRequest("Root IAM user cannot be deleted.")

@@ -105,6 +105,7 @@ class IamErrors(Enum):
     InvalidLdapUserId = 'InvalidLdapUserId'
     PasswordPolicyVoilation = 'PasswordPolicyVoilation'
     AccountNotEmpty = 'AccountNotEmpty'
+    ExtendedIamAccount = 'ExtendedIamAccount'
 
 
 class IamError:
