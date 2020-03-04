@@ -126,11 +126,7 @@ class CsmUserService(ApplicationService):
             "id": user.user_id,
             "username": user.user_id,
             "user_type": user.user_type,
-            "interfaces": user.interfaces,
             "roles": user.roles,
-            "temperature": user.temperature,
-            "language": user.language,
-            "timeout": user.timeout,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z'
         }
