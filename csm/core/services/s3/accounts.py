@@ -44,25 +44,6 @@ class S3AccountService(ApplicationService):
         """
         self._s3_root_client = self._get_root_client()
 
-    @Log.trace_method(Log.DEBUG)
-    async def _create_udx_bucket(self, account):
-        Log.debug("Creating UDX bucket for s3 account. account_name: {account.account_name}")
-        # TODO: probably, it would be better to move this function to USL
-        bucket_name = account.account_name + '-udx'
-        bucket_tags = {
-            "udx": "enabled"
-        }
-
-        try:
-            s3_client = self._s3plugin.get_s3_client(account.access_key_id,
-                account.secret_key_id, self._get_s3_connection_config())
-            new_bucket = await s3_client.create_bucket(bucket_name)
-            Log.info(f'UDX bucket {bucket_name} is created')
-            await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
-            Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
-        except:
-            raise CsmInternalError("UDX bucket creation failed")
-
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_account(self, account_name: str, account_email: str, password: str):
         """
@@ -81,7 +62,6 @@ class S3AccountService(ApplicationService):
             account.secret_key_id, self._get_iam_connection_config())
 
         try:
-            await self._create_udx_bucket(account)
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
@@ -117,7 +97,7 @@ class S3AccountService(ApplicationService):
         if isinstance(accounts, IamError):
             self._raise_remote_error(accounts)
         accounts_list = []
-        # S3 user is allowed to list all s3 user in system. 
+        # S3 user is allowed to list all s3 user in system.
         # Allowed to list only himself.
         if isinstance(session, S3Credentials):
             for acc in accounts.iam_accounts:
@@ -129,7 +109,7 @@ class S3AccountService(ApplicationService):
                         }
                     )
                     break
-        # CSM user is allowed to list all the S3 users in system.  
+        # CSM user is allowed to list all the S3 users in system.
         if isinstance(session, LocalCredentials):
             for acc in accounts.iam_accounts:
                 accounts_list.append(
