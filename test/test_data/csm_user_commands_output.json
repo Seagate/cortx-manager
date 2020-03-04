@@ -2,29 +2,23 @@
     "expected_csm_user_create": {
         "comm": {
             "json": {
-                "language": "",
                 "password": "",
                 "roles": "",
-                "temperature": "",
-                "timeout": "",
                 "username": ""
             },
             "method": "post",
             "params": {},
-            "target": "/{version}/user",
+            "target": "/{version}/csm/users",
             "type": "rest",
             "version": "v1"
         },
-        "language": null,
         "need_confirmation": true,
         "output": {
             "success": "User created"
         },
         "password": "qwerty123",
-        "roles": null,
+        "roles": ["monitor"],
         "sub_command_name": "create",
-        "temperature": null,
-        "timeout": null,
         "username": "user123"
     },
     "expected_csm_user_delete": {
@@ -34,7 +28,7 @@
             },
             "method": "delete",
             "params": {},
-            "target": "/{version}/user/{username}",
+            "target": "/{version}/csm/users/{username}",
             "type": "rest",
             "version": "v1"
         },
@@ -55,7 +49,7 @@
                 "sort_by": "",
                 "sort_dir": ""
             },
-            "target": "/{version}/user",
+            "target": "/{version}/csm/users",
             "type": "rest",
             "version": "v1"
         },
@@ -69,11 +63,7 @@
                 "headers": {
                     "username": "Username",
                     "user_type": "User Type",
-                    "interfaces": "Interfaces",
                     "roles": "Roles",
-                    "temperature": "Temp. type",
-                    "language": "Language",
-                    "timeout": "Timeout",
                     "created_time": "Creation time",
                     "updated_time": "Last update time"
                }
