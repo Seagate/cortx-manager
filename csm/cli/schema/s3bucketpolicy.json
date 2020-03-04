@@ -1,5 +1,5 @@
 {
-  "name": "s3bucket_policy",
+  "name": "s3bucketpolicy",
   "description": "Create Delete or Display S3 Bucket Policy",
   "sub_commands": [
     {
@@ -63,8 +63,7 @@
           "default": "2012-10-17",
           "type": "str",
           "help": "Policy version",
-          "json": true,
-          "required": true
+          "json": true
         },
         {
           "flag": "-s",
