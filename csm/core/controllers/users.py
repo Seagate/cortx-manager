@@ -27,16 +27,15 @@ from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
 
-# TODO: find out about policies for names and passwords
-class CsmUserCreateSchema(Schema):
+class CsmRootUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
-    roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)))
-    interfaces = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_INTERFACES)))
-    temperature = fields.Str(default=None)
-    language = fields.Str(default=None)
-    timeout = fields.Int(default=None)
+
+
+# TODO: find out about policies for names and passwords
+class CsmUserCreateSchema(CsmRootUserCreateSchema):
+    roles = fields.List(fields.String(required=True, validate=validate.OneOf(const.CSM_USER_ROLES)))
 
 
 class CsmGetUsersSchema(Schema):
@@ -48,7 +47,6 @@ class CsmGetUsersSchema(Schema):
         missing='asc', default='asc')
 
 @CsmView._app_routes.view("/api/v1/csm/users")
-@CsmView._app_routes.view("/api/v1/user")
 class CsmUsersListView(CsmView):
     def __init__(self, request):
         super(CsmUsersListView, self).__init__(request)
@@ -89,7 +87,6 @@ class CsmUsersListView(CsmView):
         return await self._service.create_user(**user_body)
 
 @CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
-@CsmView._app_routes.view("/api/v1/user/{user_id}")
 class CsmUsersView(CsmView):
     def __init__(self, request):
         super(CsmUsersView, self).__init__(request)
@@ -117,11 +114,11 @@ class CsmUsersView(CsmView):
         return await self._service.delete_user(user_id)
 
     """
-    POST PUT implementation for creating a csm user
+    PATCH implementation for creating a csm user
     """
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
-    async def put(self):
-        Log.debug(f"Handling users put request."
+    async def patch(self):
+        Log.debug(f"Handling users patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
 
@@ -154,7 +151,7 @@ class AdminUserView(CsmView):
         Log.debug("Creating root user")
 
         try:
-            schema = CsmUserCreateSchema()
+            schema = CsmRootUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")

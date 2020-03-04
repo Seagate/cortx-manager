@@ -94,7 +94,7 @@ DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
 DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'root'
-CSM_USER_ROLES = ['manage', 'monitor', 's3']
+CSM_USER_ROLES = ['manage', 'monitor']
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
