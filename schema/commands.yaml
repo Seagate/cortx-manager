@@ -1,4 +1,5 @@
 #Component Commands file Path.
 COMMANDS:
   - '<CSM_PATH>/conf/setup.yaml'
-
+  - '/opt/seagate/sspl/conf/setup.yaml'
+  - '/opt/seagate/s3/install/provisioning/s3setup.yaml'
