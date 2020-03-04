@@ -99,6 +99,8 @@ class FileRef():
                 '"overwrite" argument if you want to overwrite file')
 
         copyfile(path_to_cached_file, path_to_file_to_save)
+        
+        return path_to_file_to_save
 
 
 class FileCache(ContextDecorator):

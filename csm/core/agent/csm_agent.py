@@ -117,6 +117,10 @@ class CsmAgent:
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
+        
+        provisioner = import_plugin_module('provisioner').ProvisionerPlugin()
+        CsmRestApi._app["fw_update_service"] = FirmwareUpdateService(provisioner, 
+            Conf.get(const.CSM_GLOBAL_INDEX, 'FIRMWARE_STORAGE_PATH.path'))
 
 
     @staticmethod
@@ -195,6 +199,7 @@ if __name__ == '__main__':
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.audit_log import  AuditLogManager, AuditService
         from csm.core.services.file_transfer import DownloadFileManager
+        from csm.core.services.firmware_update import FirmwareUpdateService
 
         CsmAgent.init()
         CsmAgent.run()
