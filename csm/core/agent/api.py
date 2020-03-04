@@ -26,9 +26,9 @@ import asyncio
 import json
 import traceback
 import ssl
-import concurrent
+from concurrent import futures
 from weakref import WeakSet
-from aiohttp import web, web_exceptions, ClientConnectionError
+from aiohttp import web, web_exceptions
 from abc import ABC
 from asyncio import CancelledError
 from secure import SecureHeaders
@@ -274,9 +274,12 @@ class CsmRestApi(CsmApi, ABC):
                       f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
-        except (concurrent.futures._base.CancelledError, CancelledError, ClientConnectionError) as e:
-            Log.debug("Cancelled call")
-            return CsmRestApi.json_response("Call Cancelled", status=500)
+        
+        # These exceptions are thrown by aiohttp when request is cancelled
+        # by client to complete task which are await use atomic
+        except (futures._base.CancelledError, CancelledError) as e:
+            Log.debug(f"Client cancelled call for {request.method} {request.path}")
+            return CsmRestApi.json_response("Call cancelled by client", status=499)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e

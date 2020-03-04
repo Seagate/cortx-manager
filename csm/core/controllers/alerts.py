@@ -32,6 +32,8 @@ from csm.common.log import Log
 from aiojobs.aiohttp import atomic
 from csm.common.log import Log
 from csm.core.controllers.view import CsmView
+from asyncio import CancelledError 
+from concurrent import futures
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 """
@@ -79,28 +81,15 @@ class AlertsListView(web.View):
         """Calling Alerts Get Method"""
         Log.debug(f"Handling list alerts get request."
                   f"user_id: {self.request.session.credentials.user_id}")
-        import time
         import asyncio
-        import concurrent
-        import aiohttp
-        res = {}
-        # await asyncio.sleep(5)
-        # alerts_qp = AlertsQueryParameter()
-        # alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
-        # res = await self.alerts_service.fetch_all_alerts(**alert_data)
+        await asyncio.sleep(.8)
+        alerts_qp = AlertsQueryParameter()
         try:
-            # await asyncio.sleep(10)
-            alerts_qp = AlertsQueryParameter()
-            try:
-                alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
-                res = await self.alerts_service.fetch_all_alerts(**alert_data)
-                Log.debug(res)
-            except ValidationError as val_err:
-                raise InvalidRequest(
-                    "Invalid Parameter for alerts", str(val_err))
-        except (concurrent.futures._base.CancelledError, asyncio.CancelledError, aiohttp.ClientConnectionError) as e:
-            Log.debug("Cancelled get alerts call")
-        return res
+            alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid Parameter for alerts", str(val_err))
+        return await self.alerts_service.fetch_all_alerts(**alert_data)
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
     async def patch(self):
