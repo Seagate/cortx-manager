@@ -176,7 +176,8 @@ class AmqpChannel(Channel):
 
     def __init__(self, **kwargs):
         Channel.__init__(self)
-        self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host") 
+        self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host")
+        self.port = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.port")
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
         self.username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
         self.password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.password")
@@ -240,7 +241,7 @@ class AmqpChannel(Channel):
         """
         try:
             self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host,
-                               virtual_host=self.virtual_host,
+                               port=self.port, virtual_host=self.virtual_host,
                                credentials=pika.PlainCredentials(self.username,self.password)))
                                                                                
             self._channel = self._connection.channel()
