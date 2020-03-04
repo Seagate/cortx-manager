@@ -82,7 +82,8 @@ class Log:
             file_handler = logging.handlers.RotatingFileHandler(log_file, mode="a",
                                   maxBytes=max_bytes, backupCount=backup_count)
             file_handler.setFormatter(formatter)
-            file_handler.doRollover()
+            # if file_handler.shouldRollover(log_file):
+            #     file_handler.doRollover()
             logger = logging.getLogger(f"{file_name}")
             logger.setLevel(log_level)
             logger.addHandler(file_handler)

@@ -134,14 +134,17 @@ class CsmCli(Cmd):
                     self.do_exit("Server authentication check failed.")
                 Log.info(f"{self.username}: Logged In.")
                 self._permissions = self.loop.run_until_complete(self.rest_client.permissions())
+        except CsmError as e:
+            Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:
             self.do_exit()
         except Exception as e:
+            Log.critical(traceback.format_exc())
             Log.critical(f"{self.username}:{e}")
             self.do_exit(f"Some Error Occurred.\n")
 
     def precmd(self, command):
-        """
+        """ r4   vbhbbb
         Pre-Process the Entered Command.
         :param command: Command Entered by User.
         :return:
@@ -180,6 +183,9 @@ class CsmCli(Cmd):
                 sys.stderr(err_str)
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command Executed")
+        except CsmError as e:
+            Log.error(f"{self.username}:{e}")
+            pass
         except SystemExit:
             Log.debug(f"{self.username}: Command Executed System Exit")
             pass
@@ -187,6 +193,7 @@ class CsmCli(Cmd):
             Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
             self.do_exit()
         except Exception as e:
+            Log.critical(traceback.format_exc())
             Log.critical(f"{self.username}:{e}")
             self.do_exit("Some Error Occurred.\n Please try Re-Login")
 
@@ -213,6 +220,7 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from csm.common.log import Log
     from csm.common.conf import Conf
+    from csm.common.errors import CsmError
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
