@@ -5,6 +5,7 @@ import os
 import glob
 import traceback
 import json
+from aiojobs.aiohttp import setup
 from aiohttp import web
 from importlib import import_module
 import pathlib
@@ -35,6 +36,7 @@ class CsmAgent:
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
+        
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
         s3_plugin = import_plugin_module('s3')
