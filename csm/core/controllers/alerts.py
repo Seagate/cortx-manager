@@ -81,8 +81,6 @@ class AlertsListView(web.View):
         """Calling Alerts Get Method"""
         Log.debug(f"Handling list alerts get request."
                   f"user_id: {self.request.session.credentials.user_id}")
-        import asyncio
-        await asyncio.sleep(.8)
         alerts_qp = AlertsQueryParameter()
         try:
             alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
