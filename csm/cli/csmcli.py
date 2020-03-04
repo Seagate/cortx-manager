@@ -83,7 +83,7 @@ class CsmCli(Cmd):
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
-        self._permissions = None
+        self._permissions = {}
 
     def preloop(self):
         """
