@@ -70,7 +70,8 @@
           "dest": "Statement",
           "type": "argparse.FileType('r')",
           "help": "Path to file",
-          "json": true
+          "json": true,
+          "required": true
         },
         {
           "flag": "args",
