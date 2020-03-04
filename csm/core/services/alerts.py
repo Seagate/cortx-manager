@@ -436,9 +436,9 @@ class AlertMonitorService(Service, Observable):
         """
         This method creats and starts an alert monitor thread
         """
-        Log.info("Start Alert monitor thread")
+        Log.info("Starting Alert monitor thread")
+        self._update_health_schema_after_init()
         try:
-            self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -517,11 +517,14 @@ class AlertMonitorService(Service, Observable):
         :param None
         :return: None
         """
-        loop = asyncio.get_event_loop()
-        alerts = loop.run_until_complete(self.repo.retrieve_by_range(
-            create_time_range=None, resolved=False))
-        for alert in alerts:
-            self._health_service.update_health_schema(alert)        
+        try:
+            loop = asyncio.get_event_loop()
+            alerts = loop.run_until_complete(self.repo.retrieve_by_range(\
+                    create_time_range=None, resolved=False))
+            for alert in alerts:
+                self._health_service.update_health_schema(alert)        
+        except Exception as e:
+            Log.warn(f"Error in update_health_schema_after_init: {e}")
 
     def _resolve_alert(self, new_alert, prev_alert):
         alert_updated = False
