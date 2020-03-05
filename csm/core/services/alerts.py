@@ -69,20 +69,22 @@ class AlertRepository(IAlertStorage):
         query = Query().filter_by(Compare(AlertModel.alert_uuid, '=', alert_id))
         return next(iter(await self.db(AlertModel).get(query)), None)
 
-    async def retrieve_by_hw(self, hw_id) -> AlertModel:
-        filter = And(Compare(AlertModel.sensor_info, '=',
-                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))
+    async def retrieve_by_sensor_info(self, sensor_info, module_type) -> AlertModel:
+        filter = And(And(Compare(AlertModel.sensor_info, '=', \
+                str(sensor_info)), Compare(AlertModel.module_type, "=", \
+                str(module_type))), Or(Compare(AlertModel.acknowledged, '=', \
+                False), Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def update(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
 
-    async def update_by_hw_id(self, hw_id, update_params):
-        filter = And(Compare(AlertModel.sensor_info, '=',
-                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))
+    async def update_by_sensor_info(self, sensor_info, module_type, update_params):
+        filter = And(And(Compare(AlertModel.sensor_info, '=', \
+                str(sensor_info)), Compare(AlertModel.module_type, "=", \
+                str(module_type))), Or(Compare(AlertModel.acknowledged, '=', \
+                False), Compare(AlertModel.resolved, '=', False)))
         await self.db(AlertModel).update(filter, update_params)
 
     def _prepare_time_range(self, field, time_range: DateTimeRange):
@@ -492,18 +494,22 @@ class AlertMonitorService(Service, Observable):
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
-            prev_alert = self._run_coroutine(self.repo.retrieve_by_hw\
-                    (message.get(const.ALERT_SENSOR_INFO, "")))
+            sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
+            module_type = message.get(const.ALERT_MODULE_TYPE, "")
+            prev_alert = self._run_coroutine\
+                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
                 self._health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
+                Log.debug(f"Alert stored successfully.")
             else:
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
                     self._health_service.update_health_schema(AlertModel(message))
+                    Log.debug(f"Alert updated successfully.")
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
 
@@ -587,8 +593,8 @@ class AlertMonitorService(Service, Observable):
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
         self._update_params_cleanup(update_params)
-        self._run_coroutine(self.repo.update_by_hw_id\
-                (prev_alert.sensor_info, update_params))
+        self._run_coroutine(self.repo.update_by_sensor_info\
+                (prev_alert.sensor_info, prev_alert.module_type, update_params))
 
     def _update_params_cleanup(self, update_params):
         for key, value in update_params.items():
