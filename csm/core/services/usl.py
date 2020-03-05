@@ -126,9 +126,29 @@ class UslService(ApplicationService):
 
         return uuid5(self._device.uuid, bucket_name)
 
-    async def _create_udx_account(self, account_name, account_email, account_password, bucket_name):
+    async def _handle_udx_s3_registration(self, account_name, account_email, account_password,
+                                          bucket_name):
         """
-        Creates an UDX account with dedicated bucket.
+        Handles an S3 part of UDX device registration, i.e.:
+        - creates UDX account
+        - creates UDX bucket inside the UDX account
+        The method is a part of a bigger UDX registration process. Exception handling is left to it.
+        """
+
+        acc = await self._create_udx_account(account_name, account_email, account_password)
+        await self._create_udx_bucket(acc, bucket_name)
+
+        return {
+            "account_name": account_name,
+            "account_email": account_email,
+            "access_key": acc.access_key_id,
+            "secret_key": acc.secret_key_id,
+            "bucket_name": bucket_name,
+        }
+
+    async def _create_udx_account(self, account_name, account_email, account_password):
+        """
+        Creates an UDX S3 account
         """
 
         Log.debug(f'Creating UDX S3 account. account_name: {account_name}')
@@ -142,7 +162,6 @@ class UslService(ApplicationService):
                                                        iam_conf)
 
         try:
-            await self._create_udx_bucket(account, bucket_name)
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account_name,
                                                                         account_password)
@@ -150,15 +169,9 @@ class UslService(ApplicationService):
                 raise CsmInternalError("Failed to create loging profile for UDX S3 account")
         except Exception as e:
             await account_client.delete_account(account.account_name)
-            raise e
+            raise CsmInternalError(f'UDX account creation failed: {str(e)}')
 
-        return {
-            "account_name": account.account_name,
-            "account_email": account.account_email,
-            "access_key": account.access_key_id,
-            "secret_key": account.secret_key_id,
-            "bucket_name": bucket_name,
-        }
+        return account
 
     async def _create_udx_bucket(self, account, bucket_name):
         Log.debug(f'Creating UDX bucket {bucket_name} for s3 account: {account.account_name}')
@@ -245,6 +258,7 @@ class UslService(ApplicationService):
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
+
         return [self._device.to_primitive()]
 
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
