@@ -68,7 +68,7 @@
         {
           "flag": "-s",
           "dest": "Statement",
-          "type": "argparse.FileType('r')",
+          "type": "Validatiors.file_type",
           "help": "Path to file",
           "json": true,
           "required": true

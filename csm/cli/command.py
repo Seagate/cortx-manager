@@ -105,6 +105,12 @@ class Validatiors:
         except ValueError:
             raise argparse.ArgumentError("Value Must be Positive Integer")
 
+    @staticmethod
+    def file_type(value):
+        f_type = argparse.FileType('r')
+        return f_type(value)
+
+
 class CommandParser:
     """
     This Class Parses the Commands from the dictionary object
