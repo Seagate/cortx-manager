@@ -83,7 +83,7 @@ class CsmCli(Cmd):
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
-        self._permissions = {}
+        self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
 
     def preloop(self):
         """
@@ -133,7 +133,9 @@ class CsmCli(Cmd):
                 if not is_logged_in:
                     self.do_exit("Server authentication check failed.")
                 Log.info(f"{self.username}: Logged In.")
-                self._permissions = self.loop.run_until_complete(self.rest_client.permissions())
+                response = self.loop.run_until_complete(self.rest_client.permissions())
+                if response:
+                    self._permissions.update(response)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:

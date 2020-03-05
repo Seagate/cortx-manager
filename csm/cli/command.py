@@ -138,13 +138,11 @@ class CommandParser:
         filter sub_command if found any permissions tag
         if no permissions tag is found it returns true
         """
+        allowed = False
         permission_tag =  sub_command.get(const.SUB_COMMANDS_PERMISSIONS, False)
-        if permission_tag:
-            if self.permissions.get(permission_tag, False):
-                return True
-            else:
-                return False
-        return True
+        if permission_tag and self.permissions.get(permission_tag, False):
+            allowed = True
+        return allowed
 
     def handle_comm(self, each_args):
         """
