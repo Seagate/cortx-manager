@@ -182,7 +182,7 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-CLI_DEFAULTS_ROLES = '{}/schema/cli_defaults.json'.format(CSM_PATH)
+CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'

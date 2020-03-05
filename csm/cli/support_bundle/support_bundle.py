@@ -82,15 +82,19 @@ class SupportBundle:
         comment = command.options.get("comment")
         cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                           "SUPPORT_BUNDLE.cluster_file_path")
+        if not cluster_file_path:
+            sys.stderr.write(f"Cluster Info File Path InCorrect.\n Check File {const.CSM_CONF}")
+            return None
         if not os.path.exists(cluster_file_path):
-            raise CsmError(rc=errno.ENOENT,
-                           message_id=(f"{cluster_file_path} not Found. \n "
-                   f"Please Check if Cluster Info File is Correctly Configured."))
+            sys.stderr.write(f"{errno.ENOENT}: {cluster_file_path} not Found. \n "
+                   "Please check if cluster info file is correctly configured.")
+            return None
         cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
-            raise CsmError(rc=errno.ENOENT, message_id="{0} not Found",
-                           message_args=[const.CLUSTER_INFO_FILE])
+            sys.stderr.write((f"{errno.ENOENT}: {const.CLUSTER_INFO_FILE} \n"
+                             f"Please check if file is correctly configured"))
+            return None
         threads = []
         try:
             for each_node in active_nodes:
