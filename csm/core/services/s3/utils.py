@@ -35,11 +35,11 @@ class CsmS3ConfigurationFactory:
 
         iam_connection_config = S3ConnectionConfig()
         iam_connection_config.host = Conf.get(
-            const.CSM_GLOBAL_INDEX, "S3.host")
+            const.CSM_GLOBAL_INDEX, const.S3_HOST)
         iam_connection_config.port = Conf.get(
-            const.CSM_GLOBAL_INDEX, "S3.iam_port")
+            const.CSM_GLOBAL_INDEX, const.S3_IAM_PORT)
         iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
-                                                         "S3.max_retries_num")
+                                                         const.S3_MAX_RETRIES_NUM)
         return iam_connection_config
 
     @staticmethod
@@ -50,11 +50,11 @@ class CsmS3ConfigurationFactory:
 
         Log.debug("Get s3 connection config")
         s3_connection_config = S3ConnectionConfig()
-        s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
+        s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_HOST)
         s3_connection_config.port = Conf.get(
-            const.CSM_GLOBAL_INDEX, "S3.s3_port")
+            const.CSM_GLOBAL_INDEX, const.S3_PORT)
         s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
-                                                        "S3.max_retries_num")
+                                                        const.S3_MAX_RETRIES_NUM)
         return s3_connection_config
 
 
@@ -64,8 +64,8 @@ class IamRootClient(IamClient):
     """
 
     def __init__(self):
-        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
+        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN)
         # TODO: Password should be taken as input and not read from conf file directly.
-        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_password")
+        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
         super().__init__(ldap_login, ldap_password, iam_conf)
