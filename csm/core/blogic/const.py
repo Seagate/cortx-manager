@@ -169,8 +169,7 @@ HEALTH_SUMMARY = 'health_summary'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
-HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(
-    CSM_PATH)
+HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 
 # Support Bundle
