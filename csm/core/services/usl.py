@@ -136,14 +136,14 @@ class UslService(ApplicationService):
         """
 
         acc = await self._create_udx_account(account_name, account_email, account_password)
-        await self._create_udx_bucket(acc, bucket_name)
+        bucket = await self._create_udx_bucket(acc, bucket_name)
 
         return {
             "account_name": account_name,
             "account_email": account_email,
             "access_key": acc.access_key_id,
             "secret_key": acc.secret_key_id,
-            "bucket_name": bucket_name,
+            "bucket_name": bucket.name,
         }
 
     async def _create_udx_account(self, account_name, account_email, account_password):
@@ -175,19 +175,21 @@ class UslService(ApplicationService):
 
     async def _create_udx_bucket(self, account, bucket_name):
         Log.debug(f'Creating UDX bucket {bucket_name} for s3 account: {account.account_name}')
-        postfixed_bucket_name = bucket_name + '-udx'
+        prefixed_bucket_name = 'udx-' + bucket_name
         bucket_tags = {"udx": "enabled"}
 
         try:
             conn_conf = CsmS3ConfigurationFactory.get_s3_connection_config()
             s3_client = self._s3plugin.get_s3_client(account.access_key_id, account.secret_key_id,
                                                      conn_conf)
-            await s3_client.create_bucket(postfixed_bucket_name)
-            Log.info(f'UDX bucket {postfixed_bucket_name} is created')
-            await s3_client.put_bucket_tagging(postfixed_bucket_name, bucket_tags)
-            Log.info(f'UDX bucket {postfixed_bucket_name} is taggged with {bucket_tags}')
+            bucket = await s3_client.create_bucket(prefixed_bucket_name)
+            Log.info(f'UDX bucket {prefixed_bucket_name} is created')
+            await s3_client.put_bucket_tagging(prefixed_bucket_name, bucket_tags)
+            Log.info(f'UDX bucket {prefixed_bucket_name} is taggged with {bucket_tags}')
         except Exception as e:
             raise CsmInternalError(f'UDX bucket creation failed: {str(e)}')
+
+        return bucket
 
     async def _is_bucket_udx_enabled(self, bucket):
         """
