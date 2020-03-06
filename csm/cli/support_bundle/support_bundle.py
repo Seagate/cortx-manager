@@ -83,13 +83,13 @@ class SupportBundle:
         cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                           "SUPPORT_BUNDLE.cluster_file_path")
         if not cluster_file_path or not os.path.exists(cluster_file_path):
-            repsonse_msg = (f"{cluster_file_path} not Found. \n "
-                   "Please check if cluster info file is correctly configured.")
+            repsonse_msg = {"error": (f"{cluster_file_path} not Found. \n"
+            f"Please check if cluster info file is correctly configured.")}
             return Response(rc=errno.ENOENT, output=repsonse_msg)
         cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
-            response_msg = "No active nodes found. Cluster file may not be valid"
+            response_msg = {"error":"No active nodes found. Cluster file may not be valid"}
             return Response(output=response_msg, rc=errors.CSM_ERR_INVALID_VALUE)
         threads = []
         try:
