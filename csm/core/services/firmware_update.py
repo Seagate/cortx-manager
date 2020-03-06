@@ -31,11 +31,12 @@ class FirmwareUpdateService(ApplicationService):
         
         
     async def firmware_package_upload(self, package_ref,filename):
+        # TODO: Changes required as per provisioner api to validate the package
         cache_path =  os.path.join(package_ref.cache_dir, package_ref.file_uuid)
         firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
         return await self._provisioner.validate_package(firmware_package_path)
 
     async def trigger_firmware_upload(self):
-
+        # TODO: Changes required as per provisioner api to trigger firmware upload 
         return await self._provisioner.trigger_firmware_upload()
 

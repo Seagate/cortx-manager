@@ -20,7 +20,7 @@
 import asyncio
 
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
-# from csm.core.controllers.schemas import FileFieldSchema
+from csm.common.log import Log
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.errors import InvalidRequest
@@ -52,6 +52,8 @@ class FirmwarePackageUploadView(CsmView):
     POST REST implementation to upload firmware packages
     """
     async def post(self):
+        Log.debug(f"Handling firmware package upload api"
+                  f" user_id: {self.request.session.credentials.user_id}")
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
             multipart_data = FirmwareUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
@@ -70,5 +72,7 @@ class FirmwareUpdateView(CsmView):
     POST REST implementation to trigger firmware update
     """
     async def post(self):
+        Log.debug(f"Handling firmware package update api"
+                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.trigger_firmware_upload()
 
