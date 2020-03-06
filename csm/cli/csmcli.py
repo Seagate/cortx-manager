@@ -146,7 +146,7 @@ class CsmCli(Cmd):
             self.do_exit(f"Some Error Occurred.\n")
 
     def precmd(self, command):
-        """ r4   vbhbbb
+        """
         Pre-Process the Entered Command.
         :param command: Command Entered by User.
         :return:
@@ -187,10 +187,8 @@ class CsmCli(Cmd):
             Log.info(f"{self.username}: {cmd}: Command Executed")
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
-            pass
         except SystemExit:
             Log.debug(f"{self.username}: Command Executed System Exit")
-            pass
         except KeyboardInterrupt:
             Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
             self.do_exit()
