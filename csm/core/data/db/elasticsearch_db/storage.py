@@ -35,13 +35,13 @@ from schematics.types import (StringType, DecimalType, DateType, IntType, BaseTy
 from schematics.exceptions import ConversionError
 
 from csm.common.errors import CsmInternalError
-from csm.core.data.access import Query, SortOrder, IDataBase
-from csm.core.data.access import ExtQuery
+from eos.utils.db import Query, SortOrder, IDataBase
+from eos.utils.db import ExtQuery
 from csm.core.data.db import GenericDataBase, GenericQueryConverter
-from csm.core.blogic.models import CsmModel
+from eos.utils.db import BaseModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError
-from csm.core.data.access.filters import FilterOperationCompare
-from csm.core.data.access.filters import ComparisonOperation, IFilter
+from eos.utils.db.filters import FilterOperationCompare
+from eos.utils.db.filters import ComparisonOperation, IFilter
 
 
 __all__ = ["ElasticSearchDB"]
@@ -198,10 +198,10 @@ class ElasticSearchQueryConverter(GenericQueryConverter):
 class ElasticSearchDataMapper:
     """ElasticSearch data mappings helper"""
 
-    def __init__(self, model: Type[CsmModel]):
+    def __init__(self, model: Type[BaseModel]):
         """
 
-        :param Type[CsmModel] model: model for constructing data mapping for index in ElasticSearch
+        :param Type[BaseModel] model: model for constructing data mapping for index in ElasticSearch
         """
         self._model = model
         self._mapping = {
@@ -305,12 +305,12 @@ class ElasticSearchDB(GenericDataBase):
     }
     _default_date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-    def __init__(self, es_client: Elasticsearch, model: Type[CsmModel], collection: str,
+    def __init__(self, es_client: Elasticsearch, model: Type[BaseModel], collection: str,
                  thread_pool_exec: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
         """
 
         :param Elasticsearch es_client: elasticsearch client
-        :param Type[CsmModel] model: model (class object) to associate it with elasticsearch storage
+        :param Type[BaseModel] model: model (class object) to associate it with elasticsearch storage
         :param str collection: string represented collection for `model`
         :param ThreadPoolExecutor thread_pool_exec: thread pool executor
         :param BaseEventLoop loop: asyncio event loop
@@ -325,9 +325,9 @@ class ElasticSearchDB(GenericDataBase):
         # We are associating index name in ElasticSearch with given collection
         self._index = self._collection
 
-        if not isinstance(model, type) or CsmModel not in model.__bases__:
+        if not isinstance(model, type) or BaseModel not in model.__bases__:
             raise DataAccessInternalError("Model parameter is not a Class object or not inherited "
-                                          "from csm.core.blogic.models.CsmModel")
+                                          "from csm.core.blogic.models.BaseModel")
         self._model = model  # Needed to build returning objects
 
         self._index_info = None
@@ -337,13 +337,13 @@ class ElasticSearchDB(GenericDataBase):
                                                         self._query_converter)
 
     @classmethod
-    async def create_database(cls, config, collection, model: Type[CsmModel]) -> IDataBase:
+    async def create_database(cls, config, collection, model: Type[BaseModel]) -> IDataBase:
         """
         Creates new instance of ElasticSearch DB and performs necessary initializations
 
         :param DBSettings config: configuration for elasticsearch server
         :param str collection: collection for storing model onto db
-        :param Type[CsmModel] model: model which instances will be stored in DB
+        :param Type[BaseModel] model: model which instances will be stored in DB
         :return:
         """
         # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
@@ -402,11 +402,11 @@ class ElasticSearchDB(GenericDataBase):
         self._model_scheme = self._index_info[self._index][ESWords.MAPPINGS][ESWords.PROPERTIES]
         self._model_scheme = {k.lower(): v for k, v in self._model_scheme.items()}
 
-    async def store(self, obj: CsmModel):
+    async def store(self, obj: BaseModel):
         """
         Store object into Storage
 
-        :param CsmModel obj: Arbitrary CSM object for storing into DB
+        :param BaseModel obj: Arbitrary CSM object for storing into DB
 
         """
         def _store(_id, _doc: dict):
@@ -447,7 +447,7 @@ class ElasticSearchDB(GenericDataBase):
         await self._refresh_index()
         return result
 
-    async def get(self, query: Query) -> List[CsmModel]:
+    async def get(self, query: Query) -> List[BaseModel]:
         """
         Get object from Storage by Query
 

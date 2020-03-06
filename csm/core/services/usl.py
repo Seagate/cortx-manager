@@ -34,11 +34,11 @@ from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.data.access import Query
-from csm.core.data.access.filters import Compare
-from csm.core.data.db.db_provider import DataBaseProvider
-from csm.core.data.models.s3 import S3ConnectionConfig, IamUser
-from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
+from eos.utils.db import Query, SortOrder
+from eos.utils.db.filters import Compare
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.core.data.models.s3 import S3ConnectionConfig
+from csm.core.data.models.usl import (Device, Volume, Event, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
 from csm.core.services.usl_certificate_manager import (

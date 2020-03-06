@@ -22,11 +22,11 @@ from typing import Any, Union
 from schematics.exceptions import ValidationError, ConversionError
 
 from csm.common.errors import DataAccessInternalError
-from csm.core.blogic.models import CsmModel
-from csm.core.data.access import IDataBase, Query, IFilterTreeVisitor
-from csm.core.data.access import ExtQuery
-from csm.core.data.access import IFilter
-from csm.core.data.access.filters import (FilterOperationCompare, FilterOperationOr,
+from eos.utils.db import BaseModel
+from eos.utils.db import IDataBase, Query, IFilterTreeVisitor
+from eos.utils.db import ExtQuery
+from eos.utils.db import IFilter
+from eos.utils.db.filters import (FilterOperationCompare, FilterOperationOr,
                                           FilterOperationAnd, Compare)
 
 
@@ -35,7 +35,7 @@ class GenericDataBase(IDataBase):
 
     _model_scheme = None
 
-    async def store(self, obj: CsmModel):
+    async def store(self, obj: BaseModel):
         """
         Store object into Storage
 
@@ -68,21 +68,21 @@ class GenericDataBase(IDataBase):
         # Put Generic code here. We can't find it
         pass
 
-    async def get_by_id(self, obj_id: Any) -> Union[CsmModel, None]:
+    async def get_by_id(self, obj_id: Any) -> Union[BaseModel, None]:
         """
         Simple implementation of get function.
-        Important note: in terms of this API 'id' means CsmModel.primary_key reference. If model
+        Important note: in terms of this API 'id' means BaseModel.primary_key reference. If model
         contains 'id' field please use ordinary get call. For example,
 
-            await db(YourCsmModel).get(Query().filter_by(Compare(YourCsmModel.id, "=", obj_id)))
+            await db(YourBaseModel).get(Query().filter_by(Compare(YourBaseModel.id, "=", obj_id)))
 
         This API call is equivalent to
 
-            await db(YourCsmModel).get(Query().filter_by(
-                                                    Compare(YourCsmModel.primary_key, "=", obj_id)))
+            await db(YourBaseModel).get(Query().filter_by(
+                                                    Compare(YourBaseModel.primary_key, "=", obj_id)))
 
         :param Any obj_id:
-        :return: CsmModel if object was found by its id and None otherwise
+        :return: BaseModel if object was found by its id and None otherwise
         """
         id_field = getattr(self._model, self._model.primary_key)
         try:
@@ -114,7 +114,7 @@ class GenericDataBase(IDataBase):
         Delete CSM model by its id
 
         :param Any obj_id: id of the object to be deleted
-        :return: CsmModel if object was found by its id and None otherwise
+        :return: BaseModel if object was found by its id and None otherwise
         :return: `True` if object was deleted successfully and `False` otherwise
         """
         # Generic implementation of delete by id functionality

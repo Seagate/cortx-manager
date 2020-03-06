@@ -26,11 +26,9 @@ from typing import Type
 from schematics import Model
 from schematics.types import DictType, StringType, ListType, ModelType, IntType
 
-from csm.core.blogic.models import CsmModel
-from csm.common.errors import (MalformedConfigurationError, DataAccessInternalError,
-                               DataAccessError)
-from csm.core.data.access.storage import AbstractDataBaseProvider
-from csm.common.log import Log
+from eos.utils.db import BaseModel
+from csm.common.errors import MalformedConfigurationError, DataAccessInternalError, DataAccessError
+from eos.utils.db.storage import AbstractDataBaseProvider
 
 import csm.core.data.db as db_module
 from csm.common.synchronization import ThreadSafeEvent
@@ -145,7 +143,7 @@ class AsyncDataBase:
     Decorates all storage async calls and async db drivers and db storages initializations
     """
 
-    def __init__(self, model: Type[CsmModel], model_config: DBModelConfig,
+    def __init__(self, model: Type[BaseModel], model_config: DBModelConfig,
                  db_config: GeneralConfig):
         self._event = ThreadSafeEvent()
         self._model = model
@@ -202,13 +200,13 @@ class DataBaseProvider(AbstractDataBaseProvider):
             if not model_class:
                 raise MalformedConfigurationError(f"Couldn't import '{model.import_path}'")
 
-            if not issubclass(model_class, CsmModel):
+            if not issubclass(model_class, BaseModel):
                 raise MalformedConfigurationError(f"'{model.import_path}'"
-                                                  f" must be a subclass of CsmModel")
+                                                  f" must be a subclass of BaseModel")
 
             self.model_settings[model_class] = model
 
-    def get_storage(self, model: Type[CsmModel]):
+    def get_storage(self, model: Type[BaseModel]):
         if model not in self.model_settings:
             raise MalformedConfigurationError(f"No configuration for {model}")
 

@@ -24,8 +24,8 @@ from csm.common.queries import SortBy
 from csm.common.services import ApplicationService
 from csm.common.template import Template
 from csm.core.blogic import const
-from csm.core.data.access import Query
-from csm.core.data.access.filters import Compare
+from eos.utils.db import Query
+from eos.utils.db.filters import Compare
 from csm.core.data.db.db_provider import (DataBaseProvider)
 from csm.common.log import Log
 from csm.core.data.models.system_config import (SystemConfigSettings, 

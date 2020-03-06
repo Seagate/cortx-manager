@@ -27,8 +27,8 @@ from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic import const
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access import Query, SortOrder
+from eos.utils.db.filters import Compare, And, Or
+from eos.utils.db import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common import queries
 from schematics import Model

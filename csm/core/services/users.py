@@ -32,8 +32,8 @@ from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
                                 CsmPermissionDenied, ResourceExist)
 import time
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access import Query, SortOrder
+from eos.utils.db.filters import Compare, And, Or
+from eos.utils.db import Query, SortOrder
 from csm.core.blogic import const
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType

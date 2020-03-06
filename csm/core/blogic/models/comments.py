@@ -1,9 +1,9 @@
-from .base import CsmModel
+from eos.utils.db import BaseModel
 from schematics.types import StringType, DateTimeType
 from datetime import timezone
 
 
-class CommentModel(CsmModel):
+class CommentModel(BaseModel):
     comment_id = StringType()
     comment_text = StringType()
     created_time = DateTimeType()

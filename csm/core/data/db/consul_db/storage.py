@@ -31,13 +31,13 @@ from consul.aio import Consul
 from schematics.types import BaseType, StringType
 from schematics.exceptions import ConversionError
 
-from csm.core.data.access import Query, SortOrder, IDataBase
-from csm.core.data.access import ExtQuery
+from eos.utils.db import Query, SortOrder, IDataBase
+from eos.utils.db import ExtQuery
 from csm.core.data.db import GenericDataBase, GenericQueryConverter
-from csm.core.blogic.models import CsmModel
+from eos.utils.db import BaseModel
 from csm.common.errors import DataAccessExternalError, DataAccessInternalError, DataAccessError
-from csm.core.data.access.filters import FilterOperationCompare
-from csm.core.data.access.filters import ComparisonOperation, IFilter
+from eos.utils.db.filters import FilterOperationCompare, Compare
+from eos.utils.db.filters import ComparisonOperation, IFilter
 
 CONSUL_ROOT = "eos/csm"
 OBJECT_DIR = "obj"
@@ -122,7 +122,7 @@ class ConsulQueryConverterWithData(GenericQueryConverter):
                           self._object_data.keys()))
 
 
-def query_converter_build(model: CsmModel, filter_obj: IFilter, raw_data: List[Dict]):
+def query_converter_build(model: BaseModel, filter_obj: IFilter, raw_data: List[Dict]):
     query_converter = ConsulQueryConverterWithData(model)
     return query_converter.build(filter_obj, raw_data)
 
@@ -146,7 +146,7 @@ class ConsulKeyTemplate:
         """
         Render templates using given object_type
 
-        :param str object_type: CsmModel type or collection
+        :param str object_type: BaseModel type or collection
         :return:
         """
         self._object_root = Template(self._object_root.substitute(OBJECT_TYPE=object_type))
@@ -186,12 +186,12 @@ class ConsulDB(GenericDataBase):
     thread_pool = None
     loop = None
 
-    def __init__(self, consul_client: Consul, model: Type[CsmModel], collection: str,
+    def __init__(self, consul_client: Consul, model: Type[BaseModel], collection: str,
                  process_pool: ThreadPoolExecutor, loop: asyncio.AbstractEventLoop = None):
         """
 
         :param Consul consul_client: consul client
-        :param Type[CsmModel] model: model (class object) to associate it with consul storage
+        :param Type[BaseModel] model: model (class object) to associate it with consul storage
         :param str collection: string represented collection for `model`
         :param ThreadPoolExecutor process_pool: thread pool executor
         :param AbstractEventLoop loop: asyncio event loop
@@ -201,9 +201,9 @@ class ConsulDB(GenericDataBase):
 
         self._query_converter = ConsulQueryConverterWithData(model)
 
-        if not isinstance(model, type) or not issubclass(model, CsmModel):
+        if not isinstance(model, type) or not issubclass(model, BaseModel):
             raise DataAccessInternalError("Model parameter is not a Class object or not inherited "
-                                          "from csm.core.blogic.models.CsmModel")
+                                          "from csm.core.blogic.models.BaseModel")
         self._model = model  # Needed to build returning objects
 
         # self._query_service = ConsulQueryService(self._collection, self._consul_client,
@@ -218,13 +218,13 @@ class ConsulDB(GenericDataBase):
         self._model_scheme = dict()
 
     @classmethod
-    async def create_database(cls, config, collection: str, model: Type[CsmModel]) -> IDataBase:
+    async def create_database(cls, config, collection: str, model: Type[BaseModel]) -> IDataBase:
         """
         Creates new instance of Consul KV DB and performs necessary initializations
 
         :param DBSettings config: configuration for consul kv server
         :param str collection: collection for storing model onto db
-        :param Type[CsmModel] model: model which instances will be stored in DB
+        :param Type[BaseModel] model: model which instances will be stored in DB
         :return:
         """
         # NOTE: please, be sure that you avoid using this method twice (or more times) for the same
@@ -284,7 +284,7 @@ class ConsulDB(GenericDataBase):
 
         await _create_obj_dir()  # create if it is not exists
 
-    async def store(self, obj: CsmModel):
+    async def store(self, obj: BaseModel):
         """
         Store object into Storage
 
@@ -309,7 +309,7 @@ class ConsulDB(GenericDataBase):
             return list()
         return data
 
-    async def get(self, query: Query) -> List[CsmModel]:
+    async def get(self, query: Query) -> List[BaseModel]:
         """
         Get object from Storage by Query
 

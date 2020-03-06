@@ -21,8 +21,8 @@
 
 from csm.core.data.db.db_provider import DataBaseProvider
 from csm.core.blogic.models.support_bundle import SupportBundleModel
-from csm.core.data.access import Query
-from csm.core.data.access.filters import Compare
+from eos.utils.db import Query
+from eos.utils.db.filters import Compare
 
 class SupportBundleRepository:
     def __init__(self, storage: DataBaseProvider):

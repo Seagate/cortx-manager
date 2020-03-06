@@ -27,8 +27,8 @@ if __name__ == "__main__":
     sys.path.append("../../../../..")  # Adds higher directory to python modules path.
 
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access import Query, SortOrder
+from eos.utils.db.filters import Compare, And, Or
+from eos.utils.db import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel
 
 
