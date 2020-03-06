@@ -54,5 +54,5 @@ models:
     database: "es_db"
     config:
         es_db:
-            collection: "s3auditlog"
+            collection: "s3-rsys-index"
 

@@ -19,6 +19,7 @@
 import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
+from csm.core.controllers.validators import BucketNameValidator
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
@@ -32,9 +33,7 @@ class S3BucketCreationSchema(Schema):
     Scheme for verification of POST request body for S3 bucket creation API
 
     """
-    # TODO: The first requirement is length at least of 3 characters. Determine another polices
-    #  for buckets names
-    bucket_name = fields.Str(required=True, validate=validate.Length(min=3))
+    bucket_name = fields.Str(required=True, validate=[BucketNameValidator()])
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket")
