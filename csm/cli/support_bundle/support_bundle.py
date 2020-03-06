@@ -106,11 +106,11 @@ class SupportBundle:
                 thread_obj.start()
                 threads.append(thread_obj)
 
-            output_str = (f"Support Bundle Generation Started.\n"
+            response_msg = (f"Support Bundle Generation Started.\n"
                           f"Please use the below ID for Checking the status of "
                           f"Support Bundle. \n {bundle_id}\n")
 
-            sys.stdout.write(output_str)
+            return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
         finally:
             for each_thread in threads:
                 each_thread.join(timeout=600)
