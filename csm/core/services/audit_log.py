@@ -34,6 +34,7 @@ from csm.common import queries
 from schematics import Model
 from csm.common.errors import CsmNotFoundError
 from typing import Optional, Iterable
+from csm.common.conf import Conf
 
 # mapping of component with model, field for 
 # range queires and log format
@@ -115,8 +116,10 @@ class AuditService(ApplicationService):
             tar_file_name = f'{os.path.join(const.AUDIT_LOG, file_name)}.tar.gz'
             count = await self.audit_mngr.count_by_range(component, time_range)
             file = open(txt_file_name, "w")
-            for limit in range(0, count+1, const.MAX_RESULT_WINDOW):
-                query_limit = QueryLimits(const.MAX_RESULT_WINDOW, limit)
+            for limit in range(0, count+1, Conf.get(const.CSM_GLOBAL_INDEX,
+                                              "Log.max_result_window")):
+                query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
+                                              "Log.max_result_window"), limit)
                 audit_logs = await self.audit_mngr.retrieve_by_range(component, 
                                                  query_limit, time_range)
                 for log in audit_logs:
@@ -136,7 +139,8 @@ class AuditService(ApplicationService):
                                                    COMPONENT_NOT_FOUND)
 
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
-        query_limit = QueryLimits(const.MAX_RESULT_WINDOW, 0)
+        query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
+                                                   "Log.max_result_window"), 0)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
         return [COMPONENT_MODEL_MAPPING[component]["format"].
