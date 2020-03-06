@@ -3,6 +3,7 @@
 import sys
 import os
 import re
+import yaml
 
 def import_list(csm_path, walk_path):
     import_list = []
@@ -14,10 +15,20 @@ def import_list(csm_path, walk_path):
                 import_list.append('csm.' + file)
     return import_list
 
+def import_models(file_name):
+    import_list = []
+    with open(yaml, 'r') as f:
+        db_conf = yaml.safe_load(f)
+    for each_model in db_conf.get("models", []):
+        import_list.append(each_model.get("import_path"))
+    return import_list
+
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
 product_path = '<CSM_PATH>' + '/' + product
+db_file_path = 'CSM_PATH' + '/conf/etc/database.yaml'
 product_module_list = import_list(csm_path, product_path)
+product_module_list.extend(import_models())
 product_module_list.append("csm.cli.support_bundle")
 
 block_cipher = None
