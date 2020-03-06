@@ -59,14 +59,6 @@
           "json": true
         },
         {
-          "flag": "-p",
-          "dest": "path",
-          "type": "str",
-          "help": "Path for Iam User.",
-          "default": "/",
-          "json": true
-        },
-        {
           "flag": "-passwd",
           "dest": "password",
           "type": "Terminal.get_password",
