@@ -141,7 +141,6 @@ class CsmCli(Cmd):
         except KeyboardInterrupt:
             self.do_exit()
         except Exception as e:
-            Log.critical(traceback.format_exc())
             Log.critical(f"{self.username}:{e}")
             self.do_exit(f"Some Error Occurred.\n")
 
@@ -193,7 +192,6 @@ class CsmCli(Cmd):
             Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
             self.do_exit()
         except Exception as e:
-            Log.critical(traceback.format_exc())
             Log.critical(f"{self.username}:{e}")
             self.do_exit("Some Error Occurred.\n Please try Re-Login")
 
