@@ -62,10 +62,13 @@ class S3AccountService(ApplicationService):
             account.secret_key_id, self._get_iam_connection_config())
 
         try:
+            # Note that the order of commands below is important
+            # If profile creation fails, we can easily remove the account
+            # If a profile is created, we can still remove the account
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
-                self._raise_remote_error(account)
+                self._raise_remote_error(profile)
         except Exception as e:
             await account_client.delete_account(account.account_name)
             raise e
