@@ -19,19 +19,22 @@
 
 import sys, os
 import time
+import traceback
 import asyncio
 from statsd import StatsClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed, TestProvider, Const
+from csm.core.services.stats import StatsAppService
 from csm.common.timeseries import TimelionProvider
 from csm.core.blogic import const
 from csm.common.log import Log
 
-class TestTimelionProvider:
+class TestStatsAppService:
     def __init__(self):
         self._time_series = TimelionProvider(const.AGGREGATION_RULE)
         self._time_series.init()
+        self._stats_service = StatsAppService(self._time_series)
         self._loop = asyncio.get_event_loop()
 
     def dump_data(self):
@@ -43,36 +46,104 @@ class TestTimelionProvider:
     def get_panels(self):
         return self._loop.run_until_complete(self._time_series.get_panels())
 
-    def process_request(self, args):
-        return self._loop.run_until_complete(
-                self._time_series.process_request(**args))
+    def get(self, args):
+        return self._loop.run_until_complete(self._stats_service.get(**args))
+
+    def get_panel_list(self):
+        return self._loop.run_until_complete(self._stats_service.get_panel_list())
+
+    def get_metrics(self, args):
+        return self._loop.run_until_complete(self._stats_service.get_metrics(**args))
+
+    def get_panels_stats(self, args):
+        return self._loop.run_until_complete(self._stats_service.get_panels(**args))
+
+    def get_labels(self, panel):
+        return self._loop.run_until_complete(self._time_series.get_labels(panel))
+
+    def get_axis(self, panel):
+        return self._loop.run_until_complete(self._time_series.get_axis(panel))
 
 def init(args):
-    pass
+    args["stats"] = TestStatsAppService()
 
 #################
 # Tests
 #################
+
 def test1(args):
     """
-    Use timelion provider to initalize csm
+    Test StatsAppService for single panel
     """
-    tp = TestTimelionProvider()
+    try:
+        tp = args["stats"]
+        tp.dump_data()
+        time.sleep(10)
+        to_t = int(time.time())
+        from_t = to_t - 30
+        req_param = { "stats_id": 1, "panel": "",
+            "from_t": from_t, "to_t": to_t,
+            "metric_list": "", "interval": 10,
+            "total_sample": "", "unit": "",
+            "output_format": "gui", "query": ""
+            }
+        for panel in tp.get_panels():
+            req_param["panel"] = panel
+            res = tp.get(req_param)
+            Log.console(res)
+    except:
+        Log.error("Stats: %s" %traceback.format_exc())
+        raise TestFailed("Stats Failed for get service")
 
-    Log.console('Testing stats provider ...')
-    tp.dump_data()
-    time.sleep(10)
-    to_t = int(time.time())
-    from_t = to_t - 30
-    req_param = { "stats_id": 1, "panel": "",
-                "from_t": from_t, "duration_t": to_t,
-                "metric_list": "", "interval": 10,
-                "output_format": "gui", "query": "",
-                "total_sample": "", "unit": ""}
+def test2(args):
+    """
+    Test stats service to get data of any metric and any panel
+    """
+    try:
+        tp = args["stats"]
+        panel_list = tp.get_panel_list()
+        from_t = int(time.time()) - 40
+        to_t = int(time.time())
+        metrics_list = panel_list["metric_list"] + panel_list["unit_list"]
 
-    for panel in tp.get_panels():
-        req_param["panel"] = panel
-        res = tp.process_request(req_param)
+        req_param = { "stats_id": 1, "metrics_list": metrics_list,
+                "from_t": from_t, "to_t": to_t,
+                "interval": "", "total_sample": 5, "output_format": "gui"}
+        res = tp.get_metrics(req_param)
         Log.console(res)
+    except:
+        Log.error("Stats: %s" %traceback.format_exc())
+        raise TestFailed("Stats Failed for get_metrics service")
 
-test_list = [ test1 ]
+def test3(args):
+    """
+    Test stats for panel list
+    """
+    try:
+        tp = args["stats"]
+        tp.dump_data()
+        time.sleep(10)
+        to_t = int(time.time())
+        from_t = to_t - 30
+        req_param = { "stats_id": 1, "panels_list": tp.get_panels(),
+            "from_t": from_t, "to_t": to_t,
+            "interval": 10, "total_sample": "",
+            "output_format": "gui"
+            }
+        res = tp.get_panels_stats(req_param)
+        Log.console(res)
+    except:
+        Log.error("Stats: %s" %traceback.format_exc())
+        raise TestFailed("Stats Failed for get_panels_stats service")
+
+def test4(args):
+    try:
+        tp = args["stats"]
+        for panel in tp.get_panels():
+            Log.console(tp.get_labels(panel))
+            Log.console(tp.get_axis(panel))
+    except:
+        Log.error("Stats: %s" %traceback.format_exc())
+        raise TestFailed("Stats Failed for get_panels_stats service")
+
+test_list = [ test1, test2, test3, test4 ]
