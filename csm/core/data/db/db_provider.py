@@ -52,6 +52,7 @@ class DBSettings(Model):
     port = IntType(required=True, default=None)
     login = StringType()
     password = StringType()
+    replication = IntType(required=False, default=0)
 
 
 class DBConfig(Model):

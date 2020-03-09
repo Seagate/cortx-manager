@@ -204,7 +204,6 @@ class ElasticSearchDataMapper:
         """
         self._model = model
         self._mapping = {
-            ESWords.INDEX_SETTINGS: INDEX_SETTINGS,
             ESWords.MAPPINGS: {
                 ESWords.PROPERTIES: {
                 }
@@ -230,7 +229,7 @@ class ElasticSearchDataMapper:
         if properties[name][ESWords.DATA_TYPE] == ESDataType.KEYWORD:
             properties[name]["normalizer"] = LOWERCASE_NORMALIZER
 
-    def build_index_mappings(self) -> dict:
+    def build_index_mappings(self, replication: int) -> dict:
         """
         Build ElasticSearch index data mapping
 
@@ -238,7 +237,11 @@ class ElasticSearchDataMapper:
         """
         for name, property_type in self._model.fields.items():
             self._add_property(name, type(property_type))
-
+        self._mapping[ESWords.INDEX_SETTINGS] = INDEX_SETTINGS
+        if replication > 0:
+            self._mapping[ESWords.INDEX_SETTINGS].update({
+                "number_of_replicas" : str(replication),
+                "auto_expand_replicas": f"{replication}-all"})
         return self._mapping
 
 
@@ -356,11 +359,11 @@ class ElasticSearchDB(GenericDataBase):
 
         es_db = cls(cls.elastic_instance, model, collection, cls.thread_pool, cls.loop)
 
-        await es_db.attach_to_index()
+        await es_db.attach_to_index(config.replication)
 
         return es_db
 
-    async def attach_to_index(self) -> None:
+    async def attach_to_index(self, replication: int) -> None:
         """
         Provides async method to connect storage to index bound to provided model and collection
         :return:
@@ -378,7 +381,7 @@ class ElasticSearchDB(GenericDataBase):
         # self._obj_index = self._es_client.indices.get_alias("*")
         if indices.get(self._index, None) is None:
             data_mappings = ElasticSearchDataMapper(self._model)
-            mappings_dict = data_mappings.build_index_mappings()
+            mappings_dict = data_mappings.build_index_mappings(replication)
             # self._es_client.indices.create(index=model.__name__, ignore=400, body=mappings_dict)
             await self._loop.run_in_executor(self._tread_pool_exec,
                                              _create, self._index, mappings_dict)
