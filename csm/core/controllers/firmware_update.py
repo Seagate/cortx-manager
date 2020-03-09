@@ -23,9 +23,7 @@ from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-
 from marshmallow import Schema, fields, validate, exceptions
-
 from csm.core.controllers.schemas import FileFieldSchema
 
 
