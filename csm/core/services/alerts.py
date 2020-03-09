@@ -222,6 +222,12 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_uuid)
         if not alert:
             raise CsmNotFoundError(f"Alert not found for id {alert_uuid}", ALERTS_MSG_NOT_FOUND)
+
+        if alert.resolved and alert.acknowledged:
+            raise InvalidRequest(
+                "The alert is both resolved and acknowledged, it cannot be modified",
+                ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
+
         if alert["comments"] is None:
             alert["comments"] = []
         alert_comment = self.build_alert_comment_model(str(len(alert["comments"]) + 1), comment_text, user_id)
