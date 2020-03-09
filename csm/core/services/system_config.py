@@ -212,4 +212,4 @@ class SystemConfigAppService(ApplicationService):
                 return {"status": False, "error": "Some recipients did not receive the message",
                     "failed_recipients": success.keys()}
         except EmailError as e:
-            return {"status": False, "error": str(e), "failed_recipients": target_emails}
+            return {"status": False, "error": e.error(), "failed_recipients": target_emails}

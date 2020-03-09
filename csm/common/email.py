@@ -23,11 +23,13 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from concurrent.futures import ThreadPoolExecutor
 from smtplib import SMTP_SSL, SMTP
-from smtplib import SMTPHeloError, SMTPServerDisconnected, SMTPAuthenticationError, SMTPRecipientsRefused, SMTPSenderRefused
-from csm.common.errors import CsmInternalError
+from smtplib import (SMTPHeloError, SMTPServerDisconnected,
+                    SMTPAuthenticationError, SMTPRecipientsRefused,
+                    SMTPSenderRefused, SMTPException)
+from csm.common.errors import InvalidRequest
 
 
-class EmailError(CsmInternalError):
+class EmailError(InvalidRequest):
     pass
 
 class InvalidCredentialsError(EmailError):
@@ -114,10 +116,10 @@ class EmailSender:
             except (SMTPServerDisconnected, SMTPHeloError, ConnectionRefusedError) as e:
                 continue  # Try again
             except SMTPAuthenticationError as e:
-                raise InvalidCredentialsError(str(e)) from None
-            except Exception as e:
-                raise ServerCommunicationError(str(e)) from None
-        raise OutOfAttemptsEmailError()
+                raise InvalidCredentialsError("Authentication failed") from None
+            except SMTPException as e:
+                raise ServerCommunicationError(e.smtp_error.decode('utf-8')) from None
+        raise OutOfAttemptsEmailError("Failed to establish connection with the server")
 
     def _close(self):
         if self._is_connected:
@@ -134,9 +136,9 @@ class EmailSender:
             except (SMTPHeloError, SMTPServerDisconnected) as e:
                 self._close()
             except (SMTPRecipientsRefused, SMTPSenderRefused) as e:
-                raise BadEmailMessageError(str(e)) from None
+                raise BadEmailMessageError(e.smtp_error.decode('utf-8')) from None
 
-        raise OutOfAttemptsEmailError()
+        raise OutOfAttemptsEmailError("Failed to send the message")
     
     async def send_message(self, message: EmailMessage):
         """

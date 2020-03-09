@@ -33,13 +33,18 @@ class FileRefValidator(Validator):
             raise ValidationError('This field must be of instance of a FileRef class')
 
 
+
 class UserNameValidator(Validator):
     """
     Validator Class for Username Fields in CSM
     """
+
     def __call__(self, value):
-        if not re.search(r"^[a-zA-Z0-9_-]{8,64}$", value):
-            raise ValidationError("Username can only contain Alphanumeric, - and  _ .Length Must be between 8-64 Characters")
+        if not re.search(r"^[a-zA-Z0-9_-]{4,56}$", value):
+            raise ValidationError(
+                "Username can only contain Alphanumeric, - and  _ .Length "
+                "Must be between 4-64 Characters")
+
 
 class CommentsValidator(Validator):
     """
@@ -51,6 +56,7 @@ class CommentsValidator(Validator):
             raise ValidationError(
                 "Length should not be more than that of 250 characters.")
 
+
 class PortValidator(Validator):
     """
     Validation Class for Ports Entered in CSM
@@ -60,20 +66,24 @@ class PortValidator(Validator):
         if not const.PORT_MIN_VALUE < int(value) or not const.PORT_MAX_VALUE > int(value):
             raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} than {const.PORT_MAX_VALUE}")
 
+
 class PathPrefixValidator(Validator):
     """
     Path Prefix Validator for S3 Paths.
     """
+
     def __call__(self, value):
         if len(value) > const.PATH_PREFIX_MAX_VALUE:
             raise ValidationError(f"Path must not be more than {const.PATH_PREFIX_MAX_VALUE} characters.")
         if not value.startswith("/"):
             raise ValidationError("Path Must Start with '/'.")
 
+
 class PasswordValidator(Validator):
     """
     Password Validator Class for CSM Passwords Fields.
     """
+
     def __call__(self, password):
         if len(password) < 8:
             raise ValidationError(
@@ -90,23 +100,27 @@ class PasswordValidator(Validator):
         if not any(each_char in const.PASSWORD_SPECIAL_CHARACTER
                    for each_char in password):
             raise ValidationError((f"Password must include at lease one of the "
-                f"{''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters."))
+                                   f"{''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters."))
+
 
 class BucketNameValidator(Validator):
     """
         Validator Class for Bucket Name.
     """
+
     def __call__(self, value):
-        if not re.search(r"^[a-z0-9][a-z0-9-]{1,34}[a-z0-9]$", value):
+        if not re.search(r"^[a-z0-9][a-z0-9-]{3,54}[a-z0-9]$", value):
             raise ValidationError(
-                ("Bucket Name should be between 3-36 Characters long." 
+                ("Bucket Name should be between 4-56 Characters long."
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))
+
 
 class Ipv4(Validator):
     """
     Validator class for ipv4 address validation.
     """
+
     @staticmethod
     def validate_ipv4(ip):
         ip_regex = ("^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
@@ -120,10 +134,12 @@ class Ipv4(Validator):
             raise ValidationError(
                 "Invalid IP4 address.")
 
+
 class DomainName(Validator):
     """
     Validator class for domain name validation.
     """
+
     @staticmethod
     def validate_domain_name(domain_name):
         domain_regex = "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$"
@@ -137,10 +153,12 @@ class DomainName(Validator):
             raise ValidationError(
                 "Invalid domain name.")
 
+
 class Server(Validator):
     """
     Validator class for both ipv4 address and domain name validation.
     """
+
     def __call__(self, server_name):
         if len(server_name) > 253:
             raise ValidationError(

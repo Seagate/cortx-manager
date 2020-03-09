@@ -57,24 +57,19 @@ class IamUsersService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_user(self, s3_session: Dict, user_name: str, password: str,
-                          path_prefix: str = "/", require_reset=False) -> [
-        Response, Dict]:
+                                require_reset=False) -> [Response, Dict]:
         """
         This Method will create an IAM User in S3 user Account.
         :param s3_session: S3 session's details. :type: dict
         :param user_name: User name for New user. :type: str
         :param password: Password for new IAM user :type: str
-        :param path_prefix: path for he user if defined else "/" :type: str
         :param require_reset: Required to reset Password :type: bool
         """
 
         # Create Iam User in System.
         s3_client = await self.fetch_iam_client(s3_session)
-        path_prefix = path_prefix.strip()
-        if path_prefix and path_prefix[-1] != "/":
-            path_prefix = f"{path_prefix}/"
-        Log.debug(f"Create IAM User service: \nusername:{user_name}\nPath_prefix:{path_prefix}")
-        user_creation_resp = await s3_client.create_user(user_name, path_prefix)
+        Log.debug(f"Create IAM User service: \nusername:{user_name}")
+        user_creation_resp = await s3_client.create_user(user_name)
         if hasattr(user_creation_resp, "error_code"):
             return await  self._handle_error(user_creation_resp)
         # Create Iam User's Login Profile.
@@ -88,21 +83,17 @@ class IamUsersService(ApplicationService):
         return vars(user_creation_resp)
 
     @Log.trace_method(Log.DEBUG)
-    async def list_users(self, s3_session: Dict, path_prefix="/") -> Union[
+    async def list_users(self, s3_session: Dict) -> Union[
         Response, Dict]:
         """
         This Method Fetches Iam User's
         :param s3_session: S3 session's details. :type: dict
-        :param path_prefix: Path For user's Search "/account/sub_account/" :type:str
         :return:
         """
         s3_client = await  self.fetch_iam_client(s3_session)
-        path_prefix = path_prefix.strip()
-        if path_prefix and path_prefix[-1] != "/":
-            path_prefix = f"{path_prefix}/"
         # Fetch IAM Users
-        Log.debug(f"List IAM User service: Path_prefix:{path_prefix}")
-        users_list_response = await s3_client.list_users(path_prefix)
+        Log.debug(f"List IAM User service:")
+        users_list_response = await s3_client.list_users()
         if hasattr(users_list_response, "error_code"):
             return await  self._handle_error(users_list_response)
         iam_users_list = vars(users_list_response)
