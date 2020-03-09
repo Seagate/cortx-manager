@@ -34,7 +34,7 @@ class CsmSetupCommand:
         self._args[0] = 'csm_setup'
         self._validate()
         Conf.init()
-        Log.init(service_name = "csm_setup", log_path="/tmp",
+        Log.init(service_name = "csm_setup", log_path = const.CSM_SETUP_LOG_DIR,
                 level=const.LOG_LEVEL)
 
     def _validate(self):
