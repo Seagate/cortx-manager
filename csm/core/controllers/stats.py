@@ -58,7 +58,6 @@ class StatsView(CsmView):
             return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
                 interval, total_sample, unit, output_format, query)
 
-#@atomic
 @CsmView._app_routes.view("/api/v1/stats")
 class StatsPanelListView(CsmView):
     def __init__(self, request):

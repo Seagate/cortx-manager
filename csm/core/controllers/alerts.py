@@ -28,7 +28,6 @@ from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.common.log import Log
-from aiojobs.aiohttp import atomic
 from csm.common.log import Log
 from csm.core.controllers.view import CsmView
 from asyncio import CancelledError 
@@ -67,7 +66,6 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
-#@atomic
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
