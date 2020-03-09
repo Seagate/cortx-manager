@@ -44,7 +44,7 @@ class FirmwarePackageUploadView(CsmView):
 
     async def post(self):
         Log.info(f"Handling firmware package upload api"
-                 f"user_id: {self.request.session.credentials.user_id}")
+                 f" user_id: {self.request.session.credentials.user_id}")
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
             multipart_data = FirmwareUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
@@ -66,7 +66,7 @@ class FirmwareUpdateView(CsmView):
 
     async def post(self):
         Log.info(f"Handling firmware package update api"
-                 f"user_id: {self.request.session.credentials.user_id}")
+                 f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.trigger_firmware_upload()
 
 
@@ -78,10 +78,10 @@ class FirmwareUpdateStatus(CsmView):
         self._service_dispatch = {}
 
     """
-    POST REST implementation to trigger firmware update
+    Get REST implementation to trigger firmware update
     """
 
-    async def post(self):
-        Log.info(f"Handling firmware package update api"
+    async def get(self):
+        Log.info(f"Handling get last firmware upgrade status api"
                  f" user_id: {self.request.session.credentials.user_id}")
-        return await self._service.trigger_firmware_upload()
+        return await self._service.get_last_firmware_upgrade_status()
