@@ -26,11 +26,10 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError
-# Uncomment for csm HA resource start
-#from csm.core.blogic.csm_ha import CsmResourceAgent
-#from csm.common.ha_framework import PcsHAFramework
-#from csm.common.cluster import Cluster
-#from csm.core.agent.api import CsmApi
+from csm.core.blogic.csm_ha import CsmResourceAgent
+from csm.common.ha_framework import PcsHAFramework
+from csm.common.cluster import Cluster
+from csm.core.agent.api import CsmApi
 
 class Setup:
     def __init__(self):
@@ -76,7 +75,8 @@ class Setup:
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
         else:
-            Setup._run_cmd("userdel -r " +self._user)
+            if self._is_user_exist():
+                Setup._run_cmd("userdel -r " +self._user)
 
     def _config_user_permission_set(self, bundle_path, crt, key):
         """
@@ -96,7 +96,7 @@ class Setup:
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
 
-    def _config_user_permission_unset(self, bundle_path, crt, key):
+    def _config_user_permission_unset(self, bundle_path):
         """
         Unset user permission
         """
@@ -115,7 +115,7 @@ class Setup:
         if not reset:
             self._config_user_permission_set(bundle_path, crt, key)
         else:
-            self._config_user_permission_unset(bundle_path, crt, key)
+            self._config_user_permission_unset(bundle_path)
 
     class Config:
         """
@@ -187,7 +187,7 @@ class Setup:
         """
         Delete all logs
         """
-        Setup._run_cmd("rm -rf " +const.CSM_LOG_PATH+ "/*")
+        Setup._run_cmd("rm -rf " +const.CSM_LOG_PATH)
 
     class ConfigServer:
         """
@@ -206,11 +206,9 @@ class Setup:
             if _rc_agent == 0:
                 _proc = SimpleProcess("systemctl stop csm_agent")
                 _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-                Setup._run_cmd("systemctl is-active csm_agent")
             if _rc_web == 0:
                 _proc = SimpleProcess("systemctl stop csm_web")
                 _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-                Setup._run_cmd("systemctl is-active csm_web")
 
         @staticmethod
         def reload():
@@ -227,8 +225,29 @@ class Setup:
             if _rc_web == 0:
                 Setup._run_cmd("systemctl restart csm_web")
 
-#TODO: Devide changes in backend and frontend
-#TODO: Optimise use of args for like product, force, component
+    def _rsyslog(self):
+        """
+        Configure rsyslog
+        """
+        if os.path.exists(const.RSYSLOG_DIR):
+            Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
+            Setup._run_cmd("cp -f " +const.SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
+            Setup._run_cmd("systemctl restart rsyslog")
+        else:
+            raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
+
+    def _logrotate(self):
+        """
+        Configure logrotate
+        """
+        if os.path.exists(const.LOGROTATE_DIR):
+            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
+        else:
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+
+
+# TODO: Devide changes in backend and frontend
+# TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
     def __init__(self):
         super(CsmSetup, self).__init__()
@@ -242,7 +261,7 @@ class CsmSetup(Setup):
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
             raise Exception("Not implemented for Component %s" %args["Component"])
-        if "f" in args.keys() and args["f"] != False:
+        if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
 
     def post_install(self, args):
@@ -251,6 +270,8 @@ class CsmSetup(Setup):
             : Configure csm user
             : Add Permission for csm user
             : Add cronjob for csm cleanup
+        Post install is used after just all rpms are install but
+        no service are started
         """
         try:
             self._verify_args(args)
@@ -263,10 +284,11 @@ class CsmSetup(Setup):
         """
         Perform configuration for csm
             : Move conf file to etc
+        Config is used to move update conf files one time configuration
         """
         try:
             self._verify_args(args)
-            #TODO: Get configuration from provision and create conf file
+            # TODO: Get configuration from provision and create conf file
             self.Config.create()
         except Exception as e:
             raise CsmSetupError("csm_setup config failed. Error: %s" %e)
@@ -274,25 +296,29 @@ class CsmSetup(Setup):
     def init(self, args):
         """
         Check and move required configuration file
+        Init is used after all dependency service started
         """
         try:
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
             self.ConfigServer.reload()
-            # Uncomment this to setup cluster and HA resource agent
-            #self._config_cluster()
+            self._rsyslog()
+            self._logrotate()
+            ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
+            if ha_check:
+                self._config_cluster()
         except Exception as e:
             raise CsmSetupError("csm_setup init failed. Error: %s" %e)
 
     def reset(self, args):
         """
         Reset csm configuraion
-        Soft:
+        Soft: Soft Reset is used to restrat service with log cleanup
             - Cleanup all log
             - Reset conf
             - Restart service
-        Hard:
+        Hard: Hard reset is used to remove all configuration used by csm
             - Stop service
             - Cleanup all log
             - Delete all Dir created by csm
@@ -302,18 +328,16 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-            #TODO: handle service stop cleanly
             if args["hard"]:
                 self.Config.load()
+                self.ConfigServer.stop()
                 self._log_cleanup()
                 self._config_user_permission(reset=True)
                 self._cleanup_job(reset=True)
                 self.Config.delete()
-                #self.ConfigServer.stop() # service need to be cleanly stop
-                #self._config_user(reset=True) # Stop should work for userdel
+                self._config_user(reset=True)
             else:
-                self._log_cleanup()
                 self.Config.reset()
-                #self.ConfigServer.restart()
+                self.ConfigServer.restart()
         except Exception as e:
             raise CsmSetupError("csm_setup reset failed. Error: %s" %e)

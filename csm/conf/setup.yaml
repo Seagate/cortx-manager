@@ -14,7 +14,7 @@ csm:
     test:
         script: /usr/bin/csm_test
         args:
-            - -t <CSM_PATH>/test/plans/sanity.pln
+            - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
