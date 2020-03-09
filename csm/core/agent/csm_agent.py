@@ -119,7 +119,7 @@ class CsmAgent:
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
         
         provisioner = import_plugin_module('provisioner').ProvisionerPlugin()
-        CsmRestApi._app["fw_update_service"] = FirmwareUpdateService(provisioner, 
+        CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
             Conf.get(const.CSM_GLOBAL_INDEX, 'FIRMWARE_STORAGE_PATH.path'))
 
 

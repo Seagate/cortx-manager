@@ -245,3 +245,6 @@ SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
 LOGROTATE_DIR = "/etc/logrotate.d"
 SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/csm_agent_log.conf".format(LOGROTATE_DIR)
+
+# Service instance literal constant
+FW_UPDATE_SERVICE = "fw_update_service"
