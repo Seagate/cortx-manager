@@ -21,7 +21,6 @@ import json
 import re
 from csm.common.log import Log
 from aiohttp import web
-from aiojobs.aiohttp import atomic
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
@@ -68,7 +67,7 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
-@atomic
+#@atomic
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
@@ -76,6 +75,7 @@ class AlertsListView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmView.asyncio_shield
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """Calling Alerts Get Method"""

@@ -17,7 +17,8 @@
  ****************************************************************************
 """
 import json
-
+import asyncio
+import concurrent
 from csm.common.errors import InvalidRequest
 from csm.common.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
@@ -117,6 +118,13 @@ class CsmView(web.View):
             permissions = view_permissions
         return permissions
 
+    @classmethod
+    def asyncio_shield(cls, func):
+        def wrapper(*arg, **kw):
+            res = asyncio.shield(func(*arg, **kw))
+            return res
+        return wrapper
+    
     def validate_get(self):
         pass
 

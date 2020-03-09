@@ -19,7 +19,7 @@
 """
 from .view import CsmView
 from csm.common.log import Log
-from aiojobs.aiohttp import atomic
+
 
 #@atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
@@ -34,6 +34,7 @@ class StatsView(CsmView):
     """
     GET REST implementation for Statistics request
     """
+    @CsmView.asyncio_shield
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "

@@ -5,11 +5,10 @@ import os
 import glob
 import traceback
 import json
-from aiojobs.aiohttp import setup
 from aiohttp import web
 from importlib import import_module
 import pathlib
-from aiojobs.aiohttp import setup
+
 
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
@@ -51,7 +50,7 @@ class CsmAgent:
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
-        setup(CsmRestApi._app)
+        
         #Heath configuration
         health_repository = HealthRepository()
         health_service = HealthAppService(health_repository)
