@@ -10,3 +10,9 @@ sed -i 's/localhost/'$ip_name'/g' /etc/csm/csm.conf
 sed -i 's/127.0.0.1/'$ip_name'/g' /etc/csm/csm.conf
 sed -i 's/localhost/'$ip_name'/g' /etc/csm/database.yaml
 sed -i 's/127.0.0.1/'$ip_name'/g' /etc/csm/database.yaml
+
+read -p "Enter PORT for Consul to be Replaced in Config: "  consul_port
+if [ $consul_port == '' ] ; then
+    consul_port=18500
+fi
+sed -i 's/8500/'$consul_port'/g' /etc/csm/database.yaml

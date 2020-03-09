@@ -170,7 +170,8 @@ class EmailConfig(Model):
         config.smtp_port = self.smtp_port
         config.smtp_login = self.smtp_sender_email
         config.smtp_password = self.smtp_sender_password
-        config.smtp_use_ssl = self.smtp_protocol in [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
+        config.smtp_use_ssl = self.smtp_protocol.lower() in \
+            [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
         config.ssl_context = None
         config.timeout = const.CSM_SMTP_SEND_TIMEOUT_SEC
         config.reconnect_attempts = const.CSM_SMTP_RECONNECT_ATTEMPTS
