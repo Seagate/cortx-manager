@@ -21,6 +21,7 @@ from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
 from csm.common.conf import Conf
+from csm.common.log import Log
 
 class HealthRepository:
     def __init__(self):        
@@ -54,7 +55,8 @@ class HealthAppService(ApplicationService):
         self._init_health_schema()
 
     def _init_health_schema(self):
-        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX, 'HEALTH.health_schema')
+        health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                      'HEALTH.health_schema')
         self._health_schema = Payload(Json(health_schema_path))
         self.repo.health_schema = self._health_schema
     
@@ -67,26 +69,71 @@ class HealthAppService(ApplicationService):
         :param AlertModel: alert
         :return: None
         """
-        mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
-        hw_health_key = mapping_dict[alert.get(const.ALERT_MODULE_NAME)]
-        extended_info = eval(alert.get(const.ALERT_EXTENDED_INFO))
-        if (extended_info and extended_info.get(const.ALERT_INFO)):
-            resource_id = alert.get(const.ALERT_MODULE_NAME) + '-' \
-                + extended_info.get(const.ALERT_INFO).get(const.ALERT_RESOURCE_ID)
-            hw_health_key = hw_health_key.replace(const.ALERT_SITE_ID, 
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_SITE_ID))).replace(const.ALERT_RACK_ID, 
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_RACK_ID))).replace(const.ALERT_NODE_ID,
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_NODE_ID))).replace(const.ALERT_CLUSTER_ID,
-                str(extended_info.get(const.ALERT_INFO).get(const.ALERT_CLUSTER_ID))).replace(const.ALERT_RESOURCE_ID, 
-                resource_id)
-            resource_schema_dict = self.repo.health_schema.get(hw_health_key)
-            if(resource_schema_dict):
-                resource_schema_dict[const.HEALTH_ALERT_TYPE] = alert.get(const.ALERT_STATE, "")
-                resource_schema_dict[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
-                resource_schema_dict[const.ALERT_UUID] = alert.get(const.ALERT_UUID, "")
-                resource_schema_dict[const.ALERT_EVENT_TIME] = alert.get(const.ALERT_UPDATED_TIME, "")
-                resource_schema_dict[const.ALERT_HEALTH] = alert.get(const.ALERT_STATE, "")
-                self._health_schema.set(hw_health_key, resource_schema_dict)
+        Log.debug("Updating health schema")
+        try:
+            mapping_dict = Json(const.HEALTH_CSM_SCHEMA_KEY_MAPPING).load()
+            hw_health_key = mapping_dict.get(alert.get(const.ALERT_MODULE_NAME), "")
+            if hw_health_key and not hw_health_key.isspace():
+                extended_info = eval(alert.get(const.ALERT_EXTENDED_INFO))
+                if extended_info and extended_info.get(const.ALERT_INFO):
+                    hw_health_key = self._get_hw_health_key(alert, extended_info,
+                                                           hw_health_key)
+                    resource_schema_dict = self.repo.health_schema.get(hw_health_key)
+                    if resource_schema_dict:
+                        self._update_hw_health_schema(alert, hw_health_key,
+                                                     resource_schema_dict)
+                    else:
+                        Log.warn(f"Empty resource_schema_dict for {hw_health_key}")
+                else:
+                    Log.warn(f"Extended_info not found for alert uuid "
+                             f"{alert.get(const.ALERT_UUID)}")
+            else:
+                Log.warn(f"Empty hw_health_key for module name: "
+                         f"{alert.get(const.ALERT_MODULE_NAME)}")
+        except Exception as e:
+            Log.warn(f"Error in update_health_schema: {e}")
+
+    def _update_hw_health_schema(self, alert, hw_health_key, resource_schema_dict):
+        """
+        Update the health schema
+        :param alert:
+        :param hw_health_key:
+        :param resource_schema_dict:
+        :return:
+        """
+        resource_schema_dict[const.HEALTH_ALERT_TYPE] \
+            = alert.get(const.ALERT_STATE, "")
+        resource_schema_dict[const.ALERT_SEVERITY] \
+            = alert.get(const.ALERT_SEVERITY, "")
+        resource_schema_dict[const.ALERT_UUID] \
+            = alert.get(const.ALERT_UUID, "")
+        resource_schema_dict[const.ALERT_EVENT_TIME] \
+            = alert.get(const.ALERT_UPDATED_TIME, "")
+        resource_schema_dict[const.ALERT_HEALTH] \
+            = alert.get(const.ALERT_STATE, "")
+        self._health_schema.set(hw_health_key, resource_schema_dict)
+
+    def _get_hw_health_key(self, alert, extended_info, hw_health_key):
+        """
+        Gets the health schema key
+        :param alert:
+        :param extended_info:
+        :param hw_health_key:
+        :return:
+        """
+        resource_id = alert.get(const.ALERT_MODULE_NAME) + '-' + extended_info\
+            .get(const.ALERT_INFO).get(const.ALERT_RESOURCE_ID)
+        hw_health_key = hw_health_key\
+            .replace(const.ALERT_SITE_ID, str(extended_info.get(const.ALERT_INFO)
+                                              .get(const.ALERT_SITE_ID)))\
+            .replace(const.ALERT_RACK_ID, str(extended_info.get(const.ALERT_INFO)
+                                              .get(const.ALERT_RACK_ID)))\
+            .replace(const.ALERT_NODE_ID, str(extended_info.get(const.ALERT_INFO)
+                                              .get(const.ALERT_NODE_ID)))\
+            .replace(const.ALERT_CLUSTER_ID, str(extended_info.get(const.ALERT_INFO)
+                                                 .get(const.ALERT_CLUSTER_ID)))\
+            .replace(const.ALERT_RESOURCE_ID, resource_id)
+        return hw_health_key
 
     async def fetch_health_summary(self):
         """

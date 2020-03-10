@@ -156,13 +156,22 @@ class EmailConfig(Model):
         for key in new_values:
             setattr(self, key, new_values[key])
 
+    def get_target_emails(self):
+        """
+        Returns a list of emails to send notifications to
+        :returns: list of strings
+        """
+        stripped = (x.strip() for x in self.email.split(','))
+        return [x for x in stripped if x]
+
     def to_smtp_config(self) -> SmtpServerConfiguration:
         config = SmtpServerConfiguration()
         config.smtp_host = self.smtp_server
         config.smtp_port = self.smtp_port
         config.smtp_login = self.smtp_sender_email
         config.smtp_password = self.smtp_sender_password
-        config.smtp_use_ssl = self.smtp_protocol in [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
+        config.smtp_use_ssl = self.smtp_protocol.lower() in \
+            [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
         config.ssl_context = None
         config.timeout = const.CSM_SMTP_SEND_TIMEOUT_SEC
         config.reconnect_attempts = const.CSM_SMTP_RECONNECT_ATTEMPTS

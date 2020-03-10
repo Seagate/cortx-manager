@@ -24,7 +24,7 @@ from csm.common.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import Service, ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
-from csm.core.services.sessions import S3Credentials
+from csm.core.services.sessions import S3Credentials, LocalCredentials
 
 
 S3_MSG_REMOTE_ERROR = 's3_remote_error'
@@ -44,25 +44,6 @@ class S3AccountService(ApplicationService):
         """
         self._s3_root_client = self._get_root_client()
 
-    @Log.trace_method(Log.DEBUG)
-    async def _create_udx_bucket(self, account):
-        Log.debug("Creating UDX bucket for s3 account. account_name: {account.account_name}")
-        # TODO: probably, it would be better to move this function to USL
-        bucket_name = account.account_name + '-udx'
-        bucket_tags = {
-            "udx": "enabled"
-        }
-
-        try:
-            s3_client = self._s3plugin.get_s3_client(account.access_key_id,
-                account.secret_key_id, self._get_s3_connection_config())
-            new_bucket = await s3_client.create_bucket(bucket_name)
-            Log.info(f'UDX bucket {bucket_name} is created')
-            await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
-            Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
-        except:
-            raise CsmInternalError("UDX bucket creation failed")
-
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_account(self, account_name: str, account_email: str, password: str):
         """
@@ -81,11 +62,13 @@ class S3AccountService(ApplicationService):
             account.secret_key_id, self._get_iam_connection_config())
 
         try:
-            await self._create_udx_bucket(account)
+            # Note that the order of commands below is important
+            # If profile creation fails, we can easily remove the account
+            # If a profile is created, we can still remove the account
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
-                self._raise_remote_error(account)
+                self._raise_remote_error(profile)
         except Exception as e:
             await account_client.delete_account(account.account_name)
             raise e
@@ -98,9 +81,10 @@ class S3AccountService(ApplicationService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_accounts(self, continue_marker=None, page_limit=None) -> dict:
+    async def list_accounts(self, session, continue_marker=None, page_limit=None) -> dict:
         """
         Fetch a list of s3 accounts.
+        :param session: session object of S3Credentials or LocalCredentials
         :param continue_marker: Marker that must be used in order to fetch another
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
@@ -115,14 +99,28 @@ class S3AccountService(ApplicationService):
             marker=continue_marker)
         if isinstance(accounts, IamError):
             self._raise_remote_error(accounts)
-
-        accounts_list = [
-            {
-                "account_name": x.account_name,
-                "account_email": x.account_email
-            } for x in accounts.iam_accounts
-        ]
-
+        accounts_list = []
+        # S3 user is allowed to list all s3 user in system.
+        # Allowed to list only himself.
+        if isinstance(session, S3Credentials):
+            for acc in accounts.iam_accounts:
+                if acc.account_name == session.user_id:
+                    accounts_list.append(
+                        {
+                            "account_name": acc.account_name,
+                            "account_email": acc.account_email
+                        }
+                    )
+                    break
+        # CSM user is allowed to list all the S3 users in system.
+        if isinstance(session, LocalCredentials):
+            for acc in accounts.iam_accounts:
+                accounts_list.append(
+                        {
+                            "account_name": acc.account_name,
+                            "account_email": acc.account_email
+                        }
+                    )
         resp = {"s3_accounts": accounts_list}
         if accounts.is_truncated:
             resp["continue"] = accounts.marker

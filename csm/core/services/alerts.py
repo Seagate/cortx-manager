@@ -38,7 +38,7 @@ from csm.core.blogic import const
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
 from csm.core.data.access import Query, SortOrder
-from csm.core.blogic.models.alerts import AlertModel
+from csm.core.blogic.models.alerts import AlertModel, AlertsHistoryModel
 from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
 from csm.common import queries
@@ -65,24 +65,33 @@ class AlertRepository(IAlertStorage):
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
 
+    async def store_alerts_history(self, alert: AlertsHistoryModel):
+        await self.db(AlertsHistoryModel).store(alert)
+
     async def retrieve(self, alert_id) -> AlertModel:
         query = Query().filter_by(Compare(AlertModel.alert_uuid, '=', alert_id))
         return next(iter(await self.db(AlertModel).get(query)), None)
 
-    async def retrieve_by_hw(self, hw_id) -> AlertModel:
-        filter = And(Compare(AlertModel.sensor_info, '=',
-                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))
+    async def retrieve_alert_history(self, alert_id) -> AlertsHistoryModel:
+        query = Query().filter_by(Compare(AlertsHistoryModel.alert_uuid, '=', alert_id))
+        return next(iter(await self.db(AlertsHistoryModel).get(query)), None)
+
+    async def retrieve_by_sensor_info(self, sensor_info, module_type) -> AlertModel:
+        filter = And(And(Compare(AlertModel.sensor_info, '=', \
+                str(sensor_info)), Compare(AlertModel.module_type, "=", \
+                str(module_type))), Or(Compare(AlertModel.acknowledged, '=', \
+                False), Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(filter)
         return next(iter(await self.db(AlertModel).get(query)), None)
 
     async def update(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
 
-    async def update_by_hw_id(self, hw_id, update_params):
-        filter = And(Compare(AlertModel.sensor_info, '=',
-                        str(hw_id)), Or(Compare(AlertModel.acknowledged, '=',
-                        False), Compare(AlertModel.resolved, '=', False)))
+    async def update_by_sensor_info(self, sensor_info, module_type, update_params):
+        filter = And(And(Compare(AlertModel.sensor_info, '=', \
+                str(sensor_info)), Compare(AlertModel.module_type, "=", \
+                str(module_type))), Or(Compare(AlertModel.acknowledged, '=', \
+                False), Compare(AlertModel.resolved, '=', False)))
         await self.db(AlertModel).update(filter, update_params)
 
     def _prepare_time_range(self, field, time_range: DateTimeRange):
@@ -169,7 +178,56 @@ class AlertRepository(IAlertStorage):
         """
         Retrieves all the alerts
         """
-        pass    
+        pass
+
+    async def retrieve_all_alerts_history(self, create_time_range: DateTimeRange, \
+            severity: str=None, sort: Optional[SortBy]=None, \
+            limits: Optional[QueryLimits]=None, show_update_range: \
+            DateTimeRange = None, sensor_info: str = None) -> Iterable[AlertsHistoryModel]:
+
+        query_filter = self._prepare_history_filters(create_time_range, \
+                severity, show_update_range, sensor_info)
+        query = Query().filter_by(query_filter)
+
+        if limits and limits.offset:
+            query = query.offset(limits.offset)
+
+        if limits and limits.limit:
+            query = query.limit(limits.limit)
+
+        if sort:
+            query = query.order_by(getattr(AlertsHistoryModel, sort.field), sort.order)
+        Log.debug(f"Alerts service : Retrive alerts for history: {query_filter}")
+        return await self.db(AlertsHistoryModel).get(query)
+
+    async def count_alerts_history(self, create_time_range: DateTimeRange,\
+            severity: str = None, show_update_range: DateTimeRange = None,\
+            sensor_info: str = None) -> int:
+        Log.debug(f"Alerts service:  Count alerts history: {create_time_range}")
+        return await self.db(AlertsHistoryModel).count(\
+                self._prepare_history_filters(create_time_range, severity,\
+                show_update_range, sensor_info))
+
+    def _prepare_history_filters(self, create_time_range: DateTimeRange, \
+            severity: str = None, show_update_range: DateTimeRange = None, \
+            sensor_info: str = None):
+        and_conditions = [*self._prepare_time_range\
+                (AlertsHistoryModel.created_time, create_time_range)]
+        or_conditions = []
+        range_condition = self._prepare_time_range\
+                (AlertsHistoryModel.updated_time, show_update_range)
+        if range_condition:
+            or_conditions.extend(range_condition)
+
+        and_conditions.append(Or(*or_conditions))
+
+        if severity:
+            and_conditions.append(Compare(AlertsHistoryModel.severity, '=', severity))
+
+        if sensor_info:
+            and_conditions.append(Compare(AlertsHistoryModel.sensor_info, '=', sensor_info))
+
+        return And(*and_conditions) if and_conditions else None
 
 class AlertsAppService(ApplicationService):
     """
@@ -220,6 +278,12 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_uuid)
         if not alert:
             raise CsmNotFoundError(f"Alert not found for id {alert_uuid}", ALERTS_MSG_NOT_FOUND)
+
+        if alert.resolved and alert.acknowledged:
+            raise InvalidRequest(
+                "The alert is both resolved and acknowledged, it cannot be modified",
+                ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
+
         if alert["comments"] is None:
             alert["comments"] = []
         alert_comment = self.build_alert_comment_model(str(len(alert["comments"]) + 1), comment_text, user_id)
@@ -363,7 +427,81 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()    
+        return alert.to_primitive()
+
+    async def fetch_all_alerts_history(self, duration, direction, sort_by, severity:
+                                Optional[str] = None, offset: Optional[int] = \
+                                        None, page_limit: Optional[int] = None, \
+                                        sensor_info: Optional[str] = None, \
+                                        start_date = None, end_date = None) -> Dict:
+        """
+        Fetch All Alerts to show history
+        :param duration: time duration for range of alerts
+        :param direction: direction of sorting asc/desc
+        :param severity: if passed, alerts will be filtered by the passed severity
+        :param sort_by: key by which sorting needs to be performed.
+        :param offset: offset page (1-based indexing)
+        :param page_limit: no of records to be displayed on a page.
+        :return: :type:list
+        """
+        time_range = None
+        Log.debug(f"Fetch alerts to show history. duration:{duration}, direction:{direction}, "
+                  f"sort_by:{sort_by}, severity:{severity}, offset:{offset}")
+        if duration:  # Filter
+            # TODO: time format can generally be API-dependent. Better pass here an
+            # already parsed TimeDelta object.
+            time_duration = int(re.split(r'[a-z]', duration)[0])
+            time_format = re.split(r'[0-9]', duration)[-1]
+            dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
+            start_time = (datetime.utcnow() - timedelta(
+                **{dur[time_format]: time_duration}))
+            time_range = DateTimeRange(start_time, None)
+
+        if start_date and end_date:
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            time_range = DateTimeRange(start_datetime, end_datetime)
+
+        if sort_by and sort_by not in const.ALERT_SORTABLE_FIELDS:
+            raise InvalidRequest("The specified column cannot be used for sorting",
+                ALERTS_MSG_NON_SORTABLE_COLUMN)
+
+        limits = None
+        if offset is not None and offset > 1:
+            limits = QueryLimits(page_limit, (offset - 1) * page_limit)
+        elif page_limit is not None:
+            limits = QueryLimits(page_limit, 0)
+
+        show_time_range = DateTimeRange(datetime.utcnow() - timedelta(
+            hours=const.ALERT_SHOW_TIME_HOURS), None)
+
+        alerts_list = await self.repo.retrieve_all_alerts_history(
+            time_range,
+            severity,
+            SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
+            limits,
+            show_time_range,
+            sensor_info
+        )
+
+        alerts_count = await self.repo.count_alerts_history(time_range,
+                severity, show_time_range, sensor_info)
+        return {
+            "total_records": alerts_count,
+            "alerts": [alert.to_primitive() for alert in alerts_list]
+        }
+
+    async def fetch_alert_history(self, alert_id):
+        """
+        Fetch a single alert by its key
+        :param str alert_id: A unique identifier of the requried alert
+        :returns: Alert object or None
+        """
+        Log.debug(f"Fetch alerts history by id. alert_id:{alert_id}" )
+        alert = await self.repo.retrieve_alert_history(alert_id)
+        if not alert:
+            raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
+        return alert.to_primitive()
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
@@ -392,12 +530,10 @@ class AlertEmailNotifier(Service):
         }
         html_body = self.template.render(**alert_template_params)
         subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
-
         message = EmailSender.make_multipart(email_config.smtp_sender_email,
-            email_config.email, subject, html_body)
-
-        await self.email_sender_queue.enqueue_email(message, smtp_config)
-
+            None, subject, html_body)
+        await self.email_sender_queue.enqueue_bulk_email(message,
+            email_config.get_target_emails(), smtp_config)
 
 class AlertMonitorService(Service, Observable):
     """
@@ -438,9 +574,9 @@ class AlertMonitorService(Service, Observable):
         """
         This method creats and starts an alert monitor thread
         """
-        Log.info("Start Alert monitor thread")
+        Log.info("Starting Alert monitor thread")
+        self._update_health_schema_after_init()
         try:
-            self._update_health_schema_after_init()
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
                                               args=())
@@ -494,18 +630,30 @@ class AlertMonitorService(Service, Observable):
             for key in [const.ALERT_CREATED_TIME, const.ALERT_UPDATED_TIME]:
                 message[key] = datetime.utcfromtimestamp(message[key])\
                         .replace(tzinfo=timezone.utc)
-            prev_alert = self._run_coroutine(self.repo.retrieve_by_hw\
-                    (message.get(const.ALERT_SENSOR_INFO, "")))
+            sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
+            module_type = message.get(const.ALERT_MODULE_TYPE, "")
+            prev_alert = self._run_coroutine\
+                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
                 self._health_service.update_health_schema(alert)
                 self._notify_listeners(alert, loop=self._loop)
+                Log.debug(f"Alert stored successfully. \
+                        Alert ID : {alert.alert_uuid}")
             else:
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
                     self._health_service.update_health_schema(AlertModel(message))
+                    Log.debug(f"Alert updated successfully. \
+                            Alert ID : {alert.alert_uuid}")
+            """
+            Storing the incoming alert to alert's history collection.
+            These alerts will be shown on UI in a seperate alert's history tab.
+            """
+            alert_history = AlertsHistoryModel(message)
+            self._run_coroutine(self.repo.store_alerts_history(alert_history))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
 
@@ -519,11 +667,14 @@ class AlertMonitorService(Service, Observable):
         :param None
         :return: None
         """
-        loop = asyncio.get_event_loop()
-        alerts = loop.run_until_complete(self.repo.retrieve_by_range(
-            create_time_range=None, resolved=False))
-        for alert in alerts:
-            self._health_service.update_health_schema(alert)        
+        try:
+            loop = asyncio.get_event_loop()
+            alerts = loop.run_until_complete(self.repo.retrieve_by_range(\
+                    create_time_range=None, resolved=False))
+            for alert in alerts:
+                self._health_service.update_health_schema(alert)        
+        except Exception as e:
+            Log.warn(f"Error in update_health_schema_after_init: {e}")
 
     def _resolve_alert(self, new_alert, prev_alert):
         alert_updated = False
@@ -586,8 +737,8 @@ class AlertMonitorService(Service, Observable):
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
         self._update_params_cleanup(update_params)
-        self._run_coroutine(self.repo.update_by_hw_id\
-                (prev_alert.sensor_info, update_params))
+        self._run_coroutine(self.repo.update_by_sensor_info\
+                (prev_alert.sensor_info, prev_alert.module_type, update_params))
 
     def _update_params_cleanup(self, update_params):
         for key, value in update_params.items():

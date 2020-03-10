@@ -1,6 +1,6 @@
 """
  ****************************************************************************
- Filename:          email.py
+ Filename:          email_queue.py
  Description:       Contains the implementation of email queue plugin.
 
  Creation Date:     01/17/2019
@@ -15,9 +15,20 @@
  ****************************************************************************
 """
 import asyncio
+import copy
+import functools
 from csm.common.log import Log
 from csm.common.email import SmtpServerConfiguration, EmailSender, EmailError
-from email.mime.multipart import MIMEMultipart
+from email.message import EmailMessage
+
+
+EMAIL_CLIENT_CACHE_SIZE = 10
+EMAIL_BCC_BULK_LIMIT = 50
+
+def chunk_generator(orig_list, chunk_size):
+    total_size = len(orig_list)
+    for i in range(0, total_size, chunk_size):
+        yield orig_list[i:(i+chunk_size)]
 
 
 class EmailSenderQueue:
@@ -39,11 +50,33 @@ class EmailSenderQueue:
         self.worker = None
 
     @Log.trace_method(level=Log.DEBUG)
-    async def enqueue_email(self, message: MIMEMultipart, config: SmtpServerConfiguration):
+    async def enqueue_email(self, message: EmailMessage, config: SmtpServerConfiguration):
         """
         Enqueue an email message to be sent
         """
         self.queue.put_nowait((message, config))
+
+    @Log.trace_method(level=Log.DEBUG)
+    async def enqueue_bulk_email(self, message: EmailMessage, recipients,
+            config: SmtpServerConfiguration):
+        """
+        Enqueues a bulk of identical messages
+        :param mesage: an instance of EmailMessage, it will not be modified
+        :param recipients: a list of target recipients
+        :param config:
+        """
+        if len(recipients) == 0:
+            return
+
+        if len(recipients) == 1:
+            msg = copy.deepcopy(message)
+            msg['To'] = recipients[0]
+            await self.enqueue_email(msg, config)
+        else:
+            for bcc_list in chunk_generator(recipients, EMAIL_BCC_BULK_LIMIT):
+                msg = copy.deepcopy(message)
+                msg['Bcc'] = ', '.join(bcc_list)
+                await self.enqueue_email(msg, config)
 
     @Log.trace_method(level=Log.DEBUG)
     async def start_worker(self):
@@ -74,10 +107,16 @@ class EmailSenderQueue:
         self.worker = asyncio.ensure_future(self._worker())
 
     async def _worker(self):
+        config = None
+
+        @functools.lru_cache(EMAIL_CLIENT_CACHE_SIZE)
+        def _get_client(config):
+            return EmailSender(config)
+
         while True:
             message, config = await self.queue.get()
-            email_client = EmailSender(config)
-            # TODO: cache email clients for same configs
+            email_client = _get_client(config)
+
             try:
                 await email_client.send_message(message)
             except EmailError as e:

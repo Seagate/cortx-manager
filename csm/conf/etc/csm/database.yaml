@@ -6,6 +6,7 @@ databases:
             port: 9200
             login: ""
             password: ""
+            replication: 2
     consul_db:
         import_path: "ConsulDB"
         config:
@@ -19,6 +20,11 @@ models:
     config:
         es_db:
             collection: "alerts"
+-   import_path: "csm.core.blogic.models.alerts.AlertsHistoryModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "alerts-history"
 -   import_path: "csm.core.data.models.users.User"
     database: "consul_db"
     config:
@@ -54,5 +60,5 @@ models:
     database: "es_db"
     config:
         es_db:
-            collection: "s3auditlog"
+            collection: "s3-rsys-index"
 

@@ -55,12 +55,8 @@ class User(CsmModel):
 
     user_id = StringType()
     user_type = StringType()
-    interfaces = ListType(StringType)
     roles = ListType(StringType)
     password_hash = StringType()
-    temperature = StringType(default=const.CSM_USER_DEFAULT_TEMPERATURE)
-    language = StringType(default=const.CSM_USER_DEFAULT_LANGUAGE)
-    timeout = IntType(default=const.CSM_USER_DEFAULT_TIMEOUT)
     updated_time = DateTimeType()
     created_time = DateTimeType()
 
@@ -80,7 +76,6 @@ class User(CsmModel):
         user.user_type = UserType.CsmUser.value
         user.password_hash = Passwd.hash(password)
         user.roles = roles
-        user.interfaces = interfaces
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
@@ -92,7 +87,6 @@ class User(CsmModel):
         user.user_type = UserType.S3AccountUser.value
         user.password_hash = None
         user.roles = roles
-        user.interfaces = interfaces
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user

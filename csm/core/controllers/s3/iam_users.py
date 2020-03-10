@@ -21,7 +21,8 @@ from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
                                         UserNameValidator)
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.providers.providers import Response
 from csm.common.errors import InvalidRequest
@@ -50,8 +51,6 @@ class IamUserCreateSchema(BaseSchema):
     user_name = fields.Str(required=True,
                            validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
-    path_prefix = fields.Str(data_key='path',default='/',
-                             validate=[PathPrefixValidator()])
     require_reset = fields.Boolean(default=False)
 
     @validates_schema
@@ -60,12 +59,6 @@ class IamUserCreateSchema(BaseSchema):
             raise ValidationError(
                 "Password should not be your username or email.",
                 field_name="password")
-
-class IamUserListSchema(BaseSchema):
-    """
-    Fetching IAM user schema validation class
-    """
-    path_prefix = fields.Str(default="/", validate=[PathPrefixValidator()])
 
 class IamUserDeleteSchema(BaseSchema):
     """
@@ -81,21 +74,17 @@ class IamUserListView(S3AuthenticatedView):
         """
         super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.LIST}})
     async def get(self):
         """
         Fetch list of IAM User's
         """
         Log.debug(f"Handling list IAM USER get request. "
                   f"user_id: {self.request.session.credentials.user_id}")
-        schema = IamUserListSchema()
-        try:
-            data = schema.load(dict(self.request.query), unknown='EXCLUDE')
-        except ValidationError as val_err:
-            return Response(rc=400,
-                            output=schema.format_error(val_err))
         # Execute List User Task
-        return await self._service.list_users(self._s3_session, **data)
+        return await self._service.list_users(self._s3_session)
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.CREATE}})
     async def post(self):
         """
         Create's new IAM User.
@@ -120,6 +109,7 @@ class IamUserView(S3AuthenticatedView):
         """
         super().__init__(request, 's3_iam_users_service')
 
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.DELETE}})
     async def delete(self):
         """
         Delete IAM user

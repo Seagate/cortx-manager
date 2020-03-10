@@ -8,6 +8,7 @@ ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+CSM_SETUP_LOG_DIR = "/tmp"
 
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
@@ -94,7 +95,7 @@ DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
 DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'root'
-CSM_USER_ROLES = ['manage', 'monitor', 's3']
+CSM_USER_ROLES = ['manage', 'monitor']
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
@@ -169,7 +170,7 @@ HEALTH_SUMMARY='health_summary'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
-HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(CSM_PATH)
+HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/schema/health_csm_schema_key_mapping.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 
 #Support Bundle
@@ -232,3 +233,15 @@ MAX_RESULT_WINDOW=10000
 
 # Syslog constants
 LOG_LEVEL="INFO"
+
+# Rsyslog
+RSYSLOG_DIR = "/etc/rsyslog.d"
+SOURCE_RSYSLOG_PATH = "{0}/conf{1}/csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
+RSYSLOG_PATH = "{}/csm_logs.conf".format(RSYSLOG_DIR)
+SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
+
+#logrotate
+LOGROTATE_DIR = "/etc/logrotate.d"
+SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
+LOGROTATE_PATH = "{}/csm_agent_log.conf".format(LOGROTATE_DIR)
