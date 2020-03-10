@@ -41,7 +41,6 @@ class FirmwareUpdateService(ApplicationService):
         :return: dict
         """
         # TODO: Changes required as per provisioner api to validate the package
-        cache_path = os.path.join(package_ref.cache_dir, package_ref.file_uuid)
         firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
         upload_status = await self._provisioner.validate_package(firmware_package_path)
         last_upgrade_status = await self._provisioner.get_last_firmware_upgrade_status()
