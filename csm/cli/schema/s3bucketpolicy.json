@@ -56,18 +56,20 @@
           "help": "Policy id which you want to create.",
           "json": true
         },
-        {
-          "flag": "Version",
-          "default": "2012-10-17",
-          "type": "str",
-          "help": "Policy version",
-          "json": true
-        },
+        
         {
           "flag": "Statement",
           "type": "Validatiors.file_type",
           "help": "Path to file",
           "json": true
+        },
+        {
+          "flag": "Version",
+          "default": "2012-10-17",
+          "type": "str",
+          "help": "Policy version",
+          "json": true,
+          "nargs": "?"
         },
         {
           "flag": "args",
