@@ -18,7 +18,7 @@
 """
 from enum import Enum
 from schematics.types import StringType
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 
 
 ONBOARDING_PHASES = [
@@ -44,7 +44,7 @@ ONBOARDING_PHASES = [
 ]
 
 
-class OnboardingConfig(BaseModel):
+class OnboardingConfig(CsmModel):
     """
     Data model for Onboarding Config
     TODO: Should be part of the system config in the future

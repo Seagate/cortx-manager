@@ -17,10 +17,10 @@
  ****************************************************************************
 """
 
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 from schematics.types import StringType
 
-class SupportBundleModel(BaseModel):
+class SupportBundleModel(CsmModel):
     bundle_id = StringType()
     node_name = StringType()
     comment = StringType()

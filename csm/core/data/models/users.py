@@ -28,7 +28,7 @@ from enum import Enum
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
 from csm.core.blogic import const
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 
 # TODO: move to the appropriate location
 class Passwd:
@@ -50,7 +50,7 @@ class UserType(Enum):
     S3AccountUser = "s3_account"
 
 
-class User(BaseModel):
+class User(CsmModel):
     _id = "user_id"
 
     user_id = StringType()

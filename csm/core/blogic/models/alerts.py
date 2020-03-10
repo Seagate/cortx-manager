@@ -31,12 +31,12 @@ from schematics.models import Model
 from schematics.types import IntType, StringType, DateType, BooleanType\
 , DateTimeType, ListType, DictType, ModelType
 
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 from .comments import CommentModel
 
 
 # This is an example of how Alert model can look like
-class AlertModel(BaseModel):
+class AlertModel(CsmModel):
 
     """
     Alert model example

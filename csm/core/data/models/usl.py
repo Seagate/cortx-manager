@@ -21,9 +21,9 @@ from schematics.models import Model
 from schematics.types import UUIDType, StringType, IntType, DateTimeType, ModelType
 from schematics.transforms import blacklist
 
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 
-class Device(BaseModel):
+class Device(CsmModel):
     """
     Class depicts Device model for USL
     """
@@ -53,7 +53,7 @@ class Device(BaseModel):
         return d
 
 
-class Volume(BaseModel):
+class Volume(CsmModel):
     """
     Class depicts device's Volume model for USL
     """
@@ -92,7 +92,7 @@ class Volume(BaseModel):
         return v
 
 
-class Event(BaseModel):
+class Event(CsmModel):
     """
     Base class for all USL Events
     """

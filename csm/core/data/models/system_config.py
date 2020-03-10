@@ -25,7 +25,7 @@ from schematics.types import (StringType, ModelType, ListType,
 from csm.common.log import Log
 from csm.common.email import SmtpServerConfiguration
 from csm.core.blogic import const
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 
 # Schematics models to form schema structure for system configuration settings
 class Ipv4Nodes(Model):
@@ -184,7 +184,7 @@ class SyslogConfig(Model):
     syslog_server = StringType()
     syslog_port = IntType()
 
-class Notification(BaseModel):
+class Notification(CsmModel):
     """
     Model for Notification grouped with email config and syslog config.
     Model is used to form system config settings schema
@@ -203,7 +203,7 @@ class LdapConfig(Model):
     alt_server = StringType()
     alt_port = IntType()
 
-class SystemConfigSettings(BaseModel):
+class SystemConfigSettings(CsmModel):
     """
     Model for complete system config settings grouped with nested models like management network,
     data network, dns network, date time, notification and ldap settings.

@@ -19,14 +19,14 @@
 
 from schematics.models import Model
 from schematics.types import DateType, StringType, DateTimeType
-from eos.utils.db import BaseModel
+from csm.core.blogic.models import CsmModel
 
-class CsmAuditLogModel(BaseModel):
+class CsmAuditLogModel(CsmModel):
     """ Model for csm audit logs """
     message = StringType()
     timestamp = DateTimeType()
 
-class S3AuditLogModel(BaseModel):
+class S3AuditLogModel(CsmModel):
     """ Model for s3 audit logs """
     timestamp = DateTimeType()
     authentication_type = StringType()

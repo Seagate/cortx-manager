@@ -143,7 +143,7 @@ class AsyncDataBase:
     Decorates all storage async calls and async db drivers and db storages initializations
     """
 
-    def __init__(self, model: Type[BaseModel], model_config: DBModelConfig,
+    def __init__(self, model: Type[CsmModel], model_config: DBModelConfig,
                  db_config: GeneralConfig):
         self._event = ThreadSafeEvent()
         self._model = model
@@ -202,11 +202,11 @@ class DataBaseProvider(AbstractDataBaseProvider):
 
             if not issubclass(model_class, BaseModel):
                 raise MalformedConfigurationError(f"'{model.import_path}'"
-                                                  f" must be a subclass of BaseModel")
+                                                  f" must be a subclass of CsmModel")
 
             self.model_settings[model_class] = model
 
-    def get_storage(self, model: Type[BaseModel]):
+    def get_storage(self, model: Type[CsmModel]):
         if model not in self.model_settings:
             raise MalformedConfigurationError(f"No configuration for {model}")
 
