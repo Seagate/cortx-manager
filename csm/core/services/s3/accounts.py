@@ -189,7 +189,7 @@ class S3AccountService(ApplicationService):
         S3 account deletion
         :param s3_session: S3 Accounts Session Details
         :param account_name: Account Name to Delete Account.
-        :returns: empty dictionary in case of success. Otherwise throws an exception.
+        :returns: dictionary in case of success. Otherwise throws an exception.
         """
         Log.debug(f"Delete account service. account_name:{account_name}")
         account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
@@ -201,7 +201,7 @@ class S3AccountService(ApplicationService):
                 raise CsmNotFoundError("The entity is not found",
                                        S3_ACCOUNT_NOT_FOUND, account_name)
             self._raise_remote_error(result)
-        return {}
+        return {"message": "Account Deleted Successfully."}
 
     def _raise_remote_error(self, resp: IamError):
         """ A helper method for raising exceptions about S3-related errors """
