@@ -45,6 +45,11 @@ models:
     config:
         consul_db:
             collection: "onboarding_config"
+-   import_path: "csm.core.data.models.system_config.OnboardingLicense"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "product_licenses"
 -   import_path: "csm.core.blogic.models.support_bundle.SupportBundleModel"
     database: "es_db"
     config:
