@@ -2,7 +2,7 @@
 
 """
  ****************************************************************************
- Filename:          upgrade.py
+ Filename:          firmware_update.py
  Description:       Controller for handling system upgrade 
 
  Creation Date:     02/25/2020

@@ -2,10 +2,10 @@
 
 """
  ****************************************************************************
- Filename:          storage_capacity.py
- Description:       Service(s) for getting disk capacity details
+ Filename:          firmware_update.py
+ Description:       Service(s) for firmware update.
 
- Creation Date:     11/22/2019
+ Creation Date:     02/25/2020
  Author:            Udayan Yaragattikar
 
 
