@@ -106,7 +106,7 @@ class CsmAgent:
         #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
-        CsmRestApi._app["system_config_service"] = SystemConfigAppService(system_config_mgr,
+        CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(system_config_mgr,
             Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
         email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,

@@ -25,7 +25,8 @@ from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
 
 from .validators import Server, Ipv4, DomainName
-from .view import CsmView
+from .view import CsmView, CsmResponse, CsmAuth
+from csm.core.blogic import const
 
 # Marshmallow nested schema classes to form system configuration settings schema structure
 class Ipv4NodesSchema(Schema):
@@ -213,7 +214,7 @@ class SystemConfigListView(CsmView):
 
     def __init__(self, request):
         super(SystemConfigListView, self).__init__(request)
-        self._service = self.request.app["system_config_service"]
+        self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
         self._service_dispatch = {}
 
     """
@@ -247,7 +248,7 @@ class SystemConfigListView(CsmView):
 class SystemConfigView(CsmView):
     def __init__(self, request):
         super(SystemConfigView, self).__init__(request)
-        self._service = self.request.app["system_config_service"]
+        self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
         self._service_dispatch = {}
 
     """
@@ -284,7 +285,7 @@ class SystemConfigView(CsmView):
 class TestEmailView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["system_config_service"]
+        self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
 
     """
     POST REST implementation for sendting test emails
@@ -302,3 +303,33 @@ class TestEmailView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.test_email_config(config_data)
+
+class OnboardingLicenseSchema(Schema):
+    """
+    Onboarding license schema class for validation
+    """
+    csm_onboarding_license_key = fields.Str(required=True)
+
+@CsmView._app_routes.view("/api/v1/license/onboarding")
+@CsmAuth.public
+class OnboardingLicenseView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
+        
+    """
+    POST REST implementation for onboarding license key 
+    """
+    async def post(self):
+        Log.info("Handling onboarding license post request")
+
+        try:
+            schema = OnboardingLicenseSchema()
+            config_data = schema.load(await self.request.json(),
+                                      unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request body: {val_err}")
+        response = await self._service.create_onboarding_license(**config_data)
+        return CsmResponse(response)
