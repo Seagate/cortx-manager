@@ -95,6 +95,15 @@ class AlertModel(CsmModel):
     def __hash__(self):
         return hash(self.alert_uuid)
 
+class AlertsHistoryModel(AlertModel, CsmModel):
+    """
+    Alerts history model.
+    Created a new separate model inherited from AlertModel and CsmModel.
+    This is done because Generic DB can't decide which collection it
+    should use during store-method.
+    """
+    _id = "alert_uuid"  
+    alert_uuid = StringType()
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
 # the class, rather than storing Alert as a dictionary in the _data field

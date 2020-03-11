@@ -28,7 +28,8 @@ from csm.core.data.access import Query
 from csm.core.data.access.filters import Compare
 from csm.core.data.db.db_provider import (DataBaseProvider)
 from csm.common.log import Log
-from csm.core.data.models.system_config import SystemConfigSettings, EmailConfig
+from csm.core.data.models.system_config import (SystemConfigSettings, 
+                                                EmailConfig, OnboardingLicense)
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 
@@ -111,6 +112,15 @@ class SystemConfigManager:
         # TODO: give it more thought
         config_list = await self.get_system_config_list(limit=1)
         return next(iter(config_list)) if config_list else None
+    
+    async def create_license(self,
+                     license: OnboardingLicense) -> OnboardingLicense:
+        """
+        Stores a new onboarding license key
+        :param license: Onboarding license model instance
+        :returns: Onboarding license object.
+        """
+        return await self.storage(OnboardingLicense).store(license)
 
 
 class SystemConfigAppService(ApplicationService):
@@ -212,4 +222,19 @@ class SystemConfigAppService(ApplicationService):
                 return {"status": False, "error": "Some recipients did not receive the message",
                     "failed_recipients": success.keys()}
         except EmailError as e:
-            return {"status": False, "error": e.error(), "failed_recipients": target_emails}
+            return {"status": False, "error": str(e), "failed_recipients": target_emails}
+    
+    async def create_onboarding_license(self, 
+                            csm_onboarding_license_key: str, **kwargs) -> dict:
+        """
+        Handles the onboarding license key store
+        :param csm_onboarding_license_key: license key identifier
+        :returns: A dict describing the newly created onboarding license key.
+        """
+        Log.debug(f"Create on boarding license key."
+                  f"license_key: {csm_onboarding_license_key}")
+        onboarding_license = OnboardingLicense(csm_onboarding_license_key)
+        await onboarding_license.update(kwargs)
+        await self.system_config_mgr.create_license(onboarding_license)
+        return onboarding_license.to_primitive()
+    
