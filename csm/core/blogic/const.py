@@ -8,6 +8,7 @@ ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+CSM_SETUP_LOG_DIR = "/tmp"
 
 # Access log of aiohttp
 # format 
@@ -236,3 +237,18 @@ MAX_RESULT_WINDOW=10000
 
 # Syslog constants
 LOG_LEVEL="INFO"
+
+# Services
+SYSTEM_CONFIG_SERVICE = "system_config_service"
+
+# Rsyslog
+RSYSLOG_DIR = "/etc/rsyslog.d"
+SOURCE_RSYSLOG_PATH = "{0}/conf{1}/csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
+RSYSLOG_PATH = "{}/csm_logs.conf".format(RSYSLOG_DIR)
+SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
+
+#logrotate
+LOGROTATE_DIR = "/etc/logrotate.d"
+SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
+LOGROTATE_PATH = "{}/csm_agent_log.conf".format(LOGROTATE_DIR)

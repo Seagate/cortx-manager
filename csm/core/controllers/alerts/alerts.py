@@ -43,7 +43,8 @@ class AlertsQueryParameter(Schema):
     duration = fields.Str(default=None, missing=None)
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
         default=0, missing=0)
-    page_limit = fields.Int(data_key='limit', default=5, validate=validate.Range(min=0), missing=5)
+    page_limit = fields.Int(data_key='limit', default=1000, \
+            validate=validate.Range(min=0), missing=1000)
     sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
     direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
         missing='desc', default='desc')
@@ -83,8 +84,7 @@ class AlertsListView(web.View):
         try:
             alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid Parameter for alerts", str(val_err))
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         return await self.alerts_service.fetch_all_alerts(**alert_data)
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
