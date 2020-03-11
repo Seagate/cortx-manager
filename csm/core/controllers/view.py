@@ -217,7 +217,6 @@ class CsmView(web.View):
         while True:
             # TODO: do aiohttp decode?
             chunk = await body_reader.read_chunk(chunk_byte_size_limit)
-            print(len(chunk))
             yield chunk
             if chunk == b'':
                 break
