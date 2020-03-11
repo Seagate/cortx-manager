@@ -234,6 +234,9 @@ MAX_RESULT_WINDOW=10000
 # Syslog constants
 LOG_LEVEL="INFO"
 
+# Services
+SYSTEM_CONFIG_SERVICE = "system_config_service"
+
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
 SOURCE_RSYSLOG_PATH = "{0}/conf{1}/csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
