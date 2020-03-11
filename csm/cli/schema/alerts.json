@@ -21,7 +21,7 @@
           "flag": "-c",
           "dest": "limit",
           "nargs": "?",
-          "type": "Validatiors.positive_int",
+          "type": "int",
           "help": "No. of Alerts",
           "default": "1000",
           "params": true
@@ -80,6 +80,99 @@
             "state": "State",
             "acknowledged": "Acknowledged",
             "resolved": "Resolved"
+          },
+          "filters": "alerts"
+        }
+      }
+    },
+    {
+      "name": "history",
+      "description": "Displays alerts history on cli",
+      "need_confirmation": false,
+      "permissions_tag": "list",
+      "args": [
+        {
+          "flag": "-d",
+          "dest": "duration",
+          "nargs": "?",
+          "type": "str",
+          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
+          "default": "60s",
+          "params": true
+        },
+        {
+          "flag": "-c",
+          "dest": "limit",
+          "nargs": "?",
+          "type": "int",
+          "help": "No. of Alerts",
+          "default": "1000",
+          "params": true
+        },
+        {
+          "flag": "-s",
+          "dest": "start_date",
+          "nargs": "?",
+          "type": "str",
+          "help": "Start date for fetching alerts.",
+          "default": "",
+          "params": true
+        },
+        {
+          "flag": "-e",
+          "dest": "end_date",
+          "nargs": "?",
+          "type": "str",
+          "help": "End date for fetching alerts.",
+          "default": "",
+          "params": true
+        },
+        {
+          "flag": "-i",
+          "dest": "sensor_info",
+          "nargs": "?",
+          "type": "str",
+          "help": "Sensor info of the resource.",
+          "default": "",
+          "params": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+      "type":"rest",
+        "method": "get",
+        "target": "/{version}/alerts_history",
+        "version": "v1"
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "alert_uuid": "Alert Id",
+            "health": "Health",
+            "description": "Description",
+            "severity": "Severity",
+            "state": "State",
+            "acknowledged": "Acknowledged",
+            "resolved": "Resolved",
+            "sensor_info": "Sensor Info"
           },
           "filters": "alerts"
         }

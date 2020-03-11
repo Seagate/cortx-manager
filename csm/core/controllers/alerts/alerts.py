@@ -79,8 +79,7 @@ class AlertsListView(web.View):
         try:
             alert_data = alerts_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid Parameter for alerts", str(val_err))
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         return await self.alerts_service.fetch_all_alerts(**alert_data)
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.UPDATE}})
