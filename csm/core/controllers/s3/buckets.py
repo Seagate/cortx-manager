@@ -121,7 +121,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     GET REST implementation for S3 bucket policy fetch request
     """
-    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
+    @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling s3 bucket policy fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -132,7 +132,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     PUT REST implementation for S3 bucket policy put request
     """
-    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
+    @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.CREATE}})
     async def put(self):
         Log.debug(f"Handling s3 bucket policy put request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -145,7 +145,7 @@ class S3BucketPolicyView(S3AuthenticatedView):
     """
     DELETE REST implementation for s3 bucket policy delete request
     """
-    @CsmAuth.permissions({Resource.S3BUCKETS: {Action.UPDATE}})
+    @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.DELETE}})
     async def delete(self):
         Log.debug(f"Handling s3 bucket policy delete request."
                   f" user_id: {self.request.session.credentials.user_id}")

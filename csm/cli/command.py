@@ -22,6 +22,7 @@
 import argparse
 import getpass
 import json
+import io
 from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
@@ -44,6 +45,7 @@ class Command:
         self._output = options["output"]
         self._need_confirmation = options['need_confirmation']
         self._sub_command_name = options['sub_command_name']
+        self._read_file_parameters()
 
     @property
     def name(self):
@@ -84,8 +86,15 @@ class Command:
                                output_type=self._options.get('format',
                                                              "success"))
 
+    def _read_file_parameters(self):
+        for k, v in self._options.items():
+            if isinstance(v, io.TextIOWrapper):
+                self._options[k] = json.load(v)
+                v.close()
+
 
 class Validatiors:
+
     """CLI Validatiors Class"""
     @staticmethod
     def positive_int(value):
@@ -95,6 +104,12 @@ class Validatiors:
             raise argparse.ArgumentError("Value Must be Positive Integer")
         except ValueError:
             raise argparse.ArgumentError("Value Must be Positive Integer")
+
+    @staticmethod
+    def file_type(value):
+        f_type = argparse.FileType('r')
+        return f_type(value)
+
 
 class CommandParser:
     """

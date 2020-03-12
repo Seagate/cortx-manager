@@ -1,0 +1,120 @@
+{
+  "name": "s3bucketpolicy",
+  "description": "Create Delete or Display S3 Bucket Policy",
+  "sub_commands": [
+    {
+      "name": "show",
+      "description": "Displays policy for specified bucket",
+      "need_confirmation": false,
+      "permissions_tag": "list",
+      "args": [
+        {
+          "flag": "bucket_name",
+          "type": "str",
+          "help": "Bucket name for which policy needs to be shown."
+        },
+        {
+          "flag": "args",
+          "help": "Additional arguments that can be send to csm agent.",
+          "default": [],
+          "nargs": "?"
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "json",
+          "type": "str",
+          "choices": [
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "get",
+        "target": "/{version}/s3/bucket_policy/{bucket_name}",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "create",
+      "description": "Creates/replaces mentioned s3bucket policy",
+      "need_confirmation": true,
+      "permissions_tag": "create",
+      "args": [
+        {
+          "flag": "bucket_name",
+          "type": "str",
+          "help": "Bucket name for which policy will be created."
+        },
+        {
+          "flag": "Id",
+          "type": "str",
+          "help": "Policy id which you want to create.",
+          "json": true
+        },
+        
+        {
+          "flag": "Statement",
+          "type": "Validatiors.file_type",
+          "help": "Path to file",
+          "json": true
+        },
+        {
+          "flag": "Version",
+          "default": "2012-10-17",
+          "type": "str",
+          "help": "Policy version",
+          "json": true,
+          "nargs": "?"
+        },
+        {
+          "flag": "args",
+          "help": "Additional arguments that can be send to csm agent.",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "put",
+        "target": "/{version}/s3/bucket_policy/{bucket_name}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Bucket Policy Updated Successfully."
+      }
+    },
+    {
+      "name": "delete",
+      "description": "Delete the bucket policy",
+      "need_confirmation": true,
+      "permissions_tag": "delete",
+      "args": [
+        {
+          "flag": "bucket_name",
+          "type": "str",
+          "help": "Bucket name for which policy needs to be deleted."
+        },
+        {
+          "flag": "args",
+          "help": "Additional arguments that can be send to csm agent.",
+          "default": [],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "delete",
+        "target": "/{version}/s3/bucket_policy/{bucket_name}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Bucket policy deleted."
+      }
+    }
+  ]
+}

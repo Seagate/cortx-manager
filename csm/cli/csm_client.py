@@ -188,8 +188,8 @@ class RestRequest(Request):
         self._url = url + command.target
 
     def format(self, data, key):
-        return {k: data.get(k, self._rest[key][k]) for k, v in
-                self._rest.get(key, {}).items()}
+        return {k: data.get(k, self._rest[key][k]) for k in
+                self._rest.get(key, {})}
 
     async def request(self) -> Tuple:
         try:
