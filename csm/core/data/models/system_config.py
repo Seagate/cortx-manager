@@ -263,3 +263,28 @@ class SystemConfigSettings(CsmModel):
         except Exception as ex:
             Log.exception(ex)
         return obj
+
+class License(CsmModel):
+    """
+    Base model for license key
+    """
+    async def update(self, new_values: dict):
+        """
+        Method to update the license model.
+        param: new_values : Dictionary containg license key payload
+        return: 
+        """
+        for key in new_values:
+            setattr(self, key, new_values[key])
+    
+class OnboardingLicense(License):
+    """
+    Data model to store on boarding license key
+    """
+    _id = 'csm_onboarding_license_key'
+    
+    csm_onboarding_license_key = StringType()
+    
+    def __init__(self, license_key=None, *args, **kwargs):
+        super(OnboardingLicense, self).__init__(*args, **kwargs)
+        self.csm_onboarding_license_key = license_key

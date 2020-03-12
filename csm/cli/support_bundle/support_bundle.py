@@ -18,6 +18,7 @@
 """
 
 import sys
+import os
 import string
 import random
 import asyncio
@@ -33,7 +34,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.errors import CsmError
 from csm.core.providers.providers import Response
 from csm.common import errors
-
+from csm.common.conf import Conf
 
 class SupportBundle:
     """
@@ -79,11 +80,17 @@ class SupportBundle:
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
-        cluster_info = Yaml(const.CLUSTER_INFO_FILE).load().get("cluster", {})
+        cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                          "SUPPORT_BUNDLE.cluster_file_path")
+        if not cluster_file_path or not os.path.exists(cluster_file_path):
+            repsonse_msg = {"message": (f"{cluster_file_path} not Found. \n"
+            f"Please check if cluster info file is correctly configured.")}
+            return Response(rc=errno.ENOENT, output=repsonse_msg)
+        cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
-            raise CsmError(rc=errno.ENOENT, message_id="{0} not Found",
-                           message_args=[const.CLUSTER_INFO_FILE])
+            response_msg = {"message":"No active nodes found. Cluster file may not be valid"}
+            return Response(output=response_msg, rc=errors.CSM_ERR_INVALID_VALUE)
         threads = []
         try:
             for each_node in active_nodes:
@@ -95,11 +102,11 @@ class SupportBundle:
                 thread_obj.start()
                 threads.append(thread_obj)
 
-            output_str = (f"Support Bundle Generation Started.\n"
+            response_msg = (f"Support Bundle Generation Started.\n"
                           f"Please use the below ID for Checking the status of "
                           f"Support Bundle. \n {bundle_id}\n")
 
-            sys.stdout.write(output_str)
+            return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
         finally:
             for each_thread in threads:
                 each_thread.join(timeout=600)
