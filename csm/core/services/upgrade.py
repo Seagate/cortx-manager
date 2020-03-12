@@ -22,30 +22,14 @@ from marshmallow import Schema, fields
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.log import Log
-from csm.common.errors import CsmInternalError, CsmNotFoundError, InvalidRequest
+from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.common.services import Service, ApplicationService
 
-
-class PackageInformation:
-    version: str
-
-class PackageValidationError(Exception):
-    pass
-
-# TODO: dummy class, to be implemented later
-class ProvisionerOperations:
-    async def validate_package(self, package_file_name):
-        validation_result = PackageInformation()
-        validation_result.version = '1.2.3'
-        return validation_result
-
-    async def trigger_upgrade(self, package_file_name):
-        pass
  
 class HotfixApplicationService(ApplicationService):
-    def __init__(self, fw_folder):
+    def __init__(self, fw_folder, provisioner_plugin):
         self._fw_file = os.path.join(fw_folder,'hotfix_fw_candidate')
-        self._provisioner_ops = ProvisionerOperations()
+        self._provisioner_plugin = provisioner_plugin
 
     async def upload_package(self, file_ref) -> PackageInformation:
         """
@@ -54,8 +38,8 @@ class HotfixApplicationService(ApplicationService):
         :returns: An instance of PackageInformation
         """
         try:
-            info = await self._provisioner_ops.validate_package(file_ref.get_file_path())
-        except PackageValidationError:
+            info = await self._provisioner_plugin.validate_hotfix_package(file_ref.get_file_path())
+        except CsmError:
             raise InvalidRequest('You have uploaded an invalid hotfix firmware package')
 
         try:
@@ -76,4 +60,4 @@ class HotfixApplicationService(ApplicationService):
         if not os.path.exists(self._fw_file):
             raise InvalidRequest('There is no uploaded firmware package')
 
-        await self._provisioner_ops.trigger_upgrade(self._fw_file)
+        await self._provisioner_plugin.trigger_software_upgrade(self._fw_file)
