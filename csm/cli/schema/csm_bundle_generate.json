@@ -1,6 +1,7 @@
 {
   "name": "csm_bundle_generate",
   "description": "Csm Bundle Generate",
+  "permissions_tag": "create",
   "args": [
     {
       "flag": "bundle_id",

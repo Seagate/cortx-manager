@@ -1,6 +1,7 @@
 {
   "name": "bundle_generate",
   "description": "Generate's Support Bundle for all the EOS System.",
+  "permissions_tag": "create",
   "need_confirmation": false,
   "args": [
     {

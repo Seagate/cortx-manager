@@ -150,7 +150,7 @@ class CommandParser:
 
     def check_permissions(self, sub_command):
         """
-        filter subcommand if found any permissions tag
+        filter sub_command if found any permissions tag
         if no permissions tag is found it returns true
         """
         allowed = False
@@ -158,7 +158,7 @@ class CommandParser:
         if permission_tag and self.permissions.get(permission_tag, False):
             allowed = True
         return allowed
-    
+
     def handle_comm(self, each_args):
         """
         This method will handle the rest params and create the necessary object.
