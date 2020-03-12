@@ -114,8 +114,9 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
+        provisioner_plugin = import_plugin_module('provisioner').ProvisionerPlugin()
         CsmRestApi._app["hotfix_service"] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'), provisioner_plugin)
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
