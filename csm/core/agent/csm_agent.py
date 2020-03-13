@@ -56,7 +56,7 @@ class CsmAgent:
         health_service = HealthAppService(health_repository)
         CsmRestApi._app["health_service"] = health_service
 
-        pm = import_plugin_module('alert')
+        pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
                                               pm.AlertPlugin(), health_service)        
         email_queue = EmailSenderQueue()
@@ -93,7 +93,7 @@ class CsmAgent:
 
 
         #S3 Plugin creation
-        s3 = import_plugin_module('s3').S3Plugin()
+        s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
@@ -119,7 +119,12 @@ class CsmAgent:
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
-
+        try:
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).Provisioner()
+            CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
+                Conf.get(const.CSM_GLOBAL_INDEX, 'FIRMWARE_STORAGE_PATH.path'))
+        except CsmError as ce:
+            Log.error(f"Unable to load Provisioner plugin: {ce}")
 
     @staticmethod
     def _daemonize():
@@ -196,6 +201,8 @@ if __name__ == '__main__':
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.audit_log import  AuditLogManager, AuditService
         from csm.core.services.file_transfer import DownloadFileManager
+        from csm.core.services.firmware_update import FirmwareUpdateService
+        from csm.common.errors import CsmError
 
         CsmAgent.init()
         CsmAgent.run()

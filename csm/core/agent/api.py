@@ -175,6 +175,9 @@ class CsmRestApi(CsmApi, ABC):
         query = ()
         ct = request.headers.get('Content-Type')
         is_mulitpart = ct is not None and 'multipart' in ct
+        if is_mulitpart:
+            Log.info(f"request:{request} is_mulitpart:{is_mulitpart}"
+                     f" content_length:{request.content_length}")
         if request.has_body and not is_mulitpart:
             query = request.query.items()
             body = await request.json()
