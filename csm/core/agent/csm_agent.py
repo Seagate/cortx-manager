@@ -123,7 +123,7 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
-        CsmRestApi._app["hotfix_service"] = HotfixApplicationService(
+        CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner_plugin)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
