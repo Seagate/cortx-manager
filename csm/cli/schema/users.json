@@ -98,25 +98,24 @@
                     "json": true
                 },
                 {
-                    "flag": "-p",
+                    "flag": "roles",
                     "type": "str",
-                    "dest": "password",
-                    "help": "Password for user which you want to create",
-                    "json": true,
-                    "required": true
-                },
-                {
-                    "flag": "-r",
-                    "type": "str",
-                    "dest": "roles",
                     "help": "List of this user roles",
                     "choices": [
                         "monitor",
                         "manage"
                     ],
                     "nargs": "*",
-                    "json": true, 
-                    "required": true
+                    "json": true
+                },
+                {
+                    "flag": "-p",
+                    "dest": "password",
+                    "type": "Terminal.get_password",
+                    "help": "",
+                    "default": "",
+                    "suppress_help": true,
+                    "json": true
                 },
                 {
                     "flag": "args",

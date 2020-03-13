@@ -6,6 +6,7 @@
       "name": "generate",
       "description": "Displays Alerts On the cli",
       "need_confirmation": false,
+      "permissions_tag": "create",
       "args": [
         {
           "flag": "comment",
@@ -31,6 +32,7 @@
       "name": "status",
       "description": "",
       "need_confirmation": false,
+      "permissions_tag": "list",
       "args": [
         {
           "flag": "bundle_id",
