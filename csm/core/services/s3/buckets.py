@@ -118,7 +118,7 @@ class S3BucketService(ApplicationService):
             # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
 
-        return bucket  # Can be None
+        return {"bucket_name": bucket_name}  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
     async def list_buckets(self, s3_session: S3Credentials) -> dict:
@@ -165,7 +165,7 @@ class S3BucketService(ApplicationService):
             error = Boto3Error(e)
             # TODO: Response class to be replaced by CsmError type for raising errors
             return Response(rc=error.http_status_code, output=str(error.message))
-
+        return {"message": "Bucket Deleted Successfully."}
     @Log.trace_method(Log.INFO)
     async def get_bucket_policy(self, s3_session: S3Credentials,
                                 bucket_name: str) -> dict:

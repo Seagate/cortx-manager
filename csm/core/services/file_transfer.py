@@ -94,6 +94,7 @@ class FileRef():
         return path_to_cached_file
 
     def save_file(self, dir_to_save, filename, overwrite=False):
+        Log.debug(f"Saving f{filename} at f{dir_to_save}")
         path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
         if os.path.exists(path_to_file_to_save) and not overwrite:
@@ -102,6 +103,8 @@ class FileRef():
                 '"overwrite" argument if you want to overwrite file')
 
         copyfile(path_to_cached_file, path_to_file_to_save)
+        
+        return path_to_file_to_save
 
 
 class FileCache(ContextDecorator):

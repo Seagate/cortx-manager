@@ -236,12 +236,22 @@ class Setup:
         else:
             raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
 
+    def _rsyslog_common(self):
+        """
+        Configure common rsyslog and logrotate
+        """
+        if os.path.exists(const.LOGROTATE_DIR):
+            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
+        else:
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+
     def _logrotate(self):
         """
         Configure logrotate
         """
         if os.path.exists(const.LOGROTATE_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
+            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
@@ -305,6 +315,7 @@ class CsmSetup(Setup):
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
+            self._rsyslog_common()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster()

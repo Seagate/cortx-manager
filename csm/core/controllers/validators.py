@@ -85,23 +85,21 @@ class PasswordValidator(Validator):
     """
 
     def __call__(self, password):
+        error = []
         if len(password) < 8:
-            raise ValidationError(
-                "Password must be of more than 8 characters.")
+             error.append("Must be more than 8 characters.")
         if not any(each_char.isupper() for each_char in password):
-            raise ValidationError(
-                "Password must contain at least one Uppercase Alphabet.")
+            error.append("Must contain at least one Uppercase Alphabet.")
         if not any(each_char.islower() for each_char in password):
-            raise ValidationError(
-                "Password must contain at least one Lowercase Alphabet.")
+            error.append("Must contain at least one Lowercase Alphabet.")
         if not any(each_char.isdigit() for each_char in password):
-            raise ValidationError(
-                "Password must contain at least one Numeric value.")
+            error.append("Must contain at least one Numeric value.")
         if not any(each_char in const.PASSWORD_SPECIAL_CHARACTER
                    for each_char in password):
-            raise ValidationError((f"Password must include at lease one of the "
-                                   f"{''.join(const.PASSWORD_SPECIAL_CHARACTER)} characters."))
-
+            error.append(f"Must include {''.join(const.PASSWORD_SPECIAL_CHARACTER)}.")
+        if error:
+            error_str = "\n".join(error)
+            raise ValidationError(f"Password Policy Not Met.\n{error_str}")
 
 class BucketNameValidator(Validator):
     """
