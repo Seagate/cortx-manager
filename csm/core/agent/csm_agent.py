@@ -114,7 +114,6 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
-        provisioner_plugin = import_plugin_module('provisioner').ProvisionerPlugin()
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
@@ -124,7 +123,7 @@ class CsmAgent:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner_plugin)
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
 
