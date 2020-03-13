@@ -252,3 +252,8 @@ LOGROTATE_PATH = "{}/csm_agent_log.conf".format(LOGROTATE_DIR)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
+
+# Plugins literal constansts
+ALERT_PLUGIN = "alert"
+S3_PLUGIN = "s3"
+PROVISIONER_PLUGIN = "provisioner"
