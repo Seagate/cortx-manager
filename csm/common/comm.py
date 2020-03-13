@@ -188,6 +188,8 @@ class AmqpChannel(Channel):
         self._connection = None 
         self._channel = None
         self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.retry_count")
+        self.durable = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.durable")
+        self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exclusive")
 
     def init(self):
         """
@@ -215,7 +217,8 @@ class AmqpChannel(Channel):
         if(self._connection and self._channel):  
             try:
                 self._channel.exchange_declare(exchange=self.exchange,
-                                           exchange_type=self.exchange_type)
+                                           exchange_type=self.exchange_type, \
+                                                   durable=self.durable)
             except AMQPError as err:
                 Log.error('Exchange: [{%s}], type: [ {%s} ] cannot be declared.\
                            Details: {%s}'%(self.exchange,
@@ -223,7 +226,8 @@ class AmqpChannel(Channel):
                                               str(err)))
             try:
                 self._channel.queue_declare(queue=self.exchange_queue,
-                                            exclusive=False)
+                                            exclusive=self.exclusive, \
+                                                    durable=self.durable)
                 self._channel.queue_bind(exchange=self.exchange,
                                          queue=self.exchange_queue,
                                          routing_key=self.routing_key)
