@@ -89,7 +89,7 @@ CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
-DEFAULT_SUPPORT_BUNDLE_ROOT =  BASE_DIR + '/bundle'
+DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
 DEFAULT_SSH_TIMEOUT = 5
 USER = 'user'
@@ -129,7 +129,8 @@ ALERT_MESSAGE = 'message'
 ALERT_COMMENT = 'comment'
 ALERT_SENSOR_INFO = 'sensor_info'
 ALERT_MAX_COMMENT_LENGTH = 255
-ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved', 'acknowledged']
+ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved',
+                         'acknowledged']
 ALERT_SHOW_TIME_HOURS = 24
 ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
@@ -141,40 +142,38 @@ ALERT_EVENT_REASON = 'event_reason'
 ALERT_EVENT_RECOMMENDATION = 'event_recommendation'
 ALERT_HEALTH_REASON = 'health-reason'
 ALERT_HEALTH_RECOMMENDATION = 'health-recommendation'
-ALERT_CURRENT='current'
-ALERT_VOLTAGE='voltage'
-ALERT_TEMPERATURE='temperature'
-ALERT_SENSOR_NAME='sensor-name'
-ALERT_CONTAINER='container'
-ALERT_DURABLE_ID='durable-id'
-ALERT_LOGICAL_VOLUME='logical_volume'
-ALERT_VOLUME='volume'
-ALERT_SIDEPLANE='sideplane'
-ALERT_FAN='fan'
+ALERT_CURRENT = 'current'
+ALERT_VOLTAGE = 'voltage'
+ALERT_TEMPERATURE = 'temperature'
+ALERT_SENSOR_NAME = 'sensor-name'
+ALERT_CONTAINER = 'container'
+ALERT_DURABLE_ID = 'durable-id'
+ALERT_LOGICAL_VOLUME = 'logical_volume'
+ALERT_VOLUME = 'volume'
+ALERT_SIDEPLANE = 'sideplane'
+ALERT_FAN = 'fan'
 ALERT_HEALTH = 'health'
-ALERT_INFO='info'
-ALERT_SITE_ID='site_id'
-ALERT_CLUSTER_ID='cluster_id'
-ALERT_RACK_ID='rack_id'
-ALERT_NODE_ID='node_id'
-ALERT_RESOURCE_ID='resource_id'
-ALERT_EVENT_TIME='event_time'
+ALERT_INFO = 'info'
+ALERT_SITE_ID = 'site_id'
+ALERT_CLUSTER_ID = 'cluster_id'
+ALERT_RACK_ID = 'rack_id'
+ALERT_NODE_ID = 'node_id'
+ALERT_RESOURCE_ID = 'resource_id'
+ALERT_EVENT_TIME = 'event_time'
 
-#Health
-HEALTH='health'
-OK_HEALTH='ok'
-TOTAL='total'
-GOOD_HEALTH='good'
-HEALTH_SUMMARY='health_summary'
-
+# Health
+HEALTH = 'health'
+OK_HEALTH = 'ok'
+TOTAL = 'total'
+GOOD_HEALTH = 'good'
+HEALTH_SUMMARY = 'health_summary'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
-HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/schema/health_csm_schema_key_mapping.json'.format(CSM_PATH)
+HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 
-#Support Bundle
-CLUSTER_INFO_FILE = BASE_DIR + "/eos-prvsnr/pillar/components/cluster.sls"
+# Support Bundle
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle"
@@ -182,10 +181,9 @@ SUPPORT_BUNDLE_TAG = "support_bundle"
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
-
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-
+CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
@@ -195,22 +193,23 @@ UDS_NATIVE_CERTIFICATE_FILENAME = 'native.crt'
 UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
 UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
 
-
 # USL S3 configuration (CES2020 only!)
 USL_S3_CONF = '/etc/uds/uds_s3.toml'
-#IAM User Related
-PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
+# IAM User Related
+PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
+                              "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]
 
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time', 'updated_time']
+CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
+                            'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
 
-#CONSTANT
-UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+# CONSTANT
+UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 STRING_MAX_VALUE = 250
 PATH_PREFIX_MAX_VALUE = 512
 PORT_MIN_VALUE = 0
@@ -219,17 +218,19 @@ PORT_MAX_VALUE = 65536
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
 CSM_SMTP_RECONNECT_ATTEMPTS = 2
-CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = '{}/templates/alert_notification_email.html'.format(CSM_PATH)
+CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL = '{}/templates/alert_notification_email.html'.format(
+    CSM_PATH)
 CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT = 'Alert notification'
 CSM_ALERT_NOTIFICATION_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
 CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
-CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(CSM_PATH)
+CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(
+    CSM_PATH)
 
 # Audit Log
-AUDIT_LOG="/tmp/auditlogs/"
-MAX_RESULT_WINDOW=10000
+AUDIT_LOG = "/tmp/auditlogs/"
+MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
 LOG_LEVEL="INFO"

@@ -1,0 +1,16 @@
+{
+  "generate": {
+    "test_1": {
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.support_bundle",
+        "method": "bundle_generate",
+        "class": "SupportBundle",
+        "is_static": true
+      },
+      "need_confirmation": false,
+      "sub_command_name": "generate",
+      "comment": "Test Comment"
+    }
+  }
+}

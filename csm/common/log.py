@@ -21,6 +21,7 @@
 import os, errno
 import logging.handlers
 import inspect
+import traceback
 from functools import wraps
 from csm.core.blogic import const
 
@@ -82,7 +83,6 @@ class Log:
             file_handler = logging.handlers.RotatingFileHandler(log_file, mode="a",
                                   maxBytes=max_bytes, backupCount=backup_count)
             file_handler.setFormatter(formatter)
-            file_handler.doRollover()
             logger = logging.getLogger(f"{file_name}")
             logger.setLevel(log_level)
             logger.addHandler(file_handler)
@@ -123,6 +123,7 @@ class Log:
     def critical(msg, *args, **kwargs):
         """ Logs a message with level CRITICAL on this logger. """
         caller = inspect.stack()[1][3]
+        Log.critical(traceback.format_exc())
         Log.logger.critical(f"[{caller}] {msg}", *args, **kwargs)
 
     @staticmethod

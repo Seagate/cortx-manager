@@ -1,0 +1,12 @@
+{
+  "support_bundle": {
+    "create": true,
+    "list": true
+  },
+  "bundle_generate": {
+    "create": true
+  },
+  "csm_bundle_generate": {
+    "create": true
+  }
+}

@@ -3,11 +3,11 @@
 """
  ****************************************************************************
  Filename:          test_support_bundle.py
- Description:       Test support bundle functionality i.e. create, delete and
-                    list support bundles.
+ Description:       Test support bundle functionality for generating and status.
 
- Creation Date:     22/06/2018
- Author:            Ujjwal Lanjewar
+
+ Creation Date:     3/6/2020
+ Author:            Prathamesh Rodi
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -18,57 +18,52 @@
  ****************************************************************************
 """
 
-import sys, os, time
-import traceback
-import datetime
-import yaml
+import sys, os
+import json, unittest
+from csm.cli.command_factory import CommandFactory
+from csm.cli.support_bundle.support_bundle import SupportBundle
+from csm.test.common import Const
 
+t = unittest.TestCase()
+PERMISSIONS = {
+    "support_bundle": {
+        "create": True,
+        "list": True
+    },
+    "bundle_generate": {
+        "create": True
+    },
+    "csm_bundle_generate": {
+        "create": True
+    }
+}
+with open(f"{Const.MOCK_PATH}support_bundle.json") as fp:
+    RESPONSE_DATA = json.loads(fp.read())
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.common.errors import CsmError
-from csm.core.blogic import const
-from csm.common.log import Log
-from csm.common.conf import Conf
-from csm.common.cluster import Cluster
-from csm.ras.support_bundle import SupportBundle
 
 def init(args):
     pass
 
-#################
-# Tests
-#################
-def test1(args={}):
-    """ Use bundle provider to create a support bundle """
-    cluster = Cluster(args[Const.INVENTORY_FILE])
+with open(Const.MOCK_PATH + "support_bundle.json") as fp:
+    EXPECTED_OUTPUT = json.loads(fp.read())
 
-    components_file  = const.COMPONENTS_CONF
-    components = yaml.load(open(components_file, 'r').read())
+def test_1():
+    command = CommandFactory.get_command(["support_bundle", "generate",
+                                          "Test Comment"], PERMISSIONS)
+    actual_output = command.options
+    expected_output = RESPONSE_DATA.get("generate", {}).get("test_1", {})
+    t.assertDictEqual(actual_output, expected_output)
 
-    sb = SupportBundle(cluster, components)
+def test_2():
+    command = CommandFactory.get_command(["support_bundle", "generate",
+                                        "Test Comment"], PERMISSIONS)
+    resp = SupportBundle.bundle_generate(command)
+    t.assertEqual(resp.rc(), 0x0000)
 
-    bundle_name = 't1-%s' %datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+def test_3():
+    command = CommandFactory.get_command(["support_bundle", "generate",
+                                        "BUNDLE_ID"], PERMISSIONS)
+    resp = SupportBundle.bundle_status(command)
+    t.assertEqual(resp.rc(), 0x0000)
 
-    # Create bundle
-    Log.console('Creating bundle %s' %bundle_name)
-    output = sb.create(bundle_name)
-    Log.console('create: output=%s' %output)
-
-    # Confirm bundle is created
-    bundle_list = sb.list()
-    found = False
-    bundle_root = Conf.get(const.CSM_GLOBAL_INDEX, const.SUPPORT_BUNDLE_ROOT,
-            const.DEFAULT_SUPPORT_BUNDLE_ROOT)
-    bundle_path = os.path.join(bundle_root, '%s.tgz' %bundle_name)
-    for bundle_spec in bundle_list:
-        if bundle_path not in bundle_spec.split('\t'): continue
-        found = True
-
-    if not found: raise TestFailed('bundle %s did not generate' %bundle_name)
-
-    # Delete bundle
-    Log.console('Deleting bundle %s' %bundle_name)
-    output = sb.delete(bundle_name)
-    Log.console('delete: output=%s' %output)
-
-test_list = [ test1 ]
+test_list = [test_1, test_2, test_3]
