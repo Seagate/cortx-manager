@@ -191,7 +191,7 @@ if __name__ == '__main__':
         from csm.core.services.users import CsmUserService, UserManager
         from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
-        from csm.core.services.upgrade import HotfixApplicationService
+        from csm.core.services.hotfix_update import HotfixApplicationService
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.services.onboarding import OnboardingConfigService

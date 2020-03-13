@@ -40,7 +40,7 @@ class HotFixUploadSchema(Schema):
 class CsmHotfixUploadView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["hotfix_service"]
+        self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
         self._service_dispatch = {}
 
     """
