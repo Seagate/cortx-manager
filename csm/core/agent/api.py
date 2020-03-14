@@ -41,7 +41,8 @@ from csm.common.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
-from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied, CsmInternalError
+from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
+                               CsmInternalError, ResourceExist)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -291,6 +292,9 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmPermissionDenied as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=403)
+        except ResourceExist  as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request),
+                                            status=const.STATUS_CONFLICT)
         except CsmInternalError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
         except CsmError as e:

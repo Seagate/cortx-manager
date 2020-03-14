@@ -84,7 +84,8 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        return await self._service.create_user(**user_body)
+        response = await self._service.create_user(**user_body)
+        return CsmResponse(response, const.STATUS_CREATED)
 
 @CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
 class CsmUsersView(CsmView):
@@ -158,10 +159,10 @@ class AdminUserView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
 
-        status = self.STATUS_CREATED
+        status = const.STATUS_CREATED
         response = await self._service.create_root_user(**user_body)
         if not response:
-            status = self.STATUS_CONFLICT
+            status = const.STATUS_CONFLICT
             response = {
                 'message_id': 'root_already_exists',
                 'message_text': 'Root user already exists',
