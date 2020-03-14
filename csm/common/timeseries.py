@@ -140,6 +140,7 @@ class TimelionProvider(TimeSeriesProvider):
                                 ").label(" + metric["name"] + ")"
                     template_metrics[metric["name"]] = query
             self._aggr_rule = self._template_agg_rule
+            self._indexes = ["statsd_timerdata-*", "statsd_counter-*", "statsd_gauge-*"]
         except Exception as e:
             Log.debug("Failed to parse stats aggregation rule %s" %e)
             raise CsmInternalError("Failed to parse stats aggregation rule")
@@ -192,14 +193,13 @@ class TimelionProvider(TimeSeriesProvider):
         """
         try:
             interval = await self._parse_interval(from_t, duration_t, interval, total_sample)
-            unit = (await self.get_axis(panel))["y"] if unit is "" else unit
             from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
             duration_t = str(datetime.utcfromtimestamp(int(duration_t)).isoformat())+'.000Z'
             panel = panel.lower()
-            metric_list = await self._get_metric_list(panel, metric_list)
+            metric_list, unit_list = await self._get_metric_list(panel, metric_list, unit)
             res = await self._aggregate_metric(panel, from_t, duration_t,
                                             interval, metric_list, query)
-            return await self._convert_payload(res, stats_id, panel, output_format, unit)
+            return await self._convert_payload(res, stats_id, panel, output_format, unit_list)
         except Exception as e:
             Log.debug("Failed to request stats %s" %e)
             raise CsmInternalError("id: %s, Error: Failed to process timelion "
@@ -223,34 +223,87 @@ class TimelionProvider(TimeSeriesProvider):
                             mu.append(st)
         return mu
 
-    async def _get_metric_list(self, panel, metric_list):
+    async def _get_metric_list(self, panel, metric_list, unit):
         """
         Validate metric list. If metric list is empty then fetch from schema.
+        Validate and update units.
         """
         aggr_panel = self._aggr_rule[panel]["metrics"]
+        panel_unit = (await self.get_axis(panel))["y"]
+        unit_li = []
+        if type(unit) is list:
+            unit_li = unit
         if len(metric_list) == 0:
-            metric_list = await self.get_labels(panel)
-        else:
-            aggr_panel = self._aggr_rule[panel]["metrics"]
-            for metric in metric_list:
-                if metric not in aggr_panel:
-                    raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
-        return metric_list
+            metric_list = list(await self.get_labels(panel))
+        for i in range(0, len(metric_list)):
+            if metric_list[i] not in aggr_panel:
+                raise CsmInternalError("Invalid label %s for %s" %(metric,panel))
+            if type(unit) is list:
+                unit_li[i] = unit[i] if unit[i] != "" else panel_unit
+            else:
+                u = unit if unit is not "" else panel_unit
+                unit_li.append(u)
+
+        return metric_list, unit_li
 
     async def _parse_interval(self, from_t, duration_t, interval, total_sample):
-        try:
-            diff_sec = int(duration_t) - int(from_t)
-            if total_sample != "":
-                interval = str(int(diff_sec/int(total_sample))) + 's'
-            elif interval != "":
-                interval = str(int(interval)) + 's'
-            elif total_sample == "" and interval == "":
-                interval = "auto"
-            else:
-                raise
-            return interval
-        except Exception as e:
+        """
+        Check from_t, duration_t time interval and
+        calculate interval from total_sample
+        """
+        diff_sec = int(duration_t) - int(from_t)
+        if diff_sec <= 0:
+            raise CsmInternalError("to time should be grater than from time")
+        if total_sample == "" and interval == "":
+            interval = str(self._config_list["interval"]) + 's'
+        elif total_sample != "":
+            interval = str(int(diff_sec/int(total_sample))) + 's'
+        elif interval != "":
+            interval = str(int(interval)) + 's'
+        elif total_sample == "" and interval == "":
+            interval = "auto"
+        else:
             raise CsmInternalError("Unable to parse interval")
+        return interval
+
+    async def _update_index(self, metric, from_t, duration_t):
+        """
+        Optimize index pattern
+        1. from and duration are same date
+            from_t:  2020-03-08T14:27:12.000Z
+            duration_t: 2020-03-08T14:27:12.000Z
+            index: statsd_counter-2020.03.08
+        2. from and duration are diff by date
+            from_t:  2020-03-08T14:27:12.000Z
+            duration_t: 2020-03-09T14:27:12.000Z
+            index: statsd_counter-2020.03.*
+        3. from and duration are diff by month
+            from_t:  2020-02-08T14:27:12.000Z
+            duration_t: 2020-03-09T14:27:12.000Z
+            index: statsd_counter-2020.*
+        4. from and duration are diff by year
+            from_t:  2019-03-08T14:27:12.000Z
+            duration_t: 2020-03-09T14:27:12.000Z
+            index: statsd_counter-*
+        """
+        old_index = ""
+        new_index = ""
+        f_li = (from_t.split("T")[0]).split("-")
+        d_li = (duration_t.split("T")[0]).split("-")
+        for index in self._indexes:
+            if index in metric:
+                old_index = index
+                break
+        if f_li == d_li:
+            new_index =  old_index.replace("*", '.'.join([ele for ele in f_li]))
+        elif f_li[0] == d_li[0] and f_li[1] == d_li[1]:
+            new_index = old_index.replace("*", f"{d_li[0]}.{d_li[1]}.*")
+        elif f_li[0] == d_li[0]:
+            new_index = old_index.replace("*", f"{d_li[0]}.*")
+        else:
+            new_index = old_index
+        metric = metric.replace(old_index,new_index)
+        return metric
 
     async def _aggregate_metric(self, panel, from_t, duration_t,
                                     interval, metric_list, query):
@@ -263,7 +316,7 @@ class TimelionProvider(TimeSeriesProvider):
         if query is "":
             query = '('
             for metric in metric_list:
-                query = query + aggr_panel[metric] + ','
+                query = query + await self._update_index(aggr_panel[metric], from_t, duration_t) + ','
             query = query[:-1] + ')'
         body = self._timelion_req_body.substitute(query=query, from_t=from_t,
                                         interval=interval, to_t=duration_t)
@@ -286,7 +339,7 @@ class TimelionProvider(TimeSeriesProvider):
             Log.debug("Timelion connection error: %s" %e)
             raise CsmInternalError("Connection failed to timelion %s" %self._url)
 
-    async def _convert_payload(self, res, stats_id, panel, output_format, unit):
+    async def _convert_payload(self, res, stats_id, panel, output_format, units):
         """
         Convert timelion response to redable or gui format
         """
@@ -296,12 +349,18 @@ class TimelionProvider(TimeSeriesProvider):
         res_payload['id'] = stats_id
         res_payload['stats'] = panel
         if "sheet" in timelion_payload:
-            for s in timelion_payload["sheet"][0]["list"]:
-                datapoint = await self._modify_panel_val(s["data"], panel, unit)
+            data_list = timelion_payload["sheet"][0]["list"]
+            for i in range(0, len(data_list)):
+                datapoint = await self._modify_panel_val(data_list[i]["data"], panel, units[i])
                 if output_format == "gui":
                     datapoint = await self._get_list(datapoint)
-                operation_stats = { 'data' : datapoint, 'label': str(s["label"]) }
+                operation_stats = { 'data' : datapoint,
+                                    'name': f"{panel}.{str(data_list[i]['label'])}",
+                                    'unit': units[i] }
                 li.append(operation_stats)
+        elif "index not found" in timelion_payload["message"] or \
+                "index_not_found_exception" in timelion_payload["message"]:
+            pass
         else:
             raise CsmInternalError("Failed to convert timelion response. \
                 %s" %timelion_payload)
@@ -338,7 +397,7 @@ class TimelionProvider(TimeSeriesProvider):
         data_li = []
         for item in li:
             time_li.append(item[0])
-            data_li.append(item[1])
+            data_li.append(float("{:.2f}".format(item[1])))
 
         total_li.append(time_li)
         total_li.append(data_li)

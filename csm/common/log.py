@@ -123,7 +123,7 @@ class Log:
     def critical(msg, *args, **kwargs):
         """ Logs a message with level CRITICAL on this logger. """
         caller = inspect.stack()[1][3]
-        Log.critical(traceback.format_exc())
+        Log.logger.critical(traceback.format_exc())
         Log.logger.critical(f"[{caller}] {msg}", *args, **kwargs)
 
     @staticmethod
