@@ -9,7 +9,6 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
-
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -35,7 +34,6 @@ class CsmAgent:
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
-        
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
         s3_plugin = import_plugin_module('s3')
@@ -159,6 +157,7 @@ class CsmAgent:
         https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
+        
         if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
