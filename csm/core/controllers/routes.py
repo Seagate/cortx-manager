@@ -25,6 +25,7 @@ from .system_config import SystemConfigListView
 from .system_config import SystemConfigView
 from .storage_capacity import StorageCapacityView
 from .permissions import CurrentPermissionsView
+from .hotfix_update import CsmHotfixUploadView
 from .firmware_update import FirmwarePackageUploadView, FirmwareUpdateView, FirmwareUpdateStatus
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
 from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
