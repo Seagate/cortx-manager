@@ -79,8 +79,7 @@ class S3BucketListView(S3AuthenticatedView):
 
         # NOTE: body is empty
         result = await self._service.create_bucket(self._s3_session, **bucket_creation_body)
-        if isinstance(result, Response):
-            return result
+        return result
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket/{bucket_name}")

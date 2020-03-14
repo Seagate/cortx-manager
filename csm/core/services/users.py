@@ -210,7 +210,7 @@ class CsmUserService(ApplicationService):
             raise CsmPermissionDenied("Can't delete user %s. No such user" %
                                       user_id, USERS_MSG_USER_NOT_FOUND)
         await self.user_mgr.delete(user_id)
-        return {}
+        return {"message": "User Deleted Successfully."}
 
     async def update_user(self, user_id: str, new_values: dict) -> dict:
         Log.debug(f"Update user service user_id: {user_id}.")
