@@ -28,7 +28,8 @@ from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.data.models.users import User, UserType
-from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest, CsmPermissionDenied
+from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
+                                CsmPermissionDenied, ResourceExist)
 import time
 from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.data.access.filters import Compare, And, Or
@@ -55,7 +56,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise InvalidRequest("Such user already exists", USERS_MSG_ALREADY_EXISTS)
+            raise ResourceExist("Such user already exists", USERS_MSG_ALREADY_EXISTS,user.user_id)
 
         return await self.storage(User).store(user)
 

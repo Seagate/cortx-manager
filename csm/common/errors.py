@@ -29,6 +29,7 @@ CSM_INVALID_REQUEST         = 0x1003
 CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
 CSM_INTERNAL_ERROR          = 0x1005
 CSM_SETUP_ERROR             = 0x1006
+CSM_RESOURCE_EXIST          = 0x1007
 
 class CsmError(Exception):
     """ Parent class for the cli error classes """
@@ -103,6 +104,19 @@ class InvalidRequest(CsmError):
     def __init__(self, _desc=None, message_id=None, message_args=None):
         super(InvalidRequest, self).__init__(
             CSM_INVALID_REQUEST, _desc, message_id, message_args)
+
+
+class ResourceExist(CsmError):
+    """
+    This error will be raised when an resource already exist
+    """
+
+    _err = CSM_RESOURCE_EXIST
+    _desc = "Resource already exist."
+
+    def __init__(self, _desc=None, message_id=None, message_args=None):
+        super(ResourceExist, self).__init__(
+            CSM_RESOURCE_EXIST, _desc, message_id, message_args)
 
 
 class CsmInternalError(CsmError):
