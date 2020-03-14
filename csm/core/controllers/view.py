@@ -18,7 +18,6 @@
 """
 import json
 import asyncio
-import concurrent
 from csm.common.errors import InvalidRequest
 from csm.common.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
