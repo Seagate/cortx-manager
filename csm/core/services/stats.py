@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from typing import Dict
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
+from csm.common.errors import CsmInternalError
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -60,7 +61,7 @@ class StatsAppService(ApplicationService):
                                                   unit = unit.lower(),
                                                   output_format = output_format,
                                                   query = query)
-        output["metrics"] = await self._metric_convert(None,panel_data)
+        output["metrics"] = panel_data["list"]
         return output
 
     async def get_labels(self, panel):
@@ -92,90 +93,62 @@ class StatsAppService(ApplicationService):
         """
         Fetch statistics for selected panels list (simplified - reduced parameter set)
         """
-        Log.debug('Get panels requested: id=%s, interval=%s' %(stats_id, interval))
+        Log.debug('Get panels requested: id=%s, panels=%s' %(stats_id, str(panels_list)))
         output = {}
         output["id"]=stats_id
         data_list = []
         for panel in panels_list:
-            panel_strip = panel.replace('"','')  # strip " symbol if it presents in input
             panel_data = await self._stats_provider.process_request(
                                                   stats_id = stats_id,
-                                                  panel = panel_strip,
+                                                  panel = panel,
                                                   from_t = from_t, duration_t = to_t,
-                                                  metric_list = [],
+                                                  metric_list = "",
                                                   interval = interval,
                                                   total_sample = total_sample,
                                                   unit = "",
                                                   output_format = output_format,
                                                   query = "")
-            data_list.extend(await self._metric_convert(None,panel_data))
+            data_list.extend(panel_data["list"])
         output["metrics"] =data_list
-        return output
-
-    async def _metric_convert(self, uom, in_list):
-        output = []
-        parent_name = in_list["stats"]
-        for p in in_list["list"]:
-            prep = {}
-            prep["data"] = p["data"]
-            prep["name"] = parent_name + '.' + p["label"]
-            if uom:
-                prep["unit"] = uom
-            else:
-                prep["unit"] = (await self._stats_provider.get_axis(parent_name))["y"]
-            output.append(prep)
         return output
 
     async def get_metrics(self, stats_id, metrics_list, from_t, to_t, interval,
                           total_sample, output_format) -> Dict:
         """
         Fetch statistics for selected panel.metric list (simplified - reduced parameter set)
+        panels : { "<panel>": {"metric":[...], "unit":[...]}}
         """
-        Log.debug('Get metrics requested: id=%s, interval=%s' %(stats_id, interval))
+        Log.debug("Get metrics requested: id=%s, interval=%s" %(str(stats_id), interval))
         output = {}
-        panel_list = []
-        metric_list = {}
-        uom_list = {}
-        for panel_metric in metrics_list:  # first create list of panels and arrays of metrics for them
-            pm_strip = panel_metric.replace('"','')  # strip " symbol if it presents in input
-            pm = pm_strip.split('.',2)
-            panel = pm[0]
-            metric = pm[1]
-            if len(pm)>2:
-                uom = pm[2]
-            else:
-                uom = (await self._stats_provider.get_axis(panel))["y"]
-            if panel not in panel_list:
-                panel_list.append(panel)
-            try:
-                ml = metric_list.pop(panel)
-            except KeyError as e:
-                ml = []
-            ml.append(metric)
-            metric_list[panel] = ml
-            if uom_list.get(panel,None) and uom != uom_list[panel]:
-                Log.error('Requested different units of measure for one panel[%s], '
-                          'assuming %s' %(str(panel),str(uom)))
-            uom_list[panel] = uom
-        Log.debug('panel_list = %s' %(str(panel_list)))
+        panels = {}
+        try:
+            for metric in metrics_list:
+                li = metric.split(".")
+                if li[0] not in panels:
+                    panels[li[0]] = {"metric": [li[1]], "unit":[]}
+                else:
+                    panels[li[0]]["metric"].append(li[1])
+                if len(li) == 2:
+                    panels[li[0]]["unit"].append("")
+                else:
+                    panels[li[0]]["unit"].append(li[2])
+        except:
+            raise CsmInternalError("Stats: Invalid metric list %s" %metrics_list)
+
         output["id"]=stats_id
         data_list = []
-        for panel in panel_list:  # now get statistics and remove not needed metrics
-            Log.debug('metric_list[%s] = %s' %(str(panel), str(metric_list[panel])))
+        for panel in panels.keys():
+            Log.debug('metric[%s] = %s' %(str(panel), str(panels[panel]["metric"])))
             panel_data = await self._stats_provider.process_request(
                                                   stats_id = stats_id,
                                                   panel = panel,
                                                   from_t = from_t, duration_t = to_t,
-                                                  metric_list = [],
+                                                  metric_list = panels[panel]["metric"],
                                                   interval = interval,
                                                   total_sample = total_sample,
-                                                  unit = uom_list[panel],
+                                                  unit = panels[panel]["unit"],
                                                   output_format = output_format,
                                                   query = "")
-            m_list = panel_data.get("list")
-            panel_data["list"] = [i for i in m_list if i.get("label") in metric_list.get(panel)]
-            #add remaining data to list
-            data_list.extend(await self._metric_convert(uom_list[panel],panel_data))
-
-        output["metrics"] =data_list
+            data_list.extend(panel_data["list"])
+        output["metrics"] = data_list
         return output
