@@ -48,7 +48,7 @@ class CsmAgent:
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service, usl_service)
-        
+
         #Heath configuration
         health_repository = HealthRepository()
         health_service = HealthAppService(health_repository)
@@ -157,7 +157,7 @@ class CsmAgent:
         https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
-        
+
         if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
