@@ -28,10 +28,7 @@ from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.common.log import Log
-from csm.common.log import Log
 from csm.core.controllers.view import CsmView
-from asyncio import CancelledError 
-from concurrent import futures
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 """
