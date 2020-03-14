@@ -49,13 +49,13 @@ class StatsView(CsmView):
             stats_id = self.request.rel_url.query.get("id", None)
             from_t = self.request.rel_url.query.get("from", None)
             to_t = self.request.rel_url.query.get("to", None)
-            metric_list = self.request.rel_url.query.getall("metric_list", [])
+            metric_list = self.request.rel_url.query.get("metric", [])
             interval = self.request.rel_url.query.get("interval", "")
             total_sample = self.request.rel_url.query.get("total_sample", "")
             output_format = self.request.rel_url.query.get("output_format", "gui")
             query = self.request.rel_url.query.get("query", "")
             unit = self.request.rel_url.query.get("unit", "")
-            return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
+            return await self._service.get(stats_id, panel, from_t, to_t, metric_list.split(","),
                 interval, total_sample, unit, output_format, query)
 
 @CsmView._app_routes.view("/api/v1/stats")
@@ -98,12 +98,12 @@ class StatsPanelListView(CsmView):
             total_sample = self.request.rel_url.query.get("total_sample", "")
             output_format = self.request.rel_url.query.get("output_format", "gui")
             if panelsopt:
-                panels_list = self.request.rel_url.query.getall("panel", [])
+                panels_list = panelsopt.split(",")
                 Log.debug("Requested panels: %s", str(panels_list))
                 return await self._service.get_panels(stats_id, panels_list, from_t, to_t,
                                                       interval, total_sample, output_format)
             else:
-                metrics_list = self.request.rel_url.query.getall("metric", [])
+                metrics_list = metricsopt.split(",")
                 Log.debug("Requested metrics: %s", str(metrics_list))
                 return await self._service.get_metrics(stats_id, metrics_list, from_t, to_t,
                                                        interval, total_sample, output_format)
