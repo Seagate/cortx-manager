@@ -18,13 +18,13 @@
 """
 
 from typing import Union, Dict
-from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common.services import ApplicationService
-from csm.core.blogic import const
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
-from csm.eos.plugins.s3 import IamClient, S3ConnectionConfig
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory
+from csm.eos.plugins.s3 import IamClient
+
 
 class IamUsersService(ApplicationService):
     """
@@ -34,11 +34,7 @@ class IamUsersService(ApplicationService):
     def __init__(self, s3plugin):
         self._s3plugin = s3plugin
         # S3 Connection Object.
-        self._iam_connection_config = S3ConnectionConfig()
-        self._iam_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
-        self._iam_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
-        self._iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
-                                                            "S3.max_retries_num")
+        self._iam_connection_config = CsmS3ConfigurationFactory.get_iam_connection_config()
 
     @Log.trace_method(Log.DEBUG)
     async def fetch_iam_client(self, s3_session: Dict) -> IamClient:
@@ -97,8 +93,8 @@ class IamUsersService(ApplicationService):
         if hasattr(users_list_response, "error_code"):
             return await  self._handle_error(users_list_response)
         iam_users_list = vars(users_list_response)
-        iam_users_list["iam_users"] = [vars(each_user) 
-                                       for each_user in iam_users_list["iam_users"] 
+        iam_users_list["iam_users"] = [vars(each_user)
+                                       for each_user in iam_users_list["iam_users"]
                                        if not vars(each_user)["user_name"] == "root" ]
 
         return iam_users_list
@@ -141,4 +137,4 @@ class IamUsersService(ApplicationService):
         }
         # TODO: Response class to be replaced by CsmError type for raising errors
         return Response(rc=status_code_mapping.get(iam_error_obj.error_code.value, 500),
-                    output=iam_error_obj.error_message)
+                        output=iam_error_obj.error_message)

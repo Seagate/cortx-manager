@@ -18,6 +18,8 @@
 """
 
 from aiohttp import web, ClientSession
+from botocore.exceptions import ClientError
+from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -33,15 +35,17 @@ from csm.common.key_manager import KeyManager
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.data.access import Query, SortOrder
+from csm.core.data.access import Query
 from csm.core.data.access.filters import Compare
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.models.s3 import S3ConnectionConfig
-from csm.core.data.models.usl import (Device, Volume, Event, NewVolumeEvent, VolumeRemovedEvent,
+from csm.core.data.db.db_provider import DataBaseProvider
+from csm.core.data.models.s3 import S3ConnectionConfig, IamUser
+from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 DEFAULT_VOLUME_CACHE_UPDATE_PERIOD = 3
+
 
 class UslService(ApplicationService):
     """
@@ -49,7 +53,9 @@ class UslService(ApplicationService):
     """
     # FIXME improve token management
     _token: str
+    _s3plugin: Any
     _s3cli: Any
+    _iamcli: Any
     _storage: DataBaseProvider
     _device: Device
     _volumes: Dict[UUID, Volume]
@@ -63,7 +69,9 @@ class UslService(ApplicationService):
         loop = asyncio.get_event_loop()
 
         self._token = ''
+        self._s3plugin = s3_plugin
         self._s3cli = self._create_s3cli(s3_plugin)
+        self._iamcli = IamRootClient()
         dev_uuid = self._get_device_uuid()
         self._device = Device.instantiate(
             self._get_system_friendly_name(),
@@ -95,7 +103,7 @@ class UslService(ApplicationService):
         """Restores the volume cache from Consul KVS"""
 
         try:
-            cache = {volume.uuid:volume
+            cache = {volume.uuid: volume
                      for volume in await self._storage(Volume).get(Query())}
         except Exception as e:
             reason = (f"Failed to restore USL volume cache from Consul KVS: {str(e)}\n"
@@ -120,6 +128,175 @@ class UslService(ApplicationService):
 
         return uuid5(self._device.uuid, bucket_name)
 
+    async def _handle_udx_s3_registration(self, s3_session, iam_user_name: str, iam_user_passwd: str,
+                                          bucket_name: str) -> Dict:
+        """
+        Handles an S3 part of UDX device registration:
+        - creates UDX IAM account inside the currently logged in S3 account
+        - creates UDX bucket inside the currently logged in S3 account
+        - tags UDX bucket with {"udx": "enabled"}
+        - grants UDX IAM user full access to the UDX bucket
+        In case of error on any of the steps above, attempts to perform a cleanup, i.e.:
+        - delete UDX bucket (if it hadn't existed before the registration)
+        - delete UDX IAM account (if it hadn't existed before the registration)
+        """
+
+        iam_conn_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
+        iam_cli = self._s3plugin.get_iam_client(s3_session.access_key, s3_session.secret_key,
+                                                iam_conn_conf, s3_session.session_token)
+
+        s3_conn_conf = CsmS3ConfigurationFactory.get_s3_connection_config()
+        s3_cli = self._s3plugin.get_s3_client(s3_session.access_key, s3_session.secret_key,
+                                              s3_conn_conf)
+
+        iam_user = None
+        bucket = None
+        try:
+            iam_user = await self._get_udx_iam_user(iam_cli, iam_user_name)
+            iam_user_already_exists = iam_user is not None
+            if not iam_user_already_exists:
+                iam_user = await self._create_udx_iam_user(iam_cli, iam_user_name, iam_user_passwd)
+            iam_user_credentials = await self._get_udx_iam_user_credentials(iam_cli, iam_user_name)
+            bucket = await self._get_udx_bucket(s3_cli, bucket_name)
+            bucket_already_exists = bucket is not None
+            if not bucket_already_exists:
+                bucket = await self._create_udx_bucket(s3_cli, bucket_name)
+            udx_bucket_name = bucket.name
+            await self._tag_udx_bucket(s3_cli, udx_bucket_name)
+            await self._set_udx_policy(s3_cli, iam_user, udx_bucket_name)
+        except (CsmInternalError, ClientError) as e:
+            erorr_msg = f"Failed to accomplish UDX S3 registration: {str(e)}"
+            # Don't delete UDX bucket that had existed before the registration
+            if bucket is not None and not bucket_already_exists:
+                await s3_cli.delete_bucket(udx_bucket_name)
+                Log.info(f'UDX Bucket {udx_bucket_name} is removed '
+                         f'during failed registration clean-up')
+            # Don't delete IAM user that had existed before the registration
+            if iam_user is not None and not iam_user_already_exists:
+                await iam_cli.delete_user(iam_user.user_name)
+                Log.info(f'UDX IAM user {iam_user_name} is removed '
+                         f'during failed registration clean-up')
+            raise CsmInternalError(erorr_msg)
+
+        return {
+            'iam_user_name': iam_user.user_name,
+            'access_key_id': iam_user_credentials['access_key_id'],
+            'secret_key': iam_user_credentials['secret_key'],
+            'bucket_name': bucket.name,
+        }
+
+    async def _get_udx_iam_user(self, iam_cli, user_name: str) -> IamUser:
+        """
+        Checks UDX IAM user exists and returns it
+        """
+
+        # TODO: Currently the IAM server does not support 'get-user' operation.
+        # Thus there is no way to obtain details about existing IAM user: ID and ARN.
+        # Workaround: delete IAM user even if it exists (and recreate then).
+        # When get-user is implemented on the IAM server side workaround could be removed.
+        try:
+            await iam_cli.delete_user(user_name)
+        except ClientError:
+            # Ignore errors in deletion, user might not exist
+            pass
+
+        return None
+
+    async def _create_udx_iam_user(self, iam_cli, user_name: str, user_passwd: str) -> IamUser:
+        """
+        Creates UDX IAM user inside the currently logged in S3 account
+        """
+
+        Log.debug(f'Creating UDX IAM user {user_name}')
+        iam_user_resp = await iam_cli.create_user(user_name)
+        if hasattr(iam_user_resp, "error_code"):
+            erorr_msg = iam_user_resp.error_message
+            raise CsmInternalError(f'Failed to create UDX IAM user: {erorr_msg}')
+        Log.info(f'UDX IAM user {user_name} is created')
+
+        iam_login_resp = await iam_cli.create_user_login_profile(user_name, user_passwd, False)
+        if hasattr(iam_login_resp, "error_code"):
+            # Remove the user if the login profile creation failed
+            await iam_cli.delete_user(user_name)
+            error_msg = iam_login_resp.error_message
+            raise CsmInternalError(f'Failed to create login profile for UDX IAM user {error_msg}')
+        Log.info(f'Login profile for UDX IAM user {user_name} is created')
+
+        return iam_user_resp
+
+    async def _get_udx_iam_user_credentials(self, iam_cli, user_name: str) -> Dict:
+        """
+        Gets the access key id and secret key for UDX IAM user
+        """
+
+        # TODO: this is a STUB! IAM user key creation/listing/deletion is not implemented yet
+        # and TBD in EES sprint 17.
+        # Replace with the actual IAM client call when ready
+        return {
+            'access_key_id': '',
+            'secret_key': '',
+        }
+
+    def _get_udx_bucket_name(self, bucket_name: str) -> str:
+        return 'udx-' + bucket_name
+
+    async def _get_udx_bucket(self, s3_cli, bucket_name: str):
+        """
+        Checks if UDX bucket already exists and returns it
+        """
+
+        Log.debug(f'Getting UDX bucket')
+        udx_bucket_name = self._get_udx_bucket_name(bucket_name)
+        bucket = await s3_cli.get_bucket(udx_bucket_name)
+
+        return bucket
+
+    async def _create_udx_bucket(self, s3_cli, bucket_name: str):
+        """
+        Creates UDX bucket inside the curretnly logged in S3 account
+        """
+
+        Log.debug(f'Creating UDX bucket {bucket_name}')
+        udx_bucket_name = self._get_udx_bucket_name(bucket_name)
+        bucket = await s3_cli.create_bucket(udx_bucket_name)
+        Log.info(f'UDX bucket {udx_bucket_name} is created')
+        return bucket
+
+    async def _tag_udx_bucket(self, s3_cli, bucket_name: str):
+        """
+        Puts the UDX tag on a specified bucket
+        """
+
+        Log.debug(f'Tagging bucket {bucket_name} with UDX tag')
+        bucket_tags = {"udx": "enabled"}
+        await s3_cli.put_bucket_tagging(bucket_name, bucket_tags)
+        Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
+
+    async def _set_udx_policy(self, s3_cli, iam_user, bucket_name: str):
+        """
+        Grants the specified IAM user full access to the specified bucket
+        """
+
+        Log.debug(f'Setting UDX policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
+        policy = {
+            'Version': str(date.today()),
+            'Statement': [{
+                'Sid': 'UdxIamAccountPerm',
+                'Effect': 'Allow',
+                'Principal': {"AWS": iam_user.arn},
+                'Action': ['s3:GetObject', 's3:PutObject',
+                           's3:ListMultipartUploadParts', 's3:AbortMultipartUpload',
+                           's3:GetObjectAcl', 's3:PutObjectAcl',
+                           's3:PutObjectTagging',
+                           # TODO: now S3 server rejects the following policies
+                           # 's3:DeleteObject', 's3:RestoreObject', 's3:DeleteObjectTagging',
+                           ],
+                'Resource': f'arn:aws:s3:::{bucket_name}/*',
+            }]
+        }
+        await s3_cli.put_bucket_policy(bucket_name, policy)
+        Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
+
     async def _is_bucket_udx_enabled(self, bucket):
         """
         Checks if bucket is UDX enabled
@@ -135,7 +312,7 @@ class UslService(ApplicationService):
 
         volume_cache_update_period = float(
             Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.volume_cache_update_period_seconds') or
-                DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
+            DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
         )
 
         while True:
@@ -183,13 +360,13 @@ class UslService(ApplicationService):
 
         self._volumes = fresh_cache
 
-
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
+
         return [self._device.to_primitive()]
 
     async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
@@ -202,7 +379,7 @@ class UslService(ApplicationService):
 
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        return [v.to_primitive(role='public') for uuid,v in self._volumes.items()]
+        return [v.to_primitive(role='public') for uuid, v in self._volumes.items()]
 
     async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
         """
@@ -215,7 +392,7 @@ class UslService(ApplicationService):
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
 
-        if not volume_id in self._volumes:
+        if volume_id not in self._volumes:
             raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
         return MountResponse.instantiate(self._volumes[volume_id].bucketName,
                                          self._volumes[volume_id].bucketName).to_primitive()

@@ -17,14 +17,14 @@
  ****************************************************************************
 """
 
-from marshmallow import Schema, fields
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
-from csm.common.services import Service, ApplicationService
+from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
 from csm.core.services.sessions import S3Credentials, LocalCredentials
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
 
 
 S3_MSG_REMOTE_ERROR = 's3_remote_error'
@@ -42,7 +42,7 @@ class S3AccountService(ApplicationService):
         """
         Password should be taken as input and not read from conf file directly.
         """
-        self._s3_root_client = self._get_root_client()
+        self._s3_root_client = IamRootClient()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_account(self, account_name: str, account_email: str, password: str):
@@ -59,7 +59,7 @@ class S3AccountService(ApplicationService):
             self._raise_remote_error(account)
 
         account_client = self._s3plugin.get_iam_client(account.access_key_id,
-            account.secret_key_id, self._get_iam_connection_config())
+            account.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
 
         try:
             # Note that the order of commands below is important
@@ -159,11 +159,11 @@ class S3AccountService(ApplicationService):
             response["secret_key"] = new_creds.secret_key_id
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
-                new_creds.secret_key_id, self._get_iam_connection_config())
+                new_creds.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
         else:
             client = self._s3plugin.get_iam_client(s3_session.access_key,
-                        s3_session.secret_key, self._get_iam_connection_config(),
-                            s3_session.session_token)
+                s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
+                s3_session.session_token)
 
         if password:
             # We will try to create login profile in case it doesn't exist
@@ -193,8 +193,8 @@ class S3AccountService(ApplicationService):
         """
         Log.debug(f"Delete account service. account_name:{account_name}")
         account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
-                            s3_session.secret_key, self._get_iam_connection_config(),
-                            s3_session.session_token)
+            s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
+            s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
             if result.error_code == IamErrors.NoSuchEntity:
@@ -210,31 +210,3 @@ class S3AccountService(ApplicationService):
                 's3_error_id': resp.error_code,
                 's3_error_message': resp.error_message
             })
-
-    def _get_iam_connection_config(self):
-        # TODO: share the code below with other s3 services once they all get merged
-        Log.debug("Get IAM connection config")
-        s3_connection_config = S3ConnectionConfig()
-        s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, "S3.host")
-        s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.iam_port")
-        s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
-            "S3.max_retries_num")
-        return s3_connection_config
-
-    def _get_s3_connection_config(self):
-        Log.debug("Get s3 connection config")
-        # TODO: share the code below with other s3 services once they all get merged
-        s3_connection_config = self._get_iam_connection_config()
-        s3_connection_config.port = Conf.get(const.CSM_GLOBAL_INDEX, "S3.s3_port")
-        return s3_connection_config
-
-    def _get_root_client(self):
-        Log.debug("Get root client")
-        config = self._get_iam_connection_config()
-        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_login")
-        #TODO
-        """
-        Password should be taken as input and not read from conf file directly.
-        """
-        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, "S3.ldap_password")
-        return self._s3plugin.get_iam_client(ldap_login, ldap_password, config)

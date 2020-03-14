@@ -145,9 +145,9 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = str(err)
-        if hasattr(request.session, "credentials"):
+        if request.session is not None:
             Log.audit(f'User: {request.session.credentials.user_id} '
-                  f'Request: {request} RC: {resp["error_code"]}' )
+                      f'Request: {request} RC: {resp["error_code"]}')
         else:
             Log.audit(f'Request: {request} RC: {resp["error_code"]}')
         return resp
@@ -274,8 +274,11 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'Request: {request} RC: {status}')
+            if request.session is not None:
+                Log.audit(f'User: {request.session.credentials.user_id} '
+                          f'Request: {request} RC: {status}')
+            else:
+                Log.audit(f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
         

@@ -20,7 +20,7 @@ CSM_SETUP_CONF = '/etc/csm/setup.yaml'
 CSM_SETUP_INDEX = 'CSM_SETUP'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
-CSM Interactive Shell 
+CSM Interactive Shell
 Type -h or --help for help.\n
 ***********************************
 """
@@ -188,6 +188,14 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
 CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+
+# S3
+S3_HOST = 'S3.host'
+S3_IAM_PORT = 'S3.iam_port'
+S3_PORT = 'S3.s3_port'
+S3_MAX_RETRIES_NUM = 'S3.max_retries_num'
+S3_LDAP_LOGIN = 'S3.ldap_login'
+S3_LDAP_PASSWORD = 'S3.ldap_password'
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
