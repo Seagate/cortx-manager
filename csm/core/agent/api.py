@@ -281,7 +281,7 @@ class CsmRestApi(CsmApi, ABC):
         # These exceptions are thrown by aiohttp when request is cancelled
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
-            Log.debug(f"Client cancelled call for {request.method} {request.path}")
+            Log.warn(f"Client cancelled call for {request.method} {request.path}")
             return CsmRestApi.json_response("Call cancelled by client", status=499)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
