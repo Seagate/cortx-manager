@@ -28,6 +28,7 @@ from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.common.log import Log
+from csm.core.controllers.view import CsmView
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
 """
@@ -70,6 +71,7 @@ class AlertsListView(web.View):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
+    @CsmView.asyncio_shield
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         """Calling Alerts Get Method"""

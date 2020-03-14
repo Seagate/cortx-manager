@@ -10,6 +10,10 @@ CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 
+# Access log of aiohttp
+# format 
+REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'

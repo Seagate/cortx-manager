@@ -26,6 +26,8 @@ import asyncio
 import json
 import traceback
 import ssl
+from concurrent.futures import CancelledError as ConcurrentCancelledError
+from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from abc import ABC
@@ -275,6 +277,13 @@ class CsmRestApi(CsmApi, ABC):
                       f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
+        
+        # These exceptions are thrown by aiohttp when request is cancelled
+        # by client to complete task which are await use atomic
+        except (ConcurrentCancelledError, AsyncioCancelledError) as e:
+            log_message = await CsmRestApi.http_request_to_log_string(request)
+            Log.warn(f"Client cancelled call for {log_message}")
+            return CsmRestApi.json_response("Call cancelled by client", status=499)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e
@@ -307,7 +316,8 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context)
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, 
+                    access_log=Log.logger, access_log_format=const.REST_ACCESS_FORMAT)
 
     @staticmethod
     async def process_request(request):
@@ -370,7 +380,7 @@ class CsmRestApi(CsmApi, ABC):
             while True:
                 msg = await CsmRestApi._queue.get()
                 await CsmRestApi._websock_broadcast(msg)
-        except asyncio.CancelledError:
+        except AsyncioCancelledError:
             Log.debug('REST API websock background task canceled')
 
         Log.debug('REST API websock background task done')

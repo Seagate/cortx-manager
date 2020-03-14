@@ -20,10 +20,12 @@
 from .view import CsmView
 from csm.common.log import Log
 
+
+#@atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
 class StatsView(CsmView):
     def __init__(self, request):
-        super(StatsView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["stat_service"]
         self._service_dispatch = {
             "get": self._service.get
@@ -32,6 +34,7 @@ class StatsView(CsmView):
     """
     GET REST implementation for Statistics request
     """
+    @CsmView.asyncio_shield
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
@@ -58,7 +61,7 @@ class StatsView(CsmView):
 @CsmView._app_routes.view("/api/v1/stats")
 class StatsPanelListView(CsmView):
     def __init__(self, request):
-        super(StatsPanelListView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["stat_service"]
     """
     GET REST implementation for Statistics Get Panel List or
