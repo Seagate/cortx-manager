@@ -16,10 +16,12 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-from .view import CsmView
+from .view import CsmView, CsmAuth
 from csm.common.log import Log
-from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmNotFoundError
+from csm.common.permission_names import Resource, Action
+from csm.core.services.permissions import PermissionSet
+
 
 USERS_MSG_USER_NOT_FOUND = "users_not_found"
 
@@ -59,6 +61,7 @@ class CurrentPermissionsView(BasePermissionsView):
     """
     GET REST implementation for security permissions request
     """
+    @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
         """
         Calling Security get permissions Get Method
@@ -74,6 +77,7 @@ class UserPermissionsView(BasePermissionsView):
         self._service_dispatch = {}
         self._roles_service = self.request.app["roles_service"]
 
+    @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
         """
         Calling Security get csm user permissions Get Method

@@ -27,6 +27,7 @@ from marshmallow.exceptions import ValidationError
 from .validators import Server, Ipv4, DomainName
 from .view import CsmView, CsmResponse, CsmAuth
 from csm.core.blogic import const
+from csm.common.permission_names import Resource, Action
 
 # Marshmallow nested schema classes to form system configuration settings schema structure
 class Ipv4NodesSchema(Schema):
@@ -220,7 +221,7 @@ class SystemConfigListView(CsmView):
     """
     GET REST implementation for fetching user config
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling system config fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -229,7 +230,7 @@ class SystemConfigListView(CsmView):
     """
     POST REST implementation for creating a system config
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         Log.debug(f"Handling system config post request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -254,7 +255,7 @@ class SystemConfigView(CsmView):
     """
     GET REST implementation for fetching system config
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling system config fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -265,7 +266,7 @@ class SystemConfigView(CsmView):
     """
     PUT REST implementation for creating a system config
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling system config put request."
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -290,7 +291,7 @@ class TestEmailView(CsmView):
     """
     POST REST implementation for sendting test emails
     """
-
+    @CsmAuth.permissions({Resource.NOTIFICATION: {Action.UPDATE}})
     async def post(self):
         Log.debug("Handling system config email test request")
 
@@ -320,6 +321,7 @@ class OnboardingLicenseView(CsmView):
     """
     POST REST implementation for onboarding license key 
     """
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         Log.info("Handling onboarding license post request")
 

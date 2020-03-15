@@ -19,9 +19,10 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 
 
 class OnboardingStateSchema(Schema):
@@ -52,6 +53,7 @@ class OnboardingStateView(CsmView):
         response = { 'phase': phase }
         return CsmResponse(response)
 
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def patch(self):
         Log.debug("Updating onboarding state")
         # TODO: Check if the user has onboarding permissions

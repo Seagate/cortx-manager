@@ -17,16 +17,15 @@
  ****************************************************************************
 """
 
-import json
-import re
-from aiohttp import web
-from csm.core.controllers.view import CsmView
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.view import CsmView, CsmAuth
 
 @CsmView._app_routes.view("/api/v1/system/health")
-class HealthView(web.View):
+class HealthView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.health_service = self.request.app["health_service"]        
 
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         return await self.health_service.fetch_health_summary()

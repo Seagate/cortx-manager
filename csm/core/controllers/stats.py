@@ -17,8 +17,10 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-from .view import CsmView
+from .view import CsmView, CsmAuth
 from csm.common.log import Log
+from csm.common.permission_names import Resource, Action
+
 
 
 #@atomic
@@ -35,6 +37,7 @@ class StatsView(CsmView):
     GET REST implementation for Statistics request
     """
     @CsmView.asyncio_shield
+    @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
@@ -84,6 +87,7 @@ class StatsPanelListView(CsmView):
            * latency metric delete_object,
              reduced set of parameters used, same as aboove
     """
+    @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling Stats Get Panel List request."

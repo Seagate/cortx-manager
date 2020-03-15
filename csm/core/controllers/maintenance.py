@@ -17,9 +17,11 @@
  ****************************************************************************
 """
 
-from .view import CsmView
+from .view import CsmView, CsmAuth
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Resource, Action
+
 
 @CsmView._app_routes.view("/api/v1/maintenance/cluster/{action}")
 class MaintenanceView(CsmView):
@@ -33,6 +35,7 @@ class MaintenanceView(CsmView):
             "stop": self._service.stop
         }
 
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
         """
         GET REST implementation for Maintenance request

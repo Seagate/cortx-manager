@@ -22,6 +22,7 @@ import asyncio
 import inspect
 import traceback
 from functools import wraps
+from contextlib import contextmanager
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.blogic import const
@@ -64,6 +65,14 @@ class TestProvider(object):
         self._response = response
 
 
+def get_type_name(t):
+    try:
+        name = t.__name__
+    except AttributeError:
+        name = str(t)
+    return name
+
+
 def async_test(coro):
     @wraps(coro)
     def wrapper(*args):
@@ -71,6 +80,12 @@ def async_test(coro):
         result = loop.run_until_complete(coro(args))
         return result
     return wrapper
+
+
+def async_return(result):
+    f = asyncio.Future()
+    f.set_result(result)
+    return f
 
 
 def assert_equal(lhs, rhs):
@@ -81,3 +96,14 @@ def assert_equal(lhs, rhs):
 def assert_not_equal(lhs, rhs):
     if not (lhs != rhs):
         raise TestFailed(f'"{lhs}" == "{rhs}"')
+
+
+@contextmanager
+def assert_raises(exc_type):
+    try:
+        yield None
+    except exc_type:
+        return
+
+    exc_name = get_type_name(exc_type)
+    raise TestFailed(f'{exc_name} not raised')
