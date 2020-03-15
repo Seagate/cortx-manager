@@ -18,9 +18,9 @@
  ****************************************************************************
 """
 
-from .view import CsmView
+from .view import CsmView, CsmAuth
 from csm.common.log import Log
-from csm.core.providers.providers import Response
+from csm.common.permission_names import Resource, Action
 
 
 @CsmView._app_routes.view("/api/v1/capacity")
@@ -32,6 +32,7 @@ class StorageCapacityView(CsmView):
         super(StorageCapacityView, self).__init__(request)
         self._service = self.request.app['storage_capacity_service']
 
+    @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         return await self._service.get_capacity_details()

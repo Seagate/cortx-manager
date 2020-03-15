@@ -17,14 +17,15 @@
  ****************************************************************************
 """
 
-from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.common.log import Log
-from csm.core.controllers.validators import FileRefValidator
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.common.errors import InvalidRequest
-from csm.core.blogic import const
 from marshmallow import Schema, fields, validate, exceptions
+from csm.common.log import Log
+from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Resource, Action
+from csm.core.blogic import const
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers.schemas import FileFieldSchema
+from csm.core.controllers.validators import FileRefValidator
+from csm.core.services.file_transfer import FileType, FileCache, FileRef
 
 
 class FirmwareUploadSchema(Schema):
@@ -41,7 +42,7 @@ class FirmwarePackageUploadView(CsmView):
     """
     POST REST implementation to upload firmware packages
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         Log.info(f"Handling firmware package upload api"
                  f" user_id: {self.request.session.credentials.user_id}")
@@ -63,7 +64,7 @@ class FirmwareUpdateView(CsmView):
     """
     POST REST implementation to trigger firmware update
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         Log.info(f"Handling firmware package update api"
                  f" user_id: {self.request.session.credentials.user_id}")
@@ -80,7 +81,7 @@ class FirmwareUpdateStatus(CsmView):
     """
     Get REST implementation to trigger firmware update
     """
-
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
         Log.info(f"Handling get last firmware upgrade status api"
                  f" user_id: {self.request.session.credentials.user_id}")

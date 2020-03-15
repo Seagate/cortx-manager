@@ -1,6 +1,13 @@
 {
+    "root": {
+        "permissions": {
+            "maintenance": ["list", "update"],
+            "notification": ["update"]
+        }
+    },
     "manage":{
         "permissions": {
+            "permissions": ["list"],
             "alerts": ["list", "update", "delete"],
             "stats": ["list"],
             "capacity": ["list"],
@@ -12,6 +19,7 @@
     },
     "monitor": {
         "permissions": {
+            "permissions": ["list"],
             "alerts": ["list"],
             "stats": ["list"],
             "capacity": ["list"],
@@ -23,6 +31,7 @@
     },
     "s3": {
         "permissions": {
+            "permissions": ["list"],
             "s3accounts": ["list", "update", "delete"],
             "s3iamusers": ["list", "delete", "create"],
             "s3buckets": ["list", "update", "delete", "create"],
