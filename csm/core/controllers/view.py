@@ -209,10 +209,14 @@ class CsmView(web.View):
         return parse_results
 
     async def aiohttp_body_getter(self,
-                                  body_reader):
+                                  body_reader,
+                                  chunk_byte_size_limit=150 * 1024):
+        """
+        chunk_byte_size_limit was figured out as an optimal value for fast upload
+        """
         while True:
             # TODO: do aiohttp decode?
-            chunk = await body_reader.read_chunk()
+            chunk = await body_reader.read_chunk(chunk_byte_size_limit)
             yield chunk
             if chunk == b'':
                 break
