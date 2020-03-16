@@ -106,8 +106,6 @@ class CsmAgent:
         #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
-        CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(system_config_mgr,
-            Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
         email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
             Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
@@ -126,6 +124,8 @@ class CsmAgent:
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
+        CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(provisioner,
+            system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
     @staticmethod
     def _daemonize():

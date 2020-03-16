@@ -128,9 +128,11 @@ class SystemConfigAppService(ApplicationService):
     Service that exposes system config management actions.
     """
 
-    def __init__(self, system_config_mgr: SystemConfigManager, email_test_template=None):
+    def __init__(self, provisioner, system_config_mgr: SystemConfigManager, 
+                 email_test_template=None):
         self.system_config_mgr = system_config_mgr
         self.email_test_template = email_test_template
+        self._provisioner = provisioner
 
     async def create_system_config(self, config_id: str, **kwargs) -> dict:
         """
@@ -183,6 +185,11 @@ class SystemConfigAppService(ApplicationService):
 
         await system_config.update(new_values)
         await self.system_config_mgr.save(system_config)
+        # Calling provisioner's api to set ntp configuration
+        if new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {}):
+            ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
+            await self._provisioner.set_ntp(ntp_data)
+        
         return system_config.to_primitive()
 
     async def delete_system_config(self, config_id: str):

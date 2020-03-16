@@ -240,12 +240,30 @@ CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(
     CSM_PATH)
 
+# NTP server config
+DATE_TIME_SETTING = 'date_time_settings'
+NTP = 'ntp'
+NTP_SERVER_ADDRESS =  'ntp_server_address'
+NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
+
 # Audit Log
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
 LOG_LEVEL="INFO"
+
+# Set network config
+MANAGEMENT_NETWORK = 'management_network_settings'
+DATA_NETWORK = 'data_network_settings'
+DNS_NETWORK = 'dns_network_settings'
+IPV4 = 'ipv4'
+NODES = 'nodes'
+IP_ADDRESS = 'ip_address'
+GATEWAY = 'gateway'
+NETMASK = 'netmask'
+HOSTNAME = 'hostname'
+NAME = 'name'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
