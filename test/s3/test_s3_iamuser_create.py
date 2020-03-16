@@ -12,8 +12,11 @@ from csm.test.common import Const
 
 password = "".join(random.sample(string.ascii_letters, 12))
 
+permissions = {
+"s3iamusers": {"list": True, "delete": True, "create": True }
+}
 accounts_command = CommandFactory.get_command(
-    ["s3iamuser", 'create', "csm_user", "-passwd", password])
+    ["s3iamuser", 'create', "csm_user", "-passwd", password], permissions)
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 

@@ -33,6 +33,10 @@ expected_count = 2
 count_test2 = 0
 file_path = Const.MOCK_PATH
 
+permissions = {
+"alerts": { "list": True, "update": True, "delete": True }
+}
+
 def init(args):
     args['amqp_client'] = AmqpComm()
     args['alert_plugin_test1'] = AlertPlugin()

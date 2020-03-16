@@ -12,9 +12,12 @@ import string
 
 file_path = Const.MOCK_PATH
 password = "".join(random.sample(string.ascii_letters, 12))
-
+permissions = {
+"s3accounts": {"list": True, "update": True, "delete": True, "create": True}
+}
 accounts_command = CommandFactory.get_command(
-    ["s3accounts", 'create', "csm_user", "csm_user@seagate.com", "-p", password])
+    ["s3accounts", 'create', "csm_user", "csm_user@seagate.com", "-p", password],
+permissions)
 t = unittest.TestCase()
 
 with open(file_path + "s3_commands_output.json") as fp:

@@ -8,8 +8,12 @@ import json
 import os 
 from csm.test.common import Const
 
+permissions = {
+"s3iamusers": {"list": True, "delete": True, "create": True }
+}
+
 accounts_command = CommandFactory.get_command(
-    ["s3iamuser", 'show'])
+    ["s3iamuser", 'show'], permissions)
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
