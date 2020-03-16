@@ -266,6 +266,7 @@ class SystemConfigView(CsmView):
     """
     PUT REST implementation for creating a system config
     """
+    @CsmView.asyncio_shield
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def put(self):
         Log.debug(f"Handling system config put request."
