@@ -44,7 +44,7 @@ EXCLUDED_COMMANDS = ['csm_setup']
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_PORT = 8101
 CSM_AGENT_BASE_URL = "http://"
-TIMEOUT = 300
+TIMEOUT = 60
 
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
@@ -294,3 +294,10 @@ HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 ALERT_PLUGIN = "alert"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
+
+#REST METHODS
+POST = "POST"
+GET = "GET"
+PUT = "PUT"
+PATCH = "PATCH"
+DELETE = "DELETE"

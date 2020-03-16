@@ -73,7 +73,8 @@ class Terminal:
 
 class CsmCli(Cmd):
     def __init__(self, args):
-        super(CsmCli, self).__init__(stdout=sys.stdout)
+        super(CsmCli, self).__init__()
+        self.use_rawinput = 0
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
         if len(args) > 1:
@@ -83,7 +84,11 @@ class CsmCli(Cmd):
         self.loop = asyncio.get_event_loop()
         self.rest_client = None
         self.username = ""
+        self._session_token = None
+        self.headers = {}
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
+        self.some_error_occured = 'Some Error Occurred.\nPlease Try Login Again.\n'
+
 
     def preloop(self):
         """
@@ -128,10 +133,11 @@ class CsmCli(Cmd):
             Log.debug(f"{self.username} attempted to Login.")
             if self.username:
                 password = getpass(prompt="Password: ")
-                is_logged_in = self.loop.run_until_complete(self.rest_client.login(
+                self._session_token = self.loop.run_until_complete(self.rest_client.login(
                     self.username, password))
-                if not is_logged_in:
+                if not self._session_token:
                     self.do_exit("Server authentication check failed.")
+                self.headers = {'Authorization': f'Bearer {self._session_token}'}
                 Log.info(f"{self.username}: Logged In.")
                 response = self.loop.run_until_complete(self.rest_client.permissions())
                 if response:
@@ -142,7 +148,7 @@ class CsmCli(Cmd):
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(f"Some Error Occurred.\n")
+            self.do_exit(self.some_error_occured)
 
     def precmd(self, command):
         """
@@ -162,7 +168,8 @@ class CsmCli(Cmd):
                                  response=response)
 
     def process_rest_command(self, command):
-        response, _ = self.loop.run_until_complete(self.rest_client.call(command))
+        response, _ = self.loop.run_until_complete(self.rest_client.call(command,
+                                                                 self.headers))
         command.process_response(out=sys.stdout, err=sys.stderr,
                                  response=response)
 
@@ -193,7 +200,7 @@ class CsmCli(Cmd):
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit("Some Error Occurred.\n Please try Re-Login")
+            self.do_exit(self.some_error_occured)
 
     def do_exit(self, args=""):
         """
@@ -203,10 +210,11 @@ class CsmCli(Cmd):
         """
         if args:
             sys.stdout.write(f"{args}\n")
-        if self.rest_client.has_open_session():
-            Log.info(f"{self.username}: Logged Out")
-            is_logged_out = self.loop.run_until_complete(self.rest_client.logout())
-            Terminal.logout_alert(is_logged_out)
+        if self._session_token:
+            is_logged_out = self.loop.run_until_complete(self.rest_client.logout(
+                self.headers))
+            self.headers = {}
+            Terminal.logout_alert(True)
             assert isinstance(is_logged_out, bool)
         Log.info(f"{self.username}: Logged Out")
         sys.exit()
@@ -222,5 +230,12 @@ if __name__ == '__main__':
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
+    try:
+        CsmCli(sys.argv).cmdloop()
+    except KeyboardInterrupt:
+        Log.debug(f"Stopped via Keyboard Interrupt.")
+        sys.stdout.write("\n")
+    except Exception as e:
+        Log.critical(f"{e}")
+        sys.stderr.write('Some Error Occurred.\nPlease Try Login Again.\n')
 
-    CsmCli(sys.argv).cmdloop()

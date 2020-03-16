@@ -31,7 +31,7 @@ from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE
-from csm.cli.command import Command
+from csm.cli.command import Commander
 
 
 class CsmClient:
@@ -99,59 +99,61 @@ class CsmRestClient(CsmClient):
 
     def __init__(self, url):
         super(CsmRestClient, self).__init__(url)
-        self._session_token = None
+        self.not_authorized = "You are not authorized to run cli commands."
+        self.could_not_parse = "Could not parse the response"
 
-    def has_open_session(self):
-        return self._session_token is not None
-
-    def _failed(self, respone):
+    def _failed(self, response):
         """
         This check if response failed it will return true else false
         """
-        if respone.rc() != 200:
+        if response.rc() != 200:
             return True
         return False
     
     async def login(self, username, password):
-        response, headers = await self.call(LoginCommand(username, password))
-        token = headers.get('Authorization')
-        if self._failed(response) or not token:
+        url = "/v1/login"
+        method = const.POST
+        body = {"username": username, "password": password}
+        async with aiohttp.ClientSession() as session:
+            response, headers = await self.process_direct_request(
+                url, session, method, {}, body)
+        token = headers.get('Authorization', "").split(' ')
+        if self._failed(response) and len(token) != 2 and token[0] != 'Bearer':
             return False
-        token = token.split(' ')
-        if len(token) != 2 or token[0] != 'Bearer' or not token[1]:
-            return False
-        self._session_token = token[1]
-        return True
+        return token[1]
 
-    async def logout(self):
-        response, _ = await self.call(LogoutCommand())
-        if self._failed(response):
-            return False
-        self._session_token = None
-        return True
-
-    async def permissions(self):
-        url = "/v1/permissions"
-        method = "GET"
-        headers = {'Authorization': f'Bearer {self._session_token}'} if self._session_token else {}
+    async def logout(self, headers):
+        url = "/v1/logout"
+        method = const.POST
         async with aiohttp.ClientSession(headers=headers) as session:
-            response, _ = await self.process_direct_request(url, session, method, {}, {})
+            try:
+                response, _ = await self.process_direct_request(url, session,
+                                                                  method, {}, {})
+            except:
+                pass
+        return True
+
+    async def permissions(self, headers):
+        url = "/v1/permissions"
+        method = const.GET
+        async with aiohttp.ClientSession(headers=headers) as session:
+            response, _ = await self.process_direct_request(url, session,
+                                                            method, {}, {})
         if self._failed(response):
-            raise CsmError(errno.EACCES, 'Could not get permissions from server, check session')
+            raise CsmError(errno.EACCES, 'Could not get permissions from server,'
+                                         ' check session')
         return response.output()['permissions']
 
-
-    async def call(self, cmd):
-        headers = {'Authorization': f'Bearer {self._session_token}'} if self._session_token else {}
+    async def call(self, cmd, headers={}):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
         try:
             data = json.loads(body)
         except ValueError:
             if body == '401: Unauthorized':
-                raise CsmError(errno.EINVAL, 'You are unauthorized to do this')
+                raise CsmError(errno.EINVAL, self.not_authorized)
             else:
-                raise CsmError(errno.EINVAL, 'Could not parse the response')
+                raise CsmError(errno.EINVAL, self.could_not_parse)
         return Response(rc=status, output=data), headers
 
     async def process_request(self, session, cmd):
@@ -159,22 +161,22 @@ class CsmRestClient(CsmClient):
         body, headers, status = await rest_obj.request()
         return body, headers, status
 
-    async def process_direct_request(self, url, session, method, params_json, body_json):
-        url = self._url + url
+    async def process_direct_request(self, url, session, method, params_json,
+                                     body_json):
+        url = f"{self._url}{url}"
         rest_obj = DirectRestRequest(url, session, method, params_json, body_json)
         body, headers, status = await rest_obj.request()
         try:
             data = json.loads(body)
         except ValueError:
             if body == '401: Unauthorized':
-                raise CsmError(errno.EINVAL, 'You are unauthorized to do this')
+                raise CsmError(errno.EINVAL, self.not_authorized)
             else:
-                raise CsmError(errno.EINVAL, 'Could not parse the response')
+                raise CsmError(errno.EINVAL, self.could_not_parse)
         return Response(rc=status, output=data), headers
 
     def __cleanup__(self):
         self._loop.close()
-
 
 class RestRequest(Request):
     """Cli Rest Request Class """
@@ -209,7 +211,6 @@ class RestRequest(Request):
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
 
-
 class DirectRestRequest(Request):
     """Cli Rest Request Class """
 
@@ -223,7 +224,6 @@ class DirectRestRequest(Request):
 
     async def request(self) -> Tuple:
         try:
-            print(self._url)
             async with self._session.request(method=self._method,
                                              url=self._url,
                                              params=self._params_json,
@@ -234,46 +234,3 @@ class DirectRestRequest(Request):
             raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
-            
-            
-class LoginCommand(Command):
-    """CLI Default Logout Command"""
-
-    def __init__(self, username, password):
-        options = {
-            "username": username,
-            "password": password,
-            "need_confirmation": False,
-            "comm": {
-                "json": {"username": "",
-                         "password": "",
-                         },
-                "type": "rest",
-                "method": "post",
-                "target": "/{version}/login",
-                "version": "v1"
-            },
-            "output": {},
-            "sub_command_name": "login",
-        }
-        args = None
-        super().__init__('session', options, args)
-
-
-class LogoutCommand(Command):
-    """CLI Default Login Command"""
-
-    def __init__(self):
-        options = {
-            "need_confirmation": False,
-            "comm": {
-                "type": "rest",
-                "method": "post",
-                "target": "/{version}/logout",
-                "version": "v1"
-            },
-            "output": {},
-            "sub_command_name": "logout"
-        }
-        args = None
-        super().__init__('session', options, args)

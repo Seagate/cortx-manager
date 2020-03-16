@@ -25,8 +25,12 @@ import json
 import os
 from csm.test.common import Const
 
+permissions = {
+"s3buckets": {"list": True, "update": True, "delete": True, "create": True}
+}
+
 accounts_command = CommandFactory.get_command(
-    ["s3bucket", 'delete', "s3-bucket1"])
+    ["s3bucket", 'delete', "s3-bucket1"], permissions)
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 

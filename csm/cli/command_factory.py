@@ -49,6 +49,8 @@ class CommandFactory(object):
         """
         # Todo: Fetch Messages from Message file for localization. & implement Marshmallow for Schema Validation.
         # Todo: Add Changes to Exclude Some Commands From Help Section.
+        if len(argv) <= 1:
+            argv.append("-h")
         commands = os.listdir(const.COMMAND_DIRECTORY)
         commands = [command.split(".json")[0] for command in commands
                     if command.split(".json")[0] not in const.EXCLUDED_COMMANDS]
