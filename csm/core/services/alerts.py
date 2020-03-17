@@ -35,10 +35,10 @@ from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.db.filters import Compare, And, Or
-from eos.utils.db import Query, SortOrder
-from csm.core.blogic.models.alerts import AlertModel
+from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.data.access.filters import Compare, And, Or
+from eos.utils.data.access import Query, SortOrder
+from csm.core.blogic.models.alerts import AlertModel, AlertsHistoryModel
 from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
 from csm.common import queries

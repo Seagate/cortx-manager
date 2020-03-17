@@ -20,6 +20,7 @@
 
 import inspect
 
+from eos.utils.errors import BaseError
 from csm.common.log import Log
 
 CSM_OPERATION_SUCESSFUL     = 0x0000
@@ -31,44 +32,17 @@ CSM_INTERNAL_ERROR          = 0x1005
 CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
 
-class CsmError(Exception):
+class CsmError(BaseError):
     """ Parent class for the cli error classes """
-
-    _rc = CSM_OPERATION_SUCESSFUL
-    _desc = 'Operation Successful'
-    _caller = ''
 
     def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
         super(CsmError, self).__init__()
-        self._caller = inspect.stack()[1][3]
-        if rc is not None:
-            self._rc = str(rc)
-        self._desc = desc or self._desc
-        self._message_id = message_id
-        self._message_args = message_args
         # TODO: Log.error message will be changed when desc is removed and
         #  improved exception handling is implemented.
         # TODO: self._message_id will be formatted with self._message_args
         # Common error logging for all kind of CsmError
         Log.error(f"{self._rc}:{self._desc}:{self._message_id}:{self._message_args}")
 
-    def message_id(self):
-        return self._message_id
-
-    def message_args(self):
-        return self._message_args
-
-    def rc(self):
-        return self._rc
-
-    def error(self):
-        return self._desc
-
-    def caller(self):
-        return self._caller
-
-    def __str__(self):
-        return "error(%s): %s" % (self._rc, self._desc)
 
 class CsmSetupError(CsmError):
     """
@@ -78,6 +52,7 @@ class CsmSetupError(CsmError):
 
     def __init__(self, _desc=None):
         super(CsmSetupError, self).__init__(CSM_SETUP_ERROR, _desc)
+
 
 class CommandTerminated(KeyboardInterrupt):
     """
@@ -140,6 +115,7 @@ class CsmNotFoundError(CsmError):
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
 
+
 class CsmPermissionDenied(CsmError):
     """
     This error is raised for all cases when we don't have permissions
@@ -149,32 +125,3 @@ class CsmPermissionDenied(CsmError):
         super(CsmPermissionDenied, self).__init__(
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
-
-class DataAccessError(CsmInternalError):
-
-    """Base Data Access Error"""
-
-
-class DataAccessExternalError(DataAccessError):
-
-    """Internal DB errors which happen outside of CSM"""
-
-
-class DataAccessInternalError(DataAccessError):
-
-    """Errors regarding CSM part of Data Access implementation"""
-
-
-class MalformedQueryError(DataAccessError):
-
-    """Malformed Query or Filter error"""
-
-
-class MalformedConfigurationError(DataAccessError):
-
-    """Error in configuration of data bases or storages or db drivers"""
-
-
-class StorageNotFoundError(DataAccessError):
-
-    """Model object is not associated with any storage"""

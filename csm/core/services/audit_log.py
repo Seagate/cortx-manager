@@ -26,9 +26,9 @@ from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic import const
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.db.filters import Compare, And, Or
-from eos.utils.db import Query, SortOrder
+from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.data.access.filters import Compare, And, Or
+from eos.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common import queries
 from schematics import Model
@@ -36,9 +36,9 @@ from csm.common.errors import CsmNotFoundError
 from typing import Optional, Iterable
 from csm.common.conf import Conf
 
-# mapping of component with model, field for 
+# mapping of component with model, field for
 # range queires and log format
-COMPONENT_MODEL_MAPPING = { "csm": 
+COMPONENT_MODEL_MAPPING = { "csm":
                             { "model" : CsmAuditLogModel,
                               "field" : CsmAuditLogModel.timestamp,
                               "format" : "{message}"
@@ -46,10 +46,10 @@ COMPONENT_MODEL_MAPPING = { "csm":
                             "s3":
                             { "model" : S3AuditLogModel,
                               "field" : S3AuditLogModel.timestamp,
-                              "format" : ("{bucket_owner} {bucket} {time}" 
-      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}" 
-      "{http_status} {error_code} {bytes_sent} {object_size} {total_time}" 
-      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}" 
+                              "format" : ("{bucket_owner} {bucket} {time}"
+      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
+      "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
+      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
       "{signature_version} {cipher_suite} {authentication_type} {host_header}")
                             }
                           }
@@ -58,13 +58,13 @@ COMPONENT_NOT_FOUND = "no_audit_log_for_component"
 class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
-    
+
     def _prepare_filters(self, component, create_time_range: DateTimeRange):
         range_condition = []
         range_condition = self._prepare_time_range(
                   COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
         return And(*range_condition)
-        
+
     def _prepare_time_range(self, field, time_range: DateTimeRange):
         db_conditions = []
         if time_range and time_range.start:
@@ -73,7 +73,7 @@ class AuditLogManager():
             db_conditions.append(Compare(field, '<=', time_range.end))
         return db_conditions
 
-    async def retrieve_by_range(self, component, limits, 
+    async def retrieve_by_range(self, component, limits,
                        time_range: DateTimeRange):
         query_filter = self._prepare_filters(component, time_range)
         query = Query().filter_by(query_filter)
@@ -90,11 +90,11 @@ class AuditLogManager():
                        time_range: DateTimeRange) -> int:
         query_filter = self._prepare_filters(component, time_range)
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
-      
+
 class AuditService(ApplicationService):
     def __init__(self, audit_mngr: AuditLogManager):
         self.audit_mngr = audit_mngr
-    
+
     def generate_audit_log_filename(self, component, start_time, end_time):
         """ generate audit log file name from time range"""
         return  (f'{component}_{start_time}_'
@@ -103,11 +103,11 @@ class AuditService(ApplicationService):
     def get_date_range_from_duration(self, start_date, end_date):
         """ get date time range from given duration """
         start_date = datetime.fromtimestamp(start_date).replace(
-                                          tzinfo=timezone.utc).isoformat() 
+                                          tzinfo=timezone.utc).isoformat()
         end_date = datetime.fromtimestamp(end_date).replace(
                                           tzinfo=timezone.utc).isoformat()
         return DateTimeRange(start_date, end_date)
-       
+
     async def create_audit_log_file(self, file_name, component, time_range):
         """ create audit log file and comrpess to tar.gz """
         try:
@@ -117,7 +117,7 @@ class AuditService(ApplicationService):
             count = await self.audit_mngr.count_by_range(component, time_range)
             file = open(txt_file_name, "w")
             query_limit = QueryLimits(const.MAX_RESULT_WINDOW, 0)
-            audit_logs = await self.audit_mngr.retrieve_by_range(component, 
+            audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                  query_limit, time_range)
             for log in audit_logs:
                 file.write(COMPONENT_MODEL_MAPPING[component]["format"].
@@ -127,7 +127,7 @@ class AuditService(ApplicationService):
                 tar.add(txt_file_name, arcname=f'{file_name}.txt')
         except OSError as err:
             if err.errno != errno.EEXIST: raise
-        
+
     async def get_by_range(self, component: str, start_time: str, end_time: str):
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")

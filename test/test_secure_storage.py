@@ -26,7 +26,7 @@ from eos.utils.security.cipher import Cipher
 from eos.utils.security.secure_storage import SecureStorage
 from csm.common.payload import Yaml
 from csm.core.blogic import const
-from csm.core.data.db.db_provider import DataBaseProvider, GeneralConfig
+from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 
 t = unittest.TestCase()
 
