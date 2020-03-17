@@ -116,14 +116,11 @@ class AuditService(ApplicationService):
             tar_file_name = f'{os.path.join(const.AUDIT_LOG, file_name)}.tar.gz'
             count = await self.audit_mngr.count_by_range(component, time_range)
             file = open(txt_file_name, "w")
-            for limit in range(0, count+1, Conf.get(const.CSM_GLOBAL_INDEX,
-                                              "Log.max_result_window")):
-                query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
-                                              "Log.max_result_window"), limit)
-                audit_logs = await self.audit_mngr.retrieve_by_range(component, 
+            query_limit = QueryLimits(const.MAX_RESULT_WINDOW, 0)
+            audit_logs = await self.audit_mngr.retrieve_by_range(component, 
                                                  query_limit, time_range)
-                for log in audit_logs:
-                    file.write(COMPONENT_MODEL_MAPPING[component]["format"].
+            for log in audit_logs:
+                file.write(COMPONENT_MODEL_MAPPING[component]["format"].
                                            format(**(log.to_primitive()))+"\n")
             file.close()
             with tarfile.open(tar_file_name, "w:gz") as tar:
