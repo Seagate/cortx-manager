@@ -36,7 +36,7 @@ block_cipher = None
 
 # Analysis
 csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
-             pathex=[csm_path + '/dist/csm'],
+             pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -49,7 +49,7 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              noarchive=False)
 
 csmcli = Analysis([csm_path + '/cli/csmcli.py'],
-             pathex=[csm_path + '/dist/csm'],
+             pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
              hiddenimports=cli_module_list,
@@ -62,7 +62,7 @@ csmcli = Analysis([csm_path + '/cli/csmcli.py'],
              noarchive=False)
 
 csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
-             pathex=[csm_path + '/dist/csm'],
+             pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -75,7 +75,7 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              noarchive=False)
 
 csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
-             pathex=[csm_path + '/dist/csm'],
+             pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
