@@ -69,5 +69,7 @@ RUN yum install -y python36-pip \
             pyinstaller==3.5 \
             toml
 
+RUN yum install -y http://ci-storage.mero.colo.seagate.com/releases/eos/uploads/csm_uploads/eos-py-utils-0.2-1.noarch.rpm
+
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
