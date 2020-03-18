@@ -134,17 +134,20 @@ class CommandParser:
         elif "args" in self.command:
             self.add_args(self.command, subparsers, self.command["name"])
 
-    def handle_subparsers(self, sub_parser, data: Dict, name):
+    def handle_subparsers(self, sub_parser, data: Dict, name, add_parser_flag=True):
         """
         This Function will handle multiple sub-parsing commands
         :param sub_parser: Arg-parser Object
         :param data: Data for parsing the commands :type: Dict
         :param name: Name of the Command :type:Str
+        :param add_parser_flag: Parser Flag Decides whether an new
+            parser is object is required or not.:type:Bool
         :return: None
         """
-        arg_parser = sub_parser.add_parser(data['name'],
+        if add_parser_flag:
+             sub_parser = sub_parser.add_parser(data['name'],
                                            help=data['description'])
-        parser = arg_parser.add_subparsers()
+        parser = sub_parser.add_subparsers()
         for each_data in data['sub_commands']:
             self.add_args(each_data, parser, name)
 
@@ -210,8 +213,7 @@ class CommandParser:
 
         # Check if the command has any Commands.
         elif "sub_commands" in sub_command:
-            for each_command in sub_command['sub_commands']:
-                self.handle_subparsers(sub_parser, each_command, name)
+            self.handle_subparsers(sub_parser, sub_command, name, False)
 
 class Output:
     """CLI Response Display Class"""
