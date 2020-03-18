@@ -243,7 +243,7 @@ CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.fo
 # NTP server config
 DATE_TIME_SETTING = 'date_time_settings'
 NTP = 'ntp'
-NTP_SERVER_ADDRESS =  'ntp_server_address'
+NTP_SERVER_ADDRESS = 'ntp_server_address'
 NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 
 # Audit Log
@@ -251,7 +251,7 @@ AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
-LOG_LEVEL="INFO"
+LOG_LEVEL = "INFO"
 
 # Set network config
 MANAGEMENT_NETWORK = 'management_network_settings'
@@ -275,7 +275,7 @@ RSYSLOG_PATH = "{}/csm_logs.conf".format(RSYSLOG_DIR)
 SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
 
-#logrotate
+# logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
 
 # https status code
@@ -295,9 +295,16 @@ ALERT_PLUGIN = "alert"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 
-#REST METHODS
+# REST METHODS
 POST = "POST"
 GET = "GET"
 PUT = "PUT"
 PATCH = "PATCH"
 DELETE = "DELETE"
+
+# Keys for  Description
+#todo Currently SSPL's Key needs to be finialized.
+DECRYPTION_KEYS = {
+    "CHANNEL.password": "RMQ",
+    "S3.ldap_password": "openldap"
+}

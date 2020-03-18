@@ -8,6 +8,7 @@ import json
 from aiohttp import web
 from importlib import import_module
 import pathlib
+from salt import client
 
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
@@ -24,6 +25,7 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        CsmAgent.decrypt_conf()
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -128,6 +130,20 @@ class CsmAgent:
             system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
     @staticmethod
+    def decrypt_conf():
+        """
+        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
+        :return:
+        """
+        cluster_id = client.Caller().function('grains.get', 'cluster_id')
+        for each_key in const.DECRYPTION_KEYS:
+            cipher_key = Cipher.generate_key(cluster_id,
+                                             const.DECRYPTION_KEYS[each_key])
+            encrypted_value = Conf.get(const.CSM_CONF, each_key)
+            decrypted_value = Cipher.decrypt(cipher_key, encrypted_value)
+            Conf.set(const.CSM_CONF, each_key, decrypted_value)
+
+    @staticmethod
     def _daemonize():
         """ Change process into background service """
         if not os.path.isdir("/var/run/csm/"):
@@ -206,6 +222,7 @@ if __name__ == '__main__':
         from csm.core.services.file_transfer import DownloadFileManager
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
+        from eos.utils.security.cipher import Cipher
 
         CsmAgent.init()
         CsmAgent.run()

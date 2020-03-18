@@ -21,6 +21,7 @@ import os
 import sys
 import crypt
 import pwd
+from salt import client
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -128,7 +129,16 @@ class Setup:
 
         @staticmethod
         def create():
-            Setup._run_cmd("cp -rn " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
+            open_ldap_credentials = client.Caller().function('pillar.get',
+                                                             'openldap')
+            conf_file_data = Yaml(const.CSM_SOURCE_CONF_PATH).load()
+            conf_file_data["s3"]['ldap_login'] = open_ldap_credentials.get(
+                "iam_admin", {}).get('user')
+            conf_file_data["s3"]['ldap_password'] = open_ldap_credentials.get(
+                "iam_admin", {}).get('secret')
+            #Todo: Need to add RMQ Changes in this code.
+            Yaml(const.CSM_SOURCE_CONF_PATH).dump(conf_file_data)
+            Setup._run_cmd(f"cp -rn {const.CSM_SOURCnE_CONF_PATH} {const.ETC_PATH}")
 
         @staticmethod
         def load():
@@ -298,7 +308,7 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-            # TODO: Get configuration from provision and create conf file
+
             self.Config.create()
         except Exception as e:
             raise CsmSetupError("csm_setup config failed. Error: %s" %e)
