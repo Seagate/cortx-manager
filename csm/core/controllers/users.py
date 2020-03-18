@@ -35,16 +35,18 @@ class CsmRootUserCreateSchema(Schema):
 
 # TODO: find out about policies for names and passwords
 class CsmUserCreateSchema(CsmRootUserCreateSchema):
-    roles = fields.List(fields.String(required=True, validate=validate.OneOf(const.CSM_USER_ROLES)))
+    roles = fields.List(fields.String(
+        required=True, validate=validate.OneOf(const.CSM_USER_ROLES)), required=True)
 
 
 class CsmGetUsersSchema(Schema):
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
-        default=None, missing=None)
+                        default=None, missing=None)
     limit = fields.Int(default=None, validate=validate.Range(min=0), missing=None)
     sort_by = fields.Str(default="user_id", missing="user_id")
     sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
-        missing='asc', default='asc')
+                          missing='asc', default='asc')
+
 
 @CsmView._app_routes.view("/api/v1/csm/users")
 class CsmUsersListView(CsmView):
@@ -87,6 +89,7 @@ class CsmUsersListView(CsmView):
         response = await self._service.create_user(**user_body)
         return CsmResponse(response, const.STATUS_CREATED)
 
+
 @CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
 class CsmUsersView(CsmView):
     def __init__(self, request):
@@ -126,7 +129,7 @@ class CsmUsersView(CsmView):
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), partial=True,
-                unknown='EXCLUDE')
+                                    unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
