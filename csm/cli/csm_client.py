@@ -31,7 +31,7 @@ from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE
-from csm.cli.command import Commander
+from csm.cli.command import Command
 
 
 class CsmClient:

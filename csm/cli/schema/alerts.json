@@ -65,7 +65,7 @@
         }
       ],
       "comm": {
-      "type":"rest",
+        "type": "rest",
         "method": "get",
         "target": "/{version}/alerts",
         "version": "v1"
@@ -157,7 +157,7 @@
         }
       ],
       "comm": {
-      "type":"rest",
+        "type": "rest",
         "method": "get",
         "target": "/{version}/alerts_history",
         "version": "v1"
@@ -218,35 +218,92 @@
     {
       "name": "comment",
       "description": "Comment on a given alert id",
-      "need_confirmation": false,
-      "permissions_tag": "update",
-      "args": [
+      "permissions_tag": "list",
+      "sub_commands": [
         {
-          "flag": "alerts_id",
-          "type": "str",
-          "help": "Alert Id"
+          "name": "show",
+          "description": "Displays Comments of a particular Alert",
+          "need_confirmation": false,
+          "permissions_tag": "list",
+          "args": [
+            {
+              "flag": "alert_uuid",
+              "type": "str",
+              "help": "Alert ID for which Comment need to added"
+            },
+            {
+              "flag": "comment_text",
+              "type": "str",
+              "help": "Comment need to added.",
+              "json": true
+            },
+            {
+              "flag": "args",
+              "default": [],
+              "nargs": "?",
+              "help": "Additional arguments that can be send to csm agent"
+            },
+            {
+              "flag": "-f",
+              "dest": "format",
+              "help": "Format of Output",
+              "default": "table",
+              "type": "str",
+              "choices": [
+                "table",
+                "xml",
+                "json"
+              ],
+              "nargs": "?"
+            }
+          ],
+          "comm": {
+            "type": "rest",
+            "method": "get",
+            "target": "/{version}/alerts/{alert_uuid}/comments",
+            "version": "v1"
+          },
+          "output": {
+            "table": {
+              "headers": {
+                "comment_id": "Comment Id",
+                "comment_text": "Comment",
+                "created_by": "Created By",
+                "created_time": "Created Time"
+              },
+              "filters": "comments"
+            }
+          }
         },
         {
-          "flag": "comment",
-          "type": "str",
-          "help": "Comment to be given to Alert.",
-          "json": true
-        },
-        {
-          "flag": "args",
-          "default": [],
-          "nargs": "?"
+          "name": "add",
+          "description": "Add Comment to an existing Alert.",
+          "need_confirmation": true,
+          "permissions_tag": "update",
+          "args": [
+            {
+              "flag": "alert_uuid",
+              "type": "str",
+              "help": "Alert ID for which Comment need to added"
+            },
+            {
+              "flag": "args",
+              "default": [],
+              "nargs": "?",
+              "help": "Additional arguments that can be send to csm agent"
+            }
+          ],
+          "comm": {
+            "type": "rest",
+            "method": "post",
+            "target": "/{version}/alerts/{alert_uuid}/comments",
+            "version": "v1"
+          },
+          "output": {
+            "success": "Alert Comment Added."
+          }
         }
-      ],
-      "comm": {
-      "type": "rest",
-        "method": "patch",
-        "target": "/{version}/alerts/{alerts_id}",
-        "version": "v1"
-      },
-      "output": {
-        "success": "Comment Updated."
-      }
+      ]
     }
   ]
 }

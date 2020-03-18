@@ -74,7 +74,6 @@ class Terminal:
 class CsmCli(Cmd):
     def __init__(self, args):
         super(CsmCli, self).__init__()
-        self.use_rawinput = 0
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
         if len(args) > 1:
@@ -139,7 +138,7 @@ class CsmCli(Cmd):
                     self.do_exit("Server authentication check failed.")
                 self.headers = {'Authorization': f'Bearer {self._session_token}'}
                 Log.info(f"{self.username}: Logged In.")
-                response = self.loop.run_until_complete(self.rest_client.permissions())
+                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
                 if response:
                     self._permissions.update(response)
         except CsmError as e:
