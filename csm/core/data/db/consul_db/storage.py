@@ -21,23 +21,22 @@ import asyncio
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from string import Template
-from typing import List, Type, Union, Dict, Any
+from typing import List, Type, Union, Dict
 from datetime import datetime
 import json
 import operator
 
 from aiohttp import ClientConnectorError
 from consul.aio import Consul
-from schematics.models import Model
 from schematics.types import BaseType, StringType
-from schematics.exceptions import ConversionError, ValidationError
+from schematics.exceptions import ConversionError
 
 from csm.core.data.access import Query, SortOrder, IDataBase
 from csm.core.data.access import ExtQuery
 from csm.core.data.db import GenericDataBase, GenericQueryConverter
 from csm.core.blogic.models import CsmModel
-from csm.common.errors import DataAccessExternalError, DataAccessInternalError
-from csm.core.data.access.filters import FilterOperationCompare, Compare
+from csm.common.errors import DataAccessExternalError, DataAccessInternalError, DataAccessError
+from csm.core.data.access.filters import FilterOperationCompare
 from csm.core.data.access.filters import ComparisonOperation, IFilter
 
 CONSUL_ROOT = "eos/csm"
@@ -245,6 +244,8 @@ class ConsulDB(GenericDataBase):
             await consul_db.create_object_root()
         except ClientConnectorError as e:
             raise DataAccessExternalError(f"{e}")
+        except Exception as e:
+            raise DataAccessError(f"Some unknown exception occurred in Consul module: {e}")
 
         return consul_db
 

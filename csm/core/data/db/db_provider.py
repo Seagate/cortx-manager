@@ -21,17 +21,19 @@
 from asyncio import coroutine
 from pydoc import locate
 from enum import Enum
-from threading import Event
 from typing import Type
 
 from schematics import Model
 from schematics.types import DictType, StringType, ListType, ModelType, IntType
 
 from csm.core.blogic.models import CsmModel
-from csm.common.errors import MalformedConfigurationError, DataAccessInternalError
+from csm.common.errors import (MalformedConfigurationError, DataAccessInternalError,
+                               DataAccessError)
 from csm.core.data.access.storage import AbstractDataBaseProvider
+from csm.common.log import Log
 
 import csm.core.data.db as db_module
+from csm.common.synchronization import ThreadSafeEvent
 
 
 DEFAULT_HOST = "127.0.0.1"
@@ -94,7 +96,7 @@ class GeneralConfig(Model):
 class ProxyStorageCallDecorator:
     """Class to decorate proxy call"""
 
-    def __init__(self, async_storage, model: Type[CsmModel], attr_name: str, event: Event):
+    def __init__(self, async_storage, model: Type[CsmModel], attr_name: str, event: ThreadSafeEvent):
         self._async_storage = async_storage
         self._model = model
         self._attr_name = attr_name
@@ -103,13 +105,16 @@ class ProxyStorageCallDecorator:
 
     def __call__(self, *args, **kwargs) -> coroutine:
         async def async_wrapper():
-            if self._async_storage.storage_status == ServiceStatus.NOT_CREATED:
-                # Note: Should be called once
-                await self._async_storage.create_database()
-                self._event.set()
-            elif self._async_storage.storage_status == ServiceStatus.IN_PROGRESS:
-                await self._event.wait()
+            async def _wait_db_creation():
+                while self._async_storage.storage_status != ServiceStatus.READY:
+                    if self._async_storage.storage_status == ServiceStatus.NOT_CREATED:
+                        # Note: Call create_database one time per Model
+                        await self._async_storage.create_database()
+                    elif self._async_storage.storage_status == ServiceStatus.IN_PROGRESS:
+                        await self._event.wait()
+                        self._event.clear()
 
+            await _wait_db_creation()  # Wait until db will be created
             database = self._async_storage.get_database()
             if database is None:
                 raise DataAccessInternalError("Database is not created")
@@ -142,7 +147,7 @@ class AsyncDataBase:
 
     def __init__(self, model: Type[CsmModel], model_config: DBModelConfig,
                  db_config: GeneralConfig):
-        self._event = Event()
+        self._event = ThreadSafeEvent()
         self._model = model
         self._model_settings = model_config.config.get(model_config.database)
         self._db_config = db_config.databases.get(model_config.database)
@@ -156,10 +161,22 @@ class AsyncDataBase:
 
     async def create_database(self) -> None:
         self._database_status = ServiceStatus.IN_PROGRESS
-        self._database = await self._database_module.create_database(self._db_config.config,
-                                                                     self._model_settings.collection,
-                                                                     self._model)
-        self._database_status = ServiceStatus.READY
+        try:
+            self._database = await self._database_module.create_database(self._db_config.config,
+                                                                         self._model_settings.collection,
+                                                                         self._model)
+        except DataAccessError:
+            Log.error("Can't create storage instance. See logs for more information")
+            raise
+        except Exception as e:
+            raise DataAccessError(f"Unexpected message happened: {e}")
+        else:
+            self._database_status = ServiceStatus.READY
+        finally:
+            if not self._database_status == ServiceStatus.READY:
+                # attempt to create database was unsuccessful. Setup initial state
+                self._database_status = ServiceStatus.NOT_CREATED
+            self._event.set()  # weak up other waiting coroutines
 
     def get_database(self):
         # Note: database can be None
@@ -194,6 +211,12 @@ class DataBaseProvider(AbstractDataBaseProvider):
     def get_storage(self, model: Type[CsmModel]):
         if model not in self.model_settings:
             raise MalformedConfigurationError(f"No configuration for {model}")
+
+        model_settings = self.model_settings[model].config.get(
+            self.model_settings[model].database, None)
+        if model_settings is None:
+            raise MalformedConfigurationError(f"No model settings for '{model}' and database "
+                                              f"'{self.model_settings[model].database}'")
 
         if model in self._cached_async_decorators:
             return self._cached_async_decorators[model]
