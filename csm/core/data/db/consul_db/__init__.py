@@ -2,14 +2,14 @@
 
 """
  ****************************************************************************
- Filename:          support_bundle.py
- Description:       Model File for Support Bundle Model.
+ Filename:          __init__.py
+ _description:      Init file for consul_db module
 
- Creation Date:     17/02/2020
- Author:            Prathamesh Rodi
+ Creation Date:     18/10/2019
+ Author:            Dmitry Didenko
 
  Do NOT modify or remove this copyright and confidentiality notice!
- Copyright (c) 2001 - : 2015/01/14 $ Seagate Technology, LLC.
+ Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
  The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
  Portions are also trade secret. Any use, duplication, derivation, distribution
  or disclosure of this code, for any reason, not expressly authorized is
@@ -17,12 +17,4 @@
  ****************************************************************************
 """
 
-from .base import CsmModel
-from schematics.types import StringType
-
-class SupportBundleModel(CsmModel):
-    bundle_id = StringType()
-    node_name = StringType()
-    comment = StringType()
-    result = StringType()
-    message = StringType()
+from csm.core.data.db.consul_db.storage import ConsulDB

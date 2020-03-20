@@ -46,7 +46,7 @@ class CsmSetupCommand:
         ''' Parse csm setup command '''
         parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
-        # hardcoded permissions
+        # hardcoded permissions 
         csm_setup_permissions_dict = {'update': True}
         cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load(), csm_setup_permissions_dict)
         cmd_obj.handle_main_parse(subparsers)
@@ -93,5 +93,5 @@ if __name__ == '__main__':
         sys.stdout.write('%s\n' % csm_setup.process())
         sys.exit(0)
     except Exception as e:
-        sys.stderr.write(f'csm_setup command failed, error {str(e)}: {traceback.format_exc()}\n')
+        sys.stderr.write('csm_setup command failed: %s\n' %traceback.format_exc())
         sys.exit(1)

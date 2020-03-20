@@ -24,11 +24,11 @@ from csm.common.queries import SortBy
 from csm.common.services import ApplicationService
 from csm.common.template import Template
 from csm.core.blogic import const
-from eos.utils.data.access import Query
-from eos.utils.data.access.filters import Compare
-from eos.utils.data.db.db_provider import (DataBaseProvider)
+from csm.core.data.access import Query
+from csm.core.data.access.filters import Compare
+from csm.core.data.db.db_provider import (DataBaseProvider)
 from csm.common.log import Log
-from csm.core.data.models.system_config import (SystemConfigSettings,
+from csm.core.data.models.system_config import (SystemConfigSettings, 
                                                 EmailConfig, OnboardingLicense)
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
@@ -112,7 +112,7 @@ class SystemConfigManager:
         # TODO: give it more thought
         config_list = await self.get_system_config_list(limit=1)
         return next(iter(config_list)) if config_list else None
-
+    
     async def create_license(self,
                      license: OnboardingLicense) -> OnboardingLicense:
         """
@@ -230,8 +230,8 @@ class SystemConfigAppService(ApplicationService):
                     "failed_recipients": success.keys()}
         except EmailError as e:
             return {"status": False, "error": str(e), "failed_recipients": target_emails}
-
-    async def create_onboarding_license(self,
+    
+    async def create_onboarding_license(self, 
                             csm_onboarding_license_key: str, **kwargs) -> dict:
         """
         Handles the onboarding license key store
@@ -244,4 +244,4 @@ class SystemConfigAppService(ApplicationService):
         await onboarding_license.update(kwargs)
         await self.system_config_mgr.create_license(onboarding_license)
         return onboarding_license.to_primitive()
-
+    

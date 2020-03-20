@@ -27,7 +27,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
-from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.core.data.db.db_provider import DataBaseProvider, GeneralConfig
 from csm.test.common import Const
 
 t = unittest.TestCase()

@@ -26,7 +26,7 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.core.services.users import CsmUserService, UserManager
 from csm.common.errors import CsmPermissionDenied
-from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.core.data.db.db_provider import DataBaseProvider, GeneralConfig
 
 t = unittest.TestCase()
 
