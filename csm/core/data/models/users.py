@@ -28,7 +28,7 @@ from enum import Enum
 from csm.common.errors import CsmError, CsmNotFoundError
 from csm.common.log import Log
 from csm.core.blogic import const
-from csm.core.blogic.models.base import CsmModel
+from csm.core.blogic.models import CsmModel
 
 # TODO: move to the appropriate location
 class Passwd:
