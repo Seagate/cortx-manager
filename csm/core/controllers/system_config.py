@@ -336,3 +336,37 @@ class OnboardingLicenseView(CsmView):
             raise InvalidRequest(f"Invalid request body: {val_err}")
         response = await self._service.create_onboarding_license(**config_data)
         return CsmResponse(response)
+
+class ProvisionerStatusSchema(Schema):
+    """
+    Schema class for validate query string to get provisioner status accordingly  
+    """
+    status_type = fields.String(required=True, 
+                           validate=validate.OneOf(const.PROVISIONER_CONFIG_TYPES))
+
+@CsmView._app_routes.view("/api/v1/provisioner/status")
+class ProvisionerStatus(CsmView):
+    """
+    Rest implementation to get provisioner config status like success or faield
+    for network config, s/w update etc.
+    """
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
+        
+    """
+    GET REST implementation for fetching provisioner status
+    """
+    @CsmAuth.permissions({Resource.AUDITLOG: {Action.LIST}})
+    async def get(self):
+        Log.debug("Handling provisioner status fetch request")
+        provisioner_status = ProvisionerStatusSchema()
+        try:
+            request_data = provisioner_status.load(self.request.rel_url.query, 
+                                                   unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(
+                "Invalid parameter for provisioner status", str(val_err))
+
+        status_type = request_data["status_type"]
+        return await self._service.get_provisioner_status(status_type)
