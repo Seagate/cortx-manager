@@ -244,4 +244,15 @@ class SystemConfigAppService(ApplicationService):
         await onboarding_license.update(kwargs)
         await self.system_config_mgr.create_license(onboarding_license)
         return onboarding_license.to_primitive()
+
+    async def get_provisioner_status(self, status_type):
+        """
+        Fetch provisioner config status for network config, sw_update.
+        :param status_type: Input parameter like netwok, sw_update to 
+        get provisioner status accordingly
+        :returns: Provisioner's success or failed status
+        """
+        # Calling provisioner's api to get status
+        return await self._provisioner.get_provisioner_status(status_type)
     
+

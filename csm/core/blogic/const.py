@@ -301,3 +301,6 @@ GET = "GET"
 PUT = "PUT"
 PATCH = "PATCH"
 DELETE = "DELETE"
+
+# Provisioner status
+PROVISIONER_CONFIG_TYPES = ['network']
