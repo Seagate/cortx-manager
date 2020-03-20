@@ -129,14 +129,22 @@ class Setup:
 
         @staticmethod
         def create():
+            #read username's and password's for S3 and RMQ
             open_ldap_credentials = client.Caller().function('pillar.get',
                                                              'openldap')
+            rmq_credentials = client.Caller().function('pillar.get', 'sspl')
+            #Read Current CSM Config FIle.
             conf_file_data = Yaml(const.CSM_SOURCE_CONF_PATH).load()
+            #Edit Current Config File.
+            conf_file_data['CHANNEL']['username'] = rmq_credentials.get(
+                "sspl", {}).get("rmq", {}).get("user")
+            conf_file_data['CHANNEL']['password'] = rmq_credentials.get(
+                "sspl", {}).get("rmq", {}).get("secret")
             conf_file_data["s3"]['ldap_login'] = open_ldap_credentials.get(
                 "iam_admin", {}).get('user')
             conf_file_data["s3"]['ldap_password'] = open_ldap_credentials.get(
                 "iam_admin", {}).get('secret')
-            #Todo: Need to add RMQ Changes in this code.
+            #Update the Current Config File.
             Yaml(const.CSM_SOURCE_CONF_PATH).dump(conf_file_data)
             Setup._run_cmd(f"cp -rn {const.CSM_SOURCnE_CONF_PATH} {const.ETC_PATH}")
 

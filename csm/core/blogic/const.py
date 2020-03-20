@@ -305,6 +305,6 @@ DELETE = "DELETE"
 # Keys for  Description
 #todo Currently SSPL's Key needs to be finialized.
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "RMQ",
+    "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }
