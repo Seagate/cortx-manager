@@ -31,7 +31,6 @@ import toml
 
 from csm.common.conf import Conf
 from csm.common.errors import CsmInternalError, CsmNotFoundError
-from csm.common.key_manager import KeyManager
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -42,6 +41,9 @@ from csm.core.data.models.s3 import S3ConnectionConfig, IamUser
 from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
+from csm.core.services.usl_certificate_manager import (
+    USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
+)
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 DEFAULT_VOLUME_CACHE_UPDATE_PERIOD = 3
@@ -61,6 +63,8 @@ class UslService(ApplicationService):
     _volumes: Dict[UUID, Volume]
     _volumes_sustaining_task: asyncio.Task
     _event_queue: asyncio.Queue
+    _domain_certificate_manager: USLDomainCertificateManager
+    _native_certificate_manager: USLNativeCertificateManager
 
     def __init__(self, s3_plugin, storage) -> None:
         """
@@ -85,6 +89,8 @@ class UslService(ApplicationService):
         self._event_queue = asyncio.Queue(0, loop=loop)
         self._volumes = loop.run_until_complete(self._restore_volume_cache())
         self._volumes_sustaining_task = loop.create_task(self._sustain_cache())
+        self._domain_certificate_manager = USLDomainCertificateManager()
+        self._native_certificate_manager = USLNativeCertificateManager()
 
     # TODO: pass S3 server credentials to the server instead of reading from a file
     def _create_s3cli(self, s3_plugin):
@@ -454,8 +460,6 @@ class UslService(ApplicationService):
             while time.time() < timeout_limit:
                 async with session.get(endpoint_url) as response:
                     if response.status == 200:
-                        KeyManager.create_security_material(const.UDS_CERTIFICATES_PATH,
-                                                            const.UDS_DOMAIN_CERTIFICATE_FILENAME)
                         Log.info('Device registration successful')
                         return
                     elif response.status != 201:
@@ -494,35 +498,70 @@ class UslService(ApplicationService):
             'firmwareVersion': '0.00',
         }
 
-    # TODO replace stub
-    async def delete_system_certificates(self) -> None:
-        try:
-            path = KeyManager.get_security_material(const.UDS_CERTIFICATES_PATH,
-                                                    const.UDS_DOMAIN_CERTIFICATE_FILENAME)
-            path.unlink()
-        except FileNotFoundError:
+    async def post_system_certificates(self) -> web.Response:
+        """
+        Create USL domain key pair in case it does not exist.
+
+        :returns: USL public key as an ``application/octet-stream`` HTTP response
+        """
+        if await self._domain_certificate_manager.get_private_key_bytes() is not None:
             raise web.HTTPForbidden()
+        await self._domain_certificate_manager.create_private_key_file(overwrite=False)
+        private_key_bytes = await self._domain_certificate_manager.get_private_key_bytes()
+        if private_key_bytes is None:
+            reason = 'Could not read USL private key'
+            Log.error(reason)
+            raise web.HTTPInternalServerError(reason=reason)
+        body = await self._domain_certificate_manager.get_public_key_bytes()
+        if body is None:
+            reason = 'Could not read USL public key'
+            Log.error(f'{reason}')
+            raise web.HTTPInternalServerError(reason=reason)
+        return web.Response(body=body)
+
+    async def put_system_certificates(self, certificate: bytes) -> None:
+        if await self._domain_certificate_manager.get_certificate_bytes() is not None:
+            raise web.HTTPForbidden()
+        try:
+            await self._domain_certificate_manager.create_certificate_file(certificate)
+        except CertificateError as e:
+            reason = 'Could not update USL certificate'
+            Log.error(f'{reason}: {e}')
+            raise web.HTTPInternalServerError(reason=reason)
+        raise web.HTTPNoContent()
+
+    async def delete_system_certificates(self) -> None:
+        """
+        Delete all key material related with the USL domain certificate.
+        """
+        try:
+            await self._domain_certificate_manager.delete_key_material()
+        except FileNotFoundError:
+            raise web.HTTPForbidden() from None
         # Don't return 200 on success, but 204 as USL API specification requires
         raise web.HTTPNoContent()
 
-    # TODO replace stub
-    async def get_system_certificates_by_type(self, certificate_type: str) -> bytes:
+    async def get_system_certificates_by_type(self, material_type: str) -> web.Response:
         """
-        Provides one of the available system certificates according to the specified type.
+        Provides key material according to the specified type.
 
-        :param certificate_type: Certificate type
-        :return: The corresponding system certificate
+        :param material_type: Key material type
+        :return: The corresponding key material as an ``application/octet-stream`` HTTP response
         """
-        if certificate_type != 'domainCertificate':
-            raise web.HTTPNotImplemented()
-
-        try:
-            cert = KeyManager.get_security_material(const.UDS_CERTIFICATES_PATH,
-                                                    const.UDS_DOMAIN_CERTIFICATE_FILENAME)
-            with cert.open('rb') as f:
-                return f.read()
-        except FileNotFoundError:
+        get_material_bytes = {
+            'domainCertificate': self._domain_certificate_manager.get_certificate_bytes,
+            'domainPrivateKey': self._domain_certificate_manager.get_private_key_bytes,
+            'nativeCertificate': self._native_certificate_manager.get_certificate_bytes,
+            'nativePrivateKey': self._native_certificate_manager.get_private_key_bytes,
+        }.get(material_type)
+        if get_material_bytes is None:
+            reason = f'Unexpected key material type "{material_type}"'
+            Log.error(reason)
+            raise web.HTTPInternalServerError(reason=reason)
+        body = await get_material_bytes()
+        if body is None:
             raise web.HTTPNotFound()
+        return web.Response(body=body)
 
     # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:

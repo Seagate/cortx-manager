@@ -308,3 +308,5 @@ DECRYPTION_KEYS = {
     "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }
+# Provisioner status
+PROVISIONER_CONFIG_TYPES = ['network']

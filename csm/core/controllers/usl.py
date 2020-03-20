@@ -193,15 +193,22 @@ class SystemCertificatesView(View):
     """
     System certificates view.
     """
+    async def post(self) -> web.Response:
+        return await self._usl_service.post_system_certificates()
+
+    async def put(self) -> None:
+        certificate = await self.request.read()
+        await self._usl_service.put_system_certificates(certificate)
+
     async def delete(self) -> None:
-        return await self._usl_service.delete_system_certificates()
+        await self._usl_service.delete_system_certificates()
 
 
 class SystemCertificatesByTypeView(View):
     """
     System certificates view by type.
     """
-    async def get(self) -> bytes:
+    async def get(self) -> web.Response:
 
         class MethodSchema(Schema):
             type = fields.Str(required=True)

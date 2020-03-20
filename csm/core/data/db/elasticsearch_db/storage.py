@@ -25,12 +25,13 @@ from datetime import datetime
 from typing import List, Type, Union, Any
 from string import Template
 
-from elasticsearch_dsl import Q, Search, UpdateByQuery, Date
+from elasticsearch_dsl import Q, Search, UpdateByQuery
 from elasticsearch_dsl.response import UpdateByQueryResponse
 from elasticsearch import Elasticsearch
-from elasticsearch import ElasticsearchException, RequestError, ConflictError
+from elasticsearch import ConflictError, ConnectionError
 from schematics.types import (StringType, DecimalType, DateType, IntType, BaseType, BooleanType,
-                              DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType, ListType)
+                              DateTimeType, UTCDateTimeType, FloatType, LongType, NumberType,
+                              ListType)
 from schematics.exceptions import ConversionError
 
 from csm.common.errors import CsmInternalError
@@ -359,7 +360,13 @@ class ElasticSearchDB(GenericDataBase):
 
         es_db = cls(cls.elastic_instance, model, collection, cls.thread_pool, cls.loop)
 
-        await es_db.attach_to_index(config.replication)
+        try:
+            await es_db.attach_to_index(config.replication)
+        except DataAccessExternalError:
+            raise  # forward error to upper caller
+        except Exception as e:
+            raise DataAccessExternalError("Some unknown exception occurred in "
+                                          f"ElasticSearch module: {e}")
 
         return es_db
 
@@ -377,7 +384,11 @@ class ElasticSearchDB(GenericDataBase):
         def _get(_index):
             return self._es_client.indices.get(self._index)
 
-        indices = await self._loop.run_in_executor(self._tread_pool_exec, _get_alias, self._index)
+        try:
+            indices = await self._loop.run_in_executor(self._tread_pool_exec, _get_alias, self._index)
+        except ConnectionError as e:
+            raise DataAccessExternalError(f"Failed to establish connection to ElasticSearch: {e}")
+
         # self._obj_index = self._es_client.indices.get_alias("*")
         if indices.get(self._index, None) is None:
             data_mappings = ElasticSearchDataMapper(self._model)
