@@ -22,5 +22,14 @@ csm:
         args:
             - reset --hard
 
+    ha:
+        script: /opt/seagate/eos/hare/libexec/build-ees-ha-csm
+        args:
+            - /var/lib/hare/build-ees-ha-csm-args.yaml
+
+    ha-cleanup:
+        script: /opt/seagate/eos/hare/libexec/prov-ha-csm-reset
+        args: null
+
 support_bundle:
     - csmcli csm_bundle_generate
