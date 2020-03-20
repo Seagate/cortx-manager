@@ -1,4 +1,4 @@
-from csm.core.blogic.models import CsmModel
+from .base import CsmModel
 from schematics.types import StringType, DateTimeType
 from datetime import timezone
 

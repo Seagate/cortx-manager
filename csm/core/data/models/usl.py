@@ -21,7 +21,7 @@ from schematics.models import Model
 from schematics.types import UUIDType, StringType, IntType, DateTimeType, ModelType
 from schematics.transforms import blacklist
 
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 
 class Device(CsmModel):
     """

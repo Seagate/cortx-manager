@@ -18,7 +18,7 @@
 """
 from enum import Enum
 from schematics.types import StringType
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 
 
 ONBOARDING_PHASES = [

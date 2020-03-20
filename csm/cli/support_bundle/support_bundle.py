@@ -28,7 +28,7 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.providers.providers import  Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.errors import CsmError
