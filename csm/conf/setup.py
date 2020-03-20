@@ -129,24 +129,29 @@ class Setup:
 
         @staticmethod
         def create():
-            #read username's and password's for S3 and RMQ
+            """
+
+            :return:
+            """
+            Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+            csm_conf_path = os.path.join(const.CSM_CONF_PATH,"csm.conf")
+            # read username's and password's for S3 and RMQ
             open_ldap_credentials = client.Caller().function('pillar.get',
                                                              'openldap')
             rmq_credentials = client.Caller().function('pillar.get', 'sspl')
-            #Read Current CSM Config FIle.
-            conf_file_data = Yaml(const.CSM_SOURCE_CONF_PATH).load()
-            #Edit Current Config File.
+            # Read Current CSM Config FIle.
+            conf_file_data = Yaml(csm_conf_path).load()
+            # Edit Current Config File.
             conf_file_data['CHANNEL']['username'] = rmq_credentials.get(
-                "sspl", {}).get("rmq", {}).get("user")
+                "rmq", {}).get("user")
             conf_file_data['CHANNEL']['password'] = rmq_credentials.get(
-                "sspl", {}).get("rmq", {}).get("secret")
-            conf_file_data["s3"]['ldap_login'] = open_ldap_credentials.get(
+                "rmq", {}).get("secret")
+            conf_file_data["S3"]['ldap_login'] = open_ldap_credentials.get(
                 "iam_admin", {}).get('user')
-            conf_file_data["s3"]['ldap_password'] = open_ldap_credentials.get(
+            conf_file_data["S3"]['ldap_password'] = open_ldap_credentials.get(
                 "iam_admin", {}).get('secret')
-            #Update the Current Config File.
-            Yaml(const.CSM_SOURCE_CONF_PATH).dump(conf_file_data)
-            Setup._run_cmd(f"cp -rn {const.CSM_SOURCnE_CONF_PATH} {const.ETC_PATH}")
+            # Update the Current Config File.
+            Yaml(csm_conf_path).dump(conf_file_data)
 
         @staticmethod
         def load():

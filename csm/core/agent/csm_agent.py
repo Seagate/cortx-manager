@@ -25,7 +25,6 @@ class CsmAgent:
     def init():
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        CsmAgent.decrypt_conf()
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -33,6 +32,7 @@ class CsmAgent:
                file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        CsmAgent.decrypt_conf()
         from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -139,9 +139,9 @@ class CsmAgent:
         for each_key in const.DECRYPTION_KEYS:
             cipher_key = Cipher.generate_key(cluster_id,
                                              const.DECRYPTION_KEYS[each_key])
-            encrypted_value = Conf.get(const.CSM_CONF, each_key)
-            decrypted_value = Cipher.decrypt(cipher_key, encrypted_value)
-            Conf.set(const.CSM_CONF, each_key, decrypted_value)
+            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
+            decrypted_value = Cipher.decrypt(cipher_key, encrypted_value.encode("utf-8"))
+            Conf.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_value.decode("utf-8"))
 
     @staticmethod
     def _daemonize():
