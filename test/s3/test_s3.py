@@ -21,8 +21,8 @@ import asyncio
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.log import Log
-from csm.eos.plugins.s3 import S3ConnectionConfig, S3Plugin
-from csm.eos.plugins.s3 import ExtendedIamAccount, IamAccountListResponse
+from csm.plugins.eos.s3 import S3ConnectionConfig, S3Plugin
+from csm.plugins.eos.s3 import ExtendedIamAccount, IamAccountListResponse
 from csm.test.common import TestFailed
 
 Log.init('test', '.')

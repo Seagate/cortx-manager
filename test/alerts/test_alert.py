@@ -22,7 +22,7 @@ import sys, os, getpass, socket, filecmp
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import AmqpComm
 from csm.test.common import TestFailed
-from csm.eos.plugins.alert import AlertPlugin
+from csm.plugins.eos.alert import AlertPlugin
 from csm.test.common import Const
 import json, time
 import filecmp

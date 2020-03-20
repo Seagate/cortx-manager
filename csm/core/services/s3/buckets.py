@@ -25,7 +25,7 @@ from boto.s3.bucket import Bucket
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 
-from csm.eos.plugins.s3 import S3Plugin, S3Client
+from csm.plugins.eos.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory
