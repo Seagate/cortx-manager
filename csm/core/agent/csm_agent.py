@@ -31,7 +31,7 @@ class CsmAgent:
                file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         from csm.common.timeseries import TimelionProvider
         from csm.common.ha_framework import PcsHAFramework
         from csm.core.services.maintenance import MaintenanceAppService
-        from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
+        from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.audit_log import  AuditLogManager, AuditService

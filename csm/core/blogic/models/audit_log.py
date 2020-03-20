@@ -19,7 +19,7 @@
 
 from schematics.models import Model
 from schematics.types import DateType, StringType, DateTimeType
-from .base import CsmModel
+from csm.core.blogic.models import CsmModel
 
 class CsmAuditLogModel(CsmModel):
     """ Model for csm audit logs """
