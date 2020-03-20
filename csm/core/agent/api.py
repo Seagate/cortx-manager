@@ -168,28 +168,6 @@ class CsmRestApi(CsmApi, ABC):
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
     @staticmethod
-    async def http_request_to_log_string(request):
-        remote_ip = request.remote
-        url = request.path
-        method = request.method
-        body = {}
-        query = ()
-        ct = request.headers.get('Content-Type')
-        is_mulitpart = ct is not None and 'multipart' in ct
-        if is_mulitpart:
-            Log.info(f"request:{request} is_mulitpart:{is_mulitpart}"
-                     f" content_length:{request.content_length}")
-        if request.has_body and not is_mulitpart:
-            query = request.query.items()
-            body = await request.json()
-        if body and isinstance(body, dict):
-            for key in body.keys():
-                if "password" in key:
-                    body[key] = '*****'
-        return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} Query:{query}"
-                f" Body:{body}")
-
-    @staticmethod
     async def _resolve_handler(request):
         match_info = await request.app.router.resolve(request)
         return match_info.handler
@@ -207,8 +185,7 @@ class CsmRestApi(CsmApi, ABC):
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        log_message = await cls.http_request_to_log_string(request)
-        Log.audit(log_message)
+        Log.audit(f'{request.method} {request.path}')
         session = None
         is_public = await cls._is_public(request)
         if not is_public:
