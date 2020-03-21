@@ -8,7 +8,7 @@ import json
 from aiohttp import web
 from importlib import import_module
 import pathlib
-from salt import client
+
 
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
@@ -135,6 +135,8 @@ class CsmAgent:
         THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
         :return:
         """
+        if not client:
+            return None
         cluster_id = client.Caller().function('grains.get', 'cluster_id')
         for each_key in const.DECRYPTION_KEYS:
             cipher_key = Cipher.generate_key(cluster_id,
@@ -223,7 +225,10 @@ if __name__ == '__main__':
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
         from eos.utils.security.cipher import Cipher
-
+        try:
+            from salt import client
+        except ModuleNotFoundError:
+            client = None
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:
