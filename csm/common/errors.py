@@ -36,7 +36,7 @@ class CsmError(BaseError):
     """ Parent class for the cli error classes """
 
     def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
-        super(CsmError, self).__init__()
+        super(CsmError, self).__init__(rc, desc, message_id, message_args)
         # TODO: Log.error message will be changed when desc is removed and
         #  improved exception handling is implemented.
         # TODO: self._message_id will be formatted with self._message_args
