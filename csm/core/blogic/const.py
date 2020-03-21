@@ -271,10 +271,10 @@ SYSTEM_CONFIG_SERVICE = "system_config_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
-SOURCE_RSYSLOG_PATH = "{0}/conf{1}/csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
-RSYSLOG_PATH = "{}/csm_logs.conf".format(RSYSLOG_DIR)
-SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
-SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
+SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
+RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
+SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 
 #cron dire
 CRON_DIR="/etc/cron.daily"
