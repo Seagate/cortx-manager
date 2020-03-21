@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          alerts.py
- Description:       Services for alerts handling 
+ Description:       Services for alerts handling
 
  Creation Date:     09/05/2019
  Author:            Alexander Nogikh
@@ -35,9 +35,9 @@ from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access import Query, SortOrder
+from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.data.access.filters import Compare, And, Or
+from eos.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel, AlertsHistoryModel
 from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
@@ -60,7 +60,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
-        self.db = storage        
+        self.db = storage
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -101,13 +101,13 @@ class AlertRepository(IAlertStorage):
         if time_range and time_range.end:
             db_conditions.append(Compare(field, '<=', time_range.end))
         return db_conditions
-    
+
     def _prepare_filters(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None, acknowledged: bool =
             None, show_update_range: DateTimeRange = None, show_active: bool = False):
         and_conditions = [*self._prepare_time_range(AlertModel.created_time, create_time_range)]
         if show_active:
-            self._prapare_filters_show_active(and_conditions)            
+            self._prapare_filters_show_active(and_conditions)
         else:
             if not show_all:
                 or_conditions = []
@@ -363,7 +363,7 @@ class AlertsAppService(ApplicationService):
         :param offset: offset page (1-based indexing)
         :param page_limit: no of records to be displayed on a page.
         :param resolved: alerts filtered by resolved status when show_all is true.
-        :param acknowledged: alerts filtered by acknowledged status when 
+        :param acknowledged: alerts filtered by acknowledged status when
         show_all is true.
         :param show_active: active alerts will fetched. Active alerts are
         identified as only one flag out of acknowledged and resolved flags
@@ -537,14 +537,14 @@ class AlertEmailNotifier(Service):
 
 class AlertMonitorService(Service, Observable):
     """
-    Alert Monitor works with AmqpComm to monitor alerts. 
-    When Alert Monitor receives a subscription request, it scans the DB and 
-    sends all pending alerts. It is assumed currently that there can be only 
-    one subscriber at any given point of time. 
-    Then it waits for AmqpComm to notice if there are any new alert. 
-    Alert Monitor takes action on the received alerts using a callback. 
+    Alert Monitor works with AmqpComm to monitor alerts.
+    When Alert Monitor receives a subscription request, it scans the DB and
+    sends all pending alerts. It is assumed currently that there can be only
+    one subscriber at any given point of time.
+    Then it waits for AmqpComm to notice if there are any new alert.
+    Alert Monitor takes action on the received alerts using a callback.
     Actions include (1) storing on the DB and (2) sending to subscribers, i.e.
-    web server. 
+    web server.
     """
 
     def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
@@ -556,13 +556,13 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_service = health_service      
-       
+        self._health_service = health_service
+
         super().__init__()
 
     def _monitor(self):
         """
-        This method acts as a thread function. 
+        This method acts as a thread function.
         It will monitor the alert plugin for alerts.
         This method passes consume_alert as a callback function to alert plugin.
         """
@@ -614,7 +614,7 @@ class AlertMonitorService(Service, Observable):
         2.) If there is a previous alert we will only proceed if the state of the
         new alert is different from the previous one (check for duplicate).
         3.) If a good alert comes we search of previous alert for the same hw.
-        4.) If a good previous alert(another state) is found we update the 
+        4.) If a good previous alert(another state) is found we update the
         previous alert.
         5.) If a bad previous alert is found we resolve the previous alert.
         6.) If a bad alert comes we search for previous alert for the same hw.
@@ -672,7 +672,7 @@ class AlertMonitorService(Service, Observable):
             alerts = loop.run_until_complete(self.repo.retrieve_by_range(\
                     create_time_range=None, resolved=False))
             for alert in alerts:
-                self._health_service.update_health_schema(alert)        
+                self._health_service.update_health_schema(alert)
         except Exception as e:
             Log.warn(f"Error in update_health_schema_after_init: {e}")
 
@@ -702,7 +702,7 @@ class AlertMonitorService(Service, Observable):
                     Previous alert is a good one so updating and marking the
                     resolved status to False.
                     """
-                    self._update_alert(new_alert, prev_alert, True)  
+                    self._update_alert(new_alert, prev_alert, True)
                 alert_updated = True
         return alert_updated
 
@@ -711,7 +711,7 @@ class AlertMonitorService(Service, Observable):
         Check whether the alerts is duplicate or not based on state.
         :param alert : New Alert Dict
         :param prev_alert : Previous Alert object
-        :return: boolean (True or False) 
+        :return: boolean (True or False)
         """
         ret = False
         if new_alert.get(const.ALERT_STATE, "") == prev_alert.state:
@@ -749,7 +749,7 @@ class AlertMonitorService(Service, Observable):
         """
         Check whether the alert is good or not.
         :param alert : Alert object
-        :return: boolean (True or False) 
+        :return: boolean (True or False)
         """
         ret = False
         if alert.get(const.ALERT_STATE, "") in const.GOOD_ALERT:
@@ -760,7 +760,7 @@ class AlertMonitorService(Service, Observable):
         """
         Check whether the alert is bad or not.
         :param alert : Alert object
-        :return: boolean (True or False) 
+        :return: boolean (True or False)
         """
         ret = False
         if alert.get(const.ALERT_STATE, "") in const.BAD_ALERT:

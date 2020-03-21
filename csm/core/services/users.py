@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          alerts.py
- Description:       Services for alerts handling 
+ Description:       Services for alerts handling
 
  Creation Date:     09/05/2019
  Author:            Alexander Nogikh
@@ -31,9 +31,9 @@ from csm.core.data.models.users import User, UserType
 from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
                                 CsmPermissionDenied, ResourceExist)
 import time
-from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.data.access.filters import Compare, And, Or
-from csm.core.data.access import Query, SortOrder
+from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.data.access.filters import Compare, And, Or
+from eos.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
@@ -227,7 +227,7 @@ class CsmUserService(ApplicationService):
         else:
             await self.user_mgr.save(user)
         return self._user_to_dict(user)
-    
+
     def is_super_user(self, user: User):
-        """ Check if user is super user """        
+        """ Check if user is super user """
         return const.CSM_SUPER_USER_ROLE in user.roles

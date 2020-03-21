@@ -273,6 +273,10 @@ class Setup:
             Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+        if os.path.exists(const.CRON_DIR):
+            Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
+        else:
+            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
     def _logrotate(self):
         """

@@ -31,7 +31,7 @@ from schematics.models import Model
 from schematics.types import IntType, StringType, DateType, BooleanType\
 , DateTimeType, ListType, DictType, ModelType
 
-from .base import CsmModel
+from csm.core.blogic.models import CsmModel
 from .comments import CommentModel
 
 

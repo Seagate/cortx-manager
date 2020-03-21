@@ -275,7 +275,12 @@ RSYSLOG_PATH = "{}/csm_logs.conf".format(RSYSLOG_DIR)
 SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/support_bundle.conf".format(RSYSLOG_DIR)
 
-# logrotate
+#cron dire
+CRON_DIR="/etc/cron.daily"
+SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
+DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
+
+#logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
 
 # https status code

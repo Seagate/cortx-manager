@@ -20,8 +20,8 @@ from enum import Enum
 from schematics.exceptions import BaseError
 from csm.common.errors import CsmInternalError, InvalidRequest
 from csm.common.services import ApplicationService
-from csm.core.data.access import Query
-from csm.core.data.db.db_provider import DataBaseProvider
+from eos.utils.data.access import Query
+from eos.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.onboarding import OnboardingConfig
 
 

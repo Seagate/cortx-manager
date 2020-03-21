@@ -25,7 +25,7 @@ from schematics.types import (StringType, ModelType, ListType,
 from csm.common.log import Log
 from csm.common.email import SmtpServerConfiguration
 from csm.core.blogic import const
-from csm.core.blogic.models.base import CsmModel
+from csm.core.blogic.models import CsmModel
 
 # Schematics models to form schema structure for system configuration settings
 class Ipv4Nodes(Model):
