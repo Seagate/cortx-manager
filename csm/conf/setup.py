@@ -21,7 +21,6 @@ import os
 import sys
 import crypt
 import pwd
-from salt import client
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -31,6 +30,11 @@ from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
+
+try:
+    from salt import client
+except ModuleNotFoundError:
+    client= None
 
 class Setup:
     def __init__(self):
@@ -134,6 +138,8 @@ class Setup:
             :return:
             """
             Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+            if not client:
+                return None
             csm_conf_path = os.path.join(const.CSM_CONF_PATH,"csm.conf")
             # read username's and password's for S3 and RMQ
             open_ldap_credentials = client.Caller().function('pillar.get',
