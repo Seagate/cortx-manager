@@ -16,10 +16,11 @@ def import_list(csm_path, walk_path):
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-product_path = '<CSM_PATH>' + '/' + product
+product_path = '<CSM_PATH>' + '/plugins/' + product
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
+product_module_list.append("eos.utils.security.secure_storage")
 test_module_list = import_list(csm_path, test_path)
 test_module_list.remove('csm.test.csm_test')
 

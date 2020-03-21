@@ -19,7 +19,7 @@ from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.log import Log
 from csm.core.data.models.s3 import S3ConnectionConfig
-from csm.eos.plugins.s3 import IamClient
+from csm.plugins.eos.s3 import IamClient
 
 
 class CsmS3ConfigurationFactory:

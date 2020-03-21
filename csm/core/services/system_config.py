@@ -24,11 +24,11 @@ from csm.common.queries import SortBy
 from csm.common.services import ApplicationService
 from csm.common.template import Template
 from csm.core.blogic import const
-from csm.core.data.access import Query
-from csm.core.data.access.filters import Compare
-from csm.core.data.db.db_provider import (DataBaseProvider)
+from eos.utils.data.access import Query
+from eos.utils.data.access.filters import Compare
+from eos.utils.data.db.db_provider import (DataBaseProvider)
 from csm.common.log import Log
-from csm.core.data.models.system_config import (SystemConfigSettings, 
+from csm.core.data.models.system_config import (SystemConfigSettings,
                                                 EmailConfig, OnboardingLicense)
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
@@ -112,7 +112,7 @@ class SystemConfigManager:
         # TODO: give it more thought
         config_list = await self.get_system_config_list(limit=1)
         return next(iter(config_list)) if config_list else None
-    
+
     async def create_license(self,
                      license: OnboardingLicense) -> OnboardingLicense:
         """
@@ -128,7 +128,7 @@ class SystemConfigAppService(ApplicationService):
     Service that exposes system config management actions.
     """
 
-    def __init__(self, provisioner, system_config_mgr: SystemConfigManager, 
+    def __init__(self, provisioner, system_config_mgr: SystemConfigManager,
                  email_test_template=None):
         self.system_config_mgr = system_config_mgr
         self.email_test_template = email_test_template
@@ -189,7 +189,7 @@ class SystemConfigAppService(ApplicationService):
         if new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {}):
             ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
             await self._provisioner.set_ntp(ntp_data)
-        
+
         return system_config.to_primitive()
 
     async def delete_system_config(self, config_id: str):
@@ -230,8 +230,8 @@ class SystemConfigAppService(ApplicationService):
                     "failed_recipients": success.keys()}
         except EmailError as e:
             return {"status": False, "error": str(e), "failed_recipients": target_emails}
-    
-    async def create_onboarding_license(self, 
+
+    async def create_onboarding_license(self,
                             csm_onboarding_license_key: str, **kwargs) -> dict:
         """
         Handles the onboarding license key store
@@ -248,11 +248,11 @@ class SystemConfigAppService(ApplicationService):
     async def get_provisioner_status(self, status_type):
         """
         Fetch provisioner config status for network config, sw_update.
-        :param status_type: Input parameter like netwok, sw_update to 
+        :param status_type: Input parameter like netwok, sw_update to
         get provisioner status accordingly
         :returns: Provisioner's success or failed status
         """
         # Calling provisioner's api to get status
         return await self._provisioner.get_provisioner_status(status_type)
-    
+
 

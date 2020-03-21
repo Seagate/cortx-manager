@@ -17,7 +17,7 @@
  ****************************************************************************
 """
 
-from .base import CsmModel
+from csm.core.blogic.models import CsmModel
 from schematics.types import StringType
 
 class SupportBundleModel(CsmModel):

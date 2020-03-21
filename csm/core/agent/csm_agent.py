@@ -14,7 +14,7 @@ def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
 
     product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'eos'
-    return import_module(f'csm.{product}.plugins.{name}')
+    return import_module(f'csm.plugins.{product}.{name}')
 
 
 class CsmAgent:
@@ -28,10 +28,10 @@ class CsmAgent:
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
                backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"), 
+               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        from csm.core.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -56,14 +56,14 @@ class CsmAgent:
 
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin(), health_service)        
+                                              pm.AlertPlugin(), health_service)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
         http_notifications = AlertHttpNotifyService()
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
-        
+
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
 
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         from csm.common.timeseries import TimelionProvider
         from csm.common.ha_framework import PcsHAFramework
         from csm.core.services.maintenance import MaintenanceAppService
-        from csm.core.data.db.elasticsearch_db.storage import ElasticSearchDB
+        from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
         from csm.core.services.audit_log import  AuditLogManager, AuditService
