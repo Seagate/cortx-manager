@@ -144,13 +144,13 @@ class Setup:
             # read username's and password's for S3 and RMQ
             open_ldap_credentials = client.Caller().function('pillar.get',
                                                              'openldap')
-            rmq_credentials = client.Caller().function('pillar.get', 'sspl')
+            sspl_config = client.Caller().function('pillar.get', 'sspl')
             # Read Current CSM Config FIle.
             conf_file_data = Yaml(csm_conf_path).load()
             # Edit Current Config File.
-            conf_file_data['CHANNEL']['username'] = rmq_credentials.get(
+            conf_file_data['CHANNEL']['username'] = sspl_config.get(
                 "rmq", {}).get("user")
-            conf_file_data['CHANNEL']['password'] = rmq_credentials.get(
+            conf_file_data['CHANNEL']['password'] = sspl_config.get(
                 "rmq", {}).get("secret")
             conf_file_data["S3"]['ldap_login'] = open_ldap_credentials.get(
                 "iam_admin", {}).get('user')
