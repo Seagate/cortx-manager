@@ -22,13 +22,13 @@ product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("eos.utils.security.secure_storage")
 test_module_list = import_list(csm_path, test_path)
-test_module_list.remove('csm.test.csm_test')
+test_module_list.remove('csm.test.test_framework.csm_test')
 
 block_cipher = None
 
 # Analysis
 csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
+             pathex=[csm_path+'/../'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -41,7 +41,7 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              noarchive=False)
 
 csmcli = Analysis([csm_path + '/cli/csmcli.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
+             pathex=[csm_path+'/../'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -54,7 +54,7 @@ csmcli = Analysis([csm_path + '/cli/csmcli.py'],
              noarchive=False)
 
 csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
+             pathex=[csm_path+'/../'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -67,7 +67,7 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              noarchive=False)
 
 csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
+             pathex=[csm_path+'/../'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -79,8 +79,8 @@ csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
              cipher=block_cipher,
              noarchive=False)
 
-csm_test = Analysis([csm_path + '/test/csm_test.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
+csm_test = Analysis([csm_path + '/test/test_framework/csm_test.py'],
+             pathex=[csm_path+'/../'],
              binaries=[],
              datas=[],
              hiddenimports=test_module_list,
