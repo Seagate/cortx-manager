@@ -318,6 +318,7 @@ DECRYPTION_KEYS = {
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
 # Provisioner Plugin constant
+GRAINS_GET = 'grains.get'
 PILLAR_GET = 'pillar.get'
 S3 = 'S3'
 RMQ = 'rmq'
@@ -330,3 +331,4 @@ OPEN_LDAP = 'open_ldap'
 SSPL = 'sspl'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
+CLUSTER_ID = 'cluster_id'

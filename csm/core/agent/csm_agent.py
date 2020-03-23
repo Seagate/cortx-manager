@@ -137,7 +137,7 @@ class CsmAgent:
         """
         if not client:
             return None
-        cluster_id = client.Caller().function('grains.get', 'cluster_id')
+        cluster_id = client.Caller().function(const.GRAINS_GET, const.CLUSTER_ID)
         for each_key in const.DECRYPTION_KEYS:
             cipher_key = Cipher.generate_key(cluster_id,
                                              const.DECRYPTION_KEYS[each_key])
