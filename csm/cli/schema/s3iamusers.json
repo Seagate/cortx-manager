@@ -39,7 +39,6 @@
           "headers": {
             "user_name": "User Name",
             "user_id": "User ID",
-            "path": "PATH",
             "arn": "ARN"
           },
           "filters": "iam_users"
@@ -97,7 +96,6 @@
       "output": {
         "table": {
           "headers": {
-            "path": "Path",
             "user_name": "User Name",
             "user_id": "User ID",
             "arn": "ARN"
