@@ -314,4 +314,4 @@ DECRYPTION_KEYS = {
     "S3.ldap_password": "openldap"
 }
 # Provisioner status
-PROVISIONER_CONFIG_TYPES = ['network']
+PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']

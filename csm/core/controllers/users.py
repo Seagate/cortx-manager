@@ -39,11 +39,24 @@ class CsmUserCreateSchema(CsmRootUserCreateSchema):
         required=True, validate=validate.OneOf(const.CSM_USER_ROLES)), required=True)
 
 
+class GetUsersSortBy(fields.Str):
+    def _deserialize(self, value, attr, data, **kwargs):
+        if value == 'username':
+            return 'user_id'
+        return value
+
+
 class CsmGetUsersSchema(Schema):
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
                         default=None, missing=None)
     limit = fields.Int(default=None, validate=validate.Range(min=0), missing=None)
-    sort_by = fields.Str(default="user_id", missing="user_id")
+    sort_by = GetUsersSortBy(validate=validate.OneOf(['user_id',
+                                                      'username',
+                                                      'user_type',
+                                                      'created_time',
+                                                      'updated_time']),
+                             default="user_id",
+                             missing="user_id")
     sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
                           missing='asc', default='asc')
 

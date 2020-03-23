@@ -54,7 +54,10 @@ RUN set -ex \
 
 # --- NODEJS END ---
 
+COPY eos_uploads.repo /etc/yum.repos.d/
+
 RUN yum install -y python36-pip \
+		   eos-py-utils \	
     && pip3 install --prefix /usr \
             PyYAML \
             aiohttp \
@@ -68,8 +71,6 @@ RUN yum install -y python36-pip \
             prettytable \
             pyinstaller==3.5 \
             toml
-
-RUN yum install -y http://ci-storage.mero.colo.seagate.com/releases/eos/uploads/csm_uploads/eos-py-utils-0.2-1.noarch.rpm
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
