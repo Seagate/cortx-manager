@@ -19,11 +19,11 @@
 
 from marshmallow import Schema, fields, validate
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.core.controllers.validators import FileRefValidator
+from csm.core.controllers.validators import FileRefValidator, PackageFilenameValidator
 
 
 class FileFieldSchema(Schema):
     """ Validation schema for uploaded files"""
     content_type = fields.Str(required=True)
-    filename = fields.Str(required=True)
+    filename = fields.Str(validate=PackageFilenameValidator(), required=True)
     file_ref = fields.Field(validate=FileRefValidator())

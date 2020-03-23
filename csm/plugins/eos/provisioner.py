@@ -63,9 +63,12 @@ class ProvisionerPlugin:
         return {"version": "1.2.3",
                 "file_path": file_path}
 
-    async def trigger_firmware_upload(self):
+    async def trigger_firmware_upload(self, fw_package_info):
         # TODO: Provisioner api to trigger firmware update tobe implented here
-        return "Firmware update triggered succesfully"
+        Log.debug("Triggering firmware upgrade.")
+        return {"status":"Firmware update triggered succesfully",
+                "package_name": fw_package_info.get("valid_firmware_package_name",""),
+                "package_version": fw_package_info.get("valid_firmware_package_version")}
 
     async def get_last_firmware_upgrade_status(self):
         # TODO: Provisioner api to get last firmware upgrade status.

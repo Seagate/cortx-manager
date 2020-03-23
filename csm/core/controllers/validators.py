@@ -179,3 +179,12 @@ class ValidationErrorFormatter:
         for each_key in validation_error_obj.messages.keys():
             error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
         return "\n".join(error_messages)
+
+class PackageFilenameValidator(Validator):
+    """
+    Validator class for validating firmware and hotfix package file name.
+    """
+
+    def __call__(self, file_name):
+        if not file_name.endswith(".iso"):
+            raise ValidationError("Package should be a '.iso' file.")
