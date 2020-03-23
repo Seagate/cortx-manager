@@ -140,22 +140,22 @@ class Setup:
             Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
             if not client:
                 return None
-            csm_conf_path = os.path.join(const.CSM_CONF_PATH,"csm.conf")
+            csm_conf_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             # read username's and password's for S3 and RMQ
-            open_ldap_credentials = client.Caller().function('pillar.get',
-                                                             'openldap')
-            sspl_config = client.Caller().function('pillar.get', 'sspl')
+            open_ldap_credentials = client.Caller().function(const.PILLAR_GET,
+                                                             const.OPEN_LDAP)
+            sspl_config = client.Caller().function(const.PILLAR_GET, const.SSPL)
             # Read Current CSM Config FIle.
             conf_file_data = Yaml(csm_conf_path).load()
             # Edit Current Config File.
-            conf_file_data['CHANNEL']['username'] = sspl_config.get(
-                "rmq", {}).get("user")
-            conf_file_data['CHANNEL']['password'] = sspl_config.get(
-                "rmq", {}).get("secret")
-            conf_file_data["S3"]['ldap_login'] = open_ldap_credentials.get(
-                "iam_admin", {}).get('user')
-            conf_file_data["S3"]['ldap_password'] = open_ldap_credentials.get(
-                "iam_admin", {}).get('secret')
+            conf_file_data[const.CHANNEL][const.USERNAME] = sspl_config.get(
+                const.RMQ, {}).get(const.USER)
+            conf_file_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(
+                const.RMQ, {}).get(const.SECRET)
+            conf_file_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
+                const.IAM_ADMIN, {}).get(const.USER)
+            conf_file_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
+                const.IAM_ADMIN, {}).get(const.SECRET)
             # Update the Current Config File.
             Yaml(csm_conf_path).dump(conf_file_data)
 

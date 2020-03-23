@@ -9,6 +9,7 @@ CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
+CSM_CONF_FILE_NAME = 'csm.conf'
 
 # Access log of aiohttp
 # format 
@@ -315,3 +316,17 @@ DECRYPTION_KEYS = {
 }
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
+
+# Provisioner Plugin constant
+PILLAR_GET = 'pillar.get'
+S3 = 'S3'
+RMQ = 'rmq'
+CHANNEL = 'CHANNEL'
+USERNAME = "username"
+PASSWORD = 'password'
+SECRET = 'secret'
+IAM_ADMIN = 'iam_admin'
+OPEN_LDAP = 'open_ldap'
+SSPL = 'sspl'
+LDAP_LOGIN = 'ldap_login'
+LDAP_PASSWORD = 'ldap_password'
