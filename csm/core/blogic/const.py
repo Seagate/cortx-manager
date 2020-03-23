@@ -308,4 +308,4 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Provisioner status
-PROVISIONER_CONFIG_TYPES = ['network']
+PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
