@@ -134,7 +134,7 @@ class Setup:
         @staticmethod
         def create():
             """
-
+            This Function Creates the CSM Conf File on Required Location.
             :return:
             """
             Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
