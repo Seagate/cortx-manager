@@ -208,8 +208,8 @@ class CsmUserService(ApplicationService):
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
-            raise CsmPermissionDenied("Can't delete user %s. No such user" %
-                                      user_id, USERS_MSG_USER_NOT_FOUND)
+            raise CsmPermissionDenied("Can't delete super user",
+                                      USERS_MSG_PERMISSION_DENIED, user_id)
         await self.user_mgr.delete(user_id)
         return {"message": "User Deleted Successfully."}
 
