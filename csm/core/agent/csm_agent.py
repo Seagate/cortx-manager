@@ -9,6 +9,7 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
+
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -31,6 +32,7 @@ class CsmAgent:
                file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        CsmAgent.decrypt_conf()
         from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -128,6 +130,22 @@ class CsmAgent:
             system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
 
     @staticmethod
+    def decrypt_conf():
+        """
+        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
+        :return:
+        """
+        if not client:
+            return None
+        cluster_id = client.Caller().function(const.GRAINS_GET, const.CLUSTER_ID)
+        for each_key in const.DECRYPTION_KEYS:
+            cipher_key = Cipher.generate_key(cluster_id,
+                                             const.DECRYPTION_KEYS[each_key])
+            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
+            decrypted_value = Cipher.decrypt(cipher_key, encrypted_value.encode("utf-8"))
+            Conf.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_value.decode("utf-8"))
+
+    @staticmethod
     def _daemonize():
         """ Change process into background service """
         if not os.path.isdir("/var/run/csm/"):
@@ -206,7 +224,11 @@ if __name__ == '__main__':
         from csm.core.services.file_transfer import DownloadFileManager
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
-
+        from eos.utils.security.cipher import Cipher
+        try:
+            from salt import client
+        except ModuleNotFoundError:
+            client = None
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:

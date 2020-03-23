@@ -31,6 +31,11 @@ from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 
+try:
+    from salt import client
+except ModuleNotFoundError:
+    client= None
+
 class Setup:
     def __init__(self):
         self._user = const.NON_ROOT_USER
@@ -128,7 +133,31 @@ class Setup:
 
         @staticmethod
         def create():
-            Setup._run_cmd("cp -rn " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
+            """
+            This Function Creates the CSM Conf File on Required Location.
+            :return:
+            """
+            Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+            if not client:
+                return None
+            csm_conf_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            # read username's and password's for S3 and RMQ
+            open_ldap_credentials = client.Caller().function(const.PILLAR_GET,
+                                                             const.OPEN_LDAP)
+            sspl_config = client.Caller().function(const.PILLAR_GET, const.SSPL)
+            # Read Current CSM Config FIle.
+            conf_file_data = Yaml(csm_conf_path).load()
+            # Edit Current Config File.
+            conf_file_data[const.CHANNEL][const.USERNAME] = sspl_config.get(
+                const.RMQ, {}).get(const.USER)
+            conf_file_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(
+                const.RMQ, {}).get(const.SECRET)
+            conf_file_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
+                const.IAM_ADMIN, {}).get(const.USER)
+            conf_file_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
+                const.IAM_ADMIN, {}).get(const.SECRET)
+            # Update the Current Config File.
+            Yaml(csm_conf_path).dump(conf_file_data)
 
         @staticmethod
         def load():
@@ -302,7 +331,7 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-            # TODO: Get configuration from provision and create conf file
+
             self.Config.create()
         except Exception as e:
             raise CsmSetupError("csm_setup config failed. Error: %s" %e)
