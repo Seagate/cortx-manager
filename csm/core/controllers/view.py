@@ -154,6 +154,10 @@ class CsmView(web.View):
         """
         Log.debug("Handling file upload request")
 
+        def get_extension(filename):
+            parts = filename.split('.')
+            return parts[-1] if len(parts) > 1 else ''
+
         # TODO: make handling in case file_cache is None
 
         ct = self.request.headers.get('Content-Type')
@@ -179,7 +183,12 @@ class CsmView(web.View):
             parse_result = None
             size = 0
             if filename and file_cache is not None:
-                file_uuid = file_cache.cache_new_file()
+                extension = get_extension(filename)
+                if len(extension) > 10 or not extension.isalnum():
+                    # The extension is unsafe to preserve
+                    extension = ''
+
+                file_uuid = file_cache.cache_new_file(extension)
                 async for chunk in self.aiohttp_body_getter(field):
                     size += len(chunk)
                     if size > file_byte_size_limit:

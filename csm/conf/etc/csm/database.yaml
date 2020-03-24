@@ -66,6 +66,11 @@ models:
     config:
         es_db:
             collection: "s3-rsys-index"
+-   import_path: "csm.core.data.models.upgrade.UpdateStatusEntry"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "update_status_entries"
 -   import_path: "eos.utils.security.secure_storage.NamedEncryptedBytes"
     database: "consul_db"
     config:

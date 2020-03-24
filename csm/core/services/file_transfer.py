@@ -97,6 +97,7 @@ class FileRef():
         Log.debug(f"Saving f{filename} at f{dir_to_save}")
         path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
+
         if os.path.exists(path_to_file_to_save) and not overwrite:
             raise CsmInternalError(
                 f'File "{path_to_file_to_save}" already exists. Change ' +
@@ -129,7 +130,7 @@ class FileCache(ContextDecorator):
             else:
                 Log.error('Cached file was deleted out of scope of FileCache context manger')
 
-    def cache_new_file(self):
+    def cache_new_file(self, extension=''):
         """
         Start caching new file to cache directory
         """
@@ -139,6 +140,9 @@ class FileCache(ContextDecorator):
             raise CsmInternalError(err_msg)
 
         file_uuid = uuid.uuid4().hex
+        if extension:
+            file_uuid = file_uuid + '.' + extension
+
         # TODO: check for existing file?
         file_stream = open(os.path.join(self.cache_dir, file_uuid), 'w+b')
 
