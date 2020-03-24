@@ -6,7 +6,7 @@ databases:
             port: 9200
             login: ""
             password: ""
-            replication: 2
+            replication: 1
     consul_db:
         import_path: "ConsulDB"
         config:
