@@ -118,12 +118,18 @@ class CsmAgent:
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
         try:
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin()
+            # TODO: consider a more safe storage
+            params = {
+                "username": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.username'),
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.password')
+            }
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
+        update_repo = UpdateStatusRepository(db)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner)
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(provisioner,
@@ -209,6 +215,7 @@ if __name__ == '__main__':
         from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.services.hotfix_update import HotfixApplicationService
+        from csm.core.repositories.update_status import UpdateStatusRepository
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.services.onboarding import OnboardingConfigService
