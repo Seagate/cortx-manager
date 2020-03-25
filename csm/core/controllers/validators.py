@@ -101,13 +101,17 @@ class PasswordValidator(Validator):
             error_str = "\n".join(error)
             raise ValidationError(f"Password Policy Not Met.\n{error_str}")
 
+
 class BucketNameValidator(Validator):
     """
         Validator Class for Bucket Name.
     """
 
+    def is_value_valid(self, value):
+        return re.search(r"^[a-z0-9][a-z0-9-]{3,54}[a-z0-9]$", value)
+
     def __call__(self, value):
-        if not re.search(r"^[a-z0-9][a-z0-9-]{3,54}[a-z0-9]$", value):
+        if not self.is_value_valid(value):
             raise ValidationError(
                 ("Bucket Name should be between 4-56 Characters long."
                  "Should contain either lowercase, numeric or '-' characters. "
