@@ -81,7 +81,8 @@ class S3AccountService(ApplicationService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_accounts(self, session, continue_marker=None, page_limit=None) -> dict:
+    async def list_accounts(self, session, continue_marker=None, page_limit=None,
+                            demand_all_accounts=False) -> dict:
         """
         Fetch a list of s3 accounts.
         :param session: session object of S3Credentials or LocalCredentials
@@ -89,6 +90,8 @@ class S3AccountService(ApplicationService):
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
                            returned in one batch
+        :demand_all_accounts: When set to True, returns full list of s3 account regardless 
+                              of session type. Needed for internal calls
         :returns: a dictionary containing account list and, if the list is truncated, a marker
                   that can be used for fetching subsequent batches
         """
@@ -100,9 +103,18 @@ class S3AccountService(ApplicationService):
         if isinstance(accounts, IamError):
             self._raise_remote_error(accounts)
         accounts_list = []
+        # CSM user is allowed to list all the S3 users in system.
+        if isinstance(session, LocalCredentials) or demand_all_accounts:
+            for acc in accounts.iam_accounts:
+                accounts_list.append(
+                        {
+                            "account_name": acc.account_name,
+                            "account_email": acc.account_email
+                        }
+                    )
         # S3 user is allowed to list all s3 user in system.
         # Allowed to list only himself.
-        if isinstance(session, S3Credentials):
+        elif isinstance(session, S3Credentials):
             for acc in accounts.iam_accounts:
                 if acc.account_name == session.user_id:
                     accounts_list.append(
@@ -112,15 +124,6 @@ class S3AccountService(ApplicationService):
                         }
                     )
                     break
-        # CSM user is allowed to list all the S3 users in system.
-        if isinstance(session, LocalCredentials):
-            for acc in accounts.iam_accounts:
-                accounts_list.append(
-                        {
-                            "account_name": acc.account_name,
-                            "account_email": acc.account_email
-                        }
-                    )
         resp = {"s3_accounts": accounts_list}
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
