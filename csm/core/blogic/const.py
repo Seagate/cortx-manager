@@ -12,7 +12,7 @@ CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 
 # Access log of aiohttp
-# format 
+# format
 REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 
 # Commands
@@ -197,6 +197,19 @@ S3_PORT = 'S3.s3_port'
 S3_MAX_RETRIES_NUM = 'S3.max_retries_num'
 S3_LDAP_LOGIN = 'S3.ldap_login'
 S3_LDAP_PASSWORD = 'S3.ldap_password'
+
+S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
+S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
+S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT = 'CreateAccessKeyResult'
+S3_PARAM_ACCESS_KEY = 'AccessKey'
+S3_IAM_CMD_LIST_ACCESS_KEYS = 'ListAccessKeys'
+S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
+S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeyResult'
+S3_PARAM_ACCESS_KEY_METADATA = 'AccessKeyMetadata'
+S3_PARAM_IS_TRUNCATED = 'IsTruncated'
+S3_PARAM_MARKER = 'Marker'
+S3_PARAM_MAX_ITEMS = 'MaxItems'
+S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'

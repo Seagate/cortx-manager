@@ -53,7 +53,7 @@ class IamUsersService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_user(self, s3_session: Dict, user_name: str, password: str,
-                                require_reset=False) -> [Response, Dict]:
+                          require_reset=False) -> [Response, Dict]:
         """
         This Method will create an IAM User in S3 user Account.
         :param s3_session: S3 session's details. :type: dict
@@ -76,7 +76,16 @@ class IamUsersService(ApplicationService):
             # If User creation Failed delete the user.
             await s3_client.delete_user(user_name)
             return await  self._handle_error(user_login_profile_resp)
-        return vars(user_creation_resp)
+        # Create IAM user's access key
+        user_creds_resp = await s3_client.create_user_access_key(user_name)
+        if hasattr(user_creds_resp, "error_code"):
+            await s3_client.delete_user(user_name)
+            return await self._handle_error(user_creds_resp)
+        return {
+            **vars(user_creation_resp),
+            'access_key_id': user_creds_resp.access_key_id,
+            'secret_key': user_creds_resp.secret_key
+        }
 
     @Log.trace_method(Log.DEBUG)
     async def list_users(self, s3_session: Dict) -> Union[
