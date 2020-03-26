@@ -9,7 +9,6 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
-
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
