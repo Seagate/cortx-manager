@@ -35,6 +35,11 @@ from csm.common.errors import CsmError
 from csm.core.providers.providers import Response
 from csm.common import errors
 from csm.common.conf import Conf
+from csm.common.log import Log
+try:
+    from salt import client
+except ModuleNotFoundError as e:
+    client = None
 
 class SupportBundle:
     """
@@ -71,6 +76,39 @@ class SupportBundle:
             sys.stderr.write(f"Could Not Connect to {node_name}\n")
 
     @staticmethod
+    async def fetch_host_from_salt():
+        if not client:
+            return None, None
+        node_list = client.Caller().function(const.PILLAR_GET,
+                                             'cluster:node_list')
+        hostnames = []
+        for each_node in node_list:
+            node_details = client.Caller().function(const.PILLAR_GET,
+                                                    f'cluster:{each_node}')
+            hostnames.append(node_details.get("hostname"))
+        return hostnames, node_list
+
+    @staticmethod
+    async def fetch_host_from_cluster():
+        Log.info("Falling back to reading cluster information from cluster.sls.")
+        cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                     "SUPPORT_BUNDLE.cluster_file_path")
+        if not cluster_file_path or not os.path.exists(cluster_file_path):
+            repsonse_msg = {"message": (f"{cluster_file_path} not Found. \n"
+                                        f"Please check if cluster info file is correctly configured.")}
+            return Response(rc=errno.ENOENT, output=repsonse_msg), None
+        cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
+        active_nodes = cluster_info.get("node_list", [])
+        if not active_nodes:
+            response_msg = {
+                "message": "No active nodes found. Cluster file may not be valid"}
+            return Response(output=response_msg, rc=errors.CSM_ERR_INVALID_VALUE), None
+        hostnames = []
+        for each_node in active_nodes:
+            hostnames.append(cluster_info.get(each_node, {}).get("hostname"))
+        return hostnames, active_nodes
+
+    @staticmethod
     async def bundle_generate(command) -> sys.stdout:
         """
         Initializes the process for Generating Support Bundle on Each EOS Node.
@@ -80,25 +118,18 @@ class SupportBundle:
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
-        cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                          "SUPPORT_BUNDLE.cluster_file_path")
-        if not cluster_file_path or not os.path.exists(cluster_file_path):
-            repsonse_msg = {"message": (f"{cluster_file_path} not Found. \n"
-            f"Please check if cluster info file is correctly configured.")}
-            return Response(rc=errno.ENOENT, output=repsonse_msg)
-        cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
-        active_nodes = cluster_info.get("node_list", [])
-        if not active_nodes:
-            response_msg = {"message":"No active nodes found. Cluster file may not be valid"}
-            return Response(output=response_msg, rc=errors.CSM_ERR_INVALID_VALUE)
+        hostnames, node_list =  SupportBundle.fetch_host_from_salt()
+        if not hostnames or not node_list:
+            hostnames, node_list = SupportBundle.fetch_host_from_cluster()
+        if not isinstance(hostnames, list):
+            return hostnames
         threads = []
         try:
-            for each_node in active_nodes:
-                network = cluster_info.get(each_node, {}).get("network", {})
-                ip_address = network.get("mgmt_nw", {}).get("ipaddr", )
-                thread_obj = Thread(SupportBundle.execute_ssh(ip_address,
+            for index, hostname in enumerate(hostnames):
+                thread_obj = Thread(SupportBundle.execute_ssh(hostname,
                                                               bundle_id, comment,
-                                                              each_node))
+                                                              node_list(index)))
+
                 thread_obj.start()
                 threads.append(thread_obj)
 
