@@ -112,7 +112,7 @@ class S3AccountService(ApplicationService):
                             "account_email": acc.account_email
                         }
                     )
-        # S3 user is allowed to list all s3 user in system.
+        # S3 user is not allowed to list all s3 user in system.
         # Allowed to list only himself.
         elif isinstance(session, S3Credentials):
             for acc in accounts.iam_accounts:
