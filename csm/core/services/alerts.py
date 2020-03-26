@@ -259,8 +259,6 @@ class AlertsAppService(ApplicationService):
                 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR)
 
         if "acknowledged" in fields:
-            if not isinstance(fields["acknowledged"], bool):
-                raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
             alert.acknowledged = AlertModel.acknowledged.to_native(fields["acknowledged"])
 
         await self.repo.update(alert)
