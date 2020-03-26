@@ -101,7 +101,7 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
         s3_account = await self.request.app["s3_account_service"].get_account(
-            self.request.session, user_body['user_id'])
+            user_body['user_id'])
         if s3_account is not None:
             raise InvalidRequest("S3 account with same name as passed CSM username alreay exists")
 

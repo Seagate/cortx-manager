@@ -287,6 +287,17 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
+    async def get_account(self, account_name) -> dict:
+        accounts = await self.list_accounts()
+        for acc in accounts.iam_accounts:
+            if acc.account_name == account_name:
+                return {
+                    "account_name": acc.account_name,
+                    "account_email": acc.account_email
+                }
+        return None
+
+    @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, max_items=None,
                             marker=None) -> Union[IamAccountListResponse, IamError]:
         """

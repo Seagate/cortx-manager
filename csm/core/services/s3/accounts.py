@@ -81,14 +81,8 @@ class S3AccountService(ApplicationService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def get_account(self, session, account_name) -> dict:
-        s3_accounts = await self.list_accounts(session.credentials, demand_all_accounts=True)
-        target_account = None
-        for s3_account in s3_accounts['s3_accounts']:
-            if s3_account['account_name'] == account_name:
-                target_account = s3_account
-                break
-        return target_account
+    async def get_account(self, account_name) -> dict:
+        return await self._s3_root_client.get_account(account_name)
 
     @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, session, continue_marker=None, page_limit=None,
