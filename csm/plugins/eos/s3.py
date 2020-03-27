@@ -304,6 +304,16 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
+    async def get_account(self, account_name) -> Union[IamAccount, IamError]:
+        accounts = await self.list_accounts()
+        if isinstance(accounts, IamError):
+            return accounts
+        for acc in accounts.iam_accounts:
+            if acc.account_name == account_name:
+                return acc
+        return None
+
+    @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, max_items=None,
                             marker=None) -> Union[IamAccountListResponse, IamError]:
         """

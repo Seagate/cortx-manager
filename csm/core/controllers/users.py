@@ -99,6 +99,12 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
+
+        s3_account = await self.request.app["s3_account_service"].get_account(
+            user_body['user_id'])
+        if s3_account is not None:
+            raise InvalidRequest("S3 account with same name as passed CSM username alreay exists")
+
         response = await self._service.create_user(**user_body)
         return CsmResponse(response, const.STATUS_CREATED)
 
