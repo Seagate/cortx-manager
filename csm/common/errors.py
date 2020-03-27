@@ -31,6 +31,7 @@ CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
 CSM_INTERNAL_ERROR          = 0x1005
 CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
+CSM_OPERATION_NOT_PERMITTED = 0x1008
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """

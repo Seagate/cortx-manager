@@ -31,6 +31,7 @@ class Resource:
     S3BUCKETS = 's3buckets'
     S3BUCKET_POLICY = 's3bucketpolicy'
     AUDITLOG = 'auditlog'
+    SYSTEM = 'system'
     MAINTENANCE = 'maintenance'
     PERMISSIONS = 'permissions'
     NOTIFICATION = 'notification'

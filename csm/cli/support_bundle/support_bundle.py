@@ -66,7 +66,8 @@ class SupportBundle:
         :return:
         """
         try:
-            ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME)
+            ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME,
+                                         key_filename=const.SSH_KEY)
             ssh_conn_object.connect()
             bundle_generate = (f"csmcli bundle_generate '{bundle_id}' '{comment}' "
                                f"'{node_name}'")
@@ -78,6 +79,7 @@ class SupportBundle:
     @staticmethod
     async def fetch_host_from_salt():
         if not client:
+            Log.warn("Salt Module Not Found.")
             return None, None
         node_list = client.Caller().function(const.PILLAR_GET,
                                              'cluster:node_list')
@@ -118,9 +120,9 @@ class SupportBundle:
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
-        hostnames, node_list =  SupportBundle.fetch_host_from_salt()
+        hostnames, node_list =  await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
-            hostnames, node_list = SupportBundle.fetch_host_from_cluster()
+            hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
         if not isinstance(hostnames, list):
             return hostnames
         threads = []
@@ -128,7 +130,7 @@ class SupportBundle:
             for index, hostname in enumerate(hostnames):
                 thread_obj = Thread(SupportBundle.execute_ssh(hostname,
                                                               bundle_id, comment,
-                                                              node_list(index)))
+                                                              node_list[index]))
 
                 thread_obj.start()
                 threads.append(thread_obj)

@@ -20,7 +20,18 @@
 from .view import CsmView, CsmAuth
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
+from csm.core.controllers.validators import Enum, ValidationErrorFormatter
+from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.common.permission_names import Resource, Action
+
+
+class GetMaintenanceSchema(Schema):
+    action = fields.Str(required=True, validate=[Enum(["node_status"])])
+
+class PostMaintenanceSchema(Schema):
+    action_items = ["shutdown", "start", "stop"]
+    resource_name = fields.Str(required=True)
+    action = fields.Str(required=True, validate=[Enum(action_items)])
 
 
 @CsmView._app_routes.view("/api/v1/maintenance/cluster/{action}")
@@ -28,23 +39,37 @@ class MaintenanceView(CsmView):
     def __init__(self, request):
         super(MaintenanceView, self).__init__(request)
         self._service = self.request.app["maintenance"]
-        self._service_action = {
-            "nodes_status": self._service.get_status,
+
+    @CsmAuth.permissions({Resource.SYSTEM: {Action.LIST}})
+    async def get(self):
+        """
+        Fetch All the Node Current Status.
+        """
+        Log.debug("Handling maintenance request")
+        action = self.request.match_info["action"]
+        try:
+            GetMaintenanceSchema().load({"action": action}, unknown="EXCLUDE")
+        except ValidationError as e:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
+        return await self._service.get_status()
+
+    @CsmAuth.permissions({Resource.SYSTEM: {Action.UPDATE}})
+    async def post(self):
+        """
+        Process Service Requests for Cluster Shutdown or Node Start Stop.
+        :return:
+        """
+        Log.debug("Handling maintenance request")
+        action = self.request.match_info["action"]
+        body = await self.request.json()
+        body['action'] = action
+        try:
+            PostMaintenanceSchema().load(body, unknown="EXCLUDE")
+        except ValidationError as e:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
+        service_action = {
             "shutdown": self._service.shutdown,
             "start": self._service.start,
             "stop": self._service.stop
         }
-
-    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
-    async def get(self):
-        """
-        GET REST implementation for Maintenance request
-        """
-        #TODO: Changes this api to get list of node
-        Log.debug("Handling maintenance request")
-        action = self.request.match_info["action"]
-        if action in self._service_action.keys():
-            node = self.request.rel_url.query.get("node", None)
-            return await self._service_action[action](node)
-        else:
-            raise InvalidRequest("Maintenance Invalid request error ...")
+        return await service_action[action](**body)

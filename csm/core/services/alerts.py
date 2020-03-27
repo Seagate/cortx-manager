@@ -199,6 +199,14 @@ class AlertRepository(IAlertStorage):
         Log.debug(f"Alerts service : Retrive alerts for history: {query_filter}")
         return await self.db(AlertsHistoryModel).get(query)
 
+    async def retrieve_by_ids(self, alert_ids)-> Iterable[AlertsHistoryModel]:
+        compares = list()
+        for uuid in alert_ids:
+            compares.append(Compare(AlertModel.alert_uuid, "=", uuid))
+        filter = Or(*compares)
+        query = Query().filter_by(filter)
+        return await self.db(AlertModel).get(query)
+
     async def count_alerts_history(self, create_time_range: DateTimeRange,\
             severity: str = None, show_update_range: DateTimeRange = None,\
             sensor_info: str = None) -> int:
@@ -499,7 +507,7 @@ class AlertsAppService(ApplicationService):
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
-
+    
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
         super().__init__()

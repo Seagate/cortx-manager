@@ -1,0 +1,130 @@
+{
+  "name": "system",
+  "description": "Maintenance for System Nodes Command.",
+  "sub_commands": [
+    {
+      "name": "stop",
+      "description": "Stop Running Nodes/Cluster",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node ID for Stopping the Node.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/stop",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "shutdown",
+      "description": "Shutdown Running Nodes/Cluster",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Provide Node ID or type 'cluster' for Stopping the Resource.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/shutdown",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "start",
+      "description": "Initialize a Non Running Node",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node Name",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/start",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "status",
+      "description": "Check Status of All Nodes.",
+      "need_confirmation": false,
+      "permissions_tag": "list",
+      "args": [
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent"
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "suppress_help": true,
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "get",
+        "target": "/{version}/maintenance/cluster/node_status",
+        "version": "v1"
+      },
+      "output": {
+        "table": {
+          "headers":
+            {
+              "name": "Node ID",
+              "online": "Online/Offline",
+              "standby": "Stand-By Status",
+              "shutdown": "Shutdown Status"
+            },
+            "filters": "node_status"
+        }
+      }
+    }
+  ]
+}

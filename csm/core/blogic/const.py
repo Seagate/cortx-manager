@@ -96,7 +96,8 @@ DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
-DEFAULT_SSH_TIMEOUT = 5
+SSH_KEY = '/root/.ssh/id_rsa_prvsnr'
+DEFAULT_SSH_TIMEOUT = 10
 USER = 'user'
 DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'root'
@@ -386,3 +387,10 @@ SSPL = 'sspl'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
+
+#Maintenance
+STATE_CHANGE = "Successfully put {node} on {state} state"
+
+#Services
+HEALTH_SERVICE = "health_service"
+ALERTS_SERVICE = "alerts_service"

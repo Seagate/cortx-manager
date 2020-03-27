@@ -22,6 +22,7 @@ from typing import Dict
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from concurrent.futures import ThreadPoolExecutor
+from csm.common.errors import CsmError, CSM_OPERATION_NOT_PERMITTED
 
 class MaintenanceAppService(ApplicationService):
     """
@@ -29,28 +30,46 @@ class MaintenanceAppService(ApplicationService):
     """
 
     def __init__(self, ha):
+        super(MaintenanceAppService, self).__init__()
         self._ha = ha
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._loop = asyncio.get_event_loop()
 
-    async def get_status(self, node) -> Dict:
+    async def get_status(self) -> Dict:
         """
         Return status of cluster. List of active and passive node
         """
         Log.debug("Get cluster status")
-        return await self._loop.run_in_executor(self._executor, self._ha.get_nodes)
+        return await self._loop.run_in_executor(self._executor,
+                                                self._ha.get_nodes)
 
-    async def shutdown(self, node) -> Dict:
-        return {}
+    async def shutdown(self, resource_name, **kwargs) -> Dict:
+        """
+        Shutdown a Node or Cluster.
+        :param resource_name:
+        :param kwargs:
+        :return:
+        """
+        return await self._loop.run_in_executor(self._executor,
+                                                self._ha.shutdown, resource_name)
 
-    async def stop(self, node) -> Dict:
+    async def stop(self, resource_name, **kwargs) -> Dict:
         """
         Stop node from cluster for maintenance
         """
-        return await self._loop.run_in_executor(self._executor, self._ha.make_node_passive, node)
+        node_status = await self._loop.run_in_executor(self._executor,
+                                                       self._ha.get_nodes)
+        if len(node_status.get("online", [])) > 1:
+            return await self._loop.run_in_executor(self._executor,
+                                                    self._ha.make_node_passive,
+                                                    resource_name)
+        raise CsmError(rc=CSM_OPERATION_NOT_PERMITTED,
+                       desc="Cannot Stop All te Nodes.")
 
-    async def start(self, node) -> Dict:
+    async def start(self, resource_name, **kwargs) -> Dict:
         """
         Start node monitoring in cluster
         """
-        return await self._loop.run_in_executor(self._executor, self._ha.make_node_active, node)
+        return await self._loop.run_in_executor(self._executor,
+                                                self._ha.make_node_active,
+                                                resource_name)

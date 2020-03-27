@@ -53,7 +53,7 @@ class CsmAgent:
         #Heath configuration
         health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
-        health_service = HealthAppService(health_repository)
+        health_service = HealthAppService(health_repository, alerts_repository)
         CsmAgent.health_monitor = HealthMonitorService(\
                 health_plugin.HealthPlugin(), health_service, alerts_repository)
         CsmRestApi._app["health_service"] = health_service
@@ -144,6 +144,7 @@ class CsmAgent:
         :return:
         """
         if not client:
+            Log.warn("Salt Module Not Found.")
             return None
         cluster_id = client.Caller().function(const.GRAINS_GET, const.CLUSTER_ID)
         for each_key in const.DECRYPTION_KEYS:
