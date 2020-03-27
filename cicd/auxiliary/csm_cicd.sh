@@ -7,9 +7,8 @@ CSM_PATH=$3
 yum install -y $RPM_PATH/*.rpm
 
 # Copy certificates
-mkdir -p /etc/ssl/stx-s3/s3/
-cp -f $CSM_REPO_PATH/jenkins/cicd/ca.crt /etc/ssl/stx-s3/s3/
-cp -f $CSM_REPO_PATH/jenkins/cicd/ca.key /etc/ssl/stx-s3/s3/
+mkdir -p /etc/ssl/stx/
+cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
 
 csm_setup post_install
 csm_setup config
