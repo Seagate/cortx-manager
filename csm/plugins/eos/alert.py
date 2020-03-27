@@ -86,6 +86,7 @@ class AlertSchemaValidator(Schema):
     disk_slot = fields.Integer(required=False, allow_none = True, \
             description="Slot number of the disk.")
     durable_id = fields.String(required=False, description="Durable Id")
+    host_id = fields.String(required=True, description="Host id of the resource")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -100,11 +101,12 @@ class AlertPlugin(CsmPlugin):
         try:
             self.comm_client = AmqpComm()
             self.monitor_callback = None
+            self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
         except Exception as e:
             Log.exception(e)
 
-    def init(self, callback_fn):
+    def init(self, callback_fn, health_plugin):
         """
         Establish connection with the RMQ Server.
         AlertPlugin's _listen method acts as the thread function.
@@ -113,6 +115,7 @@ class AlertPlugin(CsmPlugin):
            class function to which plugin will send the alerts as JSON string.  
         """
         self.monitor_callback = callback_fn
+        self.health_plugin = health_plugin
         self.comm_client.init()
 
     def process_request(self, **kwargs):
@@ -137,19 +140,25 @@ class AlertPlugin(CsmPlugin):
         4. Validating empty alert data.
         5. Validating with all appropriate data.
         """
-        if self.monitor_callback:
+        """
+        Since actuator response and alerts comes on same channel we need to
+        bifercate them.
+        """
+        Log.debug(f"Message on sensor queue: {message}")
+        status = False
+        sensor_queue_msg = JsonMessage(message).load()
+        title = sensor_queue_msg.get("title", "")
+        if "actuator" in title.lower():
+            status = self.health_plugin.health_plugin_callback(message)
+        elif "sensor" in title.lower():
             try:
-                alert = self._convert_to_csm_schema(message)
-                """Validating Schema using marshmallow"""
-                alert_validator = AlertSchemaValidator()
-                alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
-                Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
-                status = self.monitor_callback(alert_data)
-                if status:
-                    # Acknowledge the alert so that it could be
-                    # removed from the queue.
-                    Log.debug(f"Marking alert as acknowleged. status: {status}")
-                    self.comm_client.acknowledge()
+                if self.monitor_callback:
+                    alert = self._convert_to_csm_schema(message)
+                    """Validating Schema using marshmallow"""
+                    alert_validator = AlertSchemaValidator()
+                    alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
+                    Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
+                    status = self.monitor_callback(alert_data)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.
                 Log.warn(f"Acknowledge incase of validation error {ve}")
@@ -158,6 +167,11 @@ class AlertPlugin(CsmPlugin):
                 Log.warn(f"Silently acknowledge ill-formed CSM alerts: {e}")
                 # Silently acknowledge ill-formed CSM alerts
                 self.comm_client.acknowledge()
+        if status:
+            # Acknowledge the alert so that it could be
+            # removed from the queue.
+            Log.debug(f"Marking sensor response as acknowleged. status: {status}")
+            self.comm_client.acknowledge()
 
     def _listen(self):
         """

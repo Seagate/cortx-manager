@@ -52,12 +52,15 @@ class CsmAgent:
 
         #Heath configuration
         health_repository = HealthRepository()
+        health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
         health_service = HealthAppService(health_repository)
+        CsmAgent.health_monitor = HealthMonitorService(\
+                health_plugin.HealthPlugin(), health_service, alerts_repository)
         CsmRestApi._app["health_service"] = health_service
 
         pm = import_plugin_module(const.ALERT_PLUGIN)
-        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin(), health_service)
+        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
+                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin)        
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -186,8 +189,10 @@ class CsmAgent:
 
         if not Options.debug:
             CsmAgent._daemonize()
+        CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
+        CsmAgent.health_monitor.stop()
         CsmAgent.alert_monitor.stop()
 
 
@@ -204,7 +209,8 @@ if __name__ == '__main__':
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                             AlertMonitorService, AlertRepository
-        from csm.core.services.health import HealthAppService, HealthRepository
+        from csm.core.services.health import HealthAppService, HealthRepository \
+                , HealthMonitorService
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService

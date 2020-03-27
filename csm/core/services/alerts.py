@@ -30,7 +30,6 @@ from threading import Event, Thread
 from csm.common.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
-from csm.core.services.health import HealthAppService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
@@ -545,7 +544,7 @@ class AlertMonitorService(Service, Observable):
     web server.
     """
 
-    def __init__(self, repo: AlertRepository, plugin, health_service: HealthAppService):
+    def __init__(self, repo: AlertRepository, plugin, health_plugin):
         """
         Initializes the Alert Plugin
         """
@@ -554,8 +553,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_service = health_service
-
+        self._health_plugin = health_plugin      
         super().__init__()
 
     def _monitor(self):
@@ -565,7 +563,8 @@ class AlertMonitorService(Service, Observable):
         This method passes consume_alert as a callback function to alert plugin.
         """
         self._thread_running = True
-        self._alert_plugin.init(callback_fn=self._consume)
+        self._alert_plugin.init(callback_fn=self._consume, \
+                health_plugin=self._health_plugin)
         self._alert_plugin.process_request(cmd='listen')
 
     def start(self):
@@ -573,7 +572,6 @@ class AlertMonitorService(Service, Observable):
         This method creats and starts an alert monitor thread
         """
         Log.info("Starting Alert monitor thread")
-        self._update_health_schema_after_init()
         try:
             if not self._thread_running and not self._thread_started:
                 self._monitor_thread = Thread(target=self._monitor,
@@ -635,7 +633,7 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
-                self._health_service.update_health_schema(alert)
+                self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                 self._notify_listeners(alert, loop=self._loop)
                 Log.debug(f"Alert stored successfully. \
                         Alert ID : {alert.alert_uuid}")
@@ -643,7 +641,7 @@ class AlertMonitorService(Service, Observable):
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
-                    self._health_service.update_health_schema(AlertModel(message))
+                    self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                     Log.debug(f"Alert updated successfully. \
                             Alert ID : {alert.alert_uuid}")
             """
@@ -656,23 +654,6 @@ class AlertMonitorService(Service, Observable):
             Log.warn(f"Error in consuming alert: {e}")
 
         return True
-
-    def _update_health_schema_after_init(self):
-        """
-        Updates the in memory health schema after CSM init.
-        1.) Fetches all the non-resolved alerts from DB
-        2.) Update the initialized and loaded in-memory health schema
-        :param None
-        :return: None
-        """
-        try:
-            loop = asyncio.get_event_loop()
-            alerts = loop.run_until_complete(self.repo.retrieve_by_range(\
-                    create_time_range=None, resolved=False))
-            for alert in alerts:
-                self._health_service.update_health_schema(alert)
-        except Exception as e:
-            Log.warn(f"Error in update_health_schema_after_init: {e}")
 
     def _resolve_alert(self, new_alert, prev_alert):
         alert_updated = False
