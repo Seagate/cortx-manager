@@ -287,8 +287,10 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def get_account(self, account_name) -> dict:
+    async def get_account(self, account_name) -> Union[IamAccount, IamError]:
         accounts = await self.list_accounts()
+        if isinstance(accounts, IamError):
+            return accounts
         for acc in accounts.iam_accounts:
             if acc.account_name == account_name:
                 return {

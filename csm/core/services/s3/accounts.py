@@ -82,7 +82,10 @@ class S3AccountService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def get_account(self, account_name) -> dict:
-        return await self._s3_root_client.get_account(account_name)
+        account = await self._s3_root_client.get_account(account_name)
+        if isinstance(account, IamError):
+            self._raise_remote_error(account)
+        return account
 
     @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, session, continue_marker=None, page_limit=None,
