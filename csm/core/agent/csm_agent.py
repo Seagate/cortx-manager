@@ -9,7 +9,6 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
-
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -53,12 +52,15 @@ class CsmAgent:
 
         #Heath configuration
         health_repository = HealthRepository()
+        health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
         health_service = HealthAppService(health_repository)
+        CsmAgent.health_monitor = HealthMonitorService(\
+                health_plugin.HealthPlugin(), health_service, alerts_repository)
         CsmRestApi._app["health_service"] = health_service
 
         pm = import_plugin_module(const.ALERT_PLUGIN)
-        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,
-                                              pm.AlertPlugin(), health_service)
+        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
+                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin)        
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -118,12 +120,18 @@ class CsmAgent:
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
         try:
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin()
+            # TODO: consider a more safe storage
+            params = {
+                "username": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.username'),
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.password')
+            }
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
+        update_repo = UpdateStatusRepository(db)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner)
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(provisioner,
@@ -181,8 +189,10 @@ class CsmAgent:
 
         if not Options.debug:
             CsmAgent._daemonize()
+        CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
+        CsmAgent.health_monitor.stop()
         CsmAgent.alert_monitor.stop()
 
 
@@ -199,7 +209,8 @@ if __name__ == '__main__':
         from csm.core.blogic import const
         from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                             AlertMonitorService, AlertRepository
-        from csm.core.services.health import HealthAppService, HealthRepository
+        from csm.core.services.health import HealthAppService, HealthRepository \
+                , HealthMonitorService
         from csm.core.services.stats import StatsAppService
         from csm.core.services.s3.iam_users import IamUsersService
         from csm.core.services.s3.accounts import S3AccountService
@@ -209,6 +220,7 @@ if __name__ == '__main__':
         from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
         from csm.core.services.hotfix_update import HotfixApplicationService
+        from csm.core.repositories.update_status import UpdateStatusRepository
         from csm.core.email.email_queue import EmailSenderQueue
         from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
         from csm.core.services.onboarding import OnboardingConfigService

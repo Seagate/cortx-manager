@@ -23,6 +23,7 @@ import argparse
 import getpass
 import json
 import io
+import re
 from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
@@ -31,6 +32,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.csmcli import Terminal
 from csm.core.blogic import const
 from csm.common.log import Log
+from csm.core.controllers.validators import BucketNameValidator
 
 class Command:
     """CLI Command Base Class"""
@@ -109,6 +111,16 @@ class Validatiors:
     def file_type(value):
         f_type = argparse.FileType('r')
         return f_type(value)
+
+    @staticmethod
+    def bucket_name(value):
+        validator = BucketNameValidator()
+        if not validator.is_value_valid(value):
+            raise argparse.ArgumentTypeError(
+                ("Bucket Name should be between 4-56 Characters long. "
+                 "Should contain either lowercase, numeric or '-' characters. "
+                 "Not starting or ending with '-'"))
+        return str(value)
 
 
 class CommandParser:

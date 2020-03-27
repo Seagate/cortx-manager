@@ -54,16 +54,30 @@ class CsmHotfixUploadView(CsmView):
             package_ref = multipart_data['package']['file_ref']
             return await self._service.upload_package(package_ref)
 
+
 @CsmView._app_routes.view("/api/v1/upgrade/hotfix/start")
 class CsmHotfixStartView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["hotfix_service"]
+        self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
         self._service_dispatch = {}
 
     """
     POST REST implementation for starting a hotfix update
     """
     async def post(self):
-        await self._service.start_upgrade()
-        return web.Response(text='OK')
+        return await self._service.start_upgrade()
+
+
+@CsmView._app_routes.view("/api/v1/upgrade/hotfix/status")
+class CsmHotfixStartView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
+        self._service_dispatch = {}
+
+    """
+    GET REST implementation for starting a hotfix update
+    """
+    async def get(self):
+        return await self._service.get_current_status()

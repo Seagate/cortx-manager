@@ -42,7 +42,7 @@ from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
-                               CsmInternalError, ResourceExist)
+                               InvalidRequest, CsmInternalError, ResourceExist)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -167,7 +167,6 @@ class CsmRestApi(CsmApi, ABC):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
-    @staticmethod
     async def _resolve_handler(request):
         match_info = await request.app.router.resolve(request)
         return match_info.handler
@@ -267,6 +266,9 @@ class CsmRestApi(CsmApi, ABC):
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e
+        except InvalidRequest as e:
+            Log.error(f"Error: {e} \n {traceback.format_exc()}")
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except CsmNotFoundError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmPermissionDenied as e:

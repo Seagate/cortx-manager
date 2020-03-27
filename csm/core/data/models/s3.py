@@ -82,6 +82,25 @@ class IamAccountListResponse:
     is_truncated: bool
 
 
+class IamUserCredentials:
+    user_name: str
+    access_key_id: str
+    secret_key: str
+    status: str
+
+
+class IamAccessKeyMetadata:
+    user_name: str
+    access_key_id: str
+    status: str
+
+
+class IamAccessKeysListResponse:
+    access_keys: List[IamAccessKeyMetadata]
+    marker: str
+    is_truncated: bool
+
+
 class IamTempCredentials:
     """
     Information about temorary auth credentials for some login profile

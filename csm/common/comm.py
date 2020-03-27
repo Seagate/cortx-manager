@@ -176,20 +176,56 @@ class AmqpChannel(Channel):
 
     def __init__(self, **kwargs):
         Channel.__init__(self)
-        self.host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host")
-        self.port = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.port")
-        self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
-        self.username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
-        self.password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.password")
-        self.exchange_type = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange_type")
-        self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange")
-        self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exchange_queue")
-        self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.routing_key")
         self._connection = None 
         self._channel = None
-        self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.retry_count")
-        self.durable = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.durable")
-        self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.exclusive")
+        self.exchange = None
+        self.exchange_queue = None
+        self.routing_key = None
+        self.is_actuator = kwargs.get(const.IS_ACTUATOR, False)
+        self.is_node1 = kwargs.get(const.IS_NODE1, False)
+        self.node1 = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.NODE1}")
+        self.node2 = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.NODE2}")
+        self.host = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.HOST}")
+        self.port = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.PORT}")
+        self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.VHOST}")
+        self.username = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.UNAME}")
+        self.password = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.PASS}")
+        self.exchange_type = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.EXCH_TYPE}")
+        self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.RETRY_COUNT}")
+        self.durable = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.DURABLE}")
+        self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.EXCLUSIVE}")
+        self._setExchangeandQueue()
+
+    def _setExchangeandQueue(self):
+        if not self.is_actuator:
+            self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    f"{const.CHANNEL}.{const.EXCH}")
+            self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    f"{const.CHANNEL}.{const.EXCH_QUEUE}")
+            self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    f"{const.CHANNEL}.{const.ROUTING_KEY}")
+        elif self.is_actuator:
+            self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    f"{const.CHANNEL}.{const.ACT_REQ_EXCH}")
+            self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    f"{const.CHANNEL}.{const.ACT_REQ_EXCH_QUEUE}") 
+            if self.is_node1:
+                self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
+                        f"{const.CHANNEL}.{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node1
+            else:
+                self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
+                        f"{const.CHANNEL}.{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node2
 
     def init(self):
         """
@@ -411,7 +447,7 @@ class Comm(metaclass=ABCMeta):
         raise Exception('disconnect not implemented in Comm class') 
 
     @abstractmethod
-    def send(self, message):
+    def send(self, message, **kwargs):
         raise Exception('send not implemented in Comm class') 
 
     @abstractmethod
@@ -434,7 +470,7 @@ class AmqpComm(Comm):
         self._inChannel.init()
         self._outChannel.init()
 
-    def send(self, message):
+    def send(self, message, **kwargs):
         self._outChannel.send(message)
 
     def _alert_callback(self, ct, ch, method, properties, body):
@@ -484,3 +520,45 @@ class AmqpComm(Comm):
 
     def connect(self):
         raise Exception('connect not implemented for AMQP Comm')
+
+class AmqpActuatorComm(Comm):
+    def __init__(self):
+        Comm.__init__(self)
+        self._outChannel_node1 = AmqpChannel(is_actuator = True, \
+                is_node1 = True)
+        self._outChannel_node2 = AmqpChannel(is_actuator = True, \
+                is_node1 = False)
+
+    def init(self):
+        self._outChannel_node1.init()
+        self._outChannel_node2.init()
+
+    def send(self, message, **kwargs):
+        """
+        For sending storage encl we will only send it to 1 node.
+        For node server request we will send it to both node 1 & 2.
+        """
+        if kwargs.get("is_storage_request", True):
+            self._outChannel_node1.send(message)
+        else:
+            self._outChannel_node1.send(message)
+            self._outChannel_node2.send(message)
+
+    def acknowledge(self):
+        raise Exception('acknowledge not implemented for AMQPActuator Comm')
+
+    def stop(self):
+        self.disconnect()
+    
+    def recv(self, callback_fn=None, message=None):
+        raise Exception('recv not implemented for AMQPActuator Comm')
+
+    def disconnect(self):
+        try:
+            self._outChannel_node1.disconnect()
+            self._outChannel_node2.disconnect()
+        except Exception as e:
+            Log.exception(e)
+
+    def connect(self):
+        raise Exception('connect not implemented for AMQPActuator Comm')

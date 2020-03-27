@@ -102,10 +102,11 @@ class AuditService(ApplicationService):
 
     def get_date_range_from_duration(self, start_date, end_date):
         """ get date time range from given duration """
+        tz = datetime.now(timezone.utc).astimezone().tzinfo
         start_date = datetime.fromtimestamp(start_date).replace(
-                                          tzinfo=timezone.utc).isoformat()
+                                          tzinfo=tz).isoformat()
         end_date = datetime.fromtimestamp(end_date).replace(
-                                          tzinfo=timezone.utc).isoformat()
+                                          tzinfo=tz).isoformat()
         return DateTimeRange(start_date, end_date)
 
     async def create_audit_log_file(self, file_name, component, time_range):

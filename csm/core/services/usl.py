@@ -37,7 +37,7 @@ from csm.core.blogic import const
 from eos.utils.data.access import Query
 from eos.utils.data.access.filters import Compare
 from eos.utils.data.db.db_provider import DataBaseProvider
-from csm.core.data.models.s3 import S3ConnectionConfig, IamUser
+from csm.core.data.models.s3 import S3ConnectionConfig, IamUser, IamUserCredentials
 from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
@@ -186,8 +186,8 @@ class UslService(ApplicationService):
 
         return {
             'iam_user_name': iam_user.user_name,
-            'access_key_id': iam_user_credentials['access_key_id'],
-            'secret_key': iam_user_credentials['secret_key'],
+            'access_key_id': iam_user_credentials.access_key_id,
+            'secret_key': iam_user_credentials.secret_key,
             'bucket_name': bucket.name,
         }
 
@@ -230,18 +230,13 @@ class UslService(ApplicationService):
 
         return iam_user_resp
 
-    async def _get_udx_iam_user_credentials(self, iam_cli, user_name: str) -> Dict:
+    async def _get_udx_iam_user_credentials(self, iam_cli, user_name: str) -> IamUserCredentials:
         """
         Gets the access key id and secret key for UDX IAM user
         """
 
-        # TODO: this is a STUB! IAM user key creation/listing/deletion is not implemented yet
-        # and TBD in EES sprint 17.
-        # Replace with the actual IAM client call when ready
-        return {
-            'access_key_id': '',
-            'secret_key': '',
-        }
+        creds = await iam_cli.create_user_access_key(user_name)
+        return creds
 
     def _get_udx_bucket_name(self, bucket_name: str) -> str:
         return 'udx-' + bucket_name

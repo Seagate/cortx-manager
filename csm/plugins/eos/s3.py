@@ -7,6 +7,7 @@
 
  Creation Date:     10/30/2019
  Author:            Alexander Nogikh
+                    Alexander Voronov
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -29,12 +30,15 @@ from boto.iam.connection import IAMConnection
 from boto.s3.connection import S3Connection, OrdinaryCallingFormat
 from boto.connection import DEFAULT_CA_CERTS_FILE
 from boto import config as boto_config
+from http import HTTPStatus
 from csm.common.log import Log
 import json
 from csm.common.errors import CsmInternalError
+from csm.core.blogic import const
 from csm.core.data.models.s3 import (S3ConnectionConfig, IamAccount, ExtendedIamAccount,
                                      IamLoginProfile, IamUser, IamUserListResponse,
-                                     IamAccountListResponse, IamTempCredentials,
+                                     IamAccountListResponse, IamTempCredentials, IamUserCredentials,
+                                     IamAccessKeyMetadata, IamAccessKeysListResponse,
                                      IamErrors, IamError)
 
 
@@ -181,6 +185,19 @@ class IamClient(BaseClient):
             'UserName': 'user_name',
             'UserId': 'user_id',
             'Arn': 'arn'
+        }
+
+        self.IAM_USER_CREDENTIALS_MAPPING = {
+            'UserName': 'user_name',
+            'AccessKeyId': 'access_key_id',
+            'SecretAccessKey': 'secret_key',
+            'Status': 'status'
+        }
+
+        self.IAM_ACCESS_KEY_METADATA_MAPPING = {
+            'UserName': 'user_name',
+            'AccessKeyId': 'access_key_id',
+            'Status': 'status',
         }
 
     def _create_boto_connection_object(self, **kwargs):
@@ -523,6 +540,106 @@ class IamClient(BaseClient):
             return self._create_error(body)
         else:
             # TODO: our IAM server does not return the updated user information
+            return True
+
+    async def create_user_access_key(self, user_name) -> Union[ExtendedIamAccount, IamError]:
+        """
+        Creates an access key id and secret key for IAM user.
+
+        :param user_name: IAM user name
+        :returns: credentials in case of success, IamError in case of problem
+        """
+
+        Log.audit(f"Create access key for user: {user_name}")
+        params = {
+            'UserName': user_name
+        }
+
+        (code, body) = await self._query_conn(const.S3_IAM_CMD_CREATE_ACCESS_KEY,
+                                              params, '/', 'POST')
+        Log.audit(f"Create access key status code: {code}")
+        if code != HTTPStatus.CREATED:
+            return self._create_error(body)
+        else:
+            creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
+                            const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
+                                const.S3_PARAM_ACCESS_KEY]
+            return self._create_response(IamUserCredentials, creds,
+                                         self.IAM_USER_CREDENTIALS_MAPPING)
+
+    async def list_user_access_keys(self, user_name, marker=None,
+                                    max_items=None) -> Union[IamAccessKeysListResponse, IamError]:
+        """
+        Gets the list of access keys for IAM user
+        Note that max_items and marker are not working for now!!
+
+        :param user_name: IAM user name
+        :param marker: pagination marker from the previous response
+        :param max_items: maximum number of access keys to return in single response
+        :returns: IamAccessKeysListResponse in case of success, IamError otherwise
+        """
+        Log.audit(f"List IAM user's {user_name} access keys. marker: {marker},"
+                  f"max_items: {max_items}")
+        params = {
+            'UserName': user_name
+        }
+
+        if marker:
+            params[const.S3_PARAM_MARKER] = marker
+
+        if max_items:
+            params[const.S3_PARAM_MAX_ITEMS] = max_items
+
+        (code, body) = await self._query_conn(const.S3_IAM_CMD_LIST_ACCESS_KEYS, params,
+                                              '/', 'POST',
+                                              list_marker=const.S3_PARAM_ACCESS_KEY_METADATA)
+        Log.audit(f"List IAM user's access keys status code: {code}")
+        if code != HTTPStatus.OK:
+            return self._create_error(body)
+        else:
+            keys = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+                            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
+                                const.S3_PARAM_ACCESS_KEY_METADATA]
+            converted_keys = []
+            for raw in keys:
+                converted_keys.append(self._create_response(IamAccessKeyMetadata, raw,
+                                      self.IAM_ACCESS_KEY_METADATA_MAPPING))
+
+            resp = IamAccessKeysListResponse()
+            resp.access_keys = converted_keys
+            raw = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+                            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
+                                const.S3_PARAM_IS_TRUNCATED]
+
+            resp.is_truncated = raw == 'true'
+            if resp.is_truncated:
+                resp.marker = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+                                        const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
+                                            const.S3_PARAM_MARKER]
+
+            return resp
+
+    async def delete_user_access_key(self, user_name, access_key_id) -> Union[bool, IamError]:
+        """
+        Deletes an access key for IAM user.
+
+        :param user_name: IAM user name
+        :param access_key_id: ID of the access key to be deleted
+        :returns: true in case of success, IamError in case of problem
+        """
+
+        Log.audit(f"Delete access key {access_key_id} for IAM user {user_name}")
+        params = {
+            'UserName': user_name,
+            'AccessKeyId': access_key_id,
+        }
+
+        (code, body) = await self._query_conn(const.S3_IAM_CMD_DELETE_ACCESS_KEY, params,
+                                              '/', 'POST')
+        Log.debug(f"Delete iam User status code: {code}")
+        if code != HTTPStatus.OK:
+            return self._create_error(body)
+        else:
             return True
 
 

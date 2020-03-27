@@ -22,7 +22,9 @@ import re
 from csm.common.log import Log
 from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
+from csm.core.services.alerts import AlertsAppService
 from csm.common.errors import InvalidRequest
+from csm.core.controllers.validators import CommentsValidator
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
@@ -31,6 +33,8 @@ from csm.common.log import Log
 from csm.core.controllers.view import CsmView
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
+INVALID_JSON_OR_BODY_MISSING = "Request body missing or invalid json"
+
 """
 this will go into models
 """
@@ -64,6 +68,12 @@ class AlertsQueryParameter(Schema):
     class Meta:
         strict = False
 
+class AlertsPatchParameter(Schema):
+    acknowledged = fields.Boolean(required=False, default=None, missing=None)
+
+    class Meta:
+        strict = False
+    
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(web.View):
@@ -90,9 +100,8 @@ class AlertsListView(web.View):
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             body = await self.request.json()
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args="Request body missing")
-
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest("Request body missing or invlaid json")
         return await self.alerts_service.update_all_alerts(body)
 
 
@@ -109,9 +118,19 @@ class AlertsView(web.View):
         Log.debug(f"Handling update alerts patch request for id: {alert_id}."
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
-            body = await self.request.json()
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args="Request body missing")
+            body_json = await self.request.json()
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(INVALID_JSON_OR_BODY_MISSING)
+        
+        alerts_body = AlertsPatchParameter()
+        
+        try:
+            body = alerts_body.load(body_json, partial=True, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest("Invalid Parameter for alerts", str(val_err))
+        
+        if not body:
+            raise InvalidRequest("Invalid Parameter for alerts", message_args=body_json)
         return await self.alerts_service.update_alert(alert_id, body)
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
@@ -154,7 +173,7 @@ class AlertCommentsView(web.View):
             schema = AlertCommentsCreateSchema()
             comment_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest(INVALID_JSON_OR_BODY_MISSING)
         except ValidationError as ve:
             raise InvalidRequest(ValidationErrorFormatter.format(ve))
 
