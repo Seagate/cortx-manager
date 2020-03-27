@@ -265,9 +265,36 @@ class Output:
         return f"error({rc}): Error:- {stacktrace.get('message')}"
 
     @staticmethod
-    def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
-        """Format for Table Data"""
-        table_obj = PrettyTable()
+    def create_by_row(table_obj, table,data):
+        """
+        Features Creation of Table By Filling each row data.
+
+        This Works for Data which is in format as follows:
+        1) Either the Data is in an array of Dictionaries.
+        e.g.
+         {
+            "filters":[
+                    {
+                         "key1":"value1",
+                         "key2":"value2"
+                    },
+                    {
+                         "key1":"value1",
+                         "key2":"value2"
+                    }
+                ]
+         }
+        2) The Data is a complete Single Dictionary.
+          {
+         "key1":"value1",
+         "key2":"value2"
+         }
+
+        :param table_obj: Pretty Table Object :type:Object
+        :param data: data to be displayed in Table :type:dict
+        :param table: Table Output From Json :type:dict
+        :return:
+        """
         table_obj.field_names = table["headers"].values()
         if table.get("filters", False):
             for each_row in data[table["filters"]]:
@@ -275,6 +302,50 @@ class Output:
                     [each_row.get(x) for x in table["headers"].keys()])
         else:
             table_obj.add_row([data.get(x) for x in table["headers"].keys()])
+
+    @staticmethod
+    def create_by_column(table_obj, table, data):
+        """
+        Features Creation of Table By Filling each column data.
+
+        This Works for Data which is in format as follows:
+        1) For a Response Where the data compromised of multiple Keys and each
+         contain list of Options.
+        e.g.:
+        {
+            "key1" : ["Value1", "Value2", ......., "ValueN"],
+            "key2" : ["Value1", "Value2", ......., "ValueN"]
+        }
+
+        :param table_obj: Pretty Table Object :type:Object
+        :param data: data to be displayed in Table :type:dict
+        :param table: Table Output From Json :type:dict
+        :return:
+        """
+        # Finds the List which has Max Values.
+        max_length_list = max(map(lambda key: len(data[key]), table["headers"].keys()))
+        for each_key in table["headers"].keys():
+            # Make All the Other Lists to same length to maintain Uniformity for the
+            # table displayed on CLI.
+            padding_length = max_length_list - len(data[each_key])
+            new_data = data[each_key]
+            new_data.extend(padding_length * [table.get("padding_element", " ")])
+            # Add Padded List to the Column.
+            table_obj.add_column(table['headers'][each_key], new_data)
+
+    @staticmethod
+    def dump_table(data: Any, table: Dict, **kwargs: Dict) -> str:
+        """
+        Format for Table Data
+        :param data: data to be displayed in Table :type:dict
+        :param table: Table Output From Json :type:dict
+        :return: Created Table. :type Str
+        """
+        table_obj = PrettyTable()
+        if table.get("create_by_column", False):
+            Output.create_by_column(table_obj, table, data)
+        else:
+            Output.create_by_row(table_obj, table, data)
         return "{0}".format(table_obj)
 
     @staticmethod

@@ -19,12 +19,10 @@
 
 import sys
 import os
-import time
 import asyncio
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.core.blogic import const
+from csm.test.common import TestFailed
 from csm.common.log import Log
 from core.services.maintenance import MaintenanceAppService
 from csm.common.ha_framework import PcsHAFramework
@@ -52,7 +50,7 @@ def nodes_status(args):
     _maintenance, _loop = TestMaintenanceAppService.init()
     Log.console('Testing node status ...')
     status = _loop.run_until_complete(_maintenance.get_status(node=None))
-    if "nodes" in status and "online" in status and "offline" in status:
+    if status:
         Log.console(status)
     else:
         raise TestFailed("Node status test failed")

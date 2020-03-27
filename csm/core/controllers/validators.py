@@ -170,6 +170,14 @@ class Server(Validator):
             raise ValidationError(
                 "Invalid server name.")
 
+class Enum(Validator):
+    def __init__(self, validator_values):
+        self._validator_values = validator_values
+    def __call__(self, value):
+        if value not in self._validator_values:
+            raise ValidationError(
+                f"Incorrect Value: Should be from {' '.join(self._validator_values)}"
+            )
 
 class ValidationErrorFormatter:
     @staticmethod

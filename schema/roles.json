@@ -2,6 +2,7 @@
     "root": {
         "permissions": {
             "maintenance": ["list", "update"],
+            "system": ["list", "update"],
             "notification": ["update"]
         }
     },
@@ -15,6 +16,7 @@
             "users": ["list", "update", "delete", "create"],
             "s3accounts": ["list", "create"],
             "auditlog": ["list", "read"]
+
         }
     },
     "monitor": {

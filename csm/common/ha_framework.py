@@ -21,6 +21,8 @@ import sys
 import os
 import time
 from csm.common.process import SimpleProcess
+from csm.common.payload import JsonMessage
+from csm.core.blogic import const
 
 class HAFramework:
     def __init__(self, resource_agents):
@@ -62,34 +64,27 @@ class PcsHAFramework(HAFramework):
                 Online: node1 node2
                 Offline:
         """
-        _livenode_cmd = "/usr/sbin/pcs status nodes corosync"
-        _proc = SimpleProcess(_livenode_cmd)
+        _live_node_cmd = "hctl node status"
+        _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s"
-                            %(_livenode_cmd, _rc, _err))
-        _status_list = _output.split('\n')
-        _activenodes = _status_list[1].split()
-        _activenodes.pop(0)
-        _inactivenodes = _status_list[2].split()
-        _inactivenodes.pop(0)
-        _allnodes = _activenodes + _inactivenodes
-        return { "nodes": _allnodes, "online": _activenodes, "offline": _inactivenodes }
+                            %(_live_node_cmd, _rc, _err))
+        return {"node_status": JsonMessage(_output.strip()).load()}
 
     def make_node_active(self, node):
         """
             Put node on standby node for maintenance use
         """
         try:
-            _standby_cmd = "/usr/sbin/pcs node standby "
+            _standby_cmd = "hctl node standby "
             _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
             _proc = SimpleProcess(_standby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
                 raise Exception(_err)
             node = "all nodes" if node == "all" else node
-            result = "Successfully put " + node + " on active state"
-            return { "message": result}
+            return { "message": const.STATE_CHANGE.format(node=node, state='active')}
         except Exception as e:
             raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
 
@@ -98,15 +93,14 @@ class PcsHAFramework(HAFramework):
             Put node on standby node for maintenance use
         """
         try:
-            _standby_cmd = "/usr/sbin/pcs node unstandby "
+            _standby_cmd = "hctl node unstandby "
             _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
             _proc = SimpleProcess(_standby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
                 raise Exception(_err)
             node = "all nodes" if node == "all" else node
-            result = "Successfully put " + node + " on passive state"
-            return { "message": result}
+            return { "message": const.STATE_CHANGE.format(node=node, state='passive')}
         except Exception as e:
             raise Exception("Failed to remove %s from passive state. Error: %s" %(node,e))
 
@@ -114,10 +108,23 @@ class PcsHAFramework(HAFramework):
         """
             Return if HAFramework in up or down
         """
-        _cluster_status_cmd = "/usr/sbin/pcs cluster status"
+        _cluster_status_cmd = "hctl cluster status"
         _proc = SimpleProcess(_cluster_status_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         return 'down' if _err != '' else 'up'
+
+    def shutdown(self, node):
+        """
+            Shutdown the current Cluster or Node.
+        :return:
+        """
+        _cluster_shutdown_cmd = f"hctl node shutdown {node}"
+        _proc = SimpleProcess(_cluster_shutdown_cmd)
+        _output, _err, _rc = _proc.run(universal_newlines=True)
+        if _rc != 0:
+            raise Exception(_err)
+        result = f"{node} Shutdown Successful."
+        return {"message": result}
 
 class ResourceAgent:
     def __init__(self, resources):
