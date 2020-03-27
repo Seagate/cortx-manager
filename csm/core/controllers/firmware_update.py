@@ -74,10 +74,23 @@ class FirmwareUpdateView(CsmView):
     async def post(self):
         Log.info(f"Handling firmware package update api"
                  f" user_id: {self.request.session.credentials.user_id}")
-        package_info = await self._service.check_for_package_availibility()
-        if not package_info.get("is_available"):
-            raise CsmNotFoundError(f"Firmware package {package_info.get('valid_firmware_package_name', '')} not found.")
-        return await self._service.trigger_firmware_upload(package_info)
+        availibility_status =  await self._service.check_for_package_availibility()
+        if availibility_status:
+            return await self._service.trigger_firmware_upload()
+
+
+@CsmView._app_routes.view("/api/v1/upgrade/firmware/status")
+class FirmwareUpdateStatusView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.FW_UPDATE_SERVICE]
+        self._service_dispatch = {}
+
+    """
+    GET REST implementation for getting current status of firmware upgrade
+    """
+    async def get(self):
+        return await self._service.get_current_status()
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/firmware/availibility")
@@ -94,9 +107,4 @@ class FirmwarePackageAvailibility(CsmView):
     async def get(self):
         Log.info(f"Handling get last firmware upgrade status api"
                  f" user_id: {self.request.session.credentials.user_id}")
-        package_info = await self._service.check_for_package_availibility()
-        if not package_info.get("is_available"):
-            raise CsmNotFoundError(f"Firmware package {package_info.get('valid_firmware_package_name', '')} not found.")
-        return {"package_path":os.path.join(package_info.get('firmware_store_path'), 
-                                            package_info.get('valid_firmware_package_name', '')),
-                "package_version":package_info.get('valid_firmware_package_version')}
+        return await self._service.check_for_package_availibility()

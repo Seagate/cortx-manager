@@ -44,7 +44,7 @@ class HotfixApplicationService(ApplicationService):
         model = await self._hotfix_repo.get_current_model(self.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
             try:
-                result = await self._provisioner_plugin.get_software_upgrade_status(model.provisioner_id)
+                result = await self._provisioner_plugin.get_upgrade_status(model.provisioner_id)
                 model.apply_status_update(result)
                 await self._hotfix_repo.save_model(model)
             except:

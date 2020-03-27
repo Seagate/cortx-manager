@@ -113,9 +113,9 @@ class ProvisionerPlugin:
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_software_upgrade_status(self, query_id) -> ProvisionerStatusResponse:
+    async def get_upgrade_status(self, query_id) -> ProvisionerStatusResponse:
         """
-        Polls Provisioner for the status of a software update process
+        Polls Provisioner for the status of a software and firmware update process
         """
         def _command_handler():
             # TODO: separately handle the case when the problem is related to the communication to the provisioner
@@ -140,19 +140,18 @@ class ProvisionerPlugin:
         return {"version": "1.2.3",
                 "file_path": file_path}
 
-    async def trigger_firmware_upload(self, fw_package_info):
-        # TODO: Provisioner api to trigger firmware update tobe implented here
-        Log.debug("Triggering firmware upgrade.")
-        return {"status":"Firmware update triggered succesfully",
-                "package_name": fw_package_info.get("valid_firmware_package_name",""),
-                "package_version": fw_package_info.get("valid_firmware_package_version")}
+    async def trigger_firmware_upload(self, fw_package_path):
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
 
-    async def get_last_firmware_upgrade_status(self):
-        # TODO: Provisioner api to get last firmware upgrade status.
-        Log.debug("Getting last firmware upgrade status")
-        return {"status": "Successful",
-                "DateTime": "YYYY-MM-DD-HH:MM:SS",
-                "version": "1.2.3"}
+        def _command_handler():
+            try:
+                return self.provisioner.fw_update(source = fw_package_path, nowait = True)
+            except Exception as e:
+                Log.exception(e)
+                raise CsmInternalError('Failed to start the upgrade process')
+
+        return await self._await_nonasync(_command_handler)
 
     async def set_ntp(self, ntp_data: dict):
         """
