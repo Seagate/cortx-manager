@@ -85,7 +85,10 @@ class S3AccountService(ApplicationService):
         account = await self._s3_root_client.get_account(account_name)
         if isinstance(account, IamError):
             self._raise_remote_error(account)
-        return account
+        return {
+            "account_name": account.account_name,
+            "account_email": account.account_email
+        }
 
     @Log.trace_method(Log.DEBUG)
     async def list_accounts(self, session, continue_marker=None, page_limit=None,

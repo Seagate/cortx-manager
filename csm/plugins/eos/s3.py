@@ -293,10 +293,7 @@ class IamClient(BaseClient):
             return accounts
         for acc in accounts.iam_accounts:
             if acc.account_name == account_name:
-                return {
-                    "account_name": acc.account_name,
-                    "account_email": acc.account_email
-                }
+                return acc
         return None
 
     @Log.trace_method(Log.DEBUG)
