@@ -24,7 +24,7 @@ from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
-from csm.common.errors import InvalidRequest, CsmPermissionDenied
+from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
 
 
 # TODO: find out about policies for names and passwords
@@ -75,7 +75,13 @@ class S3AccountsListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        return await self._service.create_account(**account_body)
+        try:
+            await self.request.app["csm_user_service"].get_user(account_body['account_name'])
+        except CsmNotFoundError:
+            # If csm_user with same user_id as passed s3 account_name wasn't found
+            return await self._service.create_account(**account_body)
+        else:
+            raise InvalidRequest("CSM user with same username as passed S3 account name alreay exists")
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts/{account_id}")
