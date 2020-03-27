@@ -386,3 +386,7 @@ SSPL = 'sspl'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
+
+#Services
+HEALTH_SERVICE = "health_service"
+ALERTS_SERVICE = "alerts_service"
