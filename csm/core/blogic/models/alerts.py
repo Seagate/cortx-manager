@@ -80,6 +80,7 @@ class AlertModel(CsmModel):
     version = StringType()
     disk_slot = IntType()
     durable_id = StringType() 
+    host_id = StringType() 
 
     def to_primitive(self) -> dict:
         obj = super().to_primitive()

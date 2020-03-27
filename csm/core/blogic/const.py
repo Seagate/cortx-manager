@@ -165,6 +165,7 @@ ALERT_RACK_ID = 'rack_id'
 ALERT_NODE_ID = 'node_id'
 ALERT_RESOURCE_ID = 'resource_id'
 ALERT_EVENT_TIME = 'event_time'
+SPECIFIC_INFO = 'specific_info'
 
 # Health
 HEALTH = 'health'
@@ -172,10 +173,49 @@ OK_HEALTH = 'ok'
 TOTAL = 'total'
 GOOD_HEALTH = 'good'
 HEALTH_SUMMARY = 'health_summary'
+RESOURCE_KEY = 'resource_key'
+IS_ACTUATOR = 'is_actuator'
+IS_NODE1 = 'is_node1'
+CHANNEL = 'CHANNEL'
+NODE1 = 'node1'
+NODE2 = 'node2'
+HOST = 'host'
+PORT = 'port'
+VHOST = 'virtual_host'
+UNAME = 'username'
+PASS = 'password'
+EXCH_TYPE = 'exchange_type'
+RETRY_COUNT = 'retry_count'
+DURABLE = 'durable'
+EXCLUSIVE = 'exclusive'
+EXCH = 'exchange'
+EXCH_QUEUE = 'exchange_queue'
+ROUTING_KEY = 'routing_key'
+ACT_REQ_EXCH = 'actuator_req_exchange'
+ACT_REQ_EXCH_QUEUE = 'actuator_req_queue'
+ACT_REQ_ROUTING_KEY = 'actuator_req_routing_key'
+ENCLOSURE = 'enclosure'
+NODE = 'node'
+TIME = 'time'
+HEADER = 'sspl_ll_msg_header'
+UUID = 'uuid'
+ACT_REQ_TYPE = 'actuator_request_type'
+STORAGE_ENCL = 'storage_enclosure'
+ENCL_REQ = 'enclosure_request'
+ENCL = 'ENCL:'
+NODE_CONTROLLER = 'node_controller'
+NODE_REQ = 'node_request'
+NODE_HW = 'NDHW:'
+KEY = 'key'
+HEALTH_FIELD ='health_field'
+RES_ID_FIELD = 'res_id_field'
+MAPPING_KEY = 'mapping_key'
+RESOURCE_LIST = 'resource_list'
+DURABLE_ID = 'durable_id'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
-HEALTH_CSM_SCHEMA_KEY_MAPPING = '{}/health_csm_schema_key_mapping.json'.format(CSM_PATH)
+HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 
 # Support Bundle
@@ -311,6 +351,7 @@ HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
+HEALTH_PLUGIN = "health"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 

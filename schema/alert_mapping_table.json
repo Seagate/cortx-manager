@@ -17,7 +17,9 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
     "message.sensor_response_type.specific_info.fans": "events",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.name": "name"
   },
   "controller": {
@@ -38,6 +40,8 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.serial-number": "serial_number"
   },
   "disk": {
@@ -58,8 +62,10 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
     "message.sensor_response_type.specific_info.serial-number": "serial_number",
     "message.sensor_response_type.specific_info.size": "volume_size",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.slot": "disk_slot"
   },
   "psu": {
@@ -79,6 +85,8 @@
     "message.sensor_response_type.info.rack_id": "sensor_info.rack_id",
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id"
   },
   "sideplane": {
@@ -99,7 +107,9 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
     "message.sensor_response_type.specific_info.unhealthy_components": "events",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.name": "name"
   },
   "logical_volume": {
@@ -117,9 +127,11 @@
     "message.sensor_response_type.info.rack_id": "sensor_info.rack_id",
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
     "message.sensor_response_type.specific_info.disk-group": "events",
     "message.sensor_response_type.specific_info.volume-group": "volume_group",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.volume-name": "name"
   },
   "volume": {
@@ -138,8 +150,10 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
     "message.sensor_response_type.specific_info.disk-group": "events",
     "message.sensor_response_type.specific_info.size": "volume_size",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.total-size": "volume_total_size"
   },
   "nw": {
@@ -154,6 +168,8 @@
     "message.sensor_response_type.info.rack_id": "sensor_info.rack_id",
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id"
   },
   "system": {
@@ -173,6 +189,8 @@
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
     "message.sensor_response_type.specific_info.uname.version": "version",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.specific_info.uname.nodename": "name"
   },
   "cpu": {
@@ -190,6 +208,8 @@
     "message.sensor_response_type.info.rack_id": "sensor_info.rack_id",
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id"
   },
   "temperature": {
@@ -204,6 +224,8 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   },
   "voltage": {
@@ -218,6 +240,8 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   },
   "current": {
@@ -234,6 +258,8 @@
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
     "message.sensor_response_type.specific_info.sensor-name": "name",
     "message.sensor_response_type.specific_info.durable-id": "durable_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   },
   "raid": {
@@ -249,6 +275,8 @@
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
     "message.sensor_response_type.specific_info.device": "name",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   },
   "disk_space": {
@@ -263,6 +291,8 @@
     "message.sensor_response_type.info.node_id": "sensor_info.node_id",
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
+    "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
+    "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   }
 }
