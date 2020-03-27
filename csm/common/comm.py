@@ -83,7 +83,8 @@ class SSHChannel(Channel):
         self.allow_agent = True
         self._ssh = None
         self._node = node
-        self._look_for_keys = True
+        self.look_for_keys = args.get('look_for_keys', False)
+        self.key_filename = args.get('key_filename', None)
         self._ssh_timeout = Conf.get(const.CSM_GLOBAL_INDEX,
                 const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
         for key, value in args.items():
@@ -99,7 +100,7 @@ class SSHChannel(Channel):
         try:
             self._ssh.connect(self._node, username=self._user,
                     timeout=self._ssh_timeout, allow_agent=self.allow_agent,
-                    look_for_keys=self._look_for_keys)
+                    key_filename=self.key_filename)
             if not self.ftp_enabled: return 0
             self._sftp = self._ssh.open_sftp()
         except socket.error as e:

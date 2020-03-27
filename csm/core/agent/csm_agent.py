@@ -144,6 +144,7 @@ class CsmAgent:
         :return:
         """
         if not client:
+            Log.warn("Salt Module Not Found.")
             return None
         cluster_id = client.Caller().function(const.GRAINS_GET, const.CLUSTER_ID)
         for each_key in const.DECRYPTION_KEYS:
