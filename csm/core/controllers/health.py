@@ -17,15 +17,67 @@
  ****************************************************************************
 """
 
+import json
+import re
+from aiohttp import web
+from csm.core.controllers.view import CsmView
+from marshmallow import Schema, fields, validate, ValidationError, validates
+from csm.core.controllers.validators import ValidationErrorFormatter
+from csm.common.errors import InvalidRequest
+from csm.common.log import Log
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.blogic import const
 
-@CsmView._app_routes.view("/api/v1/system/health")
-class HealthView(CsmView):
+class HealthViewQueryParameter(Schema):
+    node_id = fields.Str(default=None, missing=None)
+
+@CsmView._app_routes.view("/api/v1/system/health/summary")
+class HealthSummaryView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self.health_service = self.request.app["health_service"]        
+        self.health_service = self.request.app[const.HEALTH_SERVICE]        
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         return await self.health_service.fetch_health_summary()
+
+@CsmView._app_routes.view("/api/v1/system/health/view")
+class HealthView(web.View):
+    def __init__(self, request):
+        super().__init__(request)
+        self.health_service = self.request.app[const.HEALTH_SERVICE]
+        
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
+    async def get(self):
+        """Calling Alerts Get Method"""
+        Log.debug(f"Fetch Health view. "
+                  f"user_id: {self.request.session.credentials.user_id}")
+        health_view_qp = HealthViewQueryParameter()
+        try:
+            health_view_data = health_view_qp.load(self.request.rel_url.query,
+                                        unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        node_health_summary = await self.health_service.fetch_health_view(**health_view_data)
+        return node_health_summary
+
+@CsmView._app_routes.view("/api/v1/system/health/node")
+class NodeHealthView(web.View):
+    def __init__(self, request):
+        super().__init__(request)
+        self.health_service = self.request.app[const.HEALTH_SERVICE]
+
+    @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}}) 
+    async def get(self):
+        """Calling Alerts Get Method"""
+        Log.debug(f"Fetch Health view. "
+                  f"user_id: {self.request.session.credentials.user_id}")
+        health_view_qp = HealthViewQueryParameter()
+        try:
+            health_view_data = health_view_qp.load(self.request.rel_url.query,
+                                        unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        node_health_summary = await self.health_service.fetch_node_health(**health_view_data)        
+        return node_health_summary

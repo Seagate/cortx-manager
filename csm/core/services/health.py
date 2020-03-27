@@ -18,6 +18,7 @@
  ****************************************************************************
 """
 from csm.core.blogic import const
+from typing import Optional, Iterable, Dict
 from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
@@ -55,8 +56,9 @@ class HealthAppService(ApplicationService):
         Provides operations on in memory health schema
     """
 
-    def __init__(self, repo: HealthRepository):
+    def __init__(self, repo: HealthRepository, alerts_repo):
         self.repo = repo
+        self.alerts_repo = alerts_repo
         self._init_health_schema()
 
     def _init_health_schema(self):
@@ -65,8 +67,56 @@ class HealthAppService(ApplicationService):
         self._health_schema = Payload(Json(health_schema_path))
         self.repo.health_schema = self._health_schema
         self.repo.health_schema.dump()
+    
+    async def fetch_health_view(self, **kwargs):
+        """
+        Fetches health details like health summary and alerts for the provides
+        node key.
+        1.) If key is specified, get the schema for the provided key.
+        2.) If key is not provided, get all the data for the childern under
+        'nodes'
+        :param kwargs:
+        :return:
+        """
+        node_id = kwargs.get(const.ALERT_NODE_ID, "")
+        node_health_details = []
+        keys = []
+        if node_id:
+           keys.append(node_id)
+        else:
+            parent_health_schema = self._get_schema(const.KEY_NODES)
+            keys = self._get_child_node_keys(parent_health_schema)
 
-    async def fetch_health_summary(self):
+        for key in keys:
+            node_details = await self._get_node_health_details(key)
+            node_health_details.append(node_details)
+        return node_health_details
+
+    async def fetch_node_health(self, **kwargs):
+        """
+        Fetches health details like health summary for the provided
+        node key.
+        1.) If key is specified, get the schema for the provided key.
+        2.) If key is not provided, get all the data for the childern under
+        'nodes'
+        :param kwargs:
+        :return:
+        """
+        node_id = kwargs.get(const.ALERT_NODE_ID, "")
+        node_health_details = []
+        keys = []
+        if node_id:
+             keys.append(node_id)
+        else:
+            parent_health_schema = self._get_schema(const.KEY_NODES)
+            keys = self._get_child_node_keys(parent_health_schema)
+
+        for key in keys:
+            node_details = self._get_node_health(key)
+            node_health_details.append(node_details)
+        return node_health_details
+
+    async def fetch_health_summary(self , node_id: Optional[str] = None):
         """
         Fetch health summary from in-memory health schema
         1.) Gets the health schema from repo
@@ -74,23 +124,89 @@ class HealthAppService(ApplicationService):
         :param None
         :returns: Health Summary Json
         """
-        health_schema = self.repo.health_schema._data
+        health_schema = self._get_schema()
         health_count_map = {}
         leaf_nodes = []
-        self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes)
+        self._get_leaf_node_health(health_schema, health_count_map, leaf_nodes, {})
+        return {
+            const.HEALTH_SUMMARY: self._get_health_count(health_count_map, leaf_nodes)}
+
+    async def _get_node_health_details(self, node_id):
+        """
+        Get health details like health summary and alerts for the provided node_id
+        :param node_id:
+        :return:
+        """
+        health_count_map = {}
+        leaf_nodes = []
+        alert_uuid_map = {}
+        health_schema = self._get_schema(node_id)
+        self._get_leaf_node_health(health_schema, health_count_map,
+                                   leaf_nodes, alert_uuid_map)
+        health_summary = self._get_health_count(health_count_map, leaf_nodes)
+        alerts = await self._get_node_alerts(alert_uuid_map)
+        node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, const.ALERTS_COMMAND: alerts}}
+        return node_details
+
+    def _get_node_health(self, node_id):
+        """
+        Get health details like health summary for the provided node_id
+        :param node_id:
+        :return:
+        """
+        health_count_map = {}
+        leaf_nodes = []
+        alert_uuid_map = {}
+        health_schema = self._get_schema(node_id)
+        self._get_leaf_node_health(health_schema, health_count_map,
+                                   leaf_nodes, alert_uuid_map)
+        health_summary = self._get_health_count(health_count_map, leaf_nodes)
+        node_details = {node_id: {const.HEALTH_SUMMARY: health_summary}}
+        return node_details
+
+    async def _get_node_alerts(self, alert_uuid_map):
+        alert_ids = set()
+        for x in alert_uuid_map:
+            if x.lower() != const.OK_HEALTH.lower():
+                alert_ids.update(alert_uuid_map.get(x, [])) 
+
+        if alert_ids:
+            alerts_list = await self.alerts_repo.retrieve_by_ids(alert_ids)
+            alerts = [alert.to_primitive() for alert in alerts_list]                    
+        return alerts
+        
+
+    def _get_health_count(self, health_count_map, leaf_nodes):
+        """
+        Get the health count based on the health status
+        :param health_count_map:
+        :param leaf_nodes:
+        :return:
+        """
         bad_health_count = 0
         total_leaf_nodes = len(leaf_nodes)
-        health_summary={}
+        health_summary = {}
         health_summary[const.TOTAL] = total_leaf_nodes
         for x in health_count_map:
-            if(x != const.OK_HEALTH):
+            if x.lower() != const.OK_HEALTH.lower():
                 health_summary[x] = health_count_map[x]
                 bad_health_count += health_count_map[x]
         good_health_count = total_leaf_nodes - bad_health_count
         health_summary[const.GOOD_HEALTH] = good_health_count
-        return {const.HEALTH_SUMMARY: {x: health_summary[x] for x in health_summary}}
-        
-    def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes):
+        return {x: health_summary[x] for x in health_summary}
+
+    def _get_schema(self, key: Optional[str] = None):
+        """
+        Get health schema based on the key provided
+        :param key:
+        :return:
+        """
+        health_schema = self.repo.health_schema._data
+        if key and not key.isspace():
+            health_schema = self._get_health_schema_by_key(health_schema, key)
+        return health_schema
+
+    def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes, alert_uuid_map):
         """
         Identify non-empty leaf nodes of in-memory health schema
         and get health summary.
@@ -105,61 +221,31 @@ class HealthAppService(ApplicationService):
         :param health schema, health_count_map, leaf_nodes
         :returns: Health Summary Json
         """
-        def checkchilddict(health_schema):
+        if health_schema:
             for k, v in health_schema.items():
                 if isinstance(v, dict):
-                    return True
+                    if(self._checkchilddict(v)):
+                        self._get_leaf_node_health(v, health_count_map, leaf_nodes, alert_uuid_map)
+                    else:
+                        if v:
+                            leaf_nodes.append(v)
+                            health_status = v.get(const.HEALTH, "").lower()
+                            if v.get(const.HEALTH):                                
+                                if health_count_map.get(health_status):
+                                    health_count_map[health_status] += 1
+                                else:
+                                    health_count_map[health_status] = 1
 
-        def isempty(health_schema):
-            if(health_schema.items()):
-                return False
-            return True
+                            if v.get(const.ALERT_UUID):
+                                if alert_uuid_map.get(health_status):  
+                                    alert_uuids = alert_uuid_map[health_status]
+                                    if v.get(const.ALERT_UUID) not in alert_uuids:
+                                        alert_uuids.append(v.get(const.ALERT_UUID))
+                                else:
+                                    alert_uuid_map[health_status] = [v.get(const.ALERT_UUID)]
+        else:
+            Log.warn(f"Empty health_schema")
 
-        for k, v in health_schema.items():
-            if isinstance(v, dict):
-                if(checkchilddict(v)):
-                    self._get_leaf_node_health(v, health_count_map, leaf_nodes)
-                else:
-                    if(not isempty(v)):
-                        leaf_nodes.append(v)
-                        if (const.HEALTH in v):
-                            if (v[const.HEALTH] in health_count_map):
-                                health_count_map[v[const.HEALTH]] += 1
-                            else:
-                                health_count_map[v[const.HEALTH]] = 1
-
-    def update_health_map(self, msg_body):
-        Log.debug(f"Updating health map : {msg_body}")
-        try:
-            for items in msg_body.get("resource_list", []):
-                resource_key = items.get("resource_key", "")
-                resource_map = self.repo.health_schema.get\
-                        (resource_key)
-                key = items.get("key", "")
-                resource_schema_dict = self._get_health_schema_by_key\
-                        (resource_map, key)
-                if resource_schema_dict:
-                    resource_schema_dict[const.HEALTH_ALERT_TYPE] \
-                        = msg_body.get(const.HEALTH_ALERT_TYPE, "")
-                    resource_schema_dict[const.ALERT_SEVERITY] \
-                        = msg_body.get(const.ALERT_SEVERITY, "")
-                    resource_schema_dict[const.ALERT_UUID] \
-                        = msg_body.get(const.ALERT_UUID, "")
-                    resource_schema_dict["fetch_time"] \
-                        = msg_body.get("fetch_time", "")
-                    resource_schema_dict[const.ALERT_HEALTH] \
-                        = items.get(const.ALERT_HEALTH, "")
-                    resource_schema_dict["durable_id"] \
-                        = items.get("durable_id", "")
-                    self._set_health_schema_by_key\
-                            (resource_map, items.get("key", ""), resource_schema_dict)
-                    Log.debug(f"Health map updated for: {key}")
-                else:
-                    Log.warn(f"Resource not found in health map. Key :{key}")
-        except Exception as ex:
-            Log.warn(f"Health Map Updation failed :{msg_body}")
-
-       
     def _checkchilddict(self, obj):
         """
         Check if the obj has child dicts
@@ -169,6 +255,19 @@ class HealthAppService(ApplicationService):
         for k, v in obj.items():
             if isinstance(v, dict):
                 return True
+    
+    def _get_child_node_keys(self, obj):
+        """
+        Get the keys of the children dict for the provided obj
+        :param obj:
+        :return:
+        """
+        keys = []
+        if obj: 
+            for k, v in obj.items():
+                if isinstance(v, dict):
+                    keys.append(k)
+        return keys
 
     def _get_health_schema_by_key(self, obj, key):
         """
@@ -210,6 +309,37 @@ class HealthAppService(ApplicationService):
                             setValue(v)
             except Exception as ex:
                 Log.warn(f"Setting health schema by key failed:{ex}")
+
+    def update_health_map(self, msg_body):
+        Log.debug(f"Updating health map : {msg_body}")
+        try:
+            for items in msg_body.get("resource_list", []):
+                resource_key = items.get("resource_key", "")
+                resource_map = self.repo.health_schema.get\
+                        (resource_key)
+                key = items.get("key", "")
+                resource_schema_dict = self._get_health_schema_by_key\
+                        (resource_map, key)
+                if resource_schema_dict:
+                    resource_schema_dict[const.HEALTH_ALERT_TYPE] \
+                        = msg_body.get(const.HEALTH_ALERT_TYPE, "")
+                    resource_schema_dict[const.ALERT_SEVERITY] \
+                        = msg_body.get(const.ALERT_SEVERITY, "")
+                    resource_schema_dict[const.ALERT_UUID] \
+                        = msg_body.get(const.ALERT_UUID, "")
+                    resource_schema_dict["fetch_time"] \
+                        = msg_body.get("fetch_time", "")
+                    resource_schema_dict[const.ALERT_HEALTH] \
+                        = items.get(const.ALERT_HEALTH, "")
+                    resource_schema_dict["durable_id"] \
+                        = items.get("durable_id", "")
+                    self._set_health_schema_by_key\
+                            (resource_map, items.get("key", ""), resource_schema_dict)
+                    Log.debug(f"Health map updated for: {key}")
+                else:
+                    Log.warn(f"Resource not found in health map. Key :{key}")
+        except Exception as ex:
+            Log.warn(f"Health Map Updation failed :{msg_body}")
 
 class HealthMonitorService(Service, Observable):
     """
