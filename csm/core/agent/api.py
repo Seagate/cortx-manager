@@ -144,7 +144,7 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = str(err)
             resp["error_code"] = err.status
         else:
-            resp["message"] = str(err)
+            resp["message"] = f'{str(err)}'
         if request.session is not None:
             Log.audit(f'User: {request.session.credentials.user_id} '
                       f'Request: {request} RC: {resp["error_code"]}')

@@ -41,16 +41,16 @@ class Boto3Error:
 
     def __init__(self, error: ClientError):
         self._error = error
-        Log.error(f"Boto3Error:{self._error['Error']['Code']} "
+        Log.error(f"Boto3Error:{self._error.response['Error']['Code']} "
                   f"Message:{self._error.response['Error']['Message']}")
 
     @property
     def error_code(self):
-        return self._error['Error']['Code']
+        return self._error.response['Error']['Code']
 
     @property
     def request_id(self):
-        return self._error['ResponseMetadata']['RequestId']
+        return self._error.response['ResponseMetadata']['RequestId']
 
     @property
     def message(self):

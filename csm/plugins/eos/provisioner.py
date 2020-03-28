@@ -24,10 +24,16 @@ from csm.common.log import Log
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import PackageInformation, ProvisionerStatusResponse, ProvisionerCommandStatus
-
+from csm.core.blogic.const import PILLAR_GET
+try:
+    from salt import client
+except Exception as e:
+    client = None
+    Log.error(f"Salt.client not initilized: {e}")
 
 class PackageValidationError(InvalidRequest):
     pass
+
 
 class ProvisionerPlugin:
     """
@@ -164,6 +170,17 @@ class ProvisionerPlugin:
                                 timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
         except self.provisioner.errors.ProvisionerError as error:
             Log.error(f"Provisioner api error : {error}")
+
+    async def get_node_list(self):
+        node_list = client.Caller().function(PILLAR_GET, 'cluster:node_list')
+        return node_list if node_list else []
+
+    async def is_primary_node(self, node_id):
+        return client.Caller().function(PILLAR_GET, f'cluster:{node_id}:is_primary')
+
+    async def get_node_details(self, node_name):
+        node_details = client.Caller().function(PILLAR_GET, f'cluster:{node_name}')
+        return node_details if node_details else {}
 
     async def get_provisioner_status(self, status_type):
         # TODO: Provisioner api to get status tobe implented here
