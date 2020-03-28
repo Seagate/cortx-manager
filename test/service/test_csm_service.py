@@ -21,7 +21,7 @@ import sys, os
 import time
 import asyncio
 import requests
-
+import traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.conf import Conf
 from csm.test.common import TestFailed, TestProvider, Const
@@ -53,7 +53,7 @@ def test1(args):
         if resp.status_code != 401:
             raise
     except Exception as e:
-        raise TestFailed("csm_agent service is not running. Error: %s" %e)
+        raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
 
 def test2(args):
     """
@@ -70,6 +70,6 @@ def test2(args):
         if resp.status_code != 200:
             raise
     except Exception as e:
-        raise TestFailed("csm_web service is not running. Error: %s" %e)
+        raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
 test_list = [ test1, test2 ]

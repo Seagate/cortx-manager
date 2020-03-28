@@ -99,7 +99,6 @@ class CsmAgent:
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
-        CsmRestApi._app["storage_capacity_service"] = StorageCapacityService()
 
         # Plugin for Maintenance
         #TODO : Replace PcsHAFramework with hare utility
@@ -136,6 +135,7 @@ class CsmAgent:
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'))
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(provisioner,
             system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
 
     @staticmethod
     def decrypt_conf():

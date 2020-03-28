@@ -20,6 +20,7 @@
 
 from .view import CsmView, CsmAuth
 from csm.common.log import Log
+from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
 
 
@@ -30,7 +31,7 @@ class StorageCapacityView(CsmView):
     """
     def __init__(self, request):
         super(StorageCapacityView, self).__init__(request)
-        self._service = self.request.app['storage_capacity_service']
+        self._service = self.request.app[const.STORAGE_CAPACITY_SERVICE]
 
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
