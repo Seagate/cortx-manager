@@ -36,7 +36,6 @@ CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
-HCTL_COMMAND = ['hctl', 'status']
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
@@ -349,6 +348,7 @@ LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
 HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
+STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
@@ -363,6 +363,14 @@ PUT = "PUT"
 PATCH = "PATCH"
 DELETE = "DELETE"
 
+# Capacity api related constants
+M0_CLUSTER_SIZE_CMD = '/usr/bin/m0_cluster_size'
+TOTAL_SPACE = 'totalspace'
+FREE_SPACE = 'freespace'
+SIZE = 'size'
+USED = 'used'
+AVAILABLE = 'avail'
+USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 #todo Currently SSPL's Key needs to be finialized.
 DECRYPTION_KEYS = {
@@ -387,10 +395,9 @@ SSPL = 'sspl'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
-
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
-
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
+
