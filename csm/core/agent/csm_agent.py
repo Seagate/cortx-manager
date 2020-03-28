@@ -154,11 +154,10 @@ class CsmAgent:
             try:
                 decrypted_value = Cipher.decrypt(cipher_key,
                                                  encrypted_value.encode("utf-8"))
-                decrypted_value = decrypted_value.decode("utf-8")
+                Conf.set(const.CSM_GLOBAL_INDEX, each_key,
+                         decrypted_value.decode("utf-8"))
             except CipherInvalidToken as error:
                 Log.warn(f"Decryption for {each_key} Failed. {error}")
-                decrypted_value =  encrypted_value
-            Conf.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_value)
 
     @staticmethod
     def _daemonize():
