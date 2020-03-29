@@ -47,7 +47,7 @@ class FirmwarePackageUploadView(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
-        Log.info(f"Handling firmware package upload api"
+        Log.debug(f"Handling firmware package upload api"
                  f" user_id: {self.request.session.credentials.user_id}")
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
@@ -72,7 +72,7 @@ class FirmwareUpdateView(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
-        Log.info(f"Handling firmware package update api"
+        Log.debug(f"Handling firmware package update api"
                  f" user_id: {self.request.session.credentials.user_id}")
         availibility_status =  await self._service.check_for_package_availability()
         if availibility_status:
@@ -91,7 +91,7 @@ class FirmwareUpdateStatusView(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
-        Log.info(f"Handling get firmware upgrade status api"
+        Log.debug(f"Handling get firmware upgrade status api"
                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_current_status()
 
@@ -108,6 +108,6 @@ class FirmwarePackageAvailibility(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
-        Log.info(f"Handling get request to check firmware package availability status api"
+        Log.debug(f"Handling get request to check firmware package availability status api"
                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.check_for_package_availability()
