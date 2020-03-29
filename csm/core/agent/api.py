@@ -42,7 +42,8 @@ from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
-                               InvalidRequest, CsmInternalError, ResourceExist)
+                               CsmInternalError, InvalidRequest, ResourceExist,
+                               CsmNotImplemented, CsmServiceConflict)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -257,7 +258,7 @@ class CsmRestApi(CsmApi, ABC):
                 Log.audit(f'Request: {request} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
-        
+
         # These exceptions are thrown by aiohttp when request is cancelled
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
@@ -278,7 +279,11 @@ class CsmRestApi(CsmApi, ABC):
                                             status=const.STATUS_CONFLICT)
         except CsmInternalError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
-        except CsmError as e:
+        except CsmNotImplemented as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=501)
+        except CsmServiceConflict as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=409)
+        except (CsmError, InvalidRequest) as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
@@ -301,7 +306,7 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, 
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context,
                     access_log=Log.logger, access_log_format=const.REST_ACCESS_FORMAT)
 
     @staticmethod

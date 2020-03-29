@@ -23,13 +23,10 @@ from concurrent.futures import ThreadPoolExecutor
 from csm.common.log import Log
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
-from csm.core.data.models.upgrade import PackageInformation, ProvisionerStatusResponse, ProvisionerCommandStatus
+from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
+                                          ProvisionerCommandStatus)
 from csm.core.blogic.const import PILLAR_GET
-try:
-    from salt import client
-except Exception as e:
-    client = None
-    Log.error(f"Salt.client not initilized: {e}")
+
 
 class PackageValidationError(InvalidRequest):
     pass
@@ -56,6 +53,17 @@ class ProvisionerPlugin:
         except Exception as error:
             self.provisioner = None
             Log.error(f"Provisioner module not found : {error}")
+
+        try:
+            from salt import client
+
+            self.client = client
+
+            Log.info("`salt.client` is loaded")
+        except Exception as e:
+            self.client = None
+
+            Log.error(f"Salt.client not initilized: {e}")
 
     async def _await_nonasync(self, func):
         pool = ThreadPoolExecutor(max_workers=1)
@@ -113,7 +121,7 @@ class ProvisionerPlugin:
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_upgrade_status(self, query_id) -> ProvisionerStatusResponse:
+    async def get_provisioner_job_status(self, query_id: str) -> ProvisionerStatusResponse:
         """
         Polls Provisioner for the status of a software and firmware update process
         """
@@ -156,29 +164,46 @@ class ProvisionerPlugin:
     async def set_ntp(self, ntp_data: dict):
         """
         Set ntp configuration using provisioner api.
-        :param ntp_data: Ntp config dict 
+        :param ntp_data: Ntp config dict
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
         try:
-            if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and 
+            if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and
                     ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
                 if self.provisioner:
                     Log.debug("Handling provisioner's set ntp api request")
-                    self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS], 
+                    self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS],
                                 timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
         except self.provisioner.errors.ProvisionerError as error:
             Log.error(f"Provisioner api error : {error}")
 
+    async def set_ssl_certs(self, source: str) -> str:
+        """ Install uploaded certificates and replicate them between nodes.
+        TODO:
+        """
+        # TODO: validate path
+        # TODO: make it async if possible
+        def _command_handler():
+            try:
+                return self.provisioner.set_ssl_certs(source=source, nowait=True)
+            except Exception as e:
+                raise CsmInternalError(f'Failed to install certificate during provisioner '
+                                       f'`set_ssl_certs` call: {e}')
+
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+
+        return await self._await_nonasync(_command_handler)
     async def get_node_list(self):
-        node_list = client.Caller().function(PILLAR_GET, 'cluster:node_list')
+        node_list = self.client.Caller().function(PILLAR_GET, 'cluster:node_list')
         return node_list if node_list else []
 
     async def is_primary_node(self, node_id):
-        return client.Caller().function(PILLAR_GET, f'cluster:{node_id}:is_primary')
+        return self.client.Caller().function(PILLAR_GET, f'cluster:{node_id}:is_primary')
 
     async def get_node_details(self, node_name):
-        node_details = client.Caller().function(PILLAR_GET, f'cluster:{node_name}')
+        node_details = self.client.Caller().function(PILLAR_GET, f'cluster:{node_name}')
         return node_details if node_details else {}
 
     async def get_provisioner_status(self, status_type):

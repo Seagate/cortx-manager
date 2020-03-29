@@ -348,6 +348,7 @@ LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
 HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
+SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 
 # Plugins literal constansts

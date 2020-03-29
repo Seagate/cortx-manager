@@ -36,6 +36,7 @@ class ProvisionerCommandStatus(Enum):
     Success = 'success'
     Failure = 'failure'
     NotFound = 'not_found'
+    Unknown = 'unknown'
 
 
 class ProvisionerStatusResponse:

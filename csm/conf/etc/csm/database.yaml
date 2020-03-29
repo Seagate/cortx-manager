@@ -66,6 +66,16 @@ models:
     config:
         es_db:
             collection: "s3-rsys-index"
+-   import_path: "csm.core.data.models.system_config.CertificateConfig"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "certificate_config"
+-   import_path: "csm.core.data.models.system_config.SecurityConfig"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "security_config"
 -   import_path: "csm.core.data.models.upgrade.UpdateStatusEntry"
     database: "consul_db"
     config:

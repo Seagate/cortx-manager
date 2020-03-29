@@ -17,6 +17,7 @@
 
 import base64
 from datetime import datetime, timezone
+from enum import Enum
 
 from schematics.models import Model
 from schematics.types import (StringType, ModelType, ListType,
@@ -48,7 +49,7 @@ class Ipv6Nodes(Model):
     gateway = StringType()
     address_label = StringType()
     type = StringType()
-    
+
 class Ipv4Base(Model):
     """
     Class hold common fields in ipv4 for management network and data network settings.
@@ -203,6 +204,94 @@ class LdapConfig(Model):
     alt_server = StringType()
     alt_port = IntType()
 
+
+class CertificateConfig(CsmModel):
+    """
+    Certificate and private key configuration for the system servers
+    """
+
+    _id = "certificate_id"
+    certificate_id = StringType()  # id of certificate configuration: certificate serial number
+    date = DateTimeType()  # certificate uploading time
+    user = StringType()  # User who uploaded certificate
+    pemfile_path = StringType()
+
+
+class CertificateInstallationStatus(Enum):
+    """Enum represents current intallation status for certificate installation
+    """
+
+    NOT_INSTALLED = "not_installed"
+    INSTALLED = "installation_successful"
+    FAILED = "installation_failed"
+    IN_PROGRESS = "in_progress"
+    UNKNOWN = "unknown"
+
+
+class SecurityConfig(CsmModel):
+    """
+    System Security configuration: certificates settings and so on
+    """
+
+    _id = "config_id"
+    config_id = IntType()
+    s3_config = ModelType(CertificateConfig)
+    csm_config = ModelType(CertificateConfig)
+    provisioner_id = IntType()
+    installation_status = StringType()
+
+    @property
+    def is_pending_status(self) -> bool:
+        """Check installation status and return True if need to refresh installation
+        status and False otherwise
+        """
+        if (self.installation_status == CertificateInstallationStatus.IN_PROGRESS.value or
+                self.installation_status == CertificateInstallationStatus.UNKNOWN.value):
+            return True
+
+        return False
+
+    @property
+    def is_installed(self) -> bool:
+        """Check if certificate is already installed or not
+
+        :return: True if certificate installed and False otherwise
+        """
+        return (True if self.installation_status == CertificateInstallationStatus.INSTALLED.value
+                else False)
+
+    @property
+    def is_failed(self) -> bool:
+        """Check if certificate installation failed or not
+
+        :return: True if certificate installation was failed and false otherwise
+        """
+        return (True if self.installation_status == CertificateInstallationStatus.FAILED.value
+                else False)
+
+    @property
+    def is_unknown(self) -> bool:
+        """Check if certificate installation status is unkown
+
+        :return: True if certificate installation status is unkown and False otherwise
+        """
+        return (True if self.installation_status == CertificateInstallationStatus.UNKNOWN.value
+                else False)
+
+    @property
+    def is_not_installed(self) -> bool:
+        """Check if certificate not installed
+
+        :return: True if certificate is not installed and False otherwise
+        """
+        return (True
+                if self.installation_status == CertificateInstallationStatus.NOT_INSTALLED.value
+                else False)
+
+    def update_status(self, status: CertificateInstallationStatus):
+        self.installation_status = status.value
+
+
 class SystemConfigSettings(CsmModel):
     """
     Model for complete system config settings grouped with nested models like management network,
@@ -224,7 +313,7 @@ class SystemConfigSettings(CsmModel):
         """
         Method to update the system config settings model.
         param: new_values : Dictionary containg system config payload
-        return: 
+        return:
         """
         for key in new_values:
             setattr(self, key, new_values[key])
@@ -272,19 +361,19 @@ class License(CsmModel):
         """
         Method to update the license model.
         param: new_values : Dictionary containg license key payload
-        return: 
+        return:
         """
         for key in new_values:
             setattr(self, key, new_values[key])
-    
+
 class OnboardingLicense(License):
     """
     Data model to store on boarding license key
     """
     _id = 'csm_onboarding_license_key'
-    
+
     csm_onboarding_license_key = StringType()
-    
+
     def __init__(self, license_key=None, *args, **kwargs):
         super(OnboardingLicense, self).__init__(*args, **kwargs)
         self.csm_onboarding_license_key = license_key

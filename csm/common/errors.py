@@ -37,7 +37,8 @@ class CsmError(BaseError):
     """ Parent class for the cli error classes """
 
     def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
-        super(CsmError, self).__init__(rc, desc, message_id, message_args)
+        super(CsmError, self).__init__(rc=rc, desc=desc, message_id=message_id,
+                                       message_args=message_args)
         # TODO: Log.error message will be changed when desc is removed and
         #  improved exception handling is implemented.
         # TODO: self._message_id will be formatted with self._message_args
@@ -126,3 +127,23 @@ class CsmPermissionDenied(CsmError):
         super(CsmPermissionDenied, self).__init__(
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
+
+
+class CsmResourceNotAvailable(CsmInternalError):
+
+    """Describes issues when requested resource is not available"""
+
+
+class CsmTypeError(CsmInternalError):
+
+    """Issues related to incorrect type of argument/parameter, etc."""
+
+
+class CsmNotImplemented(CsmError):
+
+    """This error represents HTTP 501 Not Implemented Error"""
+
+
+class CsmServiceConflict(CsmError):
+
+    """Service in conflict stat or operation can cause that state"""
