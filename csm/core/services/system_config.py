@@ -185,10 +185,16 @@ class SystemConfigAppService(ApplicationService):
 
         await system_config.update(new_values)
         await self.system_config_mgr.save(system_config)
-        # Calling provisioner's api to set ntp configuration
-        if new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {}):
+        # Calling provisioner's set_ntp and set_network api
+        if (new_values.get(const.MANAGEMENT_NETWORK) and 
+            new_values.get(const.DATA_NETWORK) and 
+            new_values.get(const.DNS_NETWORK) and
+            new_values.get(const.DATE_TIME_SETTING) and 
+            new_values.get(const.SUMMARY)):
+            
             ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
             await self._provisioner.set_ntp(ntp_data)
+            await self._provisioner.set_network(new_values)
 
         return system_config.to_primitive()
 
@@ -254,5 +260,32 @@ class SystemConfigAppService(ApplicationService):
         """
         # Calling provisioner's api to get status
         return await self._provisioner.get_provisioner_status(status_type)
+    
+    async def update_system_config_by_type(self, config_type, config_id, config_data):
+        """
+        Update system config data based on its type like management, data
+        network, dns, ntp etc, This functionality is useful after onboarding.
+        :param config_id: System config identifier
+        :param config_type : Input parameter like management, data network, dns,
+        ntp to update data accordingly
+        :returns: A dict of system config
+        """
+        system_config = await self.system_config_mgr.get_system_config_by_id(
+            config_id)
+        if not system_config:
+            raise CsmNotFoundError("There is no such system config",
+                                   SYSTEM_CONFIG_NOT_FOUND)
 
-
+        await system_config.update(config_data)
+        await self.system_config_mgr.save(system_config)
+        # Calling provisioner's set_network api
+        if (config_data.get(const.MANAGEMENT_NETWORK) or 
+            config_data.get(const.DATA_NETWORK) or 
+            config_data.get(const.DNS_NETWORK)):
+            await self._provisioner.set_network(config_data)
+        # Calling provisioner's set_ntp api
+        if config_data.get(const.DATE_TIME_SETTING, {}):
+            ntp_config = config_data.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
+            await self._provisioner.set_ntp(ntp_config)
+  
+        return system_config.to_primitive()

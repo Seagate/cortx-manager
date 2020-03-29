@@ -38,9 +38,9 @@ class Ipv4NodesSchema(Schema):
     id = fields.Int(required=True)
     name = fields.Str(required=True)
     ip_address = fields.Str(validate=Ipv4(), required=True)
-    hostname = fields.Str(required=True)
-    gateway = fields.Str(validate=Ipv4(), required=True)
-    netmask = fields.Str(validate=Ipv4(), required=True)
+    hostname = fields.Str(allow_none=True)
+    gateway = fields.Str(validate=Ipv4(), allow_none=True)
+    netmask = fields.Str(validate=Ipv4(), allow_none=True)
 
 class Ipv6NodesSchema(Schema):
     """
@@ -109,7 +109,6 @@ class DnsNetworkSettingsNodes(Schema):
     """
     id = fields.Int(required=True)
     name = fields.Str(required=True)
-    hostname = fields.Str(required=True)
     dns_servers = fields.List(fields.Str(required=True))
     search_domain = fields.List(fields.Str(required=True))
 
@@ -119,7 +118,6 @@ class DnsNetworkSettingsSchema(Schema):
     dns network setting nodes.
     Dns network settings schema class is used to form system config settings schema
     """
-    is_external_load_balancer = fields.Boolean(allow_none=True)
     nodes = fields.List(fields.Nested(DnsNetworkSettingsNodes,
                                       allow_none=True, unknown='EXCLUDE'))
 
@@ -205,6 +203,7 @@ class SystemConfigSettingsSchema(Schema):
                                        allow_none=True,unknown='EXCLUDE')
     notifications = fields.Nested(NotificationSchema, allow_none=True,
                                   unknown='EXCLUDE')
+    is_summary = fields.Boolean(allow_none=True)
     ldap = fields.Nested(LdapConfigSchema, allow_none=True,unknown='EXCLUDE')
 
 @CsmView._app_routes.view("/api/v1/sysconfig")
@@ -245,6 +244,13 @@ class SystemConfigListView(CsmView):
         return await self._service.create_system_config(str(uuid.uuid4()),
                                                         **config_data)
 
+class ConfigTypeSchema(Schema):
+    """
+    Schema class for validate query string to update config accordingly  
+    """
+    config_type = fields.String(required=True, 
+                           validate=validate.OneOf(const.SYSCONFIG_TYPE))
+
 @CsmView._app_routes.view("/api/v1/sysconfig/{config_id}")
 class SystemConfigView(CsmView):
     def __init__(self, request):
@@ -282,6 +288,31 @@ class SystemConfigView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.update_system_config(id, config_data)
+    
+    """
+    PATCH REST implementation for updating a system config data
+    based on config type
+    """
+    @CsmView.asyncio_shield
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
+    async def patch(self):
+        Log.debug(f"Handling system config patch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
+
+        try:
+            id = self.request.match_info["config_id"]
+            config_type_schema = ConfigTypeSchema()
+            system_config_schema = SystemConfigSettingsSchema()
+            config_data = system_config_schema.load(await self.request.json(),
+                                      unknown='EXCLUDE')
+            request_data = config_type_schema.load(self.request.rel_url.query, 
+                                                   unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError as jde:
+            raise InvalidRequest(message_args="Request body missing")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request body: {val_err}")
+        config_type = request_data["config_type"]
+        return await self._service.update_system_config_by_type(config_type, id, config_data)
 
 @CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
 class TestEmailView(CsmView):

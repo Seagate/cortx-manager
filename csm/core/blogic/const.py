@@ -318,6 +318,12 @@ GATEWAY = 'gateway'
 NETMASK = 'netmask'
 HOSTNAME = 'hostname'
 NAME = 'name'
+SUMMARY = 'is_summary'
+DNS_SERVER = 'dns_servers'
+SEARCH_DOMAIN = 'search_domain'
+VIP_NODE = 'VIP'
+PRIMARY_NODE = 'Node 0'
+SECONDARY_NODE = 'Node 1'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -396,6 +402,10 @@ SSPL = 'sspl'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
+
+# System config list
+SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
+                  'dns_network_settings', 'date_time_settings', 'notifications']
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
 #Services
