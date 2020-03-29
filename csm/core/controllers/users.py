@@ -38,6 +38,10 @@ class CsmUserCreateSchema(CsmRootUserCreateSchema):
     roles = fields.List(fields.String(
         required=True, validate=validate.OneOf(const.CSM_USER_ROLES)), required=True)
 
+class CsmUserPatchSchema(Schema):
+    old_password = fields.Str(validate=[PasswordValidator()])
+    password = fields.Str(validate=[PasswordValidator()])
+    roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)))
 
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
@@ -146,15 +150,15 @@ class CsmUsersView(CsmView):
         user_id = self.request.match_info["user_id"]
 
         try:
-            schema = CsmUserCreateSchema()
+            schema = CsmUserPatchSchema()
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        return await self._service.update_user(user_id, user_body)
-
+        resp = await self._service.update_user(user_id, user_body, self.request.session.credentials.user_id)
+        return resp
 
 @CsmView._app_routes.view("/api/v1/preboarding/user")
 @CsmAuth.public
