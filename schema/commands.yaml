@@ -1,8 +1,8 @@
 #Component Commands file Path.
 COMMANDS:
   - '<CSM_PATH>/conf/setup.yaml'
-  - '/opt/seagate/sspl/conf/setup.yaml'
-  - '/opt/seagate/s3/install/provisioning/s3setup.yaml'
-  - '<HARE_PATH>core/conf/setup.yaml'
-  - '<HARE_PATH>hare/conf/setup.yaml'
-  - '<HARE_PATH>hare/conf/setup-ha.yaml'
+  - '<EOS_PATH>sspl/conf/setup.yaml'
+  - '<EOS_PATH>s3server/conf/setup.yaml'
+  - '<EOS_PATH>core/conf/setup.yaml'
+  - '<EOS_PATH>hare/conf/setup.yaml'
+  - '<EOS_PATH>hare/conf/setup-ha.yaml'
