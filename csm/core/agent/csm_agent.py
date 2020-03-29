@@ -151,8 +151,13 @@ class CsmAgent:
             cipher_key = Cipher.generate_key(cluster_id,
                                              const.DECRYPTION_KEYS[each_key])
             encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
-            decrypted_value = Cipher.decrypt(cipher_key, encrypted_value.encode("utf-8"))
-            Conf.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_value.decode("utf-8"))
+            try:
+                decrypted_value = Cipher.decrypt(cipher_key,
+                                                 encrypted_value.encode("utf-8"))
+                Conf.set(const.CSM_GLOBAL_INDEX, each_key,
+                         decrypted_value.decode("utf-8"))
+            except CipherInvalidToken as error:
+                Log.warn(f"Decryption for {each_key} Failed. {error}")
 
     @staticmethod
     def _daemonize():
@@ -237,7 +242,7 @@ if __name__ == '__main__':
         from csm.core.services.file_transfer import DownloadFileManager
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
-        from eos.utils.security.cipher import Cipher
+        from eos.utils.security.cipher import Cipher, CipherInvalidToken
         try:
             from salt import client
         except ModuleNotFoundError:
