@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 from csm.common.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
-from csm.core.data.models.users import User, UserType
+from csm.core.data.models.users import User, UserType, Passwd
 from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
                                 CsmPermissionDenied, ResourceExist)
 import time
@@ -112,6 +112,7 @@ USERS_MSG_USER_NOT_FOUND = "users_not_found"
 USERS_MSG_PERMISSION_DENIED = "user_permission_denied"
 USERS_MSG_ALREADY_EXISTS = "users_already_exists"
 USERS_MSG_CANNOT_SORT = "users_non_sortable_field"
+USERS_MSG_UPDATE_NOT_ALLOWED = "update_not_allowed"
 
 
 class CsmUserService(ApplicationService):
@@ -213,20 +214,54 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.delete(user_id)
         return {"message": "User Deleted Successfully."}
 
-    async def update_user(self, user_id: str, new_values: dict) -> dict:
+    async def _validation_for_update_by_superuser(self, user_id: str, user: User, new_values: dict):
+        old_password = new_values.get("old_password", None)
+        if self.is_super_user(user) and not old_password:
+            raise InvalidRequest("Super user old password is required",
+                                    USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+
+        if self.is_super_user(user) and ('roles' in new_values):
+            raise CsmPermissionDenied("Cannot change roles for super user",
+                                    USERS_MSG_PERMISSION_DENIED, user_id)
+    async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
+                                                    new_values: dict):
+        old_password = new_values.get("old_password", None)
+        if user_id != loggedin_user_id:
+            raise CsmPermissionDenied("Non super user cannot change other user",
+                                    USERS_MSG_PERMISSION_DENIED, user_id)
+        
+        if not old_password:
+            raise InvalidRequest("Old password is required",
+                                    USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+
+            if 'roles' in new_values:
+                raise CsmPermissionDenied("Non super user cannot change roles for self",
+                                        USERS_MSG_PERMISSION_DENIED, user_id)
+       
+    async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
         Log.debug(f"Update user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
 
-        user.update(new_values)
-        if 'user_id' in new_values and new_values['user_id'] != user_id:
-            # We have changed the user name
-            await self.user_mgr.delete(user_id)
-            await self.user_mgr.create(user)
+        old_password = new_values.get("old_password", None)
+        loggedin_user = await self.user_mgr.get(loggedin_user_id)
+        # Is Logged in user super user
+        if self.is_super_user(loggedin_user):
+            await self._validation_for_update_by_superuser(user_id, user, new_values)
         else:
-            await self.user_mgr.save(user)
+            await self._validation_for_update_by_normal_user(user_id, loggedin_user_id, new_values)
+        
+        if old_password and not self._verfiy_old_password(user, old_password):
+            raise InvalidRequest("Cannot change password without valid old password",
+                                      USERS_MSG_UPDATE_NOT_ALLOWED)
+        
+        user.update(new_values)
+        await self.user_mgr.save(user)
         return self._user_to_dict(user)
+
+    def _verfiy_old_password(self, user: User, password):
+        return Passwd.verify(password, user.password_hash)
 
     def is_super_user(self, user: User):
         """ Check if user is super user """
