@@ -107,14 +107,14 @@ class FirmwareUpdateService(ApplicationService):
         await self._firmware_repo.save_model(model)
         return model.to_printable()
 
-    async def check_for_package_availibility(self):
+    async def check_for_package_availability(self):
         """
         Service to check package is available at configured path
         :return: dict
         """
         model = await self._get_renewed_model()
         if not model:
-            raise CsmInternalError("Internal DB is inconsistent. Please upload the package again")
+            raise CsmError("Internal DB is inconsistent. Please upload the package again")
         if not model.description or not os.path.exists(model.description):
             raise InvalidRequest(f"Firmware package {model.description} not found.")
         return model.to_printable()
