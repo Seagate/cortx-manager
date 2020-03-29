@@ -118,6 +118,7 @@ class CsmAgent:
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
+
         try:
             # TODO: consider a more safe storage
             params = {
@@ -136,6 +137,8 @@ class CsmAgent:
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(provisioner,
             system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
+
+        CsmRestApi._app[const.SECURITY_SERVICE] = SecurityService(db, provisioner)
 
     @staticmethod
     def decrypt_conf():
@@ -225,6 +228,7 @@ if __name__ == '__main__':
         from csm.core.services.users import CsmUserService, UserManager
         from csm.core.services.roles import RoleManagementService, RoleManager
         from csm.core.services.sessions import SessionManager, LoginService, AuthService
+        from csm.core.services.security import SecurityService
         from csm.core.services.hotfix_update import HotfixApplicationService
         from csm.core.repositories.update_status import UpdateStatusRepository
         from csm.core.email.email_queue import EmailSenderQueue

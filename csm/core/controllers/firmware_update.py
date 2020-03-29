@@ -23,7 +23,7 @@ from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.controllers.schemas import FileFieldSchema
+from csm.core.controllers.schemas import FirmwareUpdateFileFieldSchema
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
 from csm.common.errors import CsmNotFoundError
@@ -32,7 +32,7 @@ import os
 
 
 class FirmwareUploadSchema(Schema):
-    package = fields.Nested(FileFieldSchema(), required=True)
+    package = fields.Nested(FirmwareUpdateFileFieldSchema(), required=True)
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/firmware/upload")

@@ -192,7 +192,8 @@ class ValidationErrorFormatter:
             error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
         return "\n".join(error_messages)
 
-class PackageFilenameValidator(Validator):
+
+class IsoFilenameValidator(Validator):
     """
     Validator class for validating firmware and hotfix package file name.
     """

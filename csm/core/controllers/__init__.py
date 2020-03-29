@@ -27,4 +27,4 @@ from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
 from .health import HealthView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
-# from .csm import CsmCliView
+# from .file_transfer import CsmFileView

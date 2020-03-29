@@ -17,13 +17,31 @@
  ****************************************************************************
 """
 
-from marshmallow import Schema, fields, validate
-from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.core.controllers.validators import FileRefValidator, PackageFilenameValidator
+from marshmallow import Schema, fields
+from csm.core.controllers.validators import FileRefValidator, IsoFilenameValidator
 
 
 class FileFieldSchema(Schema):
     """ Validation schema for uploaded files"""
     content_type = fields.Str(required=True)
-    filename = fields.Str(validate=PackageFilenameValidator(), required=True)
+    filename = fields.Str(required=True)
     file_ref = fields.Field(validate=FileRefValidator())
+
+
+class IsoFileFieldSchema(Schema):
+    """Base File Filed validator for 'iso'-uploaded files"""
+    content_type = fields.Str(required=True)
+    filename = fields.Str(validate=IsoFilenameValidator(), required=True)
+    file_ref = fields.Field(validate=FileRefValidator())
+
+
+class HotFixFileFieldSchema(IsoFileFieldSchema):
+    """ Validation schema for uploaded files"""
+
+    pass
+
+
+class FirmwareUpdateFileFieldSchema(IsoFileFieldSchema):
+    """Valdation schmea for firmware update"""
+
+    pass

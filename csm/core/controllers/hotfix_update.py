@@ -21,7 +21,7 @@
 import asyncio
 
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.core.controllers.schemas import FileFieldSchema
+from csm.core.controllers.schemas import HotFixFileFieldSchema
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
@@ -33,7 +33,7 @@ from marshmallow import Schema, fields, validate, exceptions
 
 
 class HotFixUploadSchema(Schema):
-    package = fields.Nested(FileFieldSchema(), required=True)
+    package = fields.Nested(HotFixFileFieldSchema(), required=True)
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/hotfix/upload")
@@ -70,7 +70,7 @@ class CsmHotfixStartView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/hotfix/status")
-class CsmHotfixStartView(CsmView):
+class CsmHotfixStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
