@@ -54,14 +54,14 @@ class StorageCapacityService(ApplicationService):
         :return: dict
         """
         try:
-            process = SimpleProcess(const.M0_CLUSTER_SIZE_CMD)
+            process = SimpleProcess(const.M0_FILESYSTEM_STAT_CMD)
             stdout, stderr, rc = process.run()
         except Exception as e:
             raise CsmInternalError(f"Error in command execution command : {e}")
         if not stdout or rc!=0:
             raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
                                    f"-{stdout.decode('utf-8')}")
-        Log.debug(f"{const.M0_CLUSTER_SIZE_CMD} command output stdout:{stdout}")
+        Log.debug(f"{const.M0_FILESYSTEM_STAT_CMD} command output stdout:{stdout}")
         console_output = re.sub(' +', ' ', stdout.decode('utf-8')).split('\n')
         cropped_console_data = [str(each_element).strip() for each_element in
                                 console_output if "space" in each_element]
