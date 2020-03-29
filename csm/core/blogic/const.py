@@ -364,7 +364,7 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
-M0_CLUSTER_SIZE_CMD = '/usr/bin/m0_cluster_size'
+M0_FILESYSTEM_STAT_CMD = '/usr/bin/m0_filesystem_stats'
 TOTAL_SPACE = 'totalspace'
 FREE_SPACE = 'freespace'
 SIZE = 'size'
