@@ -97,7 +97,6 @@ class DnsNetworkSettingsNodes(Model):
     """
     id = IntType()
     name = StringType()
-    hostname = StringType()
     dns_servers = ListType(StringType)
     search_domain = ListType(StringType)
 
@@ -106,7 +105,6 @@ class DnsNetworkSettings(Model):
     Model for dns network settings grouped with dns nodes.
     Model is used to form system config settings schema
     """
-    is_external_load_balancer = BooleanType()
     nodes = ListType(ModelType(DnsNetworkSettingsNodes))
 
 class Ntp(Model):
@@ -304,6 +302,7 @@ class SystemConfigSettings(CsmModel):
     dns_network_settings = ModelType(DnsNetworkSettings)
     date_time_settings = ModelType(DateTimeSettings)
     notifications = ModelType(Notification)
+    is_summary = BooleanType()
     ldap = ModelType(LdapConfig)
     updated_time = DateTimeType()
     created_time = DateTimeType()

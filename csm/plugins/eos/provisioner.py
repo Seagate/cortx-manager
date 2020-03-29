@@ -161,6 +161,7 @@ class ProvisionerPlugin:
 
         return await self._await_nonasync(_command_handler)
 
+    @Log.trace_method(Log.DEBUG)
     async def set_ntp(self, ntp_data: dict):
         """
         Set ntp configuration using provisioner api.
@@ -168,15 +169,22 @@ class ProvisionerPlugin:
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
-        try:
-            if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and
-                    ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
-                if self.provisioner:
-                    Log.debug("Handling provisioner's set ntp api request")
-                    self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS],
-                                timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
-        except self.provisioner.errors.ProvisionerError as error:
-            Log.error(f"Provisioner api error : {error}")
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+        
+        def _command_handler():
+            try:
+                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and 
+                        ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
+                    if self.provisioner:
+                        Log.debug("Handling provisioner's set ntp api request")
+                        self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS], 
+                                    timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
+            except self.provisioner.errors.ProvisionerError as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise PackageValidationError(f"Provisioner package failed: {error}")
+                
+        return await self._await_nonasync(_command_handler)
 
     async def set_ssl_certs(self, source: str) -> str:
         """ Install uploaded certificates and replicate them between nodes.
@@ -210,3 +218,62 @@ class ProvisionerPlugin:
         # TODO: Provisioner api to get status tobe implented here
         Log.debug(f"Getting provisioner status for : {status_type}")
         return {"status": "Successful"}
+    
+    @Log.trace_method(Log.DEBUG)
+    async def set_network(self, network_data: dict):
+        """
+        Set network configuration using provisioner api.
+        :param network_data: Nerwork config dict 
+        :returns:
+        """
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+        
+        def _command_handler():
+            try:
+                mgmt_nodes = network_data.get(const.MANAGEMENT_NETWORK, {}).get(
+                    const.IPV4, {}).get(const.NODES, [])
+                data_nodes = network_data.get(const.DATA_NETWORK, {}).get(
+                    const.IPV4, {}).get(const.NODES, [])
+                dns_nodes = network_data.get(const.DNS_NETWORK, {}).get(const.NODES, [])
+                
+                mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
+                primary_data_netmask_address = secondary_data_netmask_address = None
+                secondary_data_ip_address = dns_servers_list = search_domains_list = None
+                secondary_dns_servers_list = secondary_search_domains_list = None
+                
+                for node in mgmt_nodes:
+                    if node[const.NAME] == const.VIP_NODE:
+                        mgmt_vip_address = node.get(const.IP_ADDRESS, None)
+                for node in data_nodes:
+                    if node[const.NAME] == const.VIP_NODE:
+                        cluster_ip_address = node.get(const.IP_ADDRESS, None)
+                    if node[const.NAME] == const.PRIMARY_NODE:
+                        primary_data_ip_address = node.get(const.IP_ADDRESS, None)
+                        primary_data_netmask_address = node.get(const.NETMASK, None)
+                    if node[const.NAME] == const.SECONDARY_NODE:
+                        secondary_data_ip_address = node.get(const.IP_ADDRESS, None)
+                        secondary_data_netmask_address = node.get(const.NETMASK, None)
+                for node in dns_nodes:
+                    if node[const.NAME] == const.PRIMARY_NODE:
+                        dns_servers_list = node.get(const.DNS_SERVER, None)
+                        search_domains_list = node.get(const.SEARCH_DOMAIN, None)
+                    if node[const.NAME] == const.SECONDARY_NODE:
+                        secondary_dns_servers_list = node.get(const.DNS_SERVER, None)
+                        secondary_search_domains_list = node.get(const.SEARCH_DOMAIN, None)
+                
+                Log.debug("Handling provisioner's set network api request")
+                self.provisioner.set_network(nowait=True,
+                                mgmt_vip=mgmt_vip_address,
+                                cluster_ip=cluster_ip_address,
+                                primary_data_ip=primary_data_ip_address,
+                                primary_data_netmask=primary_data_netmask_address,
+                                secondary_data_ip=secondary_data_netmask_address,
+                                dns_servers=dns_servers_list,
+                                search_domains=search_domains_list
+                                )
+            except self.provisioner.errors.ProvisionerError as e:
+                Log.error(f"Provisioner api error : {e}")
+                raise PackageValidationError(f"Provisioner package failed: {e}")
+
+        return await self._await_nonasync(_command_handler)
