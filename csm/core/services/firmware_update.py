@@ -91,7 +91,7 @@ class FirmwareUpdateService(ApplicationService):
         await self._firmware_repo.save_model(model)
         return model.to_printable()
 
-    async def trigger_firmware_upload(self):
+    async def trigger_firmware_upgrade(self):
         """
         Service to trigger firmware upgrade
         :return:
@@ -102,7 +102,7 @@ class FirmwareUpdateService(ApplicationService):
         if model.is_in_progress():
             raise InvalidRequest("Firmware upgrade is already in progress. Please wait until it is done.")
 
-        model.provisioner_id = await self._provisioner.trigger_firmware_upload(model.description)
+        model.provisioner_id = await self._provisioner.trigger_firmware_upgrade(model.description)
         model.mark_started()
         await self._firmware_repo.save_model(model)
         return model.to_printable()

@@ -76,7 +76,7 @@ class FirmwareUpdateView(CsmView):
                  f" user_id: {self.request.session.credentials.user_id}")
         availibility_status =  await self._service.check_for_package_availability()
         if availibility_status:
-            return await self._service.trigger_firmware_upload()
+            return await self._service.trigger_firmware_upgrade()
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/firmware/status")
@@ -89,7 +89,10 @@ class FirmwareUpdateStatusView(CsmView):
     """
     GET REST implementation for getting current status of firmware upgrade
     """
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
+        Log.info(f"Handling get firmware upgrade status api"
+                 f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_current_status()
 
 
@@ -105,6 +108,6 @@ class FirmwarePackageAvailibility(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
-        Log.info(f"Handling get last firmware upgrade status api"
+        Log.info(f"Handling get request to check firmware package availability status api"
                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.check_for_package_availability()

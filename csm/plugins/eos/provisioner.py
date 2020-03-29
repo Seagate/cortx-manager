@@ -140,7 +140,7 @@ class ProvisionerPlugin:
         return {"version": "1.2.3",
                 "file_path": file_path}
 
-    async def trigger_firmware_upload(self, fw_package_path):
+    async def trigger_firmware_upgrade(self, fw_package_path):
         if not self.provisioner:
             raise PackageValidationError("Provisioner is not instantiated")
 
