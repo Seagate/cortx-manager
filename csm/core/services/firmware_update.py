@@ -49,7 +49,7 @@ class FirmwareUpdateService(ApplicationService):
         model = await self._firmware_repo.get_current_model(self.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
             try:
-                result = await self._provisioner.get_upgrade_status(model.provisioner_id)
+                result = await self._provisioner.get_provisioner_job_status(model.provisioner_id)
                 model.apply_status_update(result)
                 await self._firmware_repo.save_model(model)
             except Exception as e:
@@ -114,7 +114,7 @@ class FirmwareUpdateService(ApplicationService):
         """
         model = await self._get_renewed_model()
         if not model:
-            raise CsmError("Internal DB is inconsistent. Please upload the package again")
+            raise CsmError(desc="Internal DB is inconsistent. Please upload the package again")
         if not model.description or not os.path.exists(model.description):
             raise InvalidRequest(f"Firmware package {model.description} not found.")
         return model.to_printable()

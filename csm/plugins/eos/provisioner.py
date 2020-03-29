@@ -130,12 +130,14 @@ class ProvisionerPlugin:
             try:
                 self.provisioner.get_result(query_id)
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Success)
-            except self.provisioner.errors.PrvsnrCmdNotFinishedError:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress)
-            except self.provisioner.errors.PrvsnrCmdNotFoundError:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.NotFound)
-            except:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure)
+            except self.provisioner.errors.PrvsnrCmdNotFinishedError as not_finished_err:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress, str(not_finished_err))
+            except self.provisioner.errors.PrvsnrCmdNotFoundError as not_found_err:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.NotFound, str(not_found_err))
+            except self.provisioner.errors.SaltCmdResultError as res_err:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(res_err))
+            except self.provisioner.errors.ProvisionerError as pe:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(pe))
 
         return await self._await_nonasync(_command_handler)
 
