@@ -85,6 +85,8 @@ class S3AccountService(ApplicationService):
         account = await self._s3_root_client.get_account(account_name)
         if isinstance(account, IamError):
             self._raise_remote_error(account)
+        if account is None:
+            return None
         return {
             "account_name": account.account_name,
             "account_email": account.account_email
