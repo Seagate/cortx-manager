@@ -106,7 +106,7 @@ class CsmRestClient(CsmClient):
         """
         This check if response failed it will return true else false
         """
-        if response.rc() != 200:
+        if response.rc() not in  (200, 201):
             return True
         return False
     
