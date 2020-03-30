@@ -216,3 +216,6 @@ class Payload:
             val = self.get(key)
             payload.set(map[key], val)
         return payload
+
+    def data(self):
+        return self._data

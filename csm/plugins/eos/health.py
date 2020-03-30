@@ -152,28 +152,35 @@ class HealthPlugin(CsmPlugin):
         resource_schema = {}
         try:
             Log.debug(f"Converting alert to health schema : {message}")
-            resource_schema["resource_list"] = [] 
+            resource_schema[const.RESOURCE_LIST] = []
             resources = {}
-            extended_info = ast.literal_eval(message.get("extended_info"))
+            extended_info = ast.literal_eval(message.get(const.ALERT_EXTENDED_INFO))
             info = extended_info.get(const.ALERT_INFO)
-            resource_type = info.get("resource_type", "")
+            resource_type = info.get(const.ALERT_RESOURCE_TYPE, "")
             mapping_dict = self._health_mapping_dict.get(resource_type, "")
-            mapping_key = mapping_dict.get("key", "")
-            resource_schema["node_id"] = message.get("host_id", "")
-            resource_schema["site_id"] = info.get("site_id", "")
-            resource_schema["rack_id"] = info.get("rack_id", "")
-            resource_schema["resource_type"] = info.get("resource_type", "")
-            resource_schema["fetch_time"] = message.get("created_time", "")
-            resource_schema["alert_type"] = message.get("state", "")
-            resource_schema["severity"] = message.get("severity", "")
-            resource_schema["alert_uuid"] = message.get("alert_uuid", "")
-            resource_schema["mapping_key"] = mapping_key
-            resources["durable_id"] = extended_info.get("durable-id", "")
-            resources["health"] = extended_info.get("health", "")
-            resources["resource_key"] = self._prepare_resource_key(resource_schema)
-            resources["key"] = info.get("resource_type", "") + "-" + \
-                info.get("resource_id", "")
-            resource_schema["resource_list"].append(resources)
+            mapping_key = mapping_dict.get(const.KEY, "")
+            resource_schema[const.ALERT_NODE_ID] = message.get(const.HOST_ID, "")
+            resource_schema[const.ALERT_SITE_ID] = info.get(const.ALERT_SITE_ID, "")
+            resource_schema[const.ALERT_RACK_ID] = info.get(const.ALERT_RACK_ID, "")
+            resource_schema[const.ALERT_RESOURCE_TYPE] = resource_type
+            resource_schema[const.FETCH_TIME] = message.get(const.CREATED_TIME, "")
+            resource_schema[const.HEALTH_ALERT_TYPE] = \
+                    message.get(const.ALERT_STATE, "")
+            resource_schema[const.ALERT_SEVERITY] = \
+                    message.get(const.ALERT_SEVERITY, "")
+            resource_schema[const.ALERT_UUID] = message.get(const.ALERT_UUID, "")
+            resource_schema[const.MAPPING_KEY] = mapping_key
+            if "node" in resource_type.lower():
+                resource_schema[const.NODE_RESPONSE] = True
+            else:
+                resource_schema[const.NODE_RESPONSE] = False
+            resource_schema[const.RESOURCE_KEY] = \
+                    self._prepare_resource_key(resource_schema)
+            resources[const.DURABLE_ID] = extended_info.get(const.DURABLE_ID, "")
+            resources[const.ALERT_HEALTH] = extended_info.get(const.ALERT_HEALTH, "")
+            resources[const.KEY] = resource_type + "-" + \
+                    info.get(const.ALERT_RESOURCE_ID, "")
+            resource_schema[const.RESOURCE_LIST].append(resources)
         except Exception as ex:
             Log.warn(f"Parsing of health map by alert failed. {ex}")
         return resource_schema
@@ -201,6 +208,12 @@ class HealthPlugin(CsmPlugin):
                     health_payload.dump()
                     health_schema = health_payload.load()
                     health_schema[const.MAPPING_KEY] = mapping_key
+                    health_schema[const.RESOURCE_KEY] = \
+                            self._prepare_resource_key(health_schema)
+                    if "node" in resource_type.lower():
+                        health_schema[const.NODE_RESPONSE] = True
+                    else:
+                        health_schema[const.NODE_RESPONSE] = False
                     self._parse_specific_info(health_schema, health_field, res_id_field)
                     health_schema.pop(const.SPECIFIC_INFO, None)
         except Exception as ex:
@@ -213,7 +226,6 @@ class HealthPlugin(CsmPlugin):
             resources = {}
             resources[const.DURABLE_ID] = items.get(const.ALERT_DURABLE_ID, "")
             resources[const.HEALTH] = items.get(health_field, "")
-            resources[const.RESOURCE_KEY] = self._prepare_resource_key(health_schema)
             resources[const.KEY] = health_schema.get\
                     (const.ALERT_RESOURCE_TYPE, "") + '-' + items.get(res_id_field, "") 
             health_schema[const.RESOURCE_LIST].append(resources)    
