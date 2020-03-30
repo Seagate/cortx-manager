@@ -87,6 +87,9 @@ class AlertSchemaValidator(Schema):
             description="Slot number of the disk.")
     durable_id = fields.String(required=False, description="Durable Id")
     host_id = fields.String(required=True, description="Host id of the resource")
+    source_id = fields.String(required=False, description="Source if for IEM")
+    component_id = fields.String(required=False, description="Component if for IEM")
+    module_id = fields.String(required=False, description="Module Id for IEM")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -201,14 +204,14 @@ class AlertPlugin(CsmPlugin):
             msg_body = json_msg_obj.load()
             sub_body = msg_body.get(const.ALERT_MESSAGE, {}).get(
                 const.ALERT_SENSOR_TYPE, {})
-            resource_type = sub_body.get("info", {}).get(const.ALERT_RESOURCE_TYPE,
-                                                         "")
+            resource_type = sub_body.get("info", {}).get\
+                    (const.ALERT_RESOURCE_TYPE, "")
             if resource_type:
                 res_split = resource_type.split(':')
                 """
                 Here resource type can be 2 forms -
                 1. enclosure:fru:disk, node:os:disk_space etc
-                2. Only enclosure
+                2. enclosure, iem
                 """
                 if len(res_split) > 1:
                     module_type = res_split[2]
@@ -217,8 +220,8 @@ class AlertPlugin(CsmPlugin):
                 """ Convert  the SSPL Schema to CSM Schema. """
                 input_alert_payload = Payload(JsonMessage(message))
                 csm_alert_payload = Payload(Dict(dict()))
-                input_alert_payload.convert(self.mapping_dict.get(module_type, {}),
-                                            csm_alert_payload)
+                input_alert_payload.convert(self.mapping_dict.get\
+                        (module_type, {}), csm_alert_payload)
                 csm_alert_payload.dump()
                 csm_schema = csm_alert_payload.load()
                 # TODO

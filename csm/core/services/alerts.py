@@ -636,8 +636,9 @@ class AlertMonitorService(Service, Observable):
                         .replace(tzinfo=timezone.utc)
             sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
             module_type = message.get(const.ALERT_MODULE_TYPE, "")
-            prev_alert = self._run_coroutine\
-                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            if module_type != const.IEM:
+                prev_alert = self._run_coroutine\
+                        (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
