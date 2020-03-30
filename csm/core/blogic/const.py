@@ -221,6 +221,10 @@ RES_ID_FIELD = 'res_id_field'
 MAPPING_KEY = 'mapping_key'
 RESOURCE_LIST = 'resource_list'
 DURABLE_ID = 'durable_id'
+NODE_RESPONSE = 'node_response'
+FETCH_TIME = 'fetch_time'
+HOST_ID = 'host_id'
+CREATED_TIME = 'created_time'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)

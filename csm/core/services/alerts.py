@@ -642,17 +642,23 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
-                self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                 self._notify_listeners(alert, loop=self._loop)
                 Log.debug(f"Alert stored successfully. \
                         Alert ID : {alert.alert_uuid}")
+                """
+                Updating health map with alerts
+                """
+                self._health_plugin.update_health_map_with_alert(alert.to_primitive())
             else:
                 if self._resolve_alert(message, prev_alert):
                     alert = AlertModel(message)
                     alert.alert_uuid = prev_alert.alert_uuid
-                    self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                     Log.debug(f"Alert updated successfully. \
                             Alert ID : {alert.alert_uuid}")
+                    """
+                    Updating health map with alerts
+                    """
+                    self._health_plugin.update_health_map_with_alert(alert.to_primitive())
             """
             Storing the incoming alert to alert's history collection.
             These alerts will be shown on UI in a seperate alert's history tab.

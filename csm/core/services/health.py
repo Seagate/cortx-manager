@@ -201,7 +201,7 @@ class HealthAppService(ApplicationService):
         :param key:
         :return:
         """
-        health_schema = self.repo.health_schema._data
+        health_schema = self.repo.health_schema.data()
         if key and not key.isspace():
             health_schema = self._get_health_schema_by_key(health_schema, key)
         return health_schema
@@ -302,7 +302,7 @@ class HealthAppService(ApplicationService):
             try:
                 for k, v in obj.items():
                     if (key == k):
-                        obj[k] = value    
+                        obj[k] = value
 
                     if isinstance(v, dict):
                         if (self._checkchilddict(v)):
@@ -313,11 +313,23 @@ class HealthAppService(ApplicationService):
     def update_health_map(self, msg_body):
         Log.debug(f"Updating health map : {msg_body}")
         try:
-            for items in msg_body.get("resource_list", []):
-                resource_key = items.get("resource_key", "")
-                resource_map = self.repo.health_schema.get\
-                        (resource_key)
-                key = items.get("key", "")
+            resource_map = {}
+            resource_node_map = {}
+            update_key = None
+            is_node_response = msg_body.get(const.NODE_RESPONSE, False)
+            resource_key = msg_body.get(const.RESOURCE_KEY, "")
+            sub_resource_map = self.repo.health_schema.get(resource_key)
+            node_id = "node:" + msg_body.get(const.ALERT_NODE_ID, "")
+            if is_node_response:
+                resource_map = self._get_health_schema_by_key\
+                        (sub_resource_map, node_id)
+                update_key = node_id
+            else:
+                resource_map = sub_resource_map
+                update_key = resource_key
+
+            for items in msg_body.get(const.RESOURCE_LIST, []):
+                key = items.get(const.KEY, "")
                 resource_schema_dict = self._get_health_schema_by_key\
                         (resource_map, key)
                 if resource_schema_dict:
@@ -327,17 +339,23 @@ class HealthAppService(ApplicationService):
                         = msg_body.get(const.ALERT_SEVERITY, "")
                     resource_schema_dict[const.ALERT_UUID] \
                         = msg_body.get(const.ALERT_UUID, "")
-                    resource_schema_dict["fetch_time"] \
-                        = msg_body.get("fetch_time", "")
+                    resource_schema_dict[const.FETCH_TIME] \
+                        = msg_body.get(const.FETCH_TIME, "")
                     resource_schema_dict[const.ALERT_HEALTH] \
                         = items.get(const.ALERT_HEALTH, "")
-                    resource_schema_dict["durable_id"] \
-                        = items.get("durable_id", "")
+                    resource_schema_dict[const.ALERT_DURABLE_ID] \
+                        = items.get(const.ALERT_DURABLE_ID, "")
                     self._set_health_schema_by_key\
-                            (resource_map, items.get("key", ""), resource_schema_dict)
+                            (resource_map, key, resource_schema_dict)
                     Log.debug(f"Health map updated for: {key}")
                 else:
                     Log.warn(f"Resource not found in health map. Key :{key}")
+            """
+            Updating the health map with sub-resource map
+            """
+            self._set_health_schema_by_key(self.repo.health_schema.data(),\
+                    update_key, resource_map)
+            Log.debug(f"Health map updated successfully.")
         except Exception as ex:
             Log.warn(f"Health Map Updation failed :{msg_body}")
 
