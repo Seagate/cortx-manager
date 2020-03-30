@@ -141,6 +141,8 @@ class CsmCli(Cmd):
                 response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
                 if response:
                     self._permissions.update(response)
+            else:
+                self.do_exit("Username wasn't provided.")
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:
