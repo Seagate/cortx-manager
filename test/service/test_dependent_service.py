@@ -58,6 +58,7 @@ def test_kibana(args):
     Check status for Kibana service
     """
     try:
+        time.sleep(5)
         Log.console("Testing Kibana service")
         host = Conf.get(const.CSM_GLOBAL_INDEX, "STATS.PROVIDER.host")
         port = Conf.get(const.CSM_GLOBAL_INDEX, "STATS.PROVIDER.port")
@@ -73,6 +74,7 @@ def test_elasticsearch(args):
     Check if elasticsearch is running on system
     """
     try:
+        time.sleep(5)
         Log.console("Testing Elasticsearch service")
         db = Conf.get(const.DATABASE_INDEX, "databases")["es_db"]["config"]
         url = "http://" + db["host"] + ":" + str(db["port"])
