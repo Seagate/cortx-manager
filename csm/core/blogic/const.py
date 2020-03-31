@@ -337,6 +337,7 @@ SEARCH_DOMAIN = 'search_domain'
 VIP_NODE = 'VIP'
 PRIMARY_NODE = 'Node 0'
 SECONDARY_NODE = 'Node 1'
+SYSTEM_CONFIG = 'system_config'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"

@@ -194,7 +194,7 @@ class SystemConfigAppService(ApplicationService):
             
             ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
             await self._provisioner.set_ntp(ntp_data)
-            await self._provisioner.set_network(new_values)
+            await self._provisioner.set_network(new_values, const.SYSTEM_CONFIG)
 
         return system_config.to_primitive()
 
@@ -282,7 +282,7 @@ class SystemConfigAppService(ApplicationService):
         if (config_data.get(const.MANAGEMENT_NETWORK) or 
             config_data.get(const.DATA_NETWORK) or 
             config_data.get(const.DNS_NETWORK)):
-            await self._provisioner.set_network(config_data)
+            await self._provisioner.set_network(config_data, config_type)
         # Calling provisioner's set_ntp api
         if config_data.get(const.DATE_TIME_SETTING, {}):
             ntp_config = config_data.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})

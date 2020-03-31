@@ -201,7 +201,7 @@ class ProvisionerPlugin:
         return {"status": "Successful"}
     
     @Log.trace_method(Log.DEBUG)
-    async def set_network(self, network_data: dict):
+    async def set_network(self, network_data: dict, config_type):
         """
         Set network configuration using provisioner api.
         :param network_data: Nerwork config dict 
@@ -244,15 +244,27 @@ class ProvisionerPlugin:
                         secondary_search_domains_list = node.get(const.SEARCH_DOMAIN, None)
                 
                 Log.debug("Handling provisioner's set network api request")
-                self.provisioner.set_network(nowait=True,
-                                mgmt_vip=mgmt_vip_address,
+                if config_type == const.SYSTEM_CONFIG:
+                    self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
                                 cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
                                 secondary_data_ip=secondary_data_netmask_address,
+                                secondary_data_netmask=secondary_data_netmask_address,
                                 dns_servers=dns_servers_list,
                                 search_domains=search_domains_list
                                 )
+                if config_type == const.MANAGEMENT_NETWORK:
+                    self.provisioner.set_network(mgmt_vip=mgmt_vip_address)
+                if config_type == const.DATA_NETWORK:
+                    self.provisioner.set_network(cluster_ip=cluster_ip_address,
+                                primary_data_ip=primary_data_ip_address,
+                                primary_data_netmask=primary_data_netmask_address,
+                                secondary_data_ip=secondary_data_netmask_address,
+                                secondary_data_netmask=secondary_data_netmask_address)
+                if config_type == const.DNS_NETWORK:
+                    self.provisioner.set_network(dns_servers=dns_servers_list,
+                                search_domains=search_domains_list)
             except self.provisioner.errors.ProvisionerError as e:
                 Log.error(f"Provisioner api error : {e}")
                 raise PackageValidationError(f"Provisioner package failed: {e}")
