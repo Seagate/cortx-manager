@@ -24,12 +24,13 @@ import getpass
 import json
 import io
 import re
+import errno
 from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
 from prettytable import PrettyTable
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.cli.csmcli import Terminal
+from csm.cli.csmcli import Terminal, ArgumentError
 from csm.core.blogic import const
 from csm.common.log import Log
 from csm.core.controllers.validators import BucketNameValidator
@@ -103,9 +104,9 @@ class Validatiors:
         try:
             if int(value) > -1:
                 return int(value)
-            raise argparse.ArgumentError("Value Must be Positive Integer")
+            raise ArgumentError(errno.EINVAL, "Value Must be Positive Integer")
         except ValueError:
-            raise argparse.ArgumentError("Value Must be Positive Integer")
+            raise ArgumentError(errno.EINVAL,"Value Must be Positive Integer")
 
     @staticmethod
     def file_type(value):
@@ -116,7 +117,7 @@ class Validatiors:
     def bucket_name(value):
         validator = BucketNameValidator()
         if not validator.is_value_valid(value):
-            raise argparse.ArgumentTypeError(
+            raise ArgumentError(errno.EINVAL,
                 ("Bucket Name should be between 4-56 Characters long. "
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))

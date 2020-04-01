@@ -21,9 +21,19 @@ import sys
 import os
 import traceback
 import asyncio
+import errno
 from getpass import getpass
 from cmd import Cmd
 import pathlib
+import argparse
+
+class ArgumentError(argparse.ArgumentError):
+    def __init__(self, rc, message, argument=None):
+        super(ArgumentError, self).__init__(argument, message)
+        self.rc = rc
+
+    def __str__(self):
+        return f"{self.rc}: {self.message}"
 
 class Terminal:
     @staticmethod
@@ -62,14 +72,12 @@ class Terminal:
         Fetches the Password from Terminal in Non-Echo Mode.
         :return:
         """
-        password = value or getpass(prompt="Password: ")
+        value = value or getpass(prompt="Password: ")
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
-            if not confirm_password==password:  
-                raise InvalidRequest("Password do not match.")    
-        return password
-
-
+            if not confirm_password==value:
+                raise ArgumentError(errno.EINVAL, "Password do not match.")
+        return value
 
 class CsmCli(Cmd):
     def __init__(self, args):
@@ -185,6 +193,8 @@ class CsmCli(Cmd):
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))
+                if not res:
+                    return None
             channel_name = f"""process_{command.comm.get("type", "")}_command"""
             if not hasattr(self, channel_name):
                 err_str = f"Invalid Communication Protocol {command.comm.get('type','')} Selected."
