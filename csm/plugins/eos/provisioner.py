@@ -249,7 +249,7 @@ class ProvisionerPlugin:
                                 cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
-                                secondary_data_ip=secondary_data_netmask_address,
+                                secondary_data_ip=secondary_data_ip_address,
                                 secondary_data_netmask=secondary_data_netmask_address,
                                 dns_servers=dns_servers_list,
                                 search_domains=search_domains_list
@@ -260,7 +260,7 @@ class ProvisionerPlugin:
                     self.provisioner.set_network(cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
-                                secondary_data_ip=secondary_data_netmask_address,
+                                secondary_data_ip=secondary_data_ip_address,
                                 secondary_data_netmask=secondary_data_netmask_address)
                 if config_type == const.DNS_NETWORK:
                     self.provisioner.set_network(dns_servers=dns_servers_list,
