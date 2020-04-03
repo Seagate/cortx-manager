@@ -17,30 +17,34 @@
  ****************************************************************************
 """
 
+import asyncio
+import time
+import toml
+
 from aiohttp import web, ClientSession
+from boto.s3.bucket import Bucket
 from botocore.exceptions import ClientError
 from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from uuid import UUID, uuid4, uuid5
-import asyncio
-import time
-import toml
 
 from csm.common.conf import Conf
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+from csm.core.services.sessions import S3Credentials
+from csm.core.services.s3.accounts import S3AccountService
 from eos.utils.data.access import Query
 from eos.utils.data.access.filters import Compare
 from eos.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.s3 import S3ConnectionConfig, IamUser, IamUserCredentials
 from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
-from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
@@ -57,7 +61,6 @@ class UslService(ApplicationService):
     _token: str
     _s3plugin: Any
     _s3cli: Any
-    _iamcli: Any
     _storage: DataBaseProvider
     _device: Device
     _volumes: Dict[UUID, Volume]
@@ -75,7 +78,6 @@ class UslService(ApplicationService):
         self._token = ''
         self._s3plugin = s3_plugin
         self._s3cli = self._create_s3cli(s3_plugin)
-        self._iamcli = IamRootClient()
         dev_uuid = self._get_device_uuid()
         self._device = Device.instantiate(
             self._get_system_friendly_name(),
@@ -134,62 +136,169 @@ class UslService(ApplicationService):
 
         return uuid5(self._device.uuid, bucket_name)
 
-    async def _handle_udx_s3_registration(self, s3_session, iam_user_name: str, iam_user_passwd: str,
-                                          bucket_name: str) -> Dict:
-        """
-        Handles an S3 part of UDX device registration:
-        - creates UDX IAM account inside the currently logged in S3 account
-        - creates UDX bucket inside the currently logged in S3 account
-        - tags UDX bucket with {"udx": "enabled"}
-        - grants UDX IAM user full access to the UDX bucket
-        In case of error on any of the steps above, attempts to perform a cleanup, i.e.:
-        - delete UDX bucket (if it hadn't existed before the registration)
-        - delete UDX IAM account (if it hadn't existed before the registration)
-        """
-
-        iam_conn_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
-        iam_cli = self._s3plugin.get_iam_client(s3_session.access_key, s3_session.secret_key,
-                                                iam_conn_conf, s3_session.session_token)
-
-        s3_conn_conf = CsmS3ConfigurationFactory.get_s3_connection_config()
-        s3_cli = self._s3plugin.get_s3_client(s3_session.access_key, s3_session.secret_key,
-                                              s3_conn_conf)
-
-        iam_user = None
-        bucket = None
-        try:
-            iam_user = await self._get_udx_iam_user(iam_cli, iam_user_name)
-            iam_user_already_exists = iam_user is not None
-            if not iam_user_already_exists:
-                iam_user = await self._create_udx_iam_user(iam_cli, iam_user_name, iam_user_passwd)
-            iam_user_credentials = await self._get_udx_iam_user_credentials(iam_cli, iam_user_name)
-            bucket = await self._get_udx_bucket(s3_cli, bucket_name)
-            bucket_already_exists = bucket is not None
-            if not bucket_already_exists:
-                bucket = await self._create_udx_bucket(s3_cli, bucket_name)
-            udx_bucket_name = bucket.name
-            await self._tag_udx_bucket(s3_cli, udx_bucket_name)
-            await self._set_udx_policy(s3_cli, iam_user, udx_bucket_name)
-        except (CsmInternalError, ClientError) as e:
-            erorr_msg = f"Failed to accomplish UDX S3 registration: {str(e)}"
-            # Don't delete UDX bucket that had existed before the registration
-            if bucket is not None and not bucket_already_exists:
-                await s3_cli.delete_bucket(udx_bucket_name)
-                Log.info(f'UDX Bucket {udx_bucket_name} is removed '
-                         f'during failed registration clean-up')
-            # Don't delete IAM user that had existed before the registration
-            if iam_user is not None and not iam_user_already_exists:
-                await iam_cli.delete_user(iam_user.user_name)
-                Log.info(f'UDX IAM user {iam_user_name} is removed '
-                         f'during failed registration clean-up')
-            raise CsmInternalError(erorr_msg)
-
-        return {
-            'iam_user_name': iam_user.user_name,
-            'access_key_id': iam_user_credentials.access_key_id,
-            'secret_key': iam_user_credentials.secret_key,
-            'bucket_name': bucket.name,
+    def _format_udx_register_device_params(self, url: str, pin: str, token: str) -> Dict[str, str]:
+        register_device_params = {
+            'url': url,
+            'regPin': pin,
+            'regToken': token,
         }
+        return register_device_params
+
+    async def _format_udx_access_params(
+        self, s3_account: Dict, iam_user: IamUser, bucket: Bucket
+    ) -> Dict[str, Any]:
+        access_key = s3_account.get('access_key')
+        secret_key = s3_account.get('secret_key')
+        iam_client = self._s3plugin.get_iam_client(
+            access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
+        )
+        iam_user_credentials = await self._get_udx_iam_user_credentials(
+            iam_client, iam_user.user_name
+        )
+        access_params = {
+            'accountName': s3_account.get('account_name'),
+            # TODO find a better way to obtain S3 server host and port
+            'uri': 's3://{}:{}/{}'.format(
+                Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host'),
+                Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
+                bucket.name,
+            ),
+            'credentials': {
+                'accessKey': iam_user_credentials.access_key_id,
+                'secretKey': iam_user_credentials.secret_key,
+            },
+        }
+        return access_params
+
+    async def _cleanup_on_udx_registration_error(
+        self, s3_account: Dict, iam_user: IamUser, bucket: Bucket
+    ) -> None:
+        Log.debug('Cleaning up UDX resources...')
+        access_key = s3_account.get('access_key')
+        secret_key = s3_account.get('secret_key')
+        Log.debug('Remove bucket')
+        s3_client = self._s3plugin.get_s3_client(
+            access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
+        )
+        await s3_client.delete_bucket(bucket.name)
+        Log.debug('Remove IAM user')
+        iam_client = self._s3plugin.get_iam_client(
+            access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
+        )
+        await iam_client.delete_user(iam_user.user_name)
+        Log.debug('Remove S3 account')
+        s3_account_service = S3AccountService(self._s3plugin)
+        s3_credentials = S3Credentials(
+            str(s3_account.get('account_name')),
+            str(s3_account.get('access_key')),
+            str(s3_account.get('secret_key')),
+            '',
+        )
+        await s3_account_service.delete_account(s3_credentials, s3_account.get('account_name'))
+        Log.info('UDX resources cleanup complete.')
+
+    async def _initialize_udx_s3_resources(
+        self,
+        s3_account_name: str,
+        s3_account_email: str,
+        s3_account_password: str,
+        iam_user_name: str,
+        iam_user_password: str,
+        bucket_name: str,
+        *,
+        repair_mode: bool = False,
+    ) -> Tuple[Dict, IamUser, Bucket]:
+        s3_account = None
+        iam_user = None
+        existing_iam_user = None
+        bucket = None
+        existing_bucket = None
+
+        async def cleanup(*, s3_account_service=None, iam_client=None, s3_client=None):
+            # Remove bucket if it exists
+            if s3_client is not None and bucket is not None:
+                await s3_client.delete_bucket(bucket.name)
+            # Remove IAM user if it exists
+            if iam_client is not None and iam_user is not None:
+                await iam_client.delete_user(iam_user.user_name)
+            # Remove S3 account if it exists
+            if s3_account_service is not None and s3_account is not None:
+                s3_credentials = S3Credentials(
+                    str(s3_account.get('account_name')),
+                    str(s3_account.get('access_key')),
+                    str(s3_account.get('secret_key')),
+                    '',
+                )
+                await s3_account_service.delete_account(
+                    s3_credentials, s3_account.get('account_name')
+                )
+
+        Log.debug('Create S3 account')
+        try:
+            s3_account_service = S3AccountService(self._s3plugin)
+            s3_account = await s3_account_service.create_account(
+                s3_account_name, s3_account_email, s3_account_password,
+            )
+            access_key = s3_account.get('access_key')
+            secret_key = s3_account.get('secret_key')
+        # FIXME There is no way to extract meaningful error codes from ``CsmInternalError``.
+        #   For that reason, we raise internal server errors in all of those cases.
+        except (CsmInternalError, Exception) as e:
+            await cleanup(s3_account_service=s3_account_service)
+            reason = 'S3 account creation failed'
+            Log.error(f'{reason}---{str(e)}')
+            raise web.HTTPInternalServerError(reason=reason)
+        Log.debug('Create IAM user')
+        try:
+            iam_client = self._s3plugin.get_iam_client(
+                access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
+            )
+            existing_iam_user = await self._get_udx_iam_user(iam_client, iam_user_name)
+            if existing_iam_user is None:
+                iam_user = await self._create_udx_iam_user(
+                    iam_client, iam_user_name, iam_user_password
+                )
+            elif not repair_mode:
+                reason = 'IAM user already exists'
+                Log.error(f'{reason}')
+                raise web.HTTPConflict(reason=reason)
+        except web.HTTPConflict as e:
+            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
+            raise e
+        except Exception as e:
+            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
+            reason = 'IAM user creation failed'
+            Log.error(f'{reason}---{str(e)}')
+            raise web.HTTPInternalServerError(reason=reason)
+        Log.debug('Create bucket')
+        try:
+            s3_client = self._s3plugin.get_s3_client(
+                access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
+            )
+            existing_bucket = await self._get_udx_bucket(s3_client, bucket_name)
+            if existing_bucket is None:
+                bucket = await self._create_udx_bucket(s3_client, bucket_name)
+                await self._tag_udx_bucket(s3_client, bucket_name)
+                await self._set_udx_policy(s3_client, iam_user, bucket_name)
+            elif not repair_mode:
+                reason = 'Bucket already exists'
+                Log.error(f'{reason}')
+                raise web.HTTPConflict(reason=reason)
+        except web.HTTPConflict as e:
+            await cleanup(
+                s3_account_service=s3_account_service, iam_client=iam_client, s3_client=s3_client
+            )
+            raise e
+        except Exception as e:
+            await cleanup(
+                s3_account_service=s3_account_service, iam_client=iam_client, s3_client=s3_client
+            )
+            reason = 'Bucket creation failed'
+            Log.error(f'{reason}---{str(e)}')
+            raise web.HTTPInternalServerError(reason=reason)
+        # In case we are running on repair mode, suffice to test if the resources already exist.
+        # In case we are not, exceptions should have been raised previously.
+        return (s3_account, existing_iam_user or iam_user, existing_bucket or bucket)
 
     async def _get_udx_iam_user(self, iam_cli, user_name: str) -> IamUser:
         """
@@ -238,17 +347,13 @@ class UslService(ApplicationService):
         creds = await iam_cli.create_user_access_key(user_name)
         return creds
 
-    def _get_udx_bucket_name(self, bucket_name: str) -> str:
-        return 'udx-' + bucket_name
-
     async def _get_udx_bucket(self, s3_cli, bucket_name: str):
         """
         Checks if UDX bucket already exists and returns it
         """
 
         Log.debug(f'Getting UDX bucket')
-        udx_bucket_name = self._get_udx_bucket_name(bucket_name)
-        bucket = await s3_cli.get_bucket(udx_bucket_name)
+        bucket = await s3_cli.get_bucket(bucket_name)
 
         return bucket
 
@@ -258,9 +363,8 @@ class UslService(ApplicationService):
         """
 
         Log.debug(f'Creating UDX bucket {bucket_name}')
-        udx_bucket_name = self._get_udx_bucket_name(bucket_name)
-        bucket = await s3_cli.create_bucket(udx_bucket_name)
-        Log.info(f'UDX bucket {udx_bucket_name} is created')
+        bucket = await s3_cli.create_bucket(bucket_name)
+        Log.info(f'UDX bucket {bucket_name} is created')
         return bucket
 
     async def _tag_udx_bucket(self, s3_cli, bucket_name: str):
@@ -370,11 +474,16 @@ class UslService(ApplicationService):
 
         return [self._device.to_primitive()]
 
-    async def get_device_volumes_list(self, device_id: UUID) -> List[Dict[str, Any]]:
+    async def get_device_volumes_list(
+        self, device_id: UUID, uri: str, access_key: str, secret_access_key: str
+    ) -> List[Dict[str, Any]]:
         """
         Provides a list of all volumes associated to a specific device.
 
         :param device_id: Device UUID
+        :param uri: URI to storage service
+        :param access_key: Access key to storage service
+        :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
 
@@ -382,12 +491,17 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         return [v.to_primitive(role='public') for uuid, v in self._volumes.items()]
 
-    async def post_device_volume_mount(self, device_id: UUID, volume_id: UUID) -> Dict[str, str]:
+    async def post_device_volume_mount(
+        self, device_id: UUID, volume_id: UUID, uri: str, access_key: str, secret_access_key: str
+    ) -> Dict[str, str]:
         """
         Attaches a volume associated to a specific device to a mount point.
 
         :param device_id: Device UUID
         :param volume_id: Volume UUID
+        :param uri: URI to storage service
+        :param access_key: Access key to storage service
+        :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
         if device_id != self._device.uuid:
@@ -399,7 +513,9 @@ class UslService(ApplicationService):
                                          self._volumes[volume_id].bucketName).to_primitive()
 
     # TODO replace stub
-    async def post_device_volume_unmount(self, device_id: UUID, volume_id: UUID) -> str:
+    async def post_device_volume_unmount(
+        self, device_id: UUID, volume_id: UUID, uri: str, access_key: str, secret_access_key: str
+    ) -> str:
         """
         Detaches a volume associated to a specific device from its current mount point.
 
@@ -407,6 +523,9 @@ class UslService(ApplicationService):
 
         :param device_id: Device UUID
         :param volume_id: Volume UUID
+        :param uri: URI to storage service
+        :param access_key: Access key to storage service
+        :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
         return 'handle'
@@ -424,7 +543,17 @@ class UslService(ApplicationService):
             raise CsmInternalError("Unknown entry in USL events queue")
         return e.to_primitive(role='public')
 
-    async def register_device(self, url: str, pin: str) -> None:
+    async def post_register_device(
+        self,
+        url: str,
+        pin: str,
+        s3_account_name: str,
+        s3_account_email: str,
+        s3_account_password: str,
+        iam_user_name: str,
+        iam_user_password: str,
+        bucket_name: str,
+    ) -> Dict:
         """
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
@@ -440,32 +569,75 @@ class UslService(ApplicationService):
             reason = 'UDS base URL is not valid'
             Log.error(reason)
             raise web.HTTPInternalServerError(reason=reason)
-        endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
-        # TODO use a single client session object; manage life cycle correctly
-        async with ClientSession() as session:
-            params = {'url': url, 'regPin': pin, 'regToken': self._token}
-            Log.info(f'Start device registration at {uds_url}')
-            async with session.put(endpoint_url, params=params) as response:
-                if response.status != 201:
-                    reason = 'Could not start device registration'
-                    Log.error(f'{reason}---unexpected status code {response.status}')
-                    raise web.HTTPInternalServerError(reason=reason)
-            Log.info('Device registration in process---waiting for confirmation')
-            timeout_limit = time.time() + 60
-            while time.time() < timeout_limit:
-                async with session.get(endpoint_url) as response:
-                    if response.status == 200:
-                        Log.info('Device registration successful')
-                        return
-                    elif response.status != 201:
-                        reason = 'Device registration failed'
+        # Let ``_initialize_udx_s3_resources()`` propagate its exceptions
+        udx_s3_account, udx_iam_user, udx_bucket = await self._initialize_udx_s3_resources(
+            s3_account_name,
+            s3_account_email,
+            s3_account_password,
+            iam_user_name,
+            iam_user_password,
+            bucket_name,
+        )
+        try:
+            register_device_params = self._format_udx_register_device_params(url, pin, self._token)
+            access_params = await self._format_udx_access_params(
+                udx_s3_account, udx_iam_user, udx_bucket
+            )
+            registration_body = {
+                'registerDeviceParams': register_device_params,
+                'accessParams': access_params,
+            }
+        except Exception as e:
+            await self._cleanup_on_udx_registration_error(udx_s3_account, udx_iam_user, udx_bucket)
+            reason = 'Error on registration body assembly'
+            Log.error(f'{reason}---{str(e)}')
+            raise web.HTTPInternalServerError(reason=reason)
+        try:
+            endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
+            async with ClientSession() as session:
+                Log.info(f'Start device registration at {uds_url}')
+                async with session.put(endpoint_url, json=registration_body) as response:
+                    if response.status != 201:
+                        reason = 'Could not start device registration'
                         Log.error(f'{reason}---unexpected status code {response.status}')
                         raise web.HTTPInternalServerError(reason=reason)
-                await asyncio.sleep(1)
-            else:
-                reason = 'Could not confirm device registration status'
-                Log.error(reason)
-                raise web.HTTPGatewayTimeout(reason=reason)
+                Log.info('Device registration in process---waiting for confirmation')
+                timeout_limit = time.time() + 60
+                while time.time() < timeout_limit:
+                    async with session.get(endpoint_url) as response:
+                        if response.status == 200:
+                            Log.info('Device registration successful')
+                            break
+                        elif response.status != 201:
+                            reason = 'Device registration failed'
+                            Log.error(f'{reason}---unexpected status code {response.status}')
+                            raise web.HTTPInternalServerError(reason=reason)
+                    await asyncio.sleep(1)
+                else:
+                    reason = 'Could not confirm device registration status'
+                    Log.error(reason)
+                    raise web.HTTPGatewayTimeout(reason=reason)
+                return {
+                    's3_account': {
+                        'access_key': udx_s3_account['access_key'],
+                        'secret_key': udx_s3_account['secret_key'],
+                    },
+                    'iam_user': {
+                        'access_key': access_params['credentials']['accessKey'],
+                        'secret_key': access_params['credentials']['secretKey'],
+                    },
+                }
+        except Exception as e:
+            await self._cleanup_on_udx_registration_error(udx_s3_account, udx_iam_user, udx_bucket)
+            raise e
+
+    async def get_register_device(self) -> None:
+        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
+        async with ClientSession() as session:
+            async with session.get(endpoint_url) as response:
+                if response.status != 200:
+                    raise web.HTTPNotFound()
 
     # TODO replace stub
     async def get_registration_token(self) -> Dict[str, str]:
