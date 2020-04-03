@@ -36,6 +36,7 @@ class TimeSeriesProvider:
         """
         Parse aggregation rule payload and convert to generic template
         """
+        self._storage_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.interval'))
         with open(self._agg_rule_file, 'r') as stats_aggr:
             self._agg_rule = json.loads(stats_aggr.read())
         self._template_agg_rule = {}
@@ -131,7 +132,7 @@ class TimelionProvider(TimeSeriesProvider):
                 "/": "divide()"
             }
             self._config_list = {
-                "interval": Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.interval')
+                "interval": "${interval}"
             }
             for panel in self._agg_rule.keys():
                 template_metrics = self._template_agg_rule[panel]["metrics"]
@@ -192,7 +193,7 @@ class TimelionProvider(TimeSeriesProvider):
             query: Optional direct query to timelion_api
         """
         try:
-            interval = await self._parse_interval(from_t, duration_t, interval, total_sample)
+            interval, duration_t, from_t = await self._parse_interval(from_t, duration_t, interval, total_sample)
             from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'
             duration_t = str(datetime.utcfromtimestamp(int(duration_t)).isoformat())+'.000Z'
             panel = panel.lower()
@@ -254,17 +255,18 @@ class TimelionProvider(TimeSeriesProvider):
         diff_sec = int(duration_t) - int(from_t)
         if diff_sec <= 0:
             raise CsmInternalError("to time should be grater than from time")
+        elif diff_sec < self._storage_interval*2:
+            from_t = int(duration_t) - (int(self._storage_interval)*2)
+            diff_sec = int(self._storage_interval)*2
         if total_sample == "" and interval == "":
-            interval = str(self._config_list["interval"]) + 's'
+            interval = str(self._storage_interval) + 's'
         elif total_sample != "":
             interval = str(int(diff_sec/int(total_sample))) + 's'
         elif interval != "":
             interval = str(int(interval)) + 's'
-        elif total_sample == "" and interval == "":
-            interval = "auto"
         else:
             raise CsmInternalError("Unable to parse interval")
-        return interval
+        return interval, duration_t, from_t
 
     async def _update_index(self, metric, from_t, duration_t):
         """
@@ -320,6 +322,7 @@ class TimelionProvider(TimeSeriesProvider):
             query = query[:-1] + ')'
         body = self._timelion_req_body.substitute(query=query, from_t=from_t,
                                         interval=interval, to_t=duration_t)
+        body = body.replace("${interval}", str(interval.replace("s", "")))
         return await self._query(json.loads(body))
 
     async def _query(self, data):
