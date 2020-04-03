@@ -36,6 +36,7 @@ class ApiRoutes:
         # self._app.router.add_view("/csm", CsmCliView),
         # self._app.web.get("/ws", self.process_websocket),
         # self._app.router.add_view('/{path:.*}', self.process_dbg_static_page)
+        router.add_view("/usl/v1/registerDevice", usl_ctrl.get_device_registration_view_class())
         router.add_view("/usl/v1/devices", usl_ctrl.get_device_view_class())
         router.add_view("/usl/v1/devices/{device_id}/volumes",
                         usl_ctrl.get_device_volumes_list_view_class())
