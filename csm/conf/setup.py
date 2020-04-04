@@ -31,10 +31,11 @@ from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 
-try:
-    from salt import client
-except ModuleNotFoundError:
-    client= None
+# try:
+#     from salt import client
+# except ModuleNotFoundError:
+client = None
+
 
 class Setup:
     def __init__(self):

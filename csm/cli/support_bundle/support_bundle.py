@@ -36,10 +36,10 @@ from csm.core.providers.providers import Response
 from csm.common import errors
 from csm.common.conf import Conf
 from csm.common.log import Log
-try:
-    from salt import client
-except ModuleNotFoundError as e:
-    client = None
+# try:
+#     from salt import client
+# except ModuleNotFoundError as e:
+client = None
 
 class SupportBundle:
     """

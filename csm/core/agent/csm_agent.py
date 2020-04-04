@@ -122,8 +122,8 @@ class CsmAgent:
         try:
             # TODO: consider a more safe storage
             params = {
-                "username": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.username'),
-                "password": Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.password')
+                "username": const.NON_ROOT_USER,
+                "password": const.NON_ROOT_USER_PASS
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
@@ -247,10 +247,10 @@ if __name__ == '__main__':
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
         from eos.utils.security.cipher import Cipher, CipherInvalidToken
-        try:
-            from salt import client
-        except ModuleNotFoundError:
-            client = None
+        # try:
+        #     from salt import client
+        # except ModuleNotFoundError:
+        client = None
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:
