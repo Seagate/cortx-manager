@@ -19,7 +19,7 @@
                     "flag": "-l",
                     "type": "str",
                     "dest": "limit",
-                    "help": "Limit of amout of users you want to get",
+                    "help": "Limit of amount of users you want to view",
                     "params": true
                 },
                 {
@@ -94,13 +94,13 @@
                 {
                     "flag": "username",
                     "type": "str",
-                    "help": "User id which you want to create",
+                    "help": "Username for user used for Login.",
                     "json": true
                 },
                 {
                     "flag": "roles",
                     "type": "str",
-                    "help": "List of this user roles",
+                    "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
                     "choices": [
                         "monitor",
                         "manage"

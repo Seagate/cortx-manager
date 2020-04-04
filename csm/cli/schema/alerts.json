@@ -145,7 +145,7 @@
         {
           "flag": "-f",
           "dest": "format",
-          "help": "Format of Output",
+          "help": "Format of output",
           "default": "table",
           "type": "str",
           "choices": [
@@ -180,7 +180,7 @@
     },
     {
       "name": "acknowledge",
-      "description": "Acknowledged all the Alerts",
+      "description": "Acknowledged all the alerts",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
@@ -193,7 +193,7 @@
           "flag": "-ack",
           "dest": "acknowledged",
           "action": "store_const",
-          "help": "Marks Alert as Acknowledge, Un-acknowledge when missing.",
+          "help": "Marks alert as acknowledge, un-acknowledge when missing.",
           "default": false,
           "const": true,
           "json": true
@@ -217,25 +217,19 @@
     },
     {
       "name": "comment",
-      "description": "Comment on a given alert id",
+      "description": "Display/Add comment for an alert.",
       "permissions_tag": "list",
       "sub_commands": [
         {
           "name": "show",
-          "description": "Displays Comments of a particular Alert",
+          "description": "Displays comments of a particular alert.",
           "need_confirmation": false,
           "permissions_tag": "list",
           "args": [
             {
               "flag": "alert_uuid",
               "type": "str",
-              "help": "Alert ID for which Comment need to added"
-            },
-            {
-              "flag": "comment_text",
-              "type": "str",
-              "help": "Comment need to added.",
-              "json": true
+              "help": "Alert ID for which comments needs to displayed."
             },
             {
               "flag": "args",
@@ -277,14 +271,20 @@
         },
         {
           "name": "add",
-          "description": "Add Comment to an existing Alert.",
+          "description": "Add comment to an existing alert.",
           "need_confirmation": true,
           "permissions_tag": "update",
           "args": [
             {
               "flag": "alert_uuid",
               "type": "str",
-              "help": "Alert ID for which Comment need to added"
+              "help": "Alert ID for which comment need's to added."
+            },
+            {
+              "flag": "comment_text",
+              "type": "str",
+              "help": "Comment to be added.",
+              "json": true
             },
             {
               "flag": "args",
