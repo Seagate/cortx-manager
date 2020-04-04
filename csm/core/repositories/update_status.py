@@ -38,7 +38,8 @@ class UpdateStatusRepository:
         Fetch the model. Returns None if it has never been saved or is deleted.
         :update_type: an identifier of the specific type of upgrade (e.g. software, firmware, etc.)
         """
-        query = Query().order_by(UpdateStatusEntry.updated_at, SortOrder.DESC)
+        query = Query().filter_by(Compare(UpdateStatusEntry.update_type, '=', update_type))
+        query = query.order_by(UpdateStatusEntry.updated_at, SortOrder.DESC)
         model = next(iter(await self.db(UpdateStatusEntry).get(query)), None)
         return model
 
