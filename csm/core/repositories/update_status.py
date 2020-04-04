@@ -64,5 +64,5 @@ class UpdateStatusRepository:
         """
         # This is a workaround to delete all records - that is currently not directly
         # supported by the generic db
-        filter = Compare(UpdateStatusEntry.upgrade_id, '!=', '')
+        filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
         await self.db(UpdateStatusEntry).delete(filter)

@@ -21,3 +21,4 @@ setup.test_setup_provider
 stats.test_timelion_provider
 onboarding.test_system_config
 validators.test_validators
+update.test_hotfix
