@@ -57,7 +57,10 @@ RUN set -ex \
 COPY eos_uploads.repo /etc/yum.repos.d/
 
 RUN yum install -y python36-pip \
-		   eos-py-utils \	
+		   eos-py-utils \
+		   gcc \
+		   python3-devel \
+		   python-setuptools \
     && pip3 install --prefix /usr \
             PyYAML \
             aiohttp \

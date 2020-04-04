@@ -54,17 +54,6 @@ class ProvisionerPlugin:
             self.provisioner = None
             Log.error(f"Provisioner module not found : {error}")
 
-        try:
-            from salt import client
-
-            self.client = client
-
-            Log.info("`salt.client` is loaded")
-        except Exception as e:
-            self.client = None
-
-            Log.error(f"Salt.client not initilized: {e}")
-
     async def _await_nonasync(self, func):
         pool = ThreadPoolExecutor(max_workers=1)
         loop = asyncio.get_event_loop()
@@ -205,16 +194,6 @@ class ProvisionerPlugin:
             raise PackageValidationError("Provisioner is not instantiated")
 
         return await self._await_nonasync(_command_handler)
-    async def get_node_list(self):
-        node_list = self.client.Caller().function(PILLAR_GET, 'cluster:node_list')
-        return node_list if node_list else []
-
-    async def is_primary_node(self, node_id):
-        return self.client.Caller().function(PILLAR_GET, f'cluster:{node_id}:is_primary')
-
-    async def get_node_details(self, node_name):
-        node_details = self.client.Caller().function(PILLAR_GET, f'cluster:{node_name}')
-        return node_details if node_details else {}
 
     async def get_provisioner_status(self, status_type):
         # TODO: Provisioner api to get status tobe implented here
