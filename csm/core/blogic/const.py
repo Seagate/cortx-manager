@@ -394,7 +394,7 @@ USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 #todo Currently SSPL's Key needs to be finialized.
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "sspl",
+    "CHANNEL.password": "rabbitmq",
     "S3.ldap_password": "openldap"
 }
 # Provisioner status
