@@ -27,6 +27,32 @@ from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
 
+class RoleTypes(fields.List):
+    """
+    A list of strings representing an role type.
+    When deserialised, will be deduped"
+    """
+
+    def __init__(self, required=False, _validate=None, **kwargs):
+        if _validate is not None:
+            raise ValueError(
+                "The RoleTypes field provides its own validation "
+                "and thus does not accept a the 'validate' argument."
+            )
+
+        super().__init__(
+            fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)),
+            required=required,
+            validate=validate.Length(min=1),
+            allow_none=False,
+            **kwargs,
+        )
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        # for unique entry of role
+        return [ role
+            for role in set(super()._deserialize(value, attr, data, **kwargs))
+        ]
 class CsmRootUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
@@ -35,13 +61,13 @@ class CsmRootUserCreateSchema(Schema):
 
 # TODO: find out about policies for names and passwords
 class CsmUserCreateSchema(CsmRootUserCreateSchema):
-    roles = fields.List(fields.String(
-        required=True, validate=validate.OneOf(const.CSM_USER_ROLES)), required=True)
+    roles = RoleTypes(required=True)
 
 class CsmUserPatchSchema(Schema):
     old_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
-    roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)))
+    #roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES), unique=True), unique=True)
+    roles = RoleTypes()
 
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
