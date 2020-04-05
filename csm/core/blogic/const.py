@@ -234,7 +234,7 @@ CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 # Support Bundle
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
-SUPPORT_BUNDLE_TAG = "support_bundle"
+SUPPORT_BUNDLE_TAG = "support_bundle;"
 
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)

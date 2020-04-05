@@ -134,15 +134,17 @@ class SupportBundle:
 
                 thread_obj.start()
                 threads.append(thread_obj)
-
+            symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    "SUPPORT_BUNDLE.symlink_path")
             response_msg = (f"Support Bundle Generation Started.\n"
                           f"Please use the below ID for Checking the status of "
-                          f"Support Bundle. \n {bundle_id}\n")
+                          f"Support Bundle. \n {bundle_id}\n. Please Find the file "
+                            f"under {symlink_path} .\n")
 
             return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
         finally:
             for each_thread in threads:
-                each_thread.join(timeout=600)
+                each_thread.join(timeout=60)
 
     @staticmethod
     async def bundle_status(command):

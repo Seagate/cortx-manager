@@ -84,6 +84,9 @@ class ComponentsBundle:
         :param file_path: Path of tar file to be sent. :type:str
         :return:
         """
+        if not protocol_details.get("host", None):
+            Log.info("Skipping File Upload as host is not configured.")
+            return
         url = protocol_details.get('url')
         protocol = url.split("://")[0]
         channel = f"{protocol.upper()}Channel"
@@ -119,7 +122,7 @@ class ComponentsBundle:
                                      "SUPPORT_BUNDLE.bundle_path"))
         if os.path.isdir(path):
             shutil.rmtree(path)
-        os.makedirs(path)
+        os.makedirs(os.path.join(path, bundle_id))
         # Start Execution for each Component Command.
         threads = []
         for each_component in support_bundle_config.get("COMMANDS"):
@@ -129,12 +132,12 @@ class ComponentsBundle:
                 components_commands = file_data.get("support_bundle", [])
             if components_commands:
                 thread_obj = threading.Thread(ComponentsBundle.exc_components_cmd(
-                    components_commands, bundle_id, path))
+                    components_commands, bundle_id, f"{path}{os.sep}"))
                 thread_obj.start()
                 threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                   "SUPPORT_BUNDLE.bundle_path")
-        tar_file_name = os.path.join(directory_path, '../',
+        tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
         #Create Summary File for Tar.
         summary_file_path = os.path.join(directory_path, "summary.yaml")
@@ -161,8 +164,7 @@ class ComponentsBundle:
                                                    f"SupportBundle.{bundle_id}"))
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
-                                         node_name,
-                                         comment)
+                                         node_name, comment)
             return None
 
         #Upload the File.
@@ -174,3 +176,6 @@ class ComponentsBundle:
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
+        finally:
+            if os.path.isdir(os.path.join(path, bundle_id)):
+                shutil.rmtree(os.path.join(path, bundle_id))
