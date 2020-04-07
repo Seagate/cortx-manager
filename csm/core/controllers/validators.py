@@ -195,9 +195,19 @@ class ValidationErrorFormatter:
 
 class IsoFilenameValidator(Validator):
     """
-    Validator class for validating firmware and hotfix package file name.
+    Validator class for validating hotfix package file name.
     """
 
     def __call__(self, file_name):
         if not file_name.endswith(".iso"):
             raise ValidationError("Package should be a '.iso' file.")
+
+
+class BinFilenameValidator(Validator):
+    """
+    Validator class for validating firmware package file name.
+    """
+
+    def __call__(self, file_name):
+        if not file_name.endswith(".bin"):
+            raise ValidationError("Package should be a '.bin' file.")
