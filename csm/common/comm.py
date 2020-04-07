@@ -206,6 +206,8 @@ class AmqpChannel(Channel):
                 f"{const.CHANNEL}.{const.DURABLE}")
         self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.EXCLUSIVE}")
+        self.sleep_time = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.SLEEP_TIME}")
         self._setExchangeandQueue()
 
     def _setExchangeandQueue(self):
@@ -233,25 +235,28 @@ class AmqpChannel(Channel):
         Initialize the object from a configuration file.
         Establish connection with Rabbit-MQ server.
         """
-        while not(self._connection and self._channel) and int(self.retry_counter) < 6:
+        retry_count = 1
+        while not(self._connection and self._channel) and \
+        int(self.retry_counter) >= retry_count:
             self.connect()
             if not (self._connection and self._channel):
-                Log.warn('RMQ Connection Failed. Retry Attempt: {%d} in {%d} secs'\
-                %(self.retry_counter, self.retry_counter * 2 + 60))
-                time.sleep(self.retry_counter * 2 + 60)
-                self.retry_counter += 1
+                Log.warn(f"RMQ Connection Failed. Retry Attempt: \
+                {retry_count} in {self.sleep_time} seconds")
+                time.sleep(self.sleep_time)
+                retry_count += 1
         if not(self._connection and self._channel):
-            Log.warn('RMQ connection Failed. SSPL communication channel\
+            Log.warn('RMQ connection Failed. SSPL-CSM communication channel\
                         could not be established.')
-            Log.error('sspl-csm channel creation FAILED.\
-                                  Retry attempts: 3')
+            Log.error(f"SSPL-CSM channel creation FAILED.\
+                                  Retry attempts:{self.retry_counter}")
             raise CsmError(-1,'RMQ connection Failed to Initialize.')
         else:
-            Log.debug('RMQ connection is Initialized.')
+            Log.debug(f"RMQ connection is Initialized. \
+            Attempts:{retry_count}")
         self._declare_exchange_and_queue()
 
     def _declare_exchange_and_queue(self):
-        if(self._connection and self._channel):  
+        if(self._connection and self._channel):
             try:
                 self._channel.exchange_declare(exchange=self.exchange,
                                            exchange_type=self.exchange_type, \
@@ -284,14 +289,11 @@ class AmqpChannel(Channel):
             self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host,
                                port=self.port, virtual_host=self.virtual_host,
                                credentials=pika.PlainCredentials(self.username,self.password)))
-                                                                               
-            self._channel = self._connection.channel()
-        except AMQPError as err:
-                Log.error('RMQ connections has not established. Details  :%s ' %str(err))
-                raise CsmError(-1, '%s' %err)
 
-        Log.debug('RMQ connections has established.')
- 
+            self._channel = self._connection.channel()
+        except AMQPConnectionError as err:
+            Log.error(f"RMQ connections has not established. {err}")
+
     def disconnect(self):
         """
         Disconnect the connection 
@@ -454,7 +456,7 @@ class Comm(metaclass=ABCMeta):
     @abstractmethod
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Comm class') 
-    
+ 
     @abstractmethod
     def acknowledge(self):
         raise Exception('acknowledge not implemented in Comm class') 
@@ -491,12 +493,12 @@ class AmqpComm(Comm):
 
     def acknowledge(self):
         self._inChannel.acknowledge(self.delivery_tag)
-    
+
     def stop(self):
         consumer_tag = const.CONSUMER_TAG
         self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
         self.disconnect()
-                
+
     def recv(self, callback_fn=None, message=None):
         """
         Start consuming the queue messages.
