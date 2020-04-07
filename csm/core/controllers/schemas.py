@@ -18,7 +18,8 @@
 """
 
 from marshmallow import Schema, fields
-from csm.core.controllers.validators import FileRefValidator, IsoFilenameValidator
+from csm.core.controllers.validators import (FileRefValidator, IsoFilenameValidator, 
+                                             BinFilenameValidator)
 
 
 class FileFieldSchema(Schema):
@@ -34,6 +35,12 @@ class IsoFileFieldSchema(Schema):
     filename = fields.Str(validate=IsoFilenameValidator(), required=True)
     file_ref = fields.Field(validate=FileRefValidator())
 
+class BinFileFieldSchema(Schema):
+    """Base File Filed validator for 'bin'-uploaded files"""
+    content_type = fields.Str(required=True)
+    filename = fields.Str(validate=BinFilenameValidator(), required=True)
+    file_ref = fields.Field(validate=FileRefValidator())    
+
 
 class HotFixFileFieldSchema(IsoFileFieldSchema):
     """ Validation schema for uploaded files"""
@@ -41,7 +48,7 @@ class HotFixFileFieldSchema(IsoFileFieldSchema):
     pass
 
 
-class FirmwareUpdateFileFieldSchema(IsoFileFieldSchema):
+class FirmwareUpdateFileFieldSchema(BinFileFieldSchema):
     """Valdation schmea for firmware update"""
 
     pass

@@ -24,6 +24,8 @@ from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.core.data.models.upgrade import UpdateStatusEntry
+from csm.common.fs_utils import FSUtils
+
 
 import os
 import datetime
@@ -84,9 +86,10 @@ class FirmwareUpdateService(ApplicationService):
         model = await self._firmware_repo.get_current_model(self.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
             raise InvalidRequest("You can't upload a new package while there is an ongoing upgrade")
+
         model = UpdateStatusEntry.generate_new(self.FIRMWARE_UPDATE_ID)
-        model.version = datetime.datetime.now().strftime("%Y.%m.%d.%H.%M")
         model.description = os.path.join(self._fw_storage_path, filename)
+        model.details = ''
         model.mark_uploaded()
         await self._firmware_repo.save_model(model)
         return model.to_printable()
