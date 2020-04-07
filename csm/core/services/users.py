@@ -56,7 +56,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist("Such user already exists", USERS_MSG_ALREADY_EXISTS,user.user_id)
+            raise ResourceExist("Such user already exists", USERS_MSG_ALREADY_EXISTS,existing_user.user_id)
 
         return await self.storage(User).store(user)
 
@@ -67,8 +67,14 @@ class UserManager:
         :returns: User object in case of success. None otherwise.
         """
         Log.debug(f"Get user service user id:{user_id}")
-        query = Query().filter_by(Compare(User.user_id, '=', user_id))
-        return next(iter(await self.storage(User).get(query)), None)
+        # TODO In absence of ComapareIgnoreCase manually filtering 
+        # query = Query().filter_by(Compare(User.to_native("user_id").lower(), '=', user_id.lower()))
+        # return next(iter(await self.storage(User).get(query)), None)
+        all_users = await self.get_list()
+        for user in all_users:
+            if user["user_id"].lower() == user_id.lower():
+                return user
+        return None
 
     async def delete(self, user_id: str) -> None:
         Log.debug(f"Delete user service user id:{user_id}")
@@ -211,7 +217,7 @@ class CsmUserService(ApplicationService):
         if self.is_super_user(user):
             raise CsmPermissionDenied("Can't delete super user",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
-        await self.user_mgr.delete(user_id)
+        await self.user_mgr.delete(user.user_id)
         return {"message": "User Deleted Successfully."}
 
     async def _validation_for_update_by_superuser(self, user_id: str, user: User, new_values: dict):
