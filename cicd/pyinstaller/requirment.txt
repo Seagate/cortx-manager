@@ -23,4 +23,5 @@ pathlib==1.0.1
 statsd==3.2.2
 urllib3==1.25.7
 cryptography==2.8
-git+http://gitlab.mero.colo.seagate.com/eos/provisioner/ees-prvsnr#subdirectory=api/python
+git+http://gitlab.mero.colo.seagate.com/eos/provisioner/ees-prvsnr.git#subdirectory=api/python
+git+http://gitlab.mero.colo.seagate.com/eos/py-utils.git
