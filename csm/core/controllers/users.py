@@ -53,6 +53,7 @@ class RoleTypes(fields.List):
         return [ role
             for role in set(super()._deserialize(value, attr, data, **kwargs))
         ]
+
 class CsmRootUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
@@ -66,7 +67,6 @@ class CsmUserCreateSchema(CsmRootUserCreateSchema):
 class CsmUserPatchSchema(Schema):
     old_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
-    #roles = fields.List(fields.String(validate=validate.OneOf(const.CSM_USER_ROLES), unique=True), unique=True)
     roles = RoleTypes()
 
 class GetUsersSortBy(fields.Str):
