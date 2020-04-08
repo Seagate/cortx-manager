@@ -10,14 +10,14 @@
             "args": [
                 {
                     "flag": "-o",
-                    "type": "int",
+                    "type": "Validatiors.positive_int",
                     "dest": "offset",
                     "help": "Amount of users you want to get",
                     "params": true
                 },
                 {
                     "flag": "-l",
-                    "type": "str",
+                    "type": "Validatiors.positive_int",
                     "dest": "limit",
                     "help": "Limit of amount of users you want to view",
                     "params": true
@@ -29,6 +29,7 @@
                     "help": "Parameter by which you want to sort user list",
                     "choices": [
                         "user_id",
+                        "user_type",
                         "created_time",
                         "updated_time"
                     ],
