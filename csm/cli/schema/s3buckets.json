@@ -18,8 +18,7 @@
             "table",
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         },
         {
           "flag": "args",

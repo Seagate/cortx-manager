@@ -103,8 +103,7 @@
             "table",
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         }
       ],
       "comm": {

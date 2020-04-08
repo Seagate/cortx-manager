@@ -28,8 +28,7 @@
           "choices": [
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         }
       ],
       "comm": {

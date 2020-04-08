@@ -24,8 +24,7 @@
             "table",
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         }
       ],
       "comm": {
@@ -83,8 +82,7 @@
               "xml",
               "json"
             ],
-            "suppress_help": true,
-            "nargs": "?"
+            "suppress_help": true
           }
       ],
       "comm": {

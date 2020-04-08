@@ -60,8 +60,7 @@
             "table",
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         }
       ],
       "comm": {
@@ -152,8 +151,7 @@
             "table",
             "xml",
             "json"
-          ],
-          "nargs": "?"
+          ]
         }
       ],
       "comm": {
@@ -247,8 +245,7 @@
                 "table",
                 "xml",
                 "json"
-              ],
-              "nargs": "?"
+              ]
             }
           ],
           "comm": {
