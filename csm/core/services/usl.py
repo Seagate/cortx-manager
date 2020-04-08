@@ -28,7 +28,7 @@ from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
-from typing import Any, Dict, List, Tuple
+from typing import cast, Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4, uuid5
 
 from csm.common.conf import Conf
@@ -176,11 +176,11 @@ class UslService(ApplicationService):
         *,
         repair_mode: bool = False,
     ) -> Tuple[Dict, IamUser, Bucket]:
-        s3_account = None
-        iam_user = None
-        existing_iam_user = None
-        bucket = None
-        existing_bucket = None
+        s3_account: Optional[Dict] = None
+        iam_user: Optional[IamUser] = None
+        existing_iam_user: Optional[IamUser] = None
+        bucket: Optional[Bucket] = None
+        existing_bucket: Optional[Bucket] = None
 
         async def cleanup(*, s3_account_service=None, iam_client=None, s3_client=None):
             # Remove bucket if it exists
@@ -211,8 +211,11 @@ class UslService(ApplicationService):
             s3_account = await s3_account_service.create_account(
                 s3_account_name, s3_account_email, s3_account_password,
             )
+            # FIXME `cast()` is unsafe; mypy could not derive type correctly
+            s3_account = cast(Dict, s3_account)
             access_key = s3_account.get('access_key')
             secret_key = s3_account.get('secret_key')
+            assert s3_account is not None
         # FIXME There is no way to extract meaningful error codes from ``CsmInternalError``.
         #   For that reason, we raise internal server errors in all of those cases.
         # FIXME Service should be HTTP-agnostic and should not raise web exceptions.
@@ -235,6 +238,7 @@ class UslService(ApplicationService):
                 reason = 'IAM user already exists'
                 Log.error(f'{reason}')
                 raise web.HTTPConflict(reason=reason)
+            assert existing_iam_user is not None or iam_user is not None
         except web.HTTPConflict as e:
             await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
             raise e
@@ -271,9 +275,14 @@ class UslService(ApplicationService):
             raise web.HTTPInternalServerError(reason=reason)
         # In case we are running on repair mode, suffice to test if the resources already exist.
         # In case we are not, exceptions should have been raised previously.
-        return (s3_account, existing_iam_user or iam_user, existing_bucket or bucket)
+        # FIXME `cast()` is unsafe; mypy could not derive types correctly
+        return (
+            s3_account,
+            cast(IamUser, existing_iam_user or iam_user),
+            cast(Bucket, existing_bucket or bucket),
+        )
 
-    async def _get_udx_iam_user(self, iam_cli, user_name: str) -> IamUser:
+    async def _get_udx_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
         """
         Checks UDX IAM user exists and returns it
         """
@@ -320,7 +329,7 @@ class UslService(ApplicationService):
         creds = await iam_cli.create_user_access_key(user_name)
         return creds
 
-    async def _get_udx_bucket(self, s3_cli, bucket_name: str):
+    async def _get_udx_bucket(self, s3_cli, bucket_name: str) -> Bucket:
         """
         Checks if UDX bucket already exists and returns it
         """
@@ -330,7 +339,7 @@ class UslService(ApplicationService):
 
         return bucket
 
-    async def _create_udx_bucket(self, s3_cli, bucket_name: str):
+    async def _create_udx_bucket(self, s3_cli, bucket_name: str) -> Bucket:
         """
         Creates UDX bucket inside the curretnly logged in S3 account
         """
