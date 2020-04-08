@@ -38,19 +38,14 @@ from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
-from eos.utils.data.access import Query
-from eos.utils.data.access.filters import Compare
-from eos.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.s3 import S3ConnectionConfig, IamUser, IamUserCredentials
-from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
-                                      MountResponse)
+from csm.core.data.models.usl import Device
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
-DEFAULT_VOLUME_CACHE_UPDATE_PERIOD = 3
 
 
 class UslService(ApplicationService):
@@ -60,12 +55,7 @@ class UslService(ApplicationService):
     # FIXME improve token management
     _token: str
     _s3plugin: Any
-    _s3cli: Any
-    _storage: DataBaseProvider
     _device: Device
-    _volumes: Dict[UUID, Volume]
-    _volumes_sustaining_task: asyncio.Task
-    _event_queue: asyncio.Queue
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
 
@@ -73,11 +63,8 @@ class UslService(ApplicationService):
         """
         Constructor.
         """
-        loop = asyncio.get_event_loop()
-
         self._token = ''
         self._s3plugin = s3_plugin
-        self._s3cli = self._create_s3cli(s3_plugin)
         dev_uuid = self._get_device_uuid()
         self._device = Device.instantiate(
             self._get_system_friendly_name(),
@@ -87,10 +74,6 @@ class UslService(ApplicationService):
             dev_uuid,
             DEFAULT_EOS_DEVICE_VENDOR,
         )
-        self._storage = storage
-        self._event_queue = asyncio.Queue(0, loop=loop)
-        self._volumes = loop.run_until_complete(self._restore_volume_cache())
-        self._volumes_sustaining_task = loop.create_task(self._sustain_cache())
         self._domain_certificate_manager = USLDomainCertificateManager()
         self._native_certificate_manager = USLNativeCertificateManager()
 
@@ -107,19 +90,6 @@ class UslService(ApplicationService):
                                        usl_s3_conf['credentials']['secret_key'],
                                        s3_conf)
 
-    async def _restore_volume_cache(self) -> Dict[UUID, Volume]:
-        """Restores the volume cache from Consul KVS"""
-
-        try:
-            cache = {volume.uuid: volume
-                     for volume in await self._storage(Volume).get(Query())}
-        except Exception as e:
-            reason = (f"Failed to restore USL volume cache from Consul KVS: {str(e)}\n"
-                      f"All volumes are considered new. Redundant events may appear")
-            Log.error(reason)
-            cache = {}
-        return cache
-
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
 
@@ -127,14 +97,6 @@ class UslService(ApplicationService):
         """Obtains the EOS device UUID from config."""
 
         return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
-
-    def _get_volume_name(self, bucket_name: str) -> UUID:
-        return self._get_system_friendly_name() + ": " + bucket_name
-
-    def _get_volume_uuid(self, bucket_name: str) -> UUID:
-        """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
-
-        return uuid5(self._device.uuid, bucket_name)
 
     def _format_udx_register_device_params(self, url: str, pin: str, token: str) -> Dict[str, str]:
         register_device_params = {
@@ -413,69 +375,6 @@ class UslService(ApplicationService):
         await s3_cli.put_bucket_policy(bucket_name, policy)
         Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
-    async def _is_bucket_udx_enabled(self, bucket):
-        """
-        Checks if bucket is UDX enabled
-
-        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
-        """
-
-        tags = await self._s3cli.get_bucket_tagging(bucket)
-        return tags.get('udx', 'disabled') == 'enabled'
-
-    async def _sustain_cache(self):
-        """The infinite asynchronous task that sustains volumes cache"""
-
-        volume_cache_update_period = float(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.volume_cache_update_period_seconds') or
-            DEFAULT_VOLUME_CACHE_UPDATE_PERIOD
-        )
-
-        while True:
-            await asyncio.sleep(volume_cache_update_period)
-            try:
-                await self._update_volumes_cache()
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                reason = "Unpredictable exception during volume cache update" + str(e)
-                # Do not fail here, keep trying to update the cache
-                Log.error(reason)
-
-    async def _get_volume_cache(self) -> Dict[UUID, Volume]:
-        """
-        Creates the internal volumes cache from buckets list retrieved from S3 server
-        """
-        volumes = {}
-        for b in await self._s3cli.get_all_buckets():
-            if await self._is_bucket_udx_enabled(b):
-                volume_uuid = self._get_volume_uuid(b.name)
-                volumes[volume_uuid] = Volume.instantiate(self._get_volume_name(b.name), b.name,
-                                                          self._device.uuid, volume_uuid)
-        return volumes
-
-    async def _update_volumes_cache(self):
-        """
-        Updates the internal buckets cache.
-
-        Obtains the fresh buckets list from S3 server and updates cache with it.
-        Keeps cache the same if the server is not available.
-        """
-        fresh_cache = await self._get_volume_cache()
-
-        new_volume_uuids = fresh_cache.keys() - self._volumes.keys()
-        volume_removed_uuids = self._volumes.keys() - fresh_cache.keys()
-
-        for uuid in new_volume_uuids:
-            e = NewVolumeEvent.instantiate(fresh_cache[uuid])
-            await self._event_queue.put(e)
-
-        for uuid in volume_removed_uuids:
-            e = VolumeRemovedEvent.instantiate(uuid)
-            await self._event_queue.put(e)
-
-        self._volumes = fresh_cache
-
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
@@ -500,7 +399,8 @@ class UslService(ApplicationService):
 
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        return [v.to_primitive(role='public') for uuid, v in self._volumes.items()]
+        # FIXME return volumes list
+        return []
 
     async def post_device_volume_mount(
         self, device_id: UUID, volume_id: UUID, uri: str, access_key: str, secret_access_key: str
@@ -517,11 +417,8 @@ class UslService(ApplicationService):
         """
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-
-        if volume_id not in self._volumes:
-            raise CsmNotFoundError(desc=f'Volume {volume_id} is not found')
-        return MountResponse.instantiate(self._volumes[volume_id].bucketName,
-                                         self._volumes[volume_id].bucketName).to_primitive()
+        # TODO return proper mount handle
+        return {}
 
     # TODO replace stub
     async def post_device_volume_unmount(
@@ -541,18 +438,12 @@ class UslService(ApplicationService):
         """
         return 'handle'
 
-    async def get_events(self) -> str:
+    async def get_events(self) -> None:
         """
         Returns USL events one-by-one
         """
-        e = await self._event_queue.get()
-        if isinstance(e, NewVolumeEvent):
-            await self._storage(Volume).store(e.volume)
-        elif isinstance(e, VolumeRemovedEvent):
-            await self._storage(Volume).delete(Compare(Volume.uuid, '=', e.uuid))
-        else:
-            raise CsmInternalError("Unknown entry in USL events queue")
-        return e.to_primitive(role='public')
+        # TODO implement
+        pass
 
     async def post_register_device(
         self,
