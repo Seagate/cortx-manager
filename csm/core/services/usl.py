@@ -107,16 +107,9 @@ class UslService(ApplicationService):
         return register_device_params
 
     async def _format_udx_access_params(
-        self, s3_account: Dict, iam_user: IamUser, bucket: Bucket
+        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
+        bucket: Bucket
     ) -> Dict[str, Any]:
-        access_key = s3_account.get('access_key')
-        secret_key = s3_account.get('secret_key')
-        iam_client = self._s3plugin.get_iam_client(
-            access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
-        )
-        iam_user_credentials = await self._get_udx_iam_user_credentials(
-            iam_client, iam_user.user_name
-        )
         access_params = {
             'accountName': s3_account.get('account_name'),
             # TODO find a better way to obtain S3 server host and port
@@ -126,14 +119,15 @@ class UslService(ApplicationService):
                 bucket.name,
             ),
             'credentials': {
-                'accessKey': iam_user_credentials.access_key_id,
-                'secretKey': iam_user_credentials.secret_key,
+                'accessKey': iam_user_access_key.access_key_id,
+                'secretKey': iam_user_access_key.secret_key,
             },
         }
         return access_params
 
     async def _cleanup_on_udx_registration_error(
-        self, s3_account: Dict, iam_user: IamUser, bucket: Bucket
+        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
+        bucket: Bucket
     ) -> None:
         Log.debug('Cleaning up UDX resources...')
         access_key = s3_account.get('access_key')
@@ -143,10 +137,13 @@ class UslService(ApplicationService):
             access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
         )
         await s3_client.delete_bucket(bucket.name)
-        Log.debug('Remove IAM user')
+        Log.debug('Remove IAM user access key')
         iam_client = self._s3plugin.get_iam_client(
             access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
         )
+        await iam_client.delete_user_access_key(
+            iam_user.user_name, iam_user_access_key.access_key_id)
+        Log.debug('Remove IAM user')
         await iam_client.delete_user(iam_user.user_name)
         Log.debug('Remove S3 account')
         s3_account_service = S3AccountService(self._s3plugin)
@@ -175,10 +172,11 @@ class UslService(ApplicationService):
         bucket_name: str,
         *,
         repair_mode: bool = False,
-    ) -> Tuple[Dict, IamUser, Bucket]:
+    ) -> Tuple[Dict, IamUser, IamUserCredentials, Bucket]:
         s3_account: Optional[Dict] = None
         iam_user: Optional[IamUser] = None
         existing_iam_user: Optional[IamUser] = None
+        iam_user_access_key: Optional[IamUserCredentials] = None
         bucket: Optional[Bucket] = None
         existing_bucket: Optional[Bucket] = None
 
@@ -186,6 +184,11 @@ class UslService(ApplicationService):
             # Remove bucket if it exists
             if s3_client is not None and bucket is not None:
                 await s3_client.delete_bucket(bucket.name)
+            # Remove IAM user's access key if it exists
+            if iam_client is not None and iam_user_access_key is not None:
+                await iam_client.delete_user_access_key(
+                    iam_user.user_name,
+                    iam_user_access_key.access_key_id)
             # Remove IAM user if it exists
             if iam_client is not None and iam_user is not None:
                 await iam_client.delete_user(iam_user.user_name)
@@ -247,6 +250,18 @@ class UslService(ApplicationService):
             reason = 'IAM user creation failed'
             Log.error(f'{reason}---{str(e)}')
             raise web.HTTPInternalServerError(reason=reason)
+        Log.debug('Create access key for IAM user')
+        try:
+            # Rationale: keep only one access key for UDX IAM user
+            if repair_mode:
+                await self._delete_udx_iam_user_credentials(iam_client, iam_user.user_name)
+            iam_user_access_key = await self._create_udx_iam_user_credentials(
+                iam_client, iam_user_name)
+        except CsmInternalError as e:
+            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
+            reason = 'IAM user access key creation failed'
+            Log.error(f'{reason}---{str(e)}')
+            raise web.HTTPInternalServerError(reason=reason)
         Log.debug('Create bucket')
         try:
             s3_client = self._s3plugin.get_s3_client(
@@ -279,6 +294,7 @@ class UslService(ApplicationService):
         return (
             s3_account,
             cast(IamUser, existing_iam_user or iam_user),
+            iam_user_access_key,
             cast(Bucket, existing_bucket or bucket),
         )
 
@@ -321,15 +337,29 @@ class UslService(ApplicationService):
 
         return iam_user_resp
 
-    async def _get_udx_iam_user_credentials(self, iam_cli, user_name: str) -> IamUserCredentials:
+    async def _create_udx_iam_user_credentials(self, iam_cli, user_name: str) -> IamUserCredentials:
         """
         Gets the access key id and secret key for UDX IAM user
         """
 
         creds = await iam_cli.create_user_access_key(user_name)
+        if hasattr(creds, 'error_code'):
+            error_msg = creds.error_message
+            raise CsmInternalError(f'Failed to create access key for UDX IAM user: {error_msg}')
         return creds
 
-    async def _get_udx_bucket(self, s3_cli, bucket_name: str) -> Bucket:
+    async def _delete_udx_iam_user_credentials(self, iam_cli, user_name: str):
+        Log.debug(f'Deleting UDX IAM user {user_name} credentials')
+        access_keys_resp = await iam_cli.list_user_access_keys(user_name)
+        for access_key in access_keys_resp.access_keys:
+            res = await iam_cli.delete_user_access_key(user_name, access_key.access_key_id)
+            if hasattr(res, 'error_code'):
+                error_msg = res.error_message
+                raise CsmInternalError(f'Failed to delete access key {access_key.access_key_id}: '
+                                       f'{error_msg}')
+        Log.info(f'IAM user {user_name} credentials are deleted')
+
+    async def _get_udx_bucket(self, s3_cli, bucket_name: str):
         """
         Checks if UDX bucket already exists and returns it
         """
@@ -481,7 +511,8 @@ class UslService(ApplicationService):
             Log.error(reason)
             raise web.HTTPInternalServerError(reason=reason)
         # Let ``_initialize_udx_s3_resources()`` propagate its exceptions
-        udx_s3_account, udx_iam_user, udx_bucket = await self._initialize_udx_s3_resources(
+        (udx_s3_account, udx_iam_user, udx_iam_user_access_key,
+         udx_bucket) = await self._initialize_udx_s3_resources(
             s3_account_name,
             s3_account_email,
             s3_account_password,
@@ -492,14 +523,15 @@ class UslService(ApplicationService):
         try:
             register_device_params = self._format_udx_register_device_params(url, pin, self._token)
             access_params = await self._format_udx_access_params(
-                udx_s3_account, udx_iam_user, udx_bucket
+                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket
             )
             registration_body = {
                 'registerDeviceParams': register_device_params,
                 'accessParams': access_params,
             }
         except Exception as e:
-            await self._cleanup_on_udx_registration_error(udx_s3_account, udx_iam_user, udx_bucket)
+            await self._cleanup_on_udx_registration_error(
+                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket)
             reason = 'Error on registration body assembly'
             Log.error(f'{reason}---{str(e)}')
             raise web.HTTPInternalServerError(reason=reason)
@@ -539,7 +571,8 @@ class UslService(ApplicationService):
                     },
                 }
         except Exception as e:
-            await self._cleanup_on_udx_registration_error(udx_s3_account, udx_iam_user, udx_bucket)
+            await self._cleanup_on_udx_registration_error(
+                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket)
             raise e
 
     async def get_register_device(self) -> None:
