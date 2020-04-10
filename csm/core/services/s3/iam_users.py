@@ -22,11 +22,11 @@ from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
-from csm.core.services.s3.utils import CsmS3ConfigurationFactory
+from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
 from csm.plugins.eos.s3 import IamClient
 
 
-class IamUsersService(ApplicationService):
+class IamUsersService(S3BaseService):
     """
     Service for IAM user management
     """
@@ -66,21 +66,20 @@ class IamUsersService(ApplicationService):
         s3_client = await self.fetch_iam_client(s3_session)
         Log.debug(f"Create IAM User service: \nusername:{user_name}")
         user_creation_resp = await s3_client.create_user(user_name)
-        if hasattr(user_creation_resp, "error_code"):
-            return await  self._handle_error(user_creation_resp)
+        if isinstance(user_creation_resp, IamError):
+            self._handle_error(user_creation_resp)
         # Create Iam User's Login Profile.
         user_login_profile_resp = await s3_client.create_user_login_profile(
             user_name, password, require_reset)
-        if user_login_profile_resp and hasattr(user_login_profile_resp,
-                                               "error_code"):
+        if isinstance(user_login_profile_resp, IamError):
             # If User creation Failed delete the user.
             await s3_client.delete_user(user_name)
-            return await  self._handle_error(user_login_profile_resp)
+            self._handle_error(user_login_profile_resp)
         # Create IAM user's access key
         user_creds_resp = await s3_client.create_user_access_key(user_name)
-        if hasattr(user_creds_resp, "error_code"):
+        if isinstance(user_creds_resp, IamError):
             await s3_client.delete_user(user_name)
-            return await self._handle_error(user_creds_resp)
+            self._handle_error(user_creds_resp)
         return {
             **vars(user_creation_resp),
             'access_key_id': user_creds_resp.access_key_id,
@@ -99,8 +98,8 @@ class IamUsersService(ApplicationService):
         # Fetch IAM Users
         Log.debug(f"List IAM User service:")
         users_list_response = await s3_client.list_users()
-        if hasattr(users_list_response, "error_code"):
-            return await  self._handle_error(users_list_response)
+        if isinstance(users_list_response, IamError):
+            self._handle_error(users_list_response)
         iam_users_list = vars(users_list_response)
         iam_users_list["iam_users"] = [vars(each_user)
                                        for each_user in iam_users_list["iam_users"]
@@ -120,30 +119,9 @@ class IamUsersService(ApplicationService):
         # Delete Given Iam User
         Log.debug(f"Delete IAM User service: Username:{user_name}")
         user_delete_response = await  s3_client.delete_user(user_name)
-        if hasattr(user_delete_response, "error_code"):
-            return await self._handle_error(user_delete_response)
+        if isinstance(user_delete_response, IamError):
+            self._handle_error(user_delete_response)
         return {"message": "User Deleted Successfully."}
 
     def update_user(self, user_name: str):
         pass
-
-    @Log.trace_method(Log.DEBUG)
-    async def _handle_error(self, iam_error_obj: IamError):
-        """
-        This Method Handles various responses returned  by S3 and convert's them
-        Rest API format
-        :param iam_error_obj: Error object.
-        :return:
-        """
-        status_code_mapping = {
-            IamErrors.EntityAlreadyExists.value : 409,
-            IamErrors.OperationNotSupported.value : 404,
-            IamErrors.InvalidAccessKeyId.value : 422,
-            IamErrors.AccountNotEmpty.value : 422,
-            IamErrors.InvalidParameterValue.value : 400,
-            IamErrors.NoSuchEntity.value : 404,
-            IamErrors.ExpiredCredential.value : 401
-        }
-        # TODO: Response class to be replaced by CsmError type for raising errors
-        return Response(rc=status_code_mapping.get(iam_error_obj.error_code.value, 500),
-                        output=iam_error_obj.error_message)

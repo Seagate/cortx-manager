@@ -24,15 +24,11 @@ from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
 from csm.core.services.sessions import S3Credentials, LocalCredentials
-from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient
-
-
-S3_MSG_REMOTE_ERROR = 's3_remote_error'
-S3_ACCOUNT_NOT_FOUND = 's3_account_not_found'
+from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory, IamRootClient
 
 
 # TODO: the access to this service must be restricted to CSM users only (?)
-class S3AccountService(ApplicationService):
+class S3AccountService(S3BaseService):
     """
     Service for S3 account management
     """
@@ -56,7 +52,7 @@ class S3AccountService(ApplicationService):
         Log.debug(f"Creating s3 account. account_name: {account_name}")
         account = await self._s3_root_client.create_account(account_name, account_email)
         if isinstance(account, IamError):
-            self._raise_remote_error(account)
+            self._handle_error(account)
 
         account_client = self._s3plugin.get_iam_client(account.access_key_id,
             account.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
@@ -68,7 +64,7 @@ class S3AccountService(ApplicationService):
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
-                self._raise_remote_error(profile)
+                self._handle_error(profile)
         except Exception as e:
             await account_client.delete_account(account.account_name)
             raise e
@@ -84,7 +80,7 @@ class S3AccountService(ApplicationService):
     async def get_account(self, account_name) -> dict:
         account = await self._s3_root_client.get_account(account_name)
         if isinstance(account, IamError):
-            self._raise_remote_error(account)
+            self._handle_error(account)
         if account is None:
             return None
         return {
@@ -113,7 +109,7 @@ class S3AccountService(ApplicationService):
         accounts = await self._s3_root_client.list_accounts(max_items=page_limit,
             marker=continue_marker)
         if isinstance(accounts, IamError):
-            self._raise_remote_error(accounts)
+            self._handle_error(accounts)
         accounts_list = []
         # CSM user is allowed to list all the S3 users in system.
         if isinstance(session, LocalCredentials) or demand_all_accounts:
@@ -166,9 +162,7 @@ class S3AccountService(ApplicationService):
         if reset_access_key:
             new_creds = await client.reset_account_access_key(account_name)
             if isinstance(new_creds, IamError):
-                if new_creds.error_code == IamErrors.NoSuchEntity:
-                    raise CsmNotFoundError("The entity is not found", S3_ACCOUNT_NOT_FOUND)
-                self._raise_remote_error(new_creds)
+                self._handle_error(new_creds)
 
             response["access_key"] = new_creds.access_key_id
             response["secret_key"] = new_creds.secret_key_id
@@ -185,7 +179,7 @@ class S3AccountService(ApplicationService):
             new_profile = await client.create_account_login_profile(account_name, password)
             if isinstance(new_profile, IamError) and \
                     new_profile.error_code != IamErrors.EntityAlreadyExists:
-                self._raise_remote_error(new_profile)
+                self._handle_error(new_profile)
 
             if isinstance(new_profile, IamError):
                 # Profile already exists, we need to set new passord
@@ -195,7 +189,7 @@ class S3AccountService(ApplicationService):
 
             if isinstance(new_profile, IamError):
                 # Update failed
-                self._raise_remote_error(new_profile)
+                self._handle_error(new_profile)
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -212,16 +206,5 @@ class S3AccountService(ApplicationService):
             s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
-            if result.error_code == IamErrors.NoSuchEntity:
-                raise CsmNotFoundError("The entity is not found",
-                                       S3_ACCOUNT_NOT_FOUND, account_name)
-            self._raise_remote_error(result)
+            self._handle_error(result)
         return {"message": "Account Deleted Successfully."}
-
-    def _raise_remote_error(self, resp: IamError):
-        """ A helper method for raising exceptions about S3-related errors """
-        raise CsmInternalError("IAM API error: {}".format(resp.error_message),
-            S3_MSG_REMOTE_ERROR, {
-                's3_error_id': resp.error_code,
-                's3_error_message': resp.error_message
-            })

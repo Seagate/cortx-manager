@@ -58,7 +58,8 @@ class S3BucketListView(S3AuthenticatedView):
                   f" user_id: {self.request.session.credentials.user_id}")
         # TODO: in future we can add some parameters for pagination
 
-        return await self._service.list_buckets(self._s3_session)
+        with self._guard_service():
+            return await self._service.list_buckets(self._s3_session)
 
     @CsmAuth.permissions({Resource.S3BUCKETS: {Action.CREATE}})
     async def post(self):
@@ -77,9 +78,11 @@ class S3BucketListView(S3AuthenticatedView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
-        # NOTE: body is empty
-        result = await self._service.create_bucket(self._s3_session, **bucket_creation_body)
-        return result
+        with self._guard_service():
+            # NOTE: body is empty
+            result = await self._service.create_bucket(self._s3_session,
+                                                       **bucket_creation_body)
+            return result
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket/{bucket_name}")
@@ -102,7 +105,8 @@ class S3BucketView(S3AuthenticatedView):
         Log.debug(f"Handling s3 bucket delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-        return await self._service.delete_bucket(bucket_name, self._s3_session)
+        with self._guard_service():
+            return await self._service.delete_bucket(bucket_name, self._s3_session)
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket_policy/{bucket_name}")
@@ -125,8 +129,9 @@ class S3BucketPolicyView(S3AuthenticatedView):
         Log.debug(f"Handling s3 bucket policy fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-        return await self._service.get_bucket_policy(self._s3_session,
-                                                     bucket_name)
+        with self._guard_service():
+            return await self._service.get_bucket_policy(self._s3_session,
+                                                         bucket_name)
 
     """
     PUT REST implementation for S3 bucket policy put request
@@ -137,9 +142,10 @@ class S3BucketPolicyView(S3AuthenticatedView):
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
         bucket_policy_body = await self.request.json()
-        return await self._service.put_bucket_policy(self._s3_session,
-                                                     bucket_name,
-                                                     bucket_policy_body)
+        with self._guard_service():
+            return await self._service.put_bucket_policy(self._s3_session,
+                                                         bucket_name,
+                                                         bucket_policy_body)
 
     """
     DELETE REST implementation for s3 bucket policy delete request
@@ -149,5 +155,6 @@ class S3BucketPolicyView(S3AuthenticatedView):
         Log.debug(f"Handling s3 bucket policy delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
-        return await self._service.delete_bucket_policy(self._s3_session,
-                                                        bucket_name)
+        with self._guard_service():
+            return await self._service.delete_bucket_policy(self._s3_session,
+                                                            bucket_name)

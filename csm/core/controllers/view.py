@@ -65,6 +65,20 @@ class CsmResponse(web.Response):
                          content_type=content_type, **kwargs)
 
 
+class CsmHttpException(web.HTTPException):
+    ''' Temporary solution: Imitate common REST API error structure '''
+
+    def __init__(self, status, error_code, message_id, message, args=None):
+        self.status_code = status
+        body = json.dumps({
+            "error_code": error_code,
+            "message_id": message_id,
+            "message":  message,
+            "error_format_args": args,
+        })
+        super().__init__(body=body, content_type='application/json')
+
+
 class CsmView(web.View):
 
     # derived class will provide service amd service_disatch  details

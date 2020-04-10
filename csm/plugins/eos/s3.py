@@ -133,7 +133,7 @@ class BaseClient:
 
         return resp
 
-    def _create_error(self, body) -> IamError:
+    def _create_error(self, status, body) -> IamError:
         """
         Converts a body of a failed query into IamError object
         """
@@ -146,6 +146,7 @@ class BaseClient:
             return None
 
         iam_error = IamError()
+        iam_error.http_status = status
         iam_error.error_code = IamErrors(body['Error']['Code'])
         iam_error.error_message = body['Error']['Message']
         return iam_error
@@ -223,7 +224,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('CreateAccount', params, '/', 'POST')
         Log.debug(f"Create account profile status: {code}")
         if code != 201:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             account = body['CreateAccountResponse']['CreateAccountResult']['Account']
             resp = self._create_response(ExtendedIamAccount, account, self.EXT_ACCOUNT_MAPPING)
@@ -252,7 +253,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('CreateAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"Create login profile status: {code}")
         if code != 201:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             profile = body['CreateAccountLoginProfileResponse']['CreateAccountLoginProfileResult']
             profile = profile['LoginProfile']
@@ -279,7 +280,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('UpdateAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"Update account profile status: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return True
 
@@ -299,7 +300,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('GetAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"List account profile status: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return True
 
@@ -335,7 +336,7 @@ class IamClient(BaseClient):
                                               list_marker='Accounts')
         Log.debug(f"List account status: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             users = body['ListAccountsResponse']['ListAccountsResult']['Accounts']
             converted_accounts = []
@@ -368,7 +369,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('ResetAccountAccessKey', params, '/', 'POST')
         Log.debug(f"Reset account access key status code: {code}")
         if code != 201:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
             resp = self._create_response(ExtendedIamAccount, result['Account'],
@@ -397,7 +398,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('DeleteAccount', params, '/', 'POST')
         Log.debug(f"Delete account status code: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return True
 
@@ -416,7 +417,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('CreateUser', params, '/', 'POST')
         Log.debug(f"Create iam user status code: {code}")
         if code != 201:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             user = body['CreateUserResponse']['CreateUserResult']['User']
             return self._create_response(IamUser, user, self.IAM_USER_MAPPING)
@@ -435,7 +436,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('CreateLoginProfile', params, '/', 'POST')
         Log.debug(f"Create user profile status code: {code}")
         if code != 201:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return None
 
@@ -460,7 +461,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('ListUsers', params, '/', 'POST', list_marker='Users')
         Log.debug(f"List iam User status code: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             users = body['ListUsersResponse']['ListUsersResult']['Users']
             converted_users = []
@@ -491,7 +492,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('DeleteUser', params, '/', 'POST')
         Log.debug(f"Delete iam User status code: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return True
 
@@ -511,7 +512,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._query_conn('GetUser', params, '/', 'POST')
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return None
 
@@ -537,7 +538,7 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn('UpdateUser', params, '/', 'POST')
         Log.debug(f"Update iam User status code: {code}")
         if code != 200:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             # TODO: our IAM server does not return the updated user information
             return True
@@ -559,7 +560,7 @@ class IamClient(BaseClient):
                                               params, '/', 'POST')
         Log.audit(f"Create access key status code: {code}")
         if code != HTTPStatus.CREATED:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
                             const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
@@ -595,7 +596,7 @@ class IamClient(BaseClient):
                                               list_marker=const.S3_PARAM_ACCESS_KEY_METADATA)
         Log.audit(f"List IAM user's access keys status code: {code}")
         if code != HTTPStatus.OK:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             keys = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
                             const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
@@ -638,7 +639,7 @@ class IamClient(BaseClient):
                                               '/', 'POST')
         Log.debug(f"Delete iam User status code: {code}")
         if code != HTTPStatus.OK:
-            return self._create_error(body)
+            return self._create_error(code, body)
         else:
             return True
 
@@ -870,7 +871,7 @@ class S3Plugin:
 
         (code, body) = await iamcli._query_conn('GetTempAuthCredentials', params, '/', 'POST')
         if code != 201:
-            return iamcli._create_error(body)
+            return iamcli._create_error(code, body)
         else:
             creds = body['GetTempAuthCredentialsResponse']['GetTempAuthCredentialsResult']
             return iamcli._create_response(IamTempCredentials, creds['AccessKey'], {

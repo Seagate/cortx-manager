@@ -18,13 +18,13 @@
 """
 import json
 from marshmallow import Schema, fields, validate
-from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from marshmallow.exceptions import ValidationError
-from csm.common.permission_names import Resource, Action
-from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
+from csm.common.permission_names import Resource, Action
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.s3.base import S3BaseView, S3AuthenticatedView
 
 
 # TODO: find out about policies for names and passwords
@@ -40,11 +40,9 @@ class S3AccountPatchSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts")
-class S3AccountsListView(CsmView):
+class S3AccountsListView(S3BaseView):
     def __init__(self, request):
-        super(S3AccountsListView, self).__init__(request)
-        self._service = self.request.app["s3_account_service"]
-        self._service_dispatch = {}
+        super().__init__(request, "s3_account_service")
 
     """
     GET REST implementation for S3 account fetch request
@@ -56,8 +54,9 @@ class S3AccountsListView(CsmView):
                   f" user_id: {self.request.session.credentials.user_id}")
         limit = self.request.rel_url.query.get("limit", None)
         marker = self.request.rel_url.query.get("continue", None)
-        return await self._service.list_accounts(self.request.session.credentials,
-                                                 marker, limit)
+        with self._guard_service():
+            return await self._service.list_accounts(self.request.session.credentials,
+                                                     marker, limit)
 
     """
     POST REST implementation for S3 account fetch request
@@ -75,11 +74,13 @@ class S3AccountsListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
+        # Check whether a CSM user with the same id already exists
         try:
             await self.request.app["csm_user_service"].get_user(account_body['account_name'])
         except CsmNotFoundError:
-            # If csm_user with same user_id as passed s3 account_name wasn't found
-            return await self._service.create_account(**account_body)
+            # Ok, no CSM user has been found, now we can create an S3 account
+            with self._guard_service():
+                return await self._service.create_account(**account_body)
         else:
             raise InvalidRequest("CSM user with same username as passed S3 account name alreay exists")
 
@@ -100,12 +101,11 @@ class S3AccountsView(S3AuthenticatedView):
         """Calling Stats Get Method"""
         Log.debug(f"Handling s3 accounts delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        account_id = self.request.match_info["account_id"]
-        response_obj = await self._service.delete_account(self._s3_session, account_id)
-        if not response_obj:
-            await self.request.app.login_service.delete_all_sessions(
-            self.request.session.session_id)
-        return response_obj
+        with self._guard_service():
+            response = await self._service.delete_account(self._s3_session,
+                                                          self.account_id)
+            await self._cleanup_sessions()
+            return response
 
     """
     PATCH REST implementation for S3 account
@@ -121,8 +121,15 @@ class S3AccountsView(S3AuthenticatedView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        response_obj =  await self._service.patch_account(self._s3_session,
-                                            self.account_id, **patch_body)
-        if response_obj:
-            await self.request.app.login_service.delete_all_sessions(self.request.session.session_id)
-        return response_obj
+        with self._guard_service():
+            response = await self._service.patch_account(self._s3_session,
+                                                         self.account_id,
+                                                         **patch_body)
+            await self._cleanup_sessions()
+            return response
+
+    async def _cleanup_sessions(self):
+        login_service = self.request.app.login_service
+        session_id = self.request.session.session_id
+
+        await login_service.delete_all_sessions(session_id)
