@@ -36,7 +36,6 @@ class TimeSeriesProvider:
         """
         Parse aggregation rule payload and convert to generic template
         """
-        self._storage_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.interval'))
         with open(self._agg_rule_file, 'r') as stats_aggr:
             self._agg_rule = json.loads(stats_aggr.read())
         self._template_agg_rule = {}
@@ -127,6 +126,8 @@ class TimelionProvider(TimeSeriesProvider):
     def init(self):
         try:
             super(TimelionProvider, self).init()
+            self._storage_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.interval'))
+            self._offset_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.offset'))
             self._metric_set = {
                 "+": "sum()",
                 "/": "divide()"
@@ -255,9 +256,8 @@ class TimelionProvider(TimeSeriesProvider):
         diff_sec = int(duration_t) - int(from_t)
         if diff_sec <= 0:
             raise CsmInternalError("to time should be grater than from time")
-        elif diff_sec < self._storage_interval*2:
-            from_t = int(duration_t) - (int(self._storage_interval)*2)
-            diff_sec = int(self._storage_interval)*2
+        from_t = int(from_t) - int(self._offset_interval)
+        duration_t = int(duration_t) - int(self._offset_interval)
         if total_sample == "" and interval == "":
             interval = str(self._storage_interval) + 's'
         elif total_sample != "":
