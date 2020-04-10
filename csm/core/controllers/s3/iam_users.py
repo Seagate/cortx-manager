@@ -19,13 +19,13 @@
 from csm.common.log import Log
 from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
-from csm.core.controllers.validators import (PathPrefixValidator, PasswordValidator,
-                                        UserNameValidator)
+from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
+from csm.core.controllers.validators import (PathPrefixValidator,
+                                             PasswordValidator,
+                                             UserNameValidator)
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
-from csm.core.providers.providers import Response
-from csm.common.errors import InvalidRequest
 
 class BaseSchema(Schema):
     """
@@ -66,6 +66,7 @@ class IamUserDeleteSchema(BaseSchema):
     """
     user_name = fields.Str(required=True, validate=[UserNameValidator()])
 
+
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserListView(S3AuthenticatedView):
     def __init__(self, request):
@@ -82,7 +83,8 @@ class IamUserListView(S3AuthenticatedView):
         Log.debug(f"Handling list IAM USER get request. "
                   f"user_id: {self.request.session.credentials.user_id}")
         # Execute List User Task
-        return await self._service.list_users(self._s3_session)
+        with self._guard_service():
+            return await self._service.list_users(self._s3_session)
 
     @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.CREATE}})
     async def post(self):
@@ -96,10 +98,12 @@ class IamUserListView(S3AuthenticatedView):
             body = await self.request.json()
             request_data = schema.load(body, unknown='EXCLUDE')
         except ValidationError as val_err:
-            return Response(rc=400,
-                            output=schema.format_error(val_err))
+            raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
         # Create User
-        return await self._service.create_user(self._s3_session, **request_data)
+        with self._guard_service():
+            return await self._service.create_user(self._s3_session,
+                                                   **request_data)
+
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
 class IamUserView(S3AuthenticatedView):
@@ -123,7 +127,8 @@ class IamUserView(S3AuthenticatedView):
         try:
             schema.load({"user_name": user_name}, unknown='EXCLUDE')
         except ValidationError as val_err:
-            return Response(rc=400,
-                            output=schema.format_error(val_err))
+            raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
         # Delete Iam User
-        return await self._service.delete_user(self._s3_session, user_name)
+        with self._guard_service():
+            return await self._service.delete_user(self._s3_session,
+                                                   user_name)

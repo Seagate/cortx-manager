@@ -18,8 +18,10 @@
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.log import Log
-from csm.core.data.models.s3 import S3ConnectionConfig
+from csm.common.services import ApplicationService
+from csm.core.data.models.s3 import S3ConnectionConfig, IamErrors, IamError
 from csm.plugins.eos.s3 import IamClient
+from botocore.exceptions import ClientError
 
 
 class CsmS3ConfigurationFactory:
@@ -69,3 +71,32 @@ class IamRootClient(IamClient):
         ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
         super().__init__(ldap_login, ldap_password, iam_conf)
+
+
+class S3ServiceError(Exception):
+    def __init__(self, status: int, code: str, message: str):
+        self.status = status
+        self.code = code
+        self.message = message
+
+
+class S3BaseService(ApplicationService):
+    def _handle_error(self, error):
+        """ A helper method for raising exceptions on S3-related errors """
+
+        # TODO: Change this method after unified error handling
+        #       implemnetation in the S3 plugin.
+
+        if isinstance(error, IamError):
+            raise S3ServiceError(error.http_status,
+                                 error.error_code.value,
+                                 error.error_message)
+
+        if isinstance(error, ClientError):
+            error_code = error.response['Error']['Code']
+            error_message = error.response["Error"]["Message"]
+            http_status_code = error.response['ResponseMetadata']['HTTPStatusCode']
+            # Can be useful? request_id = error.response['ResponseMetadata']['RequestId']
+            raise S3ServiceError(http_status_code,
+                                 error_code,
+                                 error_message)

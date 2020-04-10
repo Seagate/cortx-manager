@@ -125,11 +125,15 @@ class IamErrors(Enum):
     PasswordPolicyVoilation = 'PasswordPolicyVoilation'
     AccountNotEmpty = 'AccountNotEmpty'
     ExtendedIamAccount = 'ExtendedIamAccount'
+    EmailAlreadyExists = 'EmailAlreadyExists'
+    DeleteConflict = 'DeleteConflict'
+    InvalidCredentials = 'InvalidCredentials'
 
 
 class IamError:
     """
     Class that describes a non-successful result
     """
+    http_status: int
     error_code: IamErrors
     error_message: str

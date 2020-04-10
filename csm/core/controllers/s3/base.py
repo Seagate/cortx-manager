@@ -17,15 +17,20 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
+from contextlib import contextmanager
 from csm.common.log import Log
 from csm.common.errors import CsmInternalError, CsmPermissionDenied
-from csm.core.controllers.view import CsmView
+from csm.core.controllers.view import CsmView, CsmHttpException
 from csm.core.services.sessions import S3Credentials
+from csm.core.services.s3.utils import S3ServiceError
 
-class S3AuthenticatedView(CsmView):
+
+S3_SERVICE_ERROR = 0x3000
+
+
+class S3BaseView(CsmView):
     """
-    Simple base class for any S3 view which requires S3 credentials
-    and works with one service
+    Simple base class for any S3 view which works with one service
     """
 
     def __init__(self, request, service_name):
@@ -35,8 +40,29 @@ class S3AuthenticatedView(CsmView):
         if self._service is None:
             raise CsmInternalError(desc=f"No such service '{service_name}'")
 
+    @contextmanager
+    def _guard_service(self):
+        try:
+            yield None
+        except S3ServiceError as error:
+            raise CsmHttpException(error.status,
+                                   S3_SERVICE_ERROR,
+                                   error.code,
+                                   error.message)
+        else:
+            return
+
+
+class S3AuthenticatedView(S3BaseView):
+    """
+    Simple base class for any S3 view which requires S3 credentials
+    and works with one service
+    """
+
+    def __init__(self, request, service_name):
+        super().__init__(request, service_name)
+
         # Fetch S3 access_key, secret_key and session_token from session
         self._s3_session = self.request.session.credentials
         if not issubclass(type(self._s3_session), S3Credentials):
             raise CsmPermissionDenied(desc="Invalid credentials - not S3 Account or IAM User")
-

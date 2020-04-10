@@ -44,7 +44,7 @@ from eos.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.s3 import S3ConnectionConfig, IamUser, IamUserCredentials
 from csm.core.data.models.usl import (Device, Volume, NewVolumeEvent, VolumeRemovedEvent,
                                       MountResponse)
-from csm.core.services.s3.utils import CsmS3ConfigurationFactory
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
@@ -194,7 +194,13 @@ class UslService(ApplicationService):
             str(s3_account.get('secret_key')),
             '',
         )
-        await s3_account_service.delete_account(s3_credentials, s3_account.get('account_name'))
+        try:
+            await s3_account_service.delete_account(
+                s3_credentials, s3_credentials.user_id
+            )
+        except (S3ServiceError, Exception) as e:
+            reason = f'Failed to remove account {s3_credentials.user_id}'
+            Log.error(f'{reason} --- {e}')
         Log.info('UDX resources cleanup complete.')
 
     async def _initialize_udx_s3_resources(
@@ -229,9 +235,13 @@ class UslService(ApplicationService):
                     str(s3_account.get('secret_key')),
                     '',
                 )
-                await s3_account_service.delete_account(
-                    s3_credentials, s3_account.get('account_name')
-                )
+                try:
+                    await s3_account_service.delete_account(
+                        s3_credentials, s3_credentials.user_id
+                    )
+                except (S3ServiceError, Exception) as e:
+                    reason = f'Failed to remove account {s3_credentials.user_id}'
+                    Log.error(f'{reason} --- {e}')
 
         Log.debug('Create S3 account')
         try:
@@ -243,7 +253,8 @@ class UslService(ApplicationService):
             secret_key = s3_account.get('secret_key')
         # FIXME There is no way to extract meaningful error codes from ``CsmInternalError``.
         #   For that reason, we raise internal server errors in all of those cases.
-        except (CsmInternalError, Exception) as e:
+        # FIXME Service should be HTTP-agnostic and should not raise web exceptions.
+        except (S3ServiceError, CsmInternalError, Exception) as e:
             await cleanup(s3_account_service=s3_account_service)
             reason = 'S3 account creation failed'
             Log.error(f'{reason}---{str(e)}')
