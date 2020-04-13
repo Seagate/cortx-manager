@@ -56,9 +56,12 @@ class HealthAppService(ApplicationService):
         Provides operations on in memory health schema
     """
 
-    def __init__(self, repo: HealthRepository, alerts_repo):
+    def __init__(self, repo: HealthRepository, alerts_repo, plugin):
+        self._health_plugin = plugin
         self.repo = repo
         self.alerts_repo = alerts_repo
+        self._is_map_updated_with_db = False
+        self._health_plugin = plugin
         self._init_health_schema()
 
     def _init_health_schema(self):
@@ -101,7 +104,17 @@ class HealthAppService(ApplicationService):
         'nodes'
         :param kwargs:
         :return:
+        Health map is updated with db from health plugin after reciving all 
+        the responses for actuator requests.
+        There might be a situation where we did not get all the responses for
+        the request we made. So, in that case the health map will not be update
+        with elasticsearch db.
+        So, just to make sure that the health map is updated with db we will 
+        update it when we fetch health summary.
+        To make sure that it gets updatesd only once either from plugin or from
+        summary call, a boolean flag is maintained.
         """
+        await self.update_health_schema_with_db()
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
         node_health_details = []
         keys = []
@@ -187,8 +200,13 @@ class HealthAppService(ApplicationService):
         total_leaf_nodes = len(leaf_nodes)
         health_summary = {}
         health_summary[const.TOTAL] = total_leaf_nodes
+        """
+        Since we are getting health as "NA" for node sensors we will consider
+        it as a good. 
+        """
         for x in health_count_map:
-            if x.lower() != const.OK_HEALTH.lower():
+            if x.upper() != const.OK_HEALTH and \
+                x.upper() != const.NA_HEALTH:
                 health_summary[x] = health_count_map[x]
                 bad_health_count += health_count_map[x]
         good_health_count = total_leaf_nodes - bad_health_count
@@ -229,8 +247,8 @@ class HealthAppService(ApplicationService):
                     else:
                         if v:
                             leaf_nodes.append(v)
-                            health_status = v.get(const.HEALTH, "").lower()
-                            if v.get(const.HEALTH):                                
+                            health_status = v.get(const.ALERT_HEALTH, "").lower()
+                            if v.get(const.ALERT_HEALTH):                                
                                 if health_count_map.get(health_status):
                                     health_count_map[health_status] += 1
                                 else:
@@ -312,6 +330,7 @@ class HealthAppService(ApplicationService):
 
     def update_health_map(self, msg_body):
         Log.debug(f"Updating health map : {msg_body}")
+        return_value = False
         try:
             resource_map = {}
             resource_node_map = {}
@@ -356,16 +375,36 @@ class HealthAppService(ApplicationService):
             self._set_health_schema_by_key(self.repo.health_schema.data(),\
                     update_key, resource_map)
             Log.debug(f"Health map updated successfully.")
+            return_value = True
         except Exception as ex:
             Log.warn(f"Health Map Updation failed :{msg_body}")
+            return_value = False
+        return return_value
+
+    async def update_health_schema_with_db(self):
+        """
+        Updates the in memory health schema after CSM init.
+        1.) Fetches all the non-resolved alerts from DB
+        2.) Update the initialized and loaded in-memory health schema
+        :param None
+        :return: None
+        """
+        if not self._is_map_updated_with_db:
+            Log.debug(f"Updating health schema_with db.")
+            try:
+                alerts = await self.alerts_repo.retrieve_by_range(create_time_range=None)
+                for alert in alerts:
+                    self._health_plugin.update_health_map_with_alert(alert.to_primitive())
+                self._is_map_updated_with_db = True
+            except Exception as e:
+                Log.warn(f"Error in update_health_schema_with db: {e}")
 
 class HealthMonitorService(Service, Observable):
     """
     Health Monitor works with AmqpComm to monitor and send actuatore requests. 
     """
 
-    def __init__(self, plugin, health_service: HealthAppService, alerts_repo:
-            AlertRepository):
+    def __init__(self, plugin, health_service: HealthAppService):
         """
         Initializes the Health Plugin
         """
@@ -374,7 +413,6 @@ class HealthMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self._health_service = health_service
-        self._alerts_repo = alerts_repo
         super().__init__()
 
     @property
@@ -388,7 +426,7 @@ class HealthMonitorService(Service, Observable):
         """
         self._thread_running = True
         self._health_plugin.init(callback_fn=self._consume,\
-               db_update_callback_fn=self._update_health_schema_with_db)
+               db_update_callback_fn=self._update_map_with_db)
         self._health_plugin.process_request(cmd='send')
 
     def start(self):
@@ -423,19 +461,5 @@ class HealthMonitorService(Service, Observable):
         self._health_service.update_health_map(message)
         return True
 
-    def _update_health_schema_with_db(self):
-        """
-        Updates the in memory health schema after CSM init.
-        1.) Fetches all the non-resolved alerts from DB
-        2.) Update the initialized and loaded in-memory health schema
-        :param None
-        :return: None
-        """
-        Log.debug(f"Updating health schema_with db.")
-        try:
-            alerts = self._run_coroutine(self._alerts_repo.retrieve_by_range(\
-                    create_time_range=None, resolved=False))
-            for alert in alerts:
-                self.health_plugin.update_health_map_with_alert(alert.to_primitive())        
-        except Exception as e:
-            Log.warn(f"Error in update_health_schema_with db: {e}")
+    def _update_map_with_db(self):
+        self._run_coroutine(self._health_service.update_health_schema_with_db())

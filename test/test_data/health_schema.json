@@ -699,7 +699,7 @@
                           "severity": "NA",
                           "alert_uuid": "NA",
                           "durable_id": "psu_0.0",
-                          "health": "Fault",
+                          "health": "OK",
                           "fetch_time": 1582302351
                         },
                         "enclosure:fru:psu-psu_0.1": {
@@ -707,7 +707,7 @@
                           "severity": "NA",
                           "alert_uuid": "NA",
                           "durable_id": "psu_0.1",
-                          "health": "Degraded",
+                          "health": "OK",
                           "fetch_time": 1582302351
                         }
                       }
@@ -728,7 +728,7 @@
                           "severity": "NA",
                           "alert_uuid": "NA",
                           "durable_id": "controller_b",
-                          "health": "Degraded",
+                          "health": "OK",
                           "fetch_time": 1582302353
                         }
                       }
@@ -896,7 +896,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "expport_universal_0.A0",
-                        "health": "N/A",
+                        "health": "NA",
                         "fetch_time": 1582302358
                       },
                       "enclosure:interface:sas-drawer_egress_0.D0.A0": {
@@ -952,7 +952,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "expport_universal_0.B0",
-                        "health": "N/A",
+                        "health": "NA",
                         "fetch_time": 1582302358
                       },
                       "enclosure:interface:sas-drawer_egress_0.D0.B0": {
@@ -1062,7 +1062,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "sensor_temp_ctrl_B.4",
-                        "health": "Critical",
+                        "health": "OK",
                         "fetch_time": 1582302359
                       },
                       "enclosure:sensor:temperature-sensor_temp_ctrl_B.5": {
@@ -1110,7 +1110,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "sensor_temp_iom_0.B.6",
-                        "health": "Unknown",
+                        "health": "OK",
                         "fetch_time": 1582302359
                       },
                       "enclosure:sensor:temperature-sensor_temp_iom_0.A.0": {
@@ -1238,7 +1238,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "sensor_temp_sp_0.D1.A.1",
-                        "health": "Critical",
+                        "health": "OK",
                         "fetch_time": 1582302359
                       },
                       "enclosure:sensor:temperature-sensor_temp_sp_0.D1.B.0": {
@@ -1411,7 +1411,7 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "sensor_volt_psu_0.0.0",
-                        "health": "Unrecoverable",
+                        "health": "OK",
                         "fetch_time": 1582302359
                       },
                       "enclosure:sensor:voltage-sensor_volt_psu_0.0.1": {
@@ -1419,14 +1419,14 @@
                         "severity": "NA",
                         "alert_uuid": "NA",
                         "durable_id": "sensor_volt_psu_0.0.1",
-                        "health": "Unrecoverable",
+                        "health": "OK",
                         "fetch_time": 1582302359
                       }
                     }
                   }
                 }
               },
-              "node:qb01n3-m06-vm4.mero.colo.seagate.com": {
+              "node:ssc-vm-c-115.colo.seagate.com": {
                 "health": "",
                 "hw": {
                   "health": "",
@@ -1972,7 +1972,7 @@
                   }
                 }
               },
-              "node:qb01n3-m06-vm5.mero.colo.seagate.com": {
+              "node:ssc-vm-c-116.colo.seagate.com": {
                 "health": "",
                 "hw": {
                   "health": "",

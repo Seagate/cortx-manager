@@ -53,10 +53,12 @@ class CsmAgent:
         #Heath configuration
         health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
-        health_service = HealthAppService(health_repository, alerts_repository)
+        health_plugin_obj = health_plugin.HealthPlugin()
+        health_service = HealthAppService(health_repository, alerts_repository, \
+            health_plugin_obj)
         CsmAgent.health_monitor = HealthMonitorService(\
-                health_plugin.HealthPlugin(), health_service, alerts_repository)
-        CsmRestApi._app["health_service"] = health_service
+                health_plugin_obj, health_service)
+        CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
