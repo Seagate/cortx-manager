@@ -177,8 +177,8 @@ IEM = 'iem'
 SPECIFIC_INFO = 'specific_info'
 
 # Health
-HEALTH = 'health'
-OK_HEALTH = 'ok'
+OK_HEALTH = 'OK'
+NA_HEALTH = 'NA'
 TOTAL = 'total'
 GOOD_HEALTH = 'good'
 HEALTH_SUMMARY = 'health_summary'
@@ -226,6 +226,7 @@ NODE_RESPONSE = 'node_response'
 FETCH_TIME = 'fetch_time'
 HOST_ID = 'host_id'
 CREATED_TIME = 'created_time'
+FAULT_HEALTH = 'Fault'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)

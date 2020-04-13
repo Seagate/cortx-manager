@@ -60,22 +60,21 @@ class HealthPlugin(CsmPlugin):
 
     def _send_actuator_request_payload(self):
         today = datetime.now()
-        id = uuid.uuid1()
         try:
             if self._health_mapping_dict:
                 for key in self._health_mapping_dict:
                     if key.split(':')[0] == const.ENCLOSURE:
-                        self._send_encl_request(key, today, id)
+                        self._send_encl_request(key, today)
                     elif key.split(':')[0] == const.NODE:
-                        self._send_node_request(key, today, id)
+                        self._send_node_request(key, today)
         except Exception as ex:
             Log.warn(f"Sending actuator request failed. Reason : {ex}")
 
-    def _send_encl_request(self, key, today, id):
+    def _send_encl_request(self, key, today):
         try:
             self._storage_request_dict[const.TIME] = str(today)
             self._storage_request_dict[const.ALERT_MESSAGE][const.HEADER]\
-                    [const.UUID] = str(id)
+                    [const.UUID] = str(uuid.uuid1())
             self._storage_request_dict[const.ALERT_MESSAGE][const.ACT_REQ_TYPE]\
                     [const.STORAGE_ENCL][const.ENCL_REQ] = const.ENCL + str(key)
             self.comm_client.send(self._storage_request_dict, \
@@ -85,17 +84,21 @@ class HealthPlugin(CsmPlugin):
         except Exception as ex:
             Log.warn(f"Sending enclosure request failed. Reason : {ex}")
 
-    def _send_node_request(self, key, today, id):
+    def _send_node_request(self, key, today):
         try:
             self._node_request_dict[const.TIME] = str(today)
             self._node_request_dict[const.ALERT_MESSAGE][const.HEADER]\
-                    [const.UUID] = str(id)
+                    [const.UUID] = str(uuid.uuid1())
             self._node_request_dict[const.ALERT_MESSAGE][const.ACT_REQ_TYPE]\
                     [const.NODE_CONTROLLER][const.NODE_REQ] = const.NODE_HW + \
                     str(key)
             self.comm_client.send(self._node_request_dict, \
                     is_storage_request = False)
-            self._no_of_request+=1
+            """
+            Incrementing number of request with 2 as we will be sending
+            requests for both node1 and node2.
+            """
+            self._no_of_request+=2
             Log.debug(f"Sent node request for : {key}")
         except Exception as ex:
             Log.warn(f"Sending node request failed. Reason : {ex}")
@@ -112,7 +115,6 @@ class HealthPlugin(CsmPlugin):
         self.health_callback = callback_fn
         self.db_update_callback = db_update_callback_fn
         self.comm_client.init()
-        #self._send()
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():
@@ -132,7 +134,7 @@ class HealthPlugin(CsmPlugin):
                 self._no_of_responses+=1
                 msg_body = self._parse_response(message)
                 status = self.health_callback(msg_body)
-                if self._no_of_request == self._no_of_responses+1:
+                if self._no_of_request == self._no_of_responses:
                     self.db_update_callback()
             except Exception as e:
                 Log.warn(f"SOme issue occured in parsing and updating health: {e}")
@@ -177,13 +179,36 @@ class HealthPlugin(CsmPlugin):
             resource_schema[const.RESOURCE_KEY] = \
                     self._prepare_resource_key(resource_schema)
             resources[const.DURABLE_ID] = extended_info.get(const.DURABLE_ID, "")
-            resources[const.ALERT_HEALTH] = extended_info.get(const.ALERT_HEALTH, "")
             resources[const.KEY] = resource_type + "-" + \
                     info.get(const.ALERT_RESOURCE_ID, "")
+            resources[const.ALERT_HEALTH] = self._derive_health(message, \
+                resource_schema[const.HEALTH_ALERT_TYPE])
             resource_schema[const.RESOURCE_LIST].append(resources)
         except Exception as ex:
             Log.warn(f"Parsing of health map by alert failed. {ex}")
         return resource_schema
+
+    def _derive_health(self, message, alert_type):
+        """
+        Since SSPl is not sending health for some resources so we will have
+        to derive the health based on the alert_type.
+        If we are receiving a non-empty health key we will use that health value
+        """
+        health = ""
+        if const.ALERT_HEALTH in message:
+            health = message.get(const.ALERT_HEALTH)
+        """
+        There can be two cases -
+        1. We have the health key but it has no valur. i.e 'health': ''
+        2. The health key itself is missing from the paylod.
+        In both the cases we need to derive the health based on alert_type.
+        """
+        if not health:
+            if alert_type in const.BAD_ALERT:
+                health = const.FAULT_HEALTH
+            else:
+                health = const.OK_HEALTH
+        return health
 
     def _parse_response(self, message):
         health_schema = {}
@@ -221,15 +246,25 @@ class HealthPlugin(CsmPlugin):
         return health_schema
 
     def _parse_specific_info(self, health_schema, health_field, res_id_field):
-        health_schema[const.RESOURCE_LIST] = [] 
+        health_schema[const.RESOURCE_LIST] = []
         for items in health_schema.get(const.SPECIFIC_INFO, []):
             resources = {}
             resources[const.DURABLE_ID] = items.get(const.ALERT_DURABLE_ID, "")
-            resources[const.HEALTH] = items.get(health_field, "")
+            """
+            Where 'health' key is missing we will replace the value with 'NA'
+            """
+            resources[const.ALERT_HEALTH] = items.get(health_field, const.NA_HEALTH)
+            """
+            There might be a situation where we have 'health' as the key but
+            its value is empty, i.e 'health': ''.
+            In that scenario we will replace it with 'NA'
+            """
+            if not resources[const.ALERT_HEALTH]:
+                resources[const.ALERT_HEALTH] = const.NA_HEALTH
             resources[const.KEY] = health_schema.get\
-                    (const.ALERT_RESOURCE_TYPE, "") + '-' + items.get(res_id_field, "") 
-            health_schema[const.RESOURCE_LIST].append(resources)    
-             
+                    (const.ALERT_RESOURCE_TYPE, "") + '-' + items.get(res_id_field, "")
+            health_schema[const.RESOURCE_LIST].append(resources)
+
     def _prepare_resource_key(self, health_schema):
         """
         Gets the health schema key
