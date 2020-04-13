@@ -217,11 +217,13 @@ class ProvisionerPlugin:
                 data_nodes = network_data.get(const.DATA_NETWORK, {}).get(
                     const.IPV4, {}).get(const.NODES, [])
                 dns_nodes = network_data.get(const.DNS_NETWORK, {}).get(const.NODES, [])
+                data_network_config = network_data.get(const.DATA_NETWORK, {}).get(const.IPV4, {})
                 
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 secondary_dns_servers_list = secondary_search_domains_list = None
+                data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
                 
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
@@ -245,19 +247,35 @@ class ProvisionerPlugin:
                 
                 Log.debug("Handling provisioner's set network api request")
                 if config_type == const.SYSTEM_CONFIG:
-                    self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
+                    if data_nw_dhcp:
+                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
+                                cluster_ip=cluster_ip_address,
+                                primary_data_ip=self.provisioner.UNDEFINED,
+                                primary_data_netmask=self.provisioner.UNDEFINED,
+                                secondary_data_ip=self.provisioner.UNDEFINED,
+                                secondary_data_netmask=self.provisioner.UNDEFINED,
+                                dns_servers=dns_servers_list,
+                                search_domains=search_domains_list)
+                    else:
+                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
                                 cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
                                 secondary_data_ip=secondary_data_ip_address,
                                 secondary_data_netmask=secondary_data_netmask_address,
                                 dns_servers=dns_servers_list,
-                                search_domains=search_domains_list
-                                )
+                                search_domains=search_domains_list)
                 if config_type == const.MANAGEMENT_NETWORK:
                     self.provisioner.set_network(mgmt_vip=mgmt_vip_address)
                 if config_type == const.DATA_NETWORK:
-                    self.provisioner.set_network(cluster_ip=cluster_ip_address,
+                    if data_nw_dhcp:
+                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
+                                primary_data_ip=self.provisioner.UNDEFINED,
+                                primary_data_netmask=self.provisioner.UNDEFINED,
+                                secondary_data_ip=self.provisioner.UNDEFINED,
+                                secondary_data_netmask=self.provisioner.UNDEFINED)
+                    else:
+                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
                                 secondary_data_ip=secondary_data_ip_address,
