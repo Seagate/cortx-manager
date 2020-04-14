@@ -79,19 +79,6 @@ class UslService(ApplicationService):
         self._domain_certificate_manager = USLDomainCertificateManager()
         self._native_certificate_manager = USLNativeCertificateManager()
 
-    # TODO: pass S3 server credentials to the server instead of reading from a file
-    def _create_s3cli(self, s3_plugin):
-        """Creates the S3 client for USL service"""
-
-        s3_conf = S3ConnectionConfig()
-        s3_conf.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
-        s3_conf.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
-
-        usl_s3_conf = toml.load(const.USL_S3_CONF)
-        return s3_plugin.get_s3_client(usl_s3_conf['credentials']['access_key_id'],
-                                       usl_s3_conf['credentials']['secret_key'],
-                                       s3_conf)
-
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
 
