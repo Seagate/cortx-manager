@@ -120,10 +120,11 @@ class SSHChannel(Channel):
         except Exception as e:
             Log.exception(e)
 
-    def execute(self, command):
+    def execute(self, command, **kwargs):
         """ Execute the command at node """
         try:
-            _in, _out, _err = self._ssh.exec_command(command)
+            _in, _out, _err = self._ssh.exec_command(command,
+                                                     timeout=kwargs.get("timeout", None))
             _in.close()
             rc = _out.channel.recv_exit_status()
             output = u''.join(_out.readlines()).encode('utf-8')

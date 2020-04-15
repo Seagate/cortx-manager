@@ -30,7 +30,7 @@ from csm.common.errors import CsmError
 from csm.common.conf import Conf
 from csm.common.log import Log
 
-ERROR= "error"
+ERROR = "error"
 INFO = "info"
 
 class ComponentsBundle:
@@ -74,6 +74,7 @@ class ComponentsBundle:
         :return:
         """
         for command in commands:
+            Log.debug(f"Executing Command -> {command} {bundle_id} {path}")
             os.system(f"{command} {bundle_id} {path}")
 
     @staticmethod
@@ -111,6 +112,7 @@ class ComponentsBundle:
         bundle_id = command.options.get("bundle_id", "")
         node_name = command.options.get("node_name", "")
         comment = command.options.get("comment", "")
+        Log.debug(f"Bundle Generation Started -- {bundle_id}, {node_name}, {comment}")
         #Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
@@ -122,7 +124,8 @@ class ComponentsBundle:
                                      "SUPPORT_BUNDLE.bundle_path"))
         if os.path.isdir(path):
             shutil.rmtree(path)
-        os.makedirs(os.path.join(path, bundle_id))
+        bundle_path = os.path.join(path, bundle_id)
+        os.makedirs(bundle_path)
         # Start Execution for each Component Command.
         threads = []
         for each_component in support_bundle_config.get("COMMANDS"):
@@ -132,7 +135,7 @@ class ComponentsBundle:
                 components_commands = file_data.get("support_bundle", [])
             if components_commands:
                 thread_obj = threading.Thread(ComponentsBundle.exc_components_cmd(
-                    components_commands, bundle_id, f"{path}{os.sep}"))
+                    components_commands, bundle_id, f"{bundle_path}{os.sep}"))
                 thread_obj.start()
                 threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -140,7 +143,8 @@ class ComponentsBundle:
         tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
         #Create Summary File for Tar.
-        summary_file_path = os.path.join(directory_path, "summary.yaml")
+        summary_file_path = os.path.join(bundle_path, "summary.yaml")
+        Log.debug(f"Adding Summary File at {summary_file_path}")
         summary_data = {
             "Bundle Id": str(bundle_id),
             "Node Name": str(node_name),
@@ -148,6 +152,7 @@ class ComponentsBundle:
             "Generated Time": str(datetime.isoformat(datetime.now()))
         }
         Yaml(summary_file_path).dump(summary_data)
+        Log.debug(f'Summary File Created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 "SUPPORT_BUNDLE.symlink_path")
         if os.path.exists(symlink_path):
@@ -156,10 +161,11 @@ class ComponentsBundle:
 
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
-            each_thread.join(timeout=1800)
-        # Generate TAR FILE & Create Softlink for Generated TAR.
+            Log.debug(f"Waiting for Thread - {each_thread.ident} to Complete Process")
+            each_thread.join(timeout=10)
         try:
-            Tar(tar_file_name).dump([path])
+            Log.debug("Generate TAR FILE & Create Soft-link for Generated TAR.")
+            Tar(tar_file_name).dump([bundle_path])
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"SupportBundle.{bundle_id}"))
         except Exception as e:
@@ -177,5 +183,5 @@ class ComponentsBundle:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
         finally:
-            if os.path.isdir(os.path.join(path, bundle_id)):
-                shutil.rmtree(os.path.join(path, bundle_id))
+            if os.path.isdir(bundle_path):
+                shutil.rmtree(bundle_path)
