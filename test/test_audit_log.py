@@ -52,15 +52,15 @@ async def test_download_audit_log_service():
     mock_mngr = MockAuditManager()
     audit_service = AuditService(mock_mngr)
     actual_value = await audit_service.get_audit_log_zip("csm", 1581490848, 1581922908)
-    expected_value = "csm_1581490848_1581922908.tar.gz"
-    t.assertEqual(actual_value, expected_value)
+    expected_value = "csm.12-02-2020.17-02-2020"
+    t.assertIn(expected_value, actual_value)
 
 def test_filename_service():
     mock_mngr = MockAuditManager()
     audit_service = AuditService(mock_mngr)
     actual_value = audit_service.generate_audit_log_filename("csm", 1581490848, 1581922908)
-    expected_value = "csm_1581490848_1581922908"
-    t.assertEqual(actual_value, expected_value)
+    expected_value = "csm.12-02-2020.17-02-2020"
+    t.assertIn(expected_value, actual_value)
 
 def run_tests(args = {}):
     loop = asyncio.get_event_loop()
