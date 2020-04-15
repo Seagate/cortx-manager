@@ -22,6 +22,7 @@ import os
 import string
 import random
 import asyncio
+import shutil
 import errno
 from threading import Thread
 from csm.common.payload import Yaml
@@ -36,6 +37,7 @@ from csm.core.providers.providers import Response
 from csm.common import errors
 from csm.common.conf import Conf
 from csm.common.log import Log
+import time
 # try:
 #     from salt import client
 # except ModuleNotFoundError as e:
@@ -69,15 +71,26 @@ class SupportBundle:
             ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME,
                                          key_filename=const.SSH_KEY)
             ssh_conn_object.connect()
-            bundle_generate = (f"csmcli bundle_generate '{bundle_id}' '{comment}' "
-                               f"'{node_name}'")
-            rc, output = ssh_conn_object.execute(bundle_generate)
+            bundle_generate = (f"sh {const.CSM_PATH}/cli/schema/create_support_bundle.sh"
+                    f" {bundle_id} {comment.replace(' ', '_')} {node_name} &")
+            try:
+                # Executes Shell Script to Run in Background.
+                # Time out releases the connection rather than waiting for cmd.
+                # Since Shell Runs in Background no response is expected from Shell Command.
+                ssh_conn_object.execute(bundle_generate, timeout=2)
+            except CsmError:
+                Log.debug(f"Started Bundle Generation on {ip_address}")
             ssh_conn_object.disconnect()
         except CsmError:
             sys.stderr.write(f"Could Not Connect to {node_name}\n")
 
     @staticmethod
     async def fetch_host_from_salt():
+        """
+        This Method Fetchs Hostname for all nodes from Salt DB
+        :return: hostnames : List of Hostname :type: List
+        :return: node_list : : List of Node Name :type: List
+        """
         if not client:
             Log.warn("Salt Module Not Found.")
             return None, None
@@ -92,6 +105,11 @@ class SupportBundle:
 
     @staticmethod
     async def fetch_host_from_cluster():
+        """
+        This Method is Backup method for Reading Cluster.sls if Salt Read Fails.
+        :return: hostnames : List of Hostname :type: List
+        :return: node_list : : List of Node Name :type: List
+        """
         Log.info("Falling back to reading cluster information from cluster.sls.")
         cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                      "SUPPORT_BUNDLE.cluster_file_path")
@@ -120,31 +138,26 @@ class SupportBundle:
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
+        # Get HostNames and Node Names.
         hostnames, node_list =  await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
             hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
         if not isinstance(hostnames, list):
             return hostnames
-        threads = []
-        try:
-            for index, hostname in enumerate(hostnames):
-                thread_obj = Thread(SupportBundle.execute_ssh(hostname,
-                                                              bundle_id, comment,
-                                                              node_list[index]))
+        # Start Daemon Threads for Starting SB Generation on all Nodes.
+        for index, hostname in enumerate(hostnames):
+            Log.debug(f"Connect to {hostname}")
+            thread_obj = Thread(SupportBundle.execute_ssh(hostname,
+                            bundle_id, comment, node_list[index]), daemon=True)
+            thread_obj.start()
+        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
+                                "SUPPORT_BUNDLE.symlink_path")
+        response_msg = (
+            f"Please use the below ID for Checking the status of Support Bundle."
+            f" \n{bundle_id}"
+            f"\nPlease Find the file on -> {symlink_path} .\n")
 
-                thread_obj.start()
-                threads.append(thread_obj)
-            symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    "SUPPORT_BUNDLE.symlink_path")
-            response_msg = (f"Support Bundle Generation Started.\n"
-                          f"Please use the below ID for Checking the status of "
-                          f"Support Bundle. \n {bundle_id}\n. Please Find the file "
-                            f"under {symlink_path} .\n")
-
-            return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
-        finally:
-            for each_thread in threads:
-                each_thread.join(timeout=60)
+        return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
 
     @staticmethod
     async def bundle_status(command):
