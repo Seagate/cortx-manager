@@ -26,6 +26,7 @@ from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.common.log import Log
 from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 
 from aiohttp import web
@@ -46,6 +47,7 @@ class CsmHotfixUploadView(CsmView):
     """
     POST REST implementation for uploading hotfix packages
     """
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
@@ -65,6 +67,7 @@ class CsmHotfixStartView(CsmView):
     """
     POST REST implementation for starting a hotfix update
     """
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
         return await self._service.start_upgrade()
 
@@ -79,5 +82,6 @@ class CsmHotfixStatusView(CsmView):
     """
     GET REST implementation for starting a hotfix update
     """
+    @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
         return await self._service.get_current_status()
