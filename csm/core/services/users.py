@@ -240,9 +240,9 @@ class CsmUserService(ApplicationService):
             raise InvalidRequest("Old password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
-            if 'roles' in new_values:
-                raise CsmPermissionDenied("Non super user cannot change roles for self",
-                                        USERS_MSG_PERMISSION_DENIED, user_id)
+        if 'roles' in new_values:
+            raise CsmPermissionDenied("Non super user cannot change roles for self",
+                                      USERS_MSG_PERMISSION_DENIED, user_id)
        
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
         Log.debug(f"Update user service user_id: {user_id}.")
