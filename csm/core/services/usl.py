@@ -84,7 +84,7 @@ class UslService(ApplicationService):
     def _get_device_uuid(self) -> UUID:
         """Obtains the EOS device UUID from config."""
 
-        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
+        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid"))
 
     def _format_udx_register_device_params(self, url: str, pin: str, token: str) -> Dict[str, str]:
         register_device_params = {
