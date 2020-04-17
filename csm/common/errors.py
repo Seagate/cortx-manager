@@ -147,3 +147,11 @@ class CsmNotImplemented(CsmError):
 class CsmServiceConflict(CsmError):
 
     """Service in conflict stat or operation can cause that state"""
+
+
+class CsmGatewayTimeout(CsmError):
+
+    """
+    This error represents a scenario where CSM was acting as a gateway or proxy and did not receive
+    a timely response from the upstream server.
+    """

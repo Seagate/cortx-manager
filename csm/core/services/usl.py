@@ -29,10 +29,12 @@ from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
 from typing import cast, Any, Dict, List, Optional, Tuple
-from uuid import UUID, uuid4, uuid5
+from uuid import UUID, uuid4
 
 from csm.common.conf import Conf
-from csm.common.errors import CsmInternalError, CsmNotFoundError
+from csm.common.errors import (
+    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmServiceConflict
+)
 from csm.common.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -221,12 +223,11 @@ class UslService(ApplicationService):
             assert s3_account is not None
         # FIXME There is no way to extract meaningful error codes from ``CsmInternalError``.
         #   For that reason, we raise internal server errors in all of those cases.
-        # FIXME Service should be HTTP-agnostic and should not raise web exceptions.
         except (S3ServiceError, CsmInternalError, Exception) as e:
             await cleanup(s3_account_service=s3_account_service)
             reason = 'S3 account creation failed'
             Log.error(f'{reason}---{str(e)}')
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         Log.debug('Create IAM user')
         try:
             iam_client = self._s3plugin.get_iam_client(
@@ -240,16 +241,16 @@ class UslService(ApplicationService):
             elif not repair_mode:
                 reason = 'IAM user already exists'
                 Log.error(f'{reason}')
-                raise web.HTTPConflict(reason=reason)
+                raise CsmServiceConflict(desc=reason)
             assert existing_iam_user is not None or iam_user is not None
-        except web.HTTPConflict as e:
+        except CsmServiceConflict as e:
             await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
             raise e
         except Exception as e:
             await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
             reason = 'IAM user creation failed'
             Log.error(f'{reason}---{str(e)}')
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         Log.debug('Create access key for IAM user')
         try:
             # Rationale: keep only one access key for UDX IAM user
@@ -261,7 +262,7 @@ class UslService(ApplicationService):
             await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
             reason = 'IAM user access key creation failed'
             Log.error(f'{reason}---{str(e)}')
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         Log.debug('Create bucket')
         try:
             s3_client = self._s3plugin.get_s3_client(
@@ -275,8 +276,8 @@ class UslService(ApplicationService):
             elif not repair_mode:
                 reason = 'Bucket already exists'
                 Log.error(f'{reason}')
-                raise web.HTTPConflict(reason=reason)
-        except web.HTTPConflict as e:
+                raise CsmServiceConflict(desc=reason)
+        except CsmServiceConflict as e:
             await cleanup(
                 s3_account_service=s3_account_service, iam_client=iam_client, s3_client=s3_client
             )
@@ -287,7 +288,7 @@ class UslService(ApplicationService):
             )
             reason = 'Bucket creation failed'
             Log.error(f'{reason}---{str(e)}')
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         # In case we are running on repair mode, suffice to test if the resources already exist.
         # In case we are not, exceptions should have been raised previously.
         # FIXME `cast()` is unsafe; mypy could not derive types correctly
@@ -509,7 +510,7 @@ class UslService(ApplicationService):
         except ValidationError:
             reason = 'UDS base URL is not valid'
             Log.error(reason)
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         # Let ``_initialize_udx_s3_resources()`` propagate its exceptions
         (udx_s3_account, udx_iam_user, udx_iam_user_access_key,
          udx_bucket) = await self._initialize_udx_s3_resources(
@@ -534,7 +535,7 @@ class UslService(ApplicationService):
                 udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket)
             reason = 'Error on registration body assembly'
             Log.error(f'{reason}---{str(e)}')
-            raise web.HTTPInternalServerError(reason=reason)
+            raise CsmInternalError(desc=reason)
         try:
             endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
             async with ClientSession() as session:
@@ -543,7 +544,7 @@ class UslService(ApplicationService):
                     if response.status != 201:
                         reason = 'Could not start device registration'
                         Log.error(f'{reason}---unexpected status code {response.status}')
-                        raise web.HTTPInternalServerError(reason=reason)
+                        raise CsmInternalError(desc=reason)
                 Log.info('Device registration in process---waiting for confirmation')
                 timeout_limit = time.time() + 60
                 while time.time() < timeout_limit:
@@ -554,12 +555,12 @@ class UslService(ApplicationService):
                         elif response.status != 201:
                             reason = 'Device registration failed'
                             Log.error(f'{reason}---unexpected status code {response.status}')
-                            raise web.HTTPInternalServerError(reason=reason)
+                            raise CsmInternalError(desc=reason)
                     await asyncio.sleep(1)
                 else:
                     reason = 'Could not confirm device registration status'
                     Log.error(reason)
-                    raise web.HTTPGatewayTimeout(reason=reason)
+                    raise CsmGatewayTimeout(desc=reason)
                 return {
                     's3_account': {
                         'access_key': udx_s3_account['access_key'],
@@ -581,7 +582,7 @@ class UslService(ApplicationService):
         async with ClientSession() as session:
             async with session.get(endpoint_url) as response:
                 if response.status != 200:
-                    raise web.HTTPNotFound()
+                    raise CsmNotFoundError()
 
     # TODO replace stub
     async def get_registration_token(self) -> Dict[str, str]:

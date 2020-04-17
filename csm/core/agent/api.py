@@ -43,7 +43,7 @@ from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
-                               CsmNotImplemented, CsmServiceConflict)
+                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -281,6 +281,8 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=500)
         except CsmNotImplemented as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=501)
+        except CsmGatewayTimeout as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=504)
         except CsmServiceConflict as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=409)
         except (CsmError, InvalidRequest) as e:
