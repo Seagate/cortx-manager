@@ -15,7 +15,7 @@
  ****************************************************************************
 """
 
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validates, ValidationError
 from typing import Dict, Tuple
 
 
@@ -25,8 +25,13 @@ class S3CredentialsSchema(Schema):
 
 
 class S3AccessParamsSchema(Schema):
-    uri = fields.URL(required=True, schemes=('s3'))
+    uri = fields.String(required=True)
     credentials = fields.Nested(S3CredentialsSchema, required=True)
+
+    @validates('uri')
+    def validate_uri(self, value: str) -> None:
+        if not value.startswith('s3://'):
+            raise ValidationError('Invalid S3 URI')
 
 
 class AccessParamsSchema(Schema):

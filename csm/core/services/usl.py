@@ -19,7 +19,6 @@
 
 import asyncio
 import time
-import toml
 
 from aiohttp import web, ClientSession
 from boto.s3.bucket import Bucket
@@ -40,8 +39,8 @@ from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
-from csm.core.data.models.s3 import S3ConnectionConfig, IamUser, IamUserCredentials
-from csm.core.data.models.usl import Device
+from csm.core.data.models.s3 import IamUser, IamUserCredentials
+from csm.core.data.models.usl import Device, Volume
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
@@ -79,26 +78,13 @@ class UslService(ApplicationService):
         self._domain_certificate_manager = USLDomainCertificateManager()
         self._native_certificate_manager = USLNativeCertificateManager()
 
-    # TODO: pass S3 server credentials to the server instead of reading from a file
-    def _create_s3cli(self, s3_plugin):
-        """Creates the S3 client for USL service"""
-
-        s3_conf = S3ConnectionConfig()
-        s3_conf.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
-        s3_conf.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
-
-        usl_s3_conf = toml.load(const.USL_S3_CONF)
-        return s3_plugin.get_s3_client(usl_s3_conf['credentials']['access_key_id'],
-                                       usl_s3_conf['credentials']['secret_key'],
-                                       s3_conf)
-
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
 
     def _get_device_uuid(self) -> UUID:
         """Obtains the EOS device UUID from config."""
 
-        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid")) or uuid4()
+        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid"))
 
     def _format_udx_register_device_params(self, url: str, pin: str, token: str) -> Dict[str, str]:
         register_device_params = {
@@ -380,6 +366,16 @@ class UslService(ApplicationService):
         Log.info(f'UDX bucket {bucket_name} is created')
         return bucket
 
+    async def _is_bucket_udx_enabled(self, s3_cli, bucket):
+        """
+        Checks if bucket is UDX enabled
+
+        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
+        """
+
+        tags = await s3_cli.get_bucket_tagging(bucket)
+        return tags.get('udx', 'disabled') == 'enabled'
+
     async def _tag_udx_bucket(self, s3_cli, bucket_name: str):
         """
         Puts the UDX tag on a specified bucket
@@ -415,6 +411,30 @@ class UslService(ApplicationService):
         await s3_cli.put_bucket_policy(bucket_name, policy)
         Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
+    def _get_volume_name(self, bucket_name: str) -> UUID:
+        return self._get_system_friendly_name() + ": " + bucket_name
+
+    def _get_volume_uuid(self, bucket_name: str) -> UUID:
+        """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
+        return uuid5(self._device.uuid, bucket_name)
+
+    async def _get_udx_volume_list(
+        self, access_key_id: str, secret_access_key: str
+    ) -> Dict[UUID, Volume]:
+        s3_client = self._s3plugin.get_s3_client(
+            access_key_id, secret_access_key, CsmS3ConfigurationFactory.get_s3_connection_config()
+        )
+        device_uuid = self._device.uuid
+        volumes = {}
+        for bucket in await s3_client.get_all_buckets():
+            bucket_name = bucket.name
+            if await self._is_bucket_udx_enabled(s3_client, bucket):
+                volume_uuid = self._get_volume_uuid(bucket_name)
+                volume_name = self._get_volume_name(bucket_name)
+                volume = Volume.instantiate(volume_name, bucket_name, device_uuid, volume_uuid)
+                volumes[volume_uuid] = volume
+        return volumes
+
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
@@ -425,25 +445,49 @@ class UslService(ApplicationService):
         return [self._device.to_primitive()]
 
     async def get_device_volumes_list(
-        self, device_id: UUID, uri: str, access_key: str, secret_access_key: str
+        self, device_id: UUID, uri: str, access_key_id: str, secret_access_key: str
     ) -> List[Dict[str, Any]]:
         """
         Provides a list of all volumes associated to a specific device.
 
         :param device_id: Device UUID
         :param uri: URI to storage service
-        :param access_key: Access key to storage service
+        :param access_key_id: Access key ID to storage service
         :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
 
         if device_id != self._device.uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        # FIXME return volumes list
-        return []
+        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
+        return [v.to_primitive(role='public') for _,v in volumes.items()]
+
+    async def _handle_udx_volume_mount_umount(
+        self, device_id: UUID, volume_id: UUID, uri: str,
+        access_key_id: str, secret_access_key: str, mount=True,
+    ) -> Dict[str, str]:
+        """
+        Handles UDX volume mount/umount
+
+        Checks the device and the volume with the specified IDs exist and return
+        the required mount/umount information
+        """
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
+        if volume_id not in volumes:
+            raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
+                                        f'on the device with ID {device_id}')
+        if mount:
+            return {
+                'mount': volumes[volume_id].bucketName,
+                'handle': volumes[volume_id].bucketName
+            }
+        else:
+            return volumes[volume_id].bucketName
 
     async def post_device_volume_mount(
-        self, device_id: UUID, volume_id: UUID, uri: str, access_key: str, secret_access_key: str
+        self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
     ) -> Dict[str, str]:
         """
         Attaches a volume associated to a specific device to a mount point.
@@ -451,18 +495,15 @@ class UslService(ApplicationService):
         :param device_id: Device UUID
         :param volume_id: Volume UUID
         :param uri: URI to storage service
-        :param access_key: Access key to storage service
+        :param access_key_id: Access key ID to storage service
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        if device_id != self._device.uuid:
-            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        # TODO return proper mount handle
-        return {}
+        return await self._handle_udx_volume_mount_umount(
+            device_id, volume_id, uri, access_key_id, secret_access_key, mount=True)
 
-    # TODO replace stub
     async def post_device_volume_unmount(
-        self, device_id: UUID, volume_id: UUID, uri: str, access_key: str, secret_access_key: str
+        self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
     ) -> str:
         """
         Detaches a volume associated to a specific device from its current mount point.
@@ -472,11 +513,12 @@ class UslService(ApplicationService):
         :param device_id: Device UUID
         :param volume_id: Volume UUID
         :param uri: URI to storage service
-        :param access_key: Access key to storage service
+        :param access_key_id: Access key ID to storage service
         :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
-        return 'handle'
+        return await self._handle_udx_volume_mount_umount(
+            device_id, volume_id, uri, access_key_id, secret_access_key, mount=False)
 
     async def get_events(self) -> None:
         """
