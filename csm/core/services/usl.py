@@ -462,6 +462,30 @@ class UslService(ApplicationService):
         volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _,v in volumes.items()]
 
+    async def _handle_udx_volume_mount_umount(
+        self, device_id: UUID, volume_id: UUID, uri: str,
+        access_key_id: str, secret_access_key: str, mount=True,
+    ) -> Dict[str, str]:
+        """
+        Handles UDX volume mount/umount
+
+        Checks the device and the volume with the specified IDs exist and return
+        the required mount/umount information
+        """
+        if device_id != self._device.uuid:
+            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
+        if volume_id not in volumes:
+            raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
+                                        f'on the device with ID {device_id}')
+        if mount:
+            return {
+                'mount': volumes[volume_id].bucketName,
+                'handle': volumes[volume_id].bucketName
+            }
+        else:
+            return volumes[volume_id].bucketName
+
     async def post_device_volume_mount(
         self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
     ) -> Dict[str, str]:
@@ -475,16 +499,8 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        if device_id != self._device.uuid:
-            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
-        if volume_id not in volumes:
-            raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
-                                        f'on the device with ID {device_id}')
-        return {
-            'mount': volumes[volume_id].bucketName,
-            'handle': volumes[volume_id].bucketName
-        }
+        return await self._handle_udx_volume_mount_umount(
+            device_id, volume_id, uri, access_key_id, secret_access_key, mount=True)
 
     async def post_device_volume_unmount(
         self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
@@ -501,13 +517,8 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
-        if device_id != self._device.uuid:
-            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
-        if volume_id not in volumes:
-            raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
-                                        f'on the device with ID {device_id}')
-        return volumes[volume_id].bucketName
+        return await self._handle_udx_volume_mount_umount(
+            device_id, volume_id, uri, access_key_id, secret_access_key, mount=False)
 
     async def get_events(self) -> None:
         """
