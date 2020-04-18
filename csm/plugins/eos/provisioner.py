@@ -106,7 +106,6 @@ class ProvisionerPlugin:
             except Exception as e:
                 Log.exception(e)
                 raise CsmInternalError('Failed to start the upgrade process')
-
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
@@ -129,6 +128,7 @@ class ProvisionerPlugin:
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(pe))
 
         return await self._await_nonasync(_command_handler)
+
 
     def _generate_random_version(self):
         return datetime.datetime.now().strftime("%Y.%m.%d.%H.%M")
