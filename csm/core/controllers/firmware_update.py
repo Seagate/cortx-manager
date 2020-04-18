@@ -57,7 +57,7 @@ class FirmwarePackageUploadView(CsmView):
                 raise InvalidRequest(f"Invalid Package. {val_err}")
             package_ref = multipart_data['package']['file_ref']
             file_name = multipart_data['package']['filename']
-            return await self._service.firmware_package_upload(package_ref, file_name)
+            return await self._service.upload_package(package_ref, file_name)
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/firmware/start")
@@ -65,7 +65,6 @@ class FirmwareUpdateView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.FW_UPDATE_SERVICE]
-        self._service_dispatch = {}
 
     """
     POST REST implementation to trigger firmware update
@@ -76,7 +75,7 @@ class FirmwareUpdateView(CsmView):
                  f" user_id: {self.request.session.credentials.user_id}")
         availibility_status =  await self._service.check_for_package_availability()
         if availibility_status:
-            return await self._service.trigger_firmware_upgrade()
+            return await self._service.start_update()
 
 
 @CsmView._app_routes.view("/api/v1/upgrade/firmware/status")

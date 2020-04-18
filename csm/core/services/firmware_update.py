@@ -24,57 +24,19 @@ from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.core.data.models.upgrade import UpdateStatusEntry
-from csm.common.fs_utils import FSUtils
-
+from csm.core.services.update_service import UpdateService
 
 import os
 import datetime
 
 
-class FirmwareUpdateService(ApplicationService):
-    """
-    Service for firmware package upload
-    """
-    FIRMWARE_UPDATE_ID = 'firmware_update'
-    def __init__(self, provisioner, fw_storage_path: str, firmware_repo):
-        self._provisioner = provisioner
-        self._fw_storage_path = fw_storage_path
-        self._firmware_repo = firmware_repo
+class FirmwareUpdateService(UpdateService):
+    
+    def __init__(self, provisioner, storage_path, update_repo):
+        super().__init__(provisioner, update_repo)
+        self._fw_storage_path = storage_path
 
-
-    @Log.trace_method(Log.DEBUG)
-    async def _get_renewed_model(self) -> UpdateStatusEntry:
-        """
-        Fetch the most up-to-date information about the most recent firmware upgrade process.
-        Queries the DB, then queries the Provisioner if needed.
-        """
-        model = await self._firmware_repo.get_current_model(self.FIRMWARE_UPDATE_ID)
-        if model and model.is_in_progress():
-            try:
-                result = await self._provisioner.get_provisioner_job_status(model.provisioner_id)
-                model.apply_status_update(result)
-                await self._firmware_repo.save_model(model)
-            except Exception as e:
-                raise CsmInternalError(f'Failed to fetch the status of an ongoing upgrade process')
-
-        return model
-
-    @Log.trace_method(Log.INFO)
-    async def get_current_status(self):
-        """
-        Fetch current state of firmware update process.
-        Synchronizes it with the Provisioner service if necessary.
-
-        Returns {} if there is no information (e.g. because CSM has never been updated)
-        Otherwise returns a dictionary that describes the process
-        """
-        model = await self._get_renewed_model()
-        if not model:
-            return {}
-
-        return model.to_printable()
-
-    async def firmware_package_upload(self, package_ref, filename):
+    async def upload_package(self, package_ref, filename):
         """
         Service to upload and validate firmware package. Also returns last
         firmware ugrade status
@@ -83,41 +45,46 @@ class FirmwareUpdateService(ApplicationService):
         :return: dict
         """
         firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
-        model = await self._firmware_repo.get_current_model(self.FIRMWARE_UPDATE_ID)
+        model = await self._update_repo.get_current_model(const.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
             raise InvalidRequest("You can't upload a new package while there is an ongoing upgrade")
 
-        model = UpdateStatusEntry.generate_new(self.FIRMWARE_UPDATE_ID)
+        model = UpdateStatusEntry.generate_new(const.FIRMWARE_UPDATE_ID)
         model.description = os.path.join(self._fw_storage_path, filename)
         model.details = ''
         model.mark_uploaded()
-        await self._firmware_repo.save_model(model)
+        await self._update_repo.save_model(model)
         return model.to_printable()
+    
+    async def start_update(self):
+        software_update_model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
 
-    async def trigger_firmware_upgrade(self):
-        """
-        Service to trigger firmware upgrade
-        :return:
-        """
-        model = await self._get_renewed_model()
-        if not model:
-            raise CsmInternalError("Internal DB is iconsistent. Please upload the package again")
-        if model.is_in_progress():
-            raise InvalidRequest("Firmware upgrade is already in progress. Please wait until it is done.")
+        if software_update_model and software_update_model.is_in_progress():
+            raise InvalidRequest("Software upgrade is already in progress. Please wait until it is done.")
 
-        model.provisioner_id = await self._provisioner.trigger_firmware_upgrade(model.description)
-        model.mark_started()
-        await self._firmware_repo.save_model(model)
-        return model.to_printable()
+        firmware_update_model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
+        if not firmware_update_model:
+            raise CsmInternalError("Internal DB is inconsistent. Please upload the package again")
 
+        if firmware_update_model.is_in_progress():
+            raise InvalidRequest("Firmware update is already in progress. Please wait until it is done.")
+
+        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_upgrade(firmware_update_model.description)
+        firmware_update_model.mark_started()
+        await self._update_repo.save_model(firmware_update_model)
+        return firmware_update_model.to_printable()
+    
     async def check_for_package_availability(self):
         """
         Service to check package is available at configured path
         :return: dict
         """
-        model = await self._get_renewed_model()
+        model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
         if not model:
             raise CsmError(desc="Internal DB is inconsistent. Please upload the package again")
         if not model.description or not os.path.exists(model.description):
             raise InvalidRequest(f"Firmware package {model.description} not found.")
         return model.to_printable()
+ 
+    async def get_current_status(self):
+        return await super()._get_current_status(const.FIRMWARE_UPDATE_ID)
