@@ -125,6 +125,14 @@ class CsmRestApi(CsmApi, ABC):
         return 'debug' in request.rel_url.query
 
     @staticmethod
+    def http_request_to_log_string(request):
+        remote_ip = request.remote
+        url = request.path
+        method = request.method
+        user_agent = request.headers.get('User-Agent')
+        return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} User-Agent:{user_agent}")
+
+    @staticmethod
     def error_response(err: Exception, request) -> dict:
         resp = {
             "error_code": None,
@@ -146,11 +154,13 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
+
+        audit = CsmRestApi.http_request_to_log_string(request)
         if request.session is not None:
             Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'Request: {request} RC: {resp["error_code"]}')
+                      f'{audit} RC: {resp["error_code"]}')
         else:
-            Log.audit(f'Request: {request} RC: {resp["error_code"]}')
+            Log.audit(f'{audit} RC: {resp["error_code"]}')
         return resp
 
     @staticmethod
@@ -185,7 +195,6 @@ class CsmRestApi(CsmApi, ABC):
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
-        Log.audit(f'{request.method} {request.path}')
         session = None
         is_public = await cls._is_public(request)
         if not is_public:
@@ -241,6 +250,7 @@ class CsmRestApi(CsmApi, ABC):
                 return file_resp
 
             if isinstance(resp, web.StreamResponse):
+                Log.audit(f'{CsmRestApi.http_request_to_log_string(request)} RC: {resp.status}')
                 return resp
 
             status = 200
@@ -251,11 +261,12 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
+            audit = CsmRestApi.http_request_to_log_string(request)
             if request.session is not None:
                 Log.audit(f'User: {request.session.credentials.user_id} '
-                          f'Request: {request} RC: {status}')
+                          f'{audit} RC: {status}')
             else:
-                Log.audit(f'Request: {request} RC: {status}')
+                Log.audit(f'{audit} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
