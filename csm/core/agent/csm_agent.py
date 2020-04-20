@@ -35,10 +35,21 @@ class CsmAgent:
         from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
+
+        try:
+            # TODO: consider a more safe storage
+            params = {
+                "username": const.NON_ROOT_USER,
+                "password": const.NON_ROOT_USER_PASS
+            }
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
+        except CsmError as ce:
+            Log.error(f"Unable to load Provisioner plugin: {ce}")
+
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
         s3_plugin = import_plugin_module('s3')
-        usl_service = UslService(s3_plugin.S3Plugin(), db)
+        usl_service = UslService(s3_plugin.S3Plugin(), db, provisioner)
 
         # Clearing cached files
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
@@ -62,7 +73,7 @@ class CsmAgent:
 
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin)        
+                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -120,16 +131,6 @@ class CsmAgent:
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
-
-        try:
-            # TODO: consider a more safe storage
-            params = {
-                "username": const.NON_ROOT_USER,
-                "password": const.NON_ROOT_USER_PASS
-            }
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
-        except CsmError as ce:
-            Log.error(f"Unable to load Provisioner plugin: {ce}")
 
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
