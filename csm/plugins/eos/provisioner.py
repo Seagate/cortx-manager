@@ -200,6 +200,20 @@ class ProvisionerPlugin:
         Log.debug(f"Getting provisioner status for : {status_type}")
         return {"status": "Successful"}
     
+    def get_dict(self, dictionary, keys, default=None):
+        """
+        Retrive value from nested dict.
+        :param dictionary: Input dictionary
+        :param keys: Tuple having keys in ordered format to find its value  
+        :returns: Value of given key otherwise return default value
+        """
+        for key in keys:
+            if isinstance(dictionary, dict) and key in dictionary:
+                dictionary = dictionary.get(key)
+            else:
+                return default
+        return dictionary
+    
     @Log.trace_method(Log.DEBUG)
     async def set_network(self, network_data: dict, config_type):
         """
@@ -212,17 +226,22 @@ class ProvisionerPlugin:
         
         def _command_handler():
             try:
-                mgmt_nodes = network_data.get(const.MANAGEMENT_NETWORK, {}).get(
-                    const.IPV4, {}).get(const.NODES, [])
-                data_nodes = network_data.get(const.DATA_NETWORK, {}).get(
-                    const.IPV4, {}).get(const.NODES, [])
-                dns_nodes = network_data.get(const.DNS_NETWORK, {}).get(const.NODES, [])
-                data_network_config = network_data.get(const.DATA_NETWORK, {}).get(const.IPV4, {})
+                mgmt_nodes = data_nodes = dns_nodes = []
+                data_network_config = {}
+                if network_data.get(const.MANAGEMENT_NETWORK):
+                    mgmt_nodes = self.get_dict(network_data, (
+                        const.MANAGEMENT_NETWORK, const.IPV4, const.NODES), default=[])
+                if network_data.get(const.DATA_NETWORK):
+                    data_network_config = self.get_dict(network_data, (
+                        const.DATA_NETWORK, const.IPV4), default={})
+                    data_nodes = data_network_config.get(const.NODES, [])
+                if network_data.get(const.DNS_NETWORK):
+                    dns_nodes = self.get_dict(network_data, (
+                        const.DNS_NETWORK, const.NODES), default=[])
                 
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
-                secondary_dns_servers_list = secondary_search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
                 
                 for node in mgmt_nodes:
@@ -241,9 +260,6 @@ class ProvisionerPlugin:
                     if node[const.NAME] == const.PRIMARY_NODE:
                         dns_servers_list = node.get(const.DNS_SERVER, None)
                         search_domains_list = node.get(const.SEARCH_DOMAIN, None)
-                    if node[const.NAME] == const.SECONDARY_NODE:
-                        secondary_dns_servers_list = node.get(const.DNS_SERVER, None)
-                        secondary_search_domains_list = node.get(const.SEARCH_DOMAIN, None)
                 
                 Log.debug("Handling provisioner's set network api request")
                 if config_type == const.SYSTEM_CONFIG:

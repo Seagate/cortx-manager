@@ -29,7 +29,8 @@ from eos.utils.data.access.filters import Compare
 from eos.utils.data.db.db_provider import (DataBaseProvider)
 from csm.common.log import Log
 from csm.core.data.models.system_config import (SystemConfigSettings,
-                                                EmailConfig, OnboardingLicense)
+            EmailConfig, OnboardingLicense, CertificateInstallationStatus)
+from csm.core.services.security import SecurityService
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 
@@ -128,11 +129,12 @@ class SystemConfigAppService(ApplicationService):
     Service that exposes system config management actions.
     """
 
-    def __init__(self, provisioner, system_config_mgr: SystemConfigManager,
-                 email_test_template=None):
+    def __init__(self, provisioner, security_service: SecurityService,
+                 system_config_mgr: SystemConfigManager, email_test_template=None):
         self.system_config_mgr = system_config_mgr
         self.email_test_template = email_test_template
         self._provisioner = provisioner
+        self._security_service = security_service
 
     async def create_system_config(self, config_id: str, **kwargs) -> dict:
         """
@@ -186,15 +188,17 @@ class SystemConfigAppService(ApplicationService):
         await system_config.update(new_values)
         await self.system_config_mgr.save(system_config)
         # Calling provisioner's set_ntp and set_network api
-        if (new_values.get(const.MANAGEMENT_NETWORK) and 
-            new_values.get(const.DATA_NETWORK) and 
-            new_values.get(const.DNS_NETWORK) and
-            new_values.get(const.DATE_TIME_SETTING) and 
-            new_values.get(const.SUMMARY)):
-            
+        if (new_values.get(const.SUMMARY)):
             ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
             await self._provisioner.set_ntp(ntp_data)
             await self._provisioner.set_network(new_values, const.SYSTEM_CONFIG)
+            # Get last ssl certificate installation status
+            ssl_status = await self._security_service.get_certificate_installation_status()
+            if ssl_status:
+                # Calling install_certificate() function from SecurityService 
+                if (ssl_status.installation_status == 
+                    CertificateInstallationStatus.NOT_INSTALLED.value):
+                    await self._security_service.install_certificate()
 
         return system_config.to_primitive()
 
