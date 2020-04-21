@@ -19,6 +19,7 @@
 
 import asyncio
 import datetime
+from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from csm.common.log import Log
 from csm.core.blogic import const
@@ -31,11 +32,22 @@ from csm.core.blogic.const import PILLAR_GET
 class PackageValidationError(InvalidRequest):
     pass
 
+class NetworkConfigFetchError(InvalidRequest):
+    pass
+
+
+# TODO: create a separate module for provisioner-related models
+NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
+
 
 class ProvisionerPlugin:
     """
     Plugin that provides provisioner's api integration.
     """
+
+    PRVSNR_NETWORK_PARAM_VIP = 'network/mgmt_vip'
+    PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
+
     def __init__(self, username=None, password=None):
         try:
             import provisioner
@@ -199,6 +211,35 @@ class ProvisionerPlugin:
         # TODO: Provisioner api to get status tobe implented here
         Log.debug(f"Getting provisioner status for : {status_type}")
         return {"status": "Successful"}
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_network_configuration(self):
+        """
+        Queries the current network configration from the provisioner
+        At the moment only queries VIP and CIP, later the method can be extended to fetch
+        additional information
+
+        :returns: an instance of NetworkConfiguirationResponse
+        :raises: a CsmInternalError in case of query failure
+        """
+        if not self.provisioner:
+            raise NetworkConfigFetchError("Provisioner is not instantiated")
+
+        def _command_handler():
+            try:
+                response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
+                # The IPs are same for each node, so we can take any of them
+                for node, params in response.items():
+                    return NetworkConfiguirationResponse(
+                        mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
+                        cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
+                    )
+            except Exception as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
+
+        return await self._await_nonasync(_command_handler)
+
     
     def get_dict(self, dictionary, keys, default=None):
         """
