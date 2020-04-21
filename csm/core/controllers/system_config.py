@@ -21,7 +21,7 @@ import uuid
 
 from csm.common.errors import InvalidRequest
 from csm.common.log import Log
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
 
 from .validators import Server, Ipv4, DomainName
@@ -154,12 +154,16 @@ class EmailConfigSchema(Schema):
     """
     smtp_server = fields.Str(validate=Server(), allow_none=True)
     smtp_port = fields.Int(validate=validate.Range(max=65535), allow_none=True)
-    smtp_protocol = fields.Str(validate=validate.Length(min=3, max=32),
-                               allow_none=True)  # TODO: validate as enum
+    smtp_protocol = fields.Str(allow_none=False)
     smtp_sender_email = fields.Email(allow_none=True)
     smtp_sender_password = fields.Str(validate=validate.Length(min=4, max=64),
                                       allow_none=True)
     email = fields.Str(allow_none=True)
+
+    @validates('smtp_protocol')
+    def validate_smtp_protocol(self, value):
+        return str(value).lower() in ['tls', 'ssl', 'starttls']
+
 
 class SyslogConfigSchema(Schema):
     """
