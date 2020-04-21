@@ -27,6 +27,7 @@ from csm.test.common import Const
 import json, time
 import filecmp
 import threading
+from unittest import mock
 
 actual_count = 0
 expected_count = 2
@@ -41,10 +42,10 @@ def init(args):
     args['amqp_client'] = AmqpComm()
     args['alert_plugin_test1'] = AlertPlugin()
     args['alert_plugin_test2'] = AlertPlugin()
-    args['thread_test1'] = threading.Thread(target=recv_alerts_test1,\
-                                    args=(args, ))
-    args['thread_test2'] = threading.Thread(target=recv_alerts_test2,\
-                                    args=(args, ))
+    args['alert_plugin_test3'] = AlertPlugin()
+    args['thread_test1'] = threading.Thread(target=recv_alerts_test1, args=(args, ))
+    args['thread_test2'] = threading.Thread(target=recv_alerts_test2, args=(args, ))
+    args['thread_test3'] = threading.Thread(target=recv_alerts_test3, args=(args,))
 
 def send_alerts(args):
     client = args['amqp_client']
@@ -81,6 +82,10 @@ def recv_alerts_test2(args):
     args['alert_plugin_test2'].init(callback_fn=consume_alert_test2)
     args['alert_plugin_test2'].process_request(cmd='listen')
 
+def recv_alerts_test3(args):
+    args['alert_plugin_test3'].init(callback_fn=consume_alert_test1)
+    args['alert_plugin_test3'].process_request(cmd='listen')
+
 def consume_alert_test1(message):
     global actual_count
     actual_count = actual_count + 1
@@ -99,6 +104,12 @@ def consume_alert_test2(message):
             json_file.write(',\n')
         json_file.close()
     return True 
+
+def transmit_method(args):
+    class Mock:
+        async def handle_event(self, alert_data):
+            return None
+    args['alert_plugin_test3']._decision_maker = Mock()
 
 def test1(args):
     """
@@ -126,9 +137,17 @@ def test2(args):
     args['alert_plugin_test2'].stop()
     args['thread_test2'].join()
 
+def test3(args):
+    send_alerts(args)
+    time.sleep(2)
+    args['thread_test3'].start()
+    time.sleep(2)
+    args['alert_plugin_test3'].stop()
+    args['thread_test3'].join()
+
 def compare_results():
     if not filecmp.cmp(file_path + 'alert_output_expected.json',
                         file_path + 'alert_output.json'):
         raise TestFailed('Input and Output alerts do not match.')
 
-test_list = [ test1, test2]
+test_list = [ test1, test2, test3]
