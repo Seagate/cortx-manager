@@ -431,3 +431,5 @@ STATE_CHANGE = "Successfully put {node} on {state} state"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
+
+ALERT_RETRY_COUNT = 3

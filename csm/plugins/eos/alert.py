@@ -20,6 +20,7 @@
 import json
 import os
 import time
+import asyncio
 from csm.common.comm import AmqpComm
 from csm.common.errors import CsmError
 from csm.common.log import Log
@@ -27,6 +28,12 @@ from csm.common.payload import Payload, Json, JsonMessage, Dict
 from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
+from concurrent.futures import ThreadPoolExecutor
+try:
+    from eos.utils.ha.dm.decision import DecisionMaker
+except ModuleNotFoundError:
+    Log.warn("Unable to import HA Decision Maker Library.")
+    DecisionMaker = None
 
 class AlertSchemaValidator(Schema):
     """
@@ -106,6 +113,11 @@ class AlertPlugin(CsmPlugin):
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
+            self._executor = ThreadPoolExecutor(max_workers=1)
+            self._loop = asyncio.get_event_loop()
+            self._decision_maker = None
+            if DecisionMaker:
+                self._decision_maker = DecisionMaker()
         except Exception as e:
             Log.exception(e)
 
@@ -154,6 +166,9 @@ class AlertPlugin(CsmPlugin):
         if "actuator" in title.lower():
             status = self.health_plugin.health_plugin_callback(message)
         elif "sensor" in title.lower():
+            # Call HA Decision Maker for Alerts.
+            if self._decision_maker:
+                self.transmit_alerts_info(sensor_queue_msg)
             try:
                 if self.monitor_callback:
                     alert = self._convert_to_csm_schema(message)
@@ -308,3 +323,23 @@ class AlertPlugin(CsmPlugin):
                 description_dict[const.ALERT_EVENT_RECOMMENDATION] = \
                     items[const.ALERT_HEALTH_RECOMMENDATION]
                 csm_schema[const.ALERT_EVENT_DETAILS].append(description_dict)
+
+    def transmit_alerts_info(self, alert_data):
+        """
+        This Method will send the alert to HA system for System check.
+        :param alert_data: alert data received from SSPL :type:Dict
+        :return: None
+        """
+        error = ""
+        for count in range(0, const.ALERT_RETRY_COUNT):
+            try:
+                self._loop.run_in_executor(self._executor,
+                           self._decision_maker.handle_event, alert_data)
+            except Exception as e:
+                Log.debug(f"retrying decision_maker {count}")
+                error = f"{e}"
+                time.sleep(2**count)
+                continue
+            break
+        else:
+            Log.error(f"Decision Maker Failed {error} for data {alert_data}")
