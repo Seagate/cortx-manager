@@ -28,7 +28,7 @@ from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
 from typing import cast, Any, Dict, List, Optional, Tuple
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from csm.common.conf import Conf
 from csm.common.errors import (
@@ -45,6 +45,7 @@ from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
+from csm.plugins.eos.provisioner import NetworkConfiguirationResponse
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 
@@ -60,12 +61,13 @@ class UslService(ApplicationService):
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
 
-    def __init__(self, s3_plugin, storage) -> None:
+    def __init__(self, s3_plugin, storage, provisioner) -> None:
         """
         Constructor.
         """
         self._token = ''
         self._s3plugin = s3_plugin
+        self._provisioner = provisioner
         dev_uuid = self._get_device_uuid()
         self._device = Device.instantiate(
             self._get_system_friendly_name(),
@@ -98,11 +100,12 @@ class UslService(ApplicationService):
         self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
         bucket: Bucket
     ) -> Dict[str, Any]:
+        network = await self._provisioner.get_network_configuration()
         access_params = {
             'accountName': s3_account.get('account_name'),
             # TODO find a better way to obtain S3 server host and port
             'uri': 's3://{}:{}/{}'.format(
-                Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host'),
+                network.cluster_ip,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
                 bucket.name,
             ),
@@ -636,6 +639,31 @@ class UslService(ApplicationService):
         self._token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
         return {'registrationToken': self._token}
 
+    async def _get_mgmt_url(self) -> Dict[str, str]:
+        """
+        Returns a management link to be provided to the UDS.
+
+        :return: a dictionary with a management link's name and value.
+        """
+        network = await self._provisioner.get_network_configuration()
+        mgmt_url = {
+            'name': 'mgmtUrl',
+            'url': f'https://{network.mgmt_vip}',
+        }
+        return mgmt_url
+
+    async def _get_service_urls(self) -> List[Dict[str, str]]:
+        """
+        Gathers all service URLs to be provided to the UDS.
+
+        :return: a list of service URLs.
+        """
+
+        service_urls = []
+        mgmt_url = await self._get_mgmt_url()
+        service_urls.append(mgmt_url)
+        return service_urls
+
     # TODO replace stub
     async def get_system(self) -> Dict[str, str]:
         """
@@ -644,12 +672,14 @@ class UslService(ApplicationService):
         :return: A dictionary containing system information.
         """
         friendly_name = self._get_system_friendly_name()
+        service_urls = await self._get_service_urls()
         return {
             'model': 'EES',
             'type': 'ees',
             'serialNumber': self._device.uuid,
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
+            'serviceUrls': service_urls,
         }
 
     async def post_system_certificates(self) -> web.Response:
