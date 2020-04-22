@@ -496,9 +496,10 @@ class AmqpComm(Comm):
         self._inChannel.acknowledge(self.delivery_tag)
 
     def stop(self):
-        consumer_tag = const.CONSUMER_TAG
-        self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
-        self.disconnect()
+        if self._inChannel.channel():
+            consumer_tag = const.CONSUMER_TAG
+            self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
+            self.disconnect()
 
     def recv(self, callback_fn=None, message=None):
         """
@@ -513,7 +514,6 @@ class AmqpComm(Comm):
         except AMQPConnectionError as err:
             Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
             Log.exception(str(err))
-            self.disconnect()
 
     def disconnect(self):
         try:
