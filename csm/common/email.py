@@ -51,6 +51,7 @@ class SmtpServerConfiguration:
     smtp_login:str  # Set to None if the SMTP server does not require authentication
     smtp_password:str=None
     smtp_use_ssl:bool=True
+    smtp_use_starttls:bool=False
     ssl_context=None  # If set to None and smtp_use_ssl is True, default context will be used
     timeout:int=30  # Timeout for a single reconnection attempt
     reconnect_attempts:int=2
@@ -90,7 +91,7 @@ class EmailSender:
     
     def __init__(self, config: SmtpServerConfiguration):
         self._config = config
-        self._smtp_obj = self._create_smtp_object()
+        self._smtp_obj = None
         self._is_connected = False
         self._executor = ThreadPoolExecutor(max_workers=1)
 
@@ -98,17 +99,24 @@ class EmailSender:
         """ Helper method that generates SMTP management objects from the configuration """
         if self._config.smtp_use_ssl:
             context = self._config.ssl_context or ssl.create_default_context()
-            return SMTP_SSL(host=self._config.smtp_host, timeout=self._config.timeout, context=context)
+            return SMTP_SSL(host=self._config.smtp_host, port=self._config.smtp_port,
+                timeout=self._config.timeout, context=context)
         else:
-            return SMTP(timeout=self._config.timeout)
+            return SMTP(host=self._config.smtp_host, port=self._config.smtp_port,
+                timeout=self._config.timeout)
         
     def _reconnect(self):
         for attempt in range(1, self._config.reconnect_attempts + 1):
             try:
                 self._close()
 
-                self._smtp_obj.connect(host=self._config.smtp_host, port=self._config.smtp_port)
+                self._smtp_obj = self._create_smtp_object()
                 self._is_connected = True
+
+                if self._config.smtp_use_starttls:
+                    self._smtp_obj.ehlo()
+                    self._smtp_obj.starttls()
+                    self._smtp_obj.ehlo()
 
                 if self._config.smtp_login:
                     self._smtp_obj.login(self._config.smtp_login, self._config.smtp_password)

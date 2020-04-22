@@ -134,6 +134,7 @@ class DateTimeSettings(Model):
 # TODO: figure out exact constants
 EMAIL_CONFIG_SMTP_TLS_PROTOCOL = 'tls'
 EMAIL_CONFIG_SMTP_SSL_PROTOCOL = 'ssl'
+EMAIL_CONFIG_SMTP_STARTTLS_PROTOCOL = 'starttls'
 
 class EmailConfig(Model):
     """
@@ -170,6 +171,7 @@ class EmailConfig(Model):
         config.smtp_password = self.smtp_sender_password
         config.smtp_use_ssl = self.smtp_protocol.lower() in \
             [EMAIL_CONFIG_SMTP_SSL_PROTOCOL, EMAIL_CONFIG_SMTP_TLS_PROTOCOL]
+        config.smtp_use_starttls = self.smtp_protocol.lower() == EMAIL_CONFIG_SMTP_STARTTLS_PROTOCOL
         config.ssl_context = None
         config.timeout = const.CSM_SMTP_SEND_TIMEOUT_SEC
         config.reconnect_attempts = const.CSM_SMTP_RECONNECT_ATTEMPTS
