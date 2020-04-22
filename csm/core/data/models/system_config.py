@@ -15,7 +15,6 @@
  ****************************************************************************
 """
 
-import base64
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -373,6 +372,6 @@ class OnboardingLicense(License):
 
     csm_onboarding_license_key = StringType()
 
-    def __init__(self, license_key=None, *args, **kwargs):
+    def __init__(self, license_key: str, *args, **kwargs):
         super(OnboardingLicense, self).__init__(*args, **kwargs)
         self.csm_onboarding_license_key = license_key
