@@ -114,8 +114,11 @@ class EmailSender:
                 self._is_connected = True
 
                 if self._config.smtp_use_starttls:
-                    self._smtp_obj.ehlo()
+                    # We are required to put SMTP transmission into TLS mode
                     self._smtp_obj.starttls()
+                    # After the transition is completed, we need to greet the server again
+                    # (by specs of starttls() function)
+                    # We are using ehlo() instead of hello() because STARTTLS is an ESMTP extension
                     self._smtp_obj.ehlo()
 
                 if self._config.smtp_login:
