@@ -76,13 +76,13 @@ class AlertsPatchParameter(Schema):
     
 @CsmView._app_routes.view("/api/v1/alerts")
 # TODO: Implement base class for sharing common controller logic
-class AlertsListView(web.View):
+class AlertsListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
 
-    @CsmView.asyncio_shield
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
+    @CsmView.asyncio_shield
     async def get(self):
         """Calling Alerts Get Method"""
         Log.debug(f"Handling list alerts get request."
@@ -106,7 +106,7 @@ class AlertsListView(web.View):
 
 
 @CsmView._app_routes.view("/api/v1/alerts/{alert_id}")
-class AlertsView(web.View):
+class AlertsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.alerts_service = self.request.app["alerts_service"]
@@ -148,7 +148,7 @@ class AlertCommentsCreateSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/alerts/{alert_uuid}/comments")
-class AlertCommentsView(web.View):
+class AlertCommentsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.user_id = self.request.session.credentials.user_id

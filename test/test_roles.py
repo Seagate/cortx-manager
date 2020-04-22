@@ -17,19 +17,59 @@ from csm.core.services.permissions import PermissionSet
 
 from csm.core.agent.api import CsmRestApi
 
-from csm.core.controllers.audit_log import AuditLogShowView, AuditLogDownloadView
-from csm.core.controllers.firmware_update import FirmwarePackageUploadView, FirmwareUpdateView, FirmwareUpdateStatus
-from csm.core.controllers.health import HealthView
+from csm.core.controllers.alerts.alerts import (
+    AlertsListView,
+    AlertsView,
+    AlertCommentsView
+)
+from csm.core.controllers.alerts.alerts_history import (
+    AlertsHistoryListView,
+    AlertsHistoryView
+)
+from csm.core.controllers.audit_log import (
+    AuditLogShowView,
+    AuditLogDownloadView
+)
+from csm.core.controllers.firmware_update import (
+    FirmwarePackageUploadView,
+    FirmwareUpdateView,
+    FirmwareUpdateStatusView,
+    FirmwarePackageAvailibility
+)
+from csm.core.controllers.health import (
+    HealthSummaryView,
+    HealthView,
+    NodeHealthView
+)
 from csm.core.controllers.login import LoginView, LogoutView
 from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.onboarding import OnboardingStateView
-from csm.core.controllers.permissions import CurrentPermissionsView, UserPermissionsView
+from csm.core.controllers.permissions import (
+    CurrentPermissionsView,
+    UserPermissionsView
+)
 from csm.core.controllers.stats import StatsView, StatsPanelListView
 from csm.core.controllers.storage_capacity import StorageCapacityView
-from csm.core.controllers.system_config import SystemConfigListView, SystemConfigView, TestEmailView, OnboardingLicenseView
-from csm.core.controllers.users import CsmUsersListView, CsmUsersView, AdminUserView
-from csm.core.controllers.s3.accounts import S3AccountsListView, S3AccountsView
-from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
+from csm.core.controllers.system_config import (
+    SystemConfigListView,
+    SystemConfigView,
+    TestEmailView,
+    OnboardingLicenseView
+)
+from csm.core.controllers.users import (
+    CsmUsersListView,
+    CsmUsersView,
+    AdminUserView
+)
+from csm.core.controllers.s3.accounts import (
+    S3AccountsListView,
+    S3AccountsView
+)
+from csm.core.controllers.s3.buckets import (
+    S3BucketListView,
+    S3BucketView,
+    S3BucketPolicyView
+)
 from csm.core.controllers.s3.iam_users import IamUserListView, IamUserView
 
 
@@ -179,6 +219,46 @@ async def test_rest_ep_permissions(*args):
     role_manager = RoleManager(predefined_roles)
 
     rest_ep_cases = [
+        (AlertsListView           , Method.GET   , User.Anon     , Access.FAIL),
+        (AlertsListView           , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (AlertsListView           , Method.GET   , User.CsmUser  , Access.OK  ),
+        (AlertsListView           , Method.GET   , User.S3Account, Access.FAIL),
+
+        (AlertsListView           , Method.PATCH , User.Anon     , Access.FAIL),
+        (AlertsListView           , Method.PATCH , User.CsmAdmin , Access.OK  ),
+        (AlertsListView           , Method.PATCH , User.CsmUser  , Access.FAIL),
+        (AlertsListView           , Method.PATCH , User.S3Account, Access.FAIL),
+
+        (AlertsView               , Method.GET   , User.Anon     , Access.FAIL),
+        (AlertsView               , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (AlertsView               , Method.GET   , User.CsmUser  , Access.OK  ),
+        (AlertsView               , Method.GET   , User.S3Account, Access.FAIL),
+
+        (AlertsView               , Method.PATCH , User.Anon     , Access.FAIL),
+        (AlertsView               , Method.PATCH , User.CsmAdmin , Access.OK  ),
+        (AlertsView               , Method.PATCH , User.CsmUser  , Access.FAIL),
+        (AlertsView               , Method.PATCH , User.S3Account, Access.FAIL),
+
+        (AlertCommentsView        , Method.GET   , User.Anon     , Access.FAIL),
+        (AlertCommentsView        , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (AlertCommentsView        , Method.GET   , User.CsmUser  , Access.OK  ),
+        (AlertCommentsView        , Method.GET   , User.S3Account, Access.FAIL),
+
+        (AlertCommentsView        , Method.POST  , User.Anon     , Access.FAIL),
+        (AlertCommentsView        , Method.POST  , User.CsmAdmin , Access.OK  ),
+        (AlertCommentsView        , Method.POST  , User.CsmUser  , Access.FAIL),
+        (AlertCommentsView        , Method.POST  , User.S3Account, Access.FAIL),
+
+        (AlertsHistoryListView    , Method.GET   , User.Anon     , Access.FAIL),
+        (AlertsHistoryListView    , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (AlertsHistoryListView    , Method.GET   , User.CsmUser  , Access.OK  ),
+        (AlertsHistoryListView    , Method.GET   , User.S3Account, Access.FAIL),
+
+        (AlertsHistoryView        , Method.GET   , User.Anon     , Access.FAIL),
+        (AlertsHistoryView        , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (AlertsHistoryView        , Method.GET   , User.CsmUser  , Access.OK  ),
+        (AlertsHistoryView        , Method.GET   , User.S3Account, Access.FAIL),
+
         (AuditLogShowView         , Method.GET   , User.Anon     , Access.FAIL),
         (AuditLogShowView         , Method.GET   , User.CsmAdmin , Access.OK  ),
         (AuditLogShowView         , Method.GET   , User.CsmUser  , Access.OK  ),
@@ -199,15 +279,30 @@ async def test_rest_ep_permissions(*args):
         (FirmwareUpdateView       , Method.POST  , User.CsmUser  , Access.FAIL),
         (FirmwareUpdateView       , Method.POST  , User.S3Account, Access.FAIL),
 
-        (FirmwareUpdateStatus     , Method.GET   , User.Anon     , Access.FAIL),
-        (FirmwareUpdateStatus     , Method.GET   , User.CsmAdmin , Access.OK  ),
-        (FirmwareUpdateStatus     , Method.GET   , User.CsmUser  , Access.FAIL),
-        (FirmwareUpdateStatus     , Method.GET   , User.S3Account, Access.FAIL),
+        (FirmwareUpdateStatusView , Method.GET   , User.Anon     , Access.FAIL),
+        (FirmwareUpdateStatusView , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (FirmwareUpdateStatusView , Method.GET   , User.CsmUser  , Access.FAIL),
+        (FirmwareUpdateStatusView , Method.GET   , User.S3Account, Access.FAIL),
+
+        (FirmwarePackageAvailibility, Method.GET , User.Anon     , Access.FAIL),
+        (FirmwarePackageAvailibility, Method.GET , User.CsmAdmin , Access.OK  ),
+        (FirmwarePackageAvailibility, Method.GET , User.CsmUser  , Access.FAIL),
+        (FirmwarePackageAvailibility, Method.GET , User.S3Account, Access.FAIL),
+
+        (HealthSummaryView        , Method.GET   , User.Anon     , Access.FAIL),
+        (HealthSummaryView        , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (HealthSummaryView        , Method.GET   , User.CsmUser  , Access.OK  ),
+        (HealthSummaryView        , Method.GET   , User.S3Account, Access.FAIL),
 
         (HealthView               , Method.GET   , User.Anon     , Access.FAIL),
         (HealthView               , Method.GET   , User.CsmAdmin , Access.OK  ),
         (HealthView               , Method.GET   , User.CsmUser  , Access.OK  ),
         (HealthView               , Method.GET   , User.S3Account, Access.FAIL),
+
+        (NodeHealthView           , Method.GET   , User.Anon     , Access.FAIL),
+        (NodeHealthView           , Method.GET   , User.CsmAdmin , Access.OK  ),
+        (NodeHealthView           , Method.GET   , User.CsmUser  , Access.OK  ),
+        (NodeHealthView           , Method.GET   , User.S3Account, Access.FAIL),
 
         (LoginView                , Method.POST  , User.Anon     , Access.OK  ),
         (LoginView                , Method.POST  , User.CsmAdmin , Access.OK  ),

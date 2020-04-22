@@ -36,8 +36,8 @@ class StatsView(CsmView):
     """
     GET REST implementation for Statistics request
     """
-    @CsmView.asyncio_shield
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
+    @CsmView.asyncio_shield
     async def get(self):
         """Calling Stats Get Method"""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
