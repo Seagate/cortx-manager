@@ -285,6 +285,8 @@ class AlertPlugin(CsmPlugin):
                     csm_schema.pop(const.ALERT_EVENTS)
                     csm_schema[const.ALERT_EVENT_DETAILS] = \
                             str(csm_schema[const.ALERT_EVENT_DETAILS])
+                if module_type == const.IEM:
+                    self._prepare_specific_info(csm_schema, True)
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
                         str(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
@@ -292,15 +294,23 @@ class AlertPlugin(CsmPlugin):
         Log.debug(f"Converted schema:{csm_schema}")
         return csm_schema
 
-    def _prepare_specific_info(self, csm_schema):
+    def _prepare_specific_info(self, csm_schema, is_iem=False):
         """
         This method prepares event_details for all the alerts. event_details
         comprises of some specific fields for each resource type like
         health-reason, health-recommendation and other specific fields.
         :param csm_schema : Dict containing csm alert message format
+        :param is_iem : Specifies whether it is an IEM alert or not
         :return : None
         """
-        if csm_schema[const.ALERT_MODULE_TYPE] in (const.ALERT_LOGICAL_VOLUME,
+        if is_iem:
+            csm_schema[const.SOURCE_ID] = \
+                csm_schema[const.ALERT_EXTENDED_INFO][const.SOURCE_ID]
+            csm_schema[const.COMPONENT_ID] = \
+                csm_schema[const.ALERT_EXTENDED_INFO][const.COMPONENT_ID]
+            csm_schema[const.MODULE_ID] = \
+                csm_schema[const.ALERT_EXTENDED_INFO][const.MODULE_ID]
+        elif csm_schema[const.ALERT_MODULE_TYPE] in (const.ALERT_LOGICAL_VOLUME,
                                                    const.ALERT_VOLUME,
                                                    const.ALERT_SIDEPLANE,
                                                    const.ALERT_FAN):
