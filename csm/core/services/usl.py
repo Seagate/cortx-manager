@@ -20,7 +20,7 @@
 import asyncio
 import time
 
-from aiohttp import web, ClientSession
+from aiohttp import web, ClientSession, TCPConnector
 from boto.s3.bucket import Bucket
 from botocore.exceptions import ClientError
 from datetime import date
@@ -583,7 +583,8 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         try:
             endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
-            async with ClientSession() as session:
+            # FIXME add relevant certificates to SSL context instead of disabling validation
+            async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
                 Log.info(f'Start device registration at {uds_url}')
                 async with session.put(endpoint_url, json=registration_body) as response:
                     if response.status != 201:
@@ -624,7 +625,8 @@ class UslService(ApplicationService):
     async def get_register_device(self) -> None:
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
-        async with ClientSession() as session:
+        # FIXME add relevant certificates to SSL context instead of disabling validation
+        async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
             async with session.get(endpoint_url) as response:
                 if response.status != 200:
                     raise CsmNotFoundError()
