@@ -49,6 +49,9 @@ TIMEOUT = 60
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
 
+#HA Command
+HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
+
 # File names
 SUMMARY_FILE = 'summary.txt'
 
@@ -106,6 +109,7 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_PASS = 'csm'
+HA_CLIENT_GROUP = 'haclient'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -398,8 +402,8 @@ SIZE = 'size'
 USED = 'used'
 AVAILABLE = 'avail'
 USAGE_PERCENTAGE = 'usage_percentage'
+
 # Keys for  Description
-#todo Currently SSPL's Key needs to be finialized.
 DECRYPTION_KEYS = {
     "CHANNEL.password": "rabbitmq",
     "S3.ldap_password": "openldap"

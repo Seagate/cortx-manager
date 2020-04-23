@@ -20,9 +20,13 @@
 import sys
 import os
 import time
+import crypt
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from csm.core.blogic import const
+from csm.common.conf import Conf
+from csm.common.log import Log
+
 
 class HAFramework:
     def __init__(self, resource_agents):
@@ -53,6 +57,8 @@ class PcsHAFramework(HAFramework):
     def __init__(self, resource_agents=None):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
+        self._user = const.NON_ROOT_USER
+        self._password = const.NON_ROOT_USER_PASS
 
     def get_nodes(self):
         """
@@ -64,7 +70,10 @@ class PcsHAFramework(HAFramework):
                 Online: node1 node2
                 Offline:
         """
-        _live_node_cmd = "hctl node status"
+        _live_node_cmd = const.HCTL_NODE.format(command='status',
+                        user=self._user, pwd=self._password)
+        Log.debug((f"executing command :- "
+        f"{const.HCTL_NODE.format(command='status', user=self._user, pwd='********')}"))
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:
@@ -77,8 +86,12 @@ class PcsHAFramework(HAFramework):
             Put node on standby node for maintenance use
         """
         try:
-            _standby_cmd = "hctl node standby "
-            _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
+            _command = 'unstandby '
+            _command = f"{_command } --all" if node == "all" else f"{_command } {node}"
+            _standby_cmd = const.HCTL_NODE.format(command=_command,
+                          user=self._user, pwd=self._password)
+            Log.debug((f"executing command :- "
+           f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='********')}"))
             _proc = SimpleProcess(_standby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
@@ -93,9 +106,13 @@ class PcsHAFramework(HAFramework):
             Put node on standby node for maintenance use
         """
         try:
-            _standby_cmd = "hctl node unstandby "
-            _standby_cmd = _standby_cmd + "--all" if node == "all" else _standby_cmd + node
-            _proc = SimpleProcess(_standby_cmd)
+            _command = 'standby '
+            _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+            _unstandby_cmd = const.HCTL_NODE.format(command=_command,
+                          user=self._user, pwd=self._password)
+            Log.debug((f"executing command :- "
+           f"{const.HCTL_NODE.format(command='status', user=self._user, pwd='********')}"))
+            _proc = SimpleProcess(_unstandby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
                 raise Exception(_err)
@@ -118,7 +135,10 @@ class PcsHAFramework(HAFramework):
             Shutdown the current Cluster or Node.
         :return:
         """
-        _cluster_shutdown_cmd = f"hctl node shutdown {node}"
+        _command = 'shutdown '
+        _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+        _cluster_shutdown_cmd = const.HCTL_NODE.format(command=_command,
+                          user=self._user, pwd=self._password)
         _proc = SimpleProcess(_cluster_shutdown_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:

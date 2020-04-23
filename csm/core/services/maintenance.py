@@ -59,7 +59,8 @@ class MaintenanceAppService(ApplicationService):
         """
         node_status = await self._loop.run_in_executor(self._executor,
                                                        self._ha.get_nodes)
-        if len(node_status.get("online", [])) > 1:
+        if not any(map(lambda x : x.get("standby", False),
+                       node_status.get('node_status', []))):
             return await self._loop.run_in_executor(self._executor,
                                                     self._ha.make_node_passive,
                                                     resource_name)
