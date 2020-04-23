@@ -15,8 +15,8 @@ marshmallow==3.2.1
 schematics==2.1.0
 dataclasses==0.7
 python-consul==1.1.0
-elasticsearch==7.0.4
-elasticsearch-dsl==7.0.0
+elasticsearch>=6.0.0,<7.0.0
+elasticsearch-dsl>=6.0.0,<7.0.0
 secure==0.2.1
 requests==2.22.0
 pathlib==1.0.1

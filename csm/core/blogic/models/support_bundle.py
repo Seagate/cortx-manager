@@ -20,7 +20,9 @@
 from csm.core.blogic.models import CsmModel
 from schematics.types import StringType
 
+
 class SupportBundleModel(CsmModel):
+    _id = "bundle_id"
     bundle_id = StringType()
     node_name = StringType()
     comment = StringType()
