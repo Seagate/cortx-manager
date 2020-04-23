@@ -267,6 +267,12 @@ class AlertsAppService(ApplicationService):
 
         if "acknowledged" in fields:
             alert.acknowledged = AlertModel.acknowledged.to_native(fields["acknowledged"])
+            """
+            We will mark IEM alert as resolved as soon as it is acknowledged, as
+            there will be no state change occurs for IEM alerts.
+            """
+            if alert.module_type == const.IEM:
+                alert.resolved = AlertModel.resolved.to_native(True)
 
         await self.repo.update(alert)
         return alert.to_primitive()
@@ -350,6 +356,12 @@ class AlertsAppService(ApplicationService):
                 raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
 
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
+            """
+            We will mark IEM alert as resolved as soon as it is acknowledged, as
+            there will be no state change occurs for IEM alerts.
+            """
+            if alert.module_type == const.IEM:
+                alert.resolved = AlertModel.resolved.to_native(True)
             await self.repo.update(alert)
             alerts.append(alert.to_primitive())
 
@@ -636,9 +648,8 @@ class AlertMonitorService(Service, Observable):
                         .replace(tzinfo=timezone.utc)
             sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
             module_type = message.get(const.ALERT_MODULE_TYPE, "")
-            if module_type != const.IEM:
-                prev_alert = self._run_coroutine\
-                        (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            prev_alert = self._run_coroutine\
+                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
             if not prev_alert:
                 alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
@@ -698,6 +709,8 @@ class AlertMonitorService(Service, Observable):
                     """
                     self._update_alert(new_alert, prev_alert, True)
                 alert_updated = True
+        else:
+            self._update_duplicate_alert(new_alert, prev_alert)
         return alert_updated
 
     def _is_duplicate_alert(self, new_alert, prev_alert):
@@ -730,6 +743,10 @@ class AlertMonitorService(Service, Observable):
         update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
+        if alert.get(const.ALERT_MODULE_TYPE, "") == const.IEM:
+            update_params[const.ALERT_CREATED_TIME] = \
+                alert.get(const.ALERT_CREATED_TIME, "")
+            update_params[const.DESCRIPTION] = alert.get(const.DESCRIPTION, "")
         self._update_params_cleanup(update_params)
         self._run_coroutine(self.repo.update_by_sensor_info\
                 (prev_alert.sensor_info, prev_alert.module_type, update_params))
@@ -775,3 +792,21 @@ class AlertMonitorService(Service, Observable):
             prev_alert.resolved = True
             self._update_alert(alert, prev_alert)
 
+    def _update_duplicate_alert(self, new_alert, prev_alert):
+        """
+        If we found that the incoming alert is duplicate, then we will
+        replace the old alert stroed in ES db with the new one.
+        But we will not replace the CSM specific fields like resolved,
+        acknowledged and comments as the previous alert might contain
+        some modified values which will be overwritten by the new one.
+        """
+        try:
+            alert = AlertModel(new_alert)
+            alert.alert_uuid = prev_alert.alert_uuid
+            alert.resolved = prev_alert.resolved
+            alert.acknowledged = prev_alert.acknowledged
+            alert.comments = prev_alert.comments
+            alert.updated_time = int(time.time())
+            self._run_coroutine(self.repo.update(alert))
+        except Exception as ex:
+            Log.error(f"Updation of duplicate alert failed. Alert: {new_alert}")
