@@ -36,14 +36,14 @@ class HealthViewQueryParameter(Schema):
 class HealthSummaryView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self.health_service = self.request.app[const.HEALTH_SERVICE]        
+        self.health_service = self.request.app[const.HEALTH_SERVICE]
 
     @CsmAuth.permissions({Resource.ALERTS: {Action.LIST}})
     async def get(self):
         return await self.health_service.fetch_health_summary()
 
 @CsmView._app_routes.view("/api/v1/system/health/view")
-class HealthView(web.View):
+class HealthView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.health_service = self.request.app[const.HEALTH_SERVICE]
@@ -63,7 +63,7 @@ class HealthView(web.View):
         return node_health_summary
 
 @CsmView._app_routes.view("/api/v1/system/health/node")
-class NodeHealthView(web.View):
+class NodeHealthView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.health_service = self.request.app[const.HEALTH_SERVICE]

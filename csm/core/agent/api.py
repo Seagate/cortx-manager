@@ -178,6 +178,7 @@ class CsmRestApi(CsmApi, ABC):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
+    @staticmethod
     async def _resolve_handler(request):
         match_info = await request.app.router.resolve(request)
         return match_info.handler
