@@ -77,12 +77,14 @@ class Setup:
         """
         if not reset:
             if not self._is_user_exist():
-                Setup._run_cmd("useradd -M -p "+self._password+" "+ self._user)
+                Setup._run_cmd("useradd -p "+self._password+" "+ self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
         else:
             if self._is_user_exist():
                 Setup._run_cmd("userdel -r " +self._user)
+        if self._is_user_exist():
+            Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
 
     def _config_user_permission_set(self, bundle_path, crt, key):
         """
