@@ -23,6 +23,7 @@
         {
           "flag": "args",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],
@@ -56,6 +57,7 @@
         {
           "flag": "args",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],
@@ -83,6 +85,7 @@
         {
           "flag": "args",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],

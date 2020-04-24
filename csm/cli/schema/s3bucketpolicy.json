@@ -15,8 +15,9 @@
         },
         {
           "flag": "args",
-          "help": "Additional arguments that can be send to csm agent.",
+          "help": "",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         },
         {
@@ -72,8 +73,9 @@
         },
         {
           "flag": "args",
-          "help": "Additional arguments that can be send to csm agent.",
+          "help": "",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],
@@ -100,8 +102,9 @@
         },
         {
           "flag": "args",
-          "help": "Additional arguments that can be send to csm agent.",
+          "help": "",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],

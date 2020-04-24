@@ -11,8 +11,9 @@
           {
             "flag": "args",
             "default": [],
+            "suppress_help": true,
             "nargs": "?",
-            "help": "Additional arguments that can be send to csm agent"
+            "help": ""
           },
           {
             "flag": "-f",
@@ -86,8 +87,9 @@
           {
             "flag": "args",
             "default": [],
+            "suppress_help": true,
             "nargs": "?",
-            "help": "Additional arguments that can be send to csm agent. \n Password will be asked in the below command after the command is prompted. \n Password must have 1 LowerCase, 1 UpperCase, 1 Numeric and 1 Special Characters also must be greater than 8 characters."
+            "help": ""
           }
         ],
         "comm": {
@@ -122,8 +124,9 @@
           {
             "flag": "args",
             "default": [],
+            "suppress_help": true,
             "nargs": "?",
-            "help": "Additional arguments that can be send to csm agent. \n Password will be asked in the below command after the command is prompted. \n Password must have 1 LowerCase, 1 UpperCase, 1 Numeric and 1 Special Characters also must be greater than 8 characters."
+            "help": ""
           },
           {
             "flag": "-p",
@@ -177,6 +180,7 @@
           {
             "flag": "args",
             "default": [],
+            "suppress_help": true,
             "nargs": "?"
           }
         ],
