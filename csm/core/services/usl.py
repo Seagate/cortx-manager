@@ -45,7 +45,8 @@ from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
-from csm.plugins.eos.provisioner import NetworkConfiguirationResponse
+from eos.utils.security.cipher import Cipher
+from eos.utils.security.secure_storage import SecureStorage
 
 DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
 
@@ -77,7 +78,14 @@ class UslService(ApplicationService):
             dev_uuid,
             DEFAULT_EOS_DEVICE_VENDOR,
         )
-        self._domain_certificate_manager = USLDomainCertificateManager()
+        # FIXME: the provisioner call fails on the build machine, so can't get the cluster id
+        # Use the device UUID as a temporary solution
+        # loop = asyncio.get_event_loop()
+        # cluster_id = loop.run_until_complete(self._provisioner.get_cluster_id())
+        # key = Cipher.generate_key(cluster_id, str(dev_uuid))
+        key = Cipher.generate_key(str(dev_uuid), 'USL')
+        secure_storage = SecureStorage(storage, key)
+        self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
 
     def _get_system_friendly_name(self) -> str:
@@ -719,9 +727,8 @@ class UslService(ApplicationService):
         """
         Delete all key material related with the USL domain certificate.
         """
-        try:
-            await self._domain_certificate_manager.delete_key_material()
-        except FileNotFoundError:
+        deleted = await self._domain_certificate_manager.delete_key_material()
+        if not deleted:
             raise web.HTTPForbidden() from None
         # Don't return 200 on success, but 204 as USL API specification requires
         raise web.HTTPNoContent()

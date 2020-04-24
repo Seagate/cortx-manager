@@ -35,6 +35,9 @@ class PackageValidationError(InvalidRequest):
 class NetworkConfigFetchError(InvalidRequest):
     pass
 
+class ClusterIdFetchError(InvalidRequest):
+    pass
+
 
 # TODO: create a separate module for provisioner-related models
 NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
@@ -174,19 +177,19 @@ class ProvisionerPlugin:
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
             raise PackageValidationError("Provisioner is not instantiated")
-        
+
         def _command_handler():
             try:
-                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and 
+                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and
                         ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
                     if self.provisioner:
                         Log.debug("Handling provisioner's set ntp api request")
-                        self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS], 
+                        self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS],
                                     timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Provisioner api error : {error}")
                 raise PackageValidationError(f"Provisioner package failed: {error}")
-                
+
         return await self._await_nonasync(_command_handler)
 
     async def set_ssl_certs(self, source: str) -> str:
@@ -240,12 +243,26 @@ class ProvisionerPlugin:
 
         return await self._await_nonasync(_command_handler)
 
-    
+    @Log.trace_method(Log.DEBUG)
+    async def get_cluster_id(self):
+        if not self.provisioner:
+            raise ClusterIdFetchError("Provisioner is not instantiated")
+
+        def _command_handler():
+            try:
+                cluster_id = self.provisioner.get_cluster_id()
+                return cluster_id
+            except Exception as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise ClusterIdFetchError(f"IDs fetching failed: {error}")
+
+        return await self._await_nonasync(_command_handler)
+
     def get_dict(self, dictionary, keys, default=None):
         """
         Retrive value from nested dict.
         :param dictionary: Input dictionary
-        :param keys: Tuple having keys in ordered format to find its value  
+        :param keys: Tuple having keys in ordered format to find its value
         :returns: Value of given key otherwise return default value
         """
         for key in keys:
@@ -254,17 +271,17 @@ class ProvisionerPlugin:
             else:
                 return default
         return dictionary
-    
+
     @Log.trace_method(Log.DEBUG)
     async def set_network(self, network_data: dict, config_type):
         """
         Set network configuration using provisioner api.
-        :param network_data: Nerwork config dict 
+        :param network_data: Nerwork config dict
         :returns:
         """
         if not self.provisioner:
             raise PackageValidationError("Provisioner is not instantiated")
-        
+
         def _command_handler():
             try:
                 mgmt_nodes = data_nodes = dns_nodes = []
@@ -279,12 +296,12 @@ class ProvisionerPlugin:
                 if network_data.get(const.DNS_NETWORK):
                     dns_nodes = self.get_dict(network_data, (
                         const.DNS_NETWORK, const.NODES), default=[])
-                
+
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
-                
+
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
                         mgmt_vip_address = node.get(const.IP_ADDRESS, None)
@@ -301,7 +318,7 @@ class ProvisionerPlugin:
                     if node[const.NAME] == const.PRIMARY_NODE:
                         dns_servers_list = node.get(const.DNS_SERVER, None)
                         search_domains_list = node.get(const.SEARCH_DOMAIN, None)
-                
+
                 Log.debug("Handling provisioner's set network api request")
                 if config_type == const.SYSTEM_CONFIG:
                     if data_nw_dhcp:
