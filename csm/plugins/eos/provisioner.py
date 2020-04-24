@@ -296,12 +296,13 @@ class ProvisionerPlugin:
                 if network_data.get(const.DNS_NETWORK):
                     dns_nodes = self.get_dict(network_data, (
                         const.DNS_NETWORK, const.NODES), default=[])
-
+                
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
-
+                primary_data_gateway_address = secondary_data_gateway_address = None
+                
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
                         mgmt_vip_address = node.get(const.IP_ADDRESS, None)
@@ -311,9 +312,11 @@ class ProvisionerPlugin:
                     if node[const.NAME] == const.PRIMARY_NODE:
                         primary_data_ip_address = node.get(const.IP_ADDRESS, None)
                         primary_data_netmask_address = node.get(const.NETMASK, None)
+                        primary_data_gateway_address = node.get(const.GATEWAY, None)
                     if node[const.NAME] == const.SECONDARY_NODE:
                         secondary_data_ip_address = node.get(const.IP_ADDRESS, None)
                         secondary_data_netmask_address = node.get(const.NETMASK, None)
+                        secondary_data_gateway_address = node.get(const.GATEWAY, None)
                 for node in dns_nodes:
                     if node[const.NAME] == const.PRIMARY_NODE:
                         dns_servers_list = node.get(const.DNS_SERVER, None)
@@ -326,8 +329,10 @@ class ProvisionerPlugin:
                                 cluster_ip=cluster_ip_address,
                                 primary_data_ip=self.provisioner.UNDEFINED,
                                 primary_data_netmask=self.provisioner.UNDEFINED,
+                                primary_data_gateway=self.provisioner.UNDEFINED,
                                 secondary_data_ip=self.provisioner.UNDEFINED,
                                 secondary_data_netmask=self.provisioner.UNDEFINED,
+                                secondary_data_gateway=self.provisioner.UNDEFINED,
                                 dns_servers=dns_servers_list,
                                 search_domains=search_domains_list)
                     else:
@@ -335,8 +340,10 @@ class ProvisionerPlugin:
                                 cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
+                                primary_data_gateway=primary_data_gateway_address,
                                 secondary_data_ip=secondary_data_ip_address,
                                 secondary_data_netmask=secondary_data_netmask_address,
+                                secondary_data_gateway=secondary_data_gateway_address,
                                 dns_servers=dns_servers_list,
                                 search_domains=search_domains_list)
                 if config_type == const.MANAGEMENT_NETWORK:
@@ -346,14 +353,18 @@ class ProvisionerPlugin:
                         self.provisioner.set_network(cluster_ip=cluster_ip_address,
                                 primary_data_ip=self.provisioner.UNDEFINED,
                                 primary_data_netmask=self.provisioner.UNDEFINED,
+                                primary_data_gateway=self.provisioner.UNDEFINED,
                                 secondary_data_ip=self.provisioner.UNDEFINED,
-                                secondary_data_netmask=self.provisioner.UNDEFINED)
+                                secondary_data_netmask=self.provisioner.UNDEFINED,
+                                secondary_data_gateway=self.provisioner.UNDEFINED)
                     else:
                         self.provisioner.set_network(cluster_ip=cluster_ip_address,
                                 primary_data_ip=primary_data_ip_address,
                                 primary_data_netmask=primary_data_netmask_address,
+                                primary_data_gateway=primary_data_gateway_address,
                                 secondary_data_ip=secondary_data_ip_address,
-                                secondary_data_netmask=secondary_data_netmask_address)
+                                secondary_data_netmask=secondary_data_netmask_address,
+                                secondary_data_gateway=secondary_data_gateway_address)
                 if config_type == const.DNS_NETWORK:
                     self.provisioner.set_network(dns_servers=dns_servers_list,
                                 search_domains=search_domains_list)

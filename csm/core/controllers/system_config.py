@@ -154,7 +154,7 @@ class EmailConfigSchema(Schema):
     """
     smtp_server = fields.Str(validate=Server(), allow_none=True)
     smtp_port = fields.Int(validate=validate.Range(max=65535), allow_none=True)
-    smtp_protocol = fields.Str(allow_none=False)
+    smtp_protocol = fields.Str(allow_none=True)
     smtp_sender_email = fields.Email(allow_none=True)
     smtp_sender_password = fields.Str(validate=validate.Length(min=4, max=64),
                                       allow_none=True)
