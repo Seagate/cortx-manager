@@ -28,9 +28,10 @@ from marshmallow.exceptions import ValidationError
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmTypeError, InvalidRequest, CsmNotImplemented
 from csm.core.services.file_transfer import FileCache
-from csm.core.controllers.view import CsmView
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.file_transfer import FileFieldSchema
 from csm.common.log import Log
+from csm.common.permission_names import Resource, Action
 from csm.core.data.models.system_config import SecurityConfig
 
 
@@ -82,6 +83,7 @@ class SecurityUploadView(CsmView):
         self._service = self.request.app[const.SECURITY_SERVICE]
         self._service_dispatch = {}
 
+    @CsmAuth.permissions({Resource.SECURITY: {Action.UPDATE}})
     async def post(self):
         """
         POST REST implementation for uploading private key and corresponding certificate
@@ -127,6 +129,7 @@ class SecurityInstallView(CsmView):
         self._service = self.request.app[const.SECURITY_SERVICE]
         self._service_dispatch = {}
 
+    @CsmAuth.permissions({Resource.SECURITY: {Action.UPDATE}})
     async def post(self):
         """
         POST REST API implementation for enabling last uploaded certificate and trigger
@@ -135,6 +138,7 @@ class SecurityInstallView(CsmView):
 
         Log.debug(f"Handling certificate installation request. "
                   f"user_id: {self.request.session.credentials.user_id}")
+
         try:
             schema = InstallSecurityBundleSchema()
             patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
@@ -166,6 +170,7 @@ class SecurityStatusView(CsmView):
         self._service = self.request.app[const.SECURITY_SERVICE]
         self._service_dispatch = {}
 
+    @CsmAuth.permissions({Resource.SECURITY: {Action.READ}})
     async def get(self):
         """
         GET REST API implemenetation to return current certificate installation status
@@ -173,6 +178,7 @@ class SecurityStatusView(CsmView):
         Log.debug(f"Handling get certificate installation status request. "
                   f"user_id: {self.request.session.credentials.user_id}")
         try:
+            # NOTE: method returns SecurityConfig as status instance
             security_config = await self._service.get_certificate_installation_status()
         except Exception as e:
             raise CsmInternalError(f"Internal error during certificate installation: {e}")

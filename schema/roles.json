@@ -3,7 +3,8 @@
         "permissions": {
             "maintenance": ["list", "update"],
             "system": ["list", "update"],
-            "notification": ["update"]
+            "notification": ["update"],
+            "security": ["read", "update"]
         }
     },
     "manage":{

@@ -7,7 +7,7 @@
 
  Creation Date:     02/10/2020
  Author:            Oleg Babin
- 
+
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
  The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
@@ -35,6 +35,7 @@ class Resource:
     MAINTENANCE = 'maintenance'
     PERMISSIONS = 'permissions'
     NOTIFICATION = 'notification'
+    SECURITY = "security"
 
 
 class Action:
