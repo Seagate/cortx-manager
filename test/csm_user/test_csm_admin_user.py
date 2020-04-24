@@ -2,8 +2,8 @@
 
 """
  ****************************************************************************
- Filename:          test_csm_root_user.py
- description:       Csm root user tests
+ Filename:          test_csm_admin_user.py
+ description:       Csm admin user tests
 
  Creation Date:     04/15/2020
  Author:            Artem Obruchnikov
@@ -42,12 +42,12 @@ def init(args):
     args['loop'] = loop
 
 
-def test_csm_root_user_create(args):
+def test_csm_admin_user_create(args):
     loop = args['loop']
     user_service = args.get('user_service')
     data = {'user_id': 'csm_test_user',
             'password': 'Csmuser@123',
-            'roles': ['root', 'admin']}
+            'roles': ['admin']}
 
     # Better replace with local dict storage to avoid this
     try:
@@ -64,21 +64,21 @@ def test_csm_root_user_create(args):
     assert user['roles'] == data['roles']
 
 
-def test_csm_root_user_update_without_old_password(args):
+def test_csm_admin_user_update_without_old_password(args):
     loop = args['loop']
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
     data = {'anything': 'anything'}
 
-    # We can't update root user without old_password
+    # We can't update admin user without old_password
     with t.assertRaises(InvalidRequest) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
     assert 'Super user old password is required' in str(e.exception)
 
 
-def test_csm_root_user_update_password(args):
+def test_csm_admin_user_update_password(args):
     loop = args['loop']
     user_service = args.get('user_service')
 
@@ -99,7 +99,7 @@ def test_csm_root_user_update_password(args):
     loop.run_until_complete(user_service.update_user(user_id, data, user_id))
 
 
-def test_csm_root_user_update_roles(args):
+def test_csm_admin_user_update_roles(args):
     loop = args['loop']
     user_service = args.get('user_service')
 
@@ -107,14 +107,14 @@ def test_csm_root_user_update_roles(args):
     data = {'roles': ['admin'],
             'old_password': 'Csmuser@123'}
 
-    # We can't update root user roles
+    # We can't update admin user roles
     with t.assertRaises(CsmPermissionDenied) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
     assert 'Cannot change roles for super user' in str(e.exception)
 
 
-def test_csm_root_user_delete(args):
+def test_csm_admin_user_delete(args):
     loop = args['loop']
     user_service = args.get('user_service')
 
@@ -124,8 +124,8 @@ def test_csm_root_user_delete(args):
     assert 'Can\'t delete super user' in str(e.exception)
 
 
-test_list = [test_csm_root_user_create,
-             test_csm_root_user_update_without_old_password,
-             test_csm_root_user_update_password,
-             test_csm_root_user_update_roles,
-             test_csm_root_user_delete]
+test_list = [test_csm_admin_user_create,
+             test_csm_admin_user_update_without_old_password,
+             test_csm_admin_user_update_password,
+             test_csm_admin_user_update_roles,
+             test_csm_admin_user_delete]

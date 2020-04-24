@@ -112,7 +112,7 @@ def test_csm_user_update_roles(args):
     assert user['roles'] == ['manage']
 
     loop.run_until_complete(
-        user_service.update_user(user_id, data, user_id))
+        user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
