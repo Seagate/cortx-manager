@@ -28,7 +28,7 @@ from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
 from typing import cast, Any, Dict, List, Optional, Tuple
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from csm.common.conf import Conf
 from csm.common.errors import (
@@ -104,10 +104,9 @@ class UslService(ApplicationService):
         access_params = {
             'accountName': s3_account.get('account_name'),
             # TODO find a better way to obtain S3 server host and port
-            'uri': 's3://{}:{}/{}'.format(
+            'uri': 's3://{}:{}'.format(
                 network.cluster_ip,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
-                bucket.name,
             ),
             'credentials': {
                 'accessKey': iam_user_access_key.access_key_id,
@@ -483,7 +482,7 @@ class UslService(ApplicationService):
                                         f'on the device with ID {device_id}')
         if mount:
             return {
-                'mount': volumes[volume_id].bucketName,
+                'mountPath': volumes[volume_id].bucketName,
                 'handle': volumes[volume_id].bucketName
             }
         else:
