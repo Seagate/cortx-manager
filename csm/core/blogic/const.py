@@ -39,6 +39,7 @@ SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
+HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -98,7 +99,7 @@ DATABASE_CONF = '/etc/csm/database.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
-SSH_KEY = '/root/.ssh/id_rsa_prvsnr'
+SSH_KEY = 'id_rsa_prvsnr'
 DEFAULT_SSH_TIMEOUT = 10
 USER = 'user'
 DEFAULT_USER = 'admin'
@@ -241,6 +242,7 @@ CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
 SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle;"
+SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
 
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
