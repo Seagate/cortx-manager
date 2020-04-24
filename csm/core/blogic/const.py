@@ -112,6 +112,7 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_PASS = 'csm'
+CSM_USER_HOME='/opt/seagate/eos/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 
 # CSM Alert Related
