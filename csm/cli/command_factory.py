@@ -67,8 +67,18 @@ class CommandFactory(object):
             cmd_obj = CommandParser(cmd_from_file, permissions.get(argv[0], {}))
             cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(argv)
+
+        CommandFactory.edit_arguments(namespace)
+
         sys_module = sys.modules[__name__]
         for attr in ['command', 'action', 'args']:
             setattr(sys_module, attr, getattr(namespace, attr))
             delattr(namespace, attr)
         return command(action, vars(namespace), args)
+
+    @staticmethod
+    def edit_arguments(namespace):
+        # temporary solution till user create api is not fixed
+        # remove when fixed
+        if namespace.action == 'users' and namespace.sub_command_name == 'create':
+            namespace.roles = [namespace.roles]

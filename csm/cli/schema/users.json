@@ -106,7 +106,6 @@
                         "monitor",
                         "manage"
                     ],
-                    "nargs": "*",
                     "json": true
                 },
                 {
