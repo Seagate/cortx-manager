@@ -25,12 +25,12 @@ import asyncio
 import shutil
 import errno
 from threading import Thread
-from csm.common.payload import Yaml
+from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
 from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.providers.providers import  Response
+from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.errors import CsmError
 from csm.core.providers.providers import Response
@@ -38,10 +38,7 @@ from csm.common import errors
 from csm.common.conf import Conf
 from csm.common.log import Log
 import time
-# try:
-#     from salt import client
-# except ModuleNotFoundError as e:
-client = None
+from csm.common.process import SimpleProcess
 
 class SupportBundle:
     """
@@ -68,11 +65,13 @@ class SupportBundle:
         :return:
         """
         try:
+            ssh_key = os.path.expanduser(os.path.join("~", ".ssh", const.SSH_KEY))
             ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME,
-                                         key_filename=const.SSH_KEY)
+                                         key_filename=ssh_key)
             ssh_conn_object.connect()
-            bundle_generate = (f"sh {const.CSM_PATH}/cli/schema/create_support_bundle.sh"
-                    f" {bundle_id} {comment.replace(' ', '_')} {node_name} &")
+            bundle_generate = (
+                f"sh {const.CSM_PATH}/cli/schema/create_support_bundle.sh"
+                f" {bundle_id} {comment.replace(' ', '_')} {node_name} &")
             try:
                 # Executes Shell Script to Run in Background.
                 # Time out releases the connection rather than waiting for cmd.
@@ -91,17 +90,25 @@ class SupportBundle:
         :return: hostnames : List of Hostname :type: List
         :return: node_list : : List of Node Name :type: List
         """
-        if not client:
-            Log.warn("Salt Module Not Found.")
+        process = SimpleProcess(
+            "salt-call pillar.get cluster:node_list --out=json")
+        _out, _err, _rc = process.run()
+        if _rc != 0:
+            Log.warn(f"Salt Command Failed : {_err}")
             return None, None
-        node_list = client.Caller().function(const.PILLAR_GET,
-                                             'cluster:node_list')
+        output = JsonMessage(_out.strip()).load()
+        nodes = output.get("local", [])
         hostnames = []
-        for each_node in node_list:
-            node_details = client.Caller().function(const.PILLAR_GET,
-                                                    f'cluster:{each_node}')
-            hostnames.append(node_details.get("hostname"))
-        return hostnames, node_list
+        for each_node in nodes:
+            process = SimpleProcess(
+                f"salt-call pillar.get cluster:{each_node}:hostname --out=json")
+            _out, _err, _rc = process.run()
+            if _rc != 0:
+                Log.warn(f"Salt Command Failed : {_err}")
+                return None, None
+            output = JsonMessage(_out.strip()).load()
+            hostnames.append(output.get("local", ""))
+        return hostnames, nodes
 
     @staticmethod
     async def fetch_host_from_cluster():
@@ -122,7 +129,8 @@ class SupportBundle:
         if not active_nodes:
             response_msg = {
                 "message": "No active nodes found. Cluster file may not be valid"}
-            return Response(output=response_msg, rc=errors.CSM_ERR_INVALID_VALUE), None
+            return Response(output=response_msg,
+                            rc=errors.CSM_ERR_INVALID_VALUE), None
         hostnames = []
         for each_node in active_nodes:
             hostnames.append(cluster_info.get(each_node, {}).get("hostname"))
@@ -139,7 +147,7 @@ class SupportBundle:
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
         comment = command.options.get("comment")
         # Get HostNames and Node Names.
-        hostnames, node_list =  await SupportBundle.fetch_host_from_salt()
+        hostnames, node_list = await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
             hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
         if not isinstance(hostnames, list):
@@ -174,3 +182,61 @@ class SupportBundle:
         response = {"status": [each_status.to_primitive()
                                for each_status in all_nodes_status]}
         return Response(output=response, rc=errors.CSM_OPERATION_SUCESSFUL)
+
+    @staticmethod
+    async def fetch_ftp_data(ftp_details):
+        """
+        Fetch and Validate FTP Data.
+        #todo: Need to Implement Validation Framework for CLI. And Inputs in it.
+        :param ftp_details: Current Keys for FTP.
+        :return:
+        """
+        Log.debug("Configuring FTP Channel for Support Bundle")
+        ftp_details[const.HOST] = str(input("Input FTP Host: "))
+        try:
+            ftp_details[const.PORT] = int(input("Input FTP Port:  "))
+        except ValueError:
+            raise CsmError(errno.EINVAL, f"{const.PORT} must be a integer type.")
+        ftp_details[const.USER] = str(input("Input FTP User: "))
+        ftp_details[const.PASS] = str(input("Input FTP Password: "))
+        ftp_details['remote_file'] = str(input("Input FTP Remote File Path: "))
+        return ftp_details
+
+    @staticmethod
+    async def configure(command):
+        """
+        Configure FTP for Support Bundle
+        :param command: Csm_cli Command Object :type: command
+        :return:
+        """
+        csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
+                                          const.CSM_CONF_FILE_NAME)
+        if not os.path.exists(csm_conf_file_name):
+            raise CsmError(rc=errno.ENOENT, output="Config file is not exist")
+        conf_file_data = Yaml(csm_conf_file_name).load()
+        ftp_details = conf_file_data.get(const.SUPPORT_BUNDLE)
+        ftp_details = await SupportBundle.fetch_ftp_data(ftp_details)
+        conf_file_data[const.SUPPORT_BUNDLE] = ftp_details
+        Yaml(csm_conf_file_name).dump(conf_file_data)
+        hostnames, node_list = await SupportBundle.fetch_host_from_salt()
+        if not hostnames or not node_list:
+            hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
+        if not isinstance(hostnames, list):
+            return hostnames
+        for hostname in hostnames:
+            process = SimpleProcess(
+                f"scp {csm_conf_file_name}  {hostname}:{csm_conf_file_name}")
+            stdout, stderr, rc = process.run()
+
+    @staticmethod
+    async def show_config(command):
+        """
+        Display Config for Current FTP.
+        # Todo: Need to change this command to display the FTP Configuration
+        # for individual node.
+        :param command: Csm_cli Command Object :type: command
+        :return:
+        """
+        support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
+                                        const.SUPPORT_BUNDLE)
+        return Response(output=support_bundle_config, rc=CSM_OPERATION_SUCESSFUL)

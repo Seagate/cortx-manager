@@ -67,7 +67,7 @@
         "class": "SupportBundle",
         "is_static": true
       },
-            "output": {
+      "output": {
         "table": {
           "headers": {
             "bundle_id": "Bundle Id",
@@ -77,6 +77,70 @@
             "result": "Result"
           },
           "filters": "status"
+        }
+      }
+    },
+    {
+      "name": "configure",
+      "description": "Configure FTP for Support Bundle",
+      "need_confirmation": false,
+      "permissions_tag": "create",
+      "args": [
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "suppress_help": true,
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.support_bundle",
+        "method": "configure",
+        "class": "SupportBundle",
+        "is_static": true
+      }
+    },
+    {
+      "name": "show_config",
+      "description": "View Configured FTP in Support Bundle",
+      "need_confirmation": false,
+      "permissions_tag": "create",
+      "args": [
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "suppress_help": true,
+          "type": "str",
+          "choices": [
+            "table"
+          ]
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "nargs": "?",
+          "help": "Additional arguments that can be send to csm agent."
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.support_bundle",
+        "method": "show_config",
+        "class": "SupportBundle",
+        "is_static": true
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "host": "Hostname",
+            "port": "PORT",
+            "user": "User",
+            "remote_path": "PATH"
+          }
         }
       }
     }

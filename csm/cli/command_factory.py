@@ -58,7 +58,8 @@ class CommandFactory(object):
             # common commands both in commands and permissions key list
             commands = [command for command in commands if command in permissions.keys()]
         parser = ArgumentParser(description='CSM CLI command')
-        subparsers = parser.add_subparsers(metavar=commands)
+        metavar = set(commands).difference(set(const.HIDDEN_COMMANDS))
+        subparsers = parser.add_subparsers(metavar=metavar)
         if argv[0] in commands:
             # get command json file and filter only allowed first level sub_command
             # create filter_permission_json

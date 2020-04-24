@@ -95,12 +95,20 @@ class ComponentsBundle:
             try:
                 channel_obj = getattr(comm, channel)(**protocol_details)
                 channel_obj.connect()
-                channel_obj.send_file(file_path, protocol_details.get('remote_file'))
-                channel_obj.disconnect()
             except Exception as e:
-                Log.error(f"File Upload Failed.")
+                Log.error(f"File Connection Failed. {e}")
+                raise Exception((f"Failed to Connect to {protocol}, "
+                                 f"Please check Credentials." ))
+            try:
+                channel_obj.send_file(file_path, protocol_details.get('remote_file'))
+            except Exception as e:
+                Log.error(f"File Upload Failed. {e}")
+                raise Exception(f"Could Not Upload the File to {protocol}.")
+            finally:
+                channel_obj.disconnect()
         else:
             Log.error("Invalid Url in csm.conf.")
+            raise Exception(f"{protocol} is Invalid.")
 
     @staticmethod
     async def init(command: List):
@@ -111,7 +119,9 @@ class ComponentsBundle:
         """
         bundle_id = command.options.get("bundle_id", "")
         node_name = command.options.get("node_name", "")
-        comment = command.options.get("comment", "")
+        comment = command.options.get("comment", ""),
+        ftp_msg = ""
+        file_link_msg = ""
         Log.debug(f"Bundle Generation Started -- {bundle_id}, {node_name}, {comment}")
         #Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
@@ -121,7 +131,7 @@ class ComponentsBundle:
             return None
         #Path Location for creating Support Bundle.
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                                     "SUPPORT_BUNDLE.bundle_path"))
+                                     f"{const.SUPPORT_BUNDLE}.bundle_path"))
         if os.path.isdir(path):
             shutil.rmtree(path)
         bundle_path = os.path.join(path, bundle_id)
@@ -139,7 +149,7 @@ class ComponentsBundle:
                 thread_obj.start()
                 threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                  "SUPPORT_BUNDLE.bundle_path")
+                                  f"{const.SUPPORT_BUNDLE}.bundle_path")
         tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
         #Create Summary File for Tar.
@@ -154,7 +164,7 @@ class ComponentsBundle:
         Yaml(summary_file_path).dump(summary_data)
         Log.debug(f'Summary File Created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                "SUPPORT_BUNDLE.symlink_path")
+                                f"{const.SUPPORT_BUNDLE}.symlink_path")
         if os.path.exists(symlink_path):
             shutil.rmtree(symlink_path)
         os.mkdir(symlink_path)
@@ -168,20 +178,21 @@ class ComponentsBundle:
             Tar(tar_file_name).dump([bundle_path])
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"SupportBundle.{bundle_id}"))
+            file_link_msg = f"Linked at loc - {symlink_path}"
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
                                          node_name, comment)
-            return None
 
         #Upload the File.
         try:
             ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                "SUPPORT_BUNDLE"), tar_file_name)
-            ComponentsBundle.publish_log("Bundle Generated.", INFO, bundle_id,
-                                         node_name, comment)
+                                                const.SUPPORT_BUNDLE), tar_file_name)
+            ftp_msg = "Uploaded On Configured Location."
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
         finally:
             if os.path.isdir(bundle_path):
                 shutil.rmtree(bundle_path)
+        msg = f"Support Bundle Generated {file_link_msg}  {ftp_msg}"
+        ComponentsBundle.publish_log(msg, INFO, bundle_id, node_name, comment)
