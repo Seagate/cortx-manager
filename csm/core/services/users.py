@@ -155,9 +155,9 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
-    async def create_root_user(self, user_id: str, password: str) -> dict:
+    async def create_super_user(self, user_id: str, password: str) -> dict:
         """
-        Handles the preboarding root user creation
+        Handles the preboarding super user creation
         :param user_id: User identifier
         :param password: User password (not hashed)
         :returns: A dictionary describing the newly created user.
@@ -172,8 +172,8 @@ class CsmUserService(ApplicationService):
         # TODO: Decide the default preboarding user roles once we
         # implement user role management. Replace this hardcoded values
         # with proper constants.
-        roles = ['root', 'manage']
-        interfaces = ['web', 'cli', 'api']
+        roles = [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]
+        interfaces = const.CSM_USER_INTERFACES
         user = User.instantiate_csm_user(user_id, password, roles=roles,
                                          interfaces=interfaces)
         await self.user_mgr.create(user)

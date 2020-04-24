@@ -103,8 +103,10 @@ SSH_KEY = 'id_rsa_prvsnr'
 DEFAULT_SSH_TIMEOUT = 10
 USER = 'user'
 DEFAULT_USER = 'admin'
-CSM_SUPER_USER_ROLE = 'root'
-CSM_USER_ROLES = ['manage', 'monitor']
+CSM_SUPER_USER_ROLE = 'admin'
+CSM_MANAGE_ROLE = 'manage'
+CSM_MONITOR_ROLE = 'monitor'
+CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
