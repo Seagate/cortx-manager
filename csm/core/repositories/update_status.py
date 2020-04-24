@@ -2,8 +2,8 @@
 
 """
  ****************************************************************************
- Filename:          upgrade.py
- Description:       Services common for all CSM-related upgrades
+ Filename:          update_status.py
+ Description:       Services common for all CSM-related updates
 
  Creation Date:     03/24/2020
  Author:            Alexander Nogikh
@@ -36,7 +36,7 @@ class UpdateStatusRepository:
     async def get_current_model(self, update_type: str) -> UpdateStatusEntry:
         """
         Fetch the model. Returns None if it has never been saved or is deleted.
-        :update_type: an identifier of the specific type of upgrade (e.g. software, firmware, etc.)
+        :update_type: an identifier of the specific type of update (e.g. software, firmware, etc.)
         """
         query = Query().filter_by(Compare(UpdateStatusEntry.update_type, '=', update_type))
         query = query.order_by(UpdateStatusEntry.updated_at, SortOrder.DESC)
@@ -61,7 +61,7 @@ class UpdateStatusRepository:
     async def drop_model(self, update_type: str) -> UpdateStatusEntry:
         """
         Drop the model instance from the DB (if it exists)
-        :update_type: an identifier of the specific type of upgrade (e.g. software, firmware, etc.)
+        :update_type: an identifier of the specific type of update (e.g. software, firmware, etc.)
         """
         # This is a workaround to delete all records - that is currently not directly
         # supported by the generic db

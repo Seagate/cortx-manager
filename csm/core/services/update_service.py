@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          update_service.py
- Description:       Implementation provisiner upgrade status service.
+ Description:       Implementation provisiner update status service.
 
  Creation Date:     04/08/2020
  Author:            Udayan Yaragattikar
@@ -43,7 +43,7 @@ class UpdateService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def _get_renewed_model(self, update_id):
         """
-        Fetch the most up-to-date information about the most recent firmware and software upgrade process.
+        Fetch the most up-to-date information about the most recent firmware and software update process.
         Queries the DB, then queries the Provisioner if needed.
         """
         model = await self._update_repo.get_current_model(update_id)
@@ -53,7 +53,7 @@ class UpdateService(ApplicationService):
                 model.apply_status_update(result)
                 await self._update_repo.save_model(model)
             except:
-                raise CsmInternalError(f'Failed to fetch the status of an ongoing upgrade process')
+                raise CsmInternalError(f'Failed to fetch the status of an ongoing update process')
         return model
 
     @Log.trace_method(Log.INFO)
