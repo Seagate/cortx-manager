@@ -31,6 +31,7 @@ class ArgumentError(argparse.ArgumentError):
     def __init__(self, rc, message, argument=None):
         super(ArgumentError, self).__init__(argument, message)
         self.rc = rc
+        self.messgae = message
 
     def __str__(self):
         return f"{self.rc}: {self.message}"
@@ -72,6 +73,9 @@ class Terminal:
         Fetches the Password from Terminal in Non-Echo Mode.
         :return:
         """
+        sys.stdout.write(("\nPassword Must Contain the Following.\n1) 1 Upper and Lower "
+        "Case Character.\n2) 1 Numeric Character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
+                          "Character.\n"))
         value = value or getpass(prompt="Password: ")
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")

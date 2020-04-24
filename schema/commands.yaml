@@ -6,3 +6,4 @@ COMMANDS:
   - '<EOS_PATH>core/conf/setup.yaml'
   - '<EOS_PATH>hare/conf/setup.yaml'
   - '<EOS_PATH>hare/conf/setup-ha.yaml'
+  - '<EOS_PATH>eos-prvsnr/conf/setup.yaml'

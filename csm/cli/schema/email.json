@@ -10,6 +10,7 @@
         {
           "flag": "args",
           "default": [],
+          "suppress_help": true,
           "nargs": "?"
         }
       ],
