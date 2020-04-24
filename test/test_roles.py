@@ -71,6 +71,8 @@ from csm.core.controllers.s3.buckets import (
     S3BucketPolicyView
 )
 from csm.core.controllers.s3.iam_users import IamUserListView, IamUserView
+from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
+                                           SecurityUploadView)
 
 
 roles_dict = {
@@ -475,6 +477,21 @@ async def test_rest_ep_permissions(*args):
         (IamUserView              , Method.DELETE, User.CsmAdmin , Access.FAIL),
         (IamUserView              , Method.DELETE, User.CsmUser  , Access.FAIL),
         (IamUserView              , Method.DELETE, User.S3Account, Access.OK  ),
+
+        (SecurityUploadView       , Method.POST, User.Anon     , Access.FAIL),
+        (SecurityUploadView       , Method.POST, User.CsmAdmin , Access.OK),
+        (SecurityUploadView       , Method.POST, User.CsmUser  , Access.FAIL),
+        (SecurityUploadView       , Method.POST, User.S3Account, Access.FAIL),
+
+        (SecurityStatusView       , Method.GET, User.Anon     , Access.FAIL),
+        (SecurityStatusView       , Method.GET, User.CsmAdmin , Access.OK),
+        (SecurityStatusView       , Method.GET, User.CsmUser  , Access.FAIL),
+        (SecurityStatusView       , Method.GET, User.S3Account, Access.FAIL),
+
+        (SecurityInstallView       , Method.POST, User.Anon     , Access.FAIL),
+        (SecurityInstallView       , Method.POST, User.CsmAdmin , Access.OK),
+        (SecurityInstallView       , Method.POST, User.CsmUser  , Access.FAIL),
+        (SecurityInstallView       , Method.POST, User.S3Account, Access.FAIL),
     ]
 
     for handler, method, roles, access in rest_ep_cases:
