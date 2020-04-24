@@ -27,7 +27,7 @@ from csm.common.log import Log
 from csm.common.errors import InvalidRequest
 
 
-class RoleTypes(fields.List):
+class RolesList(fields.List):
     """
     A list of strings representing an role type.
     When deserialised, will be deduped"
@@ -36,14 +36,14 @@ class RoleTypes(fields.List):
     def __init__(self, required=False, _validate=None, **kwargs):
         if _validate is not None:
             raise ValueError(
-                "The RoleTypes field provides its own validation "
+                "The RolesList field provides its own validation "
                 "and thus does not accept a the 'validate' argument."
             )
 
         super().__init__(
             fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)),
             required=required,
-            validate=validate.Length(min=1),
+            validate=validate.Length(equal=1),
             allow_none=False,
             **kwargs,
         )
@@ -54,20 +54,20 @@ class RoleTypes(fields.List):
             for role in set(super()._deserialize(value, attr, data, **kwargs))
         ]
 
-class CsmRootUserCreateSchema(Schema):
+class CsmSuperUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
 
 
 # TODO: find out about policies for names and passwords
-class CsmUserCreateSchema(CsmRootUserCreateSchema):
-    roles = RoleTypes(required=True)
+class CsmUserCreateSchema(CsmSuperUserCreateSchema):
+    roles = RolesList(required=True)
 
 class CsmUserPatchSchema(Schema):
     old_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
-    roles = RoleTypes()
+    roles = RolesList()
 
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
@@ -183,7 +183,9 @@ class CsmUsersView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        resp = await self._service.update_user(user_id, user_body, self.request.session.credentials.user_id)
+
+        resp = await self._service.update_user(user_id, user_body,
+                                               self.request.session.credentials.user_id)
         return resp
 
 @CsmView._app_routes.view("/api/v1/preboarding/user")
@@ -199,12 +201,12 @@ class AdminUserView(CsmView):
 
     async def post(self):
         """
-        POST REST implementation of creating a root user for preboarding
+        POST REST implementation of creating a super user for preboarding
         """
-        Log.debug("Creating root user")
+        Log.debug("Creating super user")
 
         try:
-            schema = CsmRootUserCreateSchema()
+            schema = CsmSuperUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args="Request body missing")
@@ -212,7 +214,7 @@ class AdminUserView(CsmView):
             raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
 
         status = const.STATUS_CREATED
-        response = await self._service.create_root_user(**user_body)
+        response = await self._service.create_super_user(**user_body)
         if not response:
             status = const.STATUS_CONFLICT
             response = {

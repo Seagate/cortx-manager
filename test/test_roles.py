@@ -114,7 +114,7 @@ async def test_manage_roles_with_root(*args):
         'users': {'create', 'delete', 'list', 'update'}
     })
 
-    actual_permissions = await role_manager.calc_effective_permissions('root', 'manage')
+    actual_permissions = await role_manager.calc_effective_permissions('admin', 'manage')
 
     assert_equal(actual_permissions, expected_permissions)
 
@@ -200,7 +200,7 @@ class User:
     """ Typical users with predefined roles """
 
     Anon = []
-    CsmAdmin = ['root', 'manage']
+    CsmAdmin = ['admin', 'manage']
     CsmUser = ['monitor']
     S3Account = ['s3']
 
