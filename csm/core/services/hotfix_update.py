@@ -2,8 +2,8 @@
 
 """
  ****************************************************************************
- Filename:          upgrade.py
- Description:       Services for upgrade functionality
+ Filename:          hotfix_update.py
+ Description:       Services for update functionality
 
  Creation Date:     02/20/2020
  Author:            Alexander Nogikh
@@ -40,7 +40,7 @@ class HotfixApplicationService(UpdateService):
     async def upload_package(self, file_ref):
         """
         Upload and validate a hotfix update firmware package
-        :param file_ref: An instance of FileRef class that represents a new upgrade package
+        :param file_ref: An instance of FileRef class that represents a new update package
         :returns: An instance of PackageInformation
         """
         try:
@@ -50,7 +50,7 @@ class HotfixApplicationService(UpdateService):
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
-            raise InvalidRequest("You can't upload a new package while there is an ongoing upgrade")
+            raise InvalidRequest("You can't upload a new package while there is an ongoing update")
 
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
@@ -70,7 +70,7 @@ class HotfixApplicationService(UpdateService):
         }
 
     @Log.trace_method(Log.INFO)
-    async def start_upgrade(self):
+    async def start_update(self):
         """
         Kicks off the hotfix application process
         :returns: Nothing
@@ -82,16 +82,16 @@ class HotfixApplicationService(UpdateService):
         software_update_model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
 
         if software_update_model and software_update_model.is_in_progress():
-            raise InvalidRequest("Software upgrade is already in progress. Please wait until it is done.")
+            raise InvalidRequest("Software update is already in progress. Please wait until it is done.")
 
         if not software_update_model.is_uploaded() or not os.path.exists(self._sw_file):
-            raise InvalidRequest("You must upload an image before starting the software upgrade.")
+            raise InvalidRequest("You must upload an image before starting the software update.")
 
-        software_update_model.provisioner_id = await self._provisioner.trigger_software_upgrade(self._sw_file)
+        software_update_model.provisioner_id = await self._provisioner.trigger_software_update(self._sw_file)
         software_update_model.mark_started()
         await self._update_repo.save_model(software_update_model)
         return {
-            "message": "Software upgrade has succesfully started"
+            "message": "Software update has succesfully started"
         }
 
     async def get_current_status(self):

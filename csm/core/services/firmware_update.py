@@ -47,7 +47,7 @@ class FirmwareUpdateService(UpdateService):
         firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
         model = await self._update_repo.get_current_model(const.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
-            raise InvalidRequest("You can't upload a new package while there is an ongoing upgrade")
+            raise InvalidRequest("You can't upload a new package while there is an ongoing update")
 
         model = UpdateStatusEntry.generate_new(const.FIRMWARE_UPDATE_ID)
         model.description = os.path.join(self._fw_storage_path, filename)
@@ -60,7 +60,7 @@ class FirmwareUpdateService(UpdateService):
         software_update_model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
 
         if software_update_model and software_update_model.is_in_progress():
-            raise InvalidRequest("Software upgrade is already in progress. Please wait until it is done.")
+            raise InvalidRequest("Software update is already in progress. Please wait until it is done.")
 
         firmware_update_model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
         if not firmware_update_model:
@@ -69,7 +69,7 @@ class FirmwareUpdateService(UpdateService):
         if firmware_update_model.is_in_progress():
             raise InvalidRequest("Firmware update is already in progress. Please wait until it is done.")
 
-        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_upgrade(firmware_update_model.description)
+        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_update(firmware_update_model.description)
         firmware_update_model.mark_started()
         await self._update_repo.save_model(firmware_update_model)
         return firmware_update_model.to_printable()

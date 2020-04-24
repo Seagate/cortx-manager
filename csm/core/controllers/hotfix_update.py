@@ -2,8 +2,8 @@
 
 """
  ****************************************************************************
- Filename:          upgrade.py
- Description:       Controller for handling system upgrade 
+ Filename:          update.py
+ Description:       Controller for handling system update 
 
  Creation Date:     02/20/2020
  Author:            Alexander Nogikh
@@ -37,7 +37,7 @@ class HotFixUploadSchema(Schema):
     package = fields.Nested(HotFixFileFieldSchema(), required=True)
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/hotfix/upload")
+@CsmView._app_routes.view("/api/v1/update/hotfix/upload")
 class CsmHotfixUploadView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -57,7 +57,7 @@ class CsmHotfixUploadView(CsmView):
             return await self._service.upload_package(package_ref)
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/hotfix/start")
+@CsmView._app_routes.view("/api/v1/update/hotfix/start")
 class CsmHotfixStartView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -69,10 +69,10 @@ class CsmHotfixStartView(CsmView):
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
-        return await self._service.start_upgrade()
+        return await self._service.start_update()
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/hotfix/status")
+@CsmView._app_routes.view("/api/v1/update/hotfix/status")
 class CsmHotfixStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)

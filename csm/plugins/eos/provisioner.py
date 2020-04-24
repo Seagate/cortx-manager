@@ -102,7 +102,7 @@ class ProvisionerPlugin:
         return validation_result
 
     @Log.trace_method(Log.DEBUG)
-    async def trigger_software_upgrade(self, path):
+    async def trigger_software_update(self, path):
         """
         Starts the software update.
         :param path: Path to a file that contains the update image
@@ -120,7 +120,7 @@ class ProvisionerPlugin:
                 return self.provisioner.eos_update(nowait=True)
             except Exception as e:
                 Log.exception(e)
-                raise CsmInternalError('Failed to start the upgrade process')
+                raise CsmInternalError('Failed to start the software update process')
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
@@ -154,7 +154,7 @@ class ProvisionerPlugin:
         return {"version": "1.2.3",
                 "file_path": file_path}
 
-    async def trigger_firmware_upgrade(self, fw_package_path):
+    async def trigger_firmware_update(self, fw_package_path):
         if not self.provisioner:
             raise PackageValidationError("Provisioner is not instantiated")
 
@@ -163,7 +163,7 @@ class ProvisionerPlugin:
                 return self.provisioner.fw_update(source = fw_package_path, nowait = True)
             except Exception as e:
                 Log.exception(e)
-                raise CsmInternalError('Failed to start the upgrade process')
+                raise CsmInternalError('Failed to start the firmware update process.')
 
         return await self._await_nonasync(_command_handler)
 

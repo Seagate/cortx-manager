@@ -3,7 +3,7 @@
 """
  ****************************************************************************
  Filename:          firmware_update.py
- Description:       Controller for handling system upgrade 
+ Description:       Controller for handling system update 
 
  Creation Date:     02/25/2020
  Author:            Udayan Yaragattikar
@@ -35,7 +35,7 @@ class FirmwareUploadSchema(Schema):
     package = fields.Nested(FirmwareUpdateFileFieldSchema(), required=True)
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/firmware/upload")
+@CsmView._app_routes.view("/api/v1/update/firmware/upload")
 class FirmwarePackageUploadView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -60,7 +60,7 @@ class FirmwarePackageUploadView(CsmView):
             return await self._service.upload_package(package_ref, file_name)
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/firmware/start")
+@CsmView._app_routes.view("/api/v1/update/firmware/start")
 class FirmwareUpdateView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -78,7 +78,7 @@ class FirmwareUpdateView(CsmView):
             return await self._service.start_update()
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/firmware/status")
+@CsmView._app_routes.view("/api/v1/update/firmware/status")
 class FirmwareUpdateStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -86,16 +86,16 @@ class FirmwareUpdateStatusView(CsmView):
         self._service_dispatch = {}
 
     """
-    GET REST implementation for getting current status of firmware upgrade
+    GET REST implementation for getting current status of firmware update
     """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
-        Log.debug(f"Handling get firmware upgrade status api"
+        Log.debug(f"Handling get firmware update status api"
                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_current_status()
 
 
-@CsmView._app_routes.view("/api/v1/upgrade/firmware/availability")
+@CsmView._app_routes.view("/api/v1/update/firmware/availability")
 class FirmwarePackageAvailibility(CsmView):
     def __init__(self, request):
         super().__init__(request)
