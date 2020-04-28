@@ -164,7 +164,8 @@ class CsmUsersView(CsmView):
         Log.debug(f"Handling delete csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
-        return await self._service.delete_user(user_id)
+        return await self._service.delete_user(user_id,
+                                               self.request.session.credentials.user_id)
 
     """
     PATCH implementation for creating a csm user

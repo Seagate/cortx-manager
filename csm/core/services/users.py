@@ -208,7 +208,7 @@ class CsmUserService(ApplicationService):
 
         return [self._user_to_dict(x) for x in user_list]
 
-    async def delete_user(self, user_id: str):
+    async def delete_user(self, user_id: str, loggedin_user_id: str):
         """ User deletion """
         Log.debug(f"Delete user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
@@ -217,6 +217,13 @@ class CsmUserService(ApplicationService):
         if self.is_super_user(user):
             raise CsmPermissionDenied("Can't delete super user",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
+        loggedin_user = await self.user_mgr.get(loggedin_user_id)
+        # Is Logged in user normal user
+        if not self.is_super_user(loggedin_user):
+            if user_id.lower() != loggedin_user_id.lower():
+                raise CsmPermissionDenied("Normal user Can't delete other user",
+                                          USERS_MSG_PERMISSION_DENIED, user_id)
+
         await self.user_mgr.delete(user.user_id)
         return {"message": "User Deleted Successfully."}
 
@@ -232,7 +239,7 @@ class CsmUserService(ApplicationService):
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
                                                     new_values: dict):
         old_password = new_values.get("old_password", None)
-        if user_id != loggedin_user_id:
+        if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non super user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
         
