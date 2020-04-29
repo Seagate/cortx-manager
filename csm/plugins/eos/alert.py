@@ -30,7 +30,7 @@ from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
 from concurrent.futures import ThreadPoolExecutor
 try:
-    from eos.utils.ha.dm.decision import DecisionMaker
+    from eos.utils.ha.dm.decision_maker import DecisionMaker
 except ModuleNotFoundError:
     Log.warn("Unable to import HA Decision Maker Library.")
     DecisionMaker = None
@@ -166,9 +166,6 @@ class AlertPlugin(CsmPlugin):
         if "actuator" in title.lower():
             status = self.health_plugin.health_plugin_callback(message)
         elif "sensor" in title.lower():
-            # Call HA Decision Maker for Alerts.
-            if self._decision_maker:
-                self.transmit_alerts_info(sensor_queue_msg)
             try:
                 if self.monitor_callback:
                     alert = self._convert_to_csm_schema(message)
@@ -176,6 +173,11 @@ class AlertPlugin(CsmPlugin):
                     alert_validator = AlertSchemaValidator()
                     alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
                     Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
+                    """
+                    Calling HA Decision Maker for Alerts.
+                    """
+                    if self._decision_maker:
+                        self.transmit_alerts_info(sensor_queue_msg)
                     status = self.monitor_callback(alert_data)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.
