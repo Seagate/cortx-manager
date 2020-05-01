@@ -10,6 +10,11 @@ yum install -y $RPM_PATH/*.rpm
 mkdir -p /etc/ssl/stx/
 cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
 
+groupadd haclient
+mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
+cp -f $CSM_REPO_PATH/jenkins/cicd/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
+chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
+
 csm_setup post_install
 csm_setup config
 csm_setup init
