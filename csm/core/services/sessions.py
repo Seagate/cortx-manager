@@ -306,11 +306,18 @@ class LoginService:
         if session_data:
             user_id = session_data.credentials.user_id
             Log.debug(f"Delete all active sessions for Userid: {user_id}")
-            session_data = await self._session_manager.get_all()
-            Log.debug(f"Delete all active sessions once account is deleted. "
-                      f"Userid: {user_id}")
-            for each_session in session_data:
-                if each_session.credentials.user_id == user_id:
-                    await self._session_manager.delete(each_session.session_id)
+            await self.delete_all_sessions_for_user(user_id)
         else:
             await self._session_manager.delete(session_id)
+
+    async def delete_all_sessions_for_user(self, user_id: str) -> None:
+        """
+        This Function will delete all the current user's active sessions.
+        :param user_id: user_id for user. :type:Str
+        :return: None
+        """
+        Log.debug(f"Delete all active sessions for Userid: {user_id}")
+        session_data = await self._session_manager.get_all()
+        for each_session in session_data:
+            if each_session.credentials.user_id.lower() == user_id.lower():
+                await self._session_manager.delete(each_session.session_id)
