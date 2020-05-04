@@ -22,7 +22,7 @@ from typing import Union
 from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
 
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import ApplicationService
 
 from csm.plugins.eos.s3 import S3Plugin, S3Client

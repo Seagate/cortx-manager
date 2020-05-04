@@ -27,7 +27,7 @@ import getpass
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.cluster import Cluster, Node
 from csm.common.errors import CsmError
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.blogic import const
 from csm.test.common import TestFailed
 

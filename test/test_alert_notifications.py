@@ -23,7 +23,7 @@ import unittest
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.observer import Observable
 from csm.common.template import Template
 from csm.common.email import SmtpServerConfiguration, EmailSender, OutOfAttemptsEmailError

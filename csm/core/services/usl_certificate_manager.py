@@ -17,7 +17,7 @@
 
 from asyncio import Lock
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization

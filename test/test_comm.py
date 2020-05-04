@@ -22,7 +22,7 @@ import sys, os, getpass, socket, filecmp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import SSHChannel, AmqpComm
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.test.common import Const, TestFailed
 from csm.common.cluster import Cluster, Node
 import json, time

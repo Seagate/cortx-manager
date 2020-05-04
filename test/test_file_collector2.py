@@ -26,14 +26,14 @@ import mock
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.file_collector import RemoteFileCollector
 
 class RemoteFileCollector(unittest.TestCase):
     """ Unit tests for RemoteFileCollector class """
 
     def setUp(self):
-        Log.init("csm")
+        Log.init("csm", log_path=".")
         collection_rules_yaml = '''
             s3_server:
                 commands:

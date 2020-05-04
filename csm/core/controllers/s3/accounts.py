@@ -19,7 +19,7 @@
 import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator

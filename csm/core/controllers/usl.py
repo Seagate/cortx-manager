@@ -26,7 +26,7 @@ from typing import Any, Callable, Dict, List, Tuple, Type
 
 from csm.common.decorators import Decorators
 from csm.common.errors import CsmError
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.runtime import Options
 from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema

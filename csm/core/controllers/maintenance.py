@@ -18,7 +18,7 @@
 """
 
 from .view import CsmView, CsmAuth
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.controllers.validators import Enum, ValidationErrorFormatter
 from marshmallow import (Schema, fields, ValidationError, validates_schema)

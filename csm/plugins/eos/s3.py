@@ -31,7 +31,7 @@ from boto.s3.connection import S3Connection, OrdinaryCallingFormat
 from boto.connection import DEFAULT_CA_CERTS_FILE
 from boto import config as boto_config
 from http import HTTPStatus
-from csm.common.log import Log
+from eos.utils.log import Log
 import json
 from csm.common.errors import CsmInternalError
 from csm.core.blogic import const

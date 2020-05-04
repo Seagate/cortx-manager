@@ -23,7 +23,7 @@ from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.errors import InvalidRequest
 
 

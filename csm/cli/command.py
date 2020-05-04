@@ -32,7 +32,7 @@ from prettytable import PrettyTable
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.csmcli import Terminal, ArgumentError
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.controllers.validators import BucketNameValidator
 
 class Command:

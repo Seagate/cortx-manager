@@ -20,7 +20,7 @@
 """
 
 import json
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.services.sessions import LoginService
 from csm.common.errors import InvalidRequest
 from .view import CsmView, CsmResponse, CsmAuth

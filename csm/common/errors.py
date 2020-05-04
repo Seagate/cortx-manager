@@ -21,7 +21,7 @@
 import inspect
 
 from eos.utils.errors import BaseError
-from csm.common.log import Log
+from eos.utils.log import Log
 
 CSM_OPERATION_SUCESSFUL     = 0x0000
 CSM_ERR_INVALID_VALUE       = 0x1001

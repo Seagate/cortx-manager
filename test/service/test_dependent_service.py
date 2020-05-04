@@ -25,7 +25,7 @@ import pika
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.conf import Conf
 
 def init(args):

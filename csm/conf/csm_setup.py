@@ -86,7 +86,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
-    from csm.common.log import Log
+    from eos.utils.log import Log
 
     try:
         csm_setup = CsmSetupCommand(sys.argv)

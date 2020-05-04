@@ -22,7 +22,7 @@ from schematics.models import Model
 from schematics.types import (StringType, ModelType, ListType,
                               BooleanType, DateTimeType, IntType)
 
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.email import SmtpServerConfiguration
 from csm.core.blogic import const
 from csm.core.blogic.models import CsmModel

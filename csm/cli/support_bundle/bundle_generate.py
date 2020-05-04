@@ -28,7 +28,7 @@ from csm.core.blogic import const
 from datetime import datetime
 from csm.common.errors import CsmError
 from csm.common.conf import Conf
-from csm.common.log import Log
+from eos.utils.log import Log
 
 ERROR = "error"
 INFO = "info"

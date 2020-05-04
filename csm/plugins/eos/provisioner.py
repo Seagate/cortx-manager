@@ -21,7 +21,7 @@ import asyncio
 import datetime
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,

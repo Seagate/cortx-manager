@@ -20,7 +20,7 @@
 import os
 import subprocess
 
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.errors import CsmError

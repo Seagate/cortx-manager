@@ -211,7 +211,7 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    from csm.common.log import Log
+    from eos.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
     try:

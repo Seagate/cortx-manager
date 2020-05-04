@@ -26,7 +26,7 @@ from contextlib import contextmanager
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.payload import Json, Payload
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.core.data.models.upgrade import PackageInformation, UpdateStatusEntry
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,

@@ -36,7 +36,7 @@ from csm.common.errors import CsmError
 from csm.core.providers.providers import Response
 from csm.common import errors
 from csm.common.conf import Conf
-from csm.common.log import Log
+from eos.utils.log import Log
 import time
 from csm.common.process import SimpleProcess
 

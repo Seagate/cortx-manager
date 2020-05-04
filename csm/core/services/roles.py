@@ -18,7 +18,7 @@
  ****************************************************************************
 """
 from typing import Iterable, Text
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.validate import Validator
 from csm.common.services import ApplicationService
 from csm.core.services.permissions import PermissionSet

@@ -47,7 +47,9 @@ def tmain(argp, argv):
         if argp.l:
             Log.init("csm_test", log_path=argp.l)
         else:
-            Log.init("csm_test")
+            Log.init("csm_test",
+             log_path=Conf.get(Const.CSM_GLOBAL_INDEX, "Log.log_path"),
+             level=Conf.get(Const.CSM_GLOBAL_INDEX, "Log.log_level"))
         test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())
         if args is None: args = {}
@@ -120,7 +122,7 @@ def tmain(argp, argv):
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    from csm.common.log import Log
+    from eos.utils.log import Log
     from csm.common.errors import CsmError
     from csm.common.payload import *
     from csm.common.conf import Conf

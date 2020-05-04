@@ -19,7 +19,7 @@
 
 import asyncio
 from typing import Dict
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from concurrent.futures import ThreadPoolExecutor
 from csm.common.errors import CsmError, CSM_OPERATION_NOT_PERMITTED

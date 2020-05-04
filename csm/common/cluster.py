@@ -26,7 +26,7 @@ import errno
 
 from csm.core.blogic import const
 from csm.common.errors import CsmError
-from csm.common.log import Log
+from eos.utils.log import Log
 
 class Node(object):
     """ Contains all the attributes of the nodes.  """

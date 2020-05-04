@@ -29,7 +29,7 @@ from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
                                ResourceExist, CsmNotFoundError, CsmServiceConflict)
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
-from csm.common.log import Log
+from eos.utils.log import Log
 from eos.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.system_config import (CertificateConfig, SecurityConfig,
                                                 CertificateInstallationStatus)

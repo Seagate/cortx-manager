@@ -22,7 +22,7 @@ import time
 import os
 import tarfile
 from datetime import datetime, timedelta, timezone
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic import const

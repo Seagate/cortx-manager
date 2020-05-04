@@ -23,7 +23,7 @@ import traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.agent.api import CsmApi
 from csm.core.providers.providers import Request, Response
 from csm.core.providers.setup_provider import SetupProvider

@@ -18,7 +18,7 @@
 """
 import json
 from csm.core.services.file_transfer import FileType
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.common.errors import InvalidRequest

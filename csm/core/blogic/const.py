@@ -6,7 +6,6 @@ CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CSM_CONF_PATH = "/etc/csm"
 ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
-CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
