@@ -346,7 +346,7 @@ class AlertPlugin(CsmPlugin):
         for count in range(0, const.ALERT_RETRY_COUNT):
             try:
                 self._loop.run_in_executor(self._executor,
-                           self._decision_maker.handle_event, alert_data)
+                           self._decision_maker.handle_alert, alert_data)
             except Exception as e:
                 Log.debug(f"retrying decision_maker {count}")
                 error = f"{e}"
