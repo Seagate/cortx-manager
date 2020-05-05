@@ -20,7 +20,7 @@ import json
 import uuid
 
 from csm.common.errors import InvalidRequest
-from csm.common.log import Log
+from eos.utils.log import Log
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
 

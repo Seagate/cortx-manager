@@ -23,7 +23,7 @@ from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
 from csm.common.conf import Conf
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.observer import Observable
 from threading import Event, Thread
 from csm.core.services.alerts import AlertRepository

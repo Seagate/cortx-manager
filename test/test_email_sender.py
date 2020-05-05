@@ -26,7 +26,7 @@ from email import message_from_bytes
 from queue import Queue, Empty
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.email import SmtpServerConfiguration, EmailSender, OutOfAttemptsEmailError
 from csm.core.email.email_queue import EmailSenderQueue
 

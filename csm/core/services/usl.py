@@ -34,7 +34,7 @@ from csm.common.conf import Conf
 from csm.common.errors import (
     CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmServiceConflict
 )
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.sessions import S3Credentials

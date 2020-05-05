@@ -18,7 +18,7 @@
  ****************************************************************************
 """
 from contextlib import contextmanager
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmPermissionDenied
 from csm.core.controllers.view import CsmView, CsmHttpException
 from csm.core.services.sessions import S3Credentials

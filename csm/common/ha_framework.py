@@ -25,7 +25,7 @@ from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from csm.core.blogic import const
 from csm.common.conf import Conf
-from csm.common.log import Log
+from eos.utils.log import Log
 
 
 class HAFramework:

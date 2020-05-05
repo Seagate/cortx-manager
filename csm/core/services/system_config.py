@@ -27,7 +27,7 @@ from csm.core.blogic import const
 from eos.utils.data.access import Query
 from eos.utils.data.access.filters import Compare
 from eos.utils.data.db.db_provider import (DataBaseProvider)
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.data.models.system_config import (SystemConfigSettings,
             EmailConfig, OnboardingLicense, CertificateInstallationStatus)
 from csm.core.services.security import SecurityService

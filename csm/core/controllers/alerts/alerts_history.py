@@ -17,7 +17,7 @@
  ****************************************************************************
 """
 import re
-from csm.common.log import Log
+from eos.utils.log import Log
 from aiohttp import web
 from typing import Dict
 from marshmallow import Schema, fields, validate, ValidationError, validates, \

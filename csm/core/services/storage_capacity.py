@@ -20,7 +20,7 @@
 
 import re
 from csm.common.process import SimpleProcess
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError

@@ -30,7 +30,7 @@ import asyncio
 import re
 from datetime import datetime, timedelta
 from typing import Dict
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError
 

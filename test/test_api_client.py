@@ -26,13 +26,13 @@ from argparse import Namespace
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.api.api_client import CsmApiClient
 
 class CsmApiClientTest(unittest.TestCase):
     """ Unit tests for command factory class.  """
     def setUp(self):
-        Log.init("csm")
+        Log.init("csm", log_path=".")
         self.csm_api_client = CsmApiClient()
         self.command = mock.MagicMock()
         self.command.name.return_value = 'support_bundle'

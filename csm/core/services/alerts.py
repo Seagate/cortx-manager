@@ -27,7 +27,7 @@ import time
 from csm.common.observer import Observable
 from datetime import datetime, timedelta, timezone
 from threading import Event, Thread
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange

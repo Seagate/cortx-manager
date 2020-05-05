@@ -22,7 +22,7 @@ import yaml
 import errno
 from threading import Thread
 from csm.common.errors import CsmError
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.blogic.email_conf import EmailConfig
 from csm.common.conf import Conf
 from csm.core.blogic import const

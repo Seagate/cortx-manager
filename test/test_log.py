@@ -21,24 +21,24 @@
 import os, sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.log import Log
+from eos.utils.log import Log
 
 def init(args):
     pass
 
 def test1_1(args={}):
-    Log.init('csm_agent')
+    Log.init('csm_agent', log_path="/tmp")
     Log.debug('test1_1: hello world')
     Log.info('test1_1: hello world')
     Log.audit_log("test1_1: audit log ")
 
 def test1_2(args={}):
-    Log.init('csm_setup', level="INFO")
+    Log.init('csm_setup', log_path="/tmp", level="INFO")
     Log.debug('test1_2: hello world')
     Log.info('test1_2: hello world')
 
 def test1_3(args={}):
-    Log.init('csm_cli', level="INFO")
+    Log.init('csm_cli', log_path="/tmp", level="INFO")
     Log.debug('test1_3: hello world')
     Log.info('test1_3: hello world')
 

@@ -28,7 +28,7 @@ from csm.core.blogic import const
 from csm.core.services.file_transfer import FileCache
 from csm.core.controllers.file_transfer import FileFieldSchema
 from csm.core.controllers.view import CsmView
-from csm.common.log import Log
+from eos.utils.log import Log
 
 from aiohttp import web, ClientSession, FormData
 from marshmallow import Schema, fields, validate, exceptions

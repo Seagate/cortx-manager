@@ -19,7 +19,7 @@
 """
 
 from .view import CsmView, CsmAuth
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
 

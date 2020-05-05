@@ -27,7 +27,7 @@ import shutil
 import errno
 from paramiko.ssh_exception import SSHException
 from csm.common.payload import *
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError

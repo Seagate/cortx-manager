@@ -28,7 +28,7 @@ from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.services.stats import StatsAppService
 from csm.common.timeseries import TimelionProvider
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 
 class TestStatsAppService:
     def __init__(self):

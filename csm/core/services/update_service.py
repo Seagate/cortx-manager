@@ -18,7 +18,7 @@
 """
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.common.services import Service, ApplicationService
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.core.data.models.upgrade import UpdateStatusEntry
 from csm.core.blogic import const
 

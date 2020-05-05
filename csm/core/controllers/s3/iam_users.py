@@ -16,7 +16,7 @@
  prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
  ****************************************************************************
 """
-from csm.common.log import Log
+from eos.utils.log import Log
 from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.common.errors import InvalidRequest

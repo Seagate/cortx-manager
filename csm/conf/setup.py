@@ -90,15 +90,16 @@ class Setup:
         """
         Set User Permission
         """
+        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
-        os.makedirs(const.CSM_LOG_PATH, exist_ok=True)
+        os.makedirs(log_path, exist_ok=True)
         os.makedirs(bundle_path, exist_ok=True)
         os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PATH)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_TMP_FILE_CACHE_DIR)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + bundle_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_LOG_PATH)
+        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_CONF_PATH)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PIDFILE_PATH)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
@@ -219,7 +220,8 @@ class Setup:
         """
         Delete all logs
         """
-        Setup._run_cmd("rm -rf " +const.CSM_LOG_PATH)
+        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        Setup._run_cmd("rm -rf " +log_path)
 
     class ConfigServer:
         """

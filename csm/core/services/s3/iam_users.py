@@ -18,7 +18,7 @@
 """
 
 from typing import Union, Dict
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response

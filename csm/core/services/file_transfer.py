@@ -29,7 +29,7 @@ from contextlib import ContextDecorator
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError
 from csm.core.blogic import const
-from csm.common.log import Log
+from eos.utils.log import Log
 
 
 class FileType(Enum):

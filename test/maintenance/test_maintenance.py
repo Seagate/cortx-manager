@@ -23,7 +23,7 @@ import asyncio
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed
-from csm.common.log import Log
+from eos.utils.log import Log
 from core.services.maintenance import MaintenanceAppService
 from csm.common.ha_framework import PcsHAFramework
 

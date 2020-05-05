@@ -22,7 +22,7 @@ import os
 import time
 from csm.common.comm import AmqpActuatorComm
 from csm.common.errors import CsmError
-from csm.common.log import Log
+from eos.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict
 from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
