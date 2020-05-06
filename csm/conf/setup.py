@@ -21,6 +21,9 @@ import os
 import sys
 import crypt
 import pwd
+import shlex
+import json
+from eos.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -70,6 +73,57 @@ class Setup:
         except KeyError as err:
             return False
 
+    def _get_salt_data(self, method, key):
+        try:
+            process = SimpleProcess(f"salt-call {method} {key} --out=json")
+            stdout, stderr, rc = process.run()
+        except Exception as e:
+            Log.logger.warn(f"Error in command execution : {e}")
+        if stderr:
+            Log.logger.warn(stderr)
+        if rc == 0 and stdout.decode('utf-8') != "":
+            res = stdout.decode('utf-8')
+            result = json.loads(res)
+            return result['local']
+
+    def _check_if_dir_exist_remote_host(self, dir, host):
+        try:
+            process = SimpleProcess("ssh "+ host +" ls "+ dir)
+            stdout, stderr, rc = process.run()
+        except Exception as e:
+            Log.logger.warn(f"Error in command execution : {e}")
+        if stderr:
+            Log.logger.warn(stderr)
+        if rc == 0:
+            return True
+ 
+    def _create_ssh_config(self, path, private_key):
+        ssh_config = '''Host *
+    User {user}
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    IdentityFile {private_key}
+    IdentitiesOnly yes
+    LogLevel ERROR'''.format(user=self._user, private_key=private_key )
+        try:
+            with open(path, "w") as fh:
+                fh.write(ssh_config)
+        except OSError as err:
+            if err.errno != errno.EEXIST: raise
+        
+    def _passwordless_ssh(self, home_dir):
+        """
+        make passwordless ssh to nodes
+        """
+        Setup._run_cmd("mkdir "+os.path.join(home_dir, const.SSH_DIR))
+        cmd = shlex.split("ssh-keygen -N '' -f "+os.path.join(home_dir, const.SSH_PRIVATE_KEY))
+        Setup._run_cmd(cmd)
+        self._create_ssh_config(os.path.join(home_dir, const.SSH_CONFIG), os.path.join(home_dir, const.SSH_PRIVATE_KEY))
+        Setup._run_cmd("cp "+os.path.join(home_dir, const.SSH_PUBLIC_KEY)+" " +
+                                                     os.path.join(home_dir, const.SSH_AUTHORIZED_KEY))
+        Setup._run_cmd("chown -R "+self._user+":"+self._user+" "+os.path.join(home_dir, const.SSH_DIR))
+        Setup._run_cmd("chmod 400 "+os.path.join(const.CSM_USER_HOME, const.SSH_PRIVATE_KEY))
+
     def _config_user(self, reset=False):
         """
         Check user already exist and create if not exist
@@ -80,6 +134,18 @@ class Setup:
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
+                node_name = self._get_salt_data(const.GRAINS_GET, "id")
+                if ( node_name is None or node_name == 'eosnode-1'): 
+                    self._passwordless_ssh(const.CSM_USER_HOME)
+                nodes = self._get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+                if ( node_name  == 'eosnode-1' and nodes is not None and len(nodes) > 1 ):
+                    nodes.remove(node_name)
+                    for node in nodes:
+                        if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
+                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+ 
+                                      node+":"+const.CSM_USER_HOME)
+                            Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
+                                                 os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
         else:
             if self._is_user_exist():
                 Setup._run_cmd("userdel -r " +self._user)
@@ -102,6 +168,7 @@ class Setup:
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_CONF_PATH)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PIDFILE_PATH)
+        Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
 

@@ -43,7 +43,8 @@ class SimpleProcess(Process):
             setattr(self, key, value)
 
         try:
-            self._cp = subprocess.run(self._cmd.split(), stdout=subprocess.PIPE,
+            cmd = self._cmd.split() if type(self._cmd) is str else self._cmd
+            self._cp = subprocess.run(cmd, stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE, shell=self.shell, cwd=self.cwd,
                     timeout=self.timeout, env=self.env,
                     universal_newlines=self.universal_newlines)
