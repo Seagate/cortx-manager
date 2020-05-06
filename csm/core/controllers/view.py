@@ -160,11 +160,11 @@ class CsmView(web.View):
                                       request,
                                       file_cache: FileCache,
                                       content_byte_size_limit=100 * (1024 ** 2),
-                                      file_byte_size_limit=1 * (1024 ** 3)):
+                                      file_byte_size_limit=2 * (1024 ** 3)):
         """
         Parse multipart request to dict
         Default limit for non-file content is 100 MB
-        Default limit for file content is 1 GB
+        Default limit for file content is 2 GB
         """
         Log.debug("Handling file upload request")
 
@@ -233,7 +233,7 @@ class CsmView(web.View):
 
     async def aiohttp_body_getter(self,
                                   body_reader,
-                                  chunk_byte_size_limit=150 * 1024):
+                                  chunk_byte_size_limit=10 * (1024 **2)):
         """
         chunk_byte_size_limit was figured out as an optimal value for fast upload
         """
