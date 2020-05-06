@@ -113,6 +113,11 @@ NON_ROOT_USER = 'csm'
 NON_ROOT_USER_PASS = 'csm'
 CSM_USER_HOME='/opt/seagate/eos/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
+SSH_DIR='.ssh'
+SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
+SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
+SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
+SSH_CONFIG='{}/config'.format(SSH_DIR)
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -416,6 +421,7 @@ DECRYPTION_KEYS = {
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
 # Provisioner Plugin constant
+NODE_LIST_KEY='cluster:node_list'
 GRAINS_GET = 'grains.get'
 PILLAR_GET = 'pillar.get'
 S3 = 'S3'
