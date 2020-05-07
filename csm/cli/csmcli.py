@@ -98,7 +98,8 @@ class CsmCli(Cmd):
         self._session_token = None
         self.headers = {}
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
-        self.some_error_occured = 'Some Error Occurred.\nPlease Try Login Again.\n'
+        self.some_error_occured = 'Some error occurred.\nPlease try login again.\n'
+        self.session_expired_error = 'Session expired.\nPlease try login again.\n'
 
 
     def preloop(self):
@@ -149,7 +150,7 @@ class CsmCli(Cmd):
                 if not self._session_token:
                     self.do_exit("Server authentication check failed.")
                 self.headers = {'Authorization': f'Bearer {self._session_token}'}
-                Log.info(f"{self.username}: Logged In.")
+                Log.info(f"{self.username}: Logged in.")
                 response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
                 if response:
                     self._permissions.update(response)
@@ -201,17 +202,21 @@ class CsmCli(Cmd):
                     return None
             channel_name = f"""process_{command.comm.get("type", "")}_command"""
             if not hasattr(self, channel_name):
-                err_str = f"Invalid Communication Protocol {command.comm.get('type','')} Selected."
+                err_str = f"Invalid communication protocol {command.comm.get('type','')} selected."
                 Log.error(f"{self.username}:{err_str}")
                 sys.stderr(err_str)
             getattr(self, channel_name)(command)
-            Log.info(f"{self.username}: {cmd}: Command Executed")
+            Log.info(f"{self.username}: {cmd}: Command executed")
+        except CsmUnauthorizedError as e:
+            # Setting session token to None cause it's already expired
+            self._session_token = None
+            self.do_exit(self.session_expired_error)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except SystemExit:
-            Log.debug(f"{self.username}: Command Executed System Exit")
+            Log.debug(f"{self.username}: Command executed system exit")
         except KeyboardInterrupt:
-            Log.debug(f"{self.username}: Stopped via Keyboard Interrupt.")
+            Log.debug(f"{self.username}: Stopped via keyboard interrupt.")
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
@@ -231,7 +236,7 @@ class CsmCli(Cmd):
             self.headers = {}
             Terminal.logout_alert(True)
             assert isinstance(is_logged_out, bool)
-        Log.info(f"{self.username}: Logged Out")
+        Log.info(f"{self.username}: Logged out")
         sys.exit()
 
 if __name__ == '__main__':
@@ -241,16 +246,16 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from eos.utils.log import Log
     from csm.common.conf import Conf
-    from csm.common.errors import CsmError
+    from csm.common.errors import CsmError, CsmUnauthorizedError
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     try:
         CsmCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
-        Log.debug(f"Stopped via Keyboard Interrupt.")
+        Log.debug(f"Stopped via keyboard interrupt.")
         sys.stdout.write("\n")
     except Exception as e:
         Log.critical(f"{e}")
-        sys.stderr.write('Some Error Occurred.\nPlease Try Login Again.\n')
+        sys.stderr.write('Some error occurred.\nPlease try login again.\n')
 
