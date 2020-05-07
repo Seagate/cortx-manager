@@ -115,9 +115,18 @@ class IamUsersService(S3BaseService):
         :param user_name: S3 User Name :type: str
         :return:
         """
-        s3_client = await  self.fetch_iam_client(s3_session)
-        # Delete Given Iam User
         Log.debug(f"Delete IAM User service: Username:{user_name}")
+        s3_client = await  self.fetch_iam_client(s3_session)
+
+        list_access_keys_resp = await s3_client.list_user_access_keys(user_name)
+        if isinstance(list_access_keys_resp, IamError):
+                self._handle_error(list_access_keys_resp)
+
+        for access_key in list_access_keys_resp.access_keys:
+            del_accesskey_resp = await s3_client.delete_user_access_key(user_name, access_key.access_key_id)
+            if isinstance(del_accesskey_resp, IamError):
+                self._handle_error(del_accesskey_resp)
+
         user_delete_response = await  s3_client.delete_user(user_name)
         if isinstance(user_delete_response, IamError):
             self._handle_error(user_delete_response)
