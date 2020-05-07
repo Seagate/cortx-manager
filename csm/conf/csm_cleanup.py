@@ -49,18 +49,9 @@ def filter_out_old_indexes(date_before, indexes):
                 l.append(l_index)
     return l
 
-# Remove selected index from es db
-def remove_by_index(host, index):
-    response = requests.delete(f'http://{host}/{index}')
-    if response.status_code == 200:
-        Log.debug(f'index {index} removed successfully')
-    else:
-        Log.error(f'error removing index {index} :{response.status_code}')
-    return response.status_code
-
 # Remove indexes of es db at address:port arg_n which are older than arg_d days
 # use arg_e option set to True to debug (don't delete but only show commands)
-def remove_old_indexes(arg_d, arg_n, arg_e):
+def remove_old_indexes(es, arg_d, arg_n, arg_e):
     if arg_n:
         host = arg_n
     days = arg_d
@@ -85,22 +76,56 @@ def remove_old_indexes(arg_d, arg_n, arg_e):
                 if arg_e:
                     Log.debug(f'curl -XDELETE http://{host}/{k}')
                 else:
-                    remove_by_index(host, k)
+                    es.remove_by_index(host, k)
                     r=r+1;
             if i==r:
                 Log.info(f"Successfully removed {r} old indexes")
         else:
             Log.debug("Nothing to remove")
 
+def process_stats(args):
+    # Pass arguments to worker function
+    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
+    remove_old_indexes(es, args.d, args.n, args.e)
+
+def process_auditlogs(args):
+    # Pass arguments to worker function
+    # remove data older than given number of days
+    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
+    es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
+
+def add_auditlog_subcommand(main_parser):
+    subparsers = main_parser.add_parser("stats", help='cleanup of stats log')
+    subparsers.set_defaults(func=process_stats)
+    subparsers.add_argument("-d", type=int, default=90,
+            help="days to keep data")
+    subparsers.add_argument("-n", type=str, default="localhost:9200",
+            help="address:port of elasticsearch service")
+    subparsers.add_argument("-e", action='store_true',
+            help="emulate, do not really delete indexes")
+
+def add_stats_subcommand(main_parser):
+    subparsers = main_parser.add_parser("auditlogs", help='cleanup of audit log')
+    subparsers.set_defaults(func=process_auditlogs)
+    subparsers.add_argument("-d", type=int, default=90,
+            help="days to keep data")
+    subparsers.add_argument("-n", type=str, default="localhost:9200",
+            help="address:port of elasticsearch service")
+    subparsers.add_argument("-f", type=str, default="timestamp",
+            help="field of index of elasticsearch service")
+    subparsers.add_argument("-i", nargs='+', default=[],
+            help="index of elasticsearch")
+
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from eos.utils.log import Log
+    from eos.utils.cleanup.es_data_cleanup import esCleanup
     from csm.common.conf import Conf, ConfSection, DebugConf
     from csm.core.blogic import const
     from csm.common.payload import Yaml
     Conf.init()
     Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-    Log.init("csm_cleanup",
+    Log.init(const.CSM_CLEANUP_LOG_FILE,
             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
@@ -108,17 +133,11 @@ if __name__ == '__main__':
             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
             log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"))
     try:
-        argParser = argparse.ArgumentParser(
-            usage = "%(prog)s [-h] [-d] [-n] [-e]",
-            formatter_class = argparse.RawDescriptionHelpFormatter)
-        argParser.add_argument("-d", type=int, default=90,
-                help="days to keep data")
-        argParser.add_argument("-n", type=str, default="localhost:9200",
-                help="address:port of elasticsearch service")
-        argParser.add_argument("-e", action='store_true',
-                help="emulate, do not really delete indexes")
+        argParser = argparse.ArgumentParser()
+        subparsers = argParser.add_subparsers()
+        add_auditlog_subcommand(subparsers)
+        add_stats_subcommand(subparsers)
         args = argParser.parse_args()
-        # Pass arguments to worker function
-        remove_old_indexes(args.d, args.n, args.e)
+        args.func(args)
     except Exception as e:
         Log.error(e, traceback.format_exc())

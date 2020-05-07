@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=/opt/seagate/eos/csm/conf/es_data_cleanup.py
+FILE=/usr/bin/csm_cleanup
 if [ -f "$FILE" ]; then
-    python3 $FILE -i csmauditlog -d 7
+    $FILE auditlogs -i csmauditlog -d 7
 fi
