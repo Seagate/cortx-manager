@@ -30,7 +30,7 @@ import aiohttp
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
-from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE
+from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError
 from csm.cli.command import Command
 
 
@@ -147,13 +147,12 @@ class CsmRestClient(CsmClient):
     async def call(self, cmd, headers={}):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
+        if status == 401:
+            raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
         except ValueError:
-            if body == '401: Unauthorized':
-                raise CsmError(errno.EINVAL, self.not_authorized)
-            else:
-                raise CsmError(errno.EINVAL, self.could_not_parse)
+            raise CsmError(errno.EINVAL, self.could_not_parse)
         return Response(rc=status, output=data), headers
 
     async def process_request(self, session, cmd):
@@ -166,13 +165,12 @@ class CsmRestClient(CsmClient):
         url = f"{self._url}{url}"
         rest_obj = DirectRestRequest(url, session, method, params_json, body_json)
         body, headers, status = await rest_obj.request()
+        if status == 401:
+            raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
         except ValueError:
-            if body == '401: Unauthorized':
-                raise CsmError(errno.EINVAL, self.not_authorized)
-            else:
-                raise CsmError(errno.EINVAL, self.could_not_parse)
+            raise CsmError(errno.EINVAL, self.could_not_parse)
         return Response(rc=status, output=data), headers
 
     def __cleanup__(self):
