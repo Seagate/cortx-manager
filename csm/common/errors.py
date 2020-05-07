@@ -155,3 +155,7 @@ class CsmGatewayTimeout(CsmError):
     This error represents a scenario where CSM was acting as a gateway or proxy and did not receive
     a timely response from the upstream server.
     """
+
+
+class CsmUnauthorizedError(CsmError):
+    """This error represents HTTP 401 Unauthorized Error"""
