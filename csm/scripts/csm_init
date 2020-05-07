@@ -292,7 +292,7 @@ initialize_grafana() {
     rpm -q unzip > /dev/null || { echo "error: unzip package is not installed."; return 1; }
 
     # Configure login page of grafana
-    sed -i -e 's/<title>Grafana<\/title>/<title>Seagate EOS<\/title>/g' \
+    sed -i -e 's/<title>Grafana<\/title>/<title>Seagate CORTX<\/title>/g' \
         -e 's/<footer/<!--footer/g' \
         -e 's/<\/footer>/<\/footer-->/g' ${GRAFANA_SHARE_DIR}views/index.html
     find ${GRAFANA_SHARE_DIR} -type f | xargs sed -i -e 's/heatmap_bg_test.svg/heatmap_bg_test.jpg/g' \

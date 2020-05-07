@@ -169,7 +169,7 @@ class SecurityService(ApplicationService):
 
     async def install_certificate(self):
         """
-        Install new private key and its corresponding certificate for the EOS
+        Install new private key and its corresponding certificate for the CORTX
 
         :return:
         """

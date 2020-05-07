@@ -48,7 +48,7 @@ from csm.core.services.usl_certificate_manager import (
 from eos.utils.security.cipher import Cipher
 from eos.utils.security.secure_storage import SecureStorage
 
-DEFAULT_EOS_DEVICE_VENDOR = 'Seagate'
+DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
 
 
 class UslService(ApplicationService):
@@ -76,7 +76,7 @@ class UslService(ApplicationService):
             str(dev_uuid),
             'S3',
             dev_uuid,
-            DEFAULT_EOS_DEVICE_VENDOR,
+            DEFAULT_CORTX_DEVICE_VENDOR,
         )
         # FIXME: the provisioner call fails on the build machine, so can't get the cluster id
         # Use the device UUID as a temporary solution
@@ -92,7 +92,7 @@ class UslService(ApplicationService):
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
 
     def _get_device_uuid(self) -> UUID:
-        """Obtains the EOS device UUID from config."""
+        """Obtains the CORTX device UUID from config."""
 
         return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid"))
 
@@ -425,7 +425,7 @@ class UslService(ApplicationService):
         return self._get_system_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
-        """Generates the EOS volume (bucket) UUID from EOS device UUID and bucket name."""
+        """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
         return uuid5(self._device.uuid, bucket_name)
 
     async def _get_udx_volume_list(

@@ -1,9 +1,9 @@
 #Component Commands file Path.
 COMMANDS:
   - '<CSM_PATH>/conf/setup.yaml'
-  - '<EOS_PATH>sspl/conf/setup.yaml'
-  - '<EOS_PATH>s3server/conf/setup.yaml'
-  - '<EOS_PATH>core/conf/setup.yaml'
-  - '<EOS_PATH>hare/conf/setup.yaml'
-  - '<EOS_PATH>hare/conf/setup-ha.yaml'
-  - '<EOS_PATH>eos-prvsnr/conf/setup.yaml'
+  - '<CORTX_PATH>sspl/conf/setup.yaml'
+  - '<CORTX_PATH>s3server/conf/setup.yaml'
+  - '<CORTX_PATH>core/conf/setup.yaml'
+  - '<CORTX_PATH>hare/conf/setup.yaml'
+  - '<CORTX_PATH>hare/conf/setup-ha.yaml'
+  - '<CORTX_PATH>eos-prvsnr/conf/setup.yaml'

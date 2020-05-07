@@ -1,6 +1,6 @@
 {
   "name": "bundle_generate",
-  "description": "Generate's Support Bundle for all the EOS System.",
+  "description": "Generate's Support Bundle for all the CORTX System.",
   "permissions_tag": "create",
   "need_confirmation": false,
   "args": [
