@@ -226,14 +226,14 @@ class AlertPlugin(CsmPlugin):
             if resource_type:
                 res_split = resource_type.split(':')
                 """
-                Here resource type can be 2 forms -
-                1. enclosure:fru:disk, node:os:disk_space etc
+                Here resource type can be of following forms -
+                1. enclosure:fru:disk, node:os:disk_space, node:interface:nw:cable etc
+                    and the hierarchy may increase in future.
                 2. enclosure, iem
+                Hence splitting the above by colon(:) and assingning the last element from the split
+                to module_type
                 """
-                if len(res_split) > 1:
-                    module_type = res_split[2]
-                else:
-                    module_type = res_split[0]
+                module_type = res_split[len(res_split) - 1]
                 """ Convert  the SSPL Schema to CSM Schema. """
                 input_alert_payload = Payload(JsonMessage(message))
                 csm_alert_payload = Payload(Dict(dict()))
