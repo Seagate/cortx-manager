@@ -1,7 +1,9 @@
 # Csm Setup
 CSM_PATH = "/opt/seagate/eos/csm"
 CSM_PIDFILE_PATH = "/var/run/csm"
-CSM_CRON_JOB = "/usr/bin/csm_cleanup -d 90"
+CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
+CSM_LOG_PATH = "/var/log/seagate/csm/"
+CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CSM_CONF_PATH = "/etc/csm"
 ETC_PATH = "/etc"
