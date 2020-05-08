@@ -114,7 +114,7 @@ class AlertPlugin(CsmPlugin):
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
             self._executor = ThreadPoolExecutor(max_workers=1)
-            self._loop = asyncio.get_event_loop()
+            self._loop = asyncio.new_event_loop()
             self._decision_maker = None
             if DecisionMaker:
                 self._decision_maker = DecisionMaker()
@@ -345,8 +345,9 @@ class AlertPlugin(CsmPlugin):
         error = ""
         for count in range(0, const.ALERT_RETRY_COUNT):
             try:
-                self._loop.run_in_executor(self._executor,
-                           self._decision_maker.handle_alert, alert_data)
+                Log.debug(f"Sending Alert to Decision Maker for data {alert_data}")
+                self._loop.run_until_complete(self._decision_maker.handle_alert(
+                    alert_data))
             except Exception as e:
                 Log.debug(f"retrying decision_maker {count}")
                 error = f"{e}"
