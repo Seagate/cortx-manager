@@ -162,7 +162,7 @@ class EmailConfigSchema(Schema):
 
     @validates('smtp_protocol')
     def validate_smtp_protocol(self, value):
-        return str(value).lower() in ['tls', 'ssl', 'starttls']
+        return str(value).lower() in ['tls', 'ssl', 'starttls', 'none']
 
 
 class SyslogConfigSchema(Schema):
