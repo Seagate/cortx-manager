@@ -1,36 +1,47 @@
 #!/bin/bash
 
+
 RPM_PATH=$1
 CSM_REPO_PATH=$2
 CSM_PATH=$3
 
+
 yum install -y $RPM_PATH/*.rpm
+
 
 # Copy certificates
 mkdir -p /etc/ssl/stx/
 cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
+
 
 groupadd haclient
 mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 cp -f $CSM_REPO_PATH/jenkins/cicd/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
 
+
 csm_setup post_install
 csm_setup config
 csm_setup init
+
 
 su -c "/usr/bin/csm_agent &" csm
 # TODO: Run web as csm user after not path issue is resolved
 node $CSM_PATH/web/web-dist/server.js &
 
+
 # TODO: Uncomment when container able to start systemd service
 #systemctl restart csm_agent
 #systemctl restart csm_web
 
+
 #systemctl status csm_agent
 #systemctl status csm_web
 
+
 sleep 5s
 mkdir -p /tmp
+cat /var/log/seagate/csm/csm_agent.log
+
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
