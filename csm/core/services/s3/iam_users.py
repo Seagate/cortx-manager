@@ -124,7 +124,7 @@ class IamUsersService(S3BaseService):
 
         for access_key in list_access_keys_resp.access_keys:
             del_accesskey_resp = await s3_client.delete_user_access_key(user_name, access_key.access_key_id)
-            if isinstance(del_accesskey_resp, IamError):
+            if isinstance(del_accesskey_resp, IamError) and not del_accesskey_resp.http_status == 404:
                 self._handle_error(del_accesskey_resp)
 
         user_delete_response = await  s3_client.delete_user(user_name)
