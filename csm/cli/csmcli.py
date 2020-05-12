@@ -22,6 +22,7 @@ import os
 import traceback
 import asyncio
 import errno
+import shlex
 from getpass import getpass
 from cmd import Cmd
 import pathlib
@@ -171,7 +172,7 @@ class CsmCli(Cmd):
         :return:
         """
         if command.strip():
-            self.args = [x.strip() for x in command.split(" ")]
+            self.args = shlex.split(command)
         return command
 
     def process_direct_command(self, command):
