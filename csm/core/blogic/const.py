@@ -120,6 +120,7 @@ SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
 SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
 SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
 SSH_CONFIG='{}/config'.format(SSH_DIR)
+PRIMARY_ROLE='primary'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
