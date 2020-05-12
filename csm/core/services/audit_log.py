@@ -100,7 +100,7 @@ class AuditService(ApplicationService):
         """ generate audit log file name from time range"""
         cluster_id = "NA"
         try:
-            process = SimpleProcess("salt eosnode-1 grains.get cluster_id --out=txt")
+            process = SimpleProcess("salt-call grains.get cluster_id --out=txt")
             stdout, stderr, rc = process.run()
         except Exception as e:
             Log.logger.warn(f"Error in command execution : {e}")

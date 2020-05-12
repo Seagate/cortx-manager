@@ -135,10 +135,11 @@ class Setup:
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = self._get_salt_data(const.GRAINS_GET, "id")
-                if ( node_name is None or node_name == 'eosnode-1'): 
+                primary = self._get_salt_data(const.GRAINS_GET, "roles")
+                if ( node_name is None or const.PRIMARY_ROLE in primary): 
                     self._passwordless_ssh(const.CSM_USER_HOME)
                 nodes = self._get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
-                if ( node_name  == 'eosnode-1' and nodes is not None and len(nodes) > 1 ):
+                if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
                     nodes.remove(node_name)
                     for node in nodes:
                         if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
