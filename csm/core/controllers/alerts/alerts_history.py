@@ -43,7 +43,6 @@ class AlertsHistoryQueryParameter(Schema):
     sort_by = fields.Str(data_key='sortby', default="created_time", missing="created_time")
     direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
         missing='desc', default='desc')
-    severity = fields.Str(default=None, missing=None, allow_none=True)
     sensor_info = fields.Str(default=None, missing=None, allow_none=True)
     start_date = fields.Str(data_key='start_date', default=None, missing=None, \
             allow_none=True)

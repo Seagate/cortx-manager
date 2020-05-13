@@ -151,7 +151,6 @@ ALERT_SENSOR_INFO = 'sensor_info'
 ALERT_MAX_COMMENT_LENGTH = 255
 ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved',
                          'acknowledged']
-ALERT_SHOW_TIME_HOURS = 24
 ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
 ALERT_SENSOR_INFO = 'sensor_info'
