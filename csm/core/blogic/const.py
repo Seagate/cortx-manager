@@ -407,9 +407,9 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
-M0_FILESYSTEM_STAT_CMD = '/usr/bin/m0_filesystem_stats'
-TOTAL_SPACE = 'totalspace'
-FREE_SPACE = 'freespace'
+FILESYSTEM_STAT_CMD = 'hctl status --json'
+TOTAL_SPACE = 'fs_total_disk'
+FREE_SPACE = 'fs_free_disk'
 SIZE = 'size'
 USED = 'used'
 AVAILABLE = 'avail'
