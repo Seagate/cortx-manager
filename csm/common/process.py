@@ -18,6 +18,7 @@
 """
 
 import subprocess
+import asyncio
 
 class Process:
     def __init__(self, cmd):
@@ -67,3 +68,20 @@ class PipedProcess(Process):
     def run(self, **args):
         #TODO
         pass
+
+class AsyncioSubprocess(Process):
+    def __init__(self, cmd):
+        super(AsyncioSubprocess, self).__init__(cmd)
+        
+    async def run(self, **agrs):
+        try:
+            self._process = await asyncio.create_subprocess_shell(self._cmd, 
+                                                            stdout=asyncio.subprocess.PIPE, 
+                                                            stderr=asyncio.subprocess.PIPE)
+            self._output, self._err = await self._process.communicate()
+
+            return self._output, self._err
+        except Exception as err:
+            self._err = "AsyncioSubProcess Error: " + str(err)
+            self._output = ""
+            return self._output, self._err
