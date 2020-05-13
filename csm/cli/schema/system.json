@@ -121,7 +121,7 @@
           "headers":
             {
               "name": "Node ID",
-              "online": "Online/Offline",
+              "online": "Online",
               "standby": "Stand-By Status",
               "shutdown": "Shutdown Status"
             },
