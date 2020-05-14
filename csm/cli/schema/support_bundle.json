@@ -139,7 +139,7 @@
             "host": "Hostname",
             "port": "PORT",
             "user": "User",
-            "remote_path": "PATH"
+            "remote_file": "PATH"
           }
         }
       }
