@@ -16,7 +16,7 @@ cp -f $CSM_REPO_PATH/jenkins/cicd/ees-schema.json /opt/seagate/eos-prvsnr/genera
 chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
 
 csm_setup post_install
-csm_setup config
+csm_setup config --debug
 csm_setup init
 
 su -c "/usr/bin/csm_agent &" csm

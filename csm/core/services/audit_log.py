@@ -98,18 +98,9 @@ class AuditService(ApplicationService):
 
     def generate_audit_log_filename(self, component, start_time, end_time):
         """ generate audit log file name from time range"""
-        cluster_id = "NA"
-        try:
-            process = SimpleProcess("salt-call grains.get cluster_id --out=txt")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.logger.warn(f"Error in command execution : {e}")
-        if stderr:
-            Log.logger.warn(stderr)
-        if rc == 0 and stdout.decode('utf-8') != "":
-            res = stdout.decode('utf-8').split('\n')
-            cluster = res[0].split(" ")
-            cluster_id = cluster[1]
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        if not cluster_id:
+            cluster_id = const.NA
         start_date = datetime.fromtimestamp(start_time).strftime('%d-%m-%Y')
         end_date = datetime.fromtimestamp(end_time).strftime('%d-%m-%Y')
         return (f'{component}.{start_date}.{end_date}.{cluster_id}')

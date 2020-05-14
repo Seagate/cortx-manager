@@ -129,6 +129,12 @@
                     "help": "force"
                 },
                 {
+                    "flag": "--debug",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "config for dev mode"
+                },
+                {
                   "flag": "-c",
                   "dest": "Component",
                   "help": "Component name",

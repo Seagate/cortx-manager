@@ -118,6 +118,8 @@ class CsmCli(Cmd):
              file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
              log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
              level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
@@ -256,6 +258,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         Log.debug(f"Stopped via keyboard interrupt.")
         sys.stdout.write("\n")
+    except InvalidRequest as e:
+        raise InvalidRequest(f"{e}")
     except Exception as e:
         Log.critical(f"{e}")
         sys.stderr.write('Some error occurred.\nPlease try login again.\n')
