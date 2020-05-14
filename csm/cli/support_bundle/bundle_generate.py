@@ -87,7 +87,7 @@ class ComponentsBundle:
         """
         if not protocol_details.get("host", None):
             Log.info("Skipping File Upload as host is not configured.")
-            return
+            return False
         url = protocol_details.get('url')
         protocol = url.split("://")[0]
         channel = f"{protocol.upper()}Channel"
@@ -109,6 +109,7 @@ class ComponentsBundle:
         else:
             Log.error("Invalid Url in csm.conf.")
             raise Exception(f"{protocol} is Invalid.")
+        return True
 
     @staticmethod
     async def init(command: List):
@@ -119,7 +120,7 @@ class ComponentsBundle:
         """
         bundle_id = command.options.get("bundle_id", "")
         node_name = command.options.get("node_name", "")
-        comment = command.options.get("comment", ""),
+        comment = command.options.get("comment", "")
         ftp_msg = ""
         file_link_msg = ""
         Log.debug(f"Bundle Generation Started -- {bundle_id}, {node_name}, {comment}")
@@ -133,7 +134,11 @@ class ComponentsBundle:
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
                                      f"{const.SUPPORT_BUNDLE}.bundle_path"))
         if os.path.isdir(path):
-            shutil.rmtree(path)
+            try:
+                shutil.rmtree(path)
+            except PermissionError:
+                Log.warn(f"Failed to cleanup {path} due to insufficient permissions")
+
         bundle_path = os.path.join(path, bundle_id)
         os.makedirs(bundle_path)
         # Start Execution for each Component Command.
@@ -166,8 +171,11 @@ class ComponentsBundle:
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}.symlink_path")
         if os.path.exists(symlink_path):
-            shutil.rmtree(symlink_path)
-        os.mkdir(symlink_path)
+            try:
+                shutil.rmtree(symlink_path)
+            except PermissionError:
+                Log.warn(f"Failed to cleanup {symlink_path} due to insufficient permissions")
+        os.makedirs(symlink_path, exist_ok=True)
 
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
@@ -185,9 +193,10 @@ class ComponentsBundle:
 
         #Upload the File.
         try:
-            ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
+            uploaded = ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.SUPPORT_BUNDLE), tar_file_name)
-            ftp_msg = "Uploaded On Configured Location."
+            if uploaded:
+                ftp_msg = "Uploaded On Configured Location."
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
