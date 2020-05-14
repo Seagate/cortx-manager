@@ -31,7 +31,8 @@ class CsmAgent:
                file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        CsmAgent.decrypt_conf()
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
@@ -143,28 +144,6 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
-
-    @staticmethod
-    def decrypt_conf():
-        """
-        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
-        :return:
-        """
-        if not client:
-            Log.warn("Salt Module Not Found.")
-            return None
-        cluster_id = client.Caller().function(const.GRAINS_GET, const.CLUSTER_ID)
-        for each_key in const.DECRYPTION_KEYS:
-            cipher_key = Cipher.generate_key(cluster_id,
-                                             const.DECRYPTION_KEYS[each_key])
-            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
-            try:
-                decrypted_value = Cipher.decrypt(cipher_key,
-                                                 encrypted_value.encode("utf-8"))
-                Conf.set(const.CSM_GLOBAL_INDEX, each_key,
-                         decrypted_value.decode("utf-8"))
-            except CipherInvalidToken as error:
-                Log.warn(f"Decryption for {each_key} Failed. {error}")
 
     @staticmethod
     def _daemonize():

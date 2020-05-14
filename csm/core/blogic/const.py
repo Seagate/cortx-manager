@@ -416,9 +416,10 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "rabbitmq",
+    "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }
+CLUSTER_ID_KEY = "PROVISIONER.cluster_id"
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -433,11 +434,20 @@ USERNAME = "username"
 PASSWORD = 'password'
 SECRET = 'secret'
 IAM_ADMIN = 'iam_admin'
-OPEN_LDAP = 'open_ldap'
-SSPL = 'sspl'
+OPENLDAP = 'openldap'
+SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
+PROVISIONER='PROVISIONER'
+LOCAL='local'
+DEBUG='debug'
+NA='NA'
+
+#Deployment Mode
+DEPLOYMENT = 'DEPLOYMENT'
+MODE = 'mode' 
+DEV = 'dev'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
