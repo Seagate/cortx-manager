@@ -21,8 +21,9 @@ import asyncio
 import time
 
 from aiohttp import web, ClientSession, TCPConnector
+from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError as BotoClientError
 from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
@@ -306,7 +307,7 @@ class UslService(ApplicationService):
         # When get-user is implemented on the IAM server side workaround could be removed.
         try:
             await iam_cli.delete_user(user_name)
-        except ClientError:
+        except BotoClientError:
             # Ignore errors in deletion, user might not exist
             pass
 
@@ -601,14 +602,18 @@ class UslService(ApplicationService):
                 Log.info('Device registration in process---waiting for confirmation')
                 timeout_limit = time.time() + 60
                 while time.time() < timeout_limit:
-                    async with session.get(endpoint_url) as response:
-                        if response.status == 200:
-                            Log.info('Device registration successful')
-                            break
-                        elif response.status != 201:
-                            reason = 'Device registration failed'
-                            Log.error(f'{reason}---unexpected status code {response.status}')
-                            raise CsmInternalError(desc=reason)
+                    try:
+                        async with session.get(endpoint_url) as response:
+                            if response.status == 200:
+                                Log.info('Device registration successful')
+                                break
+                            elif response.status != 201:
+                                reason = 'Device registration failed'
+                                Log.error(f'{reason}---unexpected status code {response.status}')
+                                raise CsmInternalError(desc=reason)
+                    except HttpClientError as e:
+                        reason = 'HTTP client error suppressed during registration confirmation'
+                        Log.warn(f'{reason}---{str(e)}')
                     await asyncio.sleep(1)
                 else:
                     reason = 'Could not confirm device registration status'
