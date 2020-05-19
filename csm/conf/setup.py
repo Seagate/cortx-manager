@@ -116,7 +116,7 @@ class Setup:
             Log.logger.warn(stderr)
         if rc == 0:
             return True
- 
+
     def _create_ssh_config(self, path, private_key):
         ssh_config = '''Host *
     User {user}
@@ -130,7 +130,7 @@ class Setup:
                 fh.write(ssh_config)
         except OSError as err:
             if err.errno != errno.EEXIST: raise
-        
+
     def _passwordless_ssh(self, home_dir):
         """
         make passwordless ssh to nodes
@@ -156,14 +156,14 @@ class Setup:
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
                 primary = Setup.get_salt_data(const.GRAINS_GET, "roles")
-                if ( node_name is None or const.PRIMARY_ROLE in primary): 
+                if ( node_name is None or const.PRIMARY_ROLE in primary):
                     self._passwordless_ssh(const.CSM_USER_HOME)
                 nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
                 if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
                     nodes.remove(node_name)
                     for node in nodes:
                         if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
-                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+ 
+                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+
                                       node+":"+const.CSM_USER_HOME)
                             Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
                                                  os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
@@ -259,7 +259,7 @@ class Setup:
             if args[const.DEBUG]:
                 conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
             else:
-                Setup.Config.store_encrypted_password(conf_file_data) 
+                Setup.Config.store_encrypted_password(conf_file_data)
                 # Update the Current Config File.
                 Yaml(csm_conf_path).dump(conf_file_data)
             Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
@@ -281,7 +281,7 @@ class Setup:
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
             Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
 
-    def _config_cluster(self):
+    def _config_cluster(self, args):
         """
         Instantiation of csm cluster with resources
         Create csm user
@@ -292,7 +292,7 @@ class Setup:
         }
         self._ha_framework = PcsHAFramework(self._csm_ra)
         self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-        self._cluster.init()
+        self._cluster.init(args['f'])
         CsmApi.set_cluster(self._cluster)
 
     def _cleanup_job(self, reset=False):
@@ -460,7 +460,7 @@ class CsmSetup(Setup):
             self._rsyslog_common()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
-                self._config_cluster()
+                self._config_cluster(args)
         except Exception as e:
             raise CsmSetupError("csm_setup init failed. Error: %s" %e)
 
