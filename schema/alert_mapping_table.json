@@ -262,7 +262,7 @@
     "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info": "extended_info.info"
   },
-  "raid": {
+  "raid_data": {
     "message.sensor_response_type.info.event_time": "created_time",
     "message.sensor_response_type.alert_type": "state",
     "message.sensor_response_type.info.resource_type": "module_name",
