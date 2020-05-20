@@ -29,6 +29,7 @@ from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
 from concurrent.futures import ThreadPoolExecutor
+from csm.common.services import Service
 try:
     from eos.utils.ha.dm.decision_maker import DecisionMaker
 except ModuleNotFoundError:
@@ -113,11 +114,7 @@ class AlertPlugin(CsmPlugin):
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
-            self._executor = ThreadPoolExecutor(max_workers=1)
-            self._loop = asyncio.new_event_loop()
-            self._decision_maker = None
-            if DecisionMaker:
-                self._decision_maker = DecisionMaker()
+            self.decision_maker_service = DecisionMakerService()
         except Exception as e:
             Log.exception(e)
 
@@ -129,9 +126,12 @@ class AlertPlugin(CsmPlugin):
         1. callback_fn :- This parameter specifies the name AlertMonitor 
            class function to which plugin will send the alerts as JSON string.  
         """
-        self.monitor_callback = callback_fn
-        self.health_plugin = health_plugin
-        self.comm_client.init()
+        try:
+            self.monitor_callback = callback_fn
+            self.health_plugin = health_plugin
+            self.comm_client.init()
+        except Exception as e:
+            Log.error(f"Error occured while calling alert plugin init. {e}")
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():
@@ -173,12 +173,12 @@ class AlertPlugin(CsmPlugin):
                     alert_validator = AlertSchemaValidator()
                     alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
                     Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
+                    status = self.monitor_callback(alert_data)
                     """
                     Calling HA Decision Maker for Alerts.
                     """
-                    if self._decision_maker:
-                        self.transmit_alerts_info(sensor_queue_msg)
-                    status = self.monitor_callback(alert_data)
+                    if self.decision_maker_service:
+                        self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.
                 Log.warn(f"Acknowledge incase of validation error {ve}")
@@ -336,23 +336,33 @@ class AlertPlugin(CsmPlugin):
                     items[const.ALERT_HEALTH_RECOMMENDATION]
                 csm_schema[const.ALERT_EVENT_DETAILS].append(description_dict)
 
-    def transmit_alerts_info(self, alert_data):
+class DecisionMakerService(Service):
+    def __init__(self):
+        super().__init__()
+        self._decision_maker = None
+        if DecisionMaker:
+            self._decision_maker = DecisionMaker()
+
+    def decision_maker_callback(self, alert_data):
+        self._transmit_alerts_info(alert_data)
+
+    def _transmit_alerts_info(self, alert_data):
         """
         This Method will send the alert to HA system for System check.
         :param alert_data: alert data received from SSPL :type:Dict
         :return: None
         """
         error = ""
-        for count in range(0, const.ALERT_RETRY_COUNT):
-            try:
-                Log.debug(f"Sending Alert to Decision Maker for data {alert_data}")
-                self._loop.run_until_complete(self._decision_maker.handle_alert(
-                    alert_data))
-            except Exception as e:
-                Log.debug(f"retrying decision_maker {count}")
-                error = f"{e}"
-                time.sleep(2**count)
-                continue
-            break
-        else:
-            Log.error(f"Decision Maker Failed {error} for data {alert_data}")
+        if self._decision_maker:
+            for count in range(0, const.ALERT_RETRY_COUNT):
+                try:
+                    Log.debug(f"Sending Alert to Decision Maker for data {alert_data}")
+                    self._run_coroutine(self._decision_maker.handle_alert(alert_data))
+                except Exception as e:
+                    Log.debug(f"retrying decision_maker {count} : {e}")
+                    error = f"{e}"
+                    time.sleep(2**count)
+                    continue
+                break
+            else:
+                Log.error(f"Decision Maker Failed {error} for data {alert_data}")
