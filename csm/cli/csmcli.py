@@ -197,6 +197,7 @@ class CsmCli(Cmd):
         :return:
         """
         try:
+            Log.debug(f"{self.username}: {cmd}")
             command = CommandFactory.get_command(self.args, self._permissions)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,

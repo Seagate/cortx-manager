@@ -29,7 +29,6 @@ Type -h or --help for help.\n
 
 CLI_PROMPT = "csmcli$ "
 
-SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 BASE_DIR = '/opt/seagate/eos'
@@ -252,6 +251,15 @@ SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
+SOS_COMP = 'os'
+SB_COMPONENTS = "components"
+SB_COMMENT = "comment"
+SB_NODE_NAME = "node_name"
+SB_BUNDLE_ID = "bundle_id"
+SB_BUNDLE_PATH = "bundle_path"
+SB_SYMLINK_PATH = "symlink_path"
+ROOT_PRIVILEGES_MSG = "Command requires root privileges"
+PERMISSION_ERROR_MSG = "Failed to cleanup {path} due to insufficient permissions"
 
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
@@ -460,3 +468,5 @@ HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
 
 ALERT_RETRY_COUNT = 3
+
+SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"

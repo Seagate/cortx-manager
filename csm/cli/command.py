@@ -240,7 +240,10 @@ class Output:
         # Todo: Need to fetch the response messages from a file for localization.
         # TODO: Check 201 response code also for creation requests.
         if self.rc not in  (200, 201, CSM_OPERATION_SUCESSFUL) :
-            errstr = Output.error(self.rc, kwargs.get("error"),
+            if isinstance(self.output, str):
+                errstr = Output.error(self.rc, self.output)    
+            else:
+                errstr = Output.error(self.rc, kwargs.get("error") ,
                                   self.output)
             err.write(f"{errstr}\n" or "")
             return None
@@ -259,10 +262,10 @@ class Output:
         return str(kwargs.get("success", output))
 
     @staticmethod
-    def error(rc: int, message: str, stacktrace) -> str:
+    def error(rc: int, message: str, stacktrace=None) -> str:
         """Format for Error message"""
-        if message:
-            return f'error({rc}): {message}\n'
+        if not stacktrace:
+            return f"error({rc}): {message}\n"
         return f"error({rc}): Error:- {stacktrace.get('message')}"
 
     @staticmethod
