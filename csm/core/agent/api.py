@@ -49,7 +49,6 @@ from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
 
 
@@ -98,7 +97,7 @@ class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
 
     @staticmethod
-    def init(alerts_service, usl_service):
+    def init(alerts_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtask = None
@@ -111,9 +110,7 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.permission_middleware]
         )
 
-        usl_ctrl = UslController(usl_service)
         CsmRoutes.add_routes(CsmRestApi._app)
-        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, usl_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
 

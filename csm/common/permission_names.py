@@ -36,6 +36,7 @@ class Resource:
     PERMISSIONS = 'permissions'
     NOTIFICATION = 'notification'
     SECURITY = "security"
+    UDX = 'udx'
 
 
 class Action:
