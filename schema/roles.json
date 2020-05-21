@@ -4,7 +4,8 @@
             "maintenance": ["list", "update"],
             "system": ["list", "update"],
             "notification": ["update"],
-            "security": ["read", "update"]
+            "security": ["read", "update"],
+            "udx": ["list", "update"]
         }
     },
     "manage":{

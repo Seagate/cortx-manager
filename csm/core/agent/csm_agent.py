@@ -37,20 +37,8 @@ class CsmAgent:
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
 
-        try:
-            # TODO: consider a more safe storage
-            params = {
-                "username": const.NON_ROOT_USER,
-                "password": const.NON_ROOT_USER_PASS
-            }
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
-        except CsmError as ce:
-            Log.error(f"Unable to load Provisioner plugin: {ce}")
-
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
-        s3_plugin = import_plugin_module('s3')
-        usl_service = UslService(s3_plugin.S3Plugin(), db, provisioner)
 
         # Clearing cached files
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
@@ -60,7 +48,7 @@ class CsmAgent:
         # Alert configuration
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
-        CsmRestApi.init(alerts_service, usl_service)
+        CsmRestApi.init(alerts_service)
 
         #Heath configuration
         health_repository = HealthRepository()
@@ -133,6 +121,16 @@ class CsmAgent:
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
 
+        try:
+            # TODO: consider a more safe storage
+            params = {
+                "username": const.NON_ROOT_USER,
+                "password": const.NON_ROOT_USER_PASS
+            }
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
+        except CsmError as ce:
+            Log.error(f"Unable to load Provisioner plugin: {ce}")
+
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
@@ -144,6 +142,9 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
+
+        # USL Service
+        CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
     @staticmethod
     def _daemonize():

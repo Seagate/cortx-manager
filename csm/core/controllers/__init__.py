@@ -17,7 +17,6 @@
  ****************************************************************************
 """
 
-from .usl import UslController
 from .routes import CsmRoutes
 from .users import CsmUsersListView, CsmUsersView
 from .s3.iam_users import IamUserListView, IamUserView
@@ -28,3 +27,6 @@ from .health import HealthView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView
+from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
+                  DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,
+                  SystemCertificatesView,  SystemCertificatesByTypeView, NetworkInterfacesView)

@@ -18,30 +18,30 @@
 """
 
 from aiohttp import web
-from functools import wraps
 from ipaddress import ip_address
 from json import JSONDecodeError
 from marshmallow import Schema, ValidationError, fields, validates
-from typing import Any, Callable, Dict, List, Tuple, Type
+from typing import Any, Dict, List, Type
 
 from csm.common.decorators import Decorators
 from csm.common.errors import CsmError
 from eos.utils.log import Log
+from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options
-from csm.core.controllers.s3.base import S3AuthenticatedView
+from csm.core.blogic import const
+from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
 from csm.core.services.usl import UslService
-from .view import CsmAuth
 
 
 # TODO replace this hack with a proper firewall, or serve USL on a separate socket
-class Proxy:
+class _Proxy:
     @staticmethod
-    def on_loopback_only(cls: Type['View']) -> Type['View']:
+    def on_loopback_only(cls: Type['_View']) -> Type['_View']:
 
         old_init = cls.__init__
 
-        def new_init(obj, request: web.Request, usl_service: UslService) -> None:
+        def new_init(obj, request: web.Request) -> None:
             if request.transport is not None:
                 peername = request.transport.get_extra_info('peername')
                 if (peername is None or
@@ -49,40 +49,28 @@ class Proxy:
                     not ip_address(peername[0]).is_loopback
                 ):
                     raise web.HTTPNotFound()
-            old_init(obj, request, usl_service)
+            old_init(obj, request)
 
         setattr(cls, '__init__', new_init)
         return cls
 
 
-# TODO: make USL views inherit CSM view, handle authorization
-class View(web.View):
+class _View(CsmView):
     """
-    Generic view class for USL API views. Binds a view to an USL service.
+    Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
-    def __init__(self, request: web.Request, usl_service: UslService) -> None:
-        web.View.__init__(self, request)
-        self._usl_service = usl_service
-
-    @staticmethod
-    def as_generic_view_class(
-        f: Callable[['UslController'], Any]
-    ) -> Callable[['UslController'], Type[web.View]]:
-
-        def wrapper(self: 'UslController') -> Type[web.View]:
-            base: Any = f(self)
-            class Child(base):
-
-                def __init__(child_self, request: web.Request) -> None:
-                    super().__init__(request, self._usl_service)
-            return Child
-        return wrapper
+    def __init__(self, request: web.Request) -> None:
+        CsmView.__init__(self, request)
+        self._service = self._request.app[const.USL_SERVICE]
 
 
-class DeviceRegistrationView(View):
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
+@CsmView._app_routes.view("/usl/v1/registerDevice")
+class DeviceRegistrationView(_View):
     """
     Device registration view.
     """
+    @CsmAuth.permissions({Resource.UDX: {Action.UPDATE}})
     async def post(self) -> Dict:
 
         class MethodSchema(Schema):
@@ -103,37 +91,43 @@ class DeviceRegistrationView(View):
         try:
             body = await self.request.json()
             params = MethodSchema().load(body)
-            return await self._usl_service.post_register_device(**params)
+            return await self._service.post_register_device(**params)
         except (JSONDecodeError, ValidationError) as e:
             desc = 'Malformed input payload'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
 
+    @CsmAuth.permissions({Resource.UDX: {Action.LIST}})
     async def get(self) -> None:
-        await self._usl_service.get_register_device()
+        await self._service.get_register_device()
 
 
-class RegistrationTokenView(View):
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
+@CsmView._app_routes.view("/usl/v1/registrationToken")
+class RegistrationTokenView(_View):
     """
     Registration token generation view.
     """
+    @CsmAuth.permissions({Resource.UDX: {Action.LIST}})
     async def get(self) -> Dict[str, str]:
-        return await self._usl_service.get_registration_token()
+        return await self._service.get_registration_token()
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class DeviceView(View):
+@CsmView._app_routes.view("/usl/v1/devices")
+class DeviceView(_View):
     """
     Devices list view.
     """
     async def get(self) -> List[Dict[str, str]]:
-        return await self._usl_service.get_device_list()
+        return await self._service.get_device_list()
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class DeviceVolumesListView(View):
+@CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes")
+class DeviceVolumesListView(_View):
     """
     Volumes list view.
     """
@@ -155,14 +149,15 @@ class DeviceVolumesListView(View):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._usl_service.get_device_volumes_list(
+        return await self._service.get_device_volumes_list(
             params['device_id'], *AccessParamsSchema.flatten(access_params)
         )
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class DeviceVolumeMountView(View):
+@CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/mount")
+class DeviceVolumeMountView(_View):
     """
     Volume mount view.
     """
@@ -185,16 +180,17 @@ class DeviceVolumeMountView(View):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._usl_service.post_device_volume_mount(
+        return await self._service.post_device_volume_mount(
             params['device_id'],
             params['volume_id'],
             *AccessParamsSchema.flatten(access_params),
         )
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class DeviceVolumeUnmountView(View):
+@CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/umount")
+class DeviceVolumeUnmountView(_View):
     """
     Volume unmount view.
     """
@@ -217,53 +213,57 @@ class DeviceVolumeUnmountView(View):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._usl_service.post_device_volume_unmount(
+        return await self._service.post_device_volume_unmount(
             params['device_id'],
             params['volume_id'],
             *AccessParamsSchema.flatten(access_params),
         )
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class UdsEventsView(View):
+@CsmView._app_routes.view("/usl/v1/events")
+class UdsEventsView(_View):
     """
     UDS Events view.
     """
     async def get(self) -> str:
-        return await self._usl_service.get_events()
+        return await self._service.get_events()
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class SystemView(View):
+@CsmView._app_routes.view("/usl/v1/system")
+class SystemView(_View):
     """
     System information view.
     """
     async def get(self) -> Dict[str, str]:
-        return await self._usl_service.get_system()
+        return await self._service.get_system()
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class SystemCertificatesView(View):
+@CsmView._app_routes.view("/usl/v1/system/certificates")
+class SystemCertificatesView(_View):
     """
     System certificates view.
     """
     async def post(self) -> web.Response:
-        return await self._usl_service.post_system_certificates()
+        return await self._service.post_system_certificates()
 
     async def put(self) -> None:
         certificate = await self.request.read()
-        await self._usl_service.put_system_certificates(certificate)
+        await self._service.put_system_certificates(certificate)
 
     async def delete(self) -> None:
-        await self._usl_service.delete_system_certificates()
+        await self._service.delete_system_certificates()
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class SystemCertificatesByTypeView(View):
+@CsmView._app_routes.view("/usl/v1/system/certificates/{type}")
+class SystemCertificatesByTypeView(_View):
     """
     System certificates view by type.
     """
@@ -285,70 +285,19 @@ class SystemCertificatesByTypeView(View):
 
         try:
             params = MethodSchema().load(self.request.match_info)
-            return await self._usl_service.get_system_certificates_by_type(params['type'])
+            return await self._service.get_system_certificates_by_type(params['type'])
         except ValidationError as e:
             desc = 'Malformed path'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
 
 
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
-@Decorators.decorate_if(not Options.debug, Proxy.on_loopback_only)
-class NetworkInterfacesView(View):
+@CsmView._app_routes.view("/usl/v1/system/network/interfaces")
+class NetworkInterfacesView(_View):
     """
     Network interfaces list view.
     """
     async def get(self) -> List[Dict[str, Any]]:
-        return await self._usl_service.get_network_interfaces()
-
-
-class UslController:
-    """
-    Exposes configured USL API views for consumption by the routing module.
-    """
-    def __init__(self, usl_service: UslService) -> None:
-        self._usl_service = usl_service
-
-    @View.as_generic_view_class
-    def get_device_registration_view_class(self) -> Type[DeviceRegistrationView]:
-        return DeviceRegistrationView
-
-    @View.as_generic_view_class
-    def get_registration_token_view_class(self) -> Type[RegistrationTokenView]:
-        return RegistrationTokenView
-
-    @View.as_generic_view_class
-    def get_device_view_class(self) -> Type[DeviceView]:
-        return DeviceView
-
-    @View.as_generic_view_class
-    def get_device_volumes_list_view_class(self) -> Type[DeviceVolumesListView]:
-        return DeviceVolumesListView
-
-    @View.as_generic_view_class
-    def get_device_volume_mount_view_class(self) -> Type[DeviceVolumeMountView]:
-        return DeviceVolumeMountView
-
-    @View.as_generic_view_class
-    def get_device_volume_unmount_view_class(self) -> Type[DeviceVolumeUnmountView]:
-        return DeviceVolumeUnmountView
-
-    @View.as_generic_view_class
-    def get_uds_events_view_class(self) -> Type[UdsEventsView]:
-        return UdsEventsView
-
-    @View.as_generic_view_class
-    def get_system_view_class(self) -> Type[SystemView]:
-        return SystemView
-
-    @View.as_generic_view_class
-    def get_system_certificates_view_class(self) -> Type[SystemCertificatesView]:
-        return SystemCertificatesView
-
-    @View.as_generic_view_class
-    def get_system_certificates_by_type_view_class(self) -> Type[SystemCertificatesByTypeView]:
-        return SystemCertificatesByTypeView
-
-    @View.as_generic_view_class
-    def get_network_interfaces_view_class(self) -> Type[NetworkInterfacesView]:
-        return NetworkInterfacesView
+        return await self._service.get_network_interfaces()
