@@ -541,7 +541,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_plugin = health_plugin      
+        self._health_plugin = health_plugin
         super().__init__()
 
     def _monitor(self):

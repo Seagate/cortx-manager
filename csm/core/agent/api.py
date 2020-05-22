@@ -100,7 +100,7 @@ class CsmRestApi(CsmApi, ABC):
     def init(alerts_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
-        CsmRestApi._bgtask = None
+        CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
         CsmRestApi._app = web.Application(
@@ -367,12 +367,14 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     async def _on_startup(app):
         Log.debug('REST API startup')
-        CsmRestApi._bgtask = app.loop.create_task(CsmRestApi._websock_bg())
+        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
+        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
     async def _on_shutdown(app):
         Log.debug('REST API shutdown')
-        CsmRestApi._bgtask.cancel()
+        for task in CsmRestApi._bgtasks:
+            task.cancel()
 
     @staticmethod
     async def _websock_bg():
@@ -396,6 +398,17 @@ class CsmRestApi(CsmApi, ABC):
                 await ws.send_str(json_msg)
         except:
             Log.debug('REST API websock broadcast error')
+
+    @classmethod
+    async def _ssl_cert_check_bg(cls):
+        Log.debug('SSL certificate expiry check background task started')
+        try:
+            security_service = cls._app[const.SECURITY_SERVICE]
+            await security_service.check_certificate_expiry_time_task()
+        except AsyncioCancelledError:
+            Log.debug('SSL certificate expiry check background task canceled')
+
+        Log.debug('SSL certificate expiry check background task done')
 
     @staticmethod
     async def _async_push(msg):
