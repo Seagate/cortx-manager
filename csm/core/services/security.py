@@ -18,15 +18,21 @@
 """
 
 import os
+import asyncio
+import syslog
 from datetime import datetime
 from string import Template
 from typing import Union
+from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
+from csm.common.iem import Iem
 from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
                                ResourceExist, CsmNotFoundError, CsmServiceConflict)
+from csm.common.conf import Conf
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
 from eos.utils.log import Log
@@ -36,6 +42,7 @@ from csm.core.data.models.system_config import (CertificateConfig, SecurityConfi
 from csm.core.services.file_transfer import FileRef
 from csm.plugins.eos.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
+from csm.core.blogic import const
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
@@ -72,6 +79,7 @@ class SecurityService(ApplicationService):
         self._provisioner = provisioner
         self._last_configuration = None
         self._provisioner_id = None
+        self._executor = ThreadPoolExecutor(max_workers=1)
 
     def _provisioner_to_installation_status(self, prv_status: ProvisionerCommandStatus):
         """ Convert provisioner job status into corresponding certificate installation status
@@ -79,6 +87,24 @@ class SecurityService(ApplicationService):
         :return: return one of the `CertificateInstallationStatus` values
         """
         return self._MAP.get(prv_status, CertificateInstallationStatus.UNKNOWN)
+
+    def _load_certificate(self, path: str):
+        """
+        Helper method for loading certificate from file in X.509 format
+
+        :param path: path to certificate file
+        :return: certificate object
+        """
+        with open(path, "br") as f:
+            # read certificate data as binary
+            data = f.read()
+        try:
+            cert = x509.load_pem_x509_certificate(data, default_backend())
+            return cert
+        except Exception as e:
+            # TODO: Catch proper exceptions instead of generic Exception
+            # TODO: Consider to raise another exceptions (SyntaxError?)
+            raise IndentationError(f"Can't load certificate from .pem file: {e}")
 
     async def _store_to_db(self, user: str, pemfile_path: str, save_time: datetime):
         """
@@ -92,13 +118,8 @@ class SecurityService(ApplicationService):
                           uploading time
         :return:
         """
-        with open(pemfile_path, "br") as cert_fh:
-            # read certificate data as binary
-            cert_data = cert_fh.read()
-        try:
-            cert = x509.load_pem_x509_certificate(cert_data, default_backend())
-        except Exception as e:
-            raise IndentationError(f"Can't load certificate from .pem file: {e}")
+        cert = self._load_certificate(pemfile_path)
+
         certificate_conf = CertificateConfig()
         certificate_conf.certificate_id = hex(cert.serial_number)[2:]
         certificate_conf.date = save_time
@@ -273,3 +294,55 @@ class SecurityService(ApplicationService):
         :return:
         """
         pass
+
+    async def get_certificate_expiry_time(self):
+        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
+        def load():
+            return self._load_certificate(path)
+        cert = await self._loop.run_in_executor(self._executor, load)
+        return cert.not_valid_after
+
+    async def _timer_task(self, handler, start: datetime, interval: timedelta):
+        current = datetime.now(timezone.utc)
+        while True:
+            delta = (start - current).total_seconds()
+            if delta > 0:
+                await asyncio.sleep(delta)
+
+            current = datetime.now(timezone.utc)
+            await handler(current)
+
+            current = datetime.now(timezone.utc)
+            start = start + interval
+
+    async def _check_certificate_expiry_time(self, current_time):
+        warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY.ssl_cert_expiry_warning_days")
+        try:
+            expiry_time = await self.get_certificate_expiry_time()
+            expiry_time = expiry_time.replace(tzinfo=timezone.utc)
+            days_left = (expiry_time.date() - current_time.date()).days
+            if expiry_time < current_time:
+                message = f'SSL certificate expired at {expiry_time}'
+            elif days_left in warning_days:
+                message = f'SSL certificate expires at {expiry_time} - {days_left} day(s) left'
+            else:
+                message = None
+
+            if message:
+                Log.warn(f'{message}')
+                Iem.generate(Iem.SEVERITY_WARN,
+                             Iem.IEC_CSM_SECURITY_SSL_CERT_EXPIRING,
+                             message)
+
+        except Exception as e:
+            Log.error(f'Failed to obtain certificate expiry time: {e}')
+
+
+    async def check_certificate_expiry_time_task(self):
+        today = datetime.now(timezone.utc).date()
+        await self._timer_task(
+            handler=self._check_certificate_expiry_time,
+            start=datetime(today.year, today.month, today.day,
+                           tzinfo=timezone.utc),
+            interval=timedelta(days=1)
+        )
