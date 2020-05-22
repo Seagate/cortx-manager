@@ -37,7 +37,7 @@
       "args": [
         {
           "flag": "resource_name",
-          "help": "Provide Node ID or type 'cluster' for Stopping the Resource.",
+          "help": "Provide Node ID for shutting down the Resource.",
           "type": "str",
           "json": true
         },

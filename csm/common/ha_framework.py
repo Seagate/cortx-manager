@@ -136,8 +136,7 @@ class PcsHAFramework(HAFramework):
             Shutdown the current Cluster or Node.
         :return:
         """
-        _command = 'shutdown '
-        _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+        _command = f"shutdown  {node}"
         _cluster_shutdown_cmd = const.HCTL_NODE.format(command=_command,
                           user=self._user, pwd=self._password)
         _proc = SimpleProcess(_cluster_shutdown_cmd)
