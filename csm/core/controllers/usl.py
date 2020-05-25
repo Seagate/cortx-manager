@@ -24,7 +24,7 @@ from marshmallow import Schema, ValidationError, fields, validates
 from typing import Any, Dict, List, Type
 
 from csm.common.decorators import Decorators
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
 from eos.utils.log import Log
 from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options
@@ -250,14 +250,27 @@ class SystemCertificatesView(_View):
     System certificates view.
     """
     async def post(self) -> web.Response:
-        return await self._service.post_system_certificates()
+        try:
+            public_key = await self._usl_service.post_system_certificates()
+        except CsmPermissionDenied:
+            raise web.HTTPForbidden()
+        return web.Response(body=public_key)
 
     async def put(self) -> None:
         certificate = await self.request.read()
-        await self._service.put_system_certificates(certificate)
+        try:
+            await self._usl_service.put_system_certificates(certificate)
+        except CsmPermissionDenied:
+            raise web.HTTPForbidden()
+        raise web.HTTPNoContent()
 
     async def delete(self) -> None:
-        await self._service.delete_system_certificates()
+        try:
+            await self._usl_service.delete_system_certificates()
+        except CsmPermissionDenied:
+            raise web.HTTPForbidden()
+        # Don't return 200 on success, but 204 as USL API specification requires
+        raise web.HTTPNoContent()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -285,11 +298,14 @@ class SystemCertificatesByTypeView(_View):
 
         try:
             params = MethodSchema().load(self.request.match_info)
-            return await self._service.get_system_certificates_by_type(params['type'])
+            certificate = await self._usl_service.get_system_certificates_by_type(params['type'])
+            return web.Response(body=certificate)
         except ValidationError as e:
             desc = 'Malformed path'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
+        except CsmNotFoundError:
+            raise web.HTTPNotFound()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
