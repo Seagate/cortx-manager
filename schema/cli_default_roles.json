@@ -8,5 +8,8 @@
   },
   "csm_bundle_generate": {
     "create": true
+  },
+  "system": {
+    "startup": true
   }
 }
