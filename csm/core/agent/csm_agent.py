@@ -185,8 +185,8 @@ class CsmAgent:
         CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
-        CsmAgent.health_monitor.stop()
         CsmAgent.alert_monitor.stop()
+        CsmAgent.health_monitor.stop()
 
 
 if __name__ == '__main__':

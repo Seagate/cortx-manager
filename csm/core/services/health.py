@@ -464,7 +464,7 @@ class HealthMonitorService(Service, Observable):
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
-            Log.warn(f"Error in stoping alert monitor thread: {e}")
+            Log.warn(f"Error in stopping health monitor thread: {e}")
 
     def _consume(self, message):
         """

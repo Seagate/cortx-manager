@@ -33,6 +33,8 @@ from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
+import re
+import time
 
 # try:
 #     from salt import client
@@ -256,21 +258,25 @@ class Setup:
             csm_conf_path = os.path.join(const.CSM_SOURCE_CONF_PATH, const.CSM_CONF_FILE_NAME)
             # Read Current CSM Config FIle.
             conf_file_data = Yaml(csm_conf_path).load()
-            if args[const.DEBUG]:
-                conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+            if conf_file_data:
+                if args[const.DEBUG]:
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                else:
+                    Setup.Config.store_encrypted_password(conf_file_data)
+                    # Update the Current Config File.
+                    Yaml(csm_conf_path).dump(conf_file_data)
+                Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+                if args[const.DEBUG]:
+                    Yaml(csm_conf_target_path).dump(conf_file_data)
             else:
-                Setup.Config.store_encrypted_password(conf_file_data)
-                # Update the Current Config File.
-                Yaml(csm_conf_path).dump(conf_file_data)
-            Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
-            if args[const.DEBUG]:
-                Yaml(csm_conf_target_path).dump(conf_file_data)
+                raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
 
         @staticmethod
         def load():
-            if not os.path.exists(const.CSM_SOURCE_CONF):
-                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_SOURCE_CONF)
-            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_SOURCE_CONF))
+            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            if not os.path.exists(csm_conf_target_path):
+                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
+            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
 
         @staticmethod
         def delete():
@@ -398,6 +404,31 @@ class Setup:
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
+    def _set_rmq_cluster_nodes(self):
+        """
+        This method gets the nodes names of the the rabbitmq cluster and writes
+        in the config.
+        """
+        nodes = []
+        nodes_found = False
+        try:
+            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
+                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
+                for line in cmd_output[0].split('\n'):
+                    if const.RUNNING_NODES in line:
+                        nodes = re.findall(r"rabbit@([-\w]+)", line)
+                        nodes_found = True
+                if nodes_found:
+                    break
+                time.sleep(2**count)
+            if nodes:
+                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
+                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
+                Conf.save(const.CSM_GLOBAL_INDEX)
+            else:
+                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+        except Exception as e:
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e}")
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
@@ -454,6 +485,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
+            self._set_rmq_cluster_nodes()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()

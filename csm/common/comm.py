@@ -33,9 +33,11 @@ from csm.core.blogic import const
 from csm.common.errors import CsmError
 import pika
 import json
-from pika.exceptions import AMQPConnectionError, AMQPError
-from abc import ABC, ABCMeta, abstractmethod 
+from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroker, \
+    ChannelWrongStateError
+from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
+import random
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -178,19 +180,23 @@ class AmqpChannel(Channel):
 
     def __init__(self, **kwargs):
         Channel.__init__(self)
-        self._connection = None 
+        self._connection = None
         self._channel = None
         self.exchange = None
         self.exchange_queue = None
         self.routing_key = None
+        self.connection_exceptions = (AMQPConnectionError, \
+            ChannelClosedByBroker, ChannelWrongStateError, AttributeError)
+        self.connection_error_msg = (\
+            'RabbitMQ channel closed with error {}. Retrying with another host...')
         self.is_actuator = kwargs.get(const.IS_ACTUATOR, False)
         self.is_node1 = kwargs.get(const.IS_NODE1, False)
         self.node1 = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.NODE1}")
         self.node2 = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.NODE2}")
-        self.host = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.HOST}")
+        self.hosts = Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.RMQ_HOSTS}")
         self.port = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.PORT}")
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, \
@@ -207,8 +213,6 @@ class AmqpChannel(Channel):
                 f"{const.CHANNEL}.{const.DURABLE}")
         self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.EXCLUSIVE}")
-        self.sleep_time = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.SLEEP_TIME}")
         self._setExchangeandQueue()
 
     def _setExchangeandQueue(self):
@@ -236,24 +240,19 @@ class AmqpChannel(Channel):
         Initialize the object from a configuration file.
         Establish connection with Rabbit-MQ server.
         """
-        retry_count = 1
+        self._connection = None
+        self._channel = None
+        retry_count = 0
         while not(self._connection and self._channel) and \
-        int(self.retry_counter) >= retry_count:
+            int(self.retry_counter) > retry_count:
             self.connect()
             if not (self._connection and self._channel):
-                Log.warn(f"RMQ Connection Failed. Retry Attempt: \
-                {retry_count} in {self.sleep_time} seconds")
-                time.sleep(self.sleep_time)
+                Log.warn(f"RMQ Connection Failed. Retry Attempt: {retry_count+1}" \
+                    f" in {2**retry_count} seconds")
+                time.sleep(2**retry_count)
                 retry_count += 1
-        if not(self._connection and self._channel):
-            Log.warn('RMQ connection Failed. SSPL-CSM communication channel\
-                        could not be established.')
-            Log.error(f"SSPL-CSM channel creation FAILED.\
-                                  Retry attempts:{self.retry_counter}")
-            raise CsmError(-1,'RMQ connection Failed to Initialize.')
-        else:
-            Log.debug(f"RMQ connection is Initialized. \
-            Attempts:{retry_count}")
+            else:
+                Log.debug(f"RMQ connection is Initialized. Attempts:{retry_count+1}")
         self._declare_exchange_and_queue()
 
     def _declare_exchange_and_queue(self):
@@ -274,33 +273,44 @@ class AmqpChannel(Channel):
                 self._channel.queue_bind(exchange=self.exchange,
                                          queue=self.exchange_queue,
                                          routing_key=self.routing_key)
+                Log.info(f'Initialized Exchange: {self.exchange}, '
+                        f'Queue: {self.exchange_queue}, routing_key: {self.routing_key}')
             except AMQPError as err:
                 Log.error(f'CSM Fails to initialize the queue.\
                       Details: {err}')
                 Log.exception(err)
                 raise CsmError(-1, f'{err}')
-            Log.info(f'Initialized Exchange: {self.exchange}, '
-                     f'Queue: {self.exchange_queue}, routing_key: {self.routing_key}')
 
     def connect(self):
         """
         Initiate the connection with RMQ and open the necessary communication channel.
         """
         try:
-            self._connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host,
-                               port=self.port, virtual_host=self.virtual_host,
-                               credentials=pika.PlainCredentials(self.username,self.password)))
-
+            ampq_hosts = [f'amqp://{self.username}:{self.password}@{host}/{self.virtual_host}'\
+                for host in self.hosts]
+            ampq_hosts = [pika.URLParameters(host) for host in ampq_hosts]
+            random.shuffle(ampq_hosts)
+            self._connection = pika.BlockingConnection(ampq_hosts)
             self._channel = self._connection.channel()
-        except AMQPConnectionError as err:
-            Log.error(f"RMQ connections has not established. {err}")
+        except self.connection_exceptions as e:
+            Log.error(self.connection_error_msg.format(repr(e)))
 
     def disconnect(self):
         """
-        Disconnect the connection 
+        Disconnect the connection
         """
-        self._connection.close()
-        self._channel.close()
+        try:
+            if self._connection:
+                consumer_tag = const.CONSUMER_TAG
+                self._channel.basic_cancel(consumer_tag=consumer_tag)
+                self._channel.stop_consuming()
+                self._channel.close()
+                self._connection.close()
+                self._channel = None
+                self._connection = None
+                Log.debug(f"RabbitMQ connection closed.")
+        except Exception as e:
+            Log.error(f"Error closing RabbitMQ connection. {e}")
 
     def recv(self, message=None):
         raise Exception('recv not implemented for AMQP Channel')
@@ -318,23 +328,29 @@ class AmqpChannel(Channel):
         @type message: str
         """
         try:
-            self._channel.basic_publish(exchange=self.exchange,routing_key=self.routing_key,
-                                        body=json.dumps(message))
-        except AMQPError as err:
-            Log.warn('Message Publish Failed to Xchange:%s Key: %s, Msg:\
-                Details: %s Error: %s' %(self.exchange,self.routing_key,message,str(err)))
-        else:
-              Log.info('Message Publish to Xchange:%s Key: %s, Msg:\
-                Details: %s ' %(self.exchange,self.routing_key,message ))
+            if self._channel:
+                self._channel.basic_publish(exchange=self.exchange,\
+                    routing_key=self.routing_key, body=json.dumps(message))
+                Log.info(f"Message Publish to Xchange: {self.exchange},"\
+                    f"Key: {self.routing_key}, Msg Details: {message}")
+        except self.connection_exceptions as e:
+            Log.error(self.connection_error_msg.format(repr(e)))
+            self.init()
+            self.send(message)
 
     def recv_file(self, remote_file, local_file):
         raise Exception('recv_file not implemented for AMQP Channel')
-    
+
     def send_file(self, local_file, remote_file):
         raise Exception('send_file not implemented for AMQP Channel')
 
     def acknowledge(self, delivery_tag=None):
-        self._channel.basic_ack(delivery_tag=delivery_tag)
+        try:
+            self._channel.basic_ack(delivery_tag=delivery_tag)
+        except self.connection_exceptions as e:
+            Log.error(self.connection_error_msg.format(repr(e)))
+            self.init()
+            self.acknowledge(delivery_tag)
 
 class FILEChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -469,6 +485,7 @@ class AmqpComm(Comm):
         self._outChannel = AmqpChannel()
         self.plugin_callback = None
         self.delivery_tag = None
+        self._is_disconnect = False
 
     def init(self):
         self._inChannel.init()
@@ -496,10 +513,7 @@ class AmqpComm(Comm):
         self._inChannel.acknowledge(self.delivery_tag)
 
     def stop(self):
-        if self._inChannel.channel():
-            consumer_tag = const.CONSUMER_TAG
-            self._inChannel.channel().basic_cancel(consumer_tag=consumer_tag)
-            self.disconnect()
+        self.disconnect()
 
     def recv(self, callback_fn=None, message=None):
         """
@@ -508,15 +522,28 @@ class AmqpComm(Comm):
         try:
             consumer_tag = const.CONSUMER_TAG
             self.plugin_callback = callback_fn
-            self._inChannel.channel().basic_consume(self._inChannel.exchange_queue,\
-                    partial(self._alert_callback, consumer_tag), consumer_tag=consumer_tag)    
-            self._inChannel.channel().start_consuming()
-        except AMQPConnectionError as err:
-            Log.warn('Connection to RMQ has Broken. Details: {%s} ' %str(err))
-            Log.exception(str(err))
+            if self._inChannel.channel():
+                self._inChannel.channel().basic_consume(self._inChannel.exchange_queue,\
+                        partial(self._alert_callback, consumer_tag), consumer_tag=consumer_tag)
+                self._inChannel.channel().start_consuming()
+        except self._inChannel.connection_exceptions as e:
+            """
+            Currently there are 2 scenarios in which recv method will fail -
+            1. When RMQ on the current node fails
+            2. When we stop csm_agent
+            For the 1st case csm should retry to connect to second node.
+            But for the 2nd case since we are closing the app we should not
+            try to re-connect.
+            """
+            if not self._is_disconnect:
+                Log.error(self._inChannel.connection_error_msg.format(repr(e)))
+                self.init()
+                self.recv(callback_fn)
 
     def disconnect(self):
         try:
+            Log.debug(f"Disconnecting AMQPSensor RMQ communication")
+            self._is_disconnect = True
             self._outChannel.disconnect()
             self._inChannel.disconnect()
         except Exception as e:
@@ -553,12 +580,13 @@ class AmqpActuatorComm(Comm):
 
     def stop(self):
         self.disconnect()
-    
+
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented for AMQPActuator Comm')
 
     def disconnect(self):
         try:
+            Log.debug(f"Disconnecting AMQPActuator RMQ communication")
             self._outChannel_node1.disconnect()
             self._outChannel_node2.disconnect()
         except Exception as e:

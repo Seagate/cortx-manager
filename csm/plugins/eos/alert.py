@@ -159,9 +159,9 @@ class AlertPlugin(CsmPlugin):
         Since actuator response and alerts comes on same channel we need to
         bifercate them.
         """
-        Log.debug(f"Message on sensor queue: {message}")
         status = False
         sensor_queue_msg = JsonMessage(message).load()
+        Log.info(f"Message on sensor queue: {sensor_queue_msg}")
         title = sensor_queue_msg.get("title", "")
         if "actuator" in title.lower():
             status = self.health_plugin.health_plugin_callback(message)
@@ -172,7 +172,7 @@ class AlertPlugin(CsmPlugin):
                     """Validating Schema using marshmallow"""
                     alert_validator = AlertSchemaValidator()
                     alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
-                    Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
+                    Log.debug(f"Alert validated : {alert_data}")
                     status = self.monitor_callback(alert_data)
                     """
                     Calling HA Decision Maker for Alerts.
@@ -211,7 +211,7 @@ class AlertPlugin(CsmPlugin):
         self.comm_client.stop()
 
     def _convert_to_csm_schema(self, message):
-        """ 
+        """
         Parsing the alert JSON to create the csm schema
         """
         Log.debug(f"Convert to csm schema:{message}")
@@ -238,9 +238,23 @@ class AlertPlugin(CsmPlugin):
                 input_alert_payload = Payload(JsonMessage(message))
                 csm_alert_payload = Payload(Dict(dict()))
                 input_alert_payload.convert(self.mapping_dict.get\
-                        (module_type, {}), csm_alert_payload)
+                        (const.COMMON), csm_alert_payload)
+                resource_mapping = self.mapping_dict.get(resource_type, "")
+                if resource_mapping:
+                    input_alert_payload.convert(resource_mapping, csm_alert_payload)
                 csm_alert_payload.dump()
                 csm_schema = csm_alert_payload.load()
+                """
+                Fetching the health information from the alert.
+                Currently we require 3 values 1. health, 2. health_reason and
+                3. health_description. All these values are fetched from
+                specific_info but due to specific_info can be a dict and a list
+                for some alerts so we cannnot include it in mapping file.
+                """
+                specific_info = csm_schema.get(const.ALERT_EXTENDED_INFO)\
+                    .get(const.SPECIFIC_INFO)
+                if module_type != const.IEM:
+                    self._set_health_info(csm_schema, specific_info)
                 # TODO
                 """
                 1. Currently we are not consuming alert_type so keeping the 
@@ -283,20 +297,20 @@ class AlertPlugin(CsmPlugin):
                 if const.ALERT_EVENTS in csm_schema and \
                         csm_schema[const.ALERT_EVENTS] is not None:
                     csm_schema[const.ALERT_EVENT_DETAILS] = []
-                    self._prepare_specific_info(csm_schema)
+                    self._prepare_specific_info(csm_schema, specific_info)
                     csm_schema.pop(const.ALERT_EVENTS)
                     csm_schema[const.ALERT_EVENT_DETAILS] = \
                             str(csm_schema[const.ALERT_EVENT_DETAILS])
                 if module_type == const.IEM:
-                    self._prepare_specific_info(csm_schema, True)
+                    self._prepare_specific_info(csm_schema, specific_info, True)
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
                         str(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
-            raise CsmError(-1, '%s' %e)
+            Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")
         return csm_schema
 
-    def _prepare_specific_info(self, csm_schema, is_iem=False):
+    def _prepare_specific_info(self, csm_schema, specific_info, is_iem=False):
         """
         This method prepares event_details for all the alerts. event_details
         comprises of some specific fields for each resource type like
@@ -306,12 +320,9 @@ class AlertPlugin(CsmPlugin):
         :return : None
         """
         if is_iem:
-            csm_schema[const.SOURCE_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.SOURCE_ID]
-            csm_schema[const.COMPONENT_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.COMPONENT_ID]
-            csm_schema[const.MODULE_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.MODULE_ID]
+            csm_schema[const.SOURCE_ID] = specific_info[const.SOURCE_ID]
+            csm_schema[const.COMPONENT_ID] = specific_info[const.COMPONENT_ID]
+            csm_schema[const.MODULE_ID] = specific_info[const.MODULE_ID]
         elif csm_schema[const.ALERT_MODULE_TYPE] in (const.ALERT_LOGICAL_VOLUME,
                                                    const.ALERT_VOLUME,
                                                    const.ALERT_SIDEPLANE,
@@ -335,6 +346,18 @@ class AlertPlugin(CsmPlugin):
                 description_dict[const.ALERT_EVENT_RECOMMENDATION] = \
                     items[const.ALERT_HEALTH_RECOMMENDATION]
                 csm_schema[const.ALERT_EVENT_DETAILS].append(description_dict)
+
+    def _set_health_info(self, csm_schema, specific_info):
+        try:
+            if not isinstance(specific_info, list):
+                csm_schema[const.ALERT_HEALTH] = \
+                    specific_info.get(const.ALERT_HEALTH, "")
+                csm_schema[const.DESCRIPTION] = \
+                    specific_info.get(const.ALERT_HEALTH_REASON, "")
+                csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
+                    specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
+        except Exception as e:
+            Log.warn(f"Unable to fetch health fields from alert. {e}")
 
 class DecisionMakerService(Service):
     def __init__(self):

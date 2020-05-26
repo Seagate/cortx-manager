@@ -59,10 +59,9 @@ class Conf:
 
     @staticmethod
     def save(index=None):
-        indexes = [x for x in _payloads.keys()] if index is None else index
+        indexes = [x for x in Conf._payloads.keys()] if index is None else [index]
         for index in indexes:
             Conf._payloads[index].dump()
-
 
     @staticmethod
     def decrypt_conf():
