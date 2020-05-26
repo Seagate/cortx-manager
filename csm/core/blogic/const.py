@@ -40,6 +40,8 @@ NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help"]
 EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
+RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
+RUNNING_NODES = 'running_nodes'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -202,6 +204,7 @@ CHANNEL = 'CHANNEL'
 NODE1 = 'node1'
 NODE2 = 'node2'
 HOST = 'host'
+RMQ_HOSTS = 'hosts'
 PORT = 'port'
 VHOST = 'virtual_host'
 UNAME = 'username'
@@ -468,5 +471,7 @@ HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
 
 ALERT_RETRY_COUNT = 3
+COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
