@@ -37,7 +37,7 @@ CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
-                    "-h", "--help"]
+                    "-h", "--help", "system"]
 EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
@@ -54,6 +54,7 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
+HCTL_ERR_MSG = "Failed Script Execution error: {_err} output: {_output}"
 
 # File names
 SUMMARY_FILE = 'summary.txt'
