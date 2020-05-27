@@ -52,9 +52,12 @@ class UpdateService(ApplicationService):
                 result = await self._provisioner.get_provisioner_job_status(model.provisioner_id)
                 model.apply_status_update(result)
                 await self._update_repo.save_model(model)
-            except:
-                raise CsmInternalError(f'Failed to fetch the status of an ongoing update process')
+                Log.debug(f'Save renewed model for {update_id} for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
+            except Exception as e:
+                Log.error(f'Failed to fetch the status of an ongoing update process: {e}')
+                raise CsmInternalError('Failed to fetch the status of an ongoing update process')
         return model
+
 
     @Log.trace_method(Log.INFO)
     async def _get_current_status(self, update_id):
