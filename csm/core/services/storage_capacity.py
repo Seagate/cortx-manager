@@ -61,7 +61,7 @@ class StorageCapacityService(ApplicationService):
         if not stdout:
             raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
                                    f"-{stdout.decode('utf-8')}")
-        Log.debug(f"{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}")
+        Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
         console_output = json.loads(stdout.decode('utf-8'))
         capacity_info = console_output.get('filesystem',{}).get('stats',{})
         if not capacity_info:
@@ -71,6 +71,7 @@ class StorageCapacityService(ApplicationService):
         formatted_output[const.USED] = await self.unit_conversion(int(
             capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
         formatted_output[const.AVAILABLE] = await self.unit_conversion(int(capacity_info[const.FREE_SPACE]))
-        formatted_output[const.USAGE_PERCENTAGE ] = str(
-            100 - round((int(capacity_info[const.FREE_SPACE] / capacity_info[const.TOTAL_SPACE])) * 100, 2)) + ' %'
+        formatted_output[const.USAGE_PERCENTAGE] = str(round((((int(capacity_info[const.TOTAL_SPACE]) -
+                                                             int(capacity_info[const.FREE_SPACE])) / 
+                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)) + ' %'       
         return formatted_output
