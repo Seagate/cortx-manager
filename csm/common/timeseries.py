@@ -17,6 +17,7 @@
  ****************************************************************************
 """
 
+import json
 import aiohttp
 import asyncio
 from string import Template
@@ -193,6 +194,9 @@ class TimelionProvider(TimeSeriesProvider):
             output_format: Json format either redable or gui. [default: gui]
             query: Optional direct query to timelion_api
         """
+        Log.debug(f"Timelion Request: id: {stats_id}, panel: {panel}, from: {from_t}, "
+                  f"duration: {duration_t}, metric_list: {metric_list}, interval: {interval}, "
+                  f"total_sample: {total_sample}, unit: {unit}, output_format: {output_format}")
         try:
             interval, duration_t, from_t = await self._parse_interval(from_t, duration_t, interval, total_sample)
             from_t = str(datetime.utcfromtimestamp(int(from_t)).isoformat())+'.000Z'

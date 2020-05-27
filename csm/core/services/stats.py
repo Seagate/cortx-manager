@@ -50,7 +50,7 @@ class StatsAppService(ApplicationService):
         Fetch specific statistics for panel - full parameter set
         :return: :type:list
         """
-        Log.debug('Get panel %s directly: id=%s, interval=%s' %(panel, stats_id, interval))
+        Log.debug(f"Get panel: {panel} stats")
         output = {}
         output["id"]=stats_id
         panel_data =  await self._stats_provider.process_request(stats_id = stats_id, panel = panel,
@@ -62,6 +62,7 @@ class StatsAppService(ApplicationService):
                                                   output_format = output_format,
                                                   query = query)
         output["metrics"] = panel_data["list"]
+        Log.debug(f"Stats Request Output: {output}")
         return output
 
     async def get_labels(self, panel):
@@ -93,7 +94,7 @@ class StatsAppService(ApplicationService):
         """
         Fetch statistics for selected panels list (simplified - reduced parameter set)
         """
-        Log.debug('Get panels requested: id=%s, panels=%s' %(stats_id, str(panels_list)))
+        Log.debug(f"Get stats for panels: {panels_list}")
         output = {}
         output["id"]=stats_id
         data_list = []
@@ -109,7 +110,8 @@ class StatsAppService(ApplicationService):
                                                   output_format = output_format,
                                                   query = "")
             data_list.extend(panel_data["list"])
-        output["metrics"] =data_list
+        output["metrics"] = data_list
+        Log.debug(f"Stats Request Output: {output}")
         return output
 
     async def get_metrics(self, stats_id, metrics_list, from_t, to_t, interval,
@@ -138,7 +140,6 @@ class StatsAppService(ApplicationService):
         output["id"]=stats_id
         data_list = []
         for panel in panels.keys():
-            Log.debug('metric[%s] = %s' %(str(panel), str(panels[panel]["metric"])))
             panel_data = await self._stats_provider.process_request(
                                                   stats_id = stats_id,
                                                   panel = panel,
@@ -151,4 +152,5 @@ class StatsAppService(ApplicationService):
                                                   query = "")
             data_list.extend(panel_data["list"])
         output["metrics"] = data_list
+        Log.debug(f"Stats Request Output: {output}")
         return output
