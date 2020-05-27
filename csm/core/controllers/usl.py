@@ -200,6 +200,11 @@ class DeviceVolumeUnmountView(_View):
             device_id = fields.UUID(required=True)
             volume_id = fields.UUID(required=True)
 
+
+        class UmountAccessParamsSchema(AccessParamsSchema):
+            handle = fields.Str(required=True)
+
+
         try:
             params = MethodSchema().load(self.request.match_info)
         except ValidationError as e:
@@ -208,7 +213,7 @@ class DeviceVolumeUnmountView(_View):
             raise CsmError(desc=desc)
         try:
             body = await self.request.json()
-            access_params = AccessParamsSchema().load(body)
+            access_params = UmountAccessParamsSchema().load(body)
         except (JSONDecodeError, ValidationError) as e:
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
