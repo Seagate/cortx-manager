@@ -21,6 +21,7 @@ import sys, os
 import time
 import requests
 import pika
+import random
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed, TestProvider, Const
@@ -103,8 +104,15 @@ def test_rabbitmq(args):
     """
     try:
         Log.console("Testing rabbitmq service")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.host")
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host))
+        hosts = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.hosts")
+        username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
+        password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.password")
+        virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
+        ampq_hosts = [f'amqp://{username}:{password}@{host}/{virtual_host}' \
+                      for host in hosts]
+        ampq_hosts = [pika.URLParameters(host) for host in ampq_hosts]
+        random.shuffle(ampq_hosts)
+        connection = pika.BlockingConnection(ampq_hosts)
         channel = connection.channel()
         connection.close()
     except:
