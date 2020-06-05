@@ -41,7 +41,6 @@ node $CSM_PATH/web/web-dist/server.js &
 
 sleep 5s
 mkdir -p /tmp
-cat /var/log/seagate/csm/csm_agent.log
 
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
