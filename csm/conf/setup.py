@@ -441,7 +441,7 @@ class CsmSetup(Setup):
         """
         Verify args for actions
         """
-        if "Product" in args.keys() and args["Product"] != "ees":
+        if "Product" in args.keys() and args["Product"] != "cortx":
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
             raise Exception("Not implemented for Component %s" %args["Component"])
