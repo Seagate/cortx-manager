@@ -51,7 +51,7 @@
         {
           "flag": "bucket_name",
           "type": "Validatiors.bucket_name",
-          "help": "Giva a bucket name to create.",
+          "help": "Give a bucket name to create.",
           "json": true
         },
         {
