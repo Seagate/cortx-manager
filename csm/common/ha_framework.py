@@ -72,8 +72,8 @@ class PcsHAFramework(HAFramework):
         """
         _live_node_cmd = const.HCTL_NODE.format(command='status',
                         user=self._user, pwd=self._password)
-        Log.debug((f"executing command :- "
-        f"{const.HCTL_NODE.format(command='status', user=self._user, pwd='********')}"))
+        Log.debug(f"executing command :- "
+              f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:
@@ -88,10 +88,10 @@ class PcsHAFramework(HAFramework):
         try:
             _command = 'unstandby '
             _command = f"{_command } --all" if node == "all" else f"{_command } {node}"
+            Log.debug(f"executing command :-  "
+              f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
             _standby_cmd = const.HCTL_NODE.format(command=_command,
                           user=self._user, pwd=self._password)
-            Log.debug((f"executing command :- "
-           f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='********')}"))
             _proc = SimpleProcess(_standby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
@@ -108,10 +108,11 @@ class PcsHAFramework(HAFramework):
         try:
             _command = 'standby '
             _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+            Log.debug(f"executing command :-  "
+              f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
+
             _unstandby_cmd = const.HCTL_NODE.format(command=_command,
                           user=self._user, pwd=self._password)
-            Log.debug((f"executing command :- "
-           f"{const.HCTL_NODE.format(command='status', user=self._user, pwd='********')}"))
             _proc = SimpleProcess(_unstandby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
@@ -135,8 +136,7 @@ class PcsHAFramework(HAFramework):
             Shutdown the current Cluster or Node.
         :return:
         """
-        _command = 'shutdown '
-        _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+        _command = f"shutdown  {node}"
         _cluster_shutdown_cmd = const.HCTL_NODE.format(command=_command,
                           user=self._user, pwd=self._password)
         _proc = SimpleProcess(_cluster_shutdown_cmd)

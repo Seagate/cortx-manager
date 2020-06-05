@@ -22,6 +22,7 @@ import os
 import traceback
 import asyncio
 import errno
+import shlex
 from getpass import getpass
 from cmd import Cmd
 import pathlib
@@ -117,6 +118,8 @@ class CsmCli(Cmd):
              file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
              log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
              level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
@@ -171,7 +174,7 @@ class CsmCli(Cmd):
         :return:
         """
         if command.strip():
-            self.args = [x.strip() for x in command.split(" ")]
+            self.args = shlex.split(command)
         return command
 
     def process_direct_command(self, command):
@@ -194,6 +197,7 @@ class CsmCli(Cmd):
         :return:
         """
         try:
+            Log.debug(f"{self.username}: {cmd}")
             command = CommandFactory.get_command(self.args, self._permissions)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
@@ -255,6 +259,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         Log.debug(f"Stopped via keyboard interrupt.")
         sys.stdout.write("\n")
+    except InvalidRequest as e:
+        raise InvalidRequest(f"{e}")
     except Exception as e:
         Log.critical(f"{e}")
         sys.stderr.write('Some error occurred.\nPlease try login again.\n')

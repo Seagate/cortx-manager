@@ -20,9 +20,10 @@
 import asyncio
 import time
 
-from aiohttp import web, ClientSession, TCPConnector
+from aiohttp import ClientSession, TCPConnector
+from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError as BotoClientError
 from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
@@ -32,7 +33,8 @@ from uuid import UUID, uuid5
 
 from csm.common.conf import Conf
 from csm.common.errors import (
-    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmServiceConflict
+    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied,
+    CsmServiceConflict
 )
 from eos.utils.log import Log
 from csm.common.services import ApplicationService
@@ -306,7 +308,7 @@ class UslService(ApplicationService):
         # When get-user is implemented on the IAM server side workaround could be removed.
         try:
             await iam_cli.delete_user(user_name)
-        except ClientError:
+        except BotoClientError:
             # Ignore errors in deletion, user might not exist
             pass
 
@@ -601,14 +603,18 @@ class UslService(ApplicationService):
                 Log.info('Device registration in process---waiting for confirmation')
                 timeout_limit = time.time() + 60
                 while time.time() < timeout_limit:
-                    async with session.get(endpoint_url) as response:
-                        if response.status == 200:
-                            Log.info('Device registration successful')
-                            break
-                        elif response.status != 201:
-                            reason = 'Device registration failed'
-                            Log.error(f'{reason}---unexpected status code {response.status}')
-                            raise CsmInternalError(desc=reason)
+                    try:
+                        async with session.get(endpoint_url) as response:
+                            if response.status == 200:
+                                Log.info('Device registration successful')
+                                break
+                            elif response.status != 201:
+                                reason = 'Device registration failed'
+                                Log.error(f'{reason}---unexpected status code {response.status}')
+                                raise CsmInternalError(desc=reason)
+                    except HttpClientError as e:
+                        reason = 'HTTP client error suppressed during registration confirmation'
+                        Log.warn(f'{reason}---{str(e)}')
                     await asyncio.sleep(1)
                 else:
                     reason = 'Could not confirm device registration status'
@@ -691,54 +697,55 @@ class UslService(ApplicationService):
             'serviceUrls': service_urls,
         }
 
-    async def post_system_certificates(self) -> web.Response:
+    async def post_system_certificates(self) -> bytes:
         """
         Create USL domain key pair in case it does not exist.
 
-        :returns: USL public key as an ``application/octet-stream`` HTTP response
+        :returns: USL public key as raw bytes
         """
         if await self._domain_certificate_manager.get_private_key_bytes() is not None:
-            raise web.HTTPForbidden()
+            reason = 'Domain certificate already exists'
+            raise CsmPermissionDenied(reason)
         await self._domain_certificate_manager.create_private_key_file(overwrite=False)
         private_key_bytes = await self._domain_certificate_manager.get_private_key_bytes()
         if private_key_bytes is None:
             reason = 'Could not read USL private key'
             Log.error(reason)
-            raise web.HTTPInternalServerError(reason=reason)
-        body = await self._domain_certificate_manager.get_public_key_bytes()
-        if body is None:
+            raise CsmInternalError(reason)
+        public_key = await self._domain_certificate_manager.get_public_key_bytes()
+        if public_key is None:
             reason = 'Could not read USL public key'
             Log.error(f'{reason}')
-            raise web.HTTPInternalServerError(reason=reason)
-        return web.Response(body=body)
+            raise CsmInternalError(reason)
+        return public_key
 
     async def put_system_certificates(self, certificate: bytes) -> None:
         if await self._domain_certificate_manager.get_certificate_bytes() is not None:
-            raise web.HTTPForbidden()
+            reason = 'Domain certificate already exists'
+            raise CsmPermissionDenied(reason)
         try:
             await self._domain_certificate_manager.create_certificate_file(certificate)
         except CertificateError as e:
             reason = 'Could not update USL certificate'
             Log.error(f'{reason}: {e}')
-            raise web.HTTPInternalServerError(reason=reason)
-        raise web.HTTPNoContent()
+            raise CsmInternalError(reason)
 
     async def delete_system_certificates(self) -> None:
         """
         Delete all key material related with the USL domain certificate.
         """
+
         deleted = await self._domain_certificate_manager.delete_key_material()
         if not deleted:
-            raise web.HTTPForbidden() from None
-        # Don't return 200 on success, but 204 as USL API specification requires
-        raise web.HTTPNoContent()
+            reason = 'Failed to delete the domain certificate'
+            raise CsmPermissionDenied(reason)
 
-    async def get_system_certificates_by_type(self, material_type: str) -> web.Response:
+    async def get_system_certificates_by_type(self, material_type: str) -> bytes:
         """
         Provides key material according to the specified type.
 
         :param material_type: Key material type
-        :return: The corresponding key material as an ``application/octet-stream`` HTTP response
+        :return: The corresponding key material as raw bytes
         """
         get_material_bytes = {
             'domainCertificate': self._domain_certificate_manager.get_certificate_bytes,
@@ -749,11 +756,12 @@ class UslService(ApplicationService):
         if get_material_bytes is None:
             reason = f'Unexpected key material type "{material_type}"'
             Log.error(reason)
-            raise web.HTTPInternalServerError(reason=reason)
-        body = await get_material_bytes()
-        if body is None:
-            raise web.HTTPNotFound()
-        return web.Response(body=body)
+            raise CsmInternalError(reason)
+        material = await get_material_bytes()
+        if material is None:
+            reason = f'Key material type "{material_type}" is not found'
+            raise CsmNotFoundError(reason)
+        return material
 
     # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:

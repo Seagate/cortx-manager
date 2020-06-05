@@ -20,6 +20,31 @@
       "help": "Current Node Name."
     },
     {
+      "flag": "-o",
+      "dest": "os_flag",
+      "action": "store_const",
+      "help": "Generate Only OS Logs",
+      "default": "false",
+      "const": "true"
+    },
+    {
+      "flag": "-c",
+      "dest": "components",
+      "type": "str",
+      "choices": [
+        "all",
+        "csm",
+        "sspl",
+        "s3server",
+        "core",
+        "hare",
+        "provisioner",
+        "os"
+      ],
+      "nargs": "+",
+      "help": "Specific Component for Support Bundle to be Generated."
+    },
+    {
       "flag": "args",
       "default": [],
       "suppress_help": true,

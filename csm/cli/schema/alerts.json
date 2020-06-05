@@ -18,8 +18,8 @@
           "params": true
         },
         {
-          "flag": "-c",
-          "dest": "count",
+          "flag": "-l",
+          "dest": "limit",
           "nargs": "?",
           "type": "int",
           "help": "No. of Alerts",
@@ -101,8 +101,8 @@
           "params": true
         },
         {
-          "flag": "-c",
-          "dest": "count",
+          "flag": "-l",
+          "dest": "limit",
           "nargs": "?",
           "type": "int",
           "help": "No. of Alerts",

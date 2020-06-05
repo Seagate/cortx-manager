@@ -24,6 +24,7 @@ import random
 import asyncio
 import shutil
 import errno
+import getpass
 from threading import Thread
 from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
@@ -44,9 +45,10 @@ class SupportBundle:
     """
     This Class initializes the Support Bundle Generation for CORTX.
     """
+
     @staticmethod
-    def execute_ssh(ip_address: str, bundle_id: str, comment: str,
-                    node_name: str):
+    def execute_ssh(ip_address: str, current_user: str, ssh_key: str,
+                    command: str, node_name: str):
         """
         This Method makes Connection on each node and Executes Bundle Generation Command.
         For Using this Method Need to setup ssh keys in ~/.ssh/ folder.
@@ -62,26 +64,26 @@ class SupportBundle:
         :param bundle_id: Unique ID of the Bundle needed to be generated. :type: str
         :param comment: Reason to generate the SB. :type: str
         :param node_name: Name of the NODE in CORTX Term :type: str
+        :param current_user : Local User Name for SSH :type str
+        :param ssh_key: SSH Key Path :type str.
         :return:
         """
         try:
-            ssh_key = os.path.expanduser(os.path.join("~", ".ssh", const.SSH_KEY))
-            ssh_conn_object = SSHChannel(ip_address, user=const.SSH_USER_NAME,
+            ssh_conn_object = SSHChannel(ip_address, user=current_user,
                                          key_filename=ssh_key)
             ssh_conn_object.connect()
-            bundle_generate = (
-                f"sh {const.CSM_PATH}/cli/schema/create_support_bundle.sh"
-                f" {bundle_id} {comment.replace(' ', '_')} {node_name} &")
+
             try:
                 # Executes Shell Script to Run in Background.
                 # Time out releases the connection rather than waiting for cmd.
                 # Since Shell Runs in Background no response is expected from Shell Command.
-                ssh_conn_object.execute(bundle_generate, timeout=2)
+                Log.debug(f"Executing Command {command} -n {node_name} &")
+                ssh_conn_object.execute(f"{command} -n {node_name} &", timeout=2)
             except CsmError:
                 Log.debug(f"Started Bundle Generation on {ip_address}")
             ssh_conn_object.disconnect()
         except CsmError:
-            sys.stderr.write(f"Could Not Connect to {node_name}\n")
+            sys.stderr.write(f"Could Not Connect to {ip_address}\n")
 
     @staticmethod
     async def fetch_host_from_salt():
@@ -136,6 +138,7 @@ class SupportBundle:
             hostnames.append(cluster_info.get(each_node, {}).get("hostname"))
         return hostnames, active_nodes
 
+
     @staticmethod
     async def bundle_generate(command) -> sys.stdout:
         """
@@ -143,23 +146,55 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None
         """
+        current_user = str(getpass.getuser())
+        # Check if User is Root User.
+        if current_user.lower() != const.SSH_USER_NAME:
+            repsonse_msg = f"Support Bundle {const.ROOT_PRIVILEGES_MSG}"
+            return Response(rc=errno.EACCES, output=repsonse_msg)
+        # Generate Unique Bundle ID
         alphabet = string.ascii_lowercase + string.digits
         bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
-        comment = command.options.get("comment")
+        # Get Arguments From Command
+        comment = command.options.get(const.SB_COMMENT)
+        components = command.options.get(const.SB_COMPONENTS, [])
+        sos = True if command.options.get(const.SOS_COMP, False) == "true" else False
+        # Create Shell Command.
+        shell_args = f"-i {bundle_id} -m {repr(comment)} "
+        if sos:
+            Log.debug("Generating OS Logs.")
+            shell_args = f"{shell_args} -s"
+        if components:
+            if "all" not in components:
+                Log.info(f"Generating Bundle for  {' '.join(components)}")
+                shell_args = f"{shell_args} -c {' '.join(components)}"
+            else:
+                Log.info(f"Generating Bundle for All Cortex Components.")
+                shell_args = f"{shell_args} -c all"
+        if not components and not sos:
+            Log.info("Generating Complete Support Bundle For SOS and Components Logs.")
+            shell_args = f"{shell_args} -c all -s"
         # Get HostNames and Node Names.
         hostnames, node_list = await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
             hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
         if not isinstance(hostnames, list):
             return hostnames
+        #GET SSH KEY for Root User
+        ssh_key = os.path.expanduser(os.path.join("~", const.SSH_DIR, const.SSH_KEY))
+        Log.debug(f"Current User > {current_user}, ssh key > {ssh_key}")
         # Start Daemon Threads for Starting SB Generation on all Nodes.
         for index, hostname in enumerate(hostnames):
             Log.debug(f"Connect to {hostname}")
+            # Add Node Name to Shell Command
+            shell_command = const.SUPPORT_BUNDLE_SHELL_COMMAND.format(
+                args=shell_args, csm_path=const.CSM_PATH)
             thread_obj = Thread(SupportBundle.execute_ssh(hostname,
-                            bundle_id, comment, node_list[index]), daemon=True)
+                                                          current_user, ssh_key,
+                                                          shell_command, node_list[index]),
+                                daemon=True)
             thread_obj.start()
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                "SUPPORT_BUNDLE.symlink_path")
+                                f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
         response_msg = (
             f"Please use the below ID for Checking the status of Support Bundle."
             f" \n{bundle_id}"
@@ -238,5 +273,5 @@ class SupportBundle:
         :return:
         """
         support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
-                                        const.SUPPORT_BUNDLE)
+                                         const.SUPPORT_BUNDLE)
         return Response(output=support_bundle_config, rc=CSM_OPERATION_SUCESSFUL)

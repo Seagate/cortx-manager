@@ -86,8 +86,8 @@ class ComponentsBundle:
         :return:
         """
         if not protocol_details.get("host", None):
-            Log.info("Skipping File Upload as host is not configured.")
-            return
+            Log.warn("Skipping File Upload as host is not configured.")
+            return False
         url = protocol_details.get('url')
         protocol = url.split("://")[0]
         channel = f"{protocol.upper()}Channel"
@@ -109,6 +109,7 @@ class ComponentsBundle:
         else:
             Log.error("Invalid Url in csm.conf.")
             raise Exception(f"{protocol} is Invalid.")
+        return True
 
     @staticmethod
     async def init(command: List):
@@ -117,77 +118,107 @@ class ComponentsBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
-        bundle_id = command.options.get("bundle_id", "")
-        node_name = command.options.get("node_name", "")
-        comment = command.options.get("comment", ""),
-        ftp_msg = ""
-        file_link_msg = ""
-        Log.debug(f"Bundle Generation Started -- {bundle_id}, {node_name}, {comment}")
-        #Read Commands.Yaml and Check's If It Exists.
+        # Fetch Command Arguments.
+        bundle_id = command.options.get(const.SB_BUNDLE_ID, "")
+        node_name = command.options.get(const.SB_NODE_NAME, "")
+        comment = command.options.get(const.SB_COMMENT, "")
+        components = command.options.get(const.SB_COMPONENTS, [])
+        os_flag =  True if command.options.get("os_flag", []) == 'true' else False
+        ftp_msg, file_link_msg, components_list = "", "", []
+
+        Log.debug((f"{const.SB_BUNDLE_ID}: {bundle_id}, {const.SB_NODE_NAME}: {node_name}, "
+                   f" {const.SB_COMMENT}: {comment}, {const.SB_COMPONENTS}: {components},"
+                   f" {const.SOS_COMP}: {os_flag}"))
+        # Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
             ComponentsBundle.publish_log(f"No Such File {const.COMMANDS_FILE}",
                                          ERROR, bundle_id, node_name, comment)
             return None
-        #Path Location for creating Support Bundle.
+        # Path Location for creating Support Bundle.
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                                     f"{const.SUPPORT_BUNDLE}.bundle_path"))
+                                     f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}"))
         if os.path.isdir(path):
-            shutil.rmtree(path)
+            try:
+                shutil.rmtree(path)
+            except PermissionError:
+                Log.warn(const.PERMISSION_ERROR_MSG.format(path=path))
+
         bundle_path = os.path.join(path, bundle_id)
         os.makedirs(bundle_path)
         # Start Execution for each Component Command.
         threads = []
-        for each_component in support_bundle_config.get("COMMANDS"):
+        command_files_info = support_bundle_config.get("COMMANDS")
+        # OS Logs Are to be Specifically Mentioned to Be Generated.
+        # Hence here Even When All is Selected O.S. Logs Will Be Skipped.
+        if components:
+            if "all" not in components:
+                components_list = list(set(command_files_info.keys()).intersection(set(components)))
+            else:
+                components_list = list(command_files_info.keys())
+                components_list.remove(const.SOS_COMP)
+        # If OS Flag is True Bundle Will Generate Only Os Logs.
+        if os_flag or const.SOS_COMP in components:
+            components_list.append(const.SOS_COMP)
+        Log.debug(f"Generating for {const.SB_COMPONENTS} {' '.join(components_list)}")
+        for each_component in components_list:
             components_commands = []
-            file_data = Yaml(each_component).load()
-            if file_data:
-                components_commands = file_data.get("support_bundle", [])
-            if components_commands:
-                thread_obj = threading.Thread(ComponentsBundle.exc_components_cmd(
-                    components_commands, bundle_id, f"{bundle_path}{os.sep}"))
-                thread_obj.start()
-                threads.append(thread_obj)
+            components_files = command_files_info[each_component]
+            for file_path in components_files:
+                file_data = Yaml(file_path).load()
+                if file_data:
+                    components_commands = file_data.get(const.SUPPORT_BUNDLE.lower(), [])
+                if components_commands:
+                    thread_obj = threading.Thread(ComponentsBundle.exc_components_cmd(
+                        components_commands, bundle_id, f"{bundle_path}{os.sep}"))
+                    thread_obj.start()
+                    threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                  f"{const.SUPPORT_BUNDLE}.bundle_path")
+                                  f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}")
         tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
-        #Create Summary File for Tar.
+        # Create Summary File for Tar.
         summary_file_path = os.path.join(bundle_path, "summary.yaml")
         Log.debug(f"Adding Summary File at {summary_file_path}")
         summary_data = {
-            "Bundle Id": str(bundle_id),
-            "Node Name": str(node_name),
-            "Comment": repr(comment),
+            const.SB_BUNDLE_ID: str(bundle_id),
+            const.SB_NODE_NAME: str(node_name),
+            const.SB_COMMENT: repr(comment),
             "Generated Time": str(datetime.isoformat(datetime.now()))
         }
         Yaml(summary_file_path).dump(summary_data)
         Log.debug(f'Summary File Created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                f"{const.SUPPORT_BUNDLE}.symlink_path")
+                                f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
         if os.path.exists(symlink_path):
-            shutil.rmtree(symlink_path)
-        os.mkdir(symlink_path)
+            try:
+                shutil.rmtree(symlink_path)
+            except PermissionError:
+                Log.warn(const.PERMISSION_ERROR_MSG.format(path=symlink_path))
+        os.makedirs(symlink_path, exist_ok=True)
 
         # Wait Until all the Threads Execution is not Complete.
         for each_thread in threads:
-            Log.debug(f"Waiting for Thread - {each_thread.ident} to Complete Process")
+            Log.debug(
+                f"Waiting for Thread - {each_thread.ident} to Complete Process")
             each_thread.join(timeout=10)
         try:
             Log.debug("Generate TAR FILE & Create Soft-link for Generated TAR.")
             Tar(tar_file_name).dump([bundle_path])
             os.symlink(tar_file_name, os.path.join(symlink_path,
-                                                   f"SupportBundle.{bundle_id}"))
+                                                   f"{const.SUPPORT_BUNDLE}.{bundle_id}"))
             file_link_msg = f"Linked at loc - {symlink_path}"
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
                                          node_name, comment)
 
-        #Upload the File.
+        # Upload the File.
         try:
-            ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.SUPPORT_BUNDLE), tar_file_name)
-            ftp_msg = "Uploaded On Configured Location."
+            uploaded = ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
+                                                           const.SUPPORT_BUNDLE),
+                                                  tar_file_name)
+            if uploaded:
+                ftp_msg = "Uploaded On Configured Location."
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)

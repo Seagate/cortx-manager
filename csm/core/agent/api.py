@@ -49,7 +49,6 @@ from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.controllers import UslController
 from csm.core.controllers import CsmRoutes
 
 
@@ -98,10 +97,10 @@ class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
 
     @staticmethod
-    def init(alerts_service, usl_service):
+    def init(alerts_service):
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
-        CsmRestApi._bgtask = None
+        CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
         CsmRestApi._app = web.Application(
@@ -111,9 +110,7 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.permission_middleware]
         )
 
-        usl_ctrl = UslController(usl_service)
         CsmRoutes.add_routes(CsmRestApi._app)
-        ApiRoutes.add_rest_api_routes(CsmRestApi._app.router, usl_ctrl)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
 
@@ -370,12 +367,14 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     async def _on_startup(app):
         Log.debug('REST API startup')
-        CsmRestApi._bgtask = app.loop.create_task(CsmRestApi._websock_bg())
+        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
+        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
     async def _on_shutdown(app):
         Log.debug('REST API shutdown')
-        CsmRestApi._bgtask.cancel()
+        for task in CsmRestApi._bgtasks:
+            task.cancel()
 
     @staticmethod
     async def _websock_bg():
@@ -399,6 +398,17 @@ class CsmRestApi(CsmApi, ABC):
                 await ws.send_str(json_msg)
         except:
             Log.debug('REST API websock broadcast error')
+
+    @classmethod
+    async def _ssl_cert_check_bg(cls):
+        Log.debug('SSL certificate expiry check background task started')
+        try:
+            security_service = cls._app[const.SECURITY_SERVICE]
+            await security_service.check_certificate_expiry_time_task()
+        except AsyncioCancelledError:
+            Log.debug('SSL certificate expiry check background task canceled')
+
+        Log.debug('SSL certificate expiry check background task done')
 
     @staticmethod
     async def _async_push(msg):

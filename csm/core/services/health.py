@@ -139,7 +139,17 @@ class HealthAppService(ApplicationService):
         2.) Counts the resources as per their health
         :param None
         :returns: Health Summary Json
+        Health map is updated with db from health plugin after reciving all 
+        the responses for actuator requests.
+        There might be a situation where we did not get all the responses for
+        the request we made. So, in that case the health map will not be update
+        with elasticsearch db.
+        So, just to make sure that the health map is updated with db we will 
+        update it when we fetch health summary.
+        To make sure that it gets updatesd only once either from plugin or from
+        summary call, a boolean flag is maintained.
         """
+        await self.update_health_schema_with_db()
         health_schema = self._get_schema()
         health_count_map = {}
         leaf_nodes = []
@@ -454,7 +464,7 @@ class HealthMonitorService(Service, Observable):
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
-            Log.warn(f"Error in stoping alert monitor thread: {e}")
+            Log.warn(f"Error in stopping health monitor thread: {e}")
 
     def _consume(self, message):
         """

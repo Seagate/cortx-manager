@@ -29,6 +29,7 @@ from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
 from concurrent.futures import ThreadPoolExecutor
+from csm.common.services import Service
 try:
     from eos.utils.ha.dm.decision_maker import DecisionMaker
 except ModuleNotFoundError:
@@ -113,11 +114,7 @@ class AlertPlugin(CsmPlugin):
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
-            self._executor = ThreadPoolExecutor(max_workers=1)
-            self._loop = asyncio.new_event_loop()
-            self._decision_maker = None
-            if DecisionMaker:
-                self._decision_maker = DecisionMaker()
+            self.decision_maker_service = DecisionMakerService()
         except Exception as e:
             Log.exception(e)
 
@@ -129,9 +126,12 @@ class AlertPlugin(CsmPlugin):
         1. callback_fn :- This parameter specifies the name AlertMonitor 
            class function to which plugin will send the alerts as JSON string.  
         """
-        self.monitor_callback = callback_fn
-        self.health_plugin = health_plugin
-        self.comm_client.init()
+        try:
+            self.monitor_callback = callback_fn
+            self.health_plugin = health_plugin
+            self.comm_client.init()
+        except Exception as e:
+            Log.error(f"Error occured while calling alert plugin init. {e}")
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():
@@ -159,9 +159,9 @@ class AlertPlugin(CsmPlugin):
         Since actuator response and alerts comes on same channel we need to
         bifercate them.
         """
-        Log.debug(f"Message on sensor queue: {message}")
         status = False
         sensor_queue_msg = JsonMessage(message).load()
+        Log.info(f"Message on sensor queue: {sensor_queue_msg}")
         title = sensor_queue_msg.get("title", "")
         if "actuator" in title.lower():
             status = self.health_plugin.health_plugin_callback(message)
@@ -172,13 +172,13 @@ class AlertPlugin(CsmPlugin):
                     """Validating Schema using marshmallow"""
                     alert_validator = AlertSchemaValidator()
                     alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
-                    Log.debug(f"Validated alert as acknowleged. Alert-data: {alert_data}")
+                    Log.debug(f"Alert validated : {alert_data}")
+                    status = self.monitor_callback(alert_data)
                     """
                     Calling HA Decision Maker for Alerts.
                     """
-                    if self._decision_maker:
-                        self.transmit_alerts_info(sensor_queue_msg)
-                    status = self.monitor_callback(alert_data)
+                    if self.decision_maker_service:
+                        self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.
                 Log.warn(f"Acknowledge incase of validation error {ve}")
@@ -211,7 +211,7 @@ class AlertPlugin(CsmPlugin):
         self.comm_client.stop()
 
     def _convert_to_csm_schema(self, message):
-        """ 
+        """
         Parsing the alert JSON to create the csm schema
         """
         Log.debug(f"Convert to csm schema:{message}")
@@ -226,21 +226,35 @@ class AlertPlugin(CsmPlugin):
             if resource_type:
                 res_split = resource_type.split(':')
                 """
-                Here resource type can be 2 forms -
-                1. enclosure:fru:disk, node:os:disk_space etc
+                Here resource type can be of following forms -
+                1. enclosure:fru:disk, node:os:disk_space, node:interface:nw:cable etc
+                    and the hierarchy may increase in future.
                 2. enclosure, iem
+                Hence splitting the above by colon(:) and assingning the last element from the split
+                to module_type
                 """
-                if len(res_split) > 1:
-                    module_type = res_split[2]
-                else:
-                    module_type = res_split[0]
+                module_type = res_split[len(res_split) - 1]
                 """ Convert  the SSPL Schema to CSM Schema. """
                 input_alert_payload = Payload(JsonMessage(message))
                 csm_alert_payload = Payload(Dict(dict()))
                 input_alert_payload.convert(self.mapping_dict.get\
-                        (module_type, {}), csm_alert_payload)
+                        (const.COMMON), csm_alert_payload)
+                resource_mapping = self.mapping_dict.get(resource_type, "")
+                if resource_mapping:
+                    input_alert_payload.convert(resource_mapping, csm_alert_payload)
                 csm_alert_payload.dump()
                 csm_schema = csm_alert_payload.load()
+                """
+                Fetching the health information from the alert.
+                Currently we require 3 values 1. health, 2. health_reason and
+                3. health_description. All these values are fetched from
+                specific_info but due to specific_info can be a dict and a list
+                for some alerts so we cannnot include it in mapping file.
+                """
+                specific_info = csm_schema.get(const.ALERT_EXTENDED_INFO)\
+                    .get(const.SPECIFIC_INFO)
+                if module_type != const.IEM:
+                    self._set_health_info(csm_schema, specific_info)
                 # TODO
                 """
                 1. Currently we are not consuming alert_type so keeping the 
@@ -283,20 +297,20 @@ class AlertPlugin(CsmPlugin):
                 if const.ALERT_EVENTS in csm_schema and \
                         csm_schema[const.ALERT_EVENTS] is not None:
                     csm_schema[const.ALERT_EVENT_DETAILS] = []
-                    self._prepare_specific_info(csm_schema)
+                    self._prepare_specific_info(csm_schema, specific_info)
                     csm_schema.pop(const.ALERT_EVENTS)
                     csm_schema[const.ALERT_EVENT_DETAILS] = \
                             str(csm_schema[const.ALERT_EVENT_DETAILS])
                 if module_type == const.IEM:
-                    self._prepare_specific_info(csm_schema, True)
+                    self._prepare_specific_info(csm_schema, specific_info, True)
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
                         str(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
-            raise CsmError(-1, '%s' %e)
+            Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")
         return csm_schema
 
-    def _prepare_specific_info(self, csm_schema, is_iem=False):
+    def _prepare_specific_info(self, csm_schema, specific_info, is_iem=False):
         """
         This method prepares event_details for all the alerts. event_details
         comprises of some specific fields for each resource type like
@@ -306,12 +320,9 @@ class AlertPlugin(CsmPlugin):
         :return : None
         """
         if is_iem:
-            csm_schema[const.SOURCE_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.SOURCE_ID]
-            csm_schema[const.COMPONENT_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.COMPONENT_ID]
-            csm_schema[const.MODULE_ID] = \
-                csm_schema[const.ALERT_EXTENDED_INFO][const.MODULE_ID]
+            csm_schema[const.SOURCE_ID] = specific_info[const.SOURCE_ID]
+            csm_schema[const.COMPONENT_ID] = specific_info[const.COMPONENT_ID]
+            csm_schema[const.MODULE_ID] = specific_info[const.MODULE_ID]
         elif csm_schema[const.ALERT_MODULE_TYPE] in (const.ALERT_LOGICAL_VOLUME,
                                                    const.ALERT_VOLUME,
                                                    const.ALERT_SIDEPLANE,
@@ -336,23 +347,45 @@ class AlertPlugin(CsmPlugin):
                     items[const.ALERT_HEALTH_RECOMMENDATION]
                 csm_schema[const.ALERT_EVENT_DETAILS].append(description_dict)
 
-    def transmit_alerts_info(self, alert_data):
+    def _set_health_info(self, csm_schema, specific_info):
+        try:
+            if not isinstance(specific_info, list):
+                csm_schema[const.ALERT_HEALTH] = \
+                    specific_info.get(const.ALERT_HEALTH, "")
+                csm_schema[const.DESCRIPTION] = \
+                    specific_info.get(const.ALERT_HEALTH_REASON, "")
+                csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
+                    specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
+        except Exception as e:
+            Log.warn(f"Unable to fetch health fields from alert. {e}")
+
+class DecisionMakerService(Service):
+    def __init__(self):
+        super().__init__()
+        self._decision_maker = None
+        if DecisionMaker:
+            self._decision_maker = DecisionMaker()
+
+    def decision_maker_callback(self, alert_data):
+        self._transmit_alerts_info(alert_data)
+
+    def _transmit_alerts_info(self, alert_data):
         """
         This Method will send the alert to HA system for System check.
         :param alert_data: alert data received from SSPL :type:Dict
         :return: None
         """
         error = ""
-        for count in range(0, const.ALERT_RETRY_COUNT):
-            try:
-                Log.debug(f"Sending Alert to Decision Maker for data {alert_data}")
-                self._loop.run_until_complete(self._decision_maker.handle_alert(
-                    alert_data))
-            except Exception as e:
-                Log.debug(f"retrying decision_maker {count}")
-                error = f"{e}"
-                time.sleep(2**count)
-                continue
-            break
-        else:
-            Log.error(f"Decision Maker Failed {error} for data {alert_data}")
+        if self._decision_maker:
+            for count in range(0, const.ALERT_RETRY_COUNT):
+                try:
+                    Log.debug(f"Sending Alert to Decision Maker for data {alert_data}")
+                    self._run_coroutine(self._decision_maker.handle_alert(alert_data))
+                except Exception as e:
+                    Log.debug(f"retrying decision_maker {count} : {e}")
+                    error = f"{e}"
+                    time.sleep(2**count)
+                    continue
+                break
+            else:
+                Log.error(f"Decision Maker Failed {error} for data {alert_data}")

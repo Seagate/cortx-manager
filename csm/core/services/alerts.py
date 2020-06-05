@@ -55,8 +55,6 @@ ALERTS_MSG_TOO_LONG_COMMENT = "alerts_too_long_comment"
 ALERTS_MSG_RESOLVED_AND_ACKED_ERROR = "alerts_resolved_and_acked"
 ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 
-
-
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
@@ -103,7 +101,7 @@ class AlertRepository(IAlertStorage):
 
     def _prepare_filters(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None, acknowledged: bool =
-            None, show_update_range: DateTimeRange = None, show_active: bool = False):
+            None, show_active: bool = False):
         and_conditions = [*self._prepare_time_range(AlertModel.created_time, create_time_range)]
         if show_active:
             self._prapare_filters_show_active(and_conditions)
@@ -112,10 +110,6 @@ class AlertRepository(IAlertStorage):
                 or_conditions = []
                 or_conditions.append(Compare(AlertModel.resolved, '=', False))
                 or_conditions.append(Compare(AlertModel.acknowledged, '=', False))
-                range_condition = self._prepare_time_range(AlertModel.updated_time, show_update_range)
-                if range_condition:
-                    or_conditions.extend(range_condition)
-
                 and_conditions.append(Or(*or_conditions))
 
             if resolved is not None:
@@ -148,10 +142,10 @@ class AlertRepository(IAlertStorage):
             self, create_time_range: DateTimeRange, show_all: bool=True,
             severity: str=None, sort: Optional[SortBy]=None,
             limits: Optional[QueryLimits]=None, resolved: bool = None, acknowledged: bool = None,
-            show_update_range: DateTimeRange = None, show_active: bool=False) -> Iterable[AlertModel]:
+            show_active: bool=False) -> Iterable[AlertModel]:
 
         query_filter = self._prepare_filters(create_time_range, show_all, severity,
-                resolved, acknowledged, show_update_range, show_active)
+                resolved, acknowledged, show_active)
         query = Query().filter_by(query_filter)
 
         if limits and limits.offset:
@@ -167,11 +161,11 @@ class AlertRepository(IAlertStorage):
 
     async def count_by_range(self, create_time_range: DateTimeRange, show_all: bool = True,
             severity: str = None, resolved: bool = None,
-            acknowledged: bool = None, show_update_range: DateTimeRange = None, show_active: bool = False) -> int:
+            acknowledged: bool = None, show_active: bool = False) -> int:
         Log.debug(f"Alerts service count by range: {create_time_range}")
         return await self.db(AlertModel).count(
             self._prepare_filters(create_time_range, show_all, severity, resolved,
-                acknowledged, show_update_range, show_active))
+                acknowledged, show_active))
 
     async def retrieve_all(self) -> list:
         """
@@ -180,12 +174,10 @@ class AlertRepository(IAlertStorage):
         pass
 
     async def retrieve_all_alerts_history(self, create_time_range: DateTimeRange, \
-            severity: str=None, sort: Optional[SortBy]=None, \
-            limits: Optional[QueryLimits]=None, show_update_range: \
-            DateTimeRange = None, sensor_info: str = None) -> Iterable[AlertsHistoryModel]:
+            sort: Optional[SortBy]=None, limits: Optional[QueryLimits]=None, \
+            sensor_info: str = None) -> Iterable[AlertsHistoryModel]:
 
-        query_filter = self._prepare_history_filters(create_time_range, \
-                severity, show_update_range, sensor_info)
+        query_filter = self._prepare_history_filters(create_time_range, sensor_info)
         query = Query().filter_by(query_filter)
 
         if limits and limits.offset:
@@ -208,28 +200,15 @@ class AlertRepository(IAlertStorage):
         return await self.db(AlertModel).get(query)
 
     async def count_alerts_history(self, create_time_range: DateTimeRange,\
-            severity: str = None, show_update_range: DateTimeRange = None,\
             sensor_info: str = None) -> int:
         Log.debug(f"Alerts service:  Count alerts history: {create_time_range}")
         return await self.db(AlertsHistoryModel).count(\
-                self._prepare_history_filters(create_time_range, severity,\
-                show_update_range, sensor_info))
+                self._prepare_history_filters(create_time_range, sensor_info))
 
     def _prepare_history_filters(self, create_time_range: DateTimeRange, \
-            severity: str = None, show_update_range: DateTimeRange = None, \
             sensor_info: str = None):
         and_conditions = [*self._prepare_time_range\
                 (AlertsHistoryModel.created_time, create_time_range)]
-        or_conditions = []
-        range_condition = self._prepare_time_range\
-                (AlertsHistoryModel.updated_time, show_update_range)
-        if range_condition:
-            or_conditions.extend(range_condition)
-
-        and_conditions.append(Or(*or_conditions))
-
-        if severity:
-            and_conditions.append(Compare(AlertsHistoryModel.severity, '=', severity))
 
         if sensor_info:
             and_conditions.append(Compare(AlertsHistoryModel.sensor_info, '=', sensor_info))
@@ -410,9 +389,6 @@ class AlertsAppService(ApplicationService):
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
-        show_time_range = DateTimeRange(datetime.utcnow() - timedelta(
-            hours=const.ALERT_SHOW_TIME_HOURS), None)
-
         # TODO: the function takes too many parameters
         alerts_list = await self.repo.retrieve_by_range(
             time_range,
@@ -422,12 +398,11 @@ class AlertsAppService(ApplicationService):
             limits,
             resolved,
             acknowledged,
-            show_time_range,
             show_active
         )
 
         alerts_count = await self.repo.count_by_range(time_range, show_all,
-                severity, resolved, acknowledged, show_time_range, show_active)
+                severity, resolved, acknowledged, show_active)
         return {
             "total_records": alerts_count,
             "alerts": [alert.to_primitive() for alert in alerts_list]
@@ -446,16 +421,15 @@ class AlertsAppService(ApplicationService):
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
 
-    async def fetch_all_alerts_history(self, duration, direction, sort_by, severity:
-                                Optional[str] = None, offset: Optional[int] = \
-                                        None, page_limit: Optional[int] = None, \
+    async def fetch_all_alerts_history(self, duration, direction, sort_by, \
+                                        offset: Optional[int] = None \
+                                        , page_limit: Optional[int] = None, \
                                         sensor_info: Optional[str] = None, \
                                         start_date = None, end_date = None) -> Dict:
         """
         Fetch All Alerts to show history
         :param duration: time duration for range of alerts
         :param direction: direction of sorting asc/desc
-        :param severity: if passed, alerts will be filtered by the passed severity
         :param sort_by: key by which sorting needs to be performed.
         :param offset: offset page (1-based indexing)
         :param page_limit: no of records to be displayed on a page.
@@ -463,7 +437,7 @@ class AlertsAppService(ApplicationService):
         """
         time_range = None
         Log.debug(f"Fetch alerts to show history. duration:{duration}, direction:{direction}, "
-                  f"sort_by:{sort_by}, severity:{severity}, offset:{offset}")
+                  f"sort_by:{sort_by}, offset:{offset}")
         if duration:  # Filter
             # TODO: time format can generally be API-dependent. Better pass here an
             # already parsed TimeDelta object.
@@ -489,20 +463,14 @@ class AlertsAppService(ApplicationService):
         elif page_limit is not None:
             limits = QueryLimits(page_limit, 0)
 
-        show_time_range = DateTimeRange(datetime.utcnow() - timedelta(
-            hours=const.ALERT_SHOW_TIME_HOURS), None)
-
         alerts_list = await self.repo.retrieve_all_alerts_history(
             time_range,
-            severity,
             SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC),
             limits,
-            show_time_range,
             sensor_info
         )
 
-        alerts_count = await self.repo.count_alerts_history(time_range,
-                severity, show_time_range, sensor_info)
+        alerts_count = await self.repo.count_alerts_history(time_range, sensor_info)
         return {
             "total_records": alerts_count,
             "alerts": [alert.to_primitive() for alert in alerts_list]
@@ -519,7 +487,7 @@ class AlertsAppService(ApplicationService):
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
         return alert.to_primitive()
-    
+
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
         super().__init__()
@@ -573,7 +541,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_started = False
         self._thread_running = False
         self.repo = repo
-        self._health_plugin = health_plugin      
+        self._health_plugin = health_plugin
         super().__init__()
 
     def _monitor(self):
@@ -603,13 +571,13 @@ class AlertMonitorService(Service, Observable):
 
     def stop(self):
         try:
-            Log.info("Stop Alert monitor thread")
+            Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
             self._monitor_thread.join()
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
-            Log.warn(f"Error in stoping alert monitor thread: {e}")
+            Log.warn(f"Error in stopping alert monitor thread: {e}")
 
     def _consume(self, message):
         """

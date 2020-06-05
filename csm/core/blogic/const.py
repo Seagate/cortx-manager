@@ -29,7 +29,6 @@ Type -h or --help for help.\n
 
 CLI_PROMPT = "csmcli$ "
 
-SUPPORT_BUNDLE = 'support_bundle'
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
 BASE_DIR = '/opt/seagate/cortx'
@@ -38,9 +37,11 @@ CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
-                    "-h", "--help"]
+                    "-h", "--help", "system"]
 EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
+RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
+RUNNING_NODES = 'running_nodes'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -53,6 +54,7 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
+HCTL_ERR_MSG = "Failed Script Execution error: {_err} output: {_output}"
 
 # File names
 SUMMARY_FILE = 'summary.txt'
@@ -120,6 +122,7 @@ SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
 SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
 SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
 SSH_CONFIG='{}/config'.format(SSH_DIR)
+PRIMARY_ROLE='primary'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -150,7 +153,6 @@ ALERT_SENSOR_INFO = 'sensor_info'
 ALERT_MAX_COMMENT_LENGTH = 255
 ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved',
                          'acknowledged']
-ALERT_SHOW_TIME_HOURS = 24
 ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
 ALERT_SENSOR_INFO = 'sensor_info'
@@ -203,6 +205,7 @@ CHANNEL = 'CHANNEL'
 NODE1 = 'node1'
 NODE2 = 'node2'
 HOST = 'host'
+RMQ_HOSTS = 'hosts'
 PORT = 'port'
 VHOST = 'virtual_host'
 UNAME = 'username'
@@ -252,6 +255,15 @@ SSH_USER_NAME = 'root'
 COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
+SOS_COMP = 'os'
+SB_COMPONENTS = "components"
+SB_COMMENT = "comment"
+SB_NODE_NAME = "node_name"
+SB_BUNDLE_ID = "bundle_id"
+SB_BUNDLE_PATH = "bundle_path"
+SB_SYMLINK_PATH = "symlink_path"
+ROOT_PRIVILEGES_MSG = "Command requires root privileges"
+PERMISSION_ERROR_MSG = "Failed to cleanup {path} due to insufficient permissions"
 
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
@@ -274,7 +286,7 @@ S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT = 'CreateAccessKeyResult'
 S3_PARAM_ACCESS_KEY = 'AccessKey'
 S3_IAM_CMD_LIST_ACCESS_KEYS = 'ListAccessKeys'
 S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
-S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeyResult'
+S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeysResult'
 S3_PARAM_ACCESS_KEY_METADATA = 'AccessKeyMetadata'
 S3_PARAM_IS_TRUNCATED = 'IsTruncated'
 S3_PARAM_MARKER = 'Marker'
@@ -391,6 +403,7 @@ FW_UPDATE_SERVICE = "fw_update_service"
 HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
+USL_SERVICE = "usl_service"
 
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
@@ -406,9 +419,9 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
-M0_FILESYSTEM_STAT_CMD = '/usr/bin/m0_filesystem_stats'
-TOTAL_SPACE = 'totalspace'
-FREE_SPACE = 'freespace'
+FILESYSTEM_STAT_CMD = 'hctl status --json'
+TOTAL_SPACE = 'fs_total_disk'
+FREE_SPACE = 'fs_free_disk'
 SIZE = 'size'
 USED = 'used'
 AVAILABLE = 'avail'
@@ -416,9 +429,10 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "rabbitmq",
+    "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }
+CLUSTER_ID_KEY = "PROVISIONER.cluster_id"
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -433,11 +447,20 @@ USERNAME = "username"
 PASSWORD = 'password'
 SECRET = 'secret'
 IAM_ADMIN = 'iam_admin'
-OPEN_LDAP = 'open_ldap'
-SSPL = 'sspl'
+OPENLDAP = 'openldap'
+SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
+PROVISIONER='PROVISIONER'
+LOCAL='local'
+DEBUG='debug'
+NA='NA'
+
+#Deployment Mode
+DEPLOYMENT = 'DEPLOYMENT'
+MODE = 'mode' 
+DEV = 'dev'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -449,3 +472,7 @@ HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
 
 ALERT_RETRY_COUNT = 3
+COMMON = "common"
+
+SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+RMQ_CLUSTER_STATUS_RETRY_COUNT = 3

@@ -17,8 +17,15 @@
  ****************************************************************************
 """
 import os
+from eos.utils.log import Log
 from csm.common.payload import *
-from csm.common.errors import CsmError
+from csm.common.errors import CsmError, InvalidRequest
+from csm.core.blogic import const
+from csm.common.process import SimpleProcess
+from eos.utils.security.cipher import Cipher, CipherInvalidToken
+
+class ClusterIdFetchError(InvalidRequest):
+    pass
 
 class Conf:
     ''' Represents conf file - singleton '''
@@ -52,10 +59,30 @@ class Conf:
 
     @staticmethod
     def save(index=None):
-        indexes = [x for x in _payloads.keys()] if index is None else index
+        indexes = [x for x in Conf._payloads.keys()] if index is None else [index]
         for index in indexes:
             Conf._payloads[index].dump()
 
+    @staticmethod
+    def decrypt_conf():
+        """
+        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
+        :return:
+        """
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        if not cluster_id:
+            raise ClusterIdFetchError("failed to get cluster id.")
+        for each_key in const.DECRYPTION_KEYS:
+            cipher_key = Cipher.generate_key(cluster_id,
+                                             const.DECRYPTION_KEYS[each_key])
+            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
+            try:
+                decrypted_value = Cipher.decrypt(cipher_key,
+                                                 encrypted_value.encode("utf-8"))
+                Conf.set(const.CSM_GLOBAL_INDEX, each_key,
+                        decrypted_value.decode("utf-8"))
+            except CipherInvalidToken as error:
+                raise CipherInvalidToken(f"Decryption for {each_key} Failed. {error}")
 
 class ConfSection:
     """Represents sub-section of config file"""

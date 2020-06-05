@@ -37,7 +37,7 @@
       "args": [
         {
           "flag": "resource_name",
-          "help": "Provide Node ID or type 'cluster' for Stopping the Resource.",
+          "help": "Provide Node ID for shutting down the Resource.",
           "type": "str",
           "json": true
         },
@@ -118,15 +118,36 @@
       },
       "output": {
         "table": {
-          "headers":
-            {
-              "name": "Node ID",
-              "online": "Online/Offline",
-              "standby": "Stand-By Status",
-              "shutdown": "Shutdown Status"
-            },
-            "filters": "node_status"
+          "headers": {
+            "name": "Node ID",
+            "online": "Online",
+            "standby": "Stand-By Status",
+            "shutdown": "Shutdown Status"
+          },
+          "filters": "node_status"
         }
+      }
+    },
+    {
+      "name": "startup",
+      "description": "Brings back the system after cluster has be started to original state.",
+      "need_confirmation": true,
+      "permissions_tag": "startup",
+      "args": [
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.scripts",
+        "method": "unmaintenance",
+        "class": "System",
+        "is_static": true
       }
     }
   ]

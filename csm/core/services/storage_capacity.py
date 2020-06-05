@@ -18,8 +18,8 @@
  ****************************************************************************
 """
 
-import re
-from csm.common.process import SimpleProcess
+import json
+from csm.common.process import SimpleProcess,AsyncioSubprocess
 from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -54,24 +54,24 @@ class StorageCapacityService(ApplicationService):
         :return: dict
         """
         try:
-            process = SimpleProcess(const.M0_FILESYSTEM_STAT_CMD)
-            stdout, stderr, rc = process.run()
+            process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
+            stdout, stderr = await process.run()
         except Exception as e:
             raise CsmInternalError(f"Error in command execution command : {e}")
-        if not stdout or rc!=0:
+        if not stdout:
             raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
                                    f"-{stdout.decode('utf-8')}")
-        Log.debug(f"{const.M0_FILESYSTEM_STAT_CMD} command output stdout:{stdout}")
-        console_output = re.sub(' +', ' ', stdout.decode('utf-8')).split('\n')
-        cropped_console_data = [str(each_element).strip() for each_element in
-                                console_output if "space" in each_element]
-        capacity_info = {data.split()[0]+data.split()[1] : int(data.split()[2])
-                         for data in cropped_console_data}
+        Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
+        console_output = json.loads(stdout.decode('utf-8'))
+        capacity_info = console_output.get('filesystem',{}).get('stats',{})
+        if not capacity_info:
+            raise CsmInternalError(f"System storage details not available.")
         formatted_output = {}
-        formatted_output[const.SIZE] = await self.unit_conversion(capacity_info[const.TOTAL_SPACE])
-        formatted_output[const.USED] = await self.unit_conversion(
-            capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE])
-        formatted_output[const.AVAILABLE] = await self.unit_conversion(capacity_info[const.FREE_SPACE])
-        formatted_output[const.USAGE_PERCENTAGE ] = str(
-            100 - round((capacity_info[const.FREE_SPACE] / capacity_info[const.TOTAL_SPACE]) * 100, 2)) + ' %'
+        formatted_output[const.SIZE] = await self.unit_conversion(int(capacity_info[const.TOTAL_SPACE]))
+        formatted_output[const.USED] = await self.unit_conversion(int(
+            capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
+        formatted_output[const.AVAILABLE] = await self.unit_conversion(int(capacity_info[const.FREE_SPACE]))
+        formatted_output[const.USAGE_PERCENTAGE] = str(round((((int(capacity_info[const.TOTAL_SPACE]) -
+                                                             int(capacity_info[const.FREE_SPACE])) / 
+                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)) + ' %'       
         return formatted_output

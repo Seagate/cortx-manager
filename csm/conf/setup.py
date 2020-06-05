@@ -28,16 +28,23 @@ from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
-from csm.common.errors import CsmSetupError
+from csm.common.errors import CsmSetupError, InvalidRequest
 from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
+import re
+import time
 
 # try:
 #     from salt import client
 # except ModuleNotFoundError:
 client = None
+
+class InvalidPillarDataError(InvalidRequest):
+    pass
+class PillarDataFetchError(InvalidRequest):
+    pass
 
 
 class Setup:
@@ -73,7 +80,8 @@ class Setup:
         except KeyError as err:
             return False
 
-    def _get_salt_data(self, method, key):
+    @staticmethod
+    def get_salt_data(method, key):
         try:
             process = SimpleProcess(f"salt-call {method} {key} --out=json")
             stdout, stderr, rc = process.run()
@@ -81,10 +89,24 @@ class Setup:
             Log.logger.warn(f"Error in command execution : {e}")
         if stderr:
             Log.logger.warn(stderr)
-        if rc == 0 and stdout.decode('utf-8') != "":
-            res = stdout.decode('utf-8')
+        res = stdout.decode('utf-8')
+        if rc == 0 and res != "":
             result = json.loads(res)
-            return result['local']
+            return result[const.LOCAL]
+
+    @staticmethod
+    def get_salt_data_with_exception(method, key):
+        try:
+            process = SimpleProcess(f"salt-call {method} {key} --out=json")
+            stdout, stderr, rc = process.run()
+        except Exception as e:
+            raise PillarDataFetchError(f"Error in command execution : {e}")
+        if stderr:
+            raise PillarDataFetchError(stderr)
+        res = stdout.decode('utf-8')
+        if rc == 0 and res != "":
+            result = json.loads(res)
+            return result[const.LOCAL]
 
     def _check_if_dir_exist_remote_host(self, dir, host):
         try:
@@ -96,7 +118,7 @@ class Setup:
             Log.logger.warn(stderr)
         if rc == 0:
             return True
- 
+
     def _create_ssh_config(self, path, private_key):
         ssh_config = '''Host *
     User {user}
@@ -110,7 +132,7 @@ class Setup:
                 fh.write(ssh_config)
         except OSError as err:
             if err.errno != errno.EEXIST: raise
-        
+
     def _passwordless_ssh(self, home_dir):
         """
         make passwordless ssh to nodes
@@ -134,15 +156,16 @@ class Setup:
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
-                node_name = self._get_salt_data(const.GRAINS_GET, "id")
-                if ( node_name is None or node_name == 'eosnode-1'): 
+                node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
+                primary = Setup.get_salt_data(const.GRAINS_GET, "roles")
+                if ( node_name is None or const.PRIMARY_ROLE in primary):
                     self._passwordless_ssh(const.CSM_USER_HOME)
-                nodes = self._get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
-                if ( node_name  == 'eosnode-1' and nodes is not None and len(nodes) > 1 ):
+                nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+                if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
                     nodes.remove(node_name)
                     for node in nodes:
                         if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
-                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+ 
+                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+
                                       node+":"+const.CSM_USER_HOME)
                             Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
                                                  os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
@@ -203,38 +226,57 @@ class Setup:
         """
 
         @staticmethod
-        def create():
+        def store_encrypted_password(conf_data):
+            # read username's and password's for S3 and RMQ
+            open_ldap_credentials = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.OPENLDAP)
+            # Edit Current Config File.
+            if open_ldap_credentials and type(open_ldap_credentials) is dict:
+                conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
+                                                    const.IAM_ADMIN, {}).get(const.USER)
+                conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
+                                                    const.IAM_ADMIN, {}).get(const.SECRET)
+            else:
+                raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
+            sspl_config = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.SSPL)
+            if sspl_config and type(sspl_config) is dict:
+                conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
+                conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
+            else:
+                raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
+            cluster_id =  Setup.get_salt_data_with_exception(const.GRAINS_GET, const.CLUSTER_ID)
+            provisioner_data = conf_data[const.PROVISIONER]
+            provisioner_data[const.CLUSTER_ID] = cluster_id
+            conf_data[const.PROVISIONER] = provisioner_data
+
+        @staticmethod
+        def create(args):
             """
             This Function Creates the CSM Conf File on Required Location.
             :return:
             """
-            Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
-            if not client:
-                return None
-            csm_conf_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            # read username's and password's for S3 and RMQ
-            open_ldap_credentials = client.Caller().function(const.PILLAR_GET,
-                                                             const.OPEN_LDAP)
-            sspl_config = client.Caller().function(const.PILLAR_GET, const.SSPL)
+            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            csm_conf_path = os.path.join(const.CSM_SOURCE_CONF_PATH, const.CSM_CONF_FILE_NAME)
             # Read Current CSM Config FIle.
             conf_file_data = Yaml(csm_conf_path).load()
-            # Edit Current Config File.
-            conf_file_data[const.CHANNEL][const.USERNAME] = sspl_config.get(
-                const.RMQ, {}).get(const.USER)
-            conf_file_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(
-                const.RMQ, {}).get(const.SECRET)
-            conf_file_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
-                const.IAM_ADMIN, {}).get(const.USER)
-            conf_file_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
-                const.IAM_ADMIN, {}).get(const.SECRET)
-            # Update the Current Config File.
-            Yaml(csm_conf_path).dump(conf_file_data)
+            if conf_file_data:
+                if args[const.DEBUG]:
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                else:
+                    Setup.Config.store_encrypted_password(conf_file_data)
+                    # Update the Current Config File.
+                    Yaml(csm_conf_path).dump(conf_file_data)
+                Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+                if args[const.DEBUG]:
+                    Yaml(csm_conf_target_path).dump(conf_file_data)
+            else:
+                raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
 
         @staticmethod
         def load():
-            if not os.path.exists(const.CSM_SOURCE_CONF):
-                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_SOURCE_CONF)
-            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_SOURCE_CONF))
+            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            if not os.path.exists(csm_conf_target_path):
+                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
+            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
 
         @staticmethod
         def delete():
@@ -245,7 +287,7 @@ class Setup:
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
             Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
 
-    def _config_cluster(self):
+    def _config_cluster(self, args):
         """
         Instantiation of csm cluster with resources
         Create csm user
@@ -256,7 +298,7 @@ class Setup:
         }
         self._ha_framework = PcsHAFramework(self._csm_ra)
         self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-        self._cluster.init()
+        self._cluster.init(args['f'])
         CsmApi.set_cluster(self._cluster)
 
     def _cleanup_job(self, reset=False):
@@ -362,6 +404,31 @@ class Setup:
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
+    def _set_rmq_cluster_nodes(self):
+        """
+        This method gets the nodes names of the the rabbitmq cluster and writes
+        in the config.
+        """
+        nodes = []
+        nodes_found = False
+        try:
+            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
+                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
+                for line in cmd_output[0].split('\n'):
+                    if const.RUNNING_NODES in line:
+                        nodes = re.findall(r"rabbit@([-\w]+)", line)
+                        nodes_found = True
+                if nodes_found:
+                    break
+                time.sleep(2**count)
+            if nodes:
+                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
+                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
+                Conf.save(const.CSM_GLOBAL_INDEX)
+            else:
+                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+        except Exception as e:
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e}")
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
@@ -405,8 +472,7 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-
-            self.Config.create()
+            self.Config.create(args)
         except Exception as e:
             raise CsmSetupError("csm_setup config failed. Error: %s" %e)
 
@@ -419,13 +485,14 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
+            self._set_rmq_cluster_nodes()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
-                self._config_cluster()
+                self._config_cluster(args)
         except Exception as e:
             raise CsmSetupError("csm_setup init failed. Error: %s" %e)
 
