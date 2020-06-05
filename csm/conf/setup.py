@@ -439,7 +439,8 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e}")
+            import traceback;
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {traceback.print_exc()}")
 
     def _set_consul_vip(self):
         """
@@ -496,7 +497,8 @@ class CsmSetup(Setup):
             self._config_user()
             self._cleanup_job()
         except Exception as e:
-            raise CsmSetupError("csm_setup post_install failed. Error: %s" %e)
+            import traceback;
+            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {traceback.print_exc()")
 
     def config(self, args):
         """
@@ -508,7 +510,8 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.create(args)
         except Exception as e:
-            raise CsmSetupError("csm_setup config failed. Error: %s" %e)
+            import traceback;
+            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {traceback.print_exc()")
 
     def init(self, args):
         """
@@ -529,7 +532,8 @@ class CsmSetup(Setup):
             if ha_check:
                 self._config_cluster(args)
         except Exception as e:
-            raise CsmSetupError("csm_setup init failed. Error: %s" %e)
+            import traceback;
+            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {traceback.print_exc()")
 
     def reset(self, args):
         """
