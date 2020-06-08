@@ -532,7 +532,8 @@ class AlertMonitorService(Service, Observable):
     web server.
     """
 
-    def __init__(self, repo: AlertRepository, plugin, health_plugin):
+    def __init__(self, repo: AlertRepository, plugin, health_plugin, \
+        http_notifications):
         """
         Initializes the Alert Plugin
         """
@@ -542,6 +543,7 @@ class AlertMonitorService(Service, Observable):
         self._thread_running = False
         self.repo = repo
         self._health_plugin = health_plugin
+        self._http_notfications = http_notifications
         super().__init__()
 
     def _monitor(self):
@@ -618,26 +620,27 @@ class AlertMonitorService(Service, Observable):
             module_type = message.get(const.ALERT_MODULE_TYPE, "")
             prev_alert = self._run_coroutine\
                     (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            alert = AlertModel(message)
             if not prev_alert:
-                alert = AlertModel(message)
                 self._run_coroutine(self.repo.store(alert))
-                self._notify_listeners(alert, loop=self._loop)
-                Log.debug(f"Alert stored successfully. \
-                        Alert ID : {alert.alert_uuid}")
+                self.add_listener(self._http_notfications.handle_alert)
+                Log.debug(f"Alert stored successfully." \
+                        f"Alert ID : {alert.alert_uuid}")
                 """
                 Updating health map with alerts
                 """
                 self._health_plugin.update_health_map_with_alert(alert.to_primitive())
             else:
                 if self._resolve_alert(message, prev_alert):
-                    alert = AlertModel(message)
+                    self.remove_listener(self._http_notfications.handle_alert)
                     alert.alert_uuid = prev_alert.alert_uuid
-                    Log.debug(f"Alert updated successfully. \
-                            Alert ID : {alert.alert_uuid}")
+                    Log.debug(f"Alert updated successfully." \
+                            f"Alert ID : {alert.alert_uuid}")
                     """
                     Updating health map with alerts
                     """
                     self._health_plugin.update_health_map_with_alert(alert.to_primitive())
+            self._notify_listeners(alert, loop=self._loop)
             """
             Storing the incoming alert to alert's history collection.
             These alerts will be shown on UI in a seperate alert's history tab.

@@ -60,13 +60,14 @@ class CsmAgent:
                 health_plugin_obj, health_service)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
+        http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin)
+                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin, \
+                http_notifications)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
-        http_notifications = AlertHttpNotifyService()
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
 
