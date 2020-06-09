@@ -52,3 +52,4 @@ mkdir -p /tmp
 
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
+cat csm.log
