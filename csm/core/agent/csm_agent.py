@@ -13,7 +13,7 @@ import pathlib
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
 
-    product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'cortx'
+    product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'eos'
     return import_module(f'csm.plugins.{product}.{name}')
 
 
