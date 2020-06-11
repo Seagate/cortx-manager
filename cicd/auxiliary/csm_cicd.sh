@@ -20,9 +20,6 @@ mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
 
-salt-call grains.get id --out=json
-salt-call grains.get roles --out=json
-
 csm_setup post_install
 csm_setup config --debug
 csm_setup init
@@ -52,4 +49,3 @@ mkdir -p /tmp
 
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
-cat csm.log
