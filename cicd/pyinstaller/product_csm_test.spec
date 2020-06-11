@@ -26,7 +26,7 @@ def import_models(file_name):
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-product_path = '<CSM_PATH>' + '/plugins/' + product
+product_path = '<CSM_PATH>' + '/plugins/' + 'eos'
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
