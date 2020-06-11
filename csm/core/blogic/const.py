@@ -11,6 +11,8 @@ CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
+PLUGIN_DIR = 'eos'
+WEB_DIR = 'eos'
 
 # Access log of aiohttp
 # format
