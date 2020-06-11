@@ -32,4 +32,4 @@ csm:
         args: null
 
 support_bundle:
-    - csmcli csm_bundle_generate
+    - cortxcli csm_bundle_generate
