@@ -44,6 +44,8 @@ def tmain(argp, argv):
         Conf.load(Const.INVENTORY_INDEX, Yaml(is_file_exists(Const.INVENTORY_FILE)))
         Conf.load(Const.COMPONENTS_INDEX, Yaml(is_file_exists(Const.COMPONENTS_CONF)))
         Conf.load(Const.DATABASE_INDEX, Yaml(is_file_exists(Const.DATABASE_CONF)))
+        if ( Conf.get(Const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != Const.DEV ):
+            Conf.decrypt_conf()
         if argp.l:
             Log.init("csm_test", log_path=argp.l)
         else:

@@ -40,6 +40,7 @@ class Const:
     CSM_PATH = '/opt/seagate/eos/csm'
     HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
     MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)
+    DEV = 'dev'
 
 class TestFailed(Exception):
     def __init__(self, desc):
