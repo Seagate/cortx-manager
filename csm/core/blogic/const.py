@@ -24,12 +24,12 @@ CSM_SETUP_CONF = '/etc/csm/setup.yaml'
 CSM_SETUP_INDEX = 'CSM_SETUP'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
-CSM Interactive Shell
+CORTX Interactive Shell
 Type -h or --help for help.\n
 ***********************************
 """
 
-CLI_PROMPT = "csmcli$ "
+CLI_PROMPT = "cortxcli$ "
 
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
