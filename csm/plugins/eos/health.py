@@ -61,12 +61,11 @@ class HealthPlugin(CsmPlugin):
     def _send_actuator_request_payload(self):
         today = datetime.now()
         try:
-            if self._health_mapping_dict:
-                for key in self._health_mapping_dict:
-                    if key.split(':')[0] == const.ENCLOSURE:
-                        self._send_encl_request(key, today)
-                    elif key.split(':')[0] == const.NODE:
-                        self._send_node_request(key, today)
+            for resource in const.ACTUATOR_REQUEST_LIST:
+                if resource.split(':')[0] == const.ENCLOSURE:
+                    self._send_encl_request(resource, today)
+                elif resource.split(':')[0] == const.NODE:
+                    self._send_node_request(resource, today)
         except Exception as ex:
             Log.warn(f"Sending actuator request failed. Reason : {ex}")
 
@@ -159,8 +158,12 @@ class HealthPlugin(CsmPlugin):
             extended_info = ast.literal_eval(message.get(const.ALERT_EXTENDED_INFO))
             info = extended_info.get(const.ALERT_INFO)
             resource_type = info.get(const.ALERT_RESOURCE_TYPE, "")
-            mapping_dict = self._health_mapping_dict.get(resource_type, "")
-            mapping_key = mapping_dict.get(const.KEY, "")
+            if resource_type.split(':')[0] == const.ENCLOSURE:
+                mapping_key = self._health_mapping_dict.get(resource_type).get\
+                    (const.KEY)
+            else:
+                mapping_key = self._health_mapping_dict.get(const.COMMON).get\
+                    (const.KEY)
             resource_schema[const.ALERT_NODE_ID] = message.get(const.HOST_ID, "")
             resource_schema[const.ALERT_SITE_ID] = info.get(const.ALERT_SITE_ID, "")
             resource_schema[const.ALERT_RACK_ID] = info.get(const.ALERT_RACK_ID, "")
@@ -178,12 +181,19 @@ class HealthPlugin(CsmPlugin):
                 resource_schema[const.NODE_RESPONSE] = False
             resource_schema[const.RESOURCE_KEY] = \
                     self._prepare_resource_key(resource_schema)
-            resources[const.DURABLE_ID] = extended_info.get(const.DURABLE_ID, "")
-            resources[const.KEY] = resource_type + "-" + \
+            health_value = self._derive_health(message, resource_schema\
+                [const.HEALTH_ALERT_TYPE])
+            """
+            This a special case so handling seperatly.
+            """
+            if resource_type == const.SAS_RESOURCE_TYPE:
+                self._handle_sas_alert(resource_schema, health_value, extended_info)
+            else:
+                resources[const.DURABLE_ID] = info.get(const.ALERT_RESOURCE_ID, "")
+                resources[const.KEY] = resource_type + "-" + \
                     info.get(const.ALERT_RESOURCE_ID, "")
-            resources[const.ALERT_HEALTH] = self._derive_health(message, \
-                resource_schema[const.HEALTH_ALERT_TYPE])
-            resource_schema[const.RESOURCE_LIST].append(resources)
+                resources[const.ALERT_HEALTH] = health_value
+                resource_schema[const.RESOURCE_LIST].append(resources)
         except Exception as ex:
             Log.warn(f"Parsing of health map by alert failed. {ex}")
         return resource_schema
@@ -225,11 +235,14 @@ class HealthPlugin(CsmPlugin):
                 if resource_type:
                     actuator_payload = Payload(JsonMessage(message))
                     health_payload = Payload(Dict(dict()))
-                    mapping_dict = self._health_mapping_dict.get(resource_type, "")
+                    mapping_dict = self._health_mapping_dict.get(const.COMMON)
                     mapping_key = mapping_dict.get(const.KEY, "")
                     health_field = mapping_dict.get(const.HEALTH_FIELD, "")
                     res_id_field = mapping_dict.get(const.RES_ID_FIELD, "")
                     actuator_payload.convert(mapping_dict, health_payload)
+                    resource_mapping = self._health_mapping_dict.get(resource_type, "")
+                    if resource_mapping:
+                        mapping_key = resource_mapping.get(const.KEY)
                     health_payload.dump()
                     health_schema = health_payload.load()
                     health_schema[const.MAPPING_KEY] = mapping_key
@@ -302,3 +315,23 @@ class HealthPlugin(CsmPlugin):
         This method will call comm's stop to stop consuming from the queue.
         """
         self.comm_client.stop()
+
+    def _handle_sas_alert(self, resource_schema, health_value, extended_info):
+        """
+        This method handles the sas alert. Since, the sas alert only comes when
+        8 phy's are at fault so we need to update 8 resources at a time in
+        the health map.
+        """
+        info = extended_info.get(const.ALERT_INFO)
+        specific_info = extended_info.get(const.SPECIFIC_INFO)
+        resource_schema[const.RESOURCE_LIST] = []
+        try:
+            for items in specific_info:
+                resources = {}
+                resources[const.DURABLE_ID] = items.get(const.ALERT_RESOURCE_ID)
+                resources[const.KEY] = info.get(const.ALERT_RESOURCE_TYPE) + "-" + \
+                    items.get(const.ALERT_RESOURCE_ID)
+                resources[const.ALERT_HEALTH] = health_value
+                resource_schema[const.RESOURCE_LIST].append(resources)
+        except Exception as ex:
+            Log.warn(f"Handling SAS alert for health updation failed. {ex}")
