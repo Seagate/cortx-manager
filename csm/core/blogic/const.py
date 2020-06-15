@@ -11,6 +11,7 @@ CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
+DB_CONF_FILE_NAME = 'database.yaml'
 
 # Access log of aiohttp
 # format
@@ -476,3 +477,10 @@ COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
+ID = "id"
+CLUSTER = "cluster"
+NETWROK = "network"
+DATA_NW = "data_nw"
+ROAMING_IP = "roaming_ip"
+CONSUL_HOST_KEY = "databases.consul_db.config.host"
+MINION_NODE1_ID = "srvnode-1"
