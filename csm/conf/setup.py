@@ -277,6 +277,17 @@ class Setup:
             if not os.path.exists(csm_conf_target_path):
                 raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
             Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
+            """
+            Loading databse config
+            """
+            Setup.Config.load_db()
+
+        @staticmethod
+        def load_db():
+            db_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.DB_CONF_FILE_NAME)
+            if not os.path.exists(db_conf_target_path):
+                raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
+            Conf.load(const.DATABASE_INDEX, Yaml(db_conf_target_path))
 
         @staticmethod
         def delete():
@@ -430,6 +441,29 @@ class Setup:
         except Exception as e:
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e}")
 
+    def _set_consul_vip(self):
+        """
+        This method gets the consul VIP for the current node and sets the
+        value in database.yaml config.
+        Seting the default values in case of command failure.
+        """
+        minion_id = None
+        consul_host = None
+        try:
+            minion_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
+            if not minion_id:
+                Log.logger.warn(f"Unable to fetch minion id for the node." \
+                    f"Using {const.MINION_NODE1_ID}.")
+                minion_id = const.MINION_NODE1_ID
+            consul_vip_cmd = f"{const.CLUSTER}:{minion_id}:{const.NETWROK}:"\
+                f"{const.DATA_NW}:{const.ROAMING_IP}"
+            consul_host = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
+                consul_vip_cmd)
+            if consul_host:
+                Conf.set(const.DATABASE_INDEX, const.CONSUL_HOST_KEY, consul_host)
+                Conf.save(const.DATABASE_INDEX)
+        except Exception as e:
+            raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -486,6 +520,7 @@ class CsmSetup(Setup):
             self.Config.load()
             self._config_user_permission()
             self._set_rmq_cluster_nodes()
+            self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
