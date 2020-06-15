@@ -12,9 +12,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],
@@ -63,9 +64,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",  
                     "ees",
                     "ecs"
                   ],
@@ -114,9 +116,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],
@@ -171,9 +174,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],

@@ -3,15 +3,15 @@ COMMANDS:
   csm:
     - '<CSM_PATH>/conf/setup.yaml'
   sspl:
-    - '<EOS_PATH>/sspl/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/sspl/conf/setup.yaml'
   s3server:
-    - '<EOS_PATH>/s3server/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/s3server/conf/setup.yaml'
   core:
-    - '<EOS_PATH>/core/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/core/conf/setup.yaml'
   hare:
-    - '<EOS_PATH>/hare/conf/setup.yaml'
-    - '<EOS_PATH>/hare/conf/setup-ha.yaml'
+    - '<COMPONENTS_PATH>/hare/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/hare/conf/setup-ha.yaml'
   provisioner:
-    - '<EOS_PATH>/eos-prvsnr/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/eos-prvsnr/conf/setup.yaml'
   os:
     - '/opt/seagate/os/conf/setup.yaml'

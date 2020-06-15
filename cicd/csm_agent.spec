@@ -33,8 +33,8 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
     ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
 
-    ln -sf $CSM_DIR/lib/csmcli /usr/bin/csmcli
-    ln -sf $CSM_DIR/lib/csmcli $CSM_DIR/bin/csmcli
+    ln -sf $CSM_DIR/lib/cortxcli /usr/bin/cortxcli
+    ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
 
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
@@ -63,7 +63,7 @@ systemctl stop csm_agent
 [ $1 -eq 1 ] && exit 0
 rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
-rm -f /usr/bin/csmcli 2> /dev/null;
+rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;

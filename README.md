@@ -1,4 +1,4 @@
-# EOS Management Stack
+# CORTX Management Stack
 
 ### Directory Structure
 
@@ -40,8 +40,8 @@ RPM would be created in dist/rpmbuild/RPMS folder.
 #### Install csm RPMs
 yum localinstall -y csm-<version>.rpm
 yum localinstall -y csm-test-<version>.rpm
-yum localinstall -y eos-csm-<version>.rpm
-yum localinstall -y eos-csm-test-<version>.rpm
+yum localinstall -y cortx-csm-<version>.rpm
+yum localinstall -y cortx-csm-test-<version>.rpm
 
 ### Setup CSM
 csmcli setup init
