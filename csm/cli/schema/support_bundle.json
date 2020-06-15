@@ -32,7 +32,8 @@
             "core",
             "hare",
             "provisioner",
-            "os"
+            "os",
+            "health_map"
           ],
           "nargs": "+",
           "help": "Generate Bundle for Specific components defined."

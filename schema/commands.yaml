@@ -15,3 +15,5 @@ COMMANDS:
     - '<EOS_PATH>/eos-prvsnr/conf/setup.yaml'
   os:
     - '/opt/seagate/os/conf/setup.yaml'
+  health_map:
+    - '/opt/seagate/health_view/conf/setup.yaml'
