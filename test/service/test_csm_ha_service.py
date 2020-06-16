@@ -83,7 +83,7 @@ def test_csm_web(args):
             csm_url = url + mgmt_vips[node]['network/mgmt_vip'] + ":" + str(port)
             resp = process_request(csm_url)
             Log.console(f"Request: {csm_url}, Responce: {resp}")
-            if resp.status_code != 401:
+            if resp.status_code != 200:
                 raise
     except Exception as e:
         raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
