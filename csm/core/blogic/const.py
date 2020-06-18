@@ -375,6 +375,7 @@ IS_DHCP = 'is_dhcp'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
+CSM_USER_SERVICE = "csm_user_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"

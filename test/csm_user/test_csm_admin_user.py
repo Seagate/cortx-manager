@@ -31,12 +31,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 t = unittest.TestCase()
 
+class MockProvisioner():
+
+    async def create_system_user(self, *args, **kwargs):
+        return True
 
 def init(args):
     conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
     db = DataBaseProvider(conf)
     usrmngr = UserManager(db)
-    user_service = CsmUserService(usrmngr)
+    provisioner = MockProvisioner()
+    user_service = CsmUserService(provisioner, usrmngr)
     loop = asyncio.get_event_loop()
     args['user_service'] = user_service
     args['loop'] = loop
@@ -120,7 +125,7 @@ def test_csm_admin_user_delete(args):
 
     user_id = args.get('user').get('id')
     with t.assertRaises(CsmPermissionDenied) as e:
-        loop.run_until_complete(user_service.delete_user(user_id))
+        loop.run_until_complete(user_service.delete_user(user_id, user_id))
     assert 'Can\'t delete super user' in str(e.exception)
 
 
