@@ -319,7 +319,7 @@ class HealthPlugin(CsmPlugin):
     def _handle_sas_alert(self, resource_schema, health_value, extended_info):
         """
         This method handles the sas alert. Since, the sas alert only comes when
-        8 phy's are at fault so we need to update 8 resources at a time in
+        16 phy's are at fault so we need to update 16 resources at a time in
         the health map.
         """
         info = extended_info.get(const.ALERT_INFO)
