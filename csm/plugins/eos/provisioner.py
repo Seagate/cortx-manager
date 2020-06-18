@@ -38,6 +38,8 @@ class NetworkConfigFetchError(InvalidRequest):
 class ClusterIdFetchError(InvalidRequest):
     pass
 
+class CreateCsmUserError(InvalidRequest):
+    pass
 
 # TODO: create a separate module for provisioner-related models
 NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
@@ -189,6 +191,29 @@ class ProvisionerPlugin:
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Provisioner api error : {error}")
                 raise PackageValidationError(f"Provisioner package failed: {error}")
+
+        return await self._await_nonasync(_command_handler)
+
+    @Log.trace_method(Log.DEBUG)
+    async def create_system_user(self, username: str, password: str):
+        """
+        Create linux user using provisioner api.
+        :param username: user name for system
+        :param password: password for the system user
+        :returns:
+        """
+        # TODO: Exception handling as per provisioner's api response
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+
+        def _command_handler():
+            try:
+                if ( username and password ):
+                    Log.debug("Handling provisioner's create user api request")
+                    self.provisioner.create_user(uname=username, passwd=password)
+            except self.provisioner.errors.ProvisionerError as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise CreateCsmUserError(f"System user creation failed: {error}")
 
         return await self._await_nonasync(_command_handler)
 

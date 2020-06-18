@@ -31,12 +31,18 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 t = unittest.TestCase()
 
+class MockProvisioner():
+
+    async def create_system_user(self, *args, **kwargs):
+        return True
+
 
 def init(args):
     conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
     db = DataBaseProvider(conf)
     usrmngr = UserManager(db)
-    user_service = CsmUserService(usrmngr)
+    provisioner = MockProvisioner()
+    user_service = CsmUserService(provisioner, usrmngr)
     loop = asyncio.get_event_loop()
     args['user_service'] = user_service
     args['loop'] = loop
@@ -124,7 +130,7 @@ def test_csm_user_delete(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    loop.run_until_complete(user_service.delete_user(user_id))
+    loop.run_until_complete(user_service.delete_user(user_id, user_id))
     with t.assertRaises(CsmNotFoundError) as e:
         loop.run_until_complete(user_service.get_user(user_id))
     assert 'There is no such user' in str(e.exception)

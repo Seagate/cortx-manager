@@ -90,9 +90,6 @@ class CsmAgent:
                                                      role_manager,
                                                      session_manager)
 
-        user_service = CsmUserService(user_manager)
-        CsmRestApi._app["csm_user_service"] = user_service
-
         roles_service = RoleManagementService(role_manager)
         CsmRestApi._app["roles_service"] = roles_service
 
@@ -132,6 +129,8 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
+        user_service = CsmUserService(provisioner, user_manager)
+        CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
