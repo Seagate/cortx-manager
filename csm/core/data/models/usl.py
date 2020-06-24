@@ -88,3 +88,23 @@ class Volume(CsmModel):
         v.size = size
         v.used = used
         return v
+
+
+class ApiKey(CsmModel):
+    """
+    Represents the USL API key
+    """
+
+    _id = "key"
+
+    key = UUIDType()
+
+    @staticmethod
+    def instantiate(key):
+        """
+        Creates an ApiKey instance
+        """
+
+        k = ApiKey()
+        k.key = key
+        return k
