@@ -198,9 +198,8 @@ class HealthAppService(ApplicationService):
 
         if alert_ids:
             alerts_list = await self.alerts_repo.retrieve_by_ids(alert_ids)
-            alerts = [alert.to_primitive() for alert in alerts_list]                    
+            alerts = [alert.to_primitive() for alert in alerts_list]
         return alerts
-        
 
     def _get_health_count(self, health_count_map, leaf_nodes):
         """
@@ -253,6 +252,7 @@ class HealthAppService(ApplicationService):
         :returns: Health Summary Json
         """
         if health_schema:
+            is_sas_incremented = False
             for k, v in health_schema.items():
                 if isinstance(v, dict):
                     if(self._checkchilddict(v)):
@@ -261,11 +261,26 @@ class HealthAppService(ApplicationService):
                         if v:
                             leaf_nodes.append(v)
                             health_status = v.get(const.ALERT_HEALTH, "").lower()
-                            if v.get(const.ALERT_HEALTH):                                
-                                if health_count_map.get(health_status):
-                                    health_count_map[health_status] += 1
+                            if v.get(const.ALERT_HEALTH):
+                                """
+                                Here we handle the count of sas alert.
+                                Since, the sas alert only comes when all the 16 
+                                phy's are at fault so we need to update 16 resources
+                                at a time in the health map but count should
+                                increase by 1 as we receive only 1 alert.
+                                """
+                                if const.SAS_RESOURCE_TYPE in k:
+                                    if not is_sas_incremented:
+                                        if health_count_map.get(health_status):
+                                            health_count_map[health_status] += 1
+                                        else:
+                                            health_count_map[health_status] = 1
+                                        is_sas_incremented = True
                                 else:
-                                    health_count_map[health_status] = 1
+                                    if health_count_map.get(health_status):
+                                        health_count_map[health_status] += 1
+                                    else:
+                                        health_count_map[health_status] = 1
 
                             if v.get(const.ALERT_UUID):
                                 if alert_uuid_map.get(health_status):  
@@ -286,7 +301,7 @@ class HealthAppService(ApplicationService):
         for k, v in obj.items():
             if isinstance(v, dict):
                 return True
-    
+
     def _get_child_node_keys(self, obj):
         """
         Get the keys of the children dict for the provided obj
