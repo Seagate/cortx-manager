@@ -33,6 +33,7 @@ from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
 from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
 from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
                                            SecurityUploadView)
+from csm.core.controllers.version import ProductVersionView
 
 
 class CsmRoutes():
