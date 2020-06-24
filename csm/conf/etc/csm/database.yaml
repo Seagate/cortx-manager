@@ -86,3 +86,8 @@ models:
     config:
         consul_db:
             collection: "secure_storage"
+-   import_path: "csm.core.data.models.usl.ApiKey"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "usl_api_key"
