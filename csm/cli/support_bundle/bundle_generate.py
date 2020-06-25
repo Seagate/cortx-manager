@@ -172,6 +172,7 @@ class ComponentsBundle:
                     thread_obj = threading.Thread(ComponentsBundle.exc_components_cmd(
                         components_commands, bundle_id, f"{bundle_path}{os.sep}"))
                     thread_obj.start()
+                    Log.debug(f"Started Thread -> {thread_obj.ident}  Component -> {each_component}")
                     threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                   f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}")
@@ -201,7 +202,7 @@ class ComponentsBundle:
         for each_thread in threads:
             Log.debug(
                 f"Waiting for Thread - {each_thread.ident} to Complete Process")
-            each_thread.join(timeout=10)
+            each_thread.join(timeout=1800)
         try:
             Log.debug("Generate TAR FILE & Create Soft-link for Generated TAR.")
             Tar(tar_file_name).dump([bundle_path])

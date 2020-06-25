@@ -18,7 +18,7 @@ while getopts ":g:i:m:n:c:s" o; do
     esac
 done
 
-CSMCLI_COMMAND="csmcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
+CSMCLI_COMMAND="nohup csmcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
 
 if [ -n "$OS" ]
 then
