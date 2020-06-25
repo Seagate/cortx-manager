@@ -31,7 +31,7 @@
     },
     {
       "name": "shutdown",
-      "description": "Shutdown Running Nodes/Cluster",
+      "description": "Shutdown Running Node.",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
@@ -50,10 +50,11 @@
         }
       ],
       "comm": {
-        "type": "rest",
-        "method": "post",
-        "target": "/{version}/maintenance/cluster/shutdown",
-        "version": "v1"
+        "type": "direct",
+        "target": "csm.cli.scripts",
+        "method": "shutdown",
+        "class": "System",
+        "is_static": true
       }
     },
     {
