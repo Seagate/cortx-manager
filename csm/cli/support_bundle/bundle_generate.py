@@ -194,6 +194,7 @@ class ComponentsBundle:
                                          node_name, comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name, comment)
+            return None
 
         Log.debug(f'Summary File Created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
