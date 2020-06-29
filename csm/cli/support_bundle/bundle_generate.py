@@ -187,7 +187,14 @@ class ComponentsBundle:
             const.SB_COMMENT: repr(comment),
             "Generated Time": str(datetime.isoformat(datetime.now()))
         }
-        Yaml(summary_file_path).dump(summary_data)
+        try:
+            Yaml(summary_file_path).dump(summary_data)
+        except PermissionError as e:
+            ComponentsBundle.publish_log(f"Permission Denied for Crating Summary File {e}", ERROR, bundle_id,
+                                         node_name, comment)
+        except Exception as e:
+            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name, comment)
+
         Log.debug(f'Summary File Created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
