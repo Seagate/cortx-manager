@@ -44,7 +44,9 @@ class ReplaceNodeService(ApplicationService):
         model = await self._storage.get(query)
         if not model or not  model[0]:
             return {}
-        status = JobStatus.Completed#await self._provisioner.get_provisioner_job_status(model[0].job_id)
+        status = JobStatus.Is_Running
+        #TODO: Commenting This Since Code from Provisioner is Incomplete
+        #status = await self._provisioner.get_provisioner_job_status(model[0].job_id)
         if status != model[0].status:
             setattr(model[0], "status", status)
             await self._storage.store(model[0])
