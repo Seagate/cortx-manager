@@ -32,7 +32,8 @@
             "sysconfig": ["list"],
             "users": ["list"],
             "s3accounts": ["list"],
-            "auditlog": ["list", "read"]
+            "auditlog": ["list", "read"],
+             "replace_node": ["list"]
         }
     },
     "s3": {
