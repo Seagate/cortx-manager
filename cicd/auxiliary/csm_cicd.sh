@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 RPM_PATH=$1
 CSM_REPO_PATH=$2
 CSM_PATH=$3
@@ -16,11 +18,14 @@ mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
 chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
 
+yum remove salt* -y
+pip3 uninstall -y salt
+
 csm_setup post_install
 csm_setup config --debug
 csm_setup init
 
-su -c "/usr/bin/csm_agent --debug &" csm
+#su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
 # TODO: Run web as csm user after not path issue is resolved
 node $CSM_PATH/web/web-dist/server.js &
