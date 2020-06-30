@@ -142,6 +142,7 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
+        CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
@@ -231,6 +232,7 @@ if __name__ == '__main__':
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
         from eos.utils.security.cipher import Cipher, CipherInvalidToken
+        from csm.core.services.version import ProductVersionService
         # try:
         #     from salt import client
         # except ModuleNotFoundError:

@@ -375,6 +375,7 @@ IS_DHCP = 'is_dhcp'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
+PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"
 
 # Rsyslog
@@ -485,3 +486,11 @@ DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
 MINION_NODE1_ID = "srvnode-1"
+SAS_RESOURCE_TYPE = "node:interface:sas"
+ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk", \
+    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan", \
+    "enclosure:eos:logical_volume", "enclosure:interface:sas", \
+    "enclosure:sensor:current", "enclosure:sensor:temperature", \
+    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk", \
+    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage", \
+    "node:interface:sas", "node:interface:nw:cable"]
