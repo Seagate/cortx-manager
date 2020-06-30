@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
  ****************************************************************************
  Filename:          node_replacement.py
@@ -20,10 +19,8 @@
 
 from .view import CsmView, CsmAuth
 from eos.utils.log import Log
-from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-from csm.core.controllers.validators import ValidationErrorFormatter
-from marshmallow import (Schema, fields, ValidationError)
+from marshmallow import (Schema, fields)
 from csm.common.permission_names import Resource, Action
 
 
@@ -34,6 +31,10 @@ class PostNodeReplaceSchema(Schema):
 @CsmView._app_routes.view("/api/v1/maintenance/replace_node")
 class ReplaceNodeView(CsmView):
     def __init__(self, request):
+        """
+        Instantiate Replace Node Controller
+        :param request:
+        """
         super(ReplaceNodeView, self).__init__(request)
         self._service = self.request.app[const.REPLACE_NODE_SERVICE]
 
