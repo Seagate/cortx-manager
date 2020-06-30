@@ -217,6 +217,34 @@
             "target": "",
             "version": "v1"
             }
+        },
+        {
+            "name": "refresh",
+            "description": "Refresh Context for CSM after Node Replacement.",
+            "need_confirmation": true,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-n",
+                  "dest": "node_id",
+                  "help": "Node ID of the faulty node",
+                  "default": "",
+                  "type": "str",
+                  "nargs": "?"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
         }
     ]
 }
