@@ -428,3 +428,13 @@ class ProvisionerPlugin:
                 raise ProductVersionFetchError(f"Product version fetching failed: {error}")
 
         return await self._await_nonasync(_command_handler)
+
+    @Log.trace_method(Log.DEBUG)
+    async def start_node_replacement(self, node_id):
+        """
+        Begin Node Replacement Prodecure.
+        :param: node_id: Node Name :type: String
+        :return: Job ID for Node Replacement
+        """
+        # todo: Will be Implementing this once received the integration setps from Provisioner.
+        return "1234"
