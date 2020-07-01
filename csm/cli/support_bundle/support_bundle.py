@@ -78,7 +78,7 @@ class SupportBundle:
                 # Time out releases the connection rather than waiting for cmd.
                 # Since Shell Runs in Background no response is expected from Shell Command.
                 Log.debug(f"Executing Command {command} -n {node_name} &")
-                ssh_conn_object.execute(f"{command} -n {node_name} &", timeout=2)
+                ssh_conn_object.execute(f"{command} -n {node_name} &", timeout=120)
             except CsmError:
                 Log.debug(f"Started Bundle Generation on {ip_address}")
             ssh_conn_object.disconnect()

@@ -38,6 +38,11 @@ class NetworkConfigFetchError(InvalidRequest):
 class ClusterIdFetchError(InvalidRequest):
     pass
 
+class CreateCsmUserError(InvalidRequest):
+    pass
+
+class ProductVersionFetchError(InvalidRequest):
+    pass
 
 # TODO: create a separate module for provisioner-related models
 NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
@@ -189,6 +194,29 @@ class ProvisionerPlugin:
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Provisioner api error : {error}")
                 raise PackageValidationError(f"Provisioner package failed: {error}")
+
+        return await self._await_nonasync(_command_handler)
+
+    @Log.trace_method(Log.DEBUG)
+    async def create_system_user(self, username: str, password: str):
+        """
+        Create linux user using provisioner api.
+        :param username: user name for system
+        :param password: password for the system user
+        :returns:
+        """
+        # TODO: Exception handling as per provisioner's api response
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+
+        def _command_handler():
+            try:
+                if ( username and password ):
+                    Log.debug("Handling provisioner's create user api request")
+                    self.provisioner.create_user(uname=username, passwd=password)
+            except self.provisioner.errors.ProvisionerError as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise CreateCsmUserError(f"System user creation failed: {error}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -371,5 +399,32 @@ class ProvisionerPlugin:
             except self.provisioner.errors.ProvisionerError as e:
                 Log.error(f"Provisioner api error : {e}")
                 raise PackageValidationError(f"Provisioner package failed: {e}")
+
+        return await self._await_nonasync(_command_handler)
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_current_version(self):
+        """
+        Fetch product version information from provisioner
+        :returns: Dict having installed product version
+        """
+        if not self.provisioner:
+            raise PackageValidationError("Provisioner is not instantiated")
+
+        def _command_handler():
+            try:
+                # TODO: Provisioner api integration and error handling as per api response.
+                return {"NAME": "EES",
+                        "VERSION": "1.0.0",
+                        "BUILD": "193",
+                        "RELEASE": "Cortx-1.0.0-12-rc7",
+                        "OS": "Red Hat Enterprise Linux Server release 7.7 (Maipo)",
+                        "DATETIME": "09-Jun-2020 05:57 UTC",
+                        "KERNEL": "3.10.0_1062.el7",
+                        "LUSTRE_VERSION": ""
+                        }
+            except self.provisioner.errors.ProvisionerError as error:
+                Log.error(f"Provisioner api error : {error}")
+                raise ProductVersionFetchError(f"Product version fetching failed: {error}")
 
         return await self._await_nonasync(_command_handler)

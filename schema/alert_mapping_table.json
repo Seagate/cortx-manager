@@ -61,10 +61,10 @@
     "message.sensor_response_type.specific_info.durable_id": "durable_id"
   },
   "iem": {
-    "message.sensor_response_type.specific_info.source_id": "sensor_info.source_id",
-    "message.sensor_response_type.specific_info.component_id": "sensor_info.component_id",
-    "message.sensor_response_type.specific_info.module_id": "sensor_info.module_id",
-    "message.sensor_response_type.specific_info.event_id": "sensor_info.event_id",
+    "message.sensor_response_type.specific_info.source_id": "source_id",
+    "message.sensor_response_type.specific_info.component_id": "component_id",
+    "message.sensor_response_type.specific_info.module_id": "module_id",
+    "message.sensor_response_type.specific_info.IEC": "sensor_info.IEC",
     "message.sensor_response_type.specific_info.description": "description"
   }
 }

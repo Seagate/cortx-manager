@@ -26,12 +26,12 @@ from typing import Any, Dict, List, Type
 from csm.common.decorators import Decorators
 from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
 from eos.utils.log import Log
+from csm.common.conf import Conf
 from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
-from csm.core.services.usl import UslService
 
 
 # TODO replace this hack with a proper firewall, or serve USL on a separate socket
@@ -62,6 +62,26 @@ class _View(CsmView):
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._service = self._request.app[const.USL_SERVICE]
+
+
+class _SecuredView(_View):
+    """
+    USL API view secured by the USL API key
+    """
+
+    USL_API_KEY_HTTP_HEAD = 'X-API-KEY'
+
+    def __init__(self, request: web.Request) -> None:
+        _View.__init__(self, request)
+        self._validate_api_key()
+
+    def _validate_api_key(self) -> None:
+        if not Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.api_key_security'):
+            return
+        req_key = self.request.headers.get(_SecuredView.USL_API_KEY_HTTP_HEAD)
+        key_correct = self._service._api_key_dispatch.validate_key(req_key)
+        if not key_correct:
+            raise web.HTTPUnauthorized()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -116,7 +136,7 @@ class RegistrationTokenView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices")
-class DeviceView(_View):
+class DeviceView(_SecuredView):
     """
     Devices list view.
     """
@@ -127,7 +147,7 @@ class DeviceView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes")
-class DeviceVolumesListView(_View):
+class DeviceVolumesListView(_SecuredView):
     """
     Volumes list view.
     """
@@ -157,7 +177,7 @@ class DeviceVolumesListView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/mount")
-class DeviceVolumeMountView(_View):
+class DeviceVolumeMountView(_SecuredView):
     """
     Volume mount view.
     """
@@ -190,7 +210,7 @@ class DeviceVolumeMountView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/umount")
-class DeviceVolumeUnmountView(_View):
+class DeviceVolumeUnmountView(_SecuredView):
     """
     Volume unmount view.
     """
@@ -228,7 +248,7 @@ class DeviceVolumeUnmountView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/events")
-class UdsEventsView(_View):
+class UdsEventsView(_SecuredView):
     """
     UDS Events view.
     """
@@ -239,7 +259,7 @@ class UdsEventsView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system")
-class SystemView(_View):
+class SystemView(_SecuredView):
     """
     System information view.
     """
@@ -250,13 +270,13 @@ class SystemView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates")
-class SystemCertificatesView(_View):
+class SystemCertificatesView(_SecuredView):
     """
     System certificates view.
     """
     async def post(self) -> web.Response:
         try:
-            public_key = await self._usl_service.post_system_certificates()
+            public_key = await self._service.post_system_certificates()
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         return web.Response(body=public_key)
@@ -264,14 +284,14 @@ class SystemCertificatesView(_View):
     async def put(self) -> None:
         certificate = await self.request.read()
         try:
-            await self._usl_service.put_system_certificates(certificate)
+            await self._service.put_system_certificates(certificate)
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         raise web.HTTPNoContent()
 
     async def delete(self) -> None:
         try:
-            await self._usl_service.delete_system_certificates()
+            await self._service.delete_system_certificates()
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         # Don't return 200 on success, but 204 as USL API specification requires
@@ -281,7 +301,7 @@ class SystemCertificatesView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates/{type}")
-class SystemCertificatesByTypeView(_View):
+class SystemCertificatesByTypeView(_SecuredView):
     """
     System certificates view by type.
     """
@@ -303,7 +323,7 @@ class SystemCertificatesByTypeView(_View):
 
         try:
             params = MethodSchema().load(self.request.match_info)
-            certificate = await self._usl_service.get_system_certificates_by_type(params['type'])
+            certificate = await self._service.get_system_certificates_by_type(params['type'])
             return web.Response(body=certificate)
         except ValidationError as e:
             desc = 'Malformed path'
@@ -316,7 +336,7 @@ class SystemCertificatesByTypeView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/network/interfaces")
-class NetworkInterfacesView(_View):
+class NetworkInterfacesView(_SecuredView):
     """
     Network interfaces list view.
     """

@@ -11,6 +11,7 @@ CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
+DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'eos'
 WEB_DIR = 'eos'
 
@@ -376,6 +377,8 @@ IS_DHCP = 'is_dhcp'
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
+PRODUCT_VERSION_SERVICE = "product_version_service"
+CSM_USER_SERVICE = "csm_user_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
@@ -478,3 +481,18 @@ COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
+ID = "id"
+CLUSTER = "cluster"
+NETWROK = "network"
+DATA_NW = "data_nw"
+ROAMING_IP = "roaming_ip"
+CONSUL_HOST_KEY = "databases.consul_db.config.host"
+MINION_NODE1_ID = "srvnode-1"
+SAS_RESOURCE_TYPE = "node:interface:sas"
+ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk", \
+    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan", \
+    "enclosure:eos:logical_volume", "enclosure:interface:sas", \
+    "enclosure:sensor:current", "enclosure:sensor:temperature", \
+    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk", \
+    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage", \
+    "node:interface:sas", "node:interface:nw:cable"]

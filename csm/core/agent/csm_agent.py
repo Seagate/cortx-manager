@@ -89,9 +89,6 @@ class CsmAgent:
                                                      role_manager,
                                                      session_manager)
 
-        user_service = CsmUserService(user_manager)
-        CsmRestApi._app["csm_user_service"] = user_service
-
         roles_service = RoleManagementService(role_manager)
         CsmRestApi._app["roles_service"] = roles_service
 
@@ -131,6 +128,8 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
+        user_service = CsmUserService(provisioner, user_manager)
+        CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
@@ -142,6 +141,7 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
+        CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
@@ -231,6 +231,7 @@ if __name__ == '__main__':
         from csm.core.services.firmware_update import FirmwareUpdateService
         from csm.common.errors import CsmError
         from eos.utils.security.cipher import Cipher, CipherInvalidToken
+        from csm.core.services.version import ProductVersionService
         # try:
         #     from salt import client
         # except ModuleNotFoundError:

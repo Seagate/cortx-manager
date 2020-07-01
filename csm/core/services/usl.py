@@ -29,20 +29,21 @@ from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
 from typing import cast, Any, Dict, List, Optional, Tuple
-from uuid import UUID, uuid5
+from uuid import UUID, uuid4, uuid5
 
 from csm.common.conf import Conf
 from csm.common.errors import (
     CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied,
     CsmServiceConflict
 )
+from csm.common.periodic import Periodic
 from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
 from csm.core.data.models.s3 import IamUser, IamUserCredentials
-from csm.core.data.models.usl import Device, Volume
+from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
@@ -50,7 +51,27 @@ from csm.core.services.usl_certificate_manager import (
 from eos.utils.security.cipher import Cipher
 from eos.utils.security.secure_storage import SecureStorage
 
+
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
+USL_API_KEY_UPDATE_PERIOD = 24 * 60 * 60
+
+
+class UslApiKeyDispatcher:
+    def __init__(self, storage):
+        self._key = None
+        self._storage = storage
+        self._updater = Periodic(USL_API_KEY_UPDATE_PERIOD, self._update_key)
+        self._updater.start()
+
+    async def _update_key(self) -> None:
+        new_key = uuid4()
+        key_model = ApiKey.instantiate(new_key)
+        await self._storage(ApiKey).store(key_model)
+        self._key = str(new_key)
+        Log.info(f'Current USL API key is {self._key}')
+
+    def validate_key(self, request_key: str) -> bool:
+        return self._key == request_key
 
 
 class UslService(ApplicationService):
@@ -63,6 +84,7 @@ class UslService(ApplicationService):
     _device: Device
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
+    _api_key_dispatch: UslApiKeyDispatcher
 
     def __init__(self, s3_plugin, storage, provisioner) -> None:
         """
@@ -89,6 +111,7 @@ class UslService(ApplicationService):
         secure_storage = SecureStorage(storage, key)
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
+        self._api_key_dispatch = UslApiKeyDispatcher(storage)
 
     def _get_system_friendly_name(self) -> str:
         return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
