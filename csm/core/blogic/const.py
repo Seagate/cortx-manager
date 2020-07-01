@@ -1,5 +1,5 @@
 # Csm Setup
-CSM_PATH = "/opt/seagate/eos/csm"
+CSM_PATH = "/opt/seagate/cortx/csm"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
@@ -32,7 +32,7 @@ CLI_PROMPT = "csmcli$ "
 
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-BASE_DIR = '/opt/seagate/eos'
+BASE_DIR = '/opt/seagate/cortx'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
@@ -116,7 +116,7 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_PASS = 'csm'
-CSM_USER_HOME='/opt/seagate/eos/csm/home/'
+CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 SSH_DIR='.ssh'
 SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
@@ -336,7 +336,7 @@ CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT = 'Alert notification'
 CSM_ALERT_NOTIFICATION_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
-CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
+CSM_SMTP_TEST_EMAIL_SUBJECT = 'CORTX: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(
     CSM_PATH)
 
