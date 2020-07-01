@@ -23,5 +23,5 @@ pathlib==1.0.1
 statsd==3.2.2
 urllib3==1.25.7
 cryptography==2.8
-git+https://github.com/Seagate/cortx-prvsnr.git#subdirectory=api/python
-git+https://github.com/Seagate/cortx-utils.git
+git+https://40666cd029c1aaf359595e2ad18a1875ca487878@github.com/Seagate/cortx-prvsnr.git#subdirectory=api/python
+git+https://40666cd029c1aaf359595e2ad18a1875ca487878@github.com/Seagate/cortx-py-utils.git
