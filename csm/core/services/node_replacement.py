@@ -48,7 +48,11 @@ class ReplaceNodeService(ApplicationService):
             return {}
         status = JobStatus.Is_Running
         #TODO: Commenting This Since Code from Provisioner is Incomplete
-        #status = await self._provisioner.get_provisioner_job_status(model[0].job_id)
+        # try:
+            #status = await self._provisioner.get_provisioner_job_status(model[0].job_id)
+        # except Exception as e:
+        #     Log.error(f"{e}")
+
         Log.debug(f"old status {status}  new status  {model[0].status}")
         if status != model[0].status:
             setattr(model[0], "status", status)
