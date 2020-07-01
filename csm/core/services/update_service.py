@@ -17,6 +17,7 @@
  ****************************************************************************
 """
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
+from csm.common.fs_utils import FSUtils
 from csm.common.services import Service, ApplicationService
 from eos.utils.log import Log
 from csm.core.data.models.upgrade import UpdateStatusEntry
@@ -36,7 +37,7 @@ class UpdateService(ApplicationService):
 
     async def start_update(self):
         raise NotImplementedError
-    
+
     async def get_current_status(self):
         raise NotImplementedError
 
@@ -51,6 +52,14 @@ class UpdateService(ApplicationService):
             try:
                 result = await self._provisioner.get_provisioner_job_status(model.provisioner_id)
                 model.apply_status_update(result)
+                if model.is_successful():
+                    fw_path = os.path.splitext(model.description)[0]
+                    fw_dir = os.path.dirname(fw_path)
+                    Log.info(f'Cleaning update directory \"{fw_dir}\" contents')
+                    FSUtils.clear_dir_contents(fw_dir)
+                    # FIXME: temporary solution, until the provisioner returns the proper version
+                    version = os.path.basename(fw_path)
+                    model.version = version
                 await self._update_repo.save_model(model)
                 Log.debug(f'Save renewed model for {update_id} for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
             except Exception as e:
@@ -73,5 +82,3 @@ class UpdateService(ApplicationService):
             return {}
 
         return model.to_printable()
-
-
