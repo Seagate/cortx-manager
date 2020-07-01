@@ -215,6 +215,13 @@ class AlertRepository(IAlertStorage):
 
         return And(*and_conditions) if and_conditions else None
 
+    async def retrieve_unresolved_by_node_id(self, node_id) -> Iterable[AlertModel]:
+        alert_filter = And(Compare(AlertModel.node_id, '=', node_id), \
+            Or(Compare(AlertModel.acknowledged, '=', False), \
+            Compare(AlertModel.resolved, '=', False)))
+        query = Query().filter_by(alert_filter)
+        return await self.db(AlertModel).get(query)
+
 class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics

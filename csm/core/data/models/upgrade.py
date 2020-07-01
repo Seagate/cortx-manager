@@ -100,6 +100,9 @@ class UpdateStatusEntry(CsmModel):
     def is_uploaded(self) -> bool:
         return self.status == str(UpdateStatus.Uploaded)
 
+    def is_successful(self) -> bool:
+        return self.status == str(UpdateStatus.Success)
+
     def mark_uploaded(self):
         self.uploaded_at = datetime.datetime.now()
         self.status = str(UpdateStatus.Uploaded)
