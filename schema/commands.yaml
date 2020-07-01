@@ -16,6 +16,6 @@ COMMANDS:
     - '<COMPONENTS_PATH>/hare/conf/setup.yaml'
     - '<COMPONENTS_PATH>/hare/conf/setup-ha.yaml'
   provisioner:
-    - '<COMPONENTS_PATH>/eos-prvsnr/conf/setup.yaml'
+    - '<COMPONENTS_PATH>/cortx/provisioner/conf/setup.yaml'
   os:
     - '/opt/seagate/os/conf/setup.yaml'

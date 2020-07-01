@@ -17,9 +17,9 @@ cp -f $CSM_REPO_PATH/jenkins/cicd/etc/database.json /etc/cortx/ha/
 
 
 groupadd haclient
-mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
-cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
-chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
+mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
 csm_setup post_install
 csm_setup config --debug
