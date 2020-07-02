@@ -7,6 +7,7 @@
 
  Creation Date:     23/08/2019
  Author:            Ajay Paratmandali
+                    Pawan Kumar Srivastava
 
  Do NOT modify or remove this copyright and confidentiality notice!
  Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
@@ -35,6 +36,10 @@ from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 import re
 import time
+import asyncio
+from csm.core.blogic.models.alerts import AlertModel
+from csm.core.services.alerts import AlertRepository
+from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 
 # try:
 #     from salt import client
@@ -464,6 +469,32 @@ class Setup:
                 Conf.save(const.DATABASE_INDEX)
         except Exception as e:
             raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
+
+    def _resolve_faulty_node_alerts(self, node_id):
+        """
+        This method resolves all the alerts for a fault replaced node.
+        """
+        try:
+            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+            db = DataBaseProvider(conf)
+            alerts = []
+            if db:
+                loop = asyncio.get_event_loop()
+                alerts_repository = AlertRepository(db)
+                alerts = loop.run_until_complete\
+                    (alerts_repository.retrieve_unresolved_by_node_id(node_id))
+                if alerts:
+                    for alert in alerts:
+                        alert.acknowledged = AlertModel.acknowledged.to_native(True)
+                        alert.resolved = AlertModel.resolved.to_native(True)
+                        loop.run_until_complete(alerts_repository.update(alert))
+                else:
+                    Log.logger.warn(f"No alerts found for node id: {node_id}")
+            else:
+                raise CsmSetupError("csm_setup refresh failed. Unbale to load db.")
+        except Exception as ex:
+            raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
+
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -481,6 +512,8 @@ class CsmSetup(Setup):
             raise Exception("Not implemented for Component %s" %args["Component"])
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
+        if "node_id" in args.keys() and not args["node_id"]:
+            raise Exception("Please provide the node id for refresh context.")
 
     def post_install(self, args):
         """
@@ -561,3 +594,13 @@ class CsmSetup(Setup):
                 self.ConfigServer.restart()
         except Exception as e:
             raise CsmSetupError("csm_setup reset failed. Error: %s" %e)
+
+    def refresh(self, args):
+        """
+        Refresh context for CSM
+        """
+        try:
+            self._verify_args(args)
+            self._resolve_faulty_node_alerts(args["node_id"])
+        except Exception as e:
+            raise CsmSetupError("csm_setup refresh failed. Error: %s" %e)

@@ -23,6 +23,7 @@ from eos.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from concurrent.futures import ThreadPoolExecutor
 from csm.common.errors import CsmError, CSM_OPERATION_NOT_PERMITTED
+from csm.core.blogic import const
 
 class MaintenanceAppService(ApplicationService):
     """
@@ -59,8 +60,8 @@ class MaintenanceAppService(ApplicationService):
         """
         node_status = await self._loop.run_in_executor(self._executor,
                                                        self._ha.get_nodes)
-        if not any(map(lambda x : x.get("standby", False),
-                       node_status.get('node_status', []))):
+        if not any(map(lambda x : x.get(const.STANDBY, False),
+                       node_status.get(const.NODE_STATUS, []))):
             return await self._loop.run_in_executor(self._executor,
                                                     self._ha.make_node_passive,
                                                     resource_name)
