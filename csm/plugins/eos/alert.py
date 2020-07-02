@@ -98,6 +98,7 @@ class AlertSchemaValidator(Schema):
     source_id = fields.String(required=False, description="Source if for IEM")
     component_id = fields.String(required=False, description="Component if for IEM")
     module_id = fields.String(required=False, description="Module Id for IEM")
+    node_id = fields.String(required=True, description="Node id of the resource")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -270,6 +271,9 @@ class AlertPlugin(CsmPlugin):
                 Below mentioned fields are managed by CSM so they are not the part
                 of mapping table
                 """
+                csm_schema[const.ALERT_NODE_ID] = csm_schema.get\
+                    (const.ALERT_EXTENDED_INFO).get(const.ALERT_INFO)\
+                    .get(const.ALERT_NODE_ID)
                 csm_schema[const.ALERT_MODULE_TYPE] = f'{module_type}'
                 csm_schema[const.ALERT_MODULE_NAME] = resource_type
                 csm_schema[const.ALERT_CREATED_TIME] = \
@@ -349,6 +353,8 @@ class AlertPlugin(CsmPlugin):
                     specific_info.get(const.ALERT_HEALTH_REASON, "")
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
+            else:
+                csm_schema[const.DESCRIPTION] = ""
         except Exception as e:
             Log.warn(f"Unable to fetch health fields from alert. {e}")
 

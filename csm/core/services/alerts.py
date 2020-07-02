@@ -215,6 +215,13 @@ class AlertRepository(IAlertStorage):
 
         return And(*and_conditions) if and_conditions else None
 
+    async def retrieve_unresolved_by_node_id(self, node_id) -> Iterable[AlertModel]:
+        alert_filter = And(Compare(AlertModel.node_id, '=', node_id), \
+            Or(Compare(AlertModel.acknowledged, '=', False), \
+            Compare(AlertModel.resolved, '=', False)))
+        query = Query().filter_by(alert_filter)
+        return await self.db(AlertModel).get(query)
+
 class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics
@@ -541,6 +548,7 @@ class AlertMonitorService(Service, Observable):
         self._monitor_thread = None
         self._thread_started = False
         self._thread_running = False
+        self._ret = False
         self.repo = repo
         self._health_plugin = health_plugin
         self._http_notfications = http_notifications
@@ -618,6 +626,13 @@ class AlertMonitorService(Service, Observable):
                         .replace(tzinfo=timezone.utc)
             sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
             module_type = message.get(const.ALERT_MODULE_TYPE, "")
+            """
+            Checking for node hw alert.
+            If the alert is node hw alert, then we will prepend the
+            description field with support message.
+            """
+            if self._is_node_alert(message[const.ALERT_MODULE_NAME]):
+                self._add_support_message(message)
             prev_alert = self._run_coroutine\
                     (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
             alert = AlertModel(message)
@@ -706,6 +721,8 @@ class AlertMonitorService(Service, Observable):
         :return: None
         """
         update_params = {}
+        if self._is_node_alert(alert.get(const.ALERT_MODULE_NAME)):
+            update_params[const.DESCRIPTION] = alert.get(const.DESCRIPTION)
         if update_resolve:
             update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
@@ -781,3 +798,26 @@ class AlertMonitorService(Service, Observable):
             self._run_coroutine(self.repo.update(alert))
         except Exception as ex:
             Log.error(f"Updation of duplicate alert failed. Alert: {new_alert}")
+
+    def _is_node_alert(self, resource_type):
+        """
+        This function checks whether the incoming alert is for node hw or not.
+        """
+        self._ret = False
+        if resource_type.split(':')[0] == const.NODE:
+            self._ret = True
+        return self._ret
+
+    def _add_support_message(self, alert):
+        try:
+            """
+            Adding -; as seperator before support message so, that UI can
+            parse the message and the link in it.
+            """
+            if self._is_bad_alert(AlertModel(alert)):
+                if alert[const.DESCRIPTION]:
+                    alert[const.DESCRIPTION] = f"{alert[const.DESCRIPTION]} -; {const.SUPPORT_MSG}"
+                else:
+                    alert[const.DESCRIPTION] = f"-; {const.SUPPORT_MSG}"
+        except Exception as ex:
+            Log.error(f"Addition of support message failed. {ex}")

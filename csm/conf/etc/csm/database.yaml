@@ -91,3 +91,9 @@ models:
     config:
         consul_db:
             collection: "usl_api_key"
+-   import_path: "csm.core.data.models.node_replace.ReplaceNode"
+    database: "consul_db"
+    config:
+        consul_db:
+            collection: "replace_node_data"
+
