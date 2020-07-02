@@ -145,7 +145,7 @@ class CsmAgent:
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
-        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework())
+        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
 
     @staticmethod
     def _daemonize():
