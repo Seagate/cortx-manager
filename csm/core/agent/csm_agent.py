@@ -100,11 +100,6 @@ class CsmAgent:
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
 
-        # Plugin for Maintenance
-        #TODO : Replace PcsHAFramework with hare utility
-        maintainence = MaintenanceAppService(PcsHAFramework())
-        CsmRestApi._app[const.MAINTENANCE_SERVICE] = maintainence
-
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
         #global base_path
@@ -148,8 +143,10 @@ class CsmAgent:
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
-        #Node Replacement
-        CsmRestApi._app[const.REPLACE_NODE_SERVICE] = ReplaceNodeService(maintainence, provisioner, db)
+        # Plugin for Maintenance
+        # TODO : Replace PcsHAFramework with hare utility
+        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework())
+
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -227,7 +224,6 @@ if __name__ == '__main__':
         from csm.common.timeseries import TimelionProvider
         from csm.common.ha_framework import PcsHAFramework
         from csm.core.services.maintenance import MaintenanceAppService
-        from csm.core.services.node_replacement import ReplaceNodeService
         from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
         from csm.core.services.storage_capacity import StorageCapacityService
         from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager

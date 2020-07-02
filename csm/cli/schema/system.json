@@ -150,6 +150,36 @@
         "class": "System",
         "is_static": true
       }
+    },
+     {
+      "name": "replace_node",
+      "description": "Provision new node.",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node Id of replaced node.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/replace_node",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Node Replacement Procedure Started."
+      }
     }
   ]
 }
