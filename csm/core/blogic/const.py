@@ -493,6 +493,7 @@ COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
+SUPPORT_MSG = "Please contact Seagate Support. Visit https://www.seagate.com/support/contact-support/ for details on how to contact Seagate Support."
 ID = "id"
 CLUSTER = "cluster"
 NETWROK = "network"
