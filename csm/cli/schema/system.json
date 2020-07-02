@@ -27,6 +27,9 @@
         "method": "post",
         "target": "/{version}/maintenance/cluster/stop",
         "version": "v1"
+      },
+       "output": {
+        "success": "Stopping Node.\n Please Exit Shell and Re-Login to Switch on Active Node."
       }
     },
     {
@@ -82,6 +85,9 @@
         "method": "post",
         "target": "/{version}/maintenance/cluster/start",
         "version": "v1"
+      },
+      "output": {
+        "success": "Starting Node.\nPlease Exit Shell and Re-Login to Switch on Active Node."
       }
     },
     {

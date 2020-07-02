@@ -101,6 +101,7 @@ class CsmCli(Cmd):
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
         self.some_error_occured = 'Some error occurred.\nPlease try login again.\n'
         self.session_expired_error = 'Session expired.\nPlease try login again.\n'
+        self.server_down = 'CSM Service is Not Found.\n Please Check whether CSM is Running.\n'
 
 
     def preloop(self):
@@ -217,6 +218,9 @@ class CsmCli(Cmd):
             self.do_exit(self.session_expired_error)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
+            if e.rc == CSM_PROVIDER_NOT_AVAILABLE:
+                self._session_token = None
+                self.do_exit(self.server_down)
         except SystemExit:
             Log.debug(f"{self.username}: Command executed system exit")
         except KeyboardInterrupt:
@@ -250,7 +254,7 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from eos.utils.log import Log
     from csm.common.conf import Conf
-    from csm.common.errors import CsmError, CsmUnauthorizedError
+    from csm.common.errors import CsmError, CsmUnauthorizedError, CSM_PROVIDER_NOT_AVAILABLE
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
