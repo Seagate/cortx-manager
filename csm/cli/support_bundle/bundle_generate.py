@@ -26,7 +26,6 @@ from csm.common import comm
 from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
 from datetime import datetime
-from csm.common.errors import CsmError
 from csm.common.conf import Conf
 from eos.utils.log import Log
 
@@ -58,8 +57,8 @@ class ComponentsBundle:
                  log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
                  level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         result = "Success"
-        if level == 'error':
-            result = "Error"
+        if level == ERROR:
+            result = ERROR.capitalize()
         message = (f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|"
                    f"{result}|{msg}")
         Log.support_bundle(message)
@@ -98,7 +97,7 @@ class ComponentsBundle:
             except Exception as e:
                 Log.error(f"File Connection Failed. {e}")
                 raise Exception((f"Failed to Connect to {protocol}, "
-                                 f"Please check Credentials." ))
+                                 f"Please check Credentials."))
             try:
                 channel_obj.send_file(file_path, protocol_details.get('remote_file'))
             except Exception as e:
@@ -212,11 +211,17 @@ class ComponentsBundle:
                 f"Waiting for Thread - {each_thread.ident} to Complete Process")
             each_thread.join(timeout=1800)
         try:
-            Log.debug("Generate TAR FILE & Create Soft-link for Generated TAR.")
+            Log.debug(f"Generating tar.gz file on Path {tar_file_name} from {bundle_path}")
             Tar(tar_file_name).dump([bundle_path])
+        except Exception as e:
+            ComponentsBundle.publish_log(f"Could Not Generate Tar File {e}", ERROR, bundle_id,
+                                         node_name, comment)
+        try:
+            Log.debug("Create Soft-link for Generated TAR.")
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"{const.SUPPORT_BUNDLE}.{bundle_id}"))
-            file_link_msg = f"Linked at loc - {symlink_path}"
+            ComponentsBundle.publish_log(f"Tar file linked at loc - {symlink_path}", INFO, bundle_id, node_name,
+                                         comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
                                          node_name, comment)
@@ -227,12 +232,13 @@ class ComponentsBundle:
                                                            const.SUPPORT_BUNDLE),
                                                   tar_file_name)
             if uploaded:
-                ftp_msg = "Uploaded On Configured Location."
+                 ComponentsBundle.publish_log("Uploaded On Configured Location.", INFO, bundle_id, node_name,
+                                         comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
                                          comment)
         finally:
             if os.path.isdir(bundle_path):
                 shutil.rmtree(bundle_path)
-        msg = f"Support Bundle Generated {file_link_msg}  {ftp_msg}"
+        msg = f"Support Bundle Generation Completed."
         ComponentsBundle.publish_log(msg, INFO, bundle_id, node_name, comment)
