@@ -38,12 +38,11 @@ db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
 cli_module_list = import_models(db_file_path)
 product_module_list.extend(cli_module_list)
 test_module_list.remove('csm.test.test_framework.csm_test')
-
 block_cipher = None
 
 # Analysis
 csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
-             pathex=[csm_path+'/../'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -56,7 +55,7 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              noarchive=False)
 
 cortxcli = Analysis([csm_path + '/cli/cortxcli.py'],
-             pathex=[csm_path+'/../'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -69,7 +68,7 @@ cortxcli = Analysis([csm_path + '/cli/cortxcli.py'],
              noarchive=False)
 
 csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
-             pathex=[csm_path+'/../'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -82,7 +81,7 @@ csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              noarchive=False)
 
 csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
-             pathex=[csm_path+'/../'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
@@ -95,7 +94,7 @@ csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
              noarchive=False)
 
 csm_test = Analysis([csm_path + '/test/test_framework/csm_test.py'],
-             pathex=[csm_path+'/../'],
+             pathex=[],
              binaries=[],
              datas=[],
              hiddenimports=test_module_list,
