@@ -26,7 +26,8 @@ def import_models(file_name):
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-product_path = '<CSM_PATH>' + '/plugins/' + product
+plugin_product_dir = 'eos'
+product_path = '<CSM_PATH>' + '/plugins/' + plugin_product_dir
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
@@ -53,7 +54,7 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              cipher=block_cipher,
              noarchive=False)
 
-csmcli = Analysis([csm_path + '/cli/csmcli.py'],
+cortxcli = Analysis([csm_path + '/cli/cortxcli.py'],
              pathex=[],
              binaries=[],
              datas=[],
@@ -106,7 +107,7 @@ csm_test = Analysis([csm_path + '/test/test_framework/csm_test.py'],
              noarchive=False)
 
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
-       (csmcli, 'csmcli', 'csmcli'),
+       (cortxcli, 'cortxcli', 'cortxcli'),
        (csm_setup, 'csm_setup', 'csm_setup'),
        (csm_cleanup, 'csm_cleanup', 'csm_cleanup'),
        (csm_test, 'csm_test', 'csm_test') )
@@ -126,15 +127,16 @@ csm_agent_exe = EXE(csm_agent_pyz,
           upx=True,
           console=True )
 
-# csmcli
-csmcli_pyz = PYZ(csmcli.pure, csmcli.zipped_data,
+# cortxcli
+cortxcli_pyz = PYZ(cortxcli.pure, cortxcli.zipped_data,
              cipher=block_cipher)
 
-csmcli_exe = EXE(csmcli_pyz,
-          csmcli.scripts,
+
+cortxcli_exe = EXE(cortxcli_pyz,
+          cortxcli.scripts,
           [],
           exclude_binaries=True,
-          name='csmcli',
+          name='cortxcli',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -193,11 +195,11 @@ coll = COLLECT(
                csm_agent.zipfiles,
                csm_agent.datas,
 
-               # csmcli
-               csmcli_exe,
-               csmcli.binaries,
-               csmcli.zipfiles,
-               csmcli.datas,
+               # cortxcli
+               cortxcli_exe,
+               cortxcli.binaries,
+               cortxcli.zipfiles,
+               cortxcli.datas,
 
                # csm_setup
                csm_setup_exe,

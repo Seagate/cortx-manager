@@ -6,17 +6,22 @@ RPM_PATH=$1
 CSM_REPO_PATH=$2
 CSM_PATH=$3
 
+
 yum install -y $RPM_PATH/*.rpm
+
 
 # Copy certificates
 mkdir -p /etc/ssl/stx/ /etc/cortx/ha/
 cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
 #cp -f $CSM_REPO_PATH/jenkins/cicd/etc/database.json /etc/cortx/ha/
 
+
+
 groupadd haclient
-mkdir -p /opt/seagate/eos-prvsnr/generated_configs/healthmap/
-cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/eos-prvsnr/generated_configs/healthmap/
-chmod 777 /opt/seagate/eos-prvsnr/generated_configs/healthmap/ees-schema.json
+
+mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
 yum remove salt* -y
 pip3 uninstall -y salt
@@ -30,9 +35,11 @@ csm_setup init
 # TODO: Run web as csm user after not path issue is resolved
 node $CSM_PATH/web/web-dist/server.js &
 
+
 # TODO: Uncomment when container able to start systemd service
 #systemctl restart csm_agent
 #systemctl restart csm_web
+
 
 #systemctl status csm_agent
 #systemctl status csm_web
@@ -45,5 +52,6 @@ node $CSM_PATH/web/web-dist/server.js &
 
 sleep 5s
 mkdir -p /tmp
+
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
