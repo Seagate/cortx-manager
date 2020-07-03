@@ -189,7 +189,7 @@ class ComponentsBundle:
         try:
             Yaml(summary_file_path).dump(summary_data)
         except PermissionError as e:
-            ComponentsBundle.publish_log(f"Permission Denied for Crating Summary File {e}", ERROR, bundle_id,
+            ComponentsBundle.publish_log(f"Permission Denied for Creating Summary File {e}", ERROR, bundle_id,
                                          node_name, comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name, comment)
@@ -220,7 +220,7 @@ class ComponentsBundle:
             Log.debug("Create Soft-link for Generated TAR.")
             os.symlink(tar_file_name, os.path.join(symlink_path,
                                                    f"{const.SUPPORT_BUNDLE}.{bundle_id}"))
-            ComponentsBundle.publish_log(f"Tar file linked at loc - {symlink_path}", INFO, bundle_id, node_name,
+            ComponentsBundle.publish_log(f"Tar file linked at location - {symlink_path}", INFO, bundle_id, node_name,
                                          comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking Failed {e}", ERROR, bundle_id,
