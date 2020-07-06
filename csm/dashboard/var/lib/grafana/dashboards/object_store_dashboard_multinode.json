@@ -12,7 +12,7 @@
       }
     ]
   },
-  "description": "Dashboard for Seagate EOS",
+  "description": "Dashboard for Seagate CORTX",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
@@ -1724,7 +1724,7 @@
     ]
   },
   "timezone": "utc",
-  "title": "Seagate EOS",
+  "title": "Seagate CORTX",
   "uid": "mV1pQuamz",
   "version": 5
 }

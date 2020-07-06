@@ -43,7 +43,7 @@ from csm.common.process import SimpleProcess
 
 class SupportBundle:
     """
-    This Class initializes the Support Bundle Generation for EOS.
+    This Class initializes the Support Bundle Generation for CORTX.
     """
 
     @staticmethod
@@ -63,7 +63,7 @@ class SupportBundle:
         :param ip_address: Ip Address of the Node. :type: str
         :param bundle_id: Unique ID of the Bundle needed to be generated. :type: str
         :param comment: Reason to generate the SB. :type: str
-        :param node_name: Name of the NODE in EOS Term :type: str
+        :param node_name: Name of the NODE in CORTX Term :type: str
         :param current_user : Local User Name for SSH :type str
         :param ssh_key: SSH Key Path :type str.
         :return:
@@ -142,7 +142,7 @@ class SupportBundle:
     @staticmethod
     async def bundle_generate(command) -> sys.stdout:
         """
-        Initializes the process for Generating Support Bundle on Each EOS Node.
+        Initializes the process for Generating Support Bundle on Each CORTX Node.
         :param command: Csm_cli Command Object :type: command
         :return: None
         """
