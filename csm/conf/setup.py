@@ -36,6 +36,7 @@ from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 import re
 import time
+import traceback
 import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
@@ -444,7 +445,8 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e}")
+            
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
         """
@@ -506,7 +508,7 @@ class CsmSetup(Setup):
         """
         Verify args for actions
         """
-        if "Product" in args.keys() and args["Product"] != "ees":
+        if "Product" in args.keys() and args["Product"] != "cortx":
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
             raise Exception("Not implemented for Component %s" %args["Component"])
@@ -529,7 +531,7 @@ class CsmSetup(Setup):
             self._config_user()
             self._cleanup_job()
         except Exception as e:
-            raise CsmSetupError("csm_setup post_install failed. Error: %s" %e)
+            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
     def config(self, args):
         """
@@ -541,7 +543,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.create(args)
         except Exception as e:
-            raise CsmSetupError("csm_setup config failed. Error: %s" %e)
+            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
     def init(self, args):
         """
@@ -562,7 +564,7 @@ class CsmSetup(Setup):
             if ha_check:
                 self._config_cluster(args)
         except Exception as e:
-            raise CsmSetupError("csm_setup init failed. Error: %s" %e)
+            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
 
     def reset(self, args):
         """
