@@ -213,14 +213,16 @@ class CsmCli(Cmd):
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command executed")
         except CsmUnauthorizedError as e:
+            Log.error(f"{self.username}:{e}")
             # Setting session token to None cause it's already expired
             self._session_token = None
             self.do_exit(self.session_expired_error)
+        except CsmServiceNotAvailable as e:
+            Log.error(f"{self.username}:{e}")
+            self._session_token = None
+            self.do_exit(self.server_down)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
-            if e.rc == CSM_PROVIDER_NOT_AVAILABLE:
-                self._session_token = None
-                self.do_exit(self.server_down)
         except SystemExit:
             Log.debug(f"{self.username}: Command executed system exit")
         except KeyboardInterrupt:
@@ -254,7 +256,7 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from eos.utils.log import Log
     from csm.common.conf import Conf
-    from csm.common.errors import CsmError, CsmUnauthorizedError, CSM_PROVIDER_NOT_AVAILABLE
+    from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest

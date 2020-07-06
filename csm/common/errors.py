@@ -159,3 +159,6 @@ class CsmGatewayTimeout(CsmError):
 
 class CsmUnauthorizedError(CsmError):
     """This error represents HTTP 401 Unauthorized Error"""
+
+class CsmServiceNotAvailable(CsmError):
+    """This  error represents CSM service is Not Available."""

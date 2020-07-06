@@ -30,7 +30,7 @@ import aiohttp
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
-from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError
+from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from csm.cli.command import Command
 
 
@@ -205,7 +205,7 @@ class RestRequest(Request):
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
         except aiohttp.ClientConnectionError as exception:
-            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
 
@@ -229,6 +229,6 @@ class DirectRestRequest(Request):
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
         except aiohttp.ClientConnectionError as exception:
-            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
