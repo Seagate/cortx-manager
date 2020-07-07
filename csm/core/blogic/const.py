@@ -1,5 +1,5 @@
 # Csm Setup
-CSM_PATH = "/opt/seagate/eos/csm"
+CSM_PATH = "/opt/seagate/cortx/csm"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
@@ -12,27 +12,29 @@ CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
+PLUGIN_DIR = 'eos'
+WEB_DIR = 'eos'
 
 # Access log of aiohttp
 # format
 REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
-
+MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'
 CSM_SETUP_INDEX = 'CSM_SETUP'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
-CSM Interactive Shell
+CORTX Interactive Shell
 Type -h or --help for help.\n
 ***********************************
 """
 
-CLI_PROMPT = "csmcli$ "
+CLI_PROMPT = "cortxcli$ "
 
 EMAIL_CONFIGURATION = 'email'
 ALERTS_COMMAND = 'alerts'
-BASE_DIR = '/opt/seagate/eos'
+BASE_DIR = '/opt/seagate/cortx'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
@@ -116,7 +118,7 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_PASS = 'csm'
-CSM_USER_HOME='/opt/seagate/eos/csm/home/'
+CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 SSH_DIR='.ssh'
 SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
@@ -326,7 +328,7 @@ PORT_MAX_VALUE = 65536
 
 SOFTWARE_UPDATE_ID = 'software_update'
 FIRMWARE_UPDATE_ID = 'firmware_update'
-
+REPLACE_NODE_ID = 'replace_node'
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
 CSM_SMTP_RECONNECT_ATTEMPTS = 2
@@ -336,7 +338,7 @@ CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT = 'Alert notification'
 CSM_ALERT_NOTIFICATION_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 CSM_SMTP_TEST_EMAIL_ATTEMPTS = 1
 CSM_SMTP_TEST_EMAIL_TIMEOUT = 15
-CSM_SMTP_TEST_EMAIL_SUBJECT = 'EOS: test email'
+CSM_SMTP_TEST_EMAIL_SUBJECT = 'CORTX: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(
     CSM_PATH)
 
@@ -407,6 +409,8 @@ HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 USL_SERVICE = "usl_service"
+MAINTENANCE_SERVICE = "maintenance"
+REPLACE_NODE_SERVICE = "replace_node"
 
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
@@ -470,6 +474,18 @@ SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
                   'dns_network_settings', 'date_time_settings', 'notifications']
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
+ACTION = "action"
+NODE_STATUS = "node_status"
+STANDBY = "standby"
+SHUTDOWN = "shutdown"
+START = "start"
+STOP = "stop"
+RESOURCE_NAME = "resource_name"
+INVALID_PASSWORD = f"Invalid {PASSWORD}"
+STATUS_CHECK_FALED = "Node Status Can't be Checked. HCTL Command Failed"
+SHUTDOWN_NODE_FIRST =  "Please Shutdown the Resource First Before Replacing."
+NODE_REPLACEMENT_ALREADY_RUNNING = "Node Replacement is Already in Progress."
+NODE_REPLACEMENT_STARTED = "Node Replacement for {resource_name} Started."
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
@@ -479,6 +495,7 @@ COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
+SUPPORT_MSG = "Please contact Seagate Support. Visit https://www.seagate.com/support/contact-support/ for details on how to contact Seagate Support."
 ID = "id"
 CLUSTER = "cluster"
 NETWROK = "network"

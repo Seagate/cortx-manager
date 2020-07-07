@@ -12,9 +12,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],
@@ -63,9 +64,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",  
                     "ees",
                     "ecs"
                   ],
@@ -114,9 +116,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],
@@ -171,9 +174,10 @@
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
-                  "default": "ees",
+                  "default": "cortx",
                   "type": "str",
                   "choices": [
+                    "cortx",
                     "ees",
                     "ecs"
                   ],
@@ -203,6 +207,34 @@
                     "action": "store_true",
                     "default": false,
                     "help": "Soft reset"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "refresh",
+            "description": "Refresh Context for CSM after Node Replacement.",
+            "need_confirmation": true,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-n",
+                  "dest": "node_id",
+                  "help": "Node ID of the faulty node",
+                  "default": "",
+                  "type": "str",
+                  "nargs": "?"
                 },
                 {
                     "flag": "args",

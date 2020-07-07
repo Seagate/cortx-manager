@@ -5,7 +5,8 @@
             "system": ["list", "update"],
             "notification": ["update"],
             "security": ["read", "update"],
-            "udx": ["list", "update"]
+            "udx": ["list", "update"],
+            "replace_node": ["create", "list"]
         }
     },
     "manage":{
@@ -17,7 +18,8 @@
             "sysconfig": ["list", "update", "delete"],
             "users": ["list", "update", "delete", "create"],
             "s3accounts": ["list", "create"],
-            "auditlog": ["list", "read"]
+            "auditlog": ["list", "read"],
+            "replace_node": ["list"]
 
         }
     },
@@ -30,7 +32,8 @@
             "sysconfig": ["list"],
             "users": ["list"],
             "s3accounts": ["list"],
-            "auditlog": ["list", "read"]
+            "auditlog": ["list", "read"],
+             "replace_node": ["list"]
         }
     },
     "s3": {

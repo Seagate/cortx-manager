@@ -1,6 +1,4 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/425586a14b004e9d8a9a3f3f48f7b65e)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-csm&amp;utm_campaign=Badge_Grade)
-
-# EOS Management Stack
+# CORTX Management Stack
 
 ### Directory Structure
 
@@ -42,8 +40,8 @@ RPM would be created in dist/rpmbuild/RPMS folder.
 #### Install csm RPMs
 yum localinstall -y csm-<version>.rpm
 yum localinstall -y csm-test-<version>.rpm
-yum localinstall -y eos-csm-<version>.rpm
-yum localinstall -y eos-csm-test-<version>.rpm
+yum localinstall -y cortx-csm-<version>.rpm
+yum localinstall -y cortx-csm-test-<version>.rpm
 
 ### Setup CSM
 csmcli setup init

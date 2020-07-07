@@ -22,6 +22,7 @@ import os
 import argparse
 import traceback
 import time
+import pathlib
 
 class CsmSetupCommand:
     """
@@ -76,9 +77,7 @@ class CsmSetupCommand:
         self._response = response
 
 if __name__ == '__main__':
-    cli_path = os.path.realpath(sys.argv[0])
-    sys.path.append(os.path.join(os.path.dirname(cli_path), '..', '..'))
-
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from csm.common.conf import Conf
     from csm.common.payload import *
     from csm.common.errors import CsmSetupError
@@ -87,7 +86,6 @@ if __name__ == '__main__':
     from csm.core.providers.providers import Request, Response
     from csm.core.providers.setup_provider import SetupProvider
     from eos.utils.log import Log
-
     try:
         csm_setup = CsmSetupCommand(sys.argv)
         sys.stdout.write('%s\n' % csm_setup.process())

@@ -17,7 +17,6 @@
  ****************************************************************************
 """
 import os
-from eos.utils.log import Log
 from csm.common.payload import *
 from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
