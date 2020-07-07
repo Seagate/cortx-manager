@@ -44,6 +44,30 @@ class CsmAgent:
         for f in cached_files:
             os.remove(f)
 
+        try:
+            # TODO: consider a more safe storage
+            params = {
+                "username": const.NON_ROOT_USER,
+                "password": const.NON_ROOT_USER_PASS
+            }
+            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
+        except CsmError as ce:
+            Log.error(f"Unable to load Provisioner plugin: {ce}")
+
+        # Get node ids and save to conf
+        try:
+            node_id_info = await provisioner.get_node_id()
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+                            f"{const.NODE1}{node_id_info[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+                            f"{const.NODE2}{node_id_info[const.MINION_NODE2_ID]}")
+            Conf.save(const.CSM_GLOBAL_INDEX)
+            Log.debug(f"Saved nodeids to conf: channel.node1:{Conf.get(const.CSM_GLOBAL_INDEX, f'{const.CHANNEL}.{const.NODE2}')}"
+                        f" channel.node2:{Conf.get(const.CSM_GLOBAL_INDEX, f'{const.CHANNEL}.{const.NODE2}')}")
+        except CsmError as e_:
+            Log.error(f"Failed to save node ids to conf: {e_}")
+
+
         # Alert configuration
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
@@ -118,16 +142,6 @@ class CsmAgent:
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
-
-        try:
-            # TODO: consider a more safe storage
-            params = {
-                "username": const.NON_ROOT_USER,
-                "password": const.NON_ROOT_USER_PASS
-            }
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
-        except CsmError as ce:
-            Log.error(f"Unable to load Provisioner plugin: {ce}")
 
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
