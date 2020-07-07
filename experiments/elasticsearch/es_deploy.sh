@@ -110,7 +110,6 @@ cluster.name: elasticsearch_cluster
 network.host: 0.0.0.0
 http.port: 9200
 discovery.zen.ping.unicast.hosts: ['srvnode-1', 'srvnode-2', 'srvnode-3']
-discovery.zen.minimum_master_nodes: 1
 path.data: /var/log/data/elasticsearch
 path.logs: /var/log/elasticsearch
 EOT
