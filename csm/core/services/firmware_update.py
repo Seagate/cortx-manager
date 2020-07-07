@@ -31,10 +31,11 @@ import datetime
 
 
 class FirmwareUpdateService(UpdateService):
-    
+
     def __init__(self, provisioner, storage_path, update_repo):
         super().__init__(provisioner, update_repo)
         self._fw_storage_path = storage_path
+        os.makedirs(storage_path, exist_ok=True)
 
     async def upload_package(self, package_ref, filename):
         """
@@ -55,7 +56,7 @@ class FirmwareUpdateService(UpdateService):
         model.mark_uploaded()
         await self._update_repo.save_model(model)
         return model.to_printable()
-    
+
     async def start_update(self):
         software_update_model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
 
@@ -73,7 +74,7 @@ class FirmwareUpdateService(UpdateService):
         firmware_update_model.mark_started()
         await self._update_repo.save_model(firmware_update_model)
         return firmware_update_model.to_printable()
-    
+
     async def check_for_package_availability(self):
         """
         Service to check package is available at configured path
@@ -85,6 +86,6 @@ class FirmwareUpdateService(UpdateService):
         if not model.description or not os.path.exists(model.description):
             raise InvalidRequest(f"Firmware package {model.description} not found.")
         return model.to_printable()
- 
+
     async def get_current_status(self):
         return await super()._get_current_status(const.FIRMWARE_UPDATE_ID)

@@ -29,13 +29,14 @@ from csm.core.data.models.upgrade import PackageInformation, UpdateStatusEntry
 from csm.core.repositories.update_status import UpdateStatusRepository
 from csm.core.services.update_service import UpdateService
 
-   
+
 class HotfixApplicationService(UpdateService):
-    
+
     def __init__(self, storage_path, provisioner, update_repo):
         super().__init__(provisioner, update_repo)
         self._sw_file = os.path.join(storage_path, 'hotfix_fw_candidate.iso')
-    
+        os.makedirs(storage_path, exist_ok=True)
+
     @Log.trace_method(Log.INFO)
     async def upload_package(self, file_ref):
         """

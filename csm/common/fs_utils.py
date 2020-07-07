@@ -19,7 +19,7 @@
 """
 
 import os
-from shutil import make_archive, unpack_archive
+from shutil import make_archive, unpack_archive, rmtree
 import asyncio
 import multiprocessing
 from enum import Enum
@@ -60,7 +60,7 @@ class FSUtils:
             raise ResourceExist(f"Can not create directory {path}: it already exists ")
 
     @staticmethod
-    def delete(path):
+    def delete(path, force=False):
         """
         Delete file or directory by a given path
 
@@ -70,7 +70,10 @@ class FSUtils:
         if os.path.exists(path):
             if os.path.isdir(path):
                 try:
-                    os.rmdir(path)
+                    if force:
+                        rmtree(path)
+                    else:
+                        os.rmdir(path)
                 except OSError as e:
                     raise CsmInternalError(f"System error during directory deletion '{path}': {e}")
             elif os.path.isfile(path):
@@ -85,6 +88,19 @@ class FSUtils:
                     raise CsmInternalError(f"System error during file unlinking '{path}': {e}")
             else:
                 raise CsmTypeError(f"{path} is neither directory nor file/link")
+
+    @staticmethod
+    def clear_dir_contents(path):
+        if not os.path.exists(path):
+            return
+        if not os.path.isdir(path):
+            return
+        for f in os.listdir(path):
+            try:
+                FSUtils.delete(os.path.join(path, f), force=True)
+            except (CsmInternalError, CsmTypeError) as e:
+                reason = f'Failed to delete {f}: {str(e)}, directory might be not clear'
+                raise CsmInternalError(reason) from None
 
     @staticmethod
     def move(src_path, dst_path):

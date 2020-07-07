@@ -27,6 +27,8 @@ from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
                                           ProvisionerCommandStatus)
 from csm.core.blogic.const import PILLAR_GET
+import provisioner
+import provisioner.freeze
 
 
 class PackageValidationError(InvalidRequest):
@@ -58,9 +60,6 @@ class ProvisionerPlugin:
 
     def __init__(self, username=None, password=None):
         try:
-            import provisioner
-            import provisioner.freeze
-
             self.provisioner = provisioner
             Log.info("Provisioner plugin is loaded")
 
@@ -428,3 +427,13 @@ class ProvisionerPlugin:
                 raise ProductVersionFetchError(f"Product version fetching failed: {error}")
 
         return await self._await_nonasync(_command_handler)
+
+    @Log.trace_method(Log.DEBUG)
+    async def start_node_replacement(self, node_id):
+        """
+        Begin Node Replacement Prodecure.
+        :param: node_id: Node Name :type: String
+        :return: Job ID for Node Replacement
+        """
+        # todo: Will be Implementing this once received the integration setps from Provisioner.
+        return "1234"

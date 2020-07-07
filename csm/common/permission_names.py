@@ -33,6 +33,7 @@ class Resource:
     AUDITLOG = 'auditlog'
     SYSTEM = 'system'
     MAINTENANCE = 'maintenance'
+    NODE_REPLACEMENT = 'replace_node'
     PERMISSIONS = 'permissions'
     NOTIFICATION = 'notification'
     SECURITY = "security"

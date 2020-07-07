@@ -13,8 +13,7 @@ import pathlib
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
 
-    product = Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.name") or 'eos'
-    return import_module(f'csm.plugins.{product}.{name}')
+    return import_module(f'csm.plugins.{const.PLUGIN_DIR}.{name}')
 
 
 class CsmAgent:
@@ -102,7 +101,8 @@ class CsmAgent:
 
         # Plugin for Maintenance
         #TODO : Replace PcsHAFramework with hare utility
-        CsmRestApi._app["maintenance"] = MaintenanceAppService(PcsHAFramework())
+        maintainence = MaintenanceAppService(PcsHAFramework())
+        CsmRestApi._app[const.MAINTENANCE_SERVICE] = maintainence
 
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
@@ -147,6 +147,8 @@ class CsmAgent:
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
+        #Node Replacement
+        CsmRestApi._app[const.REPLACE_NODE_SERVICE] = ReplaceNodeService(maintainence, provisioner, db)
     @staticmethod
     def _daemonize():
         """ Change process into background service """
@@ -195,44 +197,45 @@ if __name__ == '__main__':
     from eos.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    try:
-        from csm.common.conf import Conf, ConfSection, DebugConf
-        from csm.common.payload import Yaml
-        from csm.common.payload import Payload, Json, JsonMessage, Dict
-        from csm.common.template import Template
-        from csm.core.blogic import const
-        from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
-                                            AlertMonitorService, AlertRepository
-        from csm.core.services.health import HealthAppService, HealthRepository \
-                , HealthMonitorService
-        from csm.core.services.stats import StatsAppService
-        from csm.core.services.s3.iam_users import IamUsersService
-        from csm.core.services.s3.accounts import S3AccountService
-        from csm.core.services.s3.buckets import S3BucketService
-        from csm.core.services.usl import UslService
-        from csm.core.services.users import CsmUserService, UserManager
-        from csm.core.services.roles import RoleManagementService, RoleManager
-        from csm.core.services.sessions import SessionManager, LoginService, AuthService
-        from csm.core.services.security import SecurityService
-        from csm.core.services.hotfix_update import HotfixApplicationService
-        from csm.core.repositories.update_status import UpdateStatusRepository
-        from csm.core.email.email_queue import EmailSenderQueue
-        from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-        from csm.core.services.onboarding import OnboardingConfigService
-        from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
+    from csm.common.conf import Conf, ConfSection, DebugConf
+    from csm.common.payload import Yaml
+    from csm.common.payload import Payload, Json, JsonMessage, Dict
+    from csm.common.template import Template
+    from csm.core.blogic import const
+    from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
+                                        AlertMonitorService, AlertRepository
+    from csm.core.services.health import HealthAppService, HealthRepository \
+            , HealthMonitorService
+    from csm.core.services.stats import StatsAppService
+    from csm.core.services.s3.iam_users import IamUsersService
+    from csm.core.services.s3.accounts import S3AccountService
+    from csm.core.services.s3.buckets import S3BucketService
+    from csm.core.services.usl import UslService
+    from csm.core.services.users import CsmUserService, UserManager
+    from csm.core.services.roles import RoleManagementService, RoleManager
+    from csm.core.services.sessions import SessionManager, LoginService, AuthService
+    from csm.core.services.security import SecurityService
+    from csm.core.services.hotfix_update import HotfixApplicationService
+    from csm.core.repositories.update_status import UpdateStatusRepository
+    from csm.core.email.email_queue import EmailSenderQueue
+    from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
+    from csm.core.services.onboarding import OnboardingConfigService
+    from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
-        from csm.common.timeseries import TimelionProvider
-        from csm.common.ha_framework import PcsHAFramework
-        from csm.core.services.maintenance import MaintenanceAppService
-        from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
-        from csm.core.services.storage_capacity import StorageCapacityService
-        from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
-        from csm.core.services.audit_log import  AuditLogManager, AuditService
-        from csm.core.services.file_transfer import DownloadFileManager
-        from csm.core.services.firmware_update import FirmwareUpdateService
-        from csm.common.errors import CsmError
-        from eos.utils.security.cipher import Cipher, CipherInvalidToken
-        from csm.core.services.version import ProductVersionService
+    from csm.common.timeseries import TimelionProvider
+    from csm.common.ha_framework import PcsHAFramework
+    from csm.core.services.maintenance import MaintenanceAppService
+    from csm.core.services.node_replacement import ReplaceNodeService
+    from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
+    from csm.core.services.storage_capacity import StorageCapacityService
+    from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
+    from csm.core.services.audit_log import  AuditLogManager, AuditService
+    from csm.core.services.file_transfer import DownloadFileManager
+    from csm.core.services.firmware_update import FirmwareUpdateService
+    from csm.common.errors import CsmError
+    from eos.utils.security.cipher import Cipher, CipherInvalidToken
+    from csm.core.services.version import ProductVersionService
+    try:
         # try:
         #     from salt import client
         # except ModuleNotFoundError:
