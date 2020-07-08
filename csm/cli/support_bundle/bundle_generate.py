@@ -191,6 +191,7 @@ class ComponentsBundle:
         except PermissionError as e:
             ComponentsBundle.publish_log(f"Permission Denied for Creating Summary File {e}", ERROR, bundle_id,
                                          node_name, comment)
+            return None
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name, comment)
             return None
@@ -216,6 +217,7 @@ class ComponentsBundle:
         except Exception as e:
             ComponentsBundle.publish_log(f"Could Not Generate Tar File {e}", ERROR, bundle_id,
                                          node_name, comment)
+            return None
         try:
             Log.debug("Create Soft-link for Generated TAR.")
             os.symlink(tar_file_name, os.path.join(symlink_path,
