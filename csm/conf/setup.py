@@ -435,17 +435,6 @@ class Setup:
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
-    def _set_rmq_channel_node_id(self):
-
-        try:
-            node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
-                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
-                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
-        except:
-            pass
-
     def _set_rmq_cluster_nodes(self):
         """
         This method gets the nodes names of the the rabbitmq cluster and writes
