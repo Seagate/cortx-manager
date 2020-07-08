@@ -9,13 +9,10 @@ CSM_PATH=$3
 
 yum install -y $RPM_PATH/*.rpm
 
-
 # Copy certificates
 mkdir -p /etc/ssl/stx/ /etc/cortx/ha/
 cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
 #cp -f $CSM_REPO_PATH/jenkins/cicd/etc/database.json /etc/cortx/ha/
-
-
 
 groupadd haclient
 
@@ -23,6 +20,8 @@ mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
 cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
 chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
+python3 -c "import provisioner; print(provisioner.__file__)"
+python3 -c "import sys; print(sys.path)"
 yum remove salt* -y
 pip3 uninstall -y salt
 
