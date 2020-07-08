@@ -27,6 +27,8 @@ from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
                                           ProvisionerCommandStatus)
 from csm.core.blogic.const import PILLAR_GET
+import provisioner
+import provisioner.freeze
 
 
 class PackageValidationError(InvalidRequest):
@@ -58,9 +60,6 @@ class ProvisionerPlugin:
 
     def __init__(self, username=None, password=None):
         try:
-            import provisioner
-            import provisioner.freeze
-
             self.provisioner = provisioner
             Log.info("Provisioner plugin is loaded")
 
