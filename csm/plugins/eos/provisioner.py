@@ -46,9 +46,6 @@ class CreateCsmUserError(InvalidRequest):
 class ProductVersionFetchError(InvalidRequest):
     pass
 
-class NodeIdFetchError(InvalidRequest):
-    pass
-
 # TODO: create a separate module for provisioner-related models
 NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
 
@@ -440,18 +437,3 @@ class ProvisionerPlugin:
         """
         # todo: Will be Implementing this once received the integration setps from Provisioner.
         return "1234"
-
-    @Log.trace_method(Log.DEBUG)
-    async def get_node_id(self):
-        if not self.provisioner:
-            raise NodeIdFetchError("Provisioner is not instantiated")
-
-        def _command_handler():
-            try:
-                node_id_info = self.provisioner.get_node_id()
-                return node_id_info
-            except Exception as error:
-                Log.error(f"Node IDs fetching failed : {error}")
-                raise NodeIdFetchError(f"Node IDs fetching failed: {error}")
-
-        return await self._await_nonasync(_command_handler)
