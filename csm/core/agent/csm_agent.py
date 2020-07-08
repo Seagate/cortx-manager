@@ -222,7 +222,6 @@ if __name__ == '__main__':
     from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import PcsHAFramework
     from csm.core.services.maintenance import MaintenanceAppService
-    from csm.core.services.node_replacement import ReplaceNodeService
     from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
