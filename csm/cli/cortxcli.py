@@ -74,9 +74,9 @@ class Terminal:
         Fetches the Password from Terminal in Non-Echo Mode.
         :return:
         """
-        sys.stdout.write(("\nPassword Must Contain the Following.\n1) 1 Upper and Lower "
-        "Case Character.\n2) 1 Numeric Character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
-                          "Character.\n"))
+        sys.stdout.write(("\nPassword must contain the following.\n1) 1 upper and lower "
+        "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
+                          "characters.\n"))
         value = value or getpass(prompt="Password: ")
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
@@ -101,7 +101,7 @@ class CsmCli(Cmd):
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
         self.some_error_occured = 'Some error occurred.\nPlease try login again.\n'
         self.session_expired_error = 'Session expired.\nPlease try login again.\n'
-        self.server_down = 'CSM Service is Not Found.\n Please Check whether CSM is Running.\n'
+        self.server_down = 'CSM service is not found.\nPlease check whether CSM is running.\n'
 
 
     def preloop(self):
