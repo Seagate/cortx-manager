@@ -464,6 +464,7 @@ LOCAL='local'
 RET='ret'
 DEBUG='debug'
 NA='NA'
+GET_NODE_ID='get_node_id'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
