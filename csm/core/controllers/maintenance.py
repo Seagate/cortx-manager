@@ -27,10 +27,10 @@ from csm.common.permission_names import Resource, Action
 
 
 class GetMaintenanceSchema(Schema):
-    action = fields.Str(required=True, validate=[Enum(["node_status"])])
+    action = fields.Str(required=True, validate=[Enum([const.NODE_STATUS, const.REPLACE_NODE])])
 
 class PostMaintenanceSchema(Schema):
-    action_items = [const.SHUTDOWN, const.START, const.STOP]
+    action_items = [const.SHUTDOWN, const.START, const.STOP, const.REPLACE_NODE]
     resource_name = fields.Str(required=True)
     action = fields.Str(required=True, validate=[Enum(action_items)])
 
@@ -49,10 +49,14 @@ class MaintenanceView(CsmView):
         action = self.request.match_info[const.ACTION]
         try:
             GetMaintenanceSchema().load({const.ACTION: action},
-                                        unknown=const.const.MARSHMALLOW_EXCLUDE)
+                                        unknown=const.MARSHMALLOW_EXCLUDE)
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
-        return await self._service.get_status()
+        service_action = {
+            const.REPLACE_NODE: self._service.begin_process,
+            const.NODE_STATUS: self._service.get_status
+        }
+        return await service_action[action]()
 
     @CsmAuth.permissions({Resource.SYSTEM: {Action.UPDATE}})
     async def post(self):
@@ -72,6 +76,7 @@ class MaintenanceView(CsmView):
         service_action = {
             const.SHUTDOWN: self._service.shutdown,
             const.START: self._service.start,
-            const.STOP: self._service.stop
+            const.STOP: self._service.stop,
+            const.REPLACE_NODE: self._service.begin_process
         }
         return await service_action[action](**body)
