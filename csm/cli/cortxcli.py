@@ -74,9 +74,9 @@ class Terminal:
         Fetches the Password from Terminal in Non-Echo Mode.
         :return:
         """
-        sys.stdout.write(("\nPassword Must Contain the Following.\n1) 1 Upper and Lower "
-        "Case Character.\n2) 1 Numeric Character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
-                          "Character.\n"))
+        sys.stdout.write(("\nPassword must contain the following.\n1) 1 upper and lower "
+        "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
+                          "characters.\n"))
         value = value or getpass(prompt="Password: ")
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
@@ -101,6 +101,7 @@ class CsmCli(Cmd):
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
         self.some_error_occured = 'Some error occurred.\nPlease try login again.\n'
         self.session_expired_error = 'Session expired.\nPlease try login again.\n'
+        self.server_down = 'CSM service is not found.\nPlease check whether CSM is running.\n'
 
 
     def preloop(self):
@@ -212,9 +213,14 @@ class CsmCli(Cmd):
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command executed")
         except CsmUnauthorizedError as e:
+            Log.error(f"{self.username}:{e}")
             # Setting session token to None cause it's already expired
             self._session_token = None
             self.do_exit(self.session_expired_error)
+        except CsmServiceNotAvailable as e:
+            Log.error(f"{self.username}:{e}")
+            self._session_token = None
+            self.do_exit(self.server_down)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except SystemExit:
@@ -250,7 +256,7 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from eos.utils.log import Log
     from csm.common.conf import Conf
-    from csm.common.errors import CsmError, CsmUnauthorizedError
+    from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
