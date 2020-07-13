@@ -1,16 +1,16 @@
 {
   "name": "system",
-  "description": "Maintenance for System Nodes Command.",
+  "description": "Maintenance for system nodes command.",
   "sub_commands": [
     {
       "name": "stop",
-      "description": "Stop Running Nodes/Cluster",
+      "description": "Stop running nodes/cluster",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
         {
           "flag": "resource_name",
-          "help": "Node ID for Stopping the Node.",
+          "help": "Node-ID for stopping the node.",
           "type": "str",
           "json": true
         },
@@ -27,17 +27,20 @@
         "method": "post",
         "target": "/{version}/maintenance/cluster/stop",
         "version": "v1"
+      },
+       "output": {
+        "success": "Stopping node.\nPlease exit shell and re-login to switch on active node."
       }
     },
     {
       "name": "shutdown",
-      "description": "Shutdown Running Node.",
+      "description": "Shutdown running node.",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
         {
           "flag": "resource_name",
-          "help": "Provide Node ID for shutting down the Resource.",
+          "help": "Provide node-id for shutting down the resource.",
           "type": "str",
           "json": true
         },
@@ -59,7 +62,7 @@
     },
     {
       "name": "start",
-      "description": "Initialize a Non Running Node",
+      "description": "Initialize a non running node",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
@@ -82,11 +85,14 @@
         "method": "post",
         "target": "/{version}/maintenance/cluster/start",
         "version": "v1"
+      },
+      "output": {
+        "success": "Starting node.\nPlease exit shell and re-login to switch on active node."
       }
     },
     {
       "name": "status",
-      "description": "Check Status of All Nodes.",
+      "description": "Check status of all nodes.",
       "need_confirmation": false,
       "permissions_tag": "list",
       "args": [
@@ -100,7 +106,7 @@
         {
           "flag": "-f",
           "dest": "format",
-          "help": "Format of Output",
+          "help": "Format of output",
           "default": "table",
           "type": "str",
           "suppress_help": true,
@@ -122,8 +128,7 @@
           "headers": {
             "name": "Node ID",
             "online": "Online",
-            "standby": "Stand-By Status",
-            "shutdown": "Shutdown Status"
+            "standby": "Stand-By Status"
           },
           "filters": "node_status"
         }
@@ -149,6 +154,36 @@
         "method": "unmaintenance",
         "class": "System",
         "is_static": true
+      }
+    },
+     {
+      "name": "replace_node",
+      "description": "Provision new node.",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node Id of replaced node.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/replace_node",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Node Replacement Procedure Started."
       }
     }
   ]

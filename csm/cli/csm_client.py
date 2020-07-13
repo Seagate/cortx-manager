@@ -30,7 +30,7 @@ import aiohttp
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
-from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError
+from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from csm.cli.command import Command
 
 
@@ -147,7 +147,7 @@ class CsmRestClient(CsmClient):
     async def call(self, cmd, headers={}):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
-        if status == 401:
+        if status == 401 or status == 403:
             raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
@@ -165,7 +165,7 @@ class CsmRestClient(CsmClient):
         url = f"{self._url}{url}"
         rest_obj = DirectRestRequest(url, session, method, params_json, body_json)
         body, headers, status = await rest_obj.request()
-        if status == 401:
+        if status == 401 or status ==403:
             raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
@@ -205,7 +205,7 @@ class RestRequest(Request):
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
         except aiohttp.ClientConnectionError as exception:
-            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
 
@@ -229,6 +229,6 @@ class DirectRestRequest(Request):
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
         except aiohttp.ClientConnectionError as exception:
-            raise CsmError(CSM_PROVIDER_NOT_AVAILABLE,
+            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
                            'Cannot connect to csm agent\'s host {0}:{1}'
                            .format(exception.host, exception.port))
