@@ -77,13 +77,13 @@ class SupportBundle:
                 # Executes Shell Script to Run in Background.
                 # Time out releases the connection rather than waiting for cmd.
                 # Since Shell Runs in Background no response is expected from Shell Command.
-                Log.debug(f"Executing Command {command} -n {node_name} &")
+                Log.debug(f"Executing command {command} -n {node_name} &")
                 ssh_conn_object.execute(f"{command} -n {node_name} &", timeout=120)
             except CsmError:
-                Log.debug(f"Started Bundle Generation on {ip_address}")
+                Log.debug(f"Started bundle generation on {ip_address}")
             ssh_conn_object.disconnect()
         except CsmError:
-            sys.stderr.write(f"Could Not Connect to {ip_address}\n")
+            sys.stderr.write(f"Could not connect to {ip_address}\n")
 
     @staticmethod
     async def fetch_host_from_salt():
@@ -96,7 +96,7 @@ class SupportBundle:
             "salt-call pillar.get cluster:node_list --out=json")
         _out, _err, _rc = process.run()
         if _rc != 0:
-            Log.warn(f"Salt Command Failed : {_err}")
+            Log.warn(f"Salt command failed : {_err}")
             return None, None
         output = JsonMessage(_out.strip()).load()
         nodes = output.get("local", [])
@@ -106,7 +106,7 @@ class SupportBundle:
                 f"salt-call pillar.get cluster:{each_node}:hostname --out=json")
             _out, _err, _rc = process.run()
             if _rc != 0:
-                Log.warn(f"Salt Command Failed : {_err}")
+                Log.warn(f"Salt command failed : {_err}")
                 return None, None
             output = JsonMessage(_out.strip()).load()
             hostnames.append(output.get("local", ""))
@@ -161,17 +161,17 @@ class SupportBundle:
         # Create Shell Command.
         shell_args = f"-i {bundle_id} -m {repr(comment)} "
         if sos:
-            Log.debug("Generating OS Logs.")
+            Log.debug("Generating OS logs.")
             shell_args = f"{shell_args} -s"
         if components:
             if "all" not in components:
-                Log.info(f"Generating Bundle for  {' '.join(components)}")
+                Log.info(f"Generating bundle for  {' '.join(components)}")
                 shell_args = f"{shell_args} -c {' '.join(components)}"
             else:
-                Log.info(f"Generating Bundle for All Cortex Components.")
+                Log.info(f"Generating bundle for all CORTX components.")
                 shell_args = f"{shell_args} -c all"
         if not components and not sos:
-            Log.info("Generating Complete Support Bundle For SOS and Components Logs.")
+            Log.info("Generating complete support bundle for SOS and components logs.")
             shell_args = f"{shell_args} -c all -s"
         # Get HostNames and Node Names.
         hostnames, node_list = await SupportBundle.fetch_host_from_salt()
@@ -196,7 +196,7 @@ class SupportBundle:
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
         response_msg = (
-            f"Please use the below ID for Checking the status of Support Bundle."
+            f"Please use the below bundle id for checking the status of support bundle."
             f" \n{bundle_id}"
             f"\nPlease Find the file on -> {symlink_path} .\n")
 
@@ -226,7 +226,7 @@ class SupportBundle:
         :param ftp_details: Current Keys for FTP.
         :return:
         """
-        Log.debug("Configuring FTP Channel for Support Bundle")
+        Log.debug("Configuring FTP channel for support bundle")
         ftp_details[const.HOST] = str(input("Input FTP Host: "))
         try:
             ftp_details[const.PORT] = int(input("Input FTP Port:  "))
