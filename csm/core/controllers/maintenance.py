@@ -21,7 +21,7 @@ from .view import CsmView, CsmAuth
 from eos.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-from csm.core.controllers.validators import Enum, ValidationErrorFormatter
+from csm.core.controllers.validators import Enum, ValidationErrorFormatter, Server, PortValidator
 from marshmallow import (Schema, fields, ValidationError)
 from csm.common.permission_names import Resource, Action
 
@@ -33,6 +33,8 @@ class PostMaintenanceSchema(Schema):
     action_items = [const.SHUTDOWN, const.START, const.STOP, const.REPLACE_NODE]
     resource_name = fields.Str(required=True)
     action = fields.Str(required=True, validate=[Enum(action_items)])
+    hostname = fields.Str(missing=True, required=False, validate=[Server])
+    ssh_port = fields.Int(missing=True, required=False, validate=[PortValidator])
 
 @CsmView._app_routes.view("/api/v1/maintenance/cluster/{action}")
 class MaintenanceView(CsmView):
