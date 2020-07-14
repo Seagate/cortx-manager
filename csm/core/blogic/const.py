@@ -461,8 +461,10 @@ LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER='PROVISIONER'
 LOCAL='local'
+RET='ret'
 DEBUG='debug'
 NA='NA'
+GET_NODE_ID='get_node_id'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -505,6 +507,7 @@ DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
 MINION_NODE1_ID = "srvnode-1"
+MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk", \
     "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan", \
