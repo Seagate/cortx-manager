@@ -57,8 +57,10 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
-HCTL_ERR_MSG = "Failed Script Execution error: {_err} output: {_output}"
-
+HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
+HCTL_NOT_INSTALLED = "System is not provisioned correctly."
+INVALID_RESOURCE = "Invalid resource selected."
+RESOURCE_ALREADY_SHUTDOWN = "Resource selected is already in shutdown mode."
 # File names
 SUMMARY_FILE = 'summary.txt'
 
@@ -158,7 +160,6 @@ ALERT_SORTABLE_FIELDS = ['created_time', 'updated_time', 'severity', 'resolved',
                          'acknowledged']
 ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
-ALERT_SENSOR_INFO = 'sensor_info'
 ALERT_EVENTS = 'events'
 ALERT_NAME = 'name'
 ALERT_COMPONENET_ID = 'component_id'
@@ -226,7 +227,6 @@ ACT_REQ_EXCH_QUEUE = 'actuator_req_queue'
 ACT_REQ_ROUTING_KEY = 'actuator_req_routing_key'
 ENCLOSURE = 'enclosure'
 NODE = 'node'
-TIME = 'time'
 HEADER = 'sspl_ll_msg_header'
 UUID = 'uuid'
 ACT_REQ_TYPE = 'actuator_request_type'
@@ -449,7 +449,6 @@ GRAINS_GET = 'grains.get'
 PILLAR_GET = 'pillar.get'
 S3 = 'S3'
 RMQ = 'rmq'
-CHANNEL = 'CHANNEL'
 USERNAME = "username"
 PASSWORD = 'password'
 SECRET = 'secret'
@@ -461,8 +460,10 @@ LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER='PROVISIONER'
 LOCAL='local'
+RET='ret'
 DEBUG='debug'
 NA='NA'
+GET_NODE_ID='get_node_id'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -480,14 +481,15 @@ STANDBY = "standby"
 SHUTDOWN = "shutdown"
 START = "start"
 STOP = "stop"
+ONLINE = "online"
 RESOURCE_NAME = "resource_name"
 REPLACE_NODE = "replace_node"
-ONLINE = "online"
 INVALID_PASSWORD = f"Invalid {PASSWORD}"
 STATUS_CHECK_FALED = "Node status can't be checked. HCTL command failed"
 SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
+RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
@@ -505,6 +507,7 @@ DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
 MINION_NODE1_ID = "srvnode-1"
+MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk", \
     "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan", \

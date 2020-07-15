@@ -112,7 +112,8 @@ class CertificateManager:
             )
             public_key = private_key.public_key()
             public_key_bytes = public_key.public_bytes(
-                encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.PKCS1
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
             )
         except (TypeError, ValueError, UnsupportedAlgorithm):
             return None
@@ -223,7 +224,7 @@ class USLDomainCertificateManager(CertificateManager):
             certificate = load_pem_x509_certificate(data, default_backend())
             public_key_from_certificate = certificate.public_key().public_bytes(
                 encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.PKCS1,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
             )
         except ValueError:
             raise CertificateError('Invalid certificate data')

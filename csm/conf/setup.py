@@ -52,6 +52,9 @@ class InvalidPillarDataError(InvalidRequest):
 class PillarDataFetchError(InvalidRequest):
     pass
 
+class ProvisionerCliError(InvalidRequest):
+    pass
+
 
 class Setup:
     def __init__(self):
@@ -113,6 +116,20 @@ class Setup:
         if rc == 0 and res != "":
             result = json.loads(res)
             return result[const.LOCAL]
+
+    @staticmethod
+    def get_data_from_provisioner_cli(method, output_format="json"):
+        try:
+            process = SimpleProcess(f"provisioner {method} --out={output_format}")
+            stdout, stderr, rc = process.run()
+        except Exception as e:
+            raise ProvisionerCliError(f"Error in command execution : {e}")
+        if stderr:
+            raise ProvisionerCliError(stderr)
+        res = stdout.decode('utf-8')
+        if rc == 0 and res != "":
+            result = json.loads(res)
+            return result[const.RET]
 
     def _check_if_dir_exist_remote_host(self, dir, host):
         try:
@@ -421,6 +438,22 @@ class Setup:
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
+    def _set_rmq_node_id(self):
+        """
+        This method gets the nodes id from provisioner cli and updates
+        in the config.
+        """
+        # Get get node id from provisioner cli and set to config
+        node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
+        if node_id_data:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+            Conf.save(const.CSM_GLOBAL_INDEX)
+        else:
+            raise CsmSetupError(f"Unable to fetch RMQ nodes id info.")
+
     def _set_rmq_cluster_nodes(self):
         """
         This method gets the nodes names of the the rabbitmq cluster and writes
@@ -555,6 +588,7 @@ class CsmSetup(Setup):
             self.Config.load()
             self._config_user_permission()
             self._set_rmq_cluster_nodes()
+            self._set_rmq_node_id()
             self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
