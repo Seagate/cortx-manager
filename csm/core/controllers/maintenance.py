@@ -75,7 +75,7 @@ class MaintenanceView(CsmView):
                                          unknown=const.MARSHMALLOW_EXCLUDE)
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
-        not_valid_node = self._service.validate_node_id()
+        not_valid_node = self._service.validate_node_id(body.get("resource_name"), body[const.ACTION])
         if not_valid_node:
             raise InvalidRequest(not_valid_node)
         service_action = {
