@@ -57,8 +57,10 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
-HCTL_ERR_MSG = "Failed Script Execution error: {_err} output: {_output}"
-
+HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
+HCTL_NOT_INSTALLED = "System is not provisioned correctly."
+INVALID_RESOURCE = "Invalid resource selected."
+RESOURCE_ALREADY_SHUTDOWN = "Resource selected is already in shutdown mode."
 # File names
 SUMMARY_FILE = 'summary.txt'
 
@@ -461,8 +463,10 @@ LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER='PROVISIONER'
 LOCAL='local'
+RET='ret'
 DEBUG='debug'
 NA='NA'
+GET_NODE_ID='get_node_id'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -480,6 +484,7 @@ STANDBY = "standby"
 SHUTDOWN = "shutdown"
 START = "start"
 STOP = "stop"
+ONLINE = "online"
 RESOURCE_NAME = "resource_name"
 REPLACE_NODE = "replace_node"
 NODE_STATUS = "node_status"
@@ -488,6 +493,7 @@ STATUS_CHECK_FALED = "Node Status Can't be Checked. HCTL Command Failed"
 SHUTDOWN_NODE_FIRST =  "Please Shutdown the Resource First Before Replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node Replacement is Already in Progress."
 NODE_REPLACEMENT_STARTED = "Node Replacement for {resource_name} Started."
+RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
@@ -505,6 +511,7 @@ DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
 MINION_NODE1_ID = "srvnode-1"
+MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
