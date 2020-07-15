@@ -443,3 +443,5 @@ class ProvisionerPlugin:
             return self.provisioner.replace_node(node_id, hostname, ssh_port)
         except self.provisioner.errors.ProvisionerError as e:
             raise PackageValidationError(f"Package validation failed: {e}")
+        except AttributeError:
+            raise PackageValidationError("Node replacement is not implemented by provisioner.")

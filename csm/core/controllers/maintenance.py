@@ -33,8 +33,8 @@ class PostMaintenanceSchema(Schema):
     action_items = [const.SHUTDOWN, const.START, const.STOP, const.REPLACE_NODE]
     resource_name = fields.Str(required=True)
     action = fields.Str(required=True, validate=[Enum(action_items)])
-    hostname = fields.Str(missing=True, required=False, validate=[Server])
-    ssh_port = fields.Int(missing=True, required=False, validate=[PortValidator])
+    hostname = fields.Str(missing=True, required=False, validate=[Server()])
+    ssh_port = fields.Int(missing=True, required=False, validate=[PortValidator()])
 
 @CsmView._app_routes.view("/api/v1/maintenance/cluster/{action}")
 class MaintenanceView(CsmView):
@@ -55,7 +55,7 @@ class MaintenanceView(CsmView):
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         service_action = {
-            const.REPLACE_NODE: self._service.begin_process,
+            const.REPLACE_NODE: self._service.check_node_replacement_status,
             const.NODE_STATUS: self._service.get_status
         }
         return await service_action[action]()

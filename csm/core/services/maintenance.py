@@ -50,8 +50,13 @@ class MaintenanceAppService(ApplicationService):
         Return status of cluster. List of active and passive node
         """
         Log.debug("Get cluster status")
-        return await self._loop.run_in_executor(self._executor,
+        try:
+            return await self._loop.run_in_executor(self._executor,
                                                 self._ha.get_nodes)
+        except Exception as e:
+            Log.critical(f"{e}")
+            raise CsmError(rc=CSM_INVALID_REQUEST,
+                            desc=const.STATUS_CHECK_FALED)
 
     async def shutdown(self, resource_name, **kwargs) -> Dict:
         """
@@ -85,7 +90,7 @@ class MaintenanceAppService(ApplicationService):
                                                 self._ha.make_node_active,
                                                 resource_name)
 
-    async def check_status(self):
+    async def check_node_replacement_status(self):
         """
         Check Current Node Replacement Status
         :return:
@@ -104,8 +109,8 @@ class MaintenanceAppService(ApplicationService):
             Log.error(f"{e}")
             raise CsmError("Failed to fetch status for running process.")
 
-        if status.status != model[0].status:
-            setattr(model[0], "status", status.status)
+        if status.status.value != model[0].status:
+            setattr(model[0], "status", status.status.value)
             await self._storage.store(model[0])
         return model[0].to_primitive()
 
@@ -115,13 +120,7 @@ class MaintenanceAppService(ApplicationService):
         :param resource_name: Node ID for Replacing :type Str
         :return:
         """
-        try:
-            node_status = await self.get_status()
-        except CsmError as e:
-            Log.error(e)
-            return CsmError(rc=CSM_INVALID_REQUEST,
-                            desc=const.STATUS_CHECK_FALED)
-
+        node_status = await self.get_status()
         resources = node_status.get(const.NODE_STATUS)
         for each_resource in resources:
             if each_resource.get(const.NAME) == resource_name and each_resource.get(const.SHUTDOWN):
@@ -129,7 +128,7 @@ class MaintenanceAppService(ApplicationService):
         else:
             raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.SHUTDOWN_NODE_FIRST)
 
-    async def begin_process(self, resource_name, hostname=None, ssh_port=None):
+    async def begin_process(self, resource_name, hostname=None, ssh_port=None, **kwargs) -> Dict:
         """
         Start the Node Replacement Process.
         "param: resource_name:  Node ID for Replacing. :type: Str
@@ -149,7 +148,7 @@ class MaintenanceAppService(ApplicationService):
             raise CsmError(rc=CSM_INVALID_REQUEST,
                            desc=f"{e}")
         # Save Received Process ID in Consul.
-        model = self._replace_node.generate_new(job_id, resource_name)
+        model = self._replace_node.generate_new(job_id, resource_name, hostname, ssh_port)
         await self._storage.store(model)
         return {"msg": const.NODE_REPLACEMENT_STARTED.format(resource_name=resource_name)}
 
