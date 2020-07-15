@@ -57,8 +57,10 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
-HCTL_ERR_MSG = "Failed Script Execution error: {_err} output: {_output}"
-
+HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
+HCTL_NOT_INSTALLED = "System is not provisioned correctly."
+INVALID_RESOURCE = "Invalid resource selected."
+RESOURCE_ALREADY_SHUTDOWN = "Resource selected is already in shutdown mode."
 # File names
 SUMMARY_FILE = 'summary.txt'
 
@@ -482,6 +484,7 @@ STANDBY = "standby"
 SHUTDOWN = "shutdown"
 START = "start"
 STOP = "stop"
+ONLINE = "online"
 RESOURCE_NAME = "resource_name"
 REPLACE_NODE = "replace_node"
 NODE_STATUS = "node_status"
@@ -490,6 +493,7 @@ STATUS_CHECK_FALED = "Node Status Can't be Checked. HCTL Command Failed"
 SHUTDOWN_NODE_FIRST =  "Please Shutdown the Resource First Before Replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node Replacement is Already in Progress."
 NODE_REPLACEMENT_STARTED = "Node Replacement for {resource_name} Started."
+RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
