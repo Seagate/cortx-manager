@@ -49,11 +49,14 @@ def nodes_status(args):
     """
     _maintenance, _loop = TestMaintenanceAppService.init()
     Log.console('Testing node status ...')
-    status = _loop.run_until_complete(_maintenance.get_status(node=None))
-    if status:
-        Log.console(status)
-    else:
-        raise TestFailed("Node status test failed")
+    try:
+        status = _loop.run_until_complete(_maintenance.get_status(node=None))
+        if status.get("node_status"):
+            Log.console(status)
+        else:
+            raise TestFailed("Node status test failed")
+    except Exception as e:
+        raise TestFailed(f"Node status test failed: {e}")
 
 def stop(args):
     """
@@ -61,11 +64,14 @@ def stop(args):
     """
     Log.console('Testing node stop ...')
     _maintenance, _loop = TestMaintenanceAppService.init()
-    status = _loop.run_until_complete(_maintenance.stop("all"))
-    if "Success" in status["message"]:
-        Log.console(status)
-    else:
-        raise TestFailed("stop test failed")
+    try:
+        status = _loop.run_until_complete(_maintenance.stop("srvnode-1"))
+        if status.get("message", None):
+            Log.console(status)
+        else:
+            raise TestFailed("stop test failed")
+    except Exception as e:
+        raise TestFailed(f"stop test failed: {e}")
 
 def start(args):
     """
@@ -73,10 +79,28 @@ def start(args):
     """
     Log.console('Testing node start ...')
     _maintenance, _loop = TestMaintenanceAppService.init()
-    status = _loop.run_until_complete(_maintenance.start("all"))
-    if "Success" in status["message"]:
-        Log.console(status)
-    else:
-        raise TestFailed("start test failed")
+    try:
+        status = _loop.run_until_complete(_maintenance.start("srvnode-1"))
+        if status.get("message", None):
+            Log.console(status)
+        else:
+            raise TestFailed("start test failed")
+    except Exception as e:
+        raise TestFailed(f"start test failed: {e}")
 
-test_list = [ nodes_status, stop, start ]
+def shutdown(args):
+    """
+    Start all nodes from cluster
+    """
+    Log.console('Testing node shutdown ...')
+    _maintenance, _loop = TestMaintenanceAppService.init()
+    try:
+        status = _loop.run_until_complete(_maintenance.shutdown("srvnode-1"))
+        if status.get("message", None):
+            Log.console(status)
+        else:
+            raise TestFailed("shutdown test failed")
+    except Exception as e:
+        raise TestFailed(f"shutdown test failed: {e}")
+
+test_list = [ nodes_status, stop, start, shutdown ]

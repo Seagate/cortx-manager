@@ -146,7 +146,7 @@ class MaintenanceAppService(ApplicationService):
 
         resources = node_status.get(const.NODE_STATUS)
         for each_resource in resources:
-            if each_resource.get(const.NAME) == resource_name and each_resource.get(const.SHUTDOWN):
+            if each_resource.get(const.NAME) == resource_name and each_resource.get(const.ONLINE):
                 break
         else:
             raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.SHUTDOWN_NODE_FIRST)
