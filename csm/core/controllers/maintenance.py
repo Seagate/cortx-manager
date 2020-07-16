@@ -27,7 +27,7 @@ from csm.common.permission_names import Resource, Action
 
 
 class GetMaintenanceSchema(Schema):
-    action = fields.Str(required=True, validate=[Enum([const.NODE_STATUS, const.REPLACE_NODE])])
+    action = fields.Str(required=True, validate=[Enum([const.NODE_STATUS, const.REPLACE_NODE_STATUS])])
 
 class PostMaintenanceSchema(Schema):
     action_items = [const.SHUTDOWN, const.START, const.STOP, const.REPLACE_NODE]
@@ -55,7 +55,7 @@ class MaintenanceView(CsmView):
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         service_action = {
-            const.REPLACE_NODE: self._service.check_node_replacement_status,
+            const.REPLACE_NODE_STATUS: self._service.check_node_replacement_status,
             const.NODE_STATUS: self._service.get_status
         }
         return await service_action[action]()
