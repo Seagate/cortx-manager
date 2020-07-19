@@ -15,7 +15,7 @@ permissions = {
 }
             
 create_command = CommandFactory.get_command(
-    ["users", 'create', "user123", "-p", "qwerty123", "-r", "monitor"], permissions )
+    ["users", 'create', "user123", "monitor", "-p", "Qwerty123!"], permissions )
 t = unittest.TestCase()
 
 with open(file_path + "csm_user_commands_output.json") as fp:
