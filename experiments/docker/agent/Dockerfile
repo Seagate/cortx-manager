@@ -1,4 +1,4 @@
-FROM centos:7.7.1908
+FROM registry.access.redhat.com/rhel7
 
 ARG CSM_AGENT_RPM=./csm_agent.rpm
 
