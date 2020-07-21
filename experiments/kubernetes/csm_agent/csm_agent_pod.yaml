@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    configmap.reloader.stakater.com/reload: "csm-agent-config"
+  name: csm-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csm-agent
+  template:
+    metadata:
+      labels:
+        app: csm-agent
+    spec:
+      containers:
+      - name: csm-agent
+        image: LOCAL_DOCKER_REGISTRY/csm-agent
+        volumeMounts:
+        - name: csm-config
+          mountPath: /etc/csm
+        command: ["/usr/bin/csm_agent"]
+        args: ["--debug"]
+        ports:
+        - containerPort: 28101
+      volumes:
+      - name: csm-config
+        configMap:
+          # Provide the name of the ConfigMap containing the files you want
+          #         # to add to the container
+          name: csm-agent-config
