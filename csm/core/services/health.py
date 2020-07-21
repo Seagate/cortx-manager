@@ -98,6 +98,31 @@ class HealthAppService(ApplicationService):
             node_health_details.append(node_details)
         return node_health_details
 
+    async def fetch_component_health_view(self, **kwargs):
+        """
+        Fetches health details like health summary and components for the provides
+        node key.
+        1.) If key is specified, get the schema for the provided key.
+        2.) If key is not provided, get all the data for the childern under
+        'nodes'
+        :param kwargs:
+        :return:
+        """
+        node_id = kwargs.get(const.ALERT_NODE_ID, "")
+        node_health_details = []
+        keys = []
+        node_details = {}
+        if node_id:
+           keys.append(node_id)
+        else:
+            parent_health_schema = self._get_schema(const.KEY_NODES)
+            keys = self._get_child_node_keys(parent_health_schema)            
+
+        for key in keys:
+            node_details = await self._get_component_details(key)
+            node_health_details.append(node_details)
+        return node_health_details
+
     async def fetch_node_health(self, **kwargs):
         """
         Fetches health details like health summary for the provided
@@ -173,6 +198,32 @@ class HealthAppService(ApplicationService):
         alerts = await self._get_node_alerts(alert_uuid_map)
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, const.ALERTS_COMMAND: alerts}}
         return node_details
+    async def _get_component_details(self, node_id):
+        """
+        Get health details like health summary and components for the provided node_id
+        :param node_id:
+        :return:
+        """
+        health_count_map = {}
+        leaf_nodes = []
+        alert_uuid_map = {}
+        health_schema = self._get_schema(node_id)
+        self._get_leaf_node_health(health_schema, health_count_map,
+                                   leaf_nodes, alert_uuid_map)
+        health_summary = self._get_health_count(health_count_map, leaf_nodes)
+        component_details = []
+
+        for component in leaf_nodes:
+            component_detail = {}
+            component_detail["component_id"] = component.get("component_id")
+            component_detail["health"] = component.get("health")
+            component_detail["durable_id"] = component.get("durable_id")
+            component_detail["alert_uuid"] = component.get("alert_uuid")
+            component_detail["component_info"] = component
+            component_details.append(component_detail)
+        
+        node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, "components": component_details}}
+        return node_details
 
     def _get_node_health(self, node_id):
         """
@@ -208,7 +259,8 @@ class HealthAppService(ApplicationService):
         :param leaf_nodes:
         :return:
         """
-        bad_health_count = 0
+        critical_health_count = 0
+        warning_health_count = 0
         total_leaf_nodes = len(leaf_nodes)
         health_summary = {}
         health_summary[const.TOTAL] = total_leaf_nodes
@@ -217,12 +269,19 @@ class HealthAppService(ApplicationService):
         it as a good. 
         """
         for x in health_count_map:
-            if x.upper() != const.OK_HEALTH and \
-                x.upper() != const.NA_HEALTH:
-                health_summary[x] = health_count_map[x]
-                bad_health_count += health_count_map[x]
+            health = severity = x.split('-')[0]
+            severity = severity = x.split('-')[1]
+            if health.upper() != const.OK_HEALTH and \
+                health.upper() != const.NA_HEALTH:
+                if severity.upper() in [const.CRITICAL.upper(), const.ERROR.upper()]:
+                    critical_health_count += health_count_map[x]
+                elif severity.upper() in [const.WARNING.upper(), const.NA_HEALTH.upper(), '']:
+                    warning_health_count += health_count_map[x]
+        bad_health_count = critical_health_count + warning_health_count
         good_health_count = total_leaf_nodes - bad_health_count
         health_summary[const.GOOD_HEALTH] = good_health_count
+        health_summary[const.CRITICAL.lower()] = critical_health_count
+        health_summary[const.WARNING.lower()] = warning_health_count
         return {x: health_summary[x] for x in health_summary}
 
     def _get_schema(self, key: Optional[str] = None):
@@ -260,7 +319,10 @@ class HealthAppService(ApplicationService):
                     else:
                         if v:
                             leaf_nodes.append(v)
-                            health_status = v.get(const.ALERT_HEALTH, "").lower()
+                            v["component_id"] = k
+                            health = v.get(const.ALERT_HEALTH, "").lower()
+                            severity = v.get(const.ALERT_SEVERITY, "").lower()
+                            health_status = f'{health}-{severity}'
                             if v.get(const.ALERT_HEALTH):
                                 """
                                 Here we handle the count of sas alert.

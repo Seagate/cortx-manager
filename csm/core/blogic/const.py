@@ -196,6 +196,10 @@ EVENT_ID = 'event_id'
 IEM = 'iem'
 SPECIFIC_INFO = 'specific_info'
 
+CRITICAL='critical'
+ERROR='error'
+WARNING='warning'
+
 # Health
 OK_HEALTH = 'OK'
 NA_HEALTH = 'NA'
