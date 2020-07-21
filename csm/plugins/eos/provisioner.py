@@ -27,6 +27,8 @@ from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
                                           ProvisionerCommandStatus)
 from csm.core.blogic.const import PILLAR_GET
+from json import JSONDecodeError
+from csm.common.payload import JsonMessage
 import provisioner
 import provisioner.freeze
 
@@ -412,18 +414,11 @@ class ProvisionerPlugin:
 
         def _command_handler():
             try:
-                # TODO: Provisioner api integration and error handling as per api response.
-                return {"NAME": "EES",
-                        "VERSION": "1.0.0",
-                        "BUILD": "193",
-                        "RELEASE": "Cortx-1.0.0-12-rc7",
-                        "OS": "Red Hat Enterprise Linux Server release 7.7 (Maipo)",
-                        "DATETIME": "09-Jun-2020 05:57 UTC",
-                        "KERNEL": "3.10.0_1062.el7",
-                        "LUSTRE_VERSION": ""
-                        }
+                return JsonMessage(self.provisioner.get_release_version()).load()
+            except JSONDecodeError as jde:
+                raise ProductVersionFetchError("Product version response missing or invalid json")
             except self.provisioner.errors.ProvisionerError as error:
-                Log.error(f"Provisioner api error : {error}")
+                Log.error(f"Failed to get release version : {error}")
                 raise ProductVersionFetchError(f"Product version fetching failed: {error}")
 
         return await self._await_nonasync(_command_handler)
