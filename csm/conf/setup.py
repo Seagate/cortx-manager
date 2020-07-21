@@ -177,6 +177,7 @@ class Setup:
         if not reset:
             if not self._is_user_exist():
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
+                Setup._run_cmd("usermod -aG wheel " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
