@@ -1,4 +1,12 @@
-1) Docker image build command:
+1) Generate Kibana Dockefile using generate_Dockerfile.sh, pass Elasticsearch hostnames as a parameters.
+Usage:
+$ ./generate_Dockerfile.sh http://FQDN1:9200 http://FQDN2:9200 http://FQDN3:9200
+
+- You can also specify 'localhost' if ES is installed locally:
+
+$ ./generate_Dockerfile.sh http://localhost:9200
+
+2) Build Docker image using the Dockerfile:
 $ sudo docker build .
 
 - You can specify a repository and tag at which to save the new image:
