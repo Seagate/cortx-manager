@@ -594,7 +594,7 @@ class CsmSetup(Setup):
             try:
                 self._set_rmq_node_id()
             except Exception as e:
-                Log.error(f"Failed to fetch RMQ nodes id info from provisioner cli.- {e}")
+                Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
             self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
