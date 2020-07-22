@@ -453,7 +453,7 @@ class Setup:
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
-            raise CsmSetupError(f"Unable to fetch RMQ nodes id info.")
+            raise CsmSetupError(f"Unable to fetch system node ids info.")
 
     def _set_rmq_cluster_nodes(self):
         """
