@@ -162,7 +162,7 @@ class MaintenanceAppService(ApplicationService):
             raise CsmError(rc=CSM_INVALID_REQUEST,
                            desc=const.NODE_REPLACEMENT_ALREADY_RUNNING)
         # Call Prvisioner API and Start Node Replacement.
-        Log.debug("Calling provisioner API.")
+        Log.debug(f"Begin Node Replacement for {resource_name} with SSH Details -> {hostname}:{ssh_port}")
         try:
             job_id = await self._provisioner.start_node_replacement(resource_name, hostname, ssh_port)
         except Exception as e:

@@ -76,7 +76,7 @@ class MaintenanceView(CsmView):
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         if action != const.REPLACE_NODE:
-            not_valid_node = await self._service.validate_node_id(body.get("resource_name"),
+            not_valid_node = await self._service.validate_node_id(body.get(const.RESOURCE_NAME),
                                                                body[const.ACTION])
             if not_valid_node:
                 raise InvalidRequest(not_valid_node)
