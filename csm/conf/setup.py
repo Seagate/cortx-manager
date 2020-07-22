@@ -589,7 +589,12 @@ class CsmSetup(Setup):
             self.Config.load()
             self._config_user_permission()
             self._set_rmq_cluster_nodes()
-            self._set_rmq_node_id()
+            #TODO: Adding this implementation in try..except block to avoid build failure
+            # Its a work around and it will be fixed once EOS-10551 resolved
+            try:
+                self._set_rmq_node_id()
+            except Exception as e:
+                Log.error(f"Failed to fetch RMQ nodes id info from provisioner cli.- {e}")
             self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
