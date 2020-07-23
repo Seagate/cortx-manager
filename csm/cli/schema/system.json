@@ -169,6 +169,20 @@
           "json": true
         },
         {
+          "flag": "--hostname",
+          "dest": "hostname",
+          "type": "str",
+          "help": "Hostname for new node. Default is same as before ",
+          "json": true
+        },
+        {
+          "flag": "--port",
+          "dest": "ssh_port",
+          "type": "Validatiors.positive_int",
+          "help": "ssh port for new node. Default is same as before",
+          "json": true
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,

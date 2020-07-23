@@ -44,6 +44,28 @@ class MaintenanceAppService(ApplicationService):
         self._provisioner = provisioner
         self._replace_node = ReplaceNode
         self._storage = db(self._replace_node)
+        self._action_map = {const.SHUTDOWN: lambda x : not x.get(const.ONLINE),
+            const.START: lambda x : not x.get(const.STANDBY),
+            const.STOP: lambda x: x.get(const.const.STANDBY)}
+
+    async def validate_node_id(self, resource_name, action):
+        """
+        Validate Given Resource ID for System
+        :param resource_name: Node ID.
+        :param action: Action needed to Validate.
+        :return:
+        """
+
+        data = await self.get_status()
+        for each_resource in data.get("node_status"):
+            if each_resource.get(const.NAME) == resource_name:
+                if self._action_map.get(action)(each_resource):
+                    return const.RESOURCE_ALREADY_SAME_STATE.format(action=action)
+                else:
+                    break
+        else:
+            return const.INVALID_RESOURCE
+        return False
 
     async def get_status(self) -> Dict:
         """
@@ -124,7 +146,7 @@ class MaintenanceAppService(ApplicationService):
 
         resources = node_status.get(const.NODE_STATUS)
         for each_resource in resources:
-            if each_resource.get(const.NAME) == resource_name and each_resource.get(const.SHUTDOWN):
+            if each_resource.get(const.NAME) == resource_name and each_resource.get(const.ONLINE):
                 break
         else:
             raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.SHUTDOWN_NODE_FIRST)
