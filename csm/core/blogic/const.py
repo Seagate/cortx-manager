@@ -488,6 +488,8 @@ STOP = "stop"
 ONLINE = "online"
 RESOURCE_NAME = "resource_name"
 REPLACE_NODE = "replace_node"
+REPLACE_NODE_STATUS = "replace_node_status"
+NODE_STATUS = "node_status"
 INVALID_PASSWORD = f"Invalid {PASSWORD}"
 STATUS_CHECK_FALED = "Node status can't be checked. HCTL command failed"
 SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
@@ -513,10 +515,11 @@ CONSUL_HOST_KEY = "databases.consul_db.config.host"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
-ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk", \
-    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan", \
-    "enclosure:eos:logical_volume", "enclosure:interface:sas", \
-    "enclosure:sensor:current", "enclosure:sensor:temperature", \
-    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk", \
-    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage", \
+ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
+    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
+    "enclosure:eos:logical_volume", "enclosure:interface:sas",
+    "enclosure:sensor:current", "enclosure:sensor:temperature",
+    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk",
+    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
+PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."

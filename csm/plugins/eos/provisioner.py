@@ -89,7 +89,7 @@ class ProvisionerPlugin:
         :raises: PackageValidationError in case of an invalid package
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -116,7 +116,7 @@ class ProvisionerPlugin:
         """
 
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -162,7 +162,7 @@ class ProvisionerPlugin:
 
     async def trigger_firmware_update(self, fw_package_path):
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -182,7 +182,7 @@ class ProvisionerPlugin:
         """
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -208,7 +208,7 @@ class ProvisionerPlugin:
         """
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -235,7 +235,7 @@ class ProvisionerPlugin:
                                        f'`set_ssl_certs` call: {e}')
 
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         return await self._await_nonasync(_command_handler)
 
@@ -255,7 +255,7 @@ class ProvisionerPlugin:
         :raises: a CsmInternalError in case of query failure
         """
         if not self.provisioner:
-            raise NetworkConfigFetchError("Provisioner is not instantiated")
+            raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -275,7 +275,7 @@ class ProvisionerPlugin:
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
         if not self.provisioner:
-            raise ClusterIdFetchError("Provisioner is not instantiated")
+            raise ClusterIdFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -309,7 +309,7 @@ class ProvisionerPlugin:
         :returns:
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -410,7 +410,7 @@ class ProvisionerPlugin:
         :returns: Dict having installed product version
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -424,11 +424,21 @@ class ProvisionerPlugin:
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
-    async def start_node_replacement(self, node_id):
+    async def start_node_replacement(self, node_id, hostname=None, ssh_port=None):
         """
-        Begin Node Replacement Prodecure.
+        Begin Node Replacement Procedure.
         :param: node_id: Node Name :type: String
+        :param: hostname: New Hostname/IP Provided by User. :type: String
+        :param: ssh_port: Port to connect to SSH :type: Int
         :return: Job ID for Node Replacement
         """
-        # todo: Will be Implementing this once received the integration setps from Provisioner.
-        return "1234"
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            return self.provisioner.replace_node(node_id, hostname, ssh_port)
+        except self.provisioner.errors.ProvisionerError as e:
+            Log.error(f"Replace node error : {e}")
+            raise PackageValidationError(f"Replace node error: {e.reason.message}")
+        except AttributeError:
+            Log.critical(f"{e}")
+            raise PackageValidationError("Node replacement is not implemented by provisioner.")
