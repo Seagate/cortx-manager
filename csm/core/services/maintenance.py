@@ -23,7 +23,6 @@ from typing import Dict
 
 from eos.utils.data.access import Query, SortBy, SortOrder
 from eos.utils.log import Log
-
 from csm.common.errors import CSM_OPERATION_NOT_PERMITTED
 from csm.common.errors import CsmError, CSM_INVALID_REQUEST
 from csm.common.services import ApplicationService

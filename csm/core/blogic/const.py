@@ -496,6 +496,7 @@ SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
 RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
+SHUTDOWN_COMMENT = "node_shutdown_cron"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"

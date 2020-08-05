@@ -52,12 +52,14 @@
           "help": ""
         }
       ],
-      "comm": {
-        "type": "direct",
-        "target": "csm.cli.scripts",
-        "method": "shutdown",
-        "class": "System",
-        "is_static": true
+     "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/shutdown",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Node Shutdown will begin in a moment.\nPlease exit shell and re-login to switch on active node."
       }
     },
     {

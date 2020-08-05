@@ -21,9 +21,12 @@ import sys
 import os
 import time
 import crypt
+import datetime
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
+from eos.utils.cron import CronJob
 from csm.core.blogic import const
+
 from csm.common.conf import Conf
 from eos.utils.log import Log
 
@@ -133,18 +136,19 @@ class PcsHAFramework(HAFramework):
 
     def shutdown(self, node):
         """
-            Shutdown the current Cluster or Node.
+        Shutdown the current Cluster or Node.
         :return:
         """
-        _command = f"shutdown  {node}"
-        _cluster_shutdown_cmd = const.HCTL_NODE.format(command=_command,
-                          user=self._user, pwd=self._password)
-        _proc = SimpleProcess(_cluster_shutdown_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        if _rc != 0:
-            raise Exception(_err)
-        result = f"{node} Shutdown Successful."
-        return {"message": result}
+        _command = "{CSM_PATH}/schema/shutdown_cron.sh -u {user} -p {pwd} -n {node}"
+        _cluster_shutdown_cmd = _command.format(node=node,
+                          user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
+        shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
+                                       "MAINTENANCE.shutdown_cron_time")
+        Log.debug(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
+        cron_job_obj = CronJob(self._user)
+        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT, 
+                                cron_job_obj.create_run_time(seconds=shutdown_cron_time))
+        return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
 class ResourceAgent:
     def __init__(self, resources):

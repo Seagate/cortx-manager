@@ -35,7 +35,8 @@ class CsmAgent:
         from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
-
+        #Remove all Old Shutdown Cron Jobs
+        CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
@@ -221,6 +222,7 @@ if __name__ == '__main__':
 
     from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import PcsHAFramework
+    from eos.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
     from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
