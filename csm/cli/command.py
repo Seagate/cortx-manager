@@ -34,6 +34,7 @@ from csm.cli.cortxcli import Terminal, ArgumentError
 from csm.core.blogic import const
 from eos.utils.log import Log
 from csm.core.controllers.validators import BucketNameValidator
+from csm.common.payload import CommonPayload
 
 class Command:
     """CLI Command Base Class"""
@@ -48,7 +49,6 @@ class Command:
         self._output = options["output"]
         self._need_confirmation = options['need_confirmation']
         self._sub_command_name = options['sub_command_name']
-        self._read_file_parameters()
 
     @property
     def name(self):
@@ -89,12 +89,6 @@ class Command:
                                output_type=self._options.get('format',
                                                              "success"))
 
-    def _read_file_parameters(self):
-        for k, v in self._options.items():
-            if isinstance(v, io.TextIOWrapper):
-                self._options[k] = json.load(v)
-                v.close()
-
 
 class Validatiors:
 
@@ -109,9 +103,14 @@ class Validatiors:
             raise ArgumentError(errno.EINVAL,"Value Must be Positive Integer")
 
     @staticmethod
-    def file_type(value):
-        f_type = argparse.FileType('r')
-        return f_type(value)
+    def file_parser(value):
+        try:
+            return CommonPayload(value).load()
+        except ValueError as ve:
+            Log.error(f"File parsing failed. {value}: {ve}")
+            raise ArgumentError(errno.EINVAL,
+                ("File operations failed. "
+                 "Please check if the file is valid or not"))
 
     @staticmethod
     def bucket_name(value):
