@@ -124,7 +124,7 @@ class S3AccountService(S3BaseService):
         # Allowed to list only himself.
         elif isinstance(session, S3Credentials):
             for acc in accounts.iam_accounts:
-                if acc.account_name == session.user_id:
+                if acc.account_name.lower() == session.user_id.lower():
                     accounts_list.append(
                         {
                             "account_name": acc.account_name,
