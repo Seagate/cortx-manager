@@ -82,7 +82,7 @@ class S3AccountsListView(S3BaseView):
             with self._guard_service():
                 return await self._service.create_account(**account_body)
         else:
-            raise InvalidRequest("CSM user with same username as passed S3 account name alreay exists")
+            raise InvalidRequest("CSM user with same username as passed S3 account name already exists")
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts/{account_id}")
