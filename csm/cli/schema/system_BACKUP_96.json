@@ -1,0 +1,280 @@
+{
+  "name": "system",
+  "description": "Maintenance for system nodes command.",
+  "sub_commands": [
+    {
+      "name": "stop",
+      "description": "Stop running nodes/cluster",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node-ID for stopping the node.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/stop",
+        "version": "v1"
+      },
+       "output": {
+        "success": "Stopping node.\nPlease exit shell and re-login to switch on active node."
+      }
+    },
+    {
+      "name": "shutdown",
+      "description": "Shutdown running node.",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Provide node-id for shutting down the resource.",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+     "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/shutdown",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Node Shutdown will begin in a moment.\nPlease exit shell and re-login to switch on active node."
+      }
+    },
+    {
+      "name": "start",
+      "description": "Initialize a non running node",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "resource_name",
+          "help": "Node Name",
+          "type": "str",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/maintenance/cluster/start",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Starting node.\nPlease exit shell and re-login to switch on active node."
+      }
+    },
+    {
+      "name": "status",
+      "description": "Check status of all nodes.",
+      "need_confirmation": false,
+      "permissions_tag": "list",
+      "args": [
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of output",
+          "default": "table",
+          "type": "str",
+          "suppress_help": true,
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ]
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "get",
+        "target": "/{version}/maintenance/cluster/node_status",
+        "version": "v1"
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "name": "Node ID",
+            "online": "Online",
+            "standby": "Stand-By Status"
+          },
+          "filters": "node_status"
+        }
+      }
+    },
+    {
+      "name": "startup",
+      "description": "Brings back the system after cluster has be started to original state.",
+      "need_confirmation": true,
+      "permissions_tag": "startup",
+      "args": [
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.scripts",
+        "method": "unmaintenance",
+        "class": "System",
+        "is_static": true
+      }
+    },
+    {
+      "name": "replace_node",
+      "description": "Provision new node.",
+      "permissions_tag": "update",
+      "sub_commands": [
+        {
+          "name": "start",
+          "description": "Start node replacement.",
+          "need_confirmation": true,
+          "permissions_tag": "update",
+          "args": [
+            {
+              "flag": "resource_name",
+              "type": "str",
+              "help": "Resource name for node replace.",
+              "json": true
+
+            },
+            {
+              "flag": "--hostname",
+              "dest": "hostname",
+              "type": "str",
+              "help": "Hostname for new node. Default is same as before ",
+              "json": true
+            },
+            {
+              "flag": "--port",
+              "dest": "ssh_port",
+              "type": "Validatiors.positive_int",
+              "help": "ssh port for new node. Default is same as before",
+              "json": true
+            },
+            {
+              "flag": "args",
+              "default": [],
+              "suppress_help": true,
+              "nargs": "?",
+              "help": ""
+            }
+          ],
+          "comm": {
+            "type": "rest",
+            "method": "post",
+            "target": "/{version}/maintenance/cluster/replace_node",
+            "version": "v1"
+          },
+          "output": {
+            "success": "Node replacement started successfully."
+          }
+        },
+        {
+<<<<<<< HEAD
+          "name": "status",
+          "description": "Get node replacement status.",
+          "need_confirmation": false,
+          "permissions_tag": "list",
+          "args": [
+            {
+              "flag": "-f",
+              "dest": "format",
+              "help": "Format of Output",
+              "default": "table",
+              "type": "str",
+              "choices": [
+                "table",
+                "xml",
+                "json"
+              ]
+            },
+            {
+              "flag": "args",
+              "default": [],
+              "suppress_help": true,
+              "nargs": "?",
+              "help": ""
+            }
+          ],
+          "comm": {
+            "type": "rest",
+            "method": "get",
+            "target": "/{version}/maintenance/cluster/replace_node_status",
+            "version": "v1"
+          },
+          "output": {
+            "table": {
+              "headers": {
+                "node_id": "Node Id",
+                "job_id": "Job Id",
+                "status": "Status",
+                "created_time": "Created Time",
+                "updated_time": "Updated Time"
+              }
+            }
+          }
+=======
+          "flag": "--hostname",
+          "dest": "hostname",
+          "type": "str",
+          "help": "Hostname for new node. Default is same as before ",
+          "json": true
+        },
+        {
+          "flag": "--port",
+          "dest": "ssh_port",
+          "type": "Validatiors.positive_int",
+          "help": "ssh port for new node. Default is same as before",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+>>>>>>> release
+        }
+      ]
+    }
+  ]
+}
