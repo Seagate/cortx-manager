@@ -5,17 +5,15 @@ COMMANDS:
   os:
     - '/opt/seagate/os/conf/setup.yaml'
   csm:
-    - '<CSM_PATH>/conf/setup.yaml'
+    - '<CORTX_PATH>/csm/conf/setup.yaml'
   sspl:
-    - '<COMPONENTS_PATH>/sspl/conf/setup.yaml'
+    - '<CORTX_PATH>/sspl/conf/setup.yaml'
   s3server:
-    - '<COMPONENTS_PATH>/s3server/conf/setup.yaml'
+    - '<CORTX_PATH>/s3/conf/setup.yaml'
   core:
-    - '<COMPONENTS_PATH>/core/conf/setup.yaml'
+    - '<CORTX_PATH>/core/conf/setup.yaml'
   hare:
-    - '<COMPONENTS_PATH>/hare/conf/setup.yaml'
-    - '<COMPONENTS_PATH>/hare/conf/setup-ha.yaml'
+    - '<CORTX_PATH>/hare/conf/setup.yaml'
+    - '<CORTX_PATH>/hare/conf/setup-ha.yaml'
   provisioner:
-    - '<COMPONENTS_PATH>/cortx/provisioner/conf/setup.yaml'
-  os:
-    - '/opt/seagate/os/conf/setup.yaml'
+    - '<CORTX_PATH>/provisioner/conf/setup.yaml'
