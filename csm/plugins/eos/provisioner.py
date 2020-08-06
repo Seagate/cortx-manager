@@ -439,6 +439,6 @@ class ProvisionerPlugin:
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Replace node error : {e}")
             raise PackageValidationError(f"Replace node error: {e.reason.message}")
-        except AttributeError:
-            Log.critical(f"{e}")
+        except AttributeError as error:
+            Log.critical(f"{error}")
             raise PackageValidationError("Node replacement is not implemented by provisioner.")

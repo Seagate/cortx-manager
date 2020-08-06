@@ -137,17 +137,18 @@ class Dict(Doc):
         self._source = data
 
 class Text(Doc):
-    ''' Represents a TEXT doc '''
+
+    '''Represents a TEXT doc'''
     def __init__(self, file_path):
         Doc.__init__(self, file_path)
 
     def _load(self):
-        ''' Loads data from text file'''
+        '''Loads data from text file'''
         with open(self._source, 'r') as f:
             return f.read()
 
     def _dump(self, data):
-        ''' Dump the data to desired file or to the source '''
+        '''Dump the data to desired file or to the source'''
         with open(self._source, 'w') as f:
             f.write(data)
 
@@ -247,9 +248,9 @@ class CommonPayload:
             "ini": Ini, "yml": Yaml, "txt": Text
         }
         self._doc = self.get_doc_type()
-    
+
     def get_doc_type(self):
-        ''' Get mapped doc class object bases on file extension'''
+        '''Get mapped doc class object bases on file extension'''
         try:
             extension = os.path.splitext(self._source)[1][1:].strip().lower()
             doc_obj = self._MAP[extension]

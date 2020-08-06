@@ -35,4 +35,4 @@ while getopts ":g:u:p:n:s" o; do
     esac
 done
 
-hctl node --username ${USER} --password ${PASSWORD} shutdown ${NODE_NAME}
+hctl node --username "${USER}" --password "${PASSWORD}" shutdown "${NODE_NAME}"

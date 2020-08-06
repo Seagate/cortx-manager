@@ -21,7 +21,6 @@ import sys
 import os
 import time
 import crypt
-import datetime
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from eos.utils.cron import CronJob
@@ -146,8 +145,8 @@ class PcsHAFramework(HAFramework):
                                        "MAINTENANCE.shutdown_cron_time")
         Log.debug(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
         cron_job_obj = CronJob(self._user)
-        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT, 
-                                cron_job_obj.create_run_time(seconds=shutdown_cron_time))
+        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT,
+                                    cron_job_obj.create_run_time(seconds=shutdown_cron_time))
         return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
 class ResourceAgent:
