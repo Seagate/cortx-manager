@@ -51,7 +51,9 @@ class FirmwareUpdateService(UpdateService):
             raise InvalidRequest("You can't upload a new package while there is an ongoing update")
 
         model = UpdateStatusEntry.generate_new(const.FIRMWARE_UPDATE_ID)
+        model.version = os.path.splitext(os.path.basename(filename))[0]
         model.description = os.path.join(self._fw_storage_path, filename)
+        model.file_path = os.path.join(self._fw_storage_path, filename)
         model.details = ''
         model.mark_uploaded()
         await self._update_repo.save_model(model)
@@ -70,7 +72,7 @@ class FirmwareUpdateService(UpdateService):
         if firmware_update_model.is_in_progress():
             raise InvalidRequest("Firmware update is already in progress. Please wait until it is done.")
 
-        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_update(firmware_update_model.description)
+        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_update(firmware_update_model.file_path)
         firmware_update_model.mark_started()
         await self._update_repo.save_model(firmware_update_model)
         return firmware_update_model.to_printable()
@@ -83,8 +85,8 @@ class FirmwareUpdateService(UpdateService):
         model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
         if not model:
             raise CsmError(desc="Internal DB is inconsistent. Please upload the package again")
-        if not model.description or not os.path.exists(model.description):
-            raise InvalidRequest(f"Firmware package {model.description} not found.")
+        if not model.file_path or not os.path.exists(model.file_path):
+            raise InvalidRequest(f"Firmware package {model.file_path} not found.")
         return model.to_printable()
 
     async def get_current_status(self):

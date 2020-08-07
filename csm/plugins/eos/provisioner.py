@@ -19,6 +19,7 @@
 
 import asyncio
 import datetime
+import os
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from eos.utils.log import Log
@@ -81,7 +82,7 @@ class ProvisionerPlugin:
         return await loop.run_in_executor(pool, func)
 
     @Log.trace_method(Log.DEBUG)
-    async def validate_hotfix_package(self, path) -> PackageInformation:
+    async def validate_hotfix_package(self, path, file_name) -> PackageInformation:
         """
         Validate an update image
         :param path: Path to the image file
@@ -103,7 +104,7 @@ class ProvisionerPlugin:
 
         # TODO: fix it once it is ready on the provisioner side
         validation_result = PackageInformation()
-        validation_result.version = 'uknown_ver'
+        validation_result.version = os.path.splitext(os.path.basename(file_name))[0]
         validation_result.description = 'unknown_desc'
         return validation_result
 
@@ -121,8 +122,8 @@ class ProvisionerPlugin:
         def _command_handler():
             try:
                 # Generating the version here as at the moment we cannot infer it from the package
-                version = self._generate_random_version()
-                self.provisioner.set_eosupdate_repo(version, path)
+                # version = self._generate_random_version()
+                self.provisioner.set_eosupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
                 return self.provisioner.eos_update(nowait=True)
             except Exception as e:
                 Log.exception(e)

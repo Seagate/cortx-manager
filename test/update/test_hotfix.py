@@ -63,7 +63,7 @@ class ProvisionerMock:
         self.trigger_result = True
         self.provisioner_status = None
 
-    async def validate_hotfix_package(self, path) -> PackageInformation:
+    async def validate_hotfix_package(self, path, file_name) -> PackageInformation:
         if self.validation_response:
             return self.validation_response
         raise CsmError(f"Package validation failed")
@@ -122,13 +122,13 @@ async def test_validation(args=None):
 
     service = HotfixApplicationService('/tmp', plugin, repo)
     with t.assertRaises(InvalidRequest):
-        await service.upload_package(mock_file)
+        await service.upload_package(mock_file, 'abcd.iso')
 
     status = await service.get_current_status()
     t.assertEqual(status, {})
 
     plugin.validation_response = validation_result
-    result = await service.upload_package(mock_file)
+    result = await service.upload_package(mock_file, 'abcd.iso')
 
     status = await service.get_current_status()
     t.assertNotEqual(status, {})
@@ -148,11 +148,11 @@ async def test_duplicate_upload(args=None):
     plugin.validation_response = validation_result
     service = HotfixApplicationService('/tmp', plugin, repo)
 
-    await service.upload_package(mock_file)
+    await service.upload_package(mock_file, 'abcd.iso')
 
     status = await service.get_current_status()
     t.assertEqual(status["status"], "uploaded")
-    await service.upload_package(mock_file)
+    await service.upload_package(mock_file, 'abcd.iso')
 
 
 async def _setup_uploaded_file():
@@ -162,7 +162,7 @@ async def _setup_uploaded_file():
     plugin.provisioner_status = ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress)
     service = HotfixApplicationService('/tmp', plugin, repo)
 
-    await service.upload_package(mock_file)
+    await service.upload_package(mock_file, 'abcd.iso')
     status = await service.get_current_status()
     t.assertEqual(status["status"], "uploaded")
 
@@ -192,7 +192,7 @@ async def test_hotfix_flow(args=None):
     status = await service.get_current_status()
     t.assertEqual(status["status"], "success")
 
-    await service.upload_package(mock_file)
+    await service.upload_package(mock_file, 'abcd.iso')
     status = await service.get_current_status()
     t.assertEqual(status["status"], "uploaded")
 
@@ -220,7 +220,7 @@ async def test_hotfix_flow_fail(args=None):
     status = await service.get_current_status()
     t.assertEqual(status["status"], "fail")
 
-    await service.upload_package(mock_file)
+    await service.upload_package(mock_file, 'abcd.iso')
     status = await service.get_current_status()
     t.assertEqual(status["status"], "uploaded")
 
@@ -257,7 +257,7 @@ async def test_upload_after_start(args=None):
     status = await service.get_current_status()
     t.assertEqual(status["status"], "in_progress")
     with t.assertRaises(InvalidRequest):
-        await service.upload_package(mock_file)
+        await service.upload_package(mock_file, 'abcd.iso')
 
 
 async def test_failed_trigger_update(args=None):
