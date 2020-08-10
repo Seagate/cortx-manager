@@ -199,7 +199,10 @@ class CsmRestApi(CsmApi, ABC):
             hdr = request.headers.get(CsmAuth.HDR)
             if not hdr:
                 cls._unauthorised(f'No {CsmAuth.HDR} header')
-            auth_type, session_id = hdr.split(' ')
+            auth_pair = hdr.split(' ')
+            if len(auth_pair) != 2:
+                cls._unauthorised(f'The header is incorrect. Expected "{CsmAuth.HDR} session_id"')
+            auth_type, session_id = auth_pair
             if auth_type != CsmAuth.TYPE:
                 cls._unauthorised(f'Invalid auth type {auth_type}')
             Log.debug(f'Non-Public: {request}')
