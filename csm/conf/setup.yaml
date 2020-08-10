@@ -17,7 +17,7 @@ csm:
             - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
-    test_ha:
+    ha_sanity:
         script: /usr/bin/csm_test
         args:
             - -t <CSM_PATH>/test/plans/self_ha_test.pln
