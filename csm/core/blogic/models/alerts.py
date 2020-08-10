@@ -85,6 +85,7 @@ class AlertModel(CsmModel):
     component_id = StringType()
     module_id = StringType()
     node_id = StringType()
+    support_message = StringType()
 
     def to_primitive(self) -> dict:
         obj = super().to_primitive()

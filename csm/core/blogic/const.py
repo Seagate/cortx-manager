@@ -195,7 +195,7 @@ MODULE_ID = 'module_id'
 EVENT_ID = 'event_id'
 IEM = 'iem'
 SPECIFIC_INFO = 'specific_info'
-
+SUPPORT_MESSAGE = 'support_message'
 CRITICAL='critical'
 ERROR='error'
 WARNING='warning'

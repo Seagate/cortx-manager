@@ -76,6 +76,7 @@
             "alert_uuid": "Alert Id",
             "health": "Health",
             "description": "Description",
+            "support_message": "Remarks",
             "severity": "Severity",
             "state": "State",
             "acknowledged": "Acknowledged",

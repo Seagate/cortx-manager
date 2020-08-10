@@ -99,6 +99,7 @@ class AlertSchemaValidator(Schema):
     component_id = fields.String(required=False, description="Component if for IEM")
     module_id = fields.String(required=False, description="Module Id for IEM")
     node_id = fields.String(required=True, description="Node id of the resource")
+    support_message = fields.String(required=False, description="Support message for alert.")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -282,6 +283,7 @@ class AlertPlugin(CsmPlugin):
                 csm_schema[const.ALERT_RESOLVED] = False
                 csm_schema[const.ALERT_ACKNOWLEDGED] = False
                 csm_schema[const.ALERT_COMMENT] = ""
+                csm_schema[const.SUPPORT_MESSAGE] = ""
                 """
                 1. Event Details field is of type List and will conatin array of
                 specific info dictionary. 
