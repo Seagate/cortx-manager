@@ -144,10 +144,13 @@ class MaintenanceAppService(ApplicationService):
         node_status = await self.get_status()
         resources = node_status.get(const.NODE_STATUS)
         for each_resource in resources:
-            if each_resource.get(const.NAME) == resource_name and not each_resource.get(const.ONLINE):
-                break
+            if each_resource.get(const.NAME) == resource_name:
+                if not each_resource.get(const.ONLINE):
+                    break
+                else:
+                    raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.SHUTDOWN_NODE_FIRST)
         else:
-            raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.SHUTDOWN_NODE_FIRST)
+            raise CsmError(rc=CSM_INVALID_REQUEST, desc=const.INVALID_RESOURCE)
 
     async def begin_process(self, resource_name, hostname=None, ssh_port=None, **kwargs) -> Dict:
         """
