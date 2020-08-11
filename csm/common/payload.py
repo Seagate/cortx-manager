@@ -136,6 +136,22 @@ class Dict(Doc):
     def dump(self, data):
         self._source = data
 
+class Text(Doc):
+
+    '''Represents a TEXT doc'''
+    def __init__(self, file_path):
+        Doc.__init__(self, file_path)
+
+    def _load(self):
+        '''Loads data from text file'''
+        with open(self._source, 'r') as f:
+            return f.read()
+
+    def _dump(self, data):
+        '''Dump the data to desired file or to the source'''
+        with open(self._source, 'w') as f:
+            f.write(data)
+
 class JsonMessage(Json):
     def __init__(self, json_str):
         """
@@ -219,3 +235,36 @@ class Payload:
 
     def data(self):
         return self._data
+
+class CommonPayload:
+    """
+    Implements a common payload to represent Json, Toml, Yaml, Ini Doc.
+    """
+    def __init__(self, source):
+        self._source = source
+        # Mapping of file extensions and doc classes.
+        self._MAP = {
+            "json": Json, "toml": Toml, "yaml": Yaml,
+            "ini": Ini, "yml": Yaml, "txt": Text
+        }
+        self._doc = self.get_doc_type()
+
+    def get_doc_type(self):
+        '''Get mapped doc class object bases on file extension'''
+        try:
+            extension = os.path.splitext(self._source)[1][1:].strip().lower()
+            doc_obj = self._MAP[extension]
+            return doc_obj(self._source)
+        except KeyError as error:
+            raise KeyError(f"Unsupported file type:{error}")
+        except Exception as e:
+            raise Exception(f"Unable to read file {self._source}. {e}")
+        
+    def load(self):
+        ''' Loads data from file of given format'''
+        return self._doc._load()
+
+    def dump(self, data):
+        ''' Dump the data to desired file or to the source '''
+        self._doc._dump(data)
+    

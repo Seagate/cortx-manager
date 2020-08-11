@@ -53,7 +53,7 @@ class UpdateService(ApplicationService):
                 result = await self._provisioner.get_provisioner_job_status(model.provisioner_id)
                 model.apply_status_update(result)
                 if model.is_successful():
-                    fw_path = os.path.splitext(model.description)[0]
+                    fw_path = os.path.splitext(model.file_path)[0]
                     fw_dir = os.path.dirname(fw_path)
                     Log.info(f'Cleaning update directory \"{fw_dir}\" contents')
                     FSUtils.clear_dir_contents(fw_dir)

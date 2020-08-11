@@ -38,14 +38,14 @@ class HotfixApplicationService(UpdateService):
         os.makedirs(storage_path, exist_ok=True)
 
     @Log.trace_method(Log.INFO)
-    async def upload_package(self, file_ref):
+    async def upload_package(self, file_ref, file_name):
         """
         Upload and validate a hotfix update firmware package
         :param file_ref: An instance of FileRef class that represents a new update package
         :returns: An instance of PackageInformation
         """
         try:
-            info = await self._provisioner.validate_hotfix_package(file_ref.get_file_path())
+            info = await self._provisioner.validate_hotfix_package(file_ref.get_file_path(), file_name)
         except CsmError:
             raise InvalidRequest('You have uploaded an invalid software update package')
 
@@ -55,19 +55,22 @@ class HotfixApplicationService(UpdateService):
 
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
+        model.file_path = os.path.join(os.path.dirname(self._sw_file), file_name)
         model.description = info.description
         model.mark_uploaded()
+        Log.debug(model.to_printable())
         await self._update_repo.save_model(model)
 
         try:
             file_ref.save_file(os.path.dirname(self._sw_file),
-                os.path.basename(self._sw_file), True)
+                file_name, True)
         except Exception as e:
             raise CsmInternalError(f'Failed to save the package: {e}')
 
         return {
             "version": info.version,
-            "description": info.description
+            "description": info.description,
+            "details": model.file_path
         }
 
     @Log.trace_method(Log.INFO)
@@ -85,11 +88,12 @@ class HotfixApplicationService(UpdateService):
         if software_update_model and software_update_model.is_in_progress():
             raise InvalidRequest("Software update is already in progress. Please wait until it is done.")
 
-        if not software_update_model.is_uploaded() or not os.path.exists(self._sw_file):
+        if not software_update_model.is_uploaded() or not os.path.exists(software_update_model.file_path):
             raise InvalidRequest("You must upload an image before starting the software update.")
 
-        software_update_model.provisioner_id = await self._provisioner.trigger_software_update(self._sw_file)
+        software_update_model.provisioner_id = await self._provisioner.trigger_software_update(software_update_model.file_path)
         software_update_model.mark_started()
+        Log.debug(software_update_model.to_printable())
         await self._update_repo.save_model(software_update_model)
         return {
             "message": "Software update has succesfully started"

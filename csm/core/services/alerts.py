@@ -639,8 +639,7 @@ class AlertMonitorService(Service, Observable):
             if not prev_alert:
                 self._run_coroutine(self.repo.store(alert))
                 self.add_listener(self._http_notfications.handle_alert)
-                Log.debug(f"Alert stored successfully." \
-                        f"Alert ID : {alert.alert_uuid}")
+                Log.debug(f"Alert stored successfully. Alert ID : {alert.alert_uuid}")
                 """
                 Updating health map with alerts
                 """
@@ -722,7 +721,7 @@ class AlertMonitorService(Service, Observable):
         """
         update_params = {}
         if self._is_node_alert(alert.get(const.ALERT_MODULE_NAME)):
-            update_params[const.DESCRIPTION] = alert.get(const.DESCRIPTION)
+            update_params[const.SUPPORT_MESSAGE] = alert.get(const.SUPPORT_MESSAGE)
         if update_resolve:
             update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
@@ -811,13 +810,9 @@ class AlertMonitorService(Service, Observable):
     def _add_support_message(self, alert):
         try:
             """
-            Adding -; as seperator before support message so, that UI can
-            parse the message and the link in it.
+            Adding support message if alert is bad.
             """
             if self._is_bad_alert(AlertModel(alert)):
-                if alert[const.DESCRIPTION]:
-                    alert[const.DESCRIPTION] = f"{alert[const.DESCRIPTION]} -; {const.SUPPORT_MSG}"
-                else:
-                    alert[const.DESCRIPTION] = f"-; {const.SUPPORT_MSG}"
+                alert[const.SUPPORT_MESSAGE] = const.SUPPORT_MSG
         except Exception as ex:
             Log.error(f"Addition of support message failed. {ex}")

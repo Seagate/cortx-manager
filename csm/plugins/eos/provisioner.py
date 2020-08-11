@@ -19,6 +19,7 @@
 
 import asyncio
 import datetime
+import os
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from eos.utils.log import Log
@@ -81,7 +82,7 @@ class ProvisionerPlugin:
         return await loop.run_in_executor(pool, func)
 
     @Log.trace_method(Log.DEBUG)
-    async def validate_hotfix_package(self, path) -> PackageInformation:
+    async def validate_hotfix_package(self, path, file_name) -> PackageInformation:
         """
         Validate an update image
         :param path: Path to the image file
@@ -89,7 +90,7 @@ class ProvisionerPlugin:
         :raises: PackageValidationError in case of an invalid package
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -103,7 +104,7 @@ class ProvisionerPlugin:
 
         # TODO: fix it once it is ready on the provisioner side
         validation_result = PackageInformation()
-        validation_result.version = 'uknown_ver'
+        validation_result.version = os.path.splitext(os.path.basename(file_name))[0]
         validation_result.description = 'unknown_desc'
         return validation_result
 
@@ -116,13 +117,13 @@ class ProvisionerPlugin:
         """
 
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
                 # Generating the version here as at the moment we cannot infer it from the package
-                version = self._generate_random_version()
-                self.provisioner.set_eosupdate_repo(version, path)
+                # version = self._generate_random_version()
+                self.provisioner.set_eosupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
                 return self.provisioner.eos_update(nowait=True)
             except Exception as e:
                 Log.exception(e)
@@ -162,7 +163,7 @@ class ProvisionerPlugin:
 
     async def trigger_firmware_update(self, fw_package_path):
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -182,7 +183,7 @@ class ProvisionerPlugin:
         """
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -208,7 +209,7 @@ class ProvisionerPlugin:
         """
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -235,7 +236,7 @@ class ProvisionerPlugin:
                                        f'`set_ssl_certs` call: {e}')
 
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         return await self._await_nonasync(_command_handler)
 
@@ -255,7 +256,7 @@ class ProvisionerPlugin:
         :raises: a CsmInternalError in case of query failure
         """
         if not self.provisioner:
-            raise NetworkConfigFetchError("Provisioner is not instantiated")
+            raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -275,7 +276,7 @@ class ProvisionerPlugin:
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
         if not self.provisioner:
-            raise ClusterIdFetchError("Provisioner is not instantiated")
+            raise ClusterIdFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -309,7 +310,7 @@ class ProvisionerPlugin:
         :returns:
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -410,7 +411,7 @@ class ProvisionerPlugin:
         :returns: Dict having installed product version
         """
         if not self.provisioner:
-            raise PackageValidationError("Provisioner is not instantiated")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
@@ -424,11 +425,21 @@ class ProvisionerPlugin:
         return await self._await_nonasync(_command_handler)
 
     @Log.trace_method(Log.DEBUG)
-    async def start_node_replacement(self, node_id):
+    async def start_node_replacement(self, node_id, hostname=None, ssh_port=None):
         """
-        Begin Node Replacement Prodecure.
+        Begin Node Replacement Procedure.
         :param: node_id: Node Name :type: String
+        :param: hostname: New Hostname/IP Provided by User. :type: String
+        :param: ssh_port: Port to connect to SSH :type: Int
         :return: Job ID for Node Replacement
         """
-        # todo: Will be Implementing this once received the integration setps from Provisioner.
-        return "1234"
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            return self.provisioner.replace_node(node_id, hostname, ssh_port)
+        except self.provisioner.errors.ProvisionerError as e:
+            Log.error(f"Replace node error : {e}")
+            raise PackageValidationError(f"Replace node error: {e.reason.message}")
+        except AttributeError as error:
+            Log.critical(f"{error}")
+            raise PackageValidationError("Node replacement is not implemented by provisioner.")
