@@ -17,6 +17,7 @@
 
 from schematics.types import UUIDType, StringType, IntType
 from schematics.transforms import blacklist
+from uuid import UUID
 
 from csm.core.blogic.models import CsmModel
 
@@ -61,10 +62,10 @@ class Volume(CsmModel):
     name = StringType()
     bucketName = StringType()
     deviceUuid = UUIDType()
-    filesystem = StringType()
+    uuid = UUIDType()
     size = IntType()
     used = IntType()
-    uuid = UUIDType()
+    filesystem = StringType()
 
     class Options:
         """
@@ -74,7 +75,15 @@ class Volume(CsmModel):
         roles = {'public': blacklist('bucketName')}
 
     @staticmethod
-    def instantiate(name, bucketName, deviceUuid, uuid, filesystem='s3', size=0, used=0):
+    def instantiate(
+        name: str,
+        bucketName: str,
+        deviceUuid: UUID,
+        uuid: UUID,
+        size: int,
+        used: int,
+        filesystem: str = 's3',
+    ) -> 'Volume':
         """
         Creates a volume instance
         """
@@ -84,9 +93,10 @@ class Volume(CsmModel):
         v.bucketName = bucketName
         v.deviceUuid = deviceUuid
         v.uuid = uuid
-        v.filesystem = filesystem
         v.size = size
         v.used = used
+        v.filesystem = filesystem
+        v.validate()
         return v
 
 
