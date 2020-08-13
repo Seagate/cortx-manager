@@ -22,6 +22,7 @@ import os
 import sys
 import crypt
 import pwd
+import grp
 import shlex
 import json
 from eos.utils.log import Log
@@ -85,6 +86,17 @@ class Setup:
             u = pwd.getpwnam(self._user)
             self._uid = u.pw_uid
             self._gid = u.pw_gid
+            return True
+        except KeyError as err:
+            return False
+
+    @staticmethod
+    def _is_group_exist(user_group):
+        """
+        Check if user group exists
+        """
+        try:
+            grp.getgrnam(user_group)
             return True
         except KeyError as err:
             return False
@@ -196,7 +208,7 @@ class Setup:
         else:
             if self._is_user_exist():
                 Setup._run_cmd("userdel -r " +self._user)
-        if self._is_user_exist():
+        if self._is_user_exist() and Setup._is_group_exist(const.HA_CLIENT_GROUP):
             Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
 
     def _config_user_permission_set(self, bundle_path, crt, key):
