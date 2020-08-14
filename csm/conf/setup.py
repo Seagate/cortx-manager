@@ -548,7 +548,9 @@ class Setup:
 class CsmSetup(Setup):
     def __init__(self):
         super(CsmSetup, self).__init__()
-        pass
+        self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
+        if self._replacement_node_flag:
+            Log.info("REPLACEMENT_NODE flag is set")
 
     def _verify_args(self, args):
         """
@@ -587,7 +589,8 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-            self.Config.create(args)
+            if not self._replacement_node_flag:
+                self.Config.create(args)
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -600,14 +603,15 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
-            self._set_rmq_cluster_nodes()
-            #TODO: Adding this implementation in try..except block to avoid build failure
-            # Its a work around and it will be fixed once EOS-10551 resolved
-            try:
-                self._set_rmq_node_id()
-            except Exception as e:
-                Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-            self._set_consul_vip()
+            if not self._replacement_node_flag:
+                self._set_rmq_cluster_nodes()
+                #TODO: Adding this implementation in try..except block to avoid build failure
+                # Its a work around and it will be fixed once EOS-10551 resolved
+                try:
+                    self._set_rmq_node_id()
+                except Exception as e:
+                    Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
+                self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
