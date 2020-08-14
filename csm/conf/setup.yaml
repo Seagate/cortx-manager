@@ -37,5 +37,13 @@ csm:
         script: /opt/seagate/cortx/ha/conf/script/prov-ha-csm-reset
         args: null
 
+    backup:
+        files:
+            - /etc/csm/csm.conf 
+            - /etc/csm/database.yaml 
+            - /etc/csm/components.yaml
+            - /etc/csm/cluster.conf
+            - /etc/ssl/stx/stx.pem
+
 support_bundle:
     - cortxcli csm_bundle_generate
