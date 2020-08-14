@@ -692,10 +692,16 @@ class UslService(ApplicationService):
 
         :return: a dictionary with a management link's name and value.
         """
-        network = await self._provisioner.get_network_configuration()
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
+        network_configuration = await self._provisioner.get_network_configuration()
+        port = \
+            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
+        scheme = 'https' if ssl_check else 'http'
+        host = f'{network_configuration.mgmt_vip}'
+        url = scheme + '://' + host + ':' + str(port)
         mgmt_url = {
             'name': 'mgmtUrl',
-            'url': f'https://{network.mgmt_vip}',
+            'url': url,
         }
         return mgmt_url
 
