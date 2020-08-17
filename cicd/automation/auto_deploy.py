@@ -67,7 +67,17 @@ class Utility:
         inputs=None,
         nbytes=None,
         read_sls=False):
-
+        """
+        Execute the command on the given host
+        :param command: Command to be executed
+        :param host: hostname/ IP address
+        :param username: username on the given host
+        :param password: password of the given user
+        :param timeout_sec: timeout
+        :param inputs: Inputs to the command
+        :param nbytes: Number of bytes to read
+        :param read_sls: Read as single text
+        """
         output = None
         result_flag = True
         client = self.connect(host, username, password)
@@ -77,6 +87,8 @@ class Utility:
             stdin, stdout, stderr = client.exec_command(
                 command, timeout=timeout_sec)
             exit_status = stdout.channel.recv_exit_status()
+            if exit_status:
+                result_flag = False
             if inputs:
                 stdin.write('\n'.join(inputs))
                 stdin.write('\n')
@@ -90,8 +102,8 @@ class Utility:
                 ssh_output = stdout.read()
                 if ssh_output == b'':
                     ssh_error = stderr.read()
-                    return False, ssh_error
-                return True, ssh_output
+                    return result_flag, ssh_error
+                return result_flag, ssh_output
             else:
                 ssh_output = stdout.readlines()
             ssh_error = stderr.read()
@@ -99,7 +111,6 @@ class Utility:
                 output = ssh_output
             else:
                 output = ssh_error
-                result_flag = False
         else:
             output = constants.SSH_CONNECT_ERR
             result_flag = False
