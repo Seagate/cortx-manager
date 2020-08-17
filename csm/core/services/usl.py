@@ -40,6 +40,7 @@ from csm.common.periodic import Periodic
 from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+from csm.core.services.storage_capacity import StorageCapacityService
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
 from csm.core.data.models.s3 import IamUser, IamUserCredentials
@@ -446,12 +447,23 @@ class UslService(ApplicationService):
         await s3_cli.put_bucket_policy(bucket_name, policy)
         Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
-    def _get_volume_name(self, bucket_name: str) -> UUID:
+    def _get_volume_name(self, bucket_name: str) -> str:
         return self._get_system_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
         return uuid5(self._device.uuid, bucket_name)
+
+    async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
+        bucket_name = bucket.name
+        volume_name = self._get_volume_name(bucket_name)
+        device_uuid = self._device.uuid
+        volume_uuid = self._get_volume_uuid(bucket_name)
+        capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
+        capacity_size = capacity_details[const.SIZE]
+        capacity_used = capacity_details[const.USED]
+        return Volume.instantiate(
+            volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
 
     async def _get_udx_volume_list(
         self, access_key_id: str, secret_access_key: str
@@ -459,15 +471,12 @@ class UslService(ApplicationService):
         s3_client = self._s3plugin.get_s3_client(
             access_key_id, secret_access_key, CsmS3ConfigurationFactory.get_s3_connection_config()
         )
-        device_uuid = self._device.uuid
         volumes = {}
         for bucket in await s3_client.get_all_buckets():
-            bucket_name = bucket.name
-            if await self._is_bucket_udx_enabled(s3_client, bucket):
-                volume_uuid = self._get_volume_uuid(bucket_name)
-                volume_name = self._get_volume_name(bucket_name)
-                volume = Volume.instantiate(volume_name, bucket_name, device_uuid, volume_uuid)
-                volumes[volume_uuid] = volume
+            if not await self._is_bucket_udx_enabled(s3_client, bucket):
+                continue
+            volume = await self._format_bucket_as_volume(bucket)
+            volumes[volume.uuid] = volume
         return volumes
 
     async def get_device_list(self) -> List[Dict[str, str]]:
@@ -683,10 +692,16 @@ class UslService(ApplicationService):
 
         :return: a dictionary with a management link's name and value.
         """
-        network = await self._provisioner.get_network_configuration()
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
+        network_configuration = await self._provisioner.get_network_configuration()
+        port = \
+            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
+        scheme = 'https' if ssl_check else 'http'
+        host = f'{network_configuration.mgmt_vip}'
+        url = scheme + '://' + host + ':' + str(port)
         mgmt_url = {
             'name': 'mgmtUrl',
-            'url': f'https://{network.mgmt_vip}',
+            'url': url,
         }
         return mgmt_url
 

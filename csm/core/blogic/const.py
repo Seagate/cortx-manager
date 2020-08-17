@@ -14,6 +14,7 @@ CSM_CONF_FILE_NAME = 'csm.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'eos'
 WEB_DIR = 'eos'
+WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 
 # Access log of aiohttp
 # format

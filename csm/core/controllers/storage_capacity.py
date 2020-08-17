@@ -36,6 +36,6 @@ class StorageCapacityView(CsmView):
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        return await self._service.get_capacity_details()
+        return await self._service.get_capacity_details(format='human')
 
 

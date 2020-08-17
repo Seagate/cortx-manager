@@ -22,6 +22,7 @@ import os
 import sys
 import crypt
 import pwd
+import grp
 import shlex
 import json
 from eos.utils.log import Log
@@ -85,6 +86,17 @@ class Setup:
             u = pwd.getpwnam(self._user)
             self._uid = u.pw_uid
             self._gid = u.pw_gid
+            return True
+        except KeyError as err:
+            return False
+
+    @staticmethod
+    def _is_group_exist(user_group):
+        """
+        Check if user group exists
+        """
+        try:
+            grp.getgrnam(user_group)
             return True
         except KeyError as err:
             return False
@@ -196,7 +208,7 @@ class Setup:
         else:
             if self._is_user_exist():
                 Setup._run_cmd("userdel -r " +self._user)
-        if self._is_user_exist():
+        if self._is_user_exist() and Setup._is_group_exist(const.HA_CLIENT_GROUP):
             Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
 
     def _config_user_permission_set(self, bundle_path, crt, key):
@@ -536,7 +548,9 @@ class Setup:
 class CsmSetup(Setup):
     def __init__(self):
         super(CsmSetup, self).__init__()
-        pass
+        self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
+        if self._replacement_node_flag:
+            Log.info("REPLACEMENT_NODE flag is set")
 
     def _verify_args(self, args):
         """
@@ -575,7 +589,8 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
-            self.Config.create(args)
+            if not self._replacement_node_flag:
+                self.Config.create(args)
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -588,14 +603,15 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
-            self._set_rmq_cluster_nodes()
-            #TODO: Adding this implementation in try..except block to avoid build failure
-            # Its a work around and it will be fixed once EOS-10551 resolved
-            try:
-                self._set_rmq_node_id()
-            except Exception as e:
-                Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-            self._set_consul_vip()
+            if not self._replacement_node_flag:
+                self._set_rmq_cluster_nodes()
+                #TODO: Adding this implementation in try..except block to avoid build failure
+                # Its a work around and it will be fixed once EOS-10551 resolved
+                try:
+                    self._set_rmq_node_id()
+                except Exception as e:
+                    Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
+                self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()

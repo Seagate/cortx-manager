@@ -24,6 +24,7 @@ from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
+from typing import Callable, Dict, Any
 
 class StorageCapacityService(ApplicationService):
     def __init__(self, provisioner):
@@ -33,26 +34,36 @@ class StorageCapacityService(ApplicationService):
     """
 
     @staticmethod
-    async def unit_conversion(capacity):
+    def _integer_to_human(capacity: int) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
 
         :param capacity: Disk size in bytes :type: int
         :return: :type: str
         """
+        capacity_float = float(capacity)
         for unit in const.UNIT_LIST:
-            capacity = capacity / 1024
-            if capacity / 100 < 10:
+            capacity_float = capacity_float / 1024
+            if capacity_float / 100 < 10:
                 break
 
-        return f'{round(capacity, 2)} {unit}'
+        return f'{round(capacity_float, 2)} {unit}'
 
     @Log.trace_method(Log.DEBUG)
-    async def get_capacity_details(self):
+    async def get_capacity_details(self, format: str = 'integer') -> Dict[str, Any]:
         """
         This method will return system disk details as per command
+        :param format: Capacity format; integers by default, use 'human' for human-readable.
         :return: dict
         """
+
+        def convert_to_format(value: int) -> Any:
+            if format.lower() == 'human':
+                return StorageCapacityService._integer_to_human(value)
+            else:
+                # keep original format (i.e., integer)
+                return value
+
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
             stdout, stderr = await process.run()
@@ -67,10 +78,10 @@ class StorageCapacityService(ApplicationService):
         if not capacity_info:
             raise CsmInternalError(f"System storage details not available.")
         formatted_output = {}
-        formatted_output[const.SIZE] = await self.unit_conversion(int(capacity_info[const.TOTAL_SPACE]))
-        formatted_output[const.USED] = await self.unit_conversion(int(
-            capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
-        formatted_output[const.AVAILABLE] = await self.unit_conversion(int(capacity_info[const.FREE_SPACE]))
+        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]))
+        formatted_output[const.USED] = convert_to_format(
+            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
+        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]))
         formatted_output[const.USAGE_PERCENTAGE] = str(round((((int(capacity_info[const.TOTAL_SPACE]) -
                                                              int(capacity_info[const.FREE_SPACE])) / 
                                                              int(capacity_info[const.TOTAL_SPACE])) * 100),2)) + ' %'       
