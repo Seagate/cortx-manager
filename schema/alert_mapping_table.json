@@ -61,9 +61,9 @@
     "message.sensor_response_type.specific_info.durable_id": "durable_id"
   },
   "iem": {
-    "message.sensor_response_type.specific_info.source_id": "source_id",
-    "message.sensor_response_type.specific_info.component_id": "component_id",
-    "message.sensor_response_type.specific_info.module_id": "module_id",
+    "message.sensor_response_type.specific_info.source": "source",
+    "message.sensor_response_type.specific_info.component": "component",
+    "message.sensor_response_type.specific_info.module": "module",
     "message.sensor_response_type.specific_info.IEC": "sensor_info.IEC",
     "message.sensor_response_type.specific_info.description": "description"
   }

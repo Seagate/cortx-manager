@@ -95,9 +95,9 @@ class AlertSchemaValidator(Schema):
             description="Slot number of the disk.")
     durable_id = fields.String(required=False, description="Durable Id")
     host_id = fields.String(required=True, description="Host id of the resource")
-    source_id = fields.String(required=False, description="Source if for IEM")
-    component_id = fields.String(required=False, description="Component if for IEM")
-    module_id = fields.String(required=False, description="Module Id for IEM")
+    source = fields.String(required=False, description="Source for IEM")
+    component = fields.String(required=False, description="Component for IEM")
+    module = fields.String(required=False, description="Module for IEM")
     node_id = fields.String(required=True, description="Node id of the resource")
     support_message = fields.String(required=False, description="Support message for alert.")
 

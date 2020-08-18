@@ -81,9 +81,9 @@ class AlertModel(CsmModel):
     disk_slot = IntType()
     durable_id = StringType() 
     host_id = StringType()
-    source_id = StringType()
-    component_id = StringType()
-    module_id = StringType()
+    source = StringType()
+    component = StringType()
+    module = StringType()
     node_id = StringType()
     support_message = StringType()
 
