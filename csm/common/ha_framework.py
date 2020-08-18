@@ -138,7 +138,7 @@ class PcsHAFramework(HAFramework):
         Shutdown the current Cluster or Node.
         :return:
         """
-        _command = "{CSM_PATH}/schema/shutdown_cron.sh -u {user} -p {pwd} -n {node}"
+        _command = "{CSM_PATH}/scripts/shutdown_cron.sh -u {user} -p {pwd} -n {node}"
         _cluster_shutdown_cmd = _command.format(node=node,
                           user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
