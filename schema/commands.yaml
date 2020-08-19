@@ -17,3 +17,5 @@ COMMANDS:
     - '<CORTX_PATH>/hare/conf/setup-ha.yaml'
   provisioner:
     - '<CORTX_PATH>/provisioner/conf/setup.yaml'
+  manifest:
+    - '<CORTX_PATH>/sspl/conf/manifest.yaml'

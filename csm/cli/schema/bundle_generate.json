@@ -40,7 +40,8 @@
         "hare",
         "provisioner",
         "os",
-        "health_map"
+        "health_map",
+        "manifest"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."
