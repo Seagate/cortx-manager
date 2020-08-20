@@ -135,7 +135,6 @@ class CsmRestApi(CsmApi, ABC):
             "error_code": None,
             "message_id": None,
             "message": None,
-            "error_format_args": {},  # Empty for now
         }
 
         if CsmRestApi.is_debug(request):
@@ -145,7 +144,9 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.rc()
             resp["message_id"] = err.message_id()
             resp["message"] = err.error()
-            resp["error_format_args"] = err.message_args()
+            message_args = err.message_args()
+            if message_args is not None:
+                resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
             resp["message"] = str(err)
             resp["error_code"] = err.status

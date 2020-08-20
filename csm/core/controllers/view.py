@@ -70,13 +70,15 @@ class CsmHttpException(web.HTTPException):
 
     def __init__(self, status, error_code, message_id, message, args=None):
         self.status_code = status
-        body = json.dumps({
+        body = {
             "error_code": error_code,
             "message_id": message_id,
             "message":  message,
-            "error_format_args": args,
-        })
-        super().__init__(body=body, content_type='application/json')
+        }
+        if args is not None:
+            body["error_format_args"] = args,
+        json_body = json.dumps(body)
+        super().__init__(body=json_body, content_type='application/json')
 
 
 class CsmView(web.View):
