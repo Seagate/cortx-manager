@@ -130,6 +130,20 @@ class Setup:
             return result[const.LOCAL]
 
     @staticmethod
+    def get_salt_data_faulty_node_uuid(minion_id, method, key):
+        try:
+            process = SimpleProcess(f"salt {minion_id} {method} {key} --out=json")
+            stdout, stderr, rc = process.run()
+        except Exception as e:
+            raise PillarDataFetchError(f"Error in command execution : {e}")
+        if stderr:
+            raise PillarDataFetchError(stderr)
+        res = stdout.decode('utf-8')
+        if rc == 0 and res != "":
+            result = json.loads(res)
+            return result[minion_id]
+
+    @staticmethod
     def get_data_from_provisioner_cli(method, output_format="json"):
         try:
             process = SimpleProcess(f"provisioner {method} --out={output_format}")
@@ -518,6 +532,32 @@ class Setup:
         except Exception as e:
             raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
 
+    @classmethod
+    def _get_faulty_node_uuid(self):
+        """
+        This method will get the faulty node uuid from provisioner.
+        This uuid will be used to resolve the faulty alerts for replaced node.
+        """
+        faulty_minion_id = ''
+        faulty_node_uuid = ''
+        try:
+            faulty_minion_id_cmd = "cluster:replace_node:minion_id"
+            faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
+                faulty_minion_id_cmd)
+            if not faulty_minion_id:
+                Log.logger.warn("Fetching faulty node minion id failed.")
+                raise CsmSetupError("Fetching faulty node minion failed.")
+            faulty_node_uuid = Setup.get_salt_data_faulty_node_uuid\
+                (faulty_minion_id, const.GRAINS_GET, 'node_id')
+            if not faulty_node_uuid:
+                Log.logger.warn("Fetching faulty node uuid failed.")
+                raise CsmSetupError("Fetching faulty node uuid failed.")
+            return faulty_node_uuid
+        except Exception as e:
+            Log.logger.warn(f"Fetching faulty node uuid failed. {e}")
+            raise CsmSetupError(f"Fetching faulty node uuid failed. {e}")
+
+
     def _resolve_faulty_node_alerts(self, node_id):
         """
         This method resolves all the alerts for a fault replaced node.
@@ -533,13 +573,14 @@ class Setup:
                     (alerts_repository.retrieve_unresolved_by_node_id(node_id))
                 if alerts:
                     for alert in alerts:
-                        alert.acknowledged = AlertModel.acknowledged.to_native(True)
-                        alert.resolved = AlertModel.resolved.to_native(True)
-                        loop.run_until_complete(alerts_repository.update(alert))
+                        if not const.ENCLOSURE in alert.module_name:
+                            alert.acknowledged = AlertModel.acknowledged.to_native(True)
+                            alert.resolved = AlertModel.resolved.to_native(True)
+                            loop.run_until_complete(alerts_repository.update(alert))
                 else:
                     Log.logger.warn(f"No alerts found for node id: {node_id}")
             else:
-                raise CsmSetupError("csm_setup refresh failed. Unbale to load db.")
+                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
@@ -562,8 +603,6 @@ class CsmSetup(Setup):
             raise Exception("Not implemented for Component %s" %args["Component"])
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
-        if "node_id" in args.keys() and not args["node_id"]:
-            raise Exception("Please provide the node id for refresh context.")
 
     def post_install(self, args):
         """
@@ -653,12 +692,13 @@ class CsmSetup(Setup):
         except Exception as e:
             raise CsmSetupError("csm_setup reset failed. Error: %s" %e)
 
-    def refresh(self, args):
+    def refresh_config(self, args):
         """
         Refresh context for CSM
         """
         try:
-            self._verify_args(args)
-            self._resolve_faulty_node_alerts(args["node_id"])
+            node_id = self._get_faulty_node_uuid()
+            self._resolve_faulty_node_alerts(node_id)
+            Log.logger.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
         except Exception as e:
-            raise CsmSetupError("csm_setup refresh failed. Error: %s" %e)
+            raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)

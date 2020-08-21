@@ -223,19 +223,11 @@
             }
         },
         {
-            "name": "refresh",
+            "name": "refresh_config",
             "description": "Refresh Context for CSM after Node Replacement.",
-            "need_confirmation": true,
+            "need_confirmation": false,
             "permissions_tag": "update",
             "args": [
-                {
-                  "flag": "-n",
-                  "dest": "node_id",
-                  "help": "Node ID of the faulty node",
-                  "default": "",
-                  "type": "str",
-                  "nargs": "?"
-                },
                 {
                     "flag": "args",
                     "default": [],
