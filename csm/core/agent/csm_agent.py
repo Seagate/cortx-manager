@@ -99,6 +99,7 @@ class CsmAgent:
         CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
         CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
         CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
+        CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
 
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
@@ -208,6 +209,7 @@ if __name__ == '__main__':
     from csm.core.services.s3.iam_users import IamUsersService
     from csm.core.services.s3.accounts import S3AccountService
     from csm.core.services.s3.buckets import S3BucketService
+    from csm.core.services.s3.access_keys import S3AccessKeysService
     from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager

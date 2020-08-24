@@ -42,7 +42,8 @@
             "s3accounts": ["list", "update", "delete"],
             "s3iamusers": ["list", "delete", "create"],
             "s3buckets": ["list", "update", "delete", "create"],
-            "s3bucketpolicy": ["list", "delete", "create"]
+            "s3bucketpolicy": ["list", "delete", "create"],
+            "s3accesskeys": ["list", "update", "delete", "create"]
         }
     }
 }

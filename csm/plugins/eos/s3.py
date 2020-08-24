@@ -39,7 +39,7 @@ from csm.core.data.models.s3 import (S3ConnectionConfig, IamAccount, ExtendedIam
                                      IamLoginProfile, IamUser, IamUserListResponse,
                                      IamAccountListResponse, IamTempCredentials, IamUserCredentials,
                                      IamAccessKeyMetadata, IamAccessKeysListResponse,
-                                     IamErrors, IamError)
+                                     IamAccessKeyLastUsed, IamErrors, IamError)
 
 
 class BaseClient:
@@ -199,6 +199,12 @@ class IamClient(BaseClient):
             'UserName': 'user_name',
             'AccessKeyId': 'access_key_id',
             'Status': 'status',
+        }
+
+        self.IAM_ACCESS_KEY_LAST_USED_MAPPING = {
+            'Region': 'region',
+            'LastUsedDate': 'last_used',
+            'ServiceName': 'service_name',
         }
 
     def _create_boto_connection_object(self, **kwargs):
@@ -543,18 +549,18 @@ class IamClient(BaseClient):
             # TODO: our IAM server does not return the updated user information
             return True
 
-    async def create_user_access_key(self, user_name) -> Union[ExtendedIamAccount, IamError]:
+    async def create_user_access_key(self, user_name=None) -> Union[ExtendedIamAccount, IamError]:
         """
         Creates an access key id and secret key for IAM user.
 
-        :param user_name: IAM user name
+        :param user_name: IAM user name, if None, user is deduced from the current session
         :returns: credentials in case of success, IamError in case of problem
         """
 
         Log.audit(f"Create access key for user: {user_name}")
-        params = {
-            'UserName': user_name
-        }
+        params = {}
+        if user_name is not None:
+            params['UserName'] = user_name
 
         (code, body) = await self._query_conn(const.S3_IAM_CMD_CREATE_ACCESS_KEY,
                                               params, '/', 'POST')
@@ -568,22 +574,77 @@ class IamClient(BaseClient):
             return self._create_response(IamUserCredentials, creds,
                                          self.IAM_USER_CREDENTIALS_MAPPING)
 
-    async def list_user_access_keys(self, user_name, marker=None,
+    async def update_user_access_key(self, access_key_id, status, user_name=None) -> bool:
+        """
+        Updates an access key status (active/inactive) for IAM user.
+
+        :param user_name: IAM user name, if None, user is deduced from the current session
+        :param access_key_id: access key ID
+        :param status: new active key status (Active/inactive)
+        :returns: true in case of success, IamError in case of problem
+        """
+
+        Log.audit(f"Update access key {access_key_id} for user: {user_name}"
+                  f" with status {status}")
+        params = {
+            'AccessKeyId': access_key_id,
+            'Status': status
+        }
+        if user_name is not None:
+            params['UserName'] = user_name
+
+        (code, body) = await self._query_conn(const.S3_IAM_CMD_UPDATE_ACCESS_KEY,
+                                              params, '/', 'POST')
+        Log.audit(f"Update access key status code: {code}")
+        if code != HTTPStatus.OK:
+            return self._create_error(code, body)
+        else:
+            return True
+
+    async def get_user_access_key_last_used(self, access_key_id,
+                                            user_name=None) -> Union[IamAccessKeyLastUsed, IamError]:
+        """
+        Retrieves the timestamp of the last access key usage.
+
+        :param access_key_id: access key ID
+        :param user_name: IAM user name, if None, user is deduced from the current session
+        :returns: timestamp in case of success, IamError in case of problem
+        """
+        Log.audit(f"Get last used time of IAM user's {user_name} access key {access_key_id}")
+        params = {
+            'AccessKeyId': access_key_id
+        }
+        if user_name is not None:
+            params['UserName'] = user_name
+
+        (code, body) = await self._query_conn(const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED,
+                                              params, '/', 'POST')
+        Log.audit(f"Update access key status code: {code}")
+        if code != HTTPStatus.OK:
+            return self._create_error(code, body)
+        else:
+            info = body[const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP][
+                const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT][
+                    const.S3_PARAM_ACCESS_KEY_LAST_USED]
+            return self._create_response(IamAccessKeyLastUsed, info,
+                                         self.IAM_ACCESS_KEY_LAST_USED_MAPPING)
+
+    async def list_user_access_keys(self, user_name=None, marker=None,
                                     max_items=None) -> Union[IamAccessKeysListResponse, IamError]:
         """
         Gets the list of access keys for IAM user
         Note that max_items and marker are not working for now!!
 
-        :param user_name: IAM user name
+        :param user_name: IAM user name, if None, user is deduced from the current session
         :param marker: pagination marker from the previous response
         :param max_items: maximum number of access keys to return in single response
         :returns: IamAccessKeysListResponse in case of success, IamError otherwise
         """
         Log.audit(f"List IAM user's {user_name} access keys. marker: {marker},"
-                  f"max_items: {max_items}")
-        params = {
-            'UserName': user_name
-        }
+                  f" max_items: {max_items}")
+        params = {}
+        if user_name is not None:
+            params['UserName'] = user_name
 
         if marker:
             params[const.S3_PARAM_MARKER] = marker
@@ -620,20 +681,21 @@ class IamClient(BaseClient):
 
             return resp
 
-    async def delete_user_access_key(self, user_name, access_key_id) -> Union[bool, IamError]:
+    async def delete_user_access_key(self, access_key_id, user_name=None) -> Union[bool, IamError]:
         """
         Deletes an access key for IAM user.
 
-        :param user_name: IAM user name
+        :param user_name: IAM user name, if None, user is deduced from the current session
         :param access_key_id: ID of the access key to be deleted
         :returns: true in case of success, IamError in case of problem
         """
 
         Log.audit(f"Delete access key {access_key_id} for IAM user {user_name}")
         params = {
-            'UserName': user_name,
-            'AccessKeyId': access_key_id,
+            'AccessKeyId': access_key_id
         }
+        if user_name is not None:
+            params['UserName'] = user_name
 
         (code, body) = await self._query_conn(const.S3_IAM_CMD_DELETE_ACCESS_KEY, params,
                                               '/', 'POST')

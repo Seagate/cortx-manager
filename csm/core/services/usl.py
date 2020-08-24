@@ -166,7 +166,7 @@ class UslService(ApplicationService):
             access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
         )
         await iam_client.delete_user_access_key(
-            iam_user.user_name, iam_user_access_key.access_key_id)
+            iam_user_access_key.access_key_id, user_name=iam_user.user_name)
         Log.debug('Remove IAM user')
         await iam_client.delete_user(iam_user.user_name)
         Log.debug('Remove S3 account')
@@ -211,8 +211,8 @@ class UslService(ApplicationService):
             # Remove IAM user's access key if it exists
             if iam_client is not None and iam_user_access_key is not None:
                 await iam_client.delete_user_access_key(
-                    iam_user.user_name,
-                    iam_user_access_key.access_key_id)
+                    iam_user_access_key.access_key_id,
+                    user_name=iam_user.user_name)
             # Remove IAM user if it exists
             if iam_client is not None and iam_user is not None:
                 await iam_client.delete_user(iam_user.user_name)
@@ -365,7 +365,7 @@ class UslService(ApplicationService):
         Gets the access key id and secret key for UDX IAM user
         """
 
-        creds = await iam_cli.create_user_access_key(user_name)
+        creds = await iam_cli.create_user_access_key(user_name=user_name)
         if hasattr(creds, 'error_code'):
             error_msg = creds.error_message
             raise CsmInternalError(f'Failed to create access key for UDX IAM user: {error_msg}')
@@ -373,9 +373,9 @@ class UslService(ApplicationService):
 
     async def _delete_udx_iam_user_credentials(self, iam_cli, user_name: str):
         Log.debug(f'Deleting UDX IAM user {user_name} credentials')
-        access_keys_resp = await iam_cli.list_user_access_keys(user_name)
+        access_keys_resp = await iam_cli.list_user_access_keys(user_name=user_name)
         for access_key in access_keys_resp.access_keys:
-            res = await iam_cli.delete_user_access_key(user_name, access_key.access_key_id)
+            res = await iam_cli.delete_user_access_key(access_key.access_key_id, user_name=user_name)
             if hasattr(res, 'error_code'):
                 error_msg = res.error_message
                 raise CsmInternalError(f'Failed to delete access key {access_key.access_key_id}: '

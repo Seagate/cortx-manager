@@ -291,7 +291,13 @@ S3_LDAP_PASSWORD = 'S3.ldap_password'
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
 S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
 S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT = 'CreateAccessKeyResult'
+S3_IAM_CMD_UPDATE_ACCESS_KEY = 'UpdateAccessKey'
 S3_PARAM_ACCESS_KEY = 'AccessKey'
+S3_ACCESS_KEY_STATUSES = ['Active', 'Inactive']
+S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED = 'GetAccessKeyLastUsed'  # not supported by the S3 server yet
+S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP = 'GetAccessKeyLastUsedResponse'
+S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT = 'GetAccessKeyLastUsedResult'
+S3_PARAM_ACCESS_KEY_LAST_USED = 'AccessKeyLastUsed'
 S3_IAM_CMD_LIST_ACCESS_KEYS = 'ListAccessKeys'
 S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
 S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeysResult'
@@ -388,6 +394,7 @@ IS_DHCP = 'is_dhcp'
 SYSTEM_CONFIG_SERVICE = "system_config_service"
 PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"
+S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
@@ -476,7 +483,7 @@ GET_NODE_ID='get_node_id'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
-MODE = 'mode' 
+MODE = 'mode'
 DEV = 'dev'
 
 # System config list

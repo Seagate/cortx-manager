@@ -76,7 +76,7 @@ class IamUsersService(S3BaseService):
             await s3_client.delete_user(user_name)
             self._handle_error(user_login_profile_resp)
         # Create IAM user's access key
-        user_creds_resp = await s3_client.create_user_access_key(user_name)
+        user_creds_resp = await s3_client.create_user_access_key(user_name=user_name)
         if isinstance(user_creds_resp, IamError):
             await s3_client.delete_user(user_name)
             self._handle_error(user_creds_resp)
@@ -118,12 +118,12 @@ class IamUsersService(S3BaseService):
         Log.debug(f"Delete IAM User service: Username:{user_name}")
         s3_client = await  self.fetch_iam_client(s3_session)
 
-        list_access_keys_resp = await s3_client.list_user_access_keys(user_name)
+        list_access_keys_resp = await s3_client.list_user_access_keys(user_name=user_name)
         if isinstance(list_access_keys_resp, IamError):
                 self._handle_error(list_access_keys_resp)
 
         for access_key in list_access_keys_resp.access_keys:
-            del_accesskey_resp = await s3_client.delete_user_access_key(user_name, access_key.access_key_id)
+            del_accesskey_resp = await s3_client.delete_user_access_key(access_key.access_key_id, user_name=user_name)
             if isinstance(del_accesskey_resp, IamError) and not del_accesskey_resp.http_status == 404:
                 self._handle_error(del_accesskey_resp)
 

@@ -30,6 +30,7 @@ class Resource:
     S3IAMUSERS = 's3iamusers'
     S3BUCKETS = 's3buckets'
     S3BUCKET_POLICY = 's3bucketpolicy'
+    S3ACCESSKEYS = 's3accesskeys'
     AUDITLOG = 'auditlog'
     SYSTEM = 'system'
     MAINTENANCE = 'maintenance'

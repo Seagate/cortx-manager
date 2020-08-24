@@ -54,13 +54,14 @@ async def _test_create_iam_user(iam_client):
 
 
 async def _test_create_list_delete_iam_access_keys(iam_client, iam_user):
-    creds = await iam_client.create_user_access_key(iam_user.user_name)
+    creds = await iam_client.create_user_access_key(user_name=iam_user.user_name)
     if hasattr(creds, "error_code"):
         raise TestFailed("IAM user access key creation failed: " + repr(creds))
-    creds_list = await iam_client.list_user_access_keys(iam_user.user_name)
+    creds_list = await iam_client.list_user_access_keys(user_name=iam_user.user_name)
     if not any(x.access_key_id == creds.access_key_id for x in creds_list.access_keys):
         raise TestFailed("There is no created access key in the list")
-    result = await iam_client.delete_user_access_key(iam_user.user_name, creds.access_key_id)
+    result = await iam_client.delete_user_access_key(creds.access_key_id,
+                                                     user_name=iam_user.user_name)
     if not (isinstance(result, bool) and result):
         raise TestFailed("Cannot delete the IAM user credentials")
 

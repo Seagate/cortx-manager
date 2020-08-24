@@ -17,6 +17,7 @@
 
 from typing import List
 from enum import Enum
+from datetime import datetime
 
 
 class S3ConnectionConfig:
@@ -93,6 +94,12 @@ class IamAccessKeyMetadata:
     user_name: str
     access_key_id: str
     status: str
+
+
+class IamAccessKeyLastUsed:
+    last_used: datetime
+    region: str
+    service_name: str
 
 
 class IamAccessKeysListResponse:
