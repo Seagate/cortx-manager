@@ -291,6 +291,22 @@ class SecurityConfig(CsmModel):
         self.installation_status = status.value
 
 
+class ApplianceName(CsmModel):
+    _id = 'value'
+
+    value = 'value' # FIXME hack to ensure there is only one database entry
+    appliance_name = StringType(regex='^[A-Za-z0-9_-]{2,255}$')
+
+    @staticmethod
+    def instantiate(appliance_name: str) -> 'ApplianceName':
+        instance = ApplianceName()
+        instance.appliance_name = appliance_name
+        return instance
+
+    def __str__(self) -> str:
+        return self.appliance_name
+
+
 class SystemConfigSettings(CsmModel):
     """
     Model for complete system config settings grouped with nested models like management network,
@@ -298,6 +314,7 @@ class SystemConfigSettings(CsmModel):
     """
     _id = "config_id"
     config_id = StringType()
+    appliance_name = ModelType(ApplianceName)
     management_network_settings = ModelType(ManagementNetworkSettings)
     data_network_settings = ModelType(DataNetworkSettings)
     dns_network_settings = ModelType(DnsNetworkSettings)
@@ -329,6 +346,7 @@ class SystemConfigSettings(CsmModel):
         """
         system_config = SystemConfigSettings()
         system_config.config_id = config_id
+        system_config.appliance_name = None
         system_config.notifications = Notification()
         system_config.notifications.email = EmailConfig()
         system_config.ldap = LdapConfig()

@@ -347,6 +347,10 @@ CSM_SMTP_TEST_EMAIL_SUBJECT = 'CORTX: test email'
 CSM_SMTP_TEST_EMAIL_TEMPLATE_REL = '{}/templates/smtp_server_test_email.html'.format(
     CSM_PATH)
 
+# Appliance name config
+APPLIANCE_NAME = 'appliance_name'
+DEFAULT_APPLIANCE_NAME = 'local'
+
 # NTP server config
 DATE_TIME_SETTING = 'date_time_settings'
 NTP = 'ntp'

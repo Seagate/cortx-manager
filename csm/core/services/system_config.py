@@ -28,9 +28,10 @@ from eos.utils.data.access import Query
 from eos.utils.data.access.filters import Compare
 from eos.utils.data.db.db_provider import (DataBaseProvider)
 from eos.utils.log import Log
-from csm.core.data.models.system_config import (SystemConfigSettings,
+from csm.core.data.models.system_config import (ApplianceName, SystemConfigSettings,
             EmailConfig, OnboardingLicense, CertificateInstallationStatus)
 from csm.core.services.security import SecurityService
+from csm.plugins.eos.provisioner import ProvisionerPlugin
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 
@@ -129,10 +130,12 @@ class SystemConfigAppService(ApplicationService):
     Service that exposes system config management actions.
     """
 
-    def __init__(self, provisioner, security_service: SecurityService,
-                 system_config_mgr: SystemConfigManager, email_test_template=None):
+    def __init__(self, storage: DataBaseProvider, provisioner: ProvisionerPlugin,
+                 security_service: SecurityService, system_config_mgr: SystemConfigManager,
+                 email_test_template=None):
         self.system_config_mgr = system_config_mgr
         self.email_test_template = email_test_template
+        self._storage = storage
         self._provisioner = provisioner
         self._security_service = security_service
 
@@ -187,8 +190,14 @@ class SystemConfigAppService(ApplicationService):
 
         await system_config.update(new_values)
         await self.system_config_mgr.save(system_config)
-        # Calling provisioner's set_ntp and set_network api
         if (new_values.get(const.SUMMARY)):
+            # Store appliance name
+            if system_config.appliance_name is None:
+                appliance_name = ApplianceName.instantiate(const.DEFAULT_APPLIANCE_NAME)
+            else:
+                appliance_name = system_config.appliance_name
+            await self._storage(ApplianceName).store(appliance_name)
+            # Calling provisioner's set_ntp and set_network api
             ntp_data = new_values.get(const.DATE_TIME_SETTING, {}).get(const.NTP, {})
             await self._provisioner.set_ntp(ntp_data)
             await self._provisioner.set_network(new_values, const.SYSTEM_CONFIG)

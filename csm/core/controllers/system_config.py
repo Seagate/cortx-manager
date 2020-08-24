@@ -19,6 +19,8 @@
 import json
 import uuid
 
+from typing import Dict
+
 from csm.common.errors import InvalidRequest
 from eos.utils.log import Log
 from marshmallow import Schema, fields, validate, validates
@@ -27,6 +29,7 @@ from marshmallow.exceptions import ValidationError
 from .validators import Server, Ipv4, DomainName
 from .view import CsmView, CsmResponse, CsmAuth
 from csm.core.blogic import const
+from csm.core.data.models.system_config import ApplianceName
 from csm.common.permission_names import Resource, Action
 
 # Marshmallow nested schema classes to form system configuration settings schema structure
@@ -197,6 +200,8 @@ class SystemConfigSettingsSchema(Schema):
     Schema for complete system config settings grouped with nested schema classes like
     management network, data network, dns network, date time, notification and ldap settings.
     """
+    appliance_name = fields.Str(validate=validate.Regexp('^[A-Za-z0-9_-]{2,255}$'),
+                                allow_none=True, unknown='EXCLUDE')
     management_network_settings = fields.Nested(ManagementNetworkSettingsSchema,
                                                 allow_none=True, unknown='EXCLUDE')
     data_network_settings = fields.Nested(DataNetworkSettingsSchema,
@@ -210,8 +215,43 @@ class SystemConfigSettingsSchema(Schema):
     is_summary = fields.Boolean(allow_none=True)
     ldap = fields.Nested(LdapConfigSchema, allow_none=True,unknown='EXCLUDE')
 
+
+class SystemConfigConverter:
+    @staticmethod
+    def _view_to_model(d: Dict) -> Dict:
+        """
+        Converts a dictionary representing a system config view into a dictionary representing a
+        system config model, in place. Returns the modified dictionary as a convenience.
+
+        :param d: Dictionary representing a system config view
+        :returns: Modified input dictionary representing a system config model
+        """
+        appliance_name = d.get(const.APPLIANCE_NAME)
+        if appliance_name is not None:
+            d[const.APPLIANCE_NAME] = ApplianceName.instantiate(appliance_name).to_native()
+        return d
+
+    @staticmethod
+    def _model_to_view(d: Dict) -> Dict:
+        """
+        Converts a dictionary representing a system config model into a dictionary representing a
+        system config view, in place. Returns the modified dictionary as a convenience.
+
+        :param d: Dictionary representing a system config model
+        :returns: Modified input dictionary representing a system config view
+        """
+        if (isinstance(d[const.APPLIANCE_NAME], dict) and
+            d[const.APPLIANCE_NAME].get(const.APPLIANCE_NAME) is not None
+        ):
+            d[const.APPLIANCE_NAME] =  d[const.APPLIANCE_NAME][const.APPLIANCE_NAME]
+        return d
+
+
 @CsmView._app_routes.view("/api/v1/sysconfig")
 class SystemConfigListView(CsmView):
+
+    _converter = SystemConfigConverter()
+
     """
     System Configuration related routes
     """
@@ -228,7 +268,10 @@ class SystemConfigListView(CsmView):
     async def get(self):
         Log.debug(f"Handling system config fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        return await self._service.get_system_config_list()
+        system_config_list = await self._service.get_system_config_list()
+        for system_config in system_config_list:
+            SystemConfigListView._converter._model_to_view(system_config)
+        return system_config_list
 
     """
     POST REST implementation for creating a system config
@@ -245,8 +288,9 @@ class SystemConfigListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        return await self._service.create_system_config(str(uuid.uuid4()),
-                                                        **config_data)
+        system_config = await self._service.create_system_config(
+            str(uuid.uuid4()), **SystemConfigListView._converter._view_to_model(config_data))
+        return SystemConfigListView._converter._model_to_view(system_config)
 
 class ConfigTypeSchema(Schema):
     """
@@ -257,6 +301,9 @@ class ConfigTypeSchema(Schema):
 
 @CsmView._app_routes.view("/api/v1/sysconfig/{config_id}")
 class SystemConfigView(CsmView):
+
+    _converter = SystemConfigConverter()
+
     def __init__(self, request):
         super(SystemConfigView, self).__init__(request)
         self._service = self.request.app[const.SYSTEM_CONFIG_SERVICE]
@@ -271,7 +318,8 @@ class SystemConfigView(CsmView):
                   f" user_id: {self.request.session.credentials.user_id}")
 
         id = self.request.match_info["config_id"]
-        return await self._service.get_system_config_by_id(id)
+        system_config = await self._service.get_system_config_by_id(id)
+        return SystemConfigView._converter._model_to_view(system_config)
 
     """
     PUT REST implementation for creating a system config
@@ -291,7 +339,9 @@ class SystemConfigView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        return await self._service.update_system_config(id, config_data)
+        system_config = await self._service.update_system_config(
+            id, SystemConfigView._converter._view_to_model(config_data))
+        return SystemConfigView._converter._model_to_view(system_config)
     
     """
     PATCH REST implementation for updating a system config data
@@ -316,7 +366,9 @@ class SystemConfigView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         config_type = request_data["config_type"]
-        return await self._service.update_system_config_by_type(config_type, id, config_data)
+        system_config = await self._service.update_system_config_by_type(
+            config_type, id, SystemConfigView._converter._view_to_model(config_data))
+        return SystemConfigView._converter._model_to_view(system_config)
 
 @CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
 class TestEmailView(CsmView):
