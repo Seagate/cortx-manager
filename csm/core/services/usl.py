@@ -33,6 +33,7 @@ from csm.common.errors import (
     CsmServiceConflict
 )
 from csm.common.periodic import Periodic
+from eos.utils.data.access import Query
 from eos.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -40,6 +41,7 @@ from csm.core.services.storage_capacity import StorageCapacityService
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
 from csm.core.data.models.s3 import IamUser, IamUserCredentials
+from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
@@ -78,7 +80,6 @@ class UslService(ApplicationService):
     # FIXME improve token management
     _token: str
     _s3plugin: Any
-    _device: Device
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
     _api_key_dispatch: UslApiKeyDispatcher
@@ -90,28 +91,27 @@ class UslService(ApplicationService):
         self._token = ''
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
-        dev_uuid = self._get_device_uuid()
-        self._device = Device.instantiate(
-            self._get_system_friendly_name(),
-            '0000',
-            str(dev_uuid),
-            'S3',
-            dev_uuid,
-            DEFAULT_CORTX_DEVICE_VENDOR,
-        )
+        self._storage = storage
         # FIXME: the provisioner call fails on the build machine, so can't get the cluster id
         # Use the device UUID as a temporary solution
         # loop = asyncio.get_event_loop()
         # cluster_id = loop.run_until_complete(self._provisioner.get_cluster_id())
         # key = Cipher.generate_key(cluster_id, str(dev_uuid))
+        dev_uuid = self._get_device_uuid()
         key = Cipher.generate_key(str(dev_uuid), 'USL')
-        secure_storage = SecureStorage(storage, key)
+        secure_storage = SecureStorage(self._storage, key)
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
-        self._api_key_dispatch = UslApiKeyDispatcher(storage)
+        self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
 
-    def _get_system_friendly_name(self) -> str:
-        return str(Conf.get(const.CSM_GLOBAL_INDEX, 'PRODUCT.friendly_name') or 'local')
+    async def _get_system_friendly_name(self) -> str:
+        entries = await self._storage(ApplianceName).get(Query())
+        appliance_name = next(iter(entries), None)
+        if appliance_name is None:
+            reason = 'Could not retrieve friendly name from storage'
+            Log.error(f'{reason}')
+            raise CsmInternalError(desc=reason)
+        return str(appliance_name)
 
     def _get_device_uuid(self) -> UUID:
         """Obtains the CORTX device UUID from config."""
@@ -443,17 +443,17 @@ class UslService(ApplicationService):
         await s3_cli.put_bucket_policy(bucket_name, policy)
         Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
-    def _get_volume_name(self, bucket_name: str) -> str:
-        return self._get_system_friendly_name() + ": " + bucket_name
+    async def _get_volume_name(self, bucket_name: str) -> str:
+        return await self._get_system_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
-        return uuid5(self._device.uuid, bucket_name)
+        return uuid5(self.get_device_uuid(), bucket_name)
 
     async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
         bucket_name = bucket.name
-        volume_name = self._get_volume_name(bucket_name)
-        device_uuid = self._device.uuid
+        volume_name = await self._get_volume_name(bucket_name)
+        device_uuid = self._get_device_uuid()
         volume_uuid = self._get_volume_uuid(bucket_name)
         capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
@@ -475,14 +475,26 @@ class UslService(ApplicationService):
             volumes[volume.uuid] = volume
         return volumes
 
+    # TODO replace stub
+    async def _format_device_info(self) -> Device:
+        device_uuid = self._get_device_uuid()
+        return Device.instantiate(
+            await self._get_system_friendly_name(),
+            '0000',
+            str(device_uuid),
+            'S3',
+            device_uuid,
+            DEFAULT_CORTX_DEVICE_VENDOR,
+        )
+
     async def get_device_list(self) -> List[Dict[str, str]]:
         """
         Provides a list with all available devices.
 
         :return: A list with dictionaries, each containing information about a specific device.
         """
-
-        return [self._device.to_primitive()]
+        device = await self._format_device_info()
+        return [device.to_primitive()]
 
     async def get_device_volumes_list(
         self, device_id: UUID, uri: str, access_key_id: str, secret_access_key: str
@@ -496,8 +508,7 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-
-        if device_id != self._device.uuid:
+        if device_id != self._get_device_uuid():
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _,v in volumes.items()]
@@ -512,7 +523,7 @@ class UslService(ApplicationService):
         Checks the device and the volume with the specified IDs exist and return
         the required mount/umount information
         """
-        if device_id != self._device.uuid:
+        if device_id != self._get_device_uuid():
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
@@ -720,12 +731,12 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
-        friendly_name = self._get_system_friendly_name()
+        friendly_name = await self._get_system_friendly_name()
         service_urls = await self._get_service_urls()
         return {
             'model': 'EES',
             'type': 'ees',
-            'serialNumber': self._device.uuid,
+            'serialNumber': self._get_device_uuid(),
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
             'serviceUrls': service_urls,
