@@ -15,6 +15,8 @@
 
 from schematics.types import UUIDType, StringType, IntType
 from schematics.transforms import blacklist
+# TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
+# to https://github.com/schematics/schematics/issues/613 requesting this.
 from uuid import UUID
 
 from csm.core.blogic.models import CsmModel
@@ -71,6 +73,9 @@ class Volume(CsmModel):
         """
 
         roles = {'public': blacklist('bucketName')}
+        # TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
+        # to https://github.com/schematics/schematics/issues/613 requesting this.
+
 
     @staticmethod
     def instantiate(

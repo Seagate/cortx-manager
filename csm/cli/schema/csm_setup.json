@@ -15,9 +15,7 @@
                   "default": "cortx",
                   "type": "str",
                   "choices": [
-                    "cortx",
-                    "ees",
-                    "ecs"
+                    "cortx"
                   ],
                   "nargs": "?"
                 },
@@ -67,9 +65,7 @@
                   "default": "cortx",
                   "type": "str",
                   "choices": [
-                    "cortx",  
-                    "ees",
-                    "ecs"
+                    "cortx"
                   ],
                   "nargs": "?"
                 },
@@ -119,9 +115,7 @@
                   "default": "cortx",
                   "type": "str",
                   "choices": [
-                    "cortx",
-                    "ees",
-                    "ecs"
+                    "cortx"
                   ],
                   "nargs": "?"
                 },
@@ -177,9 +171,7 @@
                   "default": "cortx",
                   "type": "str",
                   "choices": [
-                    "cortx",
-                    "ees",
-                    "ecs"
+                    "cortx"
                   ],
                   "nargs": "?"
                 },

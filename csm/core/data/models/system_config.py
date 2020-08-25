@@ -292,7 +292,7 @@ class SecurityConfig(CsmModel):
 class ApplianceName(CsmModel):
     _id = 'value'
 
-    value = 'value' # FIXME hack to ensure there is only one database entry
+    value = 'value' # FIXME workaround to ensure there is only one database entry
     appliance_name = StringType(regex='^[A-Za-z0-9_-]{2,255}$')
 
     @staticmethod

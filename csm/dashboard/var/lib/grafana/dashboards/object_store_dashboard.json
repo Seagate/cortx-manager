@@ -314,13 +314,13 @@
         {
           "refCount": 0,
           "refId": "I",
-          "target": "alias(averageSeries(cluster.timers.delete_objects_from_clovis_success.mean, cluster.timers.delete_object_from_clovis_success.mean), 'Delete')",
+          "target": "alias(averageSeries(cluster.timers.delete_objects_from_motr_success.mean, cluster.timers.delete_object_from_motr_success.mean), 'Delete')",
           "textEditor": false
         },
         {
           "refCount": 0,
           "refId": "G",
-          "target": "alias(cluster.timers.write_to_clovis_op_success.mean, 'Write')"
+          "target": "alias(cluster.timers.write_to_motr_op_success.mean, 'Write')"
         },
         {
           "refCount": 0,
@@ -564,7 +564,7 @@
         {
           "refCount": 0,
           "refId": "B",
-          "target": "alias(sumSeries(cluster.timers.delete_object_from_clovis_failed.count, cluster.timers.delete_objects_from_clovis_failed.count), 'Delete Object')"
+          "target": "alias(sumSeries(cluster.timers.delete_object_from_motr_failed.count, cluster.timers.delete_objects_from_motr_failed.count), 'Delete Object')"
         },
         {
           "refCount": 0,
@@ -574,7 +574,7 @@
         {
           "refCount": 0,
           "refId": "D",
-          "target": "alias(cluster.timers.write_to_clovis_op_failed.count, 'Put Object')"
+          "target": "alias(cluster.timers.write_to_motr_op_failed.count, 'Put Object')"
         },
         {
           "refCount": 0,

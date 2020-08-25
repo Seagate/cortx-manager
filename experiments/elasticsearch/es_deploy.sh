@@ -103,10 +103,6 @@ tee /etc/elasticsearch/elasticsearch.yml > /dev/null <<EOT
 #
 #discovery.zen.ping.unicast.hosts: ["host1", "host2"]
 #
-# Prevent the "split brain" by configuring the majority of nodes (total number of master-eligible nodes / 2 + 1):
-#
-#discovery.zen.minimum_master_nodes:
-#
 # For more information, consult the zen discovery module documentation.
 #
 # ---------------------------------- Gateway -----------------------------------

@@ -97,7 +97,7 @@
                    {
                         "val": {
                         "index": "statsd_timerdata-*",
-                        "metric": "'(act:delete_object_from_clovis_success) OR (act:delete_objects_from_clovis_success) OR (act:delete_object_from_clovis_failed) OR (act:delete_objects_from_clovis_failed)'",
+                        "metric": "'(act:delete_object_from_motr_success) OR (act:delete_objects_from_motr_success) OR (act:delete_object_from_motr_failed) OR (act:delete_objects_from_motr_failed)'",
                         "timestamp": "@timestamp",
                         "method": "avg:mean"
                         }
@@ -110,7 +110,7 @@
                    {
                         "val": {
                             "index": "statsd_timerdata-*",
-                            "metric": "'(act:write_to_clovis_op_success) OR (act:write_to_clovis_op_failed)'",
+                            "metric": "'(act:write_to_motr_op_success) OR (act:write_to_motr_op_failed)'",
                             "timestamp": "@timestamp",
                             "method": "avg:mean"
                         }
@@ -175,7 +175,7 @@
                    {
                         "val": {
                             "index": "statsd_timerdata-*",
-                            "metric": "'(act:create_object_success) OR (act:create_object_failed) OR (act:delete_object_from_clovis_success) OR (act:delete_objects_from_clovis_success) OR (act:delete_object_from_clovis_failed) OR (act:delete_objects_from_clovis_failed) OR (act:write_to_clovis_op_success) OR (act:write_to_clovis_op_failed) OR (act:read_object_data_success) OR (act:read_object_data_failed) OR (act:get_keyval_success) OR (act:get_keyval_failed) OR (act:put_keyval_success) OR (act:put_keyval_failed) OR (act:delete_keyval_success) OR (act:delete_keyval_failed)'",
+                            "metric": "'(act:create_object_success) OR (act:create_object_failed) OR (act:delete_object_from_motr_success) OR (act:delete_objects_from_motr_success) OR (act:delete_object_from_motr_failed) OR (act:delete_objects_from_motr_failed) OR (act:write_to_motr_op_success) OR (act:write_to_motr_op_failed) OR (act:read_object_data_success) OR (act:read_object_data_failed) OR (act:get_keyval_success) OR (act:get_keyval_failed) OR (act:put_keyval_success) OR (act:put_keyval_failed) OR (act:delete_keyval_success) OR (act:delete_keyval_failed)'",
                             "timestamp": "@timestamp",
                             "method": "avg:mean"
                         }

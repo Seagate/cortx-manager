@@ -30,7 +30,7 @@ from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
 
 
-# TODO replace this hack with a proper firewall, or serve USL on a separate socket
+# TODO replace this workaround with a proper firewall, or serve USL on a separate socket
 class _Proxy:
     @staticmethod
     def on_loopback_only(cls: Type['_View']) -> Type['_View']:

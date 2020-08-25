@@ -734,7 +734,7 @@ class UslService(ApplicationService):
         friendly_name = await self._get_system_friendly_name()
         service_urls = await self._get_service_urls()
         return {
-            'model': 'EES',
+            'model': 'CORTX',
             'type': 'ees',
             'serialNumber': self._get_device_uuid(),
             'friendlyName': friendly_name,

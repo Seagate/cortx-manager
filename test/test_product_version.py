@@ -25,7 +25,7 @@ t = unittest.TestCase()
 class MockProvisioner():
     
     async def get_current_version(self, *args, **kwargs):
-        return {"NAME": "EES",
+        return {"NAME": "CORTX",
                 "VERSION": "1.0.0",
                 "BUILD": "193",
                 "RELEASE": "Cortx-1.0.0-12-rc7",
