@@ -13,6 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from typing import Any, Optional
+
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from eos.utils.log import Log
@@ -72,14 +74,15 @@ class IamRootClient(IamClient):
 
 
 class S3ServiceError(Exception):
-    def __init__(self, status: int, code: str, message: str):
+    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
         self.status = status
         self.code = code
         self.message = message
+        self.message_args = args
 
 
 class S3BaseService(ApplicationService):
-    def _handle_error(self, error):
+    def _handle_error(self, error, args: Optional[Any] = None):
         """ A helper method for raising exceptions on S3-related errors """
 
         # TODO: Change this method after unified error handling
@@ -88,7 +91,8 @@ class S3BaseService(ApplicationService):
         if isinstance(error, IamError):
             raise S3ServiceError(error.http_status,
                                  error.error_code.value,
-                                 error.error_message)
+                                 error.error_message,
+                                 args)
 
         if isinstance(error, ClientError):
             error_code = error.response['Error']['Code']
@@ -97,4 +101,5 @@ class S3BaseService(ApplicationService):
             # Can be useful? request_id = error.response['ResponseMetadata']['RequestId']
             raise S3ServiceError(http_status_code,
                                  error_code,
-                                 error_message)
+                                 error_message,
+                                 args)

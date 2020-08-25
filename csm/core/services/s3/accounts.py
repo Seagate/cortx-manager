@@ -48,7 +48,7 @@ class S3AccountService(S3BaseService):
         Log.debug(f"Creating s3 account. account_name: {account_name}")
         account = await self._s3_root_client.create_account(account_name, account_email)
         if isinstance(account, IamError):
-            self._handle_error(account)
+            self._handle_error(account, args={'account_name': account_name})
 
         account_client = self._s3plugin.get_iam_client(account.access_key_id,
             account.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
@@ -60,7 +60,7 @@ class S3AccountService(S3BaseService):
             Log.debug(f"Creating Login profile for account: {account}")
             profile = await account_client.create_account_login_profile(account.account_name, password)
             if isinstance(profile, IamError):
-                self._handle_error(profile)
+                self._handle_error(profile, args={'account_name': account_name})
         except Exception as e:
             await account_client.delete_account(account.account_name)
             raise e

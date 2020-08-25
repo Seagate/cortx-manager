@@ -73,7 +73,7 @@ class CsmHttpException(web.HTTPException):
             "message":  message,
         }
         if args is not None:
-            body["error_format_args"] = args,
+            body["error_format_args"] = args
         json_body = json.dumps(body)
         super().__init__(body=json_body, content_type='application/json')
 

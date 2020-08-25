@@ -44,7 +44,8 @@ class S3BaseView(CsmView):
             raise CsmHttpException(error.status,
                                    S3_SERVICE_ERROR,
                                    error.code,
-                                   error.message)
+                                   error.message,
+                                   error.message_args)
         else:
             return
 
