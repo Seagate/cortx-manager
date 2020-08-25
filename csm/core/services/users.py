@@ -97,6 +97,12 @@ class UserManager:
         Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
 
+    async def get_list_alert_notification_emails(self) -> List[User]:
+        """ return list of emails for user having alert_notification true"""
+        query = Query().filter_by(Compare(User.alert_notification, '=', True))
+        user_list = await self.storage(User).get(query)
+        return [user.email for user in user_list]
+
     async def count(self):
         return await self.storage(User).count(None)
 
@@ -131,6 +137,8 @@ class CsmUserService(ApplicationService):
             "username": user.user_id,
             "user_type": user.user_type,
             "roles": user.roles,
+            "email": user.email,
+            "alert_notification": user.alert_notification,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z'
         }
@@ -151,11 +159,13 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
-    async def create_super_user(self, user_id: str, password: str) -> dict:
+    async def create_super_user(self, user_id: str, password: str,
+                                email: str, alert_notification: bool) -> dict:
         """
         Handles the preboarding super user creation
         :param user_id: User identifier
         :param password: User password (not hashed)
+        :param email: User email
         :returns: A dictionary describing the newly created user.
         In case of error, an exception is raised.
         """
@@ -169,11 +179,10 @@ class CsmUserService(ApplicationService):
         # implement user role management. Replace this hardcoded values
         # with proper constants.
         roles = [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]
-        interfaces = const.CSM_USER_INTERFACES
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             await self._provisioner.create_system_user(user_id, password)
-        user = User.instantiate_csm_user(user_id, password, roles=roles,
-                                         interfaces=interfaces)
+        user = User.instantiate_csm_user(user_id, password, email=email, roles=roles,
+                                         alert_notification=alert_notification)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 

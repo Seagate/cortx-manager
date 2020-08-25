@@ -30,7 +30,7 @@
             "stats": ["list"],
             "capacity": ["list"],
             "sysconfig": ["list"],
-            "users": ["list"],
+            "users": ["list", "update"],
             "s3accounts": ["list"],
             "auditlog": ["list", "read"],
              "replace_node": ["list"]

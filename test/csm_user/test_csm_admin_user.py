@@ -48,7 +48,9 @@ def test_csm_admin_user_create(args):
     user_service = args.get('user_service')
     data = {'user_id': 'csm_test_user',
             'password': 'Csmuser@123',
-            'roles': ['admin']}
+            'roles': ['admin'],
+            'email': 'admin@test.com',
+            'alert_notification': True}
 
     # Better replace with local dict storage to avoid this
     try:
@@ -63,6 +65,8 @@ def test_csm_admin_user_create(args):
     assert 'created_time' in user
     assert user['username'] == data['user_id']
     assert user['roles'] == data['roles']
+    assert user['email'] == data['email']
+    assert user['alert_notification'] == data['alert_notification']
 
 
 def test_csm_admin_user_update_without_old_password(args):

@@ -33,6 +33,7 @@ from eos.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel, AlertsHistoryModel
 from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager
+from csm.core.services.users import UserManager
 from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
@@ -489,20 +490,24 @@ class AlertsAppService(ApplicationService):
         return alert.to_primitive()
 
 class AlertEmailNotifier(Service):
-    def __init__(self, email_sender_queue, config_manager: SystemConfigManager, template):
+    def __init__(self, email_sender_queue, config_manager: SystemConfigManager,
+                 template, user_manager: UserManager):
         super().__init__()
         self.email_sender_queue = email_sender_queue
         self.config_manager = config_manager
         self.template = template
+        self.user_manager = user_manager
 
     @Log.trace_method(Log.DEBUG)
     async def handle_alert(self, alert):
         # TODO: check if email notification is enabled for alerts
         system_config = await self.config_manager.get_current_config()
+
         if not system_config:
             return
 
         email_config = system_config.notifications.email
+
         if not email_config:
             return  # Nothing to do
 
@@ -517,8 +522,13 @@ class AlertEmailNotifier(Service):
         subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
         message = EmailSender.make_multipart(email_config.smtp_sender_email,
             None, subject, html_body)
+        email_list = await self.user_manager.get_list_alert_notification_emails()
+        target_emails = email_config.get_target_emails()
+        target_emails.extend(email_list)
+
+        Log.debug(f"Fetch target email  {target_emails}")
         await self.email_sender_queue.enqueue_bulk_email(message,
-            email_config.get_target_emails(), smtp_config)
+            target_emails, smtp_config)
 
 class AlertMonitorService(Service, Observable):
     """

@@ -102,7 +102,7 @@ roles_dict = {
           'permissions': {
               'alerts': ['list', 'update'],
               'stats': ['list', 'update'],
-              'users': ['list']
+              'users': ['list', 'update']
           }
     }
 }
@@ -139,7 +139,7 @@ async def test_monitor_roles(*args):
     expected_permissions = PermissionSet({
         'alerts': {'list', 'update'},
         'stats': {'list', 'update'},
-        'users': {'list'}
+        'users': {'list', 'update'}
     })
 
     actual_permissions = await role_manager.calc_effective_permissions('monitor')

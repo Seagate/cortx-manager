@@ -121,7 +121,8 @@ class CsmAgent:
         system_config_mgr = SystemConfigManager(db)
 
         email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
-            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL))
+            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL),
+            user_manager)
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)

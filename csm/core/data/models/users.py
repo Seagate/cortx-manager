@@ -17,7 +17,8 @@ import sys
 import json
 import bcrypt
 from schematics.models import Model
-from schematics.types import IntType, StringType, DateType, ListType, DateTimeType
+from schematics.types import (StringType, ListType,
+                              DateTimeType, BooleanType)
 from datetime import datetime, timedelta, timezone
 from csm.common.queries import SortBy, QueryLimits, DateTimeRange
 from typing import Optional, Iterable
@@ -54,6 +55,8 @@ class User(CsmModel):
     user_type = StringType()
     roles = ListType(StringType)
     password_hash = StringType()
+    email = StringType()
+    alert_notification = BooleanType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
 
@@ -67,23 +70,27 @@ class User(CsmModel):
         self.updated_time = datetime.now(timezone.utc)
 
     @staticmethod
-    def instantiate_csm_user(user_id, password, interfaces=[], roles=[]):
+    def instantiate_csm_user(user_id, password, email="", roles=[], alert_notification=False):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
         user.password_hash = Passwd.hash(password)
         user.roles = roles
+        user.email = email
+        user.alert_notification = alert_notification
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
 
     @staticmethod
-    def instantiate_s3_account_user(user_id, interfaces=[], roles=[]):
+    def instantiate_s3_account_user(user_id, roles=[]):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.S3AccountUser.value
         user.password_hash = None
         user.roles = roles
+        user.email = ""
+        user.alert_notification = False
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user

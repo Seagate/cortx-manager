@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validate, validates
+from marshmallow import Schema, fields, validate, pre_load, post_load
 from marshmallow.exceptions import ValidationError
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
@@ -24,6 +24,7 @@ from eos.utils.log import Log
 from csm.common.errors import InvalidRequest
 
 
+INVALID_REQUEST_PARAMETERS = "invalid request parameter"
 class RolesList(fields.List):
     """
     A list of strings representing an role type.
@@ -55,6 +56,8 @@ class CsmSuperUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
+    email = fields.Email(required=True)
+    alert_notification = fields.Boolean(missing=False, default=False)
 
 
 # TODO: find out about policies for names and passwords
@@ -65,6 +68,30 @@ class CsmUserPatchSchema(Schema):
     old_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
     roles = RolesList()
+    email = fields.Email()
+    alert_notification = fields.Boolean()
+
+    """
+    Validate PATCH body pre  marshamallow validation
+    """
+    @pre_load
+    def pre_load(self, data, **kwargs):
+        if const.CSM_USER_NAME in data:
+            raise InvalidRequest("username cannot be modified", INVALID_REQUEST_PARAMETERS)
+        return data
+    """
+    Validate PATCH body for no operation post marshamallow validation
+    """
+    @post_load
+    def post_load(self, data, **kwargs):
+        # empty body is invalid request
+        if not data:
+            raise InvalidRequest("Request effective body is empty", INVALID_REQUEST_PARAMETERS)
+
+        # just old_password in body is invalid
+        if len(data) == 1 and const.CSM_USER_OLD_PASSWORD in data:
+            raise InvalidRequest(f"Request effective body has no impact {data}", INVALID_REQUEST_PARAMETERS)
+        return data
 
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
@@ -80,6 +107,8 @@ class CsmGetUsersSchema(Schema):
     sort_by = GetUsersSortBy(validate=validate.OneOf(['user_id',
                                                       'username',
                                                       'user_type',
+                                                      'alert_notification',
+                                                      'email',
                                                       'created_time',
                                                       'updated_time']),
                              default="user_id",
@@ -107,7 +136,7 @@ class CsmUsersListView(CsmView):
             request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
-                "Invalid Parameter for alerts", str(val_err))
+                "Invalid Parameter for user", str(val_err))
         users = await self._service.get_user_list(**request_data)
         return {'users': users}
 
