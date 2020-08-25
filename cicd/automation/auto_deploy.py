@@ -498,8 +498,8 @@ if __name__ == "__main__":
             help="BMC Password for Node-1. Default adminBMC!")
     argParser.add_argument("-m2", type=str, default="adminBMC!",
             help="BMC Password for Node-2. Default adminBMC!")
-    argParser.add_argument("-t", type=str, default="http://ci-storage.mero.colo.seagate.com/releases/eos/github/master/rhel-7.7.1908/last_successful/",
-            help="target build url for CORTX ( default 'http://ci-storage.mero.colo.seagate.com/releases/eos/github/master/rhel-7.7.1908/last_successful/')")
+    argParser.add_argument("-t", type=str, default="http://cortx-storage.colo.seagate.com/releases/cortx/github/release/rhel-7.7.1908/last_successful/",
+            help="target build url for CORTX ( default 'http://cortx-storage.colo.seagate.com/releases/cortx/github/release/rhel-7.7.1908/last_successful/')")
     argParser.add_argument("-pre", type=str, default="https://raw.githubusercontent.com/Seagate/cortx-prvsnr/master/cli/src/cortx-prereqs.sh?token=APVYY2LLIQYAKTNYFYM4QS27CFXIA",
             help="link for prereq script  ( default 'https://raw.githubusercontent.com/Seagate/cortx-prvsnr/master/cli/src/cortx-prereqs.sh?token=APVYY2LLIQYAKTNYFYM4QS27CFXIA'")
     argParser.add_argument("-a", type=str, default="https://raw.githubusercontent.com/Seagate/cortx-prvsnr/master/cli/src/auto-deploy?token=APVYY2PVVBU2LY53KMGFVLK7BVTHE",
