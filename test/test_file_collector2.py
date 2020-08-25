@@ -38,7 +38,7 @@ class RemoteFileCollector(unittest.TestCase):
                 files:
                     - /etc/hosts
 
-            mero:
+            motr:
                 commands:
                     - ls -l /tmp
                     - uptime

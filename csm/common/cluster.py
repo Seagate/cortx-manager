@@ -68,11 +68,11 @@ class Cluster(object):
     Cluster inventory file follows yaml format:
     -----------------------------------------------
     SSU:
-        sw_components: [ os, mero, halon ]
+        sw_components: [ os, motr, hare ]
         nodes: [ ssu_1, ssu_2 ]
 
     S3_SERVER:
-        sw_components: [ os, mero, halon ]
+        sw_components: [ os, motr, hare ]
         nodes: [ s3_1, s3_2 ]
 
     CMU:

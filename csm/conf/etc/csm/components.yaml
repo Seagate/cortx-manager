@@ -42,7 +42,7 @@ s3_server:
 #       - s3iamcli listusers
         - systemctl status s3authserver
         - s3cmd ls
-        - hctl mero status
+        - hctl motr status
 
     files:
         - /opt/seagate/auth/resources/authserver.properties
@@ -63,9 +63,9 @@ s3_cli:
     files:
         - /home/*/.sgs3iamcli/config.yaml
 
-mero:
+motr:
     commands:
-        - ls -l /var/mero/*
+        - ls -l /var/motr/*
         - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') dumpdrives
         - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') getvpd
         - wbcli $(lsscsi -g | awk '/enclosu/ {print $7}') ver
@@ -81,18 +81,18 @@ mero:
         - m0reportbug
 
     files:
-        - /var/mero/m0d-*/m0trace.*
-        - /var/mero/m0d-*/addb-stobs/*
-        - /var/mero/*/conf.xc
-        - /etc/mero/*
-        - /etc/sysconfig/mero
+        - /var/motr/m0d-*/m0trace.*
+        - /var/motr/m0d-*/addb-stobs/*
+        - /var/motr/*/conf.xc
+        - /etc/motr/*
+        - /etc/sysconfig/motr
         - /var/log/messages
         - /var/crash/*
         - /run/log/journal/*
 
-halon:
+hare:
     commands:
 
     files:
-        - /etc/halon/halon_facts.yaml
-        - /var/log/halon-decision.log
+        - /etc/hare/hare_facts.yaml
+        - /var/log/hare-decision.log

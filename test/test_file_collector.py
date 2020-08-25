@@ -34,7 +34,7 @@ s3_server:
         - /etc/hosts
         - /var/log/messages
 
-mero:
+motr:
     commands:
         - ls -l /tmp
         - uptime
@@ -56,7 +56,7 @@ def test1_1(args={}):
     if os.path.exists(bundle_path): shutil.rmtree(bundle_path)
 
     fc = LocalFileCollector(comp_rules, bundle_path)
-    fc.collect(['s3_server', 'mero'])
+    fc.collect(['s3_server', 'motr'])
     cmd = 'find %s' %bundle_path
     output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
     if len(output) == 0: raise TestFailed('no files collected by file collector')
@@ -95,7 +95,7 @@ def test2_1(args={}):
     for host in host_list:
         host_bundle_path = os.path.join(bundle_path, host)
         fc = RemoteFileCollector(comp_rules, host, None, host_bundle_path)
-        fc.collect(['s3_server', 'mero'])
+        fc.collect(['s3_server', 'motr'])
 
     cmd = 'find %s' %bundle_path
     output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
