@@ -443,6 +443,7 @@ class UslService(ApplicationService):
         await s3_cli.put_bucket_policy(bucket_name, policy)
         Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
+
     async def _get_volume_name(self, bucket_name: str) -> str:
         return await self._get_system_friendly_name() + ": " + bucket_name
 
@@ -454,6 +455,17 @@ class UslService(ApplicationService):
         bucket_name = bucket.name
         volume_name = await self._get_volume_name(bucket_name)
         device_uuid = self._get_device_uuid()
+        volume_uuid = self._get_volume_uuid(bucket_name)
+        capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
+        capacity_size = capacity_details[const.SIZE]
+        capacity_used = capacity_details[const.USED]
+        return Volume.instantiate(
+            volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
+
+    async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
+        bucket_name = bucket.name
+        volume_name = self._get_volume_name(bucket_name)
+        device_uuid = self._device.uuid
         volume_uuid = self._get_volume_uuid(bucket_name)
         capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
