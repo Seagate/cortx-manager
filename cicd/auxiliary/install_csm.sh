@@ -76,7 +76,6 @@ done
 indices=(alerts csmauditlog supportbundle s3-rsys-index alerts-history)
 # remove csm rpms
 remove_rpm "csm_agent" 
-remove_rpm "csm_web"
 # remove csm conf
 remove_conf
 #remove consul data
@@ -90,12 +89,10 @@ do
 done
 # install csm rpms  from target build
 install_rpm "$tgt_build" "csm_agent"
-install_rpm "$tgt_build" "csm_web"
 # setup csm
 run_command "csm_setup post_install"
 run_command "csm_setup config"
 run_command "csm_setup init"
 # start csm_agent and csm_web services
 run_command "systemctl start csm_agent"
-run_command "systemctl start csm_web"
 

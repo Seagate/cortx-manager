@@ -11,13 +11,13 @@ yum install -y $RPM_PATH/*.rpm
 
 # Copy certificates
 mkdir -p /etc/ssl/stx/ /etc/cortx/ha/
-cp -f $CSM_REPO_PATH/jenkins/cicd/stx.pem /etc/ssl/stx/
-#cp -f $CSM_REPO_PATH/jenkins/cicd/etc/database.json /etc/cortx/ha/
+cp -f $CSM_REPO_PATH/cicd/auxiliary/stx.pem /etc/ssl/stx/
+#cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/database.json /etc/cortx/ha/
 
 groupadd haclient
 
 mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
-cp -f $CSM_REPO_PATH/jenkins/cicd/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
 chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
 python3 -c "import provisioner; print(provisioner.__file__)"
@@ -31,17 +31,11 @@ csm_setup init
 
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
-# TODO: Run web as csm user after not path issue is resolved
-node $CSM_PATH/web/web-dist/server.js &
-
 
 # TODO: Uncomment when container able to start systemd service
 #systemctl restart csm_agent
-#systemctl restart csm_web
-
 
 #systemctl status csm_agent
-#systemctl status csm_web
 
 [ -f /etc/var/log/seagate/csm/csm_agent.log ] && {
     cat /etc/var/log/seagate/csm/csm_agent.log
