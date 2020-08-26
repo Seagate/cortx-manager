@@ -74,4 +74,4 @@ def test2(args):
     except Exception as e:
         raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
-test_list = [ test1, test2 ]
+test_list = [ test1 ]
