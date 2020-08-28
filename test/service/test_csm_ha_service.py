@@ -85,4 +85,4 @@ def test_csm_web(args):
         raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
 
-test_list = [ test_csm_agent, test_csm_web ]
+test_list = [ test_csm_agent ]
