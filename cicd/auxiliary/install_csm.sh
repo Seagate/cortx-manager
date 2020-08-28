@@ -66,7 +66,7 @@ fi
 usage()
 {
     echo "\
-This script will remove existing csm rpms and 
+This script will remove existing csm rpms and
 install csm rpms from  target build
 
 Usage:
@@ -90,8 +90,7 @@ done
 
 indices=(alerts csmauditlog supportbundle s3-rsys-index alerts-history)
 # remove csm rpms
-remove_rpm "csm_agent" 
-remove_rpm "csm_web"
+remove_rpm "csm_agent"
 # remove csm conf
 remove_conf
 #remove consul data
@@ -100,17 +99,14 @@ run_command "/opt/seagate/eos/hare/bin/consul kv delete -recurse eos/base/"
 echo "---- deleting elasticsearch indices ----"
 for i in "${indices[@]}"
 do
-  printf "\n--- deleting $i index ---" 
+  printf "\n--- deleting $i index ---"
   curl -X DELETE http://localhost:9200/"$i"
 done
 # install csm rpms  from target build
 install_rpm "$tgt_build" "csm_agent"
-install_rpm "$tgt_build" "csm_web"
 # setup csm
 run_command "csm_setup post_install"
 run_command "csm_setup config"
 run_command "csm_setup init"
 # start csm_agent and csm_web services
 run_command "systemctl start csm_agent"
-run_command "systemctl start csm_web"
-
