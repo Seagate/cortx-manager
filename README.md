@@ -54,7 +54,7 @@ pip3.6 install aiohttp
 ### Build
 
 Run the command below to generate the rpm.  
-$ ./jenkins/build.sh -b \<build-no\>
+$ ./cicd/build.sh -b \<build-no\>
 
 RPM would be created in dist/rpmbuild/RPMS folder.  
 
