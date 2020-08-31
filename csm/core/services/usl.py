@@ -33,8 +33,8 @@ from csm.common.errors import (
     CsmServiceConflict
 )
 from csm.common.periodic import Periodic
-from eos.utils.data.access import Query
-from eos.utils.log import Log
+from cortx.utils.data.access import Query
+from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.storage_capacity import StorageCapacityService
@@ -47,8 +47,8 @@ from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
-from eos.utils.security.cipher import Cipher
-from eos.utils.security.secure_storage import SecureStorage
+from cortx.utils.security.cipher import Cipher
+from cortx.utils.security.secure_storage import SecureStorage
 
 
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'

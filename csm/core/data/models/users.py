@@ -24,7 +24,7 @@ from csm.common.queries import SortBy, QueryLimits, DateTimeRange
 from typing import Optional, Iterable
 from enum import Enum
 from csm.common.errors import CsmError, CsmNotFoundError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.core.blogic.models import CsmModel
 

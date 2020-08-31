@@ -24,7 +24,7 @@ import asyncio
 import re
 from datetime import datetime, timedelta
 from typing import Dict
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError
 

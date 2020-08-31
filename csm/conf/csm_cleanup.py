@@ -114,8 +114,8 @@ def add_stats_subcommand(main_parser):
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from eos.utils.log import Log
-    from eos.utils.cleanup.es_data_cleanup import esCleanup
+    from cortx.utils.log import Log
+    from cortx.utils.cleanup.es_data_cleanup import esCleanup
     from csm.common.conf import Conf, ConfSection, DebugConf
     from csm.core.blogic import const
     from csm.common.payload import Yaml

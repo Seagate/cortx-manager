@@ -20,7 +20,7 @@ import getpass
 import errno
 
 from csm.common.comm import SSHChannel
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import CsmError
 

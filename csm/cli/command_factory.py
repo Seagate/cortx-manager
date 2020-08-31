@@ -17,7 +17,7 @@ import argparse
 import sys
 import os
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.payload import Json
 from csm.cli.command import CommandParser
 

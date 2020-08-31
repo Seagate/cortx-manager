@@ -16,7 +16,7 @@
 from marshmallow import (Schema, fields, ValidationError, validate,
                          validates_schema)
 from csm.core.controllers import  validators
-from eos.utils.log import Log
+from cortx.utils.log import Log
 import os
 import json
 import unittest
