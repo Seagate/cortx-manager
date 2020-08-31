@@ -26,14 +26,20 @@ from csm.core.controllers.s3.base import S3AuthenticatedView
 from csm.core.controllers.view import CsmView, CsmAuth
 
 
+class CreateDeleteAccessKeyRelUrlSchema(Schema):
+    user_name = fields.Str(required=False)
+
+
 class ListAccessKeysRelUrlSchema(Schema):
     marker = fields.Str(required=False, data_key='continue')
     limit = fields.Int(required=False)
+    user_name = fields.Str(required=False)
 
 
 class PatchAccessKeySchema(Schema):
     status = fields.Str(
         required=True, validate=validate.OneOf(const.S3_ACCESS_KEY_STATUSES))
+    user_name = fields.Str(required=False)
 
 
 @CsmView._app_routes.view("/api/v1/s3/access_keys")
@@ -63,8 +69,12 @@ class S3AccessKeysView(S3AuthenticatedView):
         """
         Log.debug(f'Handling S3 access keys POST request:'
                   f' user_id: {self.request.session.credentials.user_id}')
+        try:
+            request_url_data = CreateDeleteAccessKeyRelUrlSchema().load(self.request.rel_url.query)
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request URL: {val_err}")
         with self._guard_service():
-            return await self._service.create_access_key(self._s3_session)
+            return await self._service.create_access_key(self._s3_session, **request_url_data)
 
 
 @CsmView._app_routes.view("/api/v1/s3/access_keys/{access_key_id}")
@@ -81,15 +91,15 @@ class S3AccessKeysListView(S3AuthenticatedView):
         Log.debug(f'Handling S3 access key PATCH request:'
                   f' user_id: {self.request.session.credentials.user_id}')
         try:
-            body = await self.request.json()
-            request_data = PatchAccessKeySchema().load(body, unknown='EXCLUDE')
+            request_url_data = PatchAccessKeySchema().load(self.request.rel_url.query)
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-        status = request_data.get('status')
+        status = request_url_data.get('status')
+        user_name = request_url_data.get('user_name', None)
         access_key_id = self.request.match_info['access_key_id']
         with self._guard_service():
             return await self._service.update_access_key(
-                self._s3_session, access_key_id, status)
+                self._s3_session, access_key_id, status, user_name=user_name)
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.DELETE}})
     async def delete(self):
@@ -98,7 +108,11 @@ class S3AccessKeysListView(S3AuthenticatedView):
         """
         Log.debug(f'Handling S3 access key DELETE request:'
                   f' user_id: {self.request.session.credentials.user_id}')
+        try:
+            request_url_data = CreateDeleteAccessKeyRelUrlSchema().load(self.request.rel_url.query)
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request URL: {val_err}")
         access_key_id = self.request.match_info['access_key_id']
         with self._guard_service():
             return await self._service.delete_access_key(
-                self._s3_session, access_key_id)
+                self._s3_session, access_key_id, **request_url_data)
