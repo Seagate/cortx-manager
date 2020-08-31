@@ -125,7 +125,7 @@
         },
         {
           "flag": "-sa",
-          "dest": "alert_notification ",
+          "dest": "alert_notification",
           "action": "store_const",
           "help": "Subscribe created user to alert notifications.",
           "default": false,
@@ -225,6 +225,59 @@
       },
       "output": {
         "success": "Password Updated."
+      }
+    },
+    {
+      "name": "update",
+      "description": "Update user information",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "user_id",
+          "type": "str",
+          "help": "Enter Your User Name."
+        },
+        {
+          "flag": "email",
+          "type": "str",
+          "help": "User's valid email address.",
+          "json": true
+        },
+        {
+          "flag": "-o",
+          "dest": "old_password",
+          "type": "Terminal.get_old_password",
+          "suppress_help": true,
+          "help": "",
+          "default": "",
+          "json": true
+        },
+        {
+          "flag": "-sa",
+          "dest": "alert_notification",
+          "action": "store_const",
+          "help": "Subscribe created user to alert notifications.",
+          "default": false,
+          "const": true,
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+      "type": "rest",
+      "method": "patch",
+      "target": "/{version}/csm/users/{user_id}",
+      "version": "v1"
+      },
+      "output": {
+      "success": "User information updated."
       }
     }
   ]
