@@ -92,7 +92,7 @@ class ProvisionerPlugin:
             try:
                 # The version argument has no effect here, but we need to pass it anyway
                 version = self._generate_random_version()
-                self.provisioner.set_eosupdate_repo(version, path, dry_run=True)
+                self.provisioner.set_swupdate_repo(version, path, dry_run=True)
             except self.provisioner.errors.ProvisionerError as e:
                 raise PackageValidationError(f"Package validation failed: {e}")
 
@@ -119,8 +119,8 @@ class ProvisionerPlugin:
             try:
                 # Generating the version here as at the moment we cannot infer it from the package
                 # version = self._generate_random_version()
-                self.provisioner.set_eosupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
-                return self.provisioner.eos_update(nowait=True)
+                self.provisioner.set_swupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
+                return self.provisioner.sw_update(nowait=True)
             except Exception as e:
                 Log.exception(e)
                 raise CsmInternalError('Failed to start the software update process')

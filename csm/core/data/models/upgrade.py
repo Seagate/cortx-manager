@@ -73,6 +73,7 @@ class UpdateStatusEntry(CsmModel):
     updated_at = DateTimeType()
     uploaded_at = DateTimeType()
     started_at = DateTimeType()
+    file_path = StringType()
 
     @classmethod
     def generate_new(cls, update_type):
@@ -89,6 +90,7 @@ class UpdateStatusEntry(CsmModel):
         model.updated_at = datetime.datetime.now()
         model.uploaded_at = None
         model.started_at = None
+        model.file_path = ""
 
         return model
 
@@ -126,7 +128,8 @@ class UpdateStatusEntry(CsmModel):
             "details": self.details,
             "uploaded_at": None,
             "started_at": None,
-            "updated_at": None
+            "updated_at": None,
+            "file_path": self.file_path
         }
 
         if self.updated_at:
