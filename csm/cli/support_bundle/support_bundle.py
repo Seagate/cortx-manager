@@ -194,8 +194,8 @@ class SupportBundle:
         try:
             ftp_details[const.PORT] = int(input("Input FTP Port:  "))
         except ValueError:
-            raise from CsmError(rc=errno.EINVAL,
-                                desc=f"{const.PORT} must be a integer type.")
+            raise CsmError(rc=errno.EINVAL,
+                            desc=f"{const.PORT} must be a integer type.")
         ftp_details[const.USER] = str(input("Input FTP User: "))
         ftp_details[const.PASS] = str(input("Input FTP Password: "))
         ftp_details['remote_file'] = str(input("Input FTP Remote File Path: "))
