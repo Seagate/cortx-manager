@@ -54,7 +54,14 @@ class S3AccessKeysView(S3AuthenticatedView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request URL: {val_err}")
         with self._guard_service():
-            return await self._service.list_access_keys(self._s3_session, **request_url_data)
+            # Gather all the access keys and filter out temporary keys created on each login
+            login_service = self.request.app.login_service
+            user_id = self.request.session.credentials.user_id
+            tmp_keys = await login_service.get_temp_access_keys(user_id)
+            resp = await self._service.list_access_keys(self._s3_session, **request_url_data)
+            filtered_keys = [k for k in resp['access_keys'] if k['access_key_id'] not in tmp_keys]
+            resp['access_keys'] = filtered_keys
+            return resp
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.CREATE}})
     async def post(self):
