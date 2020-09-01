@@ -103,21 +103,21 @@ async def _test_delete_account(iam_client, account: ExtendedIamAccount):
 
 
 
-async def is_udx_bucket(s3_client, bucket):
+async def is_lyve_pilot_bucket(s3_client, bucket):
     # TODO: Ref: EOS-4272: This part of testcases will be added to the actual CSM
     #       code in future. Commiting this functionality as testcase.
-    #       [test_disallow_list_udx_bucket, test_disallow_delete_udx_bucket]
+    #       [test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket]
     tag = await s3_client.get_bucket_tagging(bucket)
     if tag.get("udx") == "enabled":
         return True
     return False
 
 
-async def _disallow_list_udx_bucket(s3_client):
+async def _disallow_list_lyve_pilot_bucket(s3_client):
     bucket_list = await s3_client.get_all_buckets()
     response_bucket_list = []
     response_bucket_list = [{"name": bucket.name} for bucket in bucket_list
-                            if not await is_udx_bucket(s3_client, bucket)]
+                            if not await is_lyve_pilot_bucket(s3_client, bucket)]
 
     # Will cross verify if buckets enabled for Lyve Pilot are listed or not
     for bucket in response_bucket_list:
@@ -126,11 +126,11 @@ async def _disallow_list_udx_bucket(s3_client):
             raise TestFailed(f"Bucket enabled for Lyve Pilot {bucket.name} still listed.")
 
 
-async def _disallow_delete_udx_bucket(s3_client, bucket_name):
+async def _disallow_delete_lyve_pilot_bucket(s3_client, bucket_name):
 
     for bucket in await s3_client.get_all_buckets():
         if bucket.name == bucket_name:
-            if is_udx_bucket(s3_client, bucket):
+            if is_lyve_pilot_bucket(s3_client, bucket):
                 raise TestFailed(
                     f"Bucked enabled for Lyve Pilot {bucket_name} not allowed to delete")
             await s3_client.delete_bucket(bucket_name)
@@ -222,7 +222,7 @@ def test_delete_iam_user(args):
     loop.run_until_complete(_test_delete_iam_user(iam_client, iam_user))
 
 
-def test_disallow_list_udx_bucket(args):
+def test_disallow_list_lyve_pilot_bucket(args):
     """
     Testcase to verify disallowing listing of Lyve Pilot bucket.
     """
@@ -234,10 +234,10 @@ def test_disallow_list_udx_bucket(args):
     s3_conf.host = args['S3']['host']
     s3_conf.port = 80
     s3_client = s3_plugin.get_s3_client(account.access_key_id, account.secret_key_id, s3_conf)
-    loop.run_until_complete(_disallow_list_udx_bucket(s3_client))
+    loop.run_until_complete(_disallow_list_lyve_pilot_bucket(s3_client))
 
 
-def test_disallow_delete_udx_bucket(args):
+def test_disallow_delete_lyve_pilot_bucket(args):
     """
     Testcase to verify disallowing deleteing of Lyve Pilot bucket.
     """
@@ -250,7 +250,7 @@ def test_disallow_delete_udx_bucket(args):
     s3_conf.port = 80
     s3_client = s3_plugin.get_s3_client(account.access_key_id, account.secret_key_id, s3_conf)
     bucket_name = "test_bucket-udx"
-    loop.run_until_complete(_disallow_delete_udx_bucket(s3_client, bucket_name))
+    loop.run_until_complete(_disallow_delete_lyve_pilot_bucket(s3_client, bucket_name))
 
 
 test_list = [test_create_account,
@@ -258,4 +258,4 @@ test_list = [test_create_account,
              test_delete_iam_user,
              test_create_list_delete_bucket,
              test_delete_account,
-             test_disallow_list_udx_bucket, test_disallow_delete_udx_bucket]
+             test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket]
