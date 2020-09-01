@@ -111,7 +111,7 @@ class SupportBundle:
 
     @staticmethod
     def get_components(components):
-        """Get Components to Generate Support Bundle"""
+        """Get Components to Generate Support Bundle."""
         if "all" not in components:
             Log.info(f"Generating bundle for  {' '.join(components)}")
             shell_args = f"{' '.join(components)}"
@@ -125,7 +125,7 @@ class SupportBundle:
         """
         Initializes the process for Generating Support Bundle on Each CORTX Node.
         :param command: Csm_cli Command Object :type: command
-        :return: None
+        :return: None.
         """
         bundle_id = SupportBundle.generate_bundle_id()
         provisioner = SupportBundle.import_provisioner_plugin()
