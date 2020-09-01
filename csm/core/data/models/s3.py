@@ -133,6 +133,8 @@ class IamErrors(Enum):
     EmailAlreadyExists = 'EmailAlreadyExists'
     DeleteConflict = 'DeleteConflict'
     InvalidCredentials = 'InvalidCredentials'
+    BadRequest = 'BadRequest'
+    AccessKeyQotaExceeded = 'AccessKeyQuotaExceeded'
 
 
 class IamError:
