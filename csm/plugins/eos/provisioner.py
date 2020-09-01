@@ -322,13 +322,13 @@ class ProvisionerPlugin:
                 if network_data.get(const.DNS_NETWORK):
                     dns_nodes = self.get_dict(network_data, (
                         const.DNS_NETWORK, const.NODES), default=[])
-                
+
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
                 primary_data_gateway_address = secondary_data_gateway_address = None
-                
+
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
                         mgmt_vip_address = node.get(const.IP_ADDRESS, None)
@@ -439,3 +439,19 @@ class ProvisionerPlugin:
         except AttributeError as error:
             Log.critical(f"{error}")
             raise PackageValidationError("Node replacement is not implemented by provisioner.")
+
+    async def begin_bundle_generation(self, command_args, target_node_id):
+        """
+        Execute Bundle Generation via Salt Script.
+        :param command_args: Arguments to be parsed to Bundle Generate Command. :type: String
+        :param target_node_id: Node_id for target node intended. :type: String
+        :return:
+        """
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            Log.debug(f"Executing {command_args} on node -> {target_node_id}")
+            return self.provisioner.cmd_run(cmd_name=const.CORTXCLI, cmd_args=command_args, targets=target_node_id)
+        except self.provisioner.errors.ProvisionerError as e:
+            Log.error(f"Command Execution error: {e}")
+            raise PackageValidationError(f"Command Execution error: {e.reason.message}")
