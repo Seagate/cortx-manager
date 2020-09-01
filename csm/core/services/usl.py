@@ -149,7 +149,7 @@ class UslService(ApplicationService):
         self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
         bucket: Bucket
     ) -> None:
-        Log.debug('Cleaning up UDX resources...')
+        Log.debug('Cleaning up Lyve Pilot resources...')
         access_key = s3_account.get('access_key')
         secret_key = s3_account.get('secret_key')
         Log.debug('Remove bucket')
@@ -180,7 +180,7 @@ class UslService(ApplicationService):
         except (S3ServiceError, Exception) as e:
             reason = f'Failed to remove account {s3_credentials.user_id}'
             Log.error(f'{reason} --- {e}')
-        Log.info('UDX resources cleanup complete.')
+        Log.info('Lyve Pilot resources cleanup complete.')
 
     async def _initialize_udx_s3_resources(
         self,
@@ -271,7 +271,7 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         Log.debug('Create access key for IAM user')
         try:
-            # Rationale: keep only one access key for UDX IAM user
+            # Rationale: keep only one access key for Lyve Pilot IAM user
             if repair_mode:
                 await self._delete_udx_iam_user_credentials(iam_client, iam_user.user_name)
             iam_user_access_key = await self._create_udx_iam_user_credentials(
@@ -319,7 +319,7 @@ class UslService(ApplicationService):
 
     async def _get_udx_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
         """
-        Checks UDX IAM user exists and returns it
+        Checks Lyve Pilot IAM user exists and returns it
         """
 
         # TODO: Currently the IAM server does not support 'get-user' operation.
@@ -336,39 +336,41 @@ class UslService(ApplicationService):
 
     async def _create_udx_iam_user(self, iam_cli, user_name: str, user_passwd: str) -> IamUser:
         """
-        Creates UDX IAM user inside the currently logged in S3 account
+        Creates Lyve Pilot IAM user inside the currently logged in S3 account
         """
 
-        Log.debug(f'Creating UDX IAM user {user_name}')
+        Log.debug(f'Creating Lyve Pilot IAM user {user_name}')
         iam_user_resp = await iam_cli.create_user(user_name)
         if hasattr(iam_user_resp, "error_code"):
             erorr_msg = iam_user_resp.error_message
-            raise CsmInternalError(f'Failed to create UDX IAM user: {erorr_msg}')
-        Log.info(f'UDX IAM user {user_name} is created')
+            raise CsmInternalError(f'Failed to create Lyve Pilot IAM user: {erorr_msg}')
+        Log.info(f'Lyve Pilot IAM user {user_name} is created')
 
         iam_login_resp = await iam_cli.create_user_login_profile(user_name, user_passwd, False)
         if hasattr(iam_login_resp, "error_code"):
             # Remove the user if the login profile creation failed
             await iam_cli.delete_user(user_name)
             error_msg = iam_login_resp.error_message
-            raise CsmInternalError(f'Failed to create login profile for UDX IAM user {error_msg}')
-        Log.info(f'Login profile for UDX IAM user {user_name} is created')
+            raise CsmInternalError(
+                f'Failed to create login profile for Lyve Pilot IAM user {error_msg}')
+        Log.info(f'Login profile for Lyve Pilot IAM user {user_name} is created')
 
         return iam_user_resp
 
     async def _create_udx_iam_user_credentials(self, iam_cli, user_name: str) -> IamUserCredentials:
         """
-        Gets the access key id and secret key for UDX IAM user
+        Gets the access key id and secret key for Lyve Pilot IAM user
         """
 
         creds = await iam_cli.create_user_access_key(user_name=user_name)
         if hasattr(creds, 'error_code'):
             error_msg = creds.error_message
-            raise CsmInternalError(f'Failed to create access key for UDX IAM user: {error_msg}')
+            raise CsmInternalError(
+                f'Failed to create access key for Lyve Pilot IAM user: {error_msg}')
         return creds
 
     async def _delete_udx_iam_user_credentials(self, iam_cli, user_name: str):
-        Log.debug(f'Deleting UDX IAM user {user_name} credentials')
+        Log.debug(f'Deleting Lyve Pilot IAM user {user_name} credentials')
         access_keys_resp = await iam_cli.list_user_access_keys(user_name=user_name)
         for access_key in access_keys_resp.access_keys:
             res = await iam_cli.delete_user_access_key(access_key.access_key_id, user_name=user_name)
@@ -380,29 +382,29 @@ class UslService(ApplicationService):
 
     async def _get_udx_bucket(self, s3_cli, bucket_name: str):
         """
-        Checks if UDX bucket already exists and returns it
+        Checks if Lyve Pilot bucket already exists and returns it
         """
 
-        Log.debug(f'Getting UDX bucket')
+        Log.debug('Getting Lyve Pilot bucket')
         bucket = await s3_cli.get_bucket(bucket_name)
 
         return bucket
 
     async def _create_udx_bucket(self, s3_cli, bucket_name: str) -> Bucket:
         """
-        Creates UDX bucket inside the curretnly logged in S3 account
+        Creates Lyve Pilot bucket inside the curretnly logged in S3 account
         """
 
-        Log.debug(f'Creating UDX bucket {bucket_name}')
+        Log.debug(f'Creating Lyve Pilot bucket {bucket_name}')
         bucket = await s3_cli.create_bucket(bucket_name)
-        Log.info(f'UDX bucket {bucket_name} is created')
+        Log.info(f'Lyve Pilot bucket {bucket_name} is created')
         return bucket
 
     async def _is_bucket_udx_enabled(self, s3_cli, bucket):
         """
-        Checks if bucket is UDX enabled
+        Checks if bucket is enabled for Lyve Pilot
 
-        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
+        Buckets enabled for Lyve Pilot contain tag {Key=udx,Value=enabled}
         """
 
         tags = await s3_cli.get_bucket_tagging(bucket)
@@ -410,20 +412,21 @@ class UslService(ApplicationService):
 
     async def _tag_udx_bucket(self, s3_cli, bucket_name: str):
         """
-        Puts the UDX tag on a specified bucket
+        Puts the Lyve Pilot tag on a specified bucket
         """
 
-        Log.debug(f'Tagging bucket {bucket_name} with UDX tag')
+        Log.debug(f'Tagging bucket {bucket_name} with Lyve Pilot tag')
         bucket_tags = {"udx": "enabled"}
         await s3_cli.put_bucket_tagging(bucket_name, bucket_tags)
-        Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
+        Log.info(f'Lyve Pilot bucket {bucket_name} is taggged with {bucket_tags}')
 
     async def _set_udx_policy(self, s3_cli, iam_user, bucket_name: str):
         """
         Grants the specified IAM user full access to the specified bucket
         """
 
-        Log.debug(f'Setting UDX policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
+        Log.debug(
+            f'Setting Lyve Pilot policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
         policy = {
             'Version': str(date.today()),
             'Statement': [{
@@ -441,7 +444,8 @@ class UslService(ApplicationService):
             }]
         }
         await s3_cli.put_bucket_policy(bucket_name, policy)
-        Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
+        Log.info(
+            f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
 
     async def _get_volume_name(self, bucket_name: str) -> str:
@@ -519,7 +523,7 @@ class UslService(ApplicationService):
         access_key_id: str, secret_access_key: str, mount=True,
     ) -> Dict[str, str]:
         """
-        Handles UDX volume mount/umount
+        Handles Lyve Pilot volume mount/umount
 
         Checks the device and the volume with the specified IDs exist and return
         the required mount/umount information
@@ -594,8 +598,8 @@ class UslService(ApplicationService):
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
 
-        :param url: Registration URL as provided by the UDX portal
-        :param pin: Registration PIN as provided by the UDX portal
+        :param url: Registration URL as provided by the Lyve Pilot portal
+        :param pin: Registration PIN as provided by the Lyve Pilot portal
         """
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
