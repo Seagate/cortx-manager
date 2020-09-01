@@ -246,6 +246,18 @@
           "json": true
         },
         {
+          "flag": "-r",
+          "dest": "roles",
+          "type": "str",
+          "action": "append",
+          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
+          "choices": [
+          "monitor",
+          "manage"
+          ],
+          "json": true
+        },
+        {
           "flag": "-o",
           "dest": "old_password",
           "type": "Terminal.get_old_password",
