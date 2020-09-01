@@ -239,7 +239,8 @@
           "help": "Enter Your User Name."
         },
         {
-          "flag": "email",
+          "flag": "-e",
+          "dest": "email",
           "type": "str",
           "help": "User's valid email address.",
           "json": true
@@ -256,10 +257,7 @@
         {
           "flag": "-sa",
           "dest": "alert_notification",
-          "action": "store_const",
-          "help": "Subscribe created user to alert notifications.",
-          "default": false,
-          "const": true,
+          "help": "Subscribe user to alert notifications. Set flag with true or false value",
           "json": true
         },
         {
