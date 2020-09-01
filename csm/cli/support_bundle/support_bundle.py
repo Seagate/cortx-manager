@@ -19,10 +19,8 @@ import random
 import string
 import sys
 from importlib import import_module
-
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from eos.utils.log import Log
-
 from csm.common import errors
 from csm.common.conf import Conf
 from csm.common.errors import CSM_OPERATION_SUCESSFUL, CsmError
@@ -197,7 +195,7 @@ class SupportBundle:
             ftp_details[const.PORT] = int(input("Input FTP Port:  "))
         except ValueError:
             raise from CsmError(rc=errno.EINVAL,
-                            desc=f"{const.PORT} must be a integer type.")
+                                desc=f"{const.PORT} must be a integer type.")
         ftp_details[const.USER] = str(input("Input FTP User: "))
         ftp_details[const.PASS] = str(input("Input FTP Password: "))
         ftp_details['remote_file'] = str(input("Input FTP Remote File Path: "))

@@ -77,11 +77,13 @@ class ComponentsBundle:
         for command in commands:
             Log.debug(f"Executing command -> {command} {bundle_id} {path}")
             cmd_proc = SimpleProcess(f"{command} {bundle_id} {path}")
-            output, err, returncode = cmd_proc.run()
+            output, err, return_code = cmd_proc.run()
+            Log.debug(f"Command Output -> {output} {err}, {return_code}")
             if err:
                 ComponentsBundle.publish_log(
-                    "f Bundle generation failed for {component}", ERROR,
+                    f"Bundle generation failed for {component}", ERROR,
                     bundle_id, node_name, comment)
+
 
     @staticmethod
     def send_file(protocol_details: Dict, file_path: str):
@@ -178,7 +180,8 @@ class ComponentsBundle:
                 if components_commands:
                     thread_obj = threading.Thread(
                         ComponentsBundle.exc_components_cmd(components_commands,
-                            bundle_id, f"{bundle_path}{os.sep}"))
+                            bundle_id, f"{bundle_path}{os.sep}", each_component,
+                            node_name, comment))
                     thread_obj.start()
                     Log.debug(
                         f"Started: Thread -> {thread_obj.ident}  Component -> {each_component}")
