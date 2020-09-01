@@ -249,7 +249,7 @@ def test_disallow_delete_lyve_pilot_bucket(args):
     s3_conf.host = args['S3']['host']
     s3_conf.port = 80
     s3_client = s3_plugin.get_s3_client(account.access_key_id, account.secret_key_id, s3_conf)
-    bucket_name = "test_bucket-udx"
+    bucket_name = "lyve_drive_test_bucket"
     loop.run_until_complete(_disallow_delete_lyve_pilot_bucket(s3_client, bucket_name))
 
 
