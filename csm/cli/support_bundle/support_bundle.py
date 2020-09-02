@@ -42,7 +42,7 @@ class SupportBundle:
             params = {"username": const.NON_ROOT_USER,
                       "password": const.NON_ROOT_USER_PASS}
             provisioner = import_module(
-                f"csm.plugins{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
+                f"csm.plugins.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
                 **params)
         except ImportError as e:
             Log.error(f"Provisioner package not installed on system. {e}")
