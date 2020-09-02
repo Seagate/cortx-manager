@@ -392,9 +392,9 @@ class AutoDeploy:
         This method verify status of eos-cluster
         :return: boolean,tuple
         """
-        print("Verify in detail eos cluster status")
-        eos_cluster_status_cmd = "pcs status"
-        status, resp = utils_obj.execute_command(command=eos_cluster_status_cmd,
+        print("Verify in detail CORTX cluster status")
+        cortx_cluster_status_cmd = "pcs status"
+        status, resp = utils_obj.execute_command(command=cortx_cluster_status_cmd,
                                              host=self.args.pnode,
                                              username=self.args.pnode_user,
                                              password=self.args.pnode_passwd
@@ -419,7 +419,7 @@ def parse_args():
     return options
 '''
 class Deploy():
-    """ this class parse all args and deploy complete eos stack"""
+    """ this class parse all args and deploy complete CORTX stack"""
     @staticmethod
     def deploy(args):
         print(args)
