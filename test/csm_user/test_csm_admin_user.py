@@ -69,18 +69,18 @@ def test_csm_admin_user_create(args):
     assert user['alert_notification'] == data['alert_notification']
 
 
-def test_csm_admin_user_update_without_old_password(args):
+def test_csm_admin_user_update_without_current_password(args):
     loop = args['loop']
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
     data = {'anything': 'anything'}
 
-    # We can't update admin user without old_password
+    # We can't update admin user without current password
     with t.assertRaises(InvalidRequest) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-    assert 'Super user old password is required' in str(e.exception)
+    assert 'Super user current password is required' in str(e.exception)
 
 
 def test_csm_admin_user_update_password(args):
@@ -89,16 +89,16 @@ def test_csm_admin_user_update_password(args):
 
     user_id = args.get('user').get('id')
     data = {'password': 'Csmuser@123New',
-            'old_password': 'Csmuser@123'}
+            'current_password': 'Csmuser@123'}
     loop.run_until_complete(user_service.update_user(user_id, data, user_id))
 
-    # We can't update password anymore with same old_password
+    # We can't update password anymore with same current_password
+    
     with t.assertRaises(InvalidRequest):
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-
     data = {'password': 'Csmuser@123',
-            'old_password': 'Csmuser@123New'}
+            'current_password': 'Csmuser@123New'}
 
     # But when we set a new password, we can
     loop.run_until_complete(user_service.update_user(user_id, data, user_id))
@@ -110,7 +110,7 @@ def test_csm_admin_user_update_roles(args):
 
     user_id = args.get('user').get('id')
     data = {'roles': ['admin'],
-            'old_password': 'Csmuser@123'}
+            'current_password': 'Csmuser@123'}
 
     # We can't update admin user roles
     with t.assertRaises(CsmPermissionDenied) as e:
@@ -129,8 +129,10 @@ def test_csm_admin_user_delete(args):
     assert 'Can\'t delete super user' in str(e.exception)
 
 
-test_list = [test_csm_admin_user_create,
-             test_csm_admin_user_update_without_old_password,
+test_list = [
+             test_csm_admin_user_create,
+             test_csm_admin_user_update_without_current_password,
              test_csm_admin_user_update_password,
              test_csm_admin_user_update_roles,
-             test_csm_admin_user_delete]
+             test_csm_admin_user_delete
+            ]
