@@ -29,6 +29,7 @@ from csm.common.process import SimpleProcess
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.core.services.support_bundle import SupportBundleRepository
+from csm.plugins.eos.provisioner import PackageValidationError
 
 class SupportBundle:
     """
@@ -42,8 +43,8 @@ class SupportBundle:
             params = {"username": const.NON_ROOT_USER,
                       "password": const.NON_ROOT_USER_PASS}
             provisioner = import_module(
-                f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}"
-            ).ProvisionerPlugin(**params)
+                f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
+                **params)
         except ImportError as e:
             Log.error(f"Provisioner package not installed on system. {e}")
             return None
@@ -112,13 +113,13 @@ class SupportBundle:
     @staticmethod
     def get_components(components):
         """Get Components to Generate Support Bundle."""
-        if "all" not in components:
+        if components and "all" not in components:
             Log.info(f"Generating bundle for  {' '.join(components)}")
             shell_args = f"{' '.join(components)}"
         else:
             Log.info("Generating bundle for all CORTX components.")
             shell_args = "all"
-        return shell_args
+        return f" -c {shell_args}"
 
     @staticmethod
     async def bundle_generate(command) -> sys.stdout:
@@ -138,6 +139,7 @@ class SupportBundle:
         if command.options.get(const.SOS_COMP, False) == "true":
             components.append("os")
         comp_list = SupportBundle.get_components(components)
+
         # Get HostNames and Node Names.
         hostnames, node_list = await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
@@ -145,22 +147,29 @@ class SupportBundle:
         if not isinstance(hostnames, list):
             return hostnames
 
-        # Start Daemon Threads for Starting SB Generation on all Nodes.
+        # Start SB Generation on all Nodes.
         for index, hostname in enumerate(hostnames):
             Log.debug(f"Connect to {hostname}")
-            provisioner.begin_bundle_generation(
-                f"bundle_generate '{bundle_id}' '{comment}' "
-                f"'{hostname}' -c {comp_list}", node_list[index])
+            try:
+                await provisioner.begin_bundle_generation(
+                    f"bundle_generate '{bundle_id}' '{comment}' "
+                    f"'{hostname}' {comp_list}", node_list[index])
+            except PackageValidationError as e:
+                return Response(output = f"{e}", rc = str(errno.ENOENT))
+            except Exception as e:
+                Log.error(f"Provisioner API call failed : {e}")
+                return Response(output = "Bundle Generation Failed.",
+                                rc = str(errno.ENOENT))
 
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
+        display_string_len = len(bundle_id) + 4
         response_msg = (
-            f"Please use the below bundle id for checking the status of support "
-            f"bundle.\n"
-            f"{'*' * len(bundle_id)}\n"
-            f"| {bundle_id}  |"
-            f"{'*' * len(bundle_id)}\n"
-            f"Please Find the file on -> {symlink_path} .\n")
+            f"Please use the below bundle id for checking the status of support bundle."
+            f"\n{'-' * display_string_len}"
+            f"\n| {bundle_id} |"
+            f"\n{'-' * display_string_len}"
+            f"\nPlease Find the file on -> {symlink_path} .\n")
 
         return Response(output = response_msg,
                         rc = errors.CSM_OPERATION_SUCESSFUL)
