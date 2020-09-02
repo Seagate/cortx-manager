@@ -23,23 +23,24 @@ from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.s3.base import S3AuthenticatedView
+from csm.core.controllers.validators import UserNameValidator
 from csm.core.controllers.view import CsmView, CsmAuth
 
 
 class CreateDeleteAccessKeyRelUrlSchema(Schema):
-    user_name = fields.Str(required=False)
+    user_name = fields.Str(required=False, validate=[UserNameValidator()])
 
 
 class ListAccessKeysRelUrlSchema(Schema):
     marker = fields.Str(required=False, data_key='continue')
     limit = fields.Int(required=False)
-    user_name = fields.Str(required=False)
+    user_name = fields.Str(required=False, validate=[UserNameValidator()])
 
 
 class PatchAccessKeySchema(Schema):
     status = fields.Str(
         required=True, validate=validate.OneOf(const.S3_ACCESS_KEY_STATUSES))
-    user_name = fields.Str(required=False)
+    user_name = fields.Str(required=False, validate=[UserNameValidator()])
 
 
 @CsmView._app_routes.view("/api/v1/s3/access_keys")
