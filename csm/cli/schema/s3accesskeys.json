@@ -9,13 +9,6 @@
       "permissions_tag": "list",
       "args": [
         {
-          "flag": "args",
-          "default": [],
-          "suppress_help": true,
-          "nargs": "?",
-          "help": ""
-        },
-        {
           "flag": "-f",
           "dest": "format",
           "help": "Format of Output",
@@ -26,6 +19,13 @@
             "xml",
             "json"
           ]
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
         }
       ],
       "comm": {
