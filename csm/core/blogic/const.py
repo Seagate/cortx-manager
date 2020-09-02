@@ -27,7 +27,7 @@ CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
-PLUGIN_DIR = 'eos'
+PLUGIN_DIR = 'cortx'
 WEB_DIR = 'eos'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 

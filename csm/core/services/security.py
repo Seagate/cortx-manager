@@ -36,7 +36,7 @@ from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.system_config import (CertificateConfig, SecurityConfig,
                                                 CertificateInstallationStatus)
 from csm.core.services.file_transfer import FileRef
-from csm.plugins.eos.provisioner import ProvisionerPlugin
+from csm.plugins.cortx.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.blogic import const
 

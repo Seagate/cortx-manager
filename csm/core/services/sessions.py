@@ -21,7 +21,7 @@ from typing import Optional
 from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
-from csm.plugins.eos.s3 import S3Plugin
+from csm.plugins.cortx.s3 import S3Plugin
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
