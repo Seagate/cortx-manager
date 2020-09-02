@@ -42,8 +42,8 @@ class SupportBundle:
             params = {"username": const.NON_ROOT_USER,
                       "password": const.NON_ROOT_USER_PASS}
             provisioner = import_module(
-                f"csm.plugins.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
-                **params)
+                f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}"
+            ).ProvisionerPlugin(**params)
         except ImportError as e:
             Log.error(f"Provisioner package not installed on system. {e}")
             return None
@@ -86,16 +86,16 @@ class SupportBundle:
         Log.info(
             "Falling back to reading cluster information from the cluster.sls.")
         cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                        "SUPPORT_BUNDLE.cluster_file_path")
+                                     "SUPPORT_BUNDLE.cluster_file_path")
         if not cluster_file_path or not os.path.exists(cluster_file_path):
             repsonse_msg = {"message": (f"{cluster_file_path} not Found. \n"
-                f"Please check if cluster info file is correctly configured.")}
+                                        f"Please check if cluster info file is correctly configured.")}
             return Response(rc = errno.ENOENT, output = repsonse_msg), None
         cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
-            response_msg = {"message":
-                        "No active nodes found. Cluster file may not be valid"}
+            response_msg = {
+                "message": "No active nodes found. Cluster file may not be valid"}
             return Response(output = response_msg,
                             rc = errors.CSM_ERR_INVALID_VALUE), None
         hostnames = []
@@ -153,13 +153,13 @@ class SupportBundle:
                 f"'{hostname}' -c {comp_list}", node_list[index])
 
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-            f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
+                                f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
         response_msg = (
-    f"Please use the below bundle id for checking the status of support "
-    f"bundle.\n"
-            f"{'*'*len(bundle_id)}\n"
+            f"Please use the below bundle id for checking the status of support "
+            f"bundle.\n"
+            f"{'*' * len(bundle_id)}\n"
             f"| {bundle_id}  |"
-            f"{'*'*len(bundle_id)}\n"
+            f"{'*' * len(bundle_id)}\n"
             f"Please Find the file on -> {symlink_path} .\n")
 
         return Response(output = response_msg,
@@ -194,8 +194,8 @@ class SupportBundle:
         try:
             ftp_details[const.PORT] = int(input("Input FTP Port:  "))
         except ValueError:
-            raise CsmError(rc=errno.EINVAL,
-                            desc=f"{const.PORT} must be a integer type.")
+            raise CsmError(rc = errno.EINVAL,
+                           desc = f"{const.PORT} must be a integer type.")
         ftp_details[const.USER] = str(input("Input FTP User: "))
         ftp_details[const.PASS] = str(input("Input FTP Password: "))
         ftp_details['remote_file'] = str(input("Input FTP Remote File Path: "))
@@ -209,10 +209,10 @@ class SupportBundle:
         :return:
         """
         csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
-                                            const.CSM_CONF_FILE_NAME)
+                                          const.CSM_CONF_FILE_NAME)
         if not os.path.exists(csm_conf_file_name):
             raise CsmError(rc = errno.ENOENT,
-                desc = "Config file does not exist.")
+                           desc = "Config file does not exist.")
         conf_file_data = Yaml(csm_conf_file_name).load()
         ftp_details = conf_file_data.get(const.SUPPORT_BUNDLE)
         ftp_details = await SupportBundle.fetch_ftp_data(ftp_details)
@@ -237,6 +237,6 @@ class SupportBundle:
         :return:
         """
         support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
-            const.SUPPORT_BUNDLE)
+                                         const.SUPPORT_BUNDLE)
         return Response(output = support_bundle_config,
-            rc = CSM_OPERATION_SUCESSFUL)
+                        rc = CSM_OPERATION_SUCESSFUL)
