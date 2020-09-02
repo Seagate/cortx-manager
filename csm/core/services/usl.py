@@ -449,7 +449,7 @@ class UslService(ApplicationService):
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
-        return uuid5(self.get_device_uuid(), bucket_name)
+        return uuid5(self._get_device_uuid(), bucket_name)
 
     async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
         bucket_name = bucket.name
