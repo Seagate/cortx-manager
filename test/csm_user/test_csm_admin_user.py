@@ -93,7 +93,7 @@ def test_csm_admin_user_update_password(args):
     loop.run_until_complete(user_service.update_user(user_id, data, user_id))
 
     # We can't update password anymore with same current_password
-    
+
     with t.assertRaises(InvalidRequest):
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
