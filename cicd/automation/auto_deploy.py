@@ -112,7 +112,7 @@ class Utility:
             client.close()
             if nbytes:
                 ssh_output = stdout.read(nbytes)
-            # below elif is only applicable in configure-eos Lib
+            # this branch is only applicable to configure-cortx lib
             elif read_sls:
                 ssh_output = stdout.read()
                 if ssh_output == b'':
@@ -389,7 +389,7 @@ class AutoDeploy:
 
     def verify_cluster_status(self):
         """
-        This method verify status of eos-cluster
+        This method verifies the status of cortx-cluster
         :return: boolean,tuple
         """
         print("Verify in detail CORTX cluster status")

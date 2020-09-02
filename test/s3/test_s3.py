@@ -104,9 +104,6 @@ async def _test_delete_account(iam_client, account: ExtendedIamAccount):
 
 
 async def is_lyve_pilot_bucket(s3_client, bucket):
-    # TODO: Ref: EOS-4272: This part of testcases will be added to the actual CSM
-    #       code in future. Commiting this functionality as testcase.
-    #       [test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket]
     tag = await s3_client.get_bucket_tagging(bucket)
     if tag.get("udx") == "enabled":
         return True

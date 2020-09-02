@@ -688,7 +688,7 @@ class CsmSetup(Setup):
             if not self._replacement_node_flag:
                 self._set_rmq_cluster_nodes()
                 #TODO: Adding this implementation in try..except block to avoid build failure
-                # Its a work around and it will be fixed once EOS-10551 resolved
+                # This workaround will be fixed once JIRA ticket #10551 is resolved
                 try:
                     self._set_rmq_node_id()
                 except Exception as e:
