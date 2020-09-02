@@ -118,14 +118,14 @@ COPY_END_TIME=$(date +%s)
 if [ "$DEV" == true ]; then
 
     # Setup Python virtual environment
-    VENV="${TMPDIR}/venv"
-    if [ -d "${VENV}/bin" ]; then
-        echo "Using existing Python virtual environment..."
-    else
-        echo "Setting up Python 3.6 virtual environment..."
-        python3.6 -m venv "${VENV}"
-    fi
-    source "${VENV}/bin/activate"
+    #VENV="${TMPDIR}/venv"
+    #if [ -d "${VENV}/bin" ]; then
+    #    echo "Using existing Python virtual environment..."
+    #else
+    #    echo "Setting up Python 3.6 virtual environment..."
+    #    python3.6 -m venv "${VENV}"
+    #fi
+    #source "${VENV}/bin/activate"
     python --version
     pip install --upgrade pip
     pip install pyinstaller==3.5
@@ -137,12 +137,14 @@ if [ "$DEV" == true ]; then
         echo "Unable to install package from $req_file"; exit 1;
     };
     # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
+    #pip uninstall -y numpy
+    #pip install numpy --no-binary :all:
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    yum install -y eos-py-utils cortx-prvsnr
+    # these are temporary changes to make cicd build work
+    yum install -y cortx-prvsnr
+    pip3 install git+https://github.com/Seagate/cortx-py-utils.git@EOS-10251
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -184,7 +186,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
         PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm.spec
         cp "$BASE_DIR/cicd/pyinstaller/product_csm.spec" "${PYINSTALLER_FILE}"
     }
-
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
         -e "s|<CSM_PATH>|${TMPDIR}/csm|g" ${PYINSTALLER_FILE}
     python3 -m PyInstaller --clean -y --distpath "${DIST}/csm" --key "${KEY}" "${PYINSTALLER_FILE}"
