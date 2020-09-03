@@ -144,7 +144,7 @@ else
     pip3 install pyinstaller==3.5
     # these are temporary changes to make cicd build work
     yum install -y cortx-prvsnr
-    pip3 install git+https://github.com/Seagate/cortx-py-utils.git@EOS-10251
+    #pip3 install git+https://github.com/Seagate/cortx-py-utils.git@EOS-10251
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
