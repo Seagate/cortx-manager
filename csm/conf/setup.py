@@ -18,6 +18,7 @@ import sys
 import crypt
 import pwd
 import grp
+import errno
 import shlex
 import json
 from eos.utils.log import Log
@@ -37,6 +38,7 @@ import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from csm.common.payload import Text
 
 # try:
 #     from salt import client
@@ -57,6 +59,7 @@ class Setup:
         self._user = const.NON_ROOT_USER
         self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
+        self._setup_info = dict()
 
     @staticmethod
     def _run_cmd(cmd):
@@ -579,6 +582,41 @@ class Setup:
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
+    def _configure_system_auto_restart(self):
+        """
+        Check's System Installation Type an dUpdate the Service File
+        Accordingly.
+        :return: None
+        """
+        auto_restart = True
+        try:
+            if all([const.EES_INSTALLATION[key] == self._setup_info[key] for key
+                    in const.EES_INSTALLATION.keys()]):
+                auto_restart = False
+        except KeyError as e:
+            Log.logger.warn(f"Setup info does not contain keys {e}.")
+            auto_restart = True
+        except TypeError:
+            Log.logger.warn(f"Setup info does not exist.")
+            auto_restart = True
+        if auto_restart:
+            Log.logger.debug("Updating All setup file for Auto Restart on "
+                             "Failure")
+            Setup._update_service_file("#< RESTART_OPTION >",
+                                      "RESTART=on-failure")
+            Setup._run_cmd("systemctl daemon-reload")
+
+    @staticmethod
+    def _update_service_file(key, value):
+        """
+        Update CSM Agent and CSM Web service Files Depending on Job Type of
+        Setup.
+        """
+        for each_service_file in const.CSM_SERVICE_FILES:
+            service_file_data = Text(each_service_file).load()
+            data = service_file_data.replace(key, value)
+            Text(each_service_file).dump(data)
+
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -612,6 +650,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self._config_user()
             self._cleanup_job()
+            self._configure_system_auto_restart()
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
