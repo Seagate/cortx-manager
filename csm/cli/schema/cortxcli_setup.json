@@ -1,0 +1,238 @@
+{
+    "name": "cortxcli_setup",
+    "description": "CortxCLI Setup Command",
+    "sub_commands": [
+        {
+            "name": "init",
+            "description": "Initialize CSM",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "cortx",
+                  "type": "str",
+                  "choices": [
+                    "cortx"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "post_install",
+            "description": "Perform post_install for csm",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "cortx",
+                  "type": "str",
+                  "choices": [
+                    "cortx"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "config",
+            "description": "Config CSM",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "cortx",
+                  "type": "str",
+                  "choices": [
+                    "cortx"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force"
+                },
+                {
+                    "flag": "--debug",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "config for dev mode"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "reset",
+            "description": "Perform reset for csm",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-p",
+                  "dest": "Product",
+                  "help": "Product name",
+                  "default": "cortx",
+                  "type": "str",
+                  "choices": [
+                    "cortx"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                  "flag": "-c",
+                  "dest": "Component",
+                  "help": "Component name",
+                  "default": "all",
+                  "type": "str",
+                  "choices": [
+                    "backend",
+                    "frontend",
+                    "all"
+                  ],
+                  "nargs": "?"
+                },
+                {
+                    "flag": "--hard",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "Hard Reset"
+                },
+                {
+                    "flag": "--soft",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "Soft reset"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        },
+        {
+            "name": "refresh_config",
+            "description": "Refresh Context for CSM after Node Replacement.",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        }
+    ]
+}

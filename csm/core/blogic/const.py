@@ -25,7 +25,9 @@ ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
+CORTXCLI_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
+CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'eos'
 WEB_DIR = 'eos'
@@ -39,6 +41,9 @@ MARSHMALLOW_EXCLUDE = "EXCLUDE"
 CSM_SETUP_CMD = 'csm_setup'
 CSM_SETUP_CONF = '/etc/csm/setup.yaml'
 CSM_SETUP_INDEX = 'CSM_SETUP'
+CORTXCLI_SETUP_CMD = 'cortxcli_setup'
+CORTXCLI_SETUP_CONF = '/etc/csm/cortxcli_setup.yaml'
+CORTXCLI_SETUP_INDEX = 'CORTXCLI_SETUP'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
 CORTX Interactive Shell
@@ -116,10 +121,12 @@ TYPE_S3_SERVER = 'S3_SERVER'
 # Config
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
+CORTXCLI_CONF = '/etc/csm/cortxcli.conf'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
+DATABASE_CLI_CONF = '/etc/csm/database_cli.yaml'
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
@@ -272,6 +279,7 @@ FAULT_HEALTH = 'Fault'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
+CORTCCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CSM_PATH)
 
 # Support Bundle
 SSH_USER_NAME = 'root'

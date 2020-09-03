@@ -206,7 +206,7 @@ class SupportBundle:
         :return: None
         """
         bundle_id = command.options.get("bundle_id")
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)
         all_nodes_status = await repo.retrieve_all(bundle_id)
@@ -241,7 +241,7 @@ class SupportBundle:
         :return:
         """
         csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
-                                          const.CSM_CONF_FILE_NAME)
+                                          const.CORTXCLI_CONF_FILE_NAME)
         if not os.path.exists(csm_conf_file_name):
             raise CsmError(rc=errno.ENOENT, output="Config file is not exist")
         conf_file_data = Yaml(csm_conf_file_name).load()

@@ -575,7 +575,7 @@ class Setup:
                 else:
                     Log.logger.warn(f"No alerts found for node id: {node_id}")
             else:
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
+                raise CsmSetupError("setup refresh_config failed. Unbale to load db.")
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
