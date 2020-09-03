@@ -246,12 +246,12 @@ class CsmUserService(ApplicationService):
         if self.is_super_user(user) and ('roles' in new_values):
             raise CsmPermissionDenied("Cannot change roles for super user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
+
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
                                                     new_values: dict):
         """
         Validation done for updation by normal  user.
         """
-
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non super user cannot change other user",
