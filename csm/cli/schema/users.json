@@ -269,7 +269,12 @@
         {
           "flag": "-sa",
           "dest": "alert_notification",
-          "help": "Subscribe user to alert notifications. Set flag with true or false value",
+          "type": "str",
+          "help": "Subscribe user to alert notifications.",
+          "choices": [
+          "true",
+          "false"
+          ],
           "json": true
         },
         {
