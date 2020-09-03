@@ -251,8 +251,8 @@ class CsmUserService(ApplicationService):
         """
         Validation done for updation by normal  user.
         """
-        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
 
+        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non super user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
