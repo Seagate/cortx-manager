@@ -455,4 +455,4 @@ class ProvisionerPlugin:
                     cmd_args=command_args, targets=target_node_id, cmd_stdin="")
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Command Execution error: {e}")
-            raise PackageValidationError(f"Command Execution error: {e.reason.message}")
+            raise PackageValidationError(f"Command Execution error: {e}")
