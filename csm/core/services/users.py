@@ -235,6 +235,9 @@ class CsmUserService(ApplicationService):
         return {"message": "User Deleted Successfully."}
 
     async def _validation_for_update_by_superuser(self, user_id: str, user: User, new_values: dict):
+        """
+        Validation done for updation by super user.
+        """
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if self.is_super_user(user) and not current_password:
             raise InvalidRequest("Super user current password is required",
@@ -245,7 +248,11 @@ class CsmUserService(ApplicationService):
                                     USERS_MSG_PERMISSION_DENIED, user_id)
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
                                                     new_values: dict):
+        """
+        Validation done for updation by normal  user.
+        """
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
+
         if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non super user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
@@ -259,6 +266,9 @@ class CsmUserService(ApplicationService):
                                       USERS_MSG_PERMISSION_DENIED, user_id)
        
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
+        """
+        Update user .
+        """
         Log.debug(f"Update user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
@@ -281,6 +291,9 @@ class CsmUserService(ApplicationService):
         return self._user_to_dict(user)
 
     def _verfiy_current_password(self, user: User, password):
+        """
+        Verify current password of user .
+        """
         return Passwd.verify(password, user.password_hash)
 
     def is_super_user(self, user: User):
