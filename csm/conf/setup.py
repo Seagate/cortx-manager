@@ -597,7 +597,7 @@ class Setup:
             Log.logger.warn(f"Setup info does not contain keys {e}.")
             auto_restart = True
         except TypeError:
-            Log.logger.warn(f"Setup info does not exist.")
+            Log.logger.warn("Setup info does not exist.")
             auto_restart = True
         if auto_restart:
             Log.logger.debug("Updating All setup file for Auto Restart on "
