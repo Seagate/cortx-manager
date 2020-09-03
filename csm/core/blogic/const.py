@@ -496,6 +496,7 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
+GET_SETUP_INFO='get_setup_info'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -552,3 +553,7 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+
+#unsupported feature
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+COMPONENT_LIST="FEATURE_COMPONENTS.components_list"

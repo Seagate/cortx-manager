@@ -37,6 +37,7 @@ import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
 
 # try:
 #     from salt import client
@@ -579,6 +580,29 @@ class Setup:
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
+    def set_unsupported_feature_info(self):
+        try:
+            self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+
+            components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
+            unsupported_features_list = []
+            for component in components_list:
+                unsupported_features = UnsupportedFeaturesDB.get_unsupported_features(component_name=component)
+
+                for feature in unsupported_features:
+                    unsupported_features_list.append(feature.get("feature_name"))
+
+            csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
+
+            for setup in csm_unsupported_feature["setup_types"]:
+                if setup["name"] == self._setup_info["storage_type"]:
+                    unsupported_features_list.append(setup["unsupported_features"])
+
+            UnsupportedFeaturesDB.store_unsupported_features(component_name="CSM", features=unsupported_features_list)
+        except Exception as e_:
+            Log.error("Error in storing unsupported features: {e_}")
+            raise CsmSetupError("Error in storing unsupported features: {e_}")
+
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -611,6 +635,7 @@ class CsmSetup(Setup):
         try:
             self._verify_args(args)
             self._config_user()
+            self.set_unsupported_feature_info()
             self._cleanup_job()
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
