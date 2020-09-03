@@ -192,9 +192,9 @@
           "help": "Enter Your User Name."
         },
         {
-          "flag": "-o",
-          "dest": "old_password",
-          "type": "Terminal.get_old_password",
+          "flag": "-cp",
+          "dest": "current_password",
+          "type": "Terminal.get_current_password",
           "suppress_help": true,
           "help": "",
           "default": "",
@@ -258,9 +258,9 @@
           "json": true
         },
         {
-          "flag": "-o",
-          "dest": "old_password",
-          "type": "Terminal.get_old_password",
+          "flag": "-cp",
+          "dest": "current_password",
+          "type": "Terminal.get_current_password",
           "suppress_help": true,
           "help": "",
           "default": "",
