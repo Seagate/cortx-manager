@@ -1,0 +1,12 @@
+{
+    "/api/v1/alerts": {
+        "feature_name": "health",
+        "dependent_on": ["sspl"]
+    },
+    "/api/v1/fw_upload": {
+        "feature_name": "fw_update",
+        "dependent_on": ["provisioner","s3","sspl"]
+    }
+}
+
+
