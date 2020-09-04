@@ -135,7 +135,9 @@ class SupportBundle:
                             rc = str(errno.ENOENT))
         # Get Arguments From Command
         comment = command.options.get(const.SB_COMMENT)
-        components = command.options.get(const.SB_COMPONENTS, [])
+        components = command.options.get(const.SB_COMPONENTS)
+        if not components:
+            components = []
         if command.options.get(const.SOS_COMP, False) == "true":
             components.append("os")
         comp_list = SupportBundle.get_components(components)
@@ -155,7 +157,8 @@ class SupportBundle:
                     f"bundle_generate '{bundle_id}' '{comment}' "
                     f"'{hostname}' {comp_list}", node_list[index])
             except PackageValidationError as e:
-                return Response(output = f"{e}", rc = str(errno.ENOENT))
+                return Response(output = "Bundle generation failed.\nPlease "
+                         "check CLI for details.", rc = str(errno.ENOENT))
             except Exception as e:
                 Log.error(f"Provisioner API call failed : {e}")
                 return Response(output = "Bundle Generation Failed.",
