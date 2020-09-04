@@ -32,6 +32,7 @@ from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
 from eos.utils.log import Log
+from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -186,6 +187,19 @@ class CsmRestApi(CsmApi, ABC):
         handler = await cls._resolve_handler(request)
         return CsmView.get_permissions(handler, request.method)
 
+    @staticmethod
+    async def check_for_unsupported_endpoint(request):
+        feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, "FEATURE_COMPONENTS.feature_endpoint_map")
+        endpoint = feature_endpoint_map.get(request.path)
+        if endpoint:
+            if endpoint["dependent_on"]:
+                for component in endpoint["dependent_on"]:
+                    if not await UnsupportedFeaturesDB.is_feature_supported(component,endpoint["feature_name"]):
+                        raise InvalidRequest(f"This endpoint: {endpoint} and feature:{endpoint["feature_name"]} not supported by {component} ")
+            else:
+                if not await UnsupportedFeaturesDB.is_feature_supported("CSM", endpoint["feature_name"]):
+                    raise InvalidRequest(f"This endpoint: {endpoint} not supported by CSM ")        
+
     @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
@@ -240,7 +254,7 @@ class CsmRestApi(CsmApi, ABC):
     async def rest_middleware(request, handler):
         try:
             resp = await handler(request)
-
+            check_for_unsupported_endpoint(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
                 file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
