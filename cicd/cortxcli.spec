@@ -16,17 +16,17 @@
 Name: <RPM_NAME>
 Version: %{version}
 Release: %{dist}
-Summary: CSM Tools
+Summary: Cortx CLI
 License: Seagate Proprietary
 URL: http://gitlab.mero.colo.seagate.com/eos/csm
-Source0: <PRODUCT>-csm_agent-%{version}.tar.gz
+Source0: <PRODUCT>-cli-%{version}.tar.gz
 %define debug_package %{nil}
 
 %description
-CSM Tools
+Cortx CLI
 
 %prep
-%setup -n csm
+%setup -n cli
 # Nothing to do here
 
 %build
@@ -45,14 +45,11 @@ PRODUCT=<PRODUCT>
 
 # Move binary file
 [ -d "${CSM_DIR}/lib" ] && {
-    ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
-    ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
+    ln -sf $CSM_DIR/lib/cortxcli_setup /usr/bin/csm_setup
+    ln -sf $CSM_DIR/lib/cortxcli_setup $CSM_DIR/bin/csm_setup
 
-    ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
-    ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
-
-    ln -sf $CSM_DIR/lib/csm_cleanup /usr/bin/csm_cleanup
-    ln -sf $CSM_DIR/lib/csm_cleanup $CSM_DIR/bin/csm_cleanup
+    ln -sf $CSM_DIR/lib/cortxcli /usr/bin/cortxcli
+    ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
 
     cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
 }
@@ -68,18 +65,12 @@ exit 0
 
 %preun
 [ $1 -eq 1 ] && exit 0
-systemctl disable csm_agent
-systemctl stop csm_agent
 
 %postun
 [ $1 -eq 1 ] && exit 0
-rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
-rm -f /usr/bin/csm_setup 2> /dev/null;
-rm -f /usr/bin/csm_agent 2> /dev/null;
-rm -f /usr/bin/csm_test 2> /dev/null;
-rm -f /usr/bin/csm_cleanup 2> /dev/null;
+rm -f /usr/bin/cortxcli_setup 2> /dev/null;
+rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -rf <CSM_PATH>/bin/ 2> /dev/null;
-systemctl daemon-reload
 exit 0
 
 %clean
