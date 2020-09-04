@@ -345,7 +345,7 @@ CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
-CSM_USER_OLD_PASSWORD = 'old_password'
+CSM_USER_CURRENT_PASSWORD = 'current_password'
 CSM_USER_NAME = 'username'
 # CONSTANT
 UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
