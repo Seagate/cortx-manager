@@ -38,6 +38,7 @@ from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
+from eos.utils.schema.payload import Json
 
 # try:
 #     from salt import client
