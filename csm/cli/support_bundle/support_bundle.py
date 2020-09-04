@@ -156,7 +156,7 @@ class SupportBundle:
                 await provisioner.begin_bundle_generation(
                     f"bundle_generate '{bundle_id}' '{comment}' "
                     f"'{hostname}' {comp_list}", node_list[index])
-            except PackageValidationError as e:
+            except PackageValidationError:
                 return Response(output = "Bundle generation failed.\nPlease "
                          "check CLI for details.", rc = str(errno.ENOENT))
             except Exception as e:
