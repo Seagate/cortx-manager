@@ -302,9 +302,9 @@ class AlertPlugin(CsmPlugin):
                     self._prepare_specific_info(csm_schema, specific_info)
                     csm_schema.pop(const.ALERT_EVENTS)
                     csm_schema[const.ALERT_EVENT_DETAILS] = \
-                            str(csm_schema[const.ALERT_EVENT_DETAILS])
+                            json.dumps(csm_schema[const.ALERT_EVENT_DETAILS])
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
-                        str(csm_schema[const.ALERT_EXTENDED_INFO])
+                        json.dumps(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
             Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")
