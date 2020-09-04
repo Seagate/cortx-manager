@@ -5,7 +5,7 @@
             "system": ["list", "update"],
             "notification": ["update"],
             "security": ["read", "update"],
-            "udx": ["list", "update"],
+            "lyve_pilot": ["list", "update"],
             "replace_node": ["create", "list"]
         }
     },
