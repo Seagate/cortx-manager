@@ -162,13 +162,14 @@ class JsonMessage(Json):
         """
         return json.loads(self._source)
 
-    def dump(self, data: dict):
+    def dump(self):
         """
         Set's the data _source after converting to json
         :param data: :type: Dict
         :return:
         """
-        self._source = json.dumps(data)
+        self._source = json.dumps(self._source)
+        return self._source
 
 class Payload:
     ''' implements a Payload in specified format. '''
