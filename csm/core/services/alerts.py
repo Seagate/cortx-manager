@@ -512,11 +512,25 @@ class AlertEmailNotifier(Service):
             return  # Nothing to do
 
         smtp_config = email_config.to_smtp_config()
+        """
+        Getting the values from alert for filling in email template
+        """
+        extended_info = JsonMessage(alert.get(const.ALERT_EXTENDED_INFO)).load()
+        info = extended_info.get(const.ALERT_INFO)
         alert_template_params = {
-            'event_time': alert.updated_time.strftime(const.CSM_ALERT_NOTIFICATION_TIME_FORMAT),
-            'alert_target': alert.module_name,
-            'severity': alert.severity,
-            'description': alert.description
+            'resource_id': info.get(const.ALERT_RESOURCE_ID, ""),
+            'module_type': alert.get(const.ALERT_MODULE_TYPE, ""),
+            'cluster_id': info.get(const.ALERT_CLUSTER_ID, ""),
+            'site_id': info.get(const.ALERT_SITE_ID, ""),
+            'rack_id': info.get(const.ALERT_RACK_ID, ""),
+            'node_id': info.get(const.ALERT_NODE_ID, ""),
+            'resource_type': info.get(const.ALERT_RESOURCE_TYPE, ""),
+            'state': alert.get(const.ALERT_STATE, ""),
+            'resolved': alert.get(const.ALERT_RESOLVED, ""),
+            'acknowledged': alert.get(const.ALERT_ACKNOWLEDGED, ""),
+            'description': alert.get(const.DESCRIPTION, ""),
+            'created_on': alert.created_time.strftime(const.CSM_ALERT_NOTIFICATION_TIME_FORMAT),
+            'updated_on': alert.updated_time.strftime(const.CSM_ALERT_NOTIFICATION_TIME_FORMAT)
         }
         html_body = self.template.render(**alert_template_params)
         subject = const.CSM_ALERT_EMAIL_NOTIFICATION_SUBJECT
@@ -629,12 +643,15 @@ class AlertMonitorService(Service, Observable):
                         .replace(tzinfo=timezone.utc)
             sensor_info = message.get(const.ALERT_SENSOR_INFO, "")
             module_type = message.get(const.ALERT_MODULE_TYPE, "")
+            is_node_alert = self._is_node_alert(message[const.ALERT_MODULE_NAME])
+            is_high_risk_severity = self._is_high_risk_severity(\
+                message[const.ALERT_SEVERITY])
             """
             Checking for node hw alert.
-            If the alert is node hw alert, then we will prepend the
-            description field with support message.
+            If the alert is node hw alert and severity is in the category of
+            high risk, then we will prepend the description field with support message.
             """
-            if self._is_node_alert(message[const.ALERT_MODULE_NAME]):
+            if is_node_alert and is_high_risk_severity:
                 self._add_support_message(message)
             prev_alert = self._run_coroutine\
                     (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
@@ -723,8 +740,17 @@ class AlertMonitorService(Service, Observable):
         :return: None
         """
         update_params = {}
-        if self._is_node_alert(alert.get(const.ALERT_MODULE_NAME)):
+        is_node_alert = self._is_node_alert(alert.get(const.ALERT_MODULE_NAME))
+        is_high_risk_severity = self._is_high_risk_severity(\
+            alert.get(const.ALERT_SEVERITY))
+        """
+        Updating the support message based on severity for node related alerts.
+        During updation the severity might get changed from high risk to low.
+        """
+        if is_node_alert and is_high_risk_severity:
             update_params[const.SUPPORT_MESSAGE] = alert.get(const.SUPPORT_MESSAGE)
+        else:
+            update_params[const.SUPPORT_MESSAGE] = ''
         if update_resolve:
             update_params[const.ALERT_RESOLVED] = alert.get(const.ALERT_RESOLVED, "")
         else:
@@ -819,3 +845,12 @@ class AlertMonitorService(Service, Observable):
                 alert[const.SUPPORT_MESSAGE] = const.SUPPORT_MSG
         except Exception as ex:
             Log.error(f"Addition of support message failed. {ex}")
+
+    def _is_high_risk_severity(self, severity):
+        """
+        This function checks whether the severity is of hish risk or not.
+        """
+        self._ret = False
+        if severity in const.HIGH_RISK_SEVERITY:
+            self._ret = True
+        return self._ret

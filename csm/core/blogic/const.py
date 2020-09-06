@@ -148,7 +148,7 @@ PRIMARY_ROLE='primary'
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
 GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
-BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'threshold_breached:high']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
@@ -553,3 +553,4 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+HIGH_RISK_SEVERITY = ['alert', 'critical', 'error']
