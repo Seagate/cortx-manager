@@ -443,6 +443,7 @@ SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 USL_SERVICE = "usl_service"
 MAINTENANCE_SERVICE = "maintenance"
+STORAGE_CONTROLLER_SERVICE = "storage_controller"
 REPLACE_NODE_SERVICE = "replace_node"
 
 # Plugins literal constansts
@@ -526,6 +527,7 @@ NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
 RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
 SHUTDOWN_COMMENT = "node_shutdown_cron"
+STORAGE_CONTROLLER_STATUS = "status"
 #Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"

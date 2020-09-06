@@ -161,6 +161,7 @@ class CsmAgent:
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
+        CsmRestApi._app[const.STORAGE_CONTROLLER_SERVICE] = StorageControllerAppService()
 
     @staticmethod
     def _daemonize():
@@ -240,6 +241,7 @@ if __name__ == '__main__':
     from csm.common.ha_framework import PcsHAFramework
     from eos.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
+    from csm.core.services.storage_controller import StorageControllerAppService
     from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager

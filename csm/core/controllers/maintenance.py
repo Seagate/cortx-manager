@@ -83,3 +83,54 @@ class MaintenanceView(CsmView):
             const.REPLACE_NODE: self._service.begin_process
         }
         return await service_action[action](**body)
+
+class GetStorageControllerSchema(Schema):
+    action = fields.Str(required=True, validate=[Enum([const.STORAGE_CONTROLLER_STATUS])])
+
+class PostStroageControllerSchema(Schema):
+    action_items = [const.START, const.STOP]
+    action = fields.Str(required=True, validate=[Enum(action_items)])
+    
+@CsmView._app_routes.view("/api/v1/maintenance/storage_controller/{action}")
+class StorageControllerView(CsmView):
+    def __init__(self, request):
+        super(StorageControllerView, self).__init__(request)
+        self._service = self.request.app[const.STORAGE_CONTROLLER_SERVICE]
+
+    @CsmAuth.permissions({Resource.SYSTEM: {Action.LIST}})
+    async def get(self):
+        """
+        Fetch Stroage Controller Current Status.
+        """
+        Log.debug("Handling maintenance request")
+        action = self.request.match_info[const.ACTION]
+        try:
+            GetStorageControllerSchema().load({const.ACTION: action},
+                                        unknown=const.MARSHMALLOW_EXCLUDE)
+        except ValidationError as e:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
+        service_action = {
+            const.STORAGE_CONTROLLER_STATUS: self._service.get_status
+        }
+        return await service_action[action]()
+
+    @CsmAuth.permissions({Resource.SYSTEM: {Action.UPDATE}})
+    async def post(self):
+        """
+        Process Service Requests for Storage Controller Start Stop.
+        :return:
+        """
+        Log.debug("Handling storage controller request")
+        action = self.request.match_info[const.ACTION]
+        body = await self.request.json()
+        body[const.ACTION] = action
+        try:
+            PostStroageControllerSchema().load(body,
+                                         unknown=const.MARSHMALLOW_EXCLUDE)
+        except ValidationError as e:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
+        service_action = {
+            const.START: self._service.start,
+            const.STOP: self._service.stop
+        }
+        return await service_action[action](**body)
