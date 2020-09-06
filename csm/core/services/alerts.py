@@ -38,7 +38,7 @@ from csm.common import queries
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
-from csm.common.payload import Payload, Json
+from csm.common.payload import Payload, Json, JsonMessage
 import asyncio
 
 
