@@ -588,18 +588,27 @@ class Setup:
         Accordingly.
         :return: None
         """
-        auto_restart = True
-        try:
-            if all([const.EES_INSTALLATION[key] == self._setup_info[key] for key
-                    in const.EES_INSTALLATION.keys()]):
-                auto_restart = False
-        except KeyError as e:
-            Log.logger.warn(f"Setup info does not contain keys {e}.")
-            auto_restart = True
-        except TypeError:
+        is_auto_restart_required = list()
+        if self._setup_info:
+            for each_key in self._setup_info:
+                comparison_data = const.EDGE_INSTALL_TYPE.get(each_key, None)
+                #Check Key Exists:
+                if comparison_data is None:
+                    Log.logger.warn(f"Edge Installation missing key {each_key}")
+                    continue
+                if isinstance(comparison_data, list):
+                    if self._setup_info[each_key] in comparison_data:
+                        is_auto_restart_required.append(False)
+                    else:
+                        is_auto_restart_required.append(True)
+                elif self._setup_info[each_key] == comparison_data:
+                    is_auto_restart_required.append(False)
+                else:
+                    is_auto_restart_required.append(True)
+        else:
             Log.logger.warn("Setup info does not exist.")
-            auto_restart = True
-        if auto_restart:
+            is_auto_restart_required.append(True)
+        if any(is_auto_restart_required):
             Log.logger.debug("Updating All setup file for Auto Restart on "
                              "Failure")
             Setup._update_service_file("#< RESTART_OPTION >",

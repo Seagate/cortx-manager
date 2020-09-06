@@ -556,5 +556,7 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
-EES_INSTALLATION = {"nodes": 2, "storage_type": "5u84", "server_type":
-    "physical"}
+EDGE_INSTALL_TYPE ={ "nodes": 1,
+                    "servers_per_node": 2,
+                    "storage_type": ["5u84", "PODS"],
+                    "server_type": "physical"}
