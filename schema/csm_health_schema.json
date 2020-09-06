@@ -7,6 +7,7 @@
         "message.actuator_response_type.info.resource_type": "resource_type",
         "message.actuator_response_type.info.event_time": "fetch_time",
         "message.actuator_response_type.specific_info": "specific_info",
+        "message.actuator_response_type.severity": "severity",
         "health_field": "health",
         "res_id_field": "resource_id",
         "key": "cluster.sites.site_id.rack.rack_id.nodes"

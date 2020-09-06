@@ -553,4 +553,7 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
-HIGH_RISK_SEVERITY = ['alert', 'critical', 'error']
+HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
+GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
+LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
+

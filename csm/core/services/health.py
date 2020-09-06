@@ -69,7 +69,7 @@ class HealthAppService(ApplicationService):
             self.repo.health_schema.dump()
         except Exception as ex:
             Log.error(f"Error occured in reading health schema. Path: {health_schema_path}, {ex}")
-    
+
     async def fetch_health_view(self, **kwargs):
         """
         Fetches health details like health summary and alerts for the provides
@@ -96,28 +96,15 @@ class HealthAppService(ApplicationService):
 
     async def fetch_component_health_view(self, **kwargs):
         """
-        Fetches health details like health summary and components for the provides
+        Fetches health details like health summary and components for the provided
         node key.
-        1.) If key is specified, get the schema for the provided key.
-        2.) If key is not provided, get all the data for the childern under
-        'nodes'
         :param kwargs:
-        :return:
+        :return: List of components
         """
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
-        node_health_details = []
-        keys = []
         node_details = {}
-        if node_id:
-           keys.append(node_id)
-        else:
-            parent_health_schema = self._get_schema(const.KEY_NODES)
-            keys = self._get_child_node_keys(parent_health_schema)            
-
-        for key in keys:
-            node_details = await self._get_component_details(key)
-            node_health_details.append(node_details)
-        return node_health_details
+        node_details = await self._get_component_details(node_id)
+        return [node_details]
 
     async def fetch_node_health(self, **kwargs):
         """
@@ -194,6 +181,7 @@ class HealthAppService(ApplicationService):
         alerts = await self._get_node_alerts(alert_uuid_map)
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, const.ALERTS_COMMAND: alerts}}
         return node_details
+
     async def _get_component_details(self, node_id):
         """
         Get health details like health summary and components for the provided node_id
@@ -264,21 +252,26 @@ class HealthAppService(ApplicationService):
         Since we are getting health as "NA" for node sensors we will consider
         it as a good. 
         """
-        for x in health_count_map:
-            health = severity = x.split('-')[0]
-            severity = severity = x.split('-')[1]
-            if health.upper() != const.OK_HEALTH and \
-                health.upper() != const.NA_HEALTH:
-                if severity.upper() in [const.CRITICAL.upper(), const.ERROR.upper()]:
-                    critical_health_count += health_count_map[x]
-                elif severity.upper() in [const.WARNING.upper(), const.NA_HEALTH.upper(), '']:
-                    warning_health_count += health_count_map[x]
+        for value in health_count_map:
+            health = value.split('-')[0]
+            severity = value.split('-')[1]
+            """
+            Here we will check whether the health is faulty or nor.
+            If the health is faulty then we will check the severity.
+            If severity is of high risk then the critical count will increase
+            otherwise warning count will increase.
+            """
+            if health not in const.GOOD_HEALTH_VAL:
+                if severity in const.HIGH_RISK_SEVERITY:
+                    critical_health_count += health_count_map[value]
+                elif severity in const.LOW_RISK_SEVERITY:
+                    warning_health_count += health_count_map[value]
         bad_health_count = critical_health_count + warning_health_count
         good_health_count = total_leaf_nodes - bad_health_count
         health_summary[const.GOOD_HEALTH] = good_health_count
         health_summary[const.CRITICAL.lower()] = critical_health_count
         health_summary[const.WARNING.lower()] = warning_health_count
-        return {x: health_summary[x] for x in health_summary}
+        return {value: health_summary[value] for value in health_summary}
 
     def _get_schema(self, key: Optional[str] = None):
         """
@@ -307,7 +300,6 @@ class HealthAppService(ApplicationService):
         :returns: Health Summary Json
         """
         if health_schema:
-            is_sas_incremented = False
             for k, v in health_schema.items():
                 if isinstance(v, dict):
                     if(self._checkchilddict(v)):
@@ -320,25 +312,10 @@ class HealthAppService(ApplicationService):
                             severity = v.get(const.ALERT_SEVERITY, "").lower()
                             health_status = f'{health}-{severity}'
                             if v.get(const.ALERT_HEALTH):
-                                """
-                                Here we handle the count of sas alert.
-                                Since, the sas alert only comes when all the 16 
-                                phy's are at fault so we need to update 16 resources
-                                at a time in the health map but count should
-                                increase by 1 as we receive only 1 alert.
-                                """
-                                if const.SAS_RESOURCE_TYPE in k:
-                                    if not is_sas_incremented:
-                                        if health_count_map.get(health_status):
-                                            health_count_map[health_status] += 1
-                                        else:
-                                            health_count_map[health_status] = 1
-                                        is_sas_incremented = True
+                                if health_count_map.get(health_status):
+                                    health_count_map[health_status] += 1
                                 else:
-                                    if health_count_map.get(health_status):
-                                        health_count_map[health_status] += 1
-                                    else:
-                                        health_count_map[health_status] = 1
+                                    health_count_map[health_status] = 1
 
                             if v.get(const.ALERT_UUID):
                                 if alert_uuid_map.get(health_status):  
@@ -439,11 +416,11 @@ class HealthAppService(ApplicationService):
                         (resource_map, key)
                 if resource_schema_dict:
                     resource_schema_dict[const.HEALTH_ALERT_TYPE] \
-                        = msg_body.get(const.HEALTH_ALERT_TYPE, "")
+                        = msg_body.get(const.HEALTH_ALERT_TYPE, "NA")
                     resource_schema_dict[const.ALERT_SEVERITY] \
-                        = msg_body.get(const.ALERT_SEVERITY, "")
+                        = msg_body.get(const.ALERT_SEVERITY, "NA")
                     resource_schema_dict[const.ALERT_UUID] \
-                        = msg_body.get(const.ALERT_UUID, "")
+                        = msg_body.get(const.ALERT_UUID, "NA")
                     resource_schema_dict[const.FETCH_TIME] \
                         = msg_body.get(const.FETCH_TIME, "")
                     resource_schema_dict[const.ALERT_HEALTH] \
