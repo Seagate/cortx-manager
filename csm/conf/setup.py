@@ -582,9 +582,21 @@ class Setup:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
     def set_unsupported_feature_info(self):
+        """
+        This method stores CSM unsupported features in two ways:
+        1. It first gets all the unsupported features lists of the components
+        with which CSM interacts. Add all these features, as CSM unsupported 
+        features. For this, the list of components CSM interacts with is stored
+        in csm.conf file. So if there is any change in any component's name,
+        csm.conf file must be updated accordingly
+        2. Installation/envioronment type and its mapping with CSM unsupported
+        features is maintained in unsupported_feature_schema. Based on the 
+        installation/environment type received as argument, CSM unsupported
+        features can be stored.
+        """
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-
+            
             components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
             unsupported_features_list = []
             for component in components_list:
