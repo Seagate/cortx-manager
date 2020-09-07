@@ -27,6 +27,9 @@ class StorageControllerAppService(ApplicationService):
     """
 
     def __init__(self):
+        """
+        Initialize Storage Controller Service
+        """
         super(StorageControllerAppService, self).__init__()
         self._action_map = {
             const.START: lambda x : not x.get(const.STANDBY),
@@ -37,18 +40,18 @@ class StorageControllerAppService(ApplicationService):
         Return status of stroage controller
         """
         Log.debug("Get stroage controller status")
-        raise CsmNotImplemented(f"Storage controller status integration pending")
+        raise CsmNotImplemented("Storage controller status integration pending")
 
     async def stop(self, **kwargs) -> Dict:
         """
         Stop stroage controller
         """
         Log.debug("Get stroage controller status")
-        raise CsmNotImplemented(f"Storage controller stop integration pending")
+        raise CsmNotImplemented("Storage controller stop integration pending")
 
     async def start(self, **kwargs) -> Dict:
         """
         Start storage controller
         """
         Log.debug("Get stroage controller status")
-        raise CsmNotImplemented(f"Storage controller start integration pending")
+        raise CsmNotImplemented("Storage controller start integration pending")
