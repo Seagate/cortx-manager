@@ -290,6 +290,17 @@ class LoginService:
 
         return session
 
+    async def get_temp_access_keys(self, user_id: str) -> list:
+        """
+        Gathers temporary S3 access keys for user's active sessions.
+        :param user_id: user ID, for S3 session the S3 user name is expected.
+        :return: List of temporary access keys.
+        """
+        sessions = await self._session_manager.get_all()
+        return [s.credentials.access_key for s in sessions
+                if s.credentials.user_id.lower() == user_id.lower() and isinstance(
+                    s.credentials, S3Credentials)]
+
     async def delete_all_sessions(self, session_id: Session.Id) -> None:
         """
         This Function will delete all the current user's active sessions.

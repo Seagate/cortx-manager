@@ -127,7 +127,6 @@ class CsmRestApi(CsmApi, ABC):
     def error_response(err: Exception, request) -> dict:
         resp = {
             "error_code": None,
-            "message_id": None,
             "message": None,
         }
 
@@ -136,8 +135,10 @@ class CsmRestApi(CsmApi, ABC):
 
         if isinstance(err, CsmError):
             resp["error_code"] = err.rc()
-            resp["message_id"] = err.message_id()
             resp["message"] = err.error()
+            message_id = err.message_id()
+            if message_id is not None:
+                resp["message_id"] = err.message_id()
             message_args = err.message_args()
             if message_args is not None:
                 resp["error_format_args"] = err.message_args()

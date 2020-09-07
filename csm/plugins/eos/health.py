@@ -23,7 +23,6 @@ from csm.common.payload import Payload, Json, JsonMessage, Dict
 from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
-import ast
 from datetime import datetime
 import uuid
 from csm.common.conf import Conf
@@ -151,7 +150,7 @@ class HealthPlugin(CsmPlugin):
             Log.debug(f"Converting alert to health schema : {message}")
             resource_schema[const.RESOURCE_LIST] = []
             resources = {}
-            extended_info = ast.literal_eval(message.get(const.ALERT_EXTENDED_INFO))
+            extended_info = JsonMessage(message.get(const.ALERT_EXTENDED_INFO)).load()
             info = extended_info.get(const.ALERT_INFO)
             resource_type = info.get(const.ALERT_RESOURCE_TYPE, "")
             if resource_type.split(':')[0] == const.ENCLOSURE:

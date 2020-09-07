@@ -639,7 +639,7 @@ class IamClient(BaseClient):
                   f" max_items: {max_items}")
         params = {}
         if user_name is not None:
-            params['UserName'] = user_name
+            params[const.S3_PARAM_USER_NAME] = user_name
 
         if marker:
             params[const.S3_PARAM_MARKER] = marker

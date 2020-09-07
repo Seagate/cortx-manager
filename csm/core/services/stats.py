@@ -46,7 +46,8 @@ class StatsAppService(ApplicationService):
         """
         Log.debug(f"Get panel: {panel} stats")
         output = {}
-        output["id"]=stats_id
+        if stats_id:
+            output["id"]=stats_id
         panel_data =  await self._stats_provider.process_request(stats_id = stats_id, panel = panel,
                                                   from_t = from_t, duration_t = to_t,
                                                   metric_list = metric_list,
@@ -90,7 +91,8 @@ class StatsAppService(ApplicationService):
         """
         Log.debug(f"Get stats for panels: {panels_list}")
         output = {}
-        output["id"]=stats_id
+        if stats_id:
+            output["id"]=stats_id
         data_list = []
         for panel in panels_list:
             panel_data = await self._stats_provider.process_request(
@@ -131,7 +133,8 @@ class StatsAppService(ApplicationService):
         except:
             raise CsmInternalError("Stats: Invalid metric list %s" %metrics_list)
 
-        output["id"]=stats_id
+        if stats_id:
+            output["id"]=stats_id
         data_list = []
         for panel in panels.keys():
             panel_data = await self._stats_provider.process_request(

@@ -42,7 +42,7 @@ class S3AccessKeysService(S3BaseService):
                                               self._iam_connection_config, s3_session.session_token)
 
     @Log.trace_method(Log.DEBUG)
-    async def create_access_key(self, s3_session):
+    async def create_access_key(self, s3_session, user_name=None):
         """
         Creates an S3 access key for the provided user
 
@@ -51,13 +51,13 @@ class S3AccessKeysService(S3BaseService):
         """
         Log.debug('Creating an access key')
         iam_client = self._fetch_iam_client(s3_session)
-        resp = await iam_client.create_user_access_key()
+        resp = await iam_client.create_user_access_key(user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
         return vars(resp)
 
     @Log.trace_method(Log.DEBUG)
-    async def update_access_key(self, s3_session, access_key_id, status):
+    async def update_access_key(self, s3_session, access_key_id, status, user_name=None):
         """
         Updates the status of the provided access key
 
@@ -66,7 +66,7 @@ class S3AccessKeysService(S3BaseService):
         """
         Log.debug(f'Updating the access key {access_key_id} with status {status}')
         iam_client = self._fetch_iam_client(s3_session)
-        resp = await iam_client.update_user_access_key(access_key_id, status)
+        resp = await iam_client.update_user_access_key(access_key_id, status, user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
         return {
@@ -75,7 +75,7 @@ class S3AccessKeysService(S3BaseService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_access_keys(self, s3_session, marker=None, limit=None):
+    async def list_access_keys(self, s3_session, user_name=None, marker=None, limit=None):
         """
         Fetches a list of provided IAM user's access keys
 
@@ -86,7 +86,8 @@ class S3AccessKeysService(S3BaseService):
         """
         Log.debug(f'Listing access keys, marker {marker}, limit {limit}')
         iam_client = self._fetch_iam_client(s3_session)
-        access_keys_resp = await iam_client.list_user_access_keys(marker=marker, max_items=limit)
+        access_keys_resp = await iam_client.list_user_access_keys(
+            user_name=user_name, marker=marker, max_items=limit)
         if isinstance(access_keys_resp, IamError):
             self._handle_error(access_keys_resp)
         resp_keys = []
@@ -104,7 +105,7 @@ class S3AccessKeysService(S3BaseService):
         return resp
 
     @Log.trace_method(Log.DEBUG)
-    async def delete_access_key(self, s3_session, access_key_id):
+    async def delete_access_key(self, s3_session, access_key_id, user_name=None):
         """
         Deletes the provided access key
 
@@ -114,7 +115,7 @@ class S3AccessKeysService(S3BaseService):
         """
         Log.debug(f'Deleting access key {access_key_id}')
         iam_client = self._fetch_iam_client(s3_session)
-        resp = await iam_client.delete_user_access_key(access_key_id)
+        resp = await iam_client.delete_user_access_key(access_key_id, user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
         return {

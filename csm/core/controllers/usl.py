@@ -86,7 +86,7 @@ class DeviceRegistrationView(_View):
     """
     Device registration view.
     """
-    @CsmAuth.permissions({Resource.UDX: {Action.UPDATE}})
+    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.UPDATE}})
     async def post(self) -> Dict:
 
         class MethodSchema(Schema):
@@ -113,7 +113,7 @@ class DeviceRegistrationView(_View):
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
 
-    @CsmAuth.permissions({Resource.UDX: {Action.LIST}})
+    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> None:
         await self._service.get_register_device()
 
@@ -124,7 +124,7 @@ class RegistrationTokenView(_View):
     """
     Registration token generation view.
     """
-    @CsmAuth.permissions({Resource.UDX: {Action.LIST}})
+    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> Dict[str, str]:
         return await self._service.get_registration_token()
 
