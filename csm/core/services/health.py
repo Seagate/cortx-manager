@@ -198,14 +198,8 @@ class HealthAppService(ApplicationService):
         component_details = []
 
         for component in leaf_nodes:
-            component_detail = {}
-            component_detail["component_id"] = component.get("component_id")
-            component_detail["health"] = component.get("health")
-            component_detail["durable_id"] = component.get("durable_id")
-            component_detail["alert_uuid"] = component.get("alert_uuid")
-            component_detail["component_info"] = component
-            component_details.append(component_detail)
-        
+            component_details.append(component)
+
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, "components": component_details}}
         return node_details
 
