@@ -13,14 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
 
-from eos.utils.data.access import Query, SortBy, SortOrder
 from eos.utils.log import Log
 from csm.common.errors import CsmNotImplemented
-from csm.common.errors import CsmError, CSM_INVALID_REQUEST
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 

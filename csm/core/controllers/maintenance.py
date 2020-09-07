@@ -90,7 +90,7 @@ class GetStorageControllerSchema(Schema):
 class PostStroageControllerSchema(Schema):
     action_items = [const.START, const.STOP]
     action = fields.Str(required=True, validate=[Enum(action_items)])
-    
+
 @CsmView._app_routes.view("/api/v1/maintenance/storage_controller/{action}")
 class StorageControllerView(CsmView):
     def __init__(self, request):
