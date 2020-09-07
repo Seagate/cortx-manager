@@ -69,9 +69,10 @@ class ComponentsBundle:
         :param commands: Command of the component :type:str
         :param bundle_id: Unique Bundle ID of the generation process. :type:str
         :param path: Path to create the tar by components :type:str
-        :param component:
-        :param node_name:
-        :param comment:
+        :param component: Name of Component to be executed :type: str
+        :param node_name:Name of Node where the Command is being Executed
+        :type:str
+        :param comment: :User Comment: type:str
         :return:
         """
         for command in commands:
