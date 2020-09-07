@@ -24,7 +24,7 @@
           "flag": "-c",
           "dest": "components",
           "type": "str",
-          "choices": [
+          "choices":[
             "all",
             "csm",
             "sspl",
@@ -64,7 +64,6 @@
         {
           "flag": "bundle_id",
           "type": "str",
-          "default": "",
           "help": "Unique Bundle Id provided while generation."
         },
         {
