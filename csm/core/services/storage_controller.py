@@ -22,9 +22,7 @@ from csm.core.blogic import const
 
 
 class StorageControllerAppService(ApplicationService):
-    """
-    Provides maintenance services
-    """
+    """ Provides Storage controller services """
 
     def __init__(self):
         """
