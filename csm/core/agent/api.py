@@ -189,15 +189,19 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     async def check_for_unsupported_endpoint(request):
-        feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, "FEATURE_COMPONENTS.feature_endpoint_map")
+        """
+        Check whether the endpoint is supported. If not, send proper error
+        reponse.
+        """
+        feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
         endpoint = feature_endpoint_map.get(request.path)
         if endpoint:
-            if endpoint["dependent_on"]:
-                for component in endpoint["dependent_on"]:
-                    if not await UnsupportedFeaturesDB.is_feature_supported(component,endpoint["feature_name"]):
-                        raise InvalidRequest(f"This endpoint: {endpoint} and feature:{endpoint["feature_name"]} not supported by {component} ")
+            if endpoint[const.DEPENDENT_ON]:
+                for component in endpoint[const.DEPENDENT_ON]:
+                    if not await UnsupportedFeaturesDB.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
+                        raise InvalidRequest(f"This endpoint: {endpoint} and feature:{endpoint[const.FEATURE_NAME]} not supported by {component} ")
             else:
-                if not await UnsupportedFeaturesDB.is_feature_supported("CSM", endpoint["feature_name"]):
+                if not await UnsupportedFeaturesDB.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
                     raise InvalidRequest(f"This endpoint: {endpoint} not supported by CSM ")        
 
     @classmethod
