@@ -586,11 +586,11 @@ class Setup:
         This method stores CSM unsupported features in two ways:
         1. It first gets all the unsupported features lists of the components
         with which CSM interacts. Add all these features, as CSM unsupported 
-        features. For this, the list of components CSM interacts with is stored
-        in csm.conf file. So if there is any change in any component's name,
-        csm.conf file must be updated accordingly
+        features. For this, the list of components CSM interacts with, is
+        stored in csm.conf file. So if there is any change in any name 
+        of the component, csm.conf file must be updated accordingly.
         2. Installation/envioronment type and its mapping with CSM unsupported
-        features is maintained in unsupported_feature_schema. Based on the 
+        features are maintained in unsupported_feature_schema. Based on the 
         installation/environment type received as argument, CSM unsupported
         features can be stored.
         """
@@ -613,8 +613,8 @@ class Setup:
 
             UnsupportedFeaturesDB.store_unsupported_features(component_name="CSM", features=unsupported_features_list)
         except Exception as e_:
-            Log.error("Error in storing unsupported features: {e_}")
-            raise CsmSetupError("Error in storing unsupported features: {e_}")
+            Log.error(f"Error in storing unsupported features: {e_}")
+            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
