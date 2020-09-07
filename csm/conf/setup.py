@@ -584,11 +584,11 @@ class Setup:
     def set_unsupported_feature_info(self):
         """
         This method stores CSM unsupported features in two ways:
-        1. It first gets all the unsupported features lists of the components
-        with which CSM interacts. Add all these features, as CSM unsupported 
-        features. For this, the list of components CSM interacts with, is
-        stored in csm.conf file. So if there is any change in any name 
-        of the component, csm.conf file must be updated accordingly.
+        1. It first gets all the unsupported features lists of the components,
+        which CSM interacts with. Add all these features as CSM unsupported 
+        features. The list of components, CSM interacts with, is
+        stored in csm.conf file. So if there is change in name of any 
+        component, csm.conf file must be updated accordingly.
         2. Installation/envioronment type and its mapping with CSM unsupported
         features are maintained in unsupported_feature_schema. Based on the 
         installation/environment type received as argument, CSM unsupported
