@@ -23,7 +23,7 @@ class CsmPlugin(metaclass=ABCMeta):
     i.e. Alert plugin, S3 plugin etc.
     """
     @abstractmethod
-    def init(self):
+    def init(self, **kwargs):
         raise CsmError(errno.ENOSYS, 'init not implemented for Plugin class')
 
     @abstractmethod
