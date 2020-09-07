@@ -247,6 +247,7 @@ class AlertsAppService(ApplicationService):
 
         if "acknowledged" in fields:
             alert.acknowledged = AlertModel.acknowledged.to_native(fields["acknowledged"])
+            alert.updated_time = int(time.time())
             """
             We will mark IEM alert as resolved as soon as it is acknowledged, as
             there will be no state change occurs for IEM alerts.
@@ -277,6 +278,7 @@ class AlertsAppService(ApplicationService):
 
         if alert["comments"] is None:
             alert["comments"] = []
+        alert[const.ALERT_UPDATED_TIME] = int(time.time())
         alert_comment = self.build_alert_comment_model(str(len(alert["comments"]) + 1), comment_text, user_id)
         alert["comments"].append(alert_comment)
         await self.repo.update(alert)
@@ -336,6 +338,7 @@ class AlertsAppService(ApplicationService):
                 raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
 
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
+            alert.updated_time = int(time.time())
             """
             We will mark IEM alert as resolved as soon as it is acknowledged, as
             there will be no state change occurs for IEM alerts.
