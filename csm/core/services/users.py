@@ -51,7 +51,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist("Such user already exists", USERS_MSG_ALREADY_EXISTS,existing_user.user_id)
+            raise ResourceExist(f"User already exists :{existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
 
         return await self.storage(User).store(user)
 
@@ -283,7 +283,7 @@ class CsmUserService(ApplicationService):
             await self._validation_for_update_by_normal_user(user_id, loggedin_user_id, new_values)
         
         if current_password and not self._verfiy_current_password(user, current_password):
-            raise InvalidRequest("Cannot change password without valid current password",
+            raise InvalidRequest("Cannot update user details without valid current password",
                                       USERS_MSG_UPDATE_NOT_ALLOWED)
         
         user.update(new_values)
