@@ -142,6 +142,7 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
+    # add cortx-py-utils below
     yum install -y cortx-prvsnr
 
     # Check python package
