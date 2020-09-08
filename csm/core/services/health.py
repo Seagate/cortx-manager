@@ -98,13 +98,25 @@ class HealthAppService(ApplicationService):
         """
         Fetches health details like health summary and components for the provided
         node key.
+        1.) If key is specified, get the schema for the provided key.
+        2.) If key is not provided, get all the data from the health map
+        3.) Here key can be storage_encl, node names
         :param kwargs:
         :return: List of components
         """
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
+        node_health_details = []
+        keys = []
         node_details = {}
-        node_details = await self._get_component_details(node_id)
-        return [node_details]
+        if node_id:
+            keys.append(node_id)
+        else:
+            parent_health_schema = self._get_schema(const.KEY_NODES)
+            keys = self._get_child_node_keys(parent_health_schema)
+        for key in keys:
+            node_details = await self._get_component_details(key)
+            node_health_details.append(node_details)
+        return node_health_details
 
     async def fetch_node_health(self, **kwargs):
         """
