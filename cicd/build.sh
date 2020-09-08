@@ -150,6 +150,7 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
+    # need to remove below code
     pip uninstall -y numpy
     pip install numpy --no-binary :all:
 fi
