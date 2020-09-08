@@ -52,11 +52,7 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
 }
 
-[ -d "${CSM_DIR}/test" ] && {
-    ln -sf $CSM_DIR/lib/csm_test /usr/bin/csm_test
-    ln -sf $CSM_DIR/lib/csm_test $CSM_DIR/bin/csm_test
-}
-
+#TODO: add test for cli
 exit 0
 
 %preun

@@ -47,7 +47,6 @@ class CsmAgent:
             Conf.decrypt_conf()
         from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
-        import sys; print(sys.path)
         db = DataBaseProvider(conf)
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)

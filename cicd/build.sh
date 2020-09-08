@@ -247,7 +247,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     fi
 
     gen_tar_file csm_agent csm
-
+    rm -rf ${TMPDIR}/csm/*
+    rm -rf ${TMPDIR}/cli/*
     CORE_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -267,7 +268,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     # Copy Backend files
     mkdir -p $DIST/cli/lib $DIST/cli/bin $DIST/cli/conf $TMPDIR/csm
     cp -rs $BASE_DIR/csm/* $TMPDIR/csm
-    cp -rs $BASE_DIR/test/ $TMPDIR/csm
+    #TODO: Allow test to work with cli
 
     CONF=$BASE_DIR/csm/conf/
     cp -R $BASE_DIR/schema $DIST/cli/
@@ -298,7 +299,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     fi
 
     gen_tar_file cli cli
-
+    rm -rf ${TMPDIR}/csm/*
+    rm -rf ${TMPDIR}/cli/*
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 

@@ -16,7 +16,7 @@
 import os
 import sys
 import errno
-from csm.conf.cc_setup import CortxCliSetup
+from csm.conf.cortx_cli_setup import CortxCliSetup
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
 
