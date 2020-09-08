@@ -22,7 +22,7 @@ COMMANDS:
   csm:
     - '<CORTX_PATH>/csm/conf/setup.yaml'
   cortxcli:
-    - '<CORTX_PATH>/csm/conf/cortxcli_setup.yaml'
+    - '<CORTX_PATH>/cortxcli/conf/cortxcli_setup.yaml'
   sspl:
     - '<CORTX_PATH>/sspl/conf/setup.yaml'
   s3server:

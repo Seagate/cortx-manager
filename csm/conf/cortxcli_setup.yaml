@@ -14,13 +14,13 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 cortxcli:
-    post_install:
-        script: /usr/bin/cortxcli_setup
-        args: post_install
+#    post_install:
+#        script: /usr/bin/cortxcli_setup
+#        args: post_install
 
-    init:
-        script: /usr/bin/cortxcli_setup
-        args: init
+#    init:
+#        script: /usr/bin/cortxcli_setup
+#        args: init
 
     config:
         script: /usr/bin/cortxcli_setup

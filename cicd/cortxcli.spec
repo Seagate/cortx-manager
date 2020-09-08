@@ -32,26 +32,24 @@ Cortx CLI
 %build
 
 %install
-mkdir -p ${RPM_BUILD_ROOT}<CSM_PATH>
-cp -rp . ${RPM_BUILD_ROOT}<CSM_PATH>
+mkdir -p ${RPM_BUILD_ROOT}<CORTXCLI_PATH>
+cp -rp . ${RPM_BUILD_ROOT}<CORTXCLI_PATH>
 exit 0
 
 %post
 # Use csm_setup cli for csm directory, permission services
 mkdir -p /etc/uds
-CSM_DIR=<CSM_PATH>
+CSM_DIR=<CORTXCLI_PATH>
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
 
 # Move binary file
 [ -d "${CSM_DIR}/lib" ] && {
-    ln -sf $CSM_DIR/lib/cortxcli_setup /usr/bin/csm_setup
-    ln -sf $CSM_DIR/lib/cortxcli_setup $CSM_DIR/bin/csm_setup
+    ln -sf $CSM_DIR/lib/cortxcli_setup /usr/bin/cortxcli_setup
+    ln -sf $CSM_DIR/lib/cortxcli_setup $CSM_DIR/bin/cortxcli_setup
 
     ln -sf $CSM_DIR/lib/cortxcli /usr/bin/cortxcli
     ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
-
-    cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -59,18 +57,14 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_test $CSM_DIR/bin/csm_test
 }
 
-[ -f /etc/uds/uds_s3.toml ] || \
-    cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
 exit 0
 
 %preun
-[ $1 -eq 1 ] && exit 0
 
 %postun
-[ $1 -eq 1 ] && exit 0
 rm -f /usr/bin/cortxcli_setup 2> /dev/null;
 rm -f /usr/bin/cortxcli 2> /dev/null;
-rm -rf <CSM_PATH>/bin/ 2> /dev/null;
+rm -rf <CORTXCLI_PATH>/bin/ 2> /dev/null;
 exit 0
 
 %clean
@@ -78,8 +72,8 @@ exit 0
 %files
 # TODO - Verify permissions, user and groups for directory.
 %defattr(-, root, root, -)
-<CSM_PATH>/*
+<CORTXCLI_PATH>/*
 
 %changelog
-* Mon Jul 29 2019 Ajay Paratmandali <ajay.paratmandali@seagate.com> - 1.0.0
-- Initial spec file
+* Mon Sep 7 2020 Eduard Aleksandrov <eduard.aleksandrov@seagate.com> - 1.0.0
+- Initial spec file for cortxcli

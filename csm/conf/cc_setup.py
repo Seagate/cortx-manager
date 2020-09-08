@@ -98,7 +98,7 @@ class CortxCliSetup(Setup):
         try:
             self._verify_args(args)
             if not self._replacement_node_flag:
-                self.Config.create(args)
+                self.Config.cli_create(args)
         except Exception as e:
             raise CsmSetupError(f"cortxcli_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 

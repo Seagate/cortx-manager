@@ -317,6 +317,29 @@ class Setup:
                 raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
 
         @staticmethod
+        def cli_create(args):
+            """
+            This Function Creates the CortxCli Conf File on Required Location.
+            :return:
+            """
+            cli_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            # Read Current CortxCli Config FIle.
+            conf_file_data = Yaml(cli_conf_path).load()
+            if conf_file_data:
+                if args[const.DEBUG]:
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                else:
+                    Setup.Config.store_encrypted_password(conf_file_data)
+                    # Update the Current Config File.
+                    Yaml(cli_conf_path).dump(conf_file_data)
+                Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+                if args[const.DEBUG]:
+                    Yaml(cli_conf_target_path).dump(conf_file_data)
+            else:
+                raise CsmSetupError(f"Unable to load Cortx Cli config. Path:{cli_conf_path}")
+
+        @staticmethod
         def load():
             csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):

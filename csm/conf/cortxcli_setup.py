@@ -22,13 +22,13 @@ import pathlib
 
 class CortxCliSetupCommand:
     """
-        Provide cli to setup cortxcli. Create user for csm to allow basic
+        Provide cli to setup cortxcli. Create user for cortxcli to allow basic
         permission like log, bundle path.
     """
     def __init__(self, argv):
         ''' Check cortxcli setup command and initialize '''
         self._args = argv
-        self._args[0] = 'csm_setup'
+        self._args[0] = 'cortxcli_setup'
         self._validate()
         Conf.init()
         Log.init(service_name = "cortxcli_setup", log_path = const.CORTXCLI_SETUP_LOG_DIR,
@@ -40,12 +40,12 @@ class CortxCliSetupCommand:
             raise Exception('Usage: cortxcli_setup -h')
 
     def _get_command(self):
-        ''' Parse csm setup command '''
+        ''' Parse cortxcli setup command '''
         parser = argparse.ArgumentParser(description='CORTX CLI Setup', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
-        csm_setup_permissions_dict = {'update': True}
-        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load(), csm_setup_permissions_dict)
+        cortxcli_setup_permissions_dict = {'update': True}
+        cmd_obj = CommandParser(Json(const.CORTXCLI_SETUP_FILE).load(), cortxcli_setup_permissions_dict)
         cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
@@ -55,7 +55,7 @@ class CortxCliSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        ''' Parse args for csm_setup and execute cmd to print output '''
+        ''' Parse args for cortxcli_setup and execute cmd to print output '''
         self._cmd = self._get_command()
         self._response = None
         self._request = Request(self._cmd._name, self._cmd.args, self._cmd.options)

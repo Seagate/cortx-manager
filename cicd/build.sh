@@ -20,6 +20,7 @@ PROG_NAME=$(basename $0)
 DIST=$(realpath $BASE_DIR/dist)
 CORTX_PATH="/opt/seagate/cortx/"
 CSM_PATH="${CORTX_PATH}csm"
+CORTXCLI_PATH="${CORTX_PATH}cortxcli"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
@@ -144,8 +145,6 @@ CONF=$BASE_DIR/csm/conf/
 cd $BASE_DIR
 rm -rf ${DIST}/rpmbuild
 mkdir -p ${DIST}/rpmbuild/SOURCES
-#rm -rf ${DIST}/rpmbuild
-#mkdir -p ${DIST}/rpmbuild/SOURCES
 COPY_END_TIME=$(date +%s)
 
 ################### Dependency ##########################
@@ -173,8 +172,8 @@ if [ "$DEV" == true ]; then
         echo "Unable to install package from $req_file"; exit 1;
     };
     # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
-#    pip uninstall -y numpy
-#    pip install numpy --no-binary :all:
+    pip uninstall -y numpy
+    pip install numpy --no-binary :all:
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
@@ -211,8 +210,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R $BASE_DIR/schema $DIST/csm/
     cp -R $BASE_DIR/templates $DIST/csm/
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
-    #mkdir -p  $DIST/csm/cli/
-    #cp -R "$BASE_DIR/csm/cli/schema" "$DIST/csm/cli/"
+    mkdir -p  $DIST/csm/cli/
+    cp -R "$BASE_DIR/csm/cli/schema" "$DIST/csm/cli/"
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
@@ -266,9 +265,9 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cd $TMPDIR
 
     # Copy Backend files
-    mkdir -p $DIST/cli/lib $DIST/cli/bin $DIST/cli/conf $TMPDIR/cli
-    cp -rs $BASE_DIR/csm/* $TMPDIR/cli
-    cp -rs $BASE_DIR/test/ $TMPDIR/cli
+    mkdir -p $DIST/cli/lib $DIST/cli/bin $DIST/cli/conf $TMPDIR/csm
+    cp -rs $BASE_DIR/csm/* $TMPDIR/csm
+    cp -rs $BASE_DIR/test/ $TMPDIR/csm
 
     CONF=$BASE_DIR/csm/conf/
     cp -R $BASE_DIR/schema $DIST/cli/
@@ -277,37 +276,25 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     mkdir -p  $DIST/cli/cli/
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
-    # Create spec for pyinstaller
-    #[ "$TEST" == true ] && {
-    #    PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm_test.spec
-    #    cp "$BASE_DIR/cicd/pyinstaller/product_csm_test.spec" "${PYINSTALLER_FILE}"
-    #    mkdir -p $DIST/csm/test
-    #    cp -R $BASE_DIR/test/plans $BASE_DIR/test/test_data $DIST/csm/test
-    #} || {
-        PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm.spec
-        cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
-    #}
+    PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_cli.spec
+    cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
 
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
-        -e "s|<CSM_PATH>|${TMPDIR}/cli|g" ${PYINSTALLER_FILE}
+        -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" ${PYINSTALLER_FILE}
     python3 -m PyInstaller --clean -y --distpath "${DIST}/cli" --key "${KEY}" "${PYINSTALLER_FILE}"
-################## Add CSM_PATH #################################
+################## Add CORTXCLI_PATH #################################
 
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
-        -e "s|<CSM_PATH>|${CSM_PATH}|g" \
+        -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/cortxcli.spec
 
     sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" $DIST/cli/schema/commands.yaml
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/cli/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/cli/conf/cortxcli_setup.yaml
-    sed -i -e "s|<PROVISIONER_CONFIG_PATH>|${PROVISIONER_CONFIG_PATH}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
 
     if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" $DIST/cli/conf/etc/csm/csm.conf
+        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
     else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" $DIST/cli/conf/etc/csm/csm.conf
+        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
     fi
 
     gen_tar_file cli cli
@@ -316,17 +303,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 fi
 
 
-################### TAR & RPM BUILD ##############################
-
-# Remove existing directory tree and create fresh one.
-#TAR_START_TIME=$(date +%s)
-
-
-#pwd
-# Create tar for csm
-#echo "Creating tar for csm build"
-#tar -czf ${DIST}/rpmbuild/SOURCES/${PRODUCT}-csm_agent-${VER}.tar.gz csm
-#TAR_END_TIME=$(date +%s)
+################### RPM BUILD ##############################
 
 # Generate RPMs
 RPM_BUILD_START_TIME=$(date +%s)
@@ -340,9 +317,9 @@ rpm_build cli cortxcli
 RPM_BUILD_END_TIME=$(date +%s)
 
 # Remove temporary directory
-#\rm -rf ${DIST}/csm
-#\rm -rf ${DIST}/cli
-#\rm -rf ${TMPDIR}
+\rm -rf ${DIST}/csm
+\rm -rf ${DIST}/cli
+\rm -rf ${TMPDIR}
 BUILD_END_TIME=$(date +%s)
 
 echo "CSM RPMs ..."

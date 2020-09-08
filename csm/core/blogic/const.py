@@ -15,12 +15,13 @@
 
 # Csm Setup
 CSM_PATH = "/opt/seagate/cortx/csm"
+CORTXCLI_PATH = "/opt/seagate/cortx/cortxcli"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
-CSM_CONF_PATH = "/etc/csm"
+CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
@@ -59,10 +60,11 @@ BASE_DIR = '/opt/seagate/cortx'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
+CORTXCLI_COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
-EXCLUDED_COMMANDS = ['csm_setup']
+EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
@@ -279,11 +281,11 @@ FAULT_HEALTH = 'Fault'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
-CORTCCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CSM_PATH)
+CORTXCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CORTXCLI_PATH)
 
 # Support Bundle
 SSH_USER_NAME = 'root'
-COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
+COMMANDS_FILE = "{}/schema/commands.yaml".format(CORTXCLI_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
 SOS_COMP = 'os'
@@ -301,7 +303,7 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CORTXCLI_PATH)
 
 # S3
 S3_HOST = 'S3.host'
