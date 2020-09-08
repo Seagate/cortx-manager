@@ -330,9 +330,14 @@ class Setup:
                 if args[const.DEBUG]:
                     conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
                 else:
-                    Setup.Config.store_encrypted_password(conf_file_data)
                     # Update the Current Config File.
-                    Yaml(cli_conf_path).dump(conf_file_data)
+                    if const.ADDRESS_PARAM in args.keys():
+                        conf_file_data[const.CORTXCLI_SECTION][const.CSM_AGENT_HOST_PARAM_NAME] =\
+                            args[const.ADDRESS_PARAM]
+                    if args["f"]:
+                        Yaml(cli_conf_target_path).dump(conf_file_data)
+                    else:
+                        Yaml(cli_conf_path).dump(conf_file_data)
                 Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
                 if args[const.DEBUG]:
                     Yaml(cli_conf_target_path).dump(conf_file_data)

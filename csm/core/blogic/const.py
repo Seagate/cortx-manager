@@ -71,6 +71,8 @@ RUNNING_NODES = 'running_nodes'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
+CSM_AGENT_HOST_PARAM_NAME = "csm_agent_host"
+ADDRESS_PARAM = "Address"
 CSM_AGENT_PORT = 8101
 CSM_AGENT_BASE_URL = "http://"
 TIMEOUT = 60
@@ -124,6 +126,7 @@ TYPE_S3_SERVER = 'S3_SERVER'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 CORTXCLI_CONF = '/etc/csm/cortxcli.conf'
+CORTXCLI_SECTION = 'CORTXCLI'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'

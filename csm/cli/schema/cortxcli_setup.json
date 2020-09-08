@@ -14,9 +14,6 @@
                   "help": "CSM Agent Address",
                   "default": "127.0.0.1",
                   "type": "str",
-                  "choices": [
-                    "127.0.0.1"
-                  ],
                   "nargs": "?"
                 },
                 {
@@ -30,19 +27,6 @@
                     "action": "store_true",
                     "default": false,
                     "help": "config for dev mode"
-                },
-                {
-                  "flag": "-c",
-                  "dest": "Component",
-                  "help": "Component name",
-                  "default": "all",
-                  "type": "str",
-                  "choices": [
-                    "backend",
-                    "frontend",
-                    "all"
-                  ],
-                  "nargs": "?"
                 },
                 {
                     "flag": "args",

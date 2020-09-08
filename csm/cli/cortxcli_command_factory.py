@@ -21,6 +21,16 @@ from eos.utils.log import Log
 from csm.common.payload import Json
 from csm.cli.command import CommandParser
 
+
+class ArgumentParser(argparse.ArgumentParser):
+    """Overwritten ArgumentParser class for internal purposes"""
+
+    def error(self, message):
+        # todo:  Need to Modify the changes for Fetching Error Messages from config file
+        self.print_usage(sys.stderr)
+        self.exit(2, f'Error: {message.capitalize()}\n')
+
+
 class CommandFactory(object):
     """
     Factory for representing and creating command objects using

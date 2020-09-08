@@ -38,6 +38,7 @@ from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.conf.setup import Setup
+import ipaddress;
 
 # try:
 #     from salt import client
@@ -70,24 +71,11 @@ class CortxCliSetup(Setup):
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
             raise Exception("Not implemented for Component %s" %args["Component"])
-        if "f" in args.keys() and args["f"] is True:
-            raise Exception("Not implemented for force action")
-
-    def post_install(self, args):
-        """
-        Perform post-install for csm
-            : Configure csm user
-            : Add Permission for csm user
-            : Add cronjob for csm cleanup
-        Post install is used after just all rpms are install but
-        no service are started
-        """
-        try:
-            self._verify_args(args)
-            self._config_user()
-            self._cleanup_job()
-        except Exception as e:
-            raise CsmSetupError(f"cortxcli_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
+        if const.ADDRESS_PARAM in args.keys():
+            try:
+                ipaddress.ip_address(args[const.ADDRESS_PARAM])
+            except ValueError:
+                raise Exception("Incorrect ip address %s" %args[const.ADDRESS_PARAM])
 
     def config(self, args):
         """
@@ -97,69 +85,9 @@ class CortxCliSetup(Setup):
         """
         try:
             self._verify_args(args)
-            if not self._replacement_node_flag:
-                self.Config.cli_create(args)
+            self.Config.cli_create(args)
         except Exception as e:
             raise CsmSetupError(f"cortxcli_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def init(self, args):
-        """
-        Check and move required configuration file
-        Init is used after all dependency service started
-        """
-        try:
-            self._verify_args(args)
-            self.Config.load()
-            self._config_user_permission()
-            if not self._replacement_node_flag:
-                self._set_rmq_cluster_nodes()
-                #TODO: Adding this implementation in try..except block to avoid build failure
-                # Its a work around and it will be fixed once EOS-10551 resolved
-                try:
-                    self._set_rmq_node_id()
-                except Exception as e:
-                    Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                self._set_consul_vip()
-            self.ConfigServer.reload()
-            self._rsyslog()
-            self._logrotate()
-            self._rsyslog_common()
-            ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
-            if ha_check:
-                self._config_cluster(args)
-        except Exception as e:
-            raise CsmSetupError(f"cortxcli_setup init failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def reset(self, args):
-        """
-        Reset csm configuraion
-        Soft: Soft Reset is used to restrat service with log cleanup
-            - Cleanup all log
-            - Reset conf
-            - Restart service
-        Hard: Hard reset is used to remove all configuration used by csm
-            - Stop service
-            - Cleanup all log
-            - Delete all Dir created by csm
-            - Cleanup Job
-            - Disable csm service
-            - Delete csm user
-        """
-        try:
-            self._verify_args(args)
-            if args["hard"]:
-                self.Config.load()
-                self.ConfigServer.stop()
-                self._log_cleanup()
-                self._config_user_permission(reset=True)
-                self._cleanup_job(reset=True)
-                self.Config.delete()
-                self._config_user(reset=True)
-            else:
-                self.Config.reset()
-                self.ConfigServer.restart()
-        except Exception as e:
-            raise CsmSetupError("cortxcli_setup reset failed. Error: %s" %e)
 
     def refresh_config(self, args):
         """
