@@ -2,7 +2,7 @@
     "setup_types": [
         {
             "name":"virtual",
-            "unsupported_features": ["fw_update","sw_update"]
+            "unsupported_features": ["alerts","health", "cluster_management"]
         },
         {
             "name":"5u84",

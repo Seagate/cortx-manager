@@ -603,15 +603,15 @@ class Setup:
                 unsupported_features = UnsupportedFeaturesDB.get_unsupported_features(component_name=component)
 
                 for feature in unsupported_features:
-                    unsupported_features_list.append(feature.get("feature_name"))
+                    unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
 
-            for setup in csm_unsupported_feature["setup_types"]:
-                if setup["name"] == self._setup_info["storage_type"]:
-                    unsupported_features_list.append(setup["unsupported_features"])
+            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
+                if setup["name"] == self._setup_info[const.STORAGE_TYPE]:
+                    unsupported_features_list.append(setup[const.UNSUPPORTED_FEATURES])
 
-            UnsupportedFeaturesDB.store_unsupported_features(component_name="CSM", features=unsupported_features_list)
+            UnsupportedFeaturesDB.store_unsupported_features(component_name=const.CSM_COMPONENT_NAME, features=unsupported_features_list)
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")

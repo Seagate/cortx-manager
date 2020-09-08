@@ -558,3 +558,8 @@ PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
 #unsupported feature
 UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
 COMPONENT_LIST="FEATURE_COMPONENTS.components_list"
+CSM_COMPONENT_NAME = "csm"
+FEATURE_NAME = "feature_name"
+SETUP_TYPES = "setup_types"
+UNSUPPORTED_FEATURES = "unsupported_features"
+STORAGE_TYPE = "storage_type"
