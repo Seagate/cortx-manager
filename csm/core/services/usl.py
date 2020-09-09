@@ -466,9 +466,12 @@ class UslService(ApplicationService):
         volume_name = await self._get_volume_name(bucket_name)
         device_uuid = self._get_device_uuid()
         volume_uuid = self._get_volume_uuid(bucket_name)
-        capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
-        capacity_size = capacity_details[const.SIZE]
-        capacity_used = capacity_details[const.USED]
+        if False:
+            capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
+            capacity_size = capacity_details[const.SIZE]
+            capacity_used = capacity_details[const.USED]
+        capacity_size = 0
+        capacity_used = 0
         return Volume.instantiate(
             volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
 
