@@ -699,7 +699,6 @@ class CsmSetup(Setup):
             self.set_unsupported_feature_info()
             self._cleanup_job()
             self._configure_system_auto_restart()
-
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
