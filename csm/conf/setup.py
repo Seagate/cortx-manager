@@ -18,6 +18,7 @@ import sys
 import crypt
 import pwd
 import grp
+import errno
 import shlex
 import json
 from eos.utils.log import Log
@@ -39,6 +40,7 @@ from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
 from eos.utils.schema.payload import Json
+from csm.common.payload import Text
 
 # try:
 #     from salt import client
@@ -59,6 +61,7 @@ class Setup:
         self._user = const.NON_ROOT_USER
         self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
+        self._setup_info = dict()
 
     @staticmethod
     def _run_cmd(cmd):
@@ -617,6 +620,49 @@ class Setup:
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+    def _configure_system_auto_restart(self):
+        """
+        Check's System Installation Type an dUpdate the Service File
+        Accordingly.
+        :return: None
+        """
+        is_auto_restart_required = list()
+        if self._setup_info:
+            for each_key in self._setup_info:
+                comparison_data = const.EDGE_INSTALL_TYPE.get(each_key, None)
+                #Check Key Exists:
+                if comparison_data is None:
+                    Log.logger.warn(f"Edge Installation missing key {each_key}")
+                    continue
+                if isinstance(comparison_data, list):
+                    if self._setup_info[each_key] in comparison_data:
+                        is_auto_restart_required.append(False)
+                    else:
+                        is_auto_restart_required.append(True)
+                elif self._setup_info[each_key] == comparison_data:
+                    is_auto_restart_required.append(False)
+                else:
+                    is_auto_restart_required.append(True)
+        else:
+            Log.logger.warn("Setup info does not exist.")
+            is_auto_restart_required.append(True)
+        if any(is_auto_restart_required):
+            Log.logger.debug("Updating All setup file for Auto Restart on "
+                             "Failure")
+            Setup._update_service_file("#< RESTART_OPTION >",
+                                      "RESTART=on-failure")
+            Setup._run_cmd("systemctl daemon-reload")
+
+    @staticmethod
+    def _update_service_file(key, value):
+        """
+        Update CSM Agent and CSM Web service Files Depending on Job Type of
+        Setup.
+        """
+        for each_service_file in const.CSM_SERVICE_FILES:
+            service_file_data = Text(each_service_file).load()
+            data = service_file_data.replace(key, value)
+            Text(each_service_file).dump(data)
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
@@ -652,6 +698,7 @@ class CsmSetup(Setup):
             self._config_user()
             self.set_unsupported_feature_info()
             self._cleanup_job()
+            self._configure_system_auto_restart()
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
