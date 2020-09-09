@@ -142,7 +142,8 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    yum install -y eos-py-utils cortx-prvsnr
+    pip3 install git+https://0b8f10915fae2fdf468e581a12f81291953df1ff@github.com/Seagate/cortx-py-utils.git@rpm_build_break
+    yum install -y cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
