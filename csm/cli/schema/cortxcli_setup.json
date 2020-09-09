@@ -20,7 +20,7 @@
                     "flag": "-f",
                     "action": "store_true",
                     "default": false,
-                    "help": "force"
+                    "help": "force config overwrite"
                 },
                 {
                     "flag": "--debug",
