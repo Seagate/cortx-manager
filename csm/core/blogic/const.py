@@ -151,7 +151,7 @@ PRIMARY_ROLE='primary'
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
 GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
-BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'threshold_breached:high']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
@@ -556,6 +556,9 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
+GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
+LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
 EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
