@@ -596,22 +596,24 @@ class Setup:
         """
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            
+            unsupported_feature_instance = UnsupportedFeaturesDB()
+            self._loop = asyncio.get_event_loop()
             components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
             unsupported_features_list = []
             for component in components_list:
-                unsupported_features = UnsupportedFeaturesDB.get_unsupported_features(component_name=component)
-
+                unsupported_features = self._loop.run_until_complete(
+                    unsupported_feature_instance.get_unsupported_features(component_name=component))
                 for feature in unsupported_features:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
 
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
-                if setup["name"] == self._setup_info[const.STORAGE_TYPE]:
-                    unsupported_features_list.append(setup[const.UNSUPPORTED_FEATURES])
+                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
+                    unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
 
-            UnsupportedFeaturesDB.store_unsupported_features(component_name=const.CSM_COMPONENT_NAME, features=unsupported_features_list)
+            self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
+                component_name=str(const.CSM_COMPONENT_NAME.lower()), features=unsupported_features_list))
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
