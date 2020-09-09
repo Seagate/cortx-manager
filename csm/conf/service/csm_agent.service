@@ -34,6 +34,6 @@ ExecStart=/usr/bin/csm_agent
 ExecStopPost=/usr/bin/rm -rf /var/run/csm/csm_agent.pid
 PIDFile=/var/run/csm/csm_agent.pid
 User=csm
-
-# Restart=on-failure
+# Auto restart option is enabled depending on the system installation type.
+#< RESTART_OPTION >
 TimeoutStartSec=300

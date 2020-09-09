@@ -49,7 +49,7 @@ class CsmAgent:
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         #Remove all Old Shutdown Cron Jobs
-        CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
+        #CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
