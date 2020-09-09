@@ -232,6 +232,7 @@ class CsmRestApi(CsmApi, ABC):
         request.session = session
         return await handler(request)
 
+                      
     @classmethod
     @web.middleware
     async def permission_middleware(cls, request, handler):
