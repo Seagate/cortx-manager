@@ -65,13 +65,13 @@ class Terminal:
             sys.stderr('Logout failed\n')
 
     @staticmethod
-    def get_old_password(value):
+    def get_current_password(value):
         """
-        Fetches an old password for user in non-echo mode.
+        Fetches current password for user in non-echo mode.
         :param value:
         :return:
         """
-        value = value or getpass(prompt="Old Password: ")
+        value = value or getpass(prompt="Current Password: ")
         return value
 
     @staticmethod
