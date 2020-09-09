@@ -35,5 +35,6 @@ ExecStart=/opt/nodejs/node-v12.13.0-linux-x64/bin/node <CSM_PATH>/web/web-dist/s
 ExecStopPost=/bin/rm -rf /var/run/csm/csm_web.pid
 PIDFile=/var/run/csm/csm_web.pid
 User=csm
-# Restart=on-failure
+# Auto restart option is enabled depending on the system installation type.
+#< RESTART_OPTION >
 TimeoutStartSec=300
