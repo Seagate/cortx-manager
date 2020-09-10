@@ -96,6 +96,7 @@ class AlertSchemaValidator(Schema):
     module = fields.String(required=False, description="Module for IEM")
     node_id = fields.String(required=True, description="Node id of the resource")
     support_message = fields.String(required=False, description="Support message for alert.")
+    resource_id = fields.String(required=True, description="Id of the resource")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -272,6 +273,9 @@ class AlertPlugin(CsmPlugin):
                 csm_schema[const.ALERT_NODE_ID] = csm_schema.get\
                     (const.ALERT_EXTENDED_INFO).get(const.ALERT_INFO)\
                     .get(const.ALERT_NODE_ID)
+                csm_schema[const.ALERT_RESOURCE_ID] = csm_schema.get\
+                    (const.ALERT_EXTENDED_INFO).get(const.ALERT_INFO)\
+                    .get(const.ALERT_RESOURCE_ID)
                 csm_schema[const.ALERT_MODULE_TYPE] = f'{module_type}'
                 csm_schema[const.ALERT_MODULE_NAME] = resource_type
                 csm_schema[const.ALERT_CREATED_TIME] = \
