@@ -247,9 +247,18 @@ BUILD_END_TIME=$(date +%s)
 echo "CSM RPMs ..."
 find $BASE_DIR -name *.rpm
 
+echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr BEFORE AUXIALLARY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+rpm -qa | grep cortx-prvsnr
+python3 -c "import provisioner; print(provisioner.__file__)"
+
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
     bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"
+    
+    echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr AFTER AUXIALLARY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    rpm -qa | grep cortx-prvsnr
+    python3 -c "import provisioner; print(provisioner.__file__)"
+    
     RESULT=$(cat /tmp/result.txt)
     cat /tmp/result.txt
     echo $RESULT
