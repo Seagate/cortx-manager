@@ -15,7 +15,7 @@
 
 # Csm Setup
 CSM_PATH = "/opt/seagate/cortx/csm"
-CORTXCLI_PATH = "/opt/seagate/cortx/cortxcli"
+CORTXCLI_PATH = "/opt/seagate/cortx/cli"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"

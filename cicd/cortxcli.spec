@@ -18,7 +18,7 @@ Version: %{version}
 Release: %{dist}
 Summary: Cortx CLI
 License: Seagate Proprietary
-URL: http://gitlab.mero.colo.seagate.com/eos/csm
+URL: http://github.com/Seagate/cortx-management
 Source0: <PRODUCT>-cli-%{version}.tar.gz
 %define debug_package %{nil}
 
@@ -37,8 +37,6 @@ cp -rp . ${RPM_BUILD_ROOT}<CORTXCLI_PATH>
 exit 0
 
 %post
-# Use csm_setup cli for csm directory, permission services
-mkdir -p /etc/uds
 CSM_DIR=<CORTXCLI_PATH>
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
