@@ -38,7 +38,7 @@ import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
+from eos.utils.product_features import unsupported_features
 from eos.utils.schema.payload import Json
 from csm.common.payload import Text
 
@@ -599,7 +599,7 @@ class Setup:
         """
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            unsupported_feature_instance = UnsupportedFeaturesDB()
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             self._loop = asyncio.get_event_loop()
             components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
             unsupported_features_list = []
