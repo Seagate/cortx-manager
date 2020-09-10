@@ -37,7 +37,6 @@ chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.
 
 echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 rpm -qa | grep cortx-prvsnr
-python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
 yum remove salt* -y
 pip3 uninstall -y salt
