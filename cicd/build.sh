@@ -144,7 +144,6 @@ else
     pip3 install pyinstaller==3.5
     yum install -y eos-py-utils cortx-prvsnr
     echo "========================================Echoing here provisioner=================================================="
-    python3 -c "import provisioner; print(provisioner.__file__)"
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -152,8 +151,12 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
+    sudo chmod -R ugo+rX /usr/local/lib/python3.6/site-packages
     echo "========================================Echoing here=================================================="
     python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
+    
+    python3 -c "import provisioner; print(provisioner.__file__)"
+
 fi
 ################### Backend ##############################
 
