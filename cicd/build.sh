@@ -57,6 +57,11 @@ TAR_END_TIME=$(( $(date +%s) - $TAR_START_TIME ))
 TAR_TOTAL_TIME=$(( $TAR_TOTAL_TIME + $TAR_END_TIME ))
 }
 
+rm_list() {
+    sed -i -e "s|<PATH>|${DIST}/${2}|g" ${1}
+    for x in `cat ${1}`;do rm -r $x;done;
+}
+
 usage() {
     echo """
 usage: $PROG_NAME [-v <csm version>]
@@ -213,6 +218,9 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     mkdir -p  $DIST/csm/cli/
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/csm/cli/"
 
+    cp $BASE_DIR/cicd/csm_agent.rm $TMPDIR/
+    rm_list $TMPDIR/csm_agent.rm csm
+
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
         PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm_test.spec
@@ -276,6 +284,9 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
     mkdir -p  $DIST/cli/cli/
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
+
+    cp $BASE_DIR/cicd/cortxcli.rm $TMPDIR/
+    rm_list $TMPDIR/cortxcli.rm cli
 
     PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_cli.spec
     cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"

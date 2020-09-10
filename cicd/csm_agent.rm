@@ -1,0 +1,6 @@
+<PATH>/cli/schema/cortxcli_setup.json
+<PATH>/conf/etc/csm/cortxcli.conf
+<PATH>/conf/etc/csm/database_cli.yaml
+<PATH>/schema/cli_default_roles.json
+<PATH>/conf/etc/rsyslog.d/0-cortxcli_logs.conf
+

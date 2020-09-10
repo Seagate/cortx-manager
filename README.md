@@ -65,7 +65,7 @@ yum localinstall -y cortx-csm-<version>.rpm
 yum localinstall -y cortx-csm-test-<version>.rpm  
 
 ### Setup CSM
-csmcli setup init
+cortxcli setup init
 
 ### Unit Testing
 Follow the commands given below to run unit tests for CLI.  
