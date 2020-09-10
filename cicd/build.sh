@@ -253,12 +253,7 @@ python3 -c "import provisioner; print(provisioner.__file__)"
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
-    bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"
-    
-    echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr AFTER AUXIALLARY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    rpm -qa | grep cortx-prvsnr
-    python3 -c "import provisioner; print(provisioner.__file__)"
-    
+    bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"    
     RESULT=$(cat /tmp/result.txt)
     cat /tmp/result.txt
     echo $RESULT
@@ -268,6 +263,10 @@ python3 -c "import provisioner; print(provisioner.__file__)"
     }
     INTEGRATION_TEST_STOP=$(date +%s)
 }
+    
+echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr AFTER AUXIALLARY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+rpm -qa | grep cortx-prvsnr
+python3 -c "import provisioner; print(provisioner.__file__)"
 
 COPY_DIFF=$(( $COPY_END_TIME - $COPY_START_TIME ))
 printf "COPY TIME!!!!!!!!!!!!"
