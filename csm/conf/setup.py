@@ -598,7 +598,8 @@ class Setup:
         features can be stored.
         """
         try:
-            self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            #self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            self._setup_info = {const.STORAGE_TYPE:"virtual"}
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             self._loop = asyncio.get_event_loop()
             components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
@@ -620,6 +621,7 @@ class Setup:
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+    
     def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
