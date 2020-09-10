@@ -90,7 +90,7 @@ cd $BASE_DIR
 [ -z "$KEY" ] && KEY="cortx@ees@csm@pr0duct"
 [ -z "$COMPONENT" ] && COMPONENT="all"
 [ -z "$TEST" ] && TEST=false
-INTEGRATION=false
+[ -z "$TEST" ] && INTEGRATION=false
 [ -z "$DEV" ] && DEV=false
 [ -z "$QA" ] && QA=false
 
@@ -150,6 +150,8 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
+    echo "========================================Echoing here=================================================="
+    python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
 fi
 ################### Backend ##############################
 
