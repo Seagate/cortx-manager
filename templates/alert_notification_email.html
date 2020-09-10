@@ -1,25 +1,38 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head><META http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>
     <div>
-        <p>Hi,</p>
-        <p>You have received an alert with following details:</p>
-        
-        <table width="60%" style="border:1px solid black;border-collapse:collapse">
-            <tbody>
-                <tr>
-                    <td width="15%" style="border:1px solid black;font-weight:bold;text-align:center;background-color:#6ebe49">Time</td>
-                    <td width="35%" style="border:1px solid black;font-weight:bold;text-align:center;background-color:#6ebe49">Alert Target</td>
-                    <td width="10%" style="border:1px solid black;font-weight:bold;text-align:center;background-color:#6ebe49">Severity</td>
-                    <td width="40%" style="border:1px solid black;font-weight:bold;text-align:center;background-color:#6ebe49">Description</td>
-                </tr>
-                <tr>
-                    <td style="border:1px solid black;word-wrap:break-word">{event_time}</td>
-                    <td style="border:1px solid black;word-wrap:break-word">{alert_target}</td>
-                    <td style="border:1px solid black;word-wrap:break-word">{severity}</td>
-                    <td style="border:1px solid black;word-wrap:break-word">{description}</td>
-                </tr>
-            </tbody>
-        </table>
-        <p>Thanks,<br>
-        CORTX</p>
+        <p>This is an automatically generated email by CORTX system about an important alert, the details of which, are as follows:</p>
+       
+        <div style="background-color:#f5f5f5;padding: 20px;">
+            <div style="background-color:#ffffff;padding: 20px; border:1px solid #cccccc; border-radius: 5px;">
+                <div>
+                  <label style="font-size: 0.875em; font-weight: bold;">Id:&nbsp;</label>
+                  <label>{resource_id}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Name:&nbsp;</label>
+                  <label>{module_type}</label>
+                </div>
+                <div style="margin-top: 2px;">
+                  <label style="font-size: 0.875em; font-weight: bold;">Cluster:&nbsp;</label><label>{cluster_id}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Site:&nbsp;</label><label>{site_id}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Rack:&nbsp;</label><label>{rack_id}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Node:&nbsp;</label><label>{node_id}</label>
+                </div>
+                <div style="margin-top: 2px;">
+                  <label style="font-size: 0.875em; font-weight: bold;">Resource type:&nbsp;</label><label>{resource_type}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| State:&nbsp;</label><label>{state}</label>
+                </div>
+                <div style="margin-top: 2px;">
+                  <label style="font-size: 0.875em; font-weight: bold;">Description:&nbsp;</label><label>{description}</label>
+                </div>
+                <div style="margin-top: 2px;">
+                  <label style="font-size: 0.875em; font-weight: bold;">Resolved:&nbsp;</label><label>{resolved}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Acknowledged:&nbsp;</label><label>{acknowledged}</label>
+                </div>
+                <br />
+                <div>
+                  <label style="font-size: 0.875em; font-weight: bold;">Created On:&nbsp;</label><label>{created_on}</label>
+                  <label style="font-size: 0.875em; font-weight: bold;">&nbsp;| Updated On:&nbsp;</label><label>{updated_on}</label>
+                </div>
+            </div>
+        </div> 
     </div>
 </body></html>
