@@ -143,8 +143,6 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     yum install -y eos-py-utils cortx-prvsnr
-    echo "=========================================================================================="
-    python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -152,6 +150,8 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
+    echo "========================================Echoing here=================================================="
+    python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
 fi
 ################### Backend ##############################
 
