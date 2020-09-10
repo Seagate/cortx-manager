@@ -143,7 +143,7 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     # add cortx-py-utils below
-    yum install -y cortx-prvsnr
+    yum install -y cortx-prvsnr  python36-cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -152,8 +152,8 @@ else
         echo "Unable to install package from $req_file"; exit 1;
     };
     #   check need to remove below code
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
+    pip3  uninstall -y numpy
+    pip3  install numpy --no-binary :all:
 fi
 ################### Backend ##############################
 
