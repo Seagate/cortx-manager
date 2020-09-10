@@ -151,7 +151,7 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
-    sudo chmod -R ugo+rX /usr/local/lib/python3.6/site-packages
+    chmod -R ugo+rX /usr/local/lib/python3.6/site-packages
     echo "========================================Echoing here=================================================="
     python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
     
