@@ -151,33 +151,33 @@ COPY_END_TIME=$(date +%s)
 ENV_START_TIME=$(date +%s)
 # install dependency
 if [ "$DEV" == true ]; then
+echo "REMOVE"
+    # # Setup Python virtual environment
+    # VENV="${TMPDIR}/venv"
+    # if [ -d "${VENV}/bin" ]; then
+    #     echo "Using existing Python virtual environment..."
+    # else
+    #     echo "Setting up Python 3.6 virtual environment..."
+    #     python3.6 -m venv "${VENV}"
+    # fi
+    # source "${VENV}/bin/activate"
+    # python --version
+    # pip install --upgrade pip
+    # pip install pyinstaller==3.5
 
-    # Setup Python virtual environment
-    VENV="${TMPDIR}/venv"
-    if [ -d "${VENV}/bin" ]; then
-        echo "Using existing Python virtual environment..."
-    else
-        echo "Setting up Python 3.6 virtual environment..."
-        python3.6 -m venv "${VENV}"
-    fi
-    source "${VENV}/bin/activate"
-    python --version
-    pip install --upgrade pip
-    pip install pyinstaller==3.5
-
-    # Check python package
-    req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
-    echo "Installing python packages..."
-    pip install -r "$req_file" || {
-        echo "Unable to install package from $req_file"; exit 1;
-    };
-    # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
+    # # Check python package
+    # req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
+    # echo "Installing python packages..."
+    # pip install -r "$req_file" || {
+    #     echo "Unable to install package from $req_file"; exit 1;
+    # };
+    # # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
+    # pip uninstall -y numpy
+    # pip install numpy --no-binary :all:
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    yum install -y eos-py-utils cortx-prvsnr
+    yum install -y eos-py-utils cortx-prvsnr python36-cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
