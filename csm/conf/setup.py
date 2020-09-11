@@ -662,11 +662,6 @@ class CsmSetup(Setup):
             self._configure_system_auto_restart()
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
-        """
-        try:
-        except Exception as ex:
-            Log.error(f"configure_system_auto_restart failed. {ex}")
-        """
 
     def config(self, args):
         """
