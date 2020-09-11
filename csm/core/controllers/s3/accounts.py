@@ -19,6 +19,7 @@ from marshmallow.exceptions import ValidationError
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
 from csm.common.permission_names import Resource, Action
+from csm.core.blogic import const
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3BaseView, S3AuthenticatedView
@@ -39,7 +40,7 @@ class S3AccountPatchSchema(Schema):
 @CsmView._app_routes.view("/api/v1/s3_accounts")
 class S3AccountsListView(S3BaseView):
     def __init__(self, request):
-        super().__init__(request, "s3_account_service")
+        super().__init__(request, const.S3_ACCOUNT_SERVICE)
 
     """
     GET REST implementation for S3 account fetch request
@@ -51,9 +52,10 @@ class S3AccountsListView(S3BaseView):
                   f" user_id: {self.request.session.credentials.user_id}")
         limit = self.request.rel_url.query.get("limit", None)
         marker = self.request.rel_url.query.get("continue", None)
+        urls_service = self.request.app[const.URLS_SERVICE]
         with self._guard_service():
             return await self._service.list_accounts(self.request.session.credentials,
-                                                     marker, limit)
+                                                     urls_service, marker, limit)
 
     """
     POST REST implementation for S3 account fetch request

@@ -25,6 +25,7 @@ from csm.plugins.eos.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
+from csm.core.services.urls import UrlsService
 
 
 # TODO: the access to this service must be restricted to CSM users only (?)
@@ -52,13 +53,15 @@ class S3BucketService(S3BaseService):
                                             session_token=s3_session.session_token)
 
     @Log.trace_method(Log.INFO)
-    async def create_bucket(self, s3_session: S3Credentials,
+    async def create_bucket(self, s3_session: S3Credentials, urls_service: UrlsService,
                             bucket_name: str) -> Union[Response, Bucket]:
         """
         Create new bucket by given name
 
         :param s3_session: s3 user session
         :type s3_session: S3Credentials
+        :param urls_service: service object that is able to retrieve S3 server's URL
+        :type urls_service: UrlsService
         :param bucket_name: name of bucket for creation
         :type bucket_name: str
         :return:
@@ -70,16 +73,21 @@ class S3BucketService(S3BaseService):
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
-
-        return {"bucket_name": bucket_name}  # bucket Can be None
+        bucket_url = await urls_service.get_s3_url(scheme='https', bucket_name=bucket_name)
+        return {
+            "bucket_name": bucket_name,
+            "bucket_url": bucket_url
+        }  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
-    async def list_buckets(self, s3_session: S3Credentials) -> dict:
+    async def list_buckets(self, s3_session: S3Credentials, urls_service: UrlsService) -> dict:
         """
         Retrieve the full list of existing buckets
 
         :param s3_session: s3 user session
         :type s3_session: S3Credentials
+        :param urls_service: service object that is able to retrieve S3 server's URL
+        :type urls_service: UrlsService
         :return:
         """
         # TODO: pagination can be added later
@@ -92,7 +100,12 @@ class S3BucketService(S3BaseService):
             self._handle_error(e)
 
         # TODO: create model for response
-        bucket_list = [{"name": bucket.name} for bucket in bucket_list]
+        bucket_list = [
+            {
+                "name": bucket.name,
+                "bucket_url": await urls_service.get_s3_url(scheme='https', bucket_name=bucket.name)
+            }
+            for bucket in bucket_list]
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)

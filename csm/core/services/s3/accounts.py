@@ -85,16 +85,17 @@ class S3AccountService(S3BaseService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_accounts(self, session, continue_marker=None, page_limit=None,
+    async def list_accounts(self, session, urls_service, continue_marker=None, page_limit=None,
                             demand_all_accounts=False) -> dict:
         """
         Fetch a list of s3 accounts.
         :param session: session object of S3Credentials or LocalCredentials
+        :param urls_service: service object that is able to retrieve S3 server's URL
         :param continue_marker: Marker that must be used in order to fetch another
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
                            returned in one batch
-        :demand_all_accounts: When set to True, returns full list of s3 account regardless 
+        :demand_all_accounts: When set to True, returns full list of s3 account regardless
                               of session type. Needed for internal calls
         :returns: a dictionary containing account list and, if the list is truncated, a marker
                   that can be used for fetching subsequent batches
@@ -131,6 +132,7 @@ class S3AccountService(S3BaseService):
         resp = {"s3_accounts": accounts_list}
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
+        resp["s3_urls"] = await urls_service.get_s3_url()
         Log.debug(f"List account response: {resp}")
         return resp
 

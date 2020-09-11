@@ -19,6 +19,7 @@ from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
+from csm.core.services.urls import UrlsService
 from csm.plugins.eos.s3 import IamClient
 
 
@@ -83,11 +84,12 @@ class IamUsersService(S3BaseService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_users(self, s3_session: Dict) -> Union[
+    async def list_users(self, s3_session: Dict, urls_service: UrlsService) -> Union[
         Response, Dict]:
         """
         This Method Fetches Iam User's
         :param s3_session: S3 session's details. :type: dict
+        :param urls_service: service object that is able to retrieve S3 server's URL.
         :return:
         """
         s3_client = await  self.fetch_iam_client(s3_session)
@@ -100,7 +102,7 @@ class IamUsersService(S3BaseService):
         iam_users_list["iam_users"] = [vars(each_user)
                                        for each_user in iam_users_list["iam_users"]
                                        if not vars(each_user)["user_name"] == "root" ]
-
+        iam_users_list["s3_urls"] = await urls_service.get_s3_url()
         return iam_users_list
 
     @Log.trace_method(Log.DEBUG)

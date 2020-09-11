@@ -107,11 +107,11 @@ class CsmAgent:
         CsmRestApi._app["roles_service"] = roles_service
 
 
-        #S3 Plugin creation
+        # S3 Plugin creation
         s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
-        CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
-        CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3)
+        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3)
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
 
         #TODO : This is a temporary fix for build failure.
@@ -161,6 +161,7 @@ class CsmAgent:
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
+        CsmRestApi._app[const.URLS_SERVICE] = UrlsService(provisioner)
 
     @staticmethod
     def _daemonize():
@@ -246,6 +247,7 @@ if __name__ == '__main__':
     from csm.core.services.audit_log import  AuditLogManager, AuditService
     from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
+    from csm.core.services.urls import UrlsService
     from csm.common.errors import CsmError
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
