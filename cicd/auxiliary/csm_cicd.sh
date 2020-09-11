@@ -21,9 +21,6 @@ RPM_PATH=$1
 CSM_REPO_PATH=$2
 CSM_PATH=$3
 
-echo "#############################################################################"
-echo "########################### CICD CHECK ######################################"
-echo "#############################################################################"
 
 yum install -y $RPM_PATH/*.rpm
 
@@ -40,8 +37,6 @@ chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.
 
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
-python3 -c "eos.utils.product_features.model.UnsupportedFeaturesModel"
-
 yum remove salt* -y
 pip3 uninstall -y salt
 
@@ -58,23 +53,15 @@ csm_setup init
 
 
 #systemctl status csm_agent
-echo "#############################################################################"
-echo "########################### LOG ######################################"
-echo "#############################################################################"
 
-
-[ -f /var/log/seagate/csm/csm_agent.log ] && {
-    cat /var/log/seagate/csm/csm_agent.log
+[ -f /etc/var/log/seagate/csm/csm_agent.log ] && {
+    cat /etc/var/log/seagate/csm/csm_agent.log
 } || {
     echo "Log init failed"
 }
 
 sleep 5s
 mkdir -p /tmp
-
-echo "#############################################################################"
-echo "########################### Test Case ######################################"
-echo "#############################################################################"
 
 
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
