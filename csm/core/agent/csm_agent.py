@@ -249,6 +249,11 @@ if __name__ == '__main__':
     from csm.common.errors import CsmError
     from eos.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
+    from eos.utils.product_features import unsupported_features
+    from eos.utils.product_features import model
+    
+    print(model.UnsupportedFeaturesModel())
+    print(unsupported_features.UnsupportedFeaturesDB())
     try:
         # try:
         #     from salt import client
