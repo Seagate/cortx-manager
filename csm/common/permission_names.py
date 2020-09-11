@@ -33,7 +33,7 @@ class Resource:
     PERMISSIONS = 'permissions'
     NOTIFICATION = 'notification'
     SECURITY = "security"
-    UDX = 'udx'
+    LYVE_PILOT = 'lyve_pilot'
 
 
 class Action:

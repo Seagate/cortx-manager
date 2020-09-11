@@ -125,7 +125,7 @@
         },
         {
           "flag": "-sa",
-          "dest": "alert_notification ",
+          "dest": "alert_notification",
           "action": "store_const",
           "help": "Subscribe created user to alert notifications.",
           "default": false,
@@ -192,9 +192,9 @@
           "help": "Enter Your User Name."
         },
         {
-          "flag": "-o",
-          "dest": "old_password",
-          "type": "Terminal.get_old_password",
+          "flag": "-cp",
+          "dest": "current_password",
+          "type": "Terminal.get_current_password",
           "suppress_help": true,
           "help": "",
           "default": "",
@@ -225,6 +225,74 @@
       },
       "output": {
         "success": "Password Updated."
+      }
+    },
+    {
+      "name": "update",
+      "description": "Update user information",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "user_id",
+          "type": "str",
+          "help": "Enter Your User Name."
+        },
+        {
+          "flag": "-e",
+          "dest": "email",
+          "type": "str",
+          "help": "User's valid email address.",
+          "json": true
+        },
+        {
+          "flag": "-r",
+          "dest": "roles",
+          "type": "str",
+          "action": "append",
+          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
+          "choices": [
+          "monitor",
+          "manage"
+          ],
+          "json": true
+        },
+        {
+          "flag": "-cp",
+          "dest": "current_password",
+          "type": "Terminal.get_current_password",
+          "suppress_help": true,
+          "help": "",
+          "default": "",
+          "json": true
+        },
+        {
+          "flag": "-sa",
+          "dest": "alert_notification",
+          "type": "str",
+          "help": "Subscribe user to alert notifications.",
+          "choices": [
+          "true",
+          "false"
+          ],
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+      "type": "rest",
+      "method": "patch",
+      "target": "/{version}/csm/users/{user_id}",
+      "version": "v1"
+      },
+      "output": {
+      "success": "User information updated."
       }
     }
   ]

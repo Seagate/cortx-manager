@@ -96,6 +96,7 @@ class AlertSchemaValidator(Schema):
     module = fields.String(required=False, description="Module for IEM")
     node_id = fields.String(required=True, description="Node id of the resource")
     support_message = fields.String(required=False, description="Support message for alert.")
+    resource_id = fields.String(required=True, description="Id of the resource")
 
 class AlertPlugin(CsmPlugin):
     """
@@ -242,6 +243,7 @@ class AlertPlugin(CsmPlugin):
                     input_alert_payload.convert(resource_mapping, csm_alert_payload)
                 csm_alert_payload.dump()
                 csm_schema = csm_alert_payload.load()
+                obj_extended_info = JsonMessage(csm_schema[const.ALERT_EXTENDED_INFO])
                 """
                 Fetching the health information from the alert.
                 Currently we require 3 values 1. health, 2. health_reason and
@@ -271,6 +273,9 @@ class AlertPlugin(CsmPlugin):
                 csm_schema[const.ALERT_NODE_ID] = csm_schema.get\
                     (const.ALERT_EXTENDED_INFO).get(const.ALERT_INFO)\
                     .get(const.ALERT_NODE_ID)
+                csm_schema[const.ALERT_RESOURCE_ID] = csm_schema.get\
+                    (const.ALERT_EXTENDED_INFO).get(const.ALERT_INFO)\
+                    .get(const.ALERT_RESOURCE_ID)
                 csm_schema[const.ALERT_MODULE_TYPE] = f'{module_type}'
                 csm_schema[const.ALERT_MODULE_NAME] = resource_type
                 csm_schema[const.ALERT_CREATED_TIME] = \
@@ -299,12 +304,13 @@ class AlertPlugin(CsmPlugin):
                 if const.ALERT_EVENTS in csm_schema and \
                         csm_schema[const.ALERT_EVENTS] is not None:
                     csm_schema[const.ALERT_EVENT_DETAILS] = []
+                    obj_event_details = JsonMessage(csm_schema[const.ALERT_EVENT_DETAILS])
                     self._prepare_specific_info(csm_schema, specific_info)
                     csm_schema.pop(const.ALERT_EVENTS)
-                    csm_schema[const.ALERT_EVENT_DETAILS] = \
-                            str(csm_schema[const.ALERT_EVENT_DETAILS])
+                    csm_schema[const.ALERT_EVENT_DETAILS]= \
+                        obj_event_details.dump(csm_schema[const.ALERT_EVENT_DETAILS])
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
-                        str(csm_schema[const.ALERT_EXTENDED_INFO])
+                    obj_extended_info.dump(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
             Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")

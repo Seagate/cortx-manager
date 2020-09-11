@@ -1,0 +1,186 @@
+{
+  "name": "s3accesskeys",
+  "description": "Create delete or display S3 access keys",
+  "sub_commands": [
+    {
+      "name": "show",
+      "description": "Displays S3 access Keys",
+      "need_confirmation": false,
+      "permissions_tag": "list",
+      "args": [
+        {
+          "flag": "-iu",
+          "dest": "user_name",
+          "nargs": "?",
+          "type": "str",
+          "help": "S3 IAM user name for which access keys needs to be displayed.",
+          "params": true
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ]
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+      "type":"rest",
+        "method": "get",
+        "target": "/{version}/s3/access_keys",
+        "version": "v1"
+      },
+      "output": {
+        "table":{
+          "headers":{
+            "access_key_id":"Access Key",
+            "status":"Status"
+          },
+          "filters": "access_keys"
+        }
+      }
+    },
+    {
+      "name": "create",
+      "description": "Create a new access key.",
+      "need_confirmation": true,
+      "permissions_tag": "create",
+      "args": [
+        {
+          "flag": "-iu",
+          "dest": "user_name",
+          "nargs": "?",
+          "type": "str",
+          "help": "S3 IAM user name for which access key needs to be created.",
+          "params": true
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ]
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "post",
+        "target": "/{version}/s3/access_keys",
+        "version": "v1"
+      },
+      "output": {
+        "table":{
+          "headers":{
+            "access_key_id": "Access Key",
+            "secret_key": "Secret Key",
+            "status": "Status"
+          }
+        }
+      }
+    },
+    {
+      "name": "delete",
+      "description": "Deletes the given access key",
+      "need_confirmation": true,
+      "permissions_tag": "delete",
+      "args": [
+        {
+          "flag": "access_key_id",
+          "type": "str",
+          "help": "Access key id to be deleted."
+        },
+        {
+          "flag": "-iu",
+          "dest": "user_name",
+          "nargs": "?",
+          "type": "str",
+          "help": "S3 IAM user name for which access key needs to be deleted.",
+          "params": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+      "type": "rest",
+        "method": "delete",
+        "target": "/{version}/s3/access_keys/{access_key_id}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Access Key Deleted."
+      }
+    },
+    {
+      "name": "update",
+      "description": "Update the given access key",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "user_name",
+          "type": "str",
+          "help": "S3 IAM user name for which access key needs to be updated.",
+          "params": true
+        },
+        {
+          "flag": "access_key_id",
+          "type": "str",
+          "help": "Access key id to be updated."
+        },
+        {
+          "flag": "status",
+          "type": "str",
+          "help": "Select an appropriate status to update access key.",
+          "choices": [
+            "Active",
+            "Inactive"
+          ],
+          "params": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+      "type": "rest",
+        "method": "patch",
+        "target": "/{version}/s3/access_keys/{access_key_id}",
+        "version": "v1"
+      },
+      "output": {
+        "success": "Access Key updated."
+      }
+    }
+  ]
+}

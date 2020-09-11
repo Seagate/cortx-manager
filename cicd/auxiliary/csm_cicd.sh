@@ -54,8 +54,8 @@ csm_setup init
 
 #systemctl status csm_agent
 
-[ -f /etc/var/log/seagate/csm/csm_agent.log ] && {
-    cat /etc/var/log/seagate/csm/csm_agent.log
+[ -f /var/log/seagate/csm/csm_agent.log ] && {
+    cat /var/log/seagate/csm/csm_agent.log
 } || {
     echo "Log init failed"
 }
