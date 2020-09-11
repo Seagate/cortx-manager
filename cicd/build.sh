@@ -153,8 +153,8 @@ else
         echo "Unable to install package from $req_file"; exit 1;
     };
     #   check need to remove below code
-    #pip3  uninstall -y numpy
-    #pip3  install numpy --no-binary :all:
+    pip3  uninstall -y numpy
+    pip3  install numpy --no-binary :all:
 fi
 ################### Backend ##############################
 
