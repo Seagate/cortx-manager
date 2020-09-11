@@ -142,12 +142,7 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    echo "----------------Removing salt-------------------"
-    yum remove salt* -y
-    pip3 uninstall -y salt
     yum install -y eos-py-utils cortx-prvsnr
-    echo "========================================Echoing here provisioner=================================================="
-    yum install -y python36-cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -155,14 +150,6 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
-    chmod -R ugo+rX /usr/lib/python3.6/site-packages
-    ls -l /usr/lib/python3.6/site-packages/provisioner
-    ls -l /usr/local/lib/python3.6/site-packages/provisioner
-    echo "========================================Echoing here=================================================="
-    python3 -c "from eos.utils.product_features import unsupported_features;print(unsupported_features)"
-    
-    python3 -c "import provisioner; print(provisioner.__file__)"
-
 fi
 ################### Backend ##############################
 
@@ -271,10 +258,6 @@ find $BASE_DIR -name *.rpm
     INTEGRATION_TEST_STOP=$(date +%s)
 }
     
-echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr AFTER AUXIALLARY~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-rpm -qa | grep cortx-prvsnr
-python3 -c "import provisioner; print(provisioner.__file__)"
-
 COPY_DIFF=$(( $COPY_END_TIME - $COPY_START_TIME ))
 printf "COPY TIME!!!!!!!!!!!!"
 printf "%02d:%02d:%02d\n" $(( COPY_DIFF / 3600 )) $(( ( COPY_DIFF / 60 ) % 60 )) $(( COPY_DIFF % 60 ))
