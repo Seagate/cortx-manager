@@ -247,7 +247,7 @@ find $BASE_DIR -name *.rpm
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
-    bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"    
+    bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"
     RESULT=$(cat /tmp/result.txt)
     cat /tmp/result.txt
     echo $RESULT
@@ -257,7 +257,7 @@ find $BASE_DIR -name *.rpm
     }
     INTEGRATION_TEST_STOP=$(date +%s)
 }
-    
+
 COPY_DIFF=$(( $COPY_END_TIME - $COPY_START_TIME ))
 printf "COPY TIME!!!!!!!!!!!!"
 printf "%02d:%02d:%02d\n" $(( COPY_DIFF / 3600 )) $(( ( COPY_DIFF / 60 ) % 60 )) $(( COPY_DIFF % 60 ))
