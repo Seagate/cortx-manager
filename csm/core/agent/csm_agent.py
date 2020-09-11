@@ -251,7 +251,6 @@ if __name__ == '__main__':
     from csm.core.services.version import ProductVersionService
     #from eos.utils.product_features import unsupported_features
     #from eos.utils.product_features import model
-    
     #print(model.UnsupportedFeaturesModel())
     #print(unsupported_features.UnsupportedFeaturesDB())
     try:
