@@ -35,11 +35,10 @@ mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
 cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
 chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
-echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "~~~~~~~~~~~~~~~~~~Echoing cortx-prvsnr in csm_cicd.sh~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 rpm -qa | grep cortx-prvsnr
 python3 -c "import sys; print(sys.path)"
-yum remove salt* -y
-pip3 uninstall -y salt
+
 
 csm_setup post_install
 csm_setup config --debug
