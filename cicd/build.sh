@@ -144,6 +144,7 @@ else
     pip3 install pyinstaller==3.5
     yum install -y eos-py-utils cortx-prvsnr
     echo "========================================Echoing here provisioner=================================================="
+    yum install -y python36-cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
