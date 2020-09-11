@@ -152,6 +152,7 @@ else
         echo "Unable to install package from $req_file"; exit 1;
     };
 fi
+python3 -c "import eos.utils.product_features.model.UnsupportedFeaturesModel" || echo "product package not found"; true;
 ################### Backend ##############################
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
