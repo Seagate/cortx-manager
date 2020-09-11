@@ -112,6 +112,13 @@ CONF=$BASE_DIR/csm/conf/
 cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
 COPY_END_TIME=$(date +%s)
 
+python3 -c "import provisioner; print(provisioner.__file__)"
+python3 -c "import sys; print(sys.path)"
+python3 -c "import eos.utils.product_features.model.UnsupportedFeaturesModel"
+
+rpm -qa eos-py-utils || true
+rpm -qa cortx-prvsnr || true
+
 ################### Dependency ##########################
 
 # install dependency
@@ -140,9 +147,19 @@ if [ "$DEV" == true ]; then
     pip uninstall -y numpy
     pip install numpy --no-binary :all:
 else
+python3 -c "import provisioner; print(provisioner.__file__)"
+python3 -c "import sys; print(sys.path)"
+python3 -c "import eos.utils.product_features.model.UnsupportedFeaturesModel"
+
+
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     yum install -y eos-py-utils cortx-prvsnr
+
+python3 -c "import provisioner; print(provisioner.__file__)"
+python3 -c "import sys; print(sys.path)"
+python3 -c "import eos.utils.product_features.model.UnsupportedFeaturesModel"
+
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
@@ -150,6 +167,12 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
+python3 -c "import provisioner; print(provisioner.__file__)"
+python3 -c "import sys; print(sys.path)"
+python3 -c "import eos.utils.product_features.model.UnsupportedFeaturesModel"
+rpm -qa eos-py-utils || true
+rpm -qa cortx-prvsnr || true
+
 fi
 ################### Backend ##############################
 
