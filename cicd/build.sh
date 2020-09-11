@@ -142,6 +142,9 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
+    echo "----------------Removing salt-------------------"
+    yum remove salt* -y
+    pip3 uninstall -y salt
     yum install -y eos-py-utils cortx-prvsnr
     echo "========================================Echoing here provisioner=================================================="
     yum install -y python36-cortx-prvsnr
