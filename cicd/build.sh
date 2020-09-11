@@ -143,7 +143,7 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     # add cortx-py-utils below
-    yum install -y cortx-prvsnr  python36-cortx-prvsnr
+    yum install -y python36-cortx-prvsnr
 
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
