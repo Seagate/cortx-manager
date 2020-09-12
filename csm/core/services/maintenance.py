@@ -41,7 +41,7 @@ class MaintenanceAppService(ApplicationService):
         self._storage = db(self._replace_node)
         self._action_map = {const.SHUTDOWN: lambda x : not x.get(const.ONLINE),
             const.START: lambda x : not x.get(const.STANDBY),
-            const.STOP: lambda x: x.get(const.const.STANDBY)}
+            const.STOP: lambda x: x.get(const.STANDBY)}
 
     async def validate_node_id(self, resource_name, action):
         """
