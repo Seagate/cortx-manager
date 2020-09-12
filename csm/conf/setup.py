@@ -38,6 +38,8 @@ import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.product_features import unsupported_features
+from eos.utils.schema.payload import Json
 from csm.common.payload import Text
 
 # try:
@@ -582,6 +584,44 @@ class Setup:
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
+    def set_unsupported_feature_info(self):
+        """
+        This method stores CSM unsupported features in two ways:
+        1. It first gets all the unsupported features lists of the components,
+        which CSM interacts with. Add all these features as CSM unsupported 
+        features. The list of components, CSM interacts with, is
+        stored in csm.conf file. So if there is change in name of any 
+        component, csm.conf file must be updated accordingly.
+        2. Installation/envioronment type and its mapping with CSM unsupported
+        features are maintained in unsupported_feature_schema. Based on the 
+        installation/environment type received as argument, CSM unsupported
+        features can be stored.
+        """
+        try:
+            #self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            self._setup_info = {const.STORAGE_TYPE:"virtual"}
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+            self._loop = asyncio.get_event_loop()
+            components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
+            unsupported_features_list = []
+            for component in components_list:
+                unsupported_features = self._loop.run_until_complete(
+                    unsupported_feature_instance.get_unsupported_features(component_name=component))
+                for feature in unsupported_features:
+                    unsupported_features_list.append(feature.get(const.FEATURE_NAME))
+
+            csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
+
+            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
+                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
+                    unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
+
+            self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
+                component_name=str(const.CSM_COMPONENT_NAME.lower()), features=unsupported_features_list))
+        except Exception as e_:
+            Log.error(f"Error in storing unsupported features: {e_}")
+            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+    
     def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
@@ -658,8 +698,10 @@ class CsmSetup(Setup):
         try:
             self._verify_args(args)
             self._config_user()
+            self.set_unsupported_feature_info()
             self._cleanup_job()
             self._configure_system_auto_restart()
+            
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
