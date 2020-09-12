@@ -51,7 +51,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist(f"User already exists :{existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
+            raise ResourceExist(f"User already exists: {existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
 
         return await self.storage(User).store(user)
 
@@ -193,7 +193,7 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Get user service user id: {user_id}")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         return self._user_to_dict(user)
 
     async def get_user_list(self, limit, offset, sort_by, sort_dir):
@@ -220,7 +220,7 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Delete user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
             raise CsmPermissionDenied("Can't delete super user",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
@@ -272,7 +272,7 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Update user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
 
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
