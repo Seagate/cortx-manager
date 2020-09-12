@@ -124,15 +124,6 @@
           "json": true
         },
         {
-          "flag": "-sa",
-          "dest": "alert_notification",
-          "action": "store_const",
-          "help": "Subscribe created user to alert notifications.",
-          "default": false,
-          "const": true,
-          "json": true
-        },
-        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -264,17 +255,6 @@
           "suppress_help": true,
           "help": "",
           "default": "",
-          "json": true
-        },
-        {
-          "flag": "-sa",
-          "dest": "alert_notification",
-          "type": "str",
-          "help": "Subscribe user to alert notifications.",
-          "choices": [
-          "true",
-          "false"
-          ],
           "json": true
         },
         {
