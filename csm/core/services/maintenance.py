@@ -43,6 +43,7 @@ class MaintenanceAppService(ApplicationService):
             const.START: lambda x : not x.get(const.STANDBY),
             const.STOP: lambda x: x.get(const.STANDBY)}
 
+        
     async def validate_node_id(self, resource_name, action):
         """
         Validate Given Resource ID for System
