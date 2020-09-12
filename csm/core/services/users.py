@@ -51,7 +51,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist(f"User already exist: {existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
+            raise ResourceExist(f"User already exists: {existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
 
         return await self.storage(User).store(user)
 
