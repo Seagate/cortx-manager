@@ -19,7 +19,7 @@ import time
 import crypt
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
-#from eos.utils.cron import CronJob
+from eos.utils.cron import CronJob
 from csm.core.blogic import const
 
 from csm.common.conf import Conf
