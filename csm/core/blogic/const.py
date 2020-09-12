@@ -59,8 +59,7 @@ ALERTS_COMMAND = 'alerts'
 BASE_DIR = '/opt/seagate/cortx'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
-COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
-CORTXCLI_COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
+COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
@@ -286,7 +285,7 @@ FAULT_HEALTH = 'Fault'
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
-CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
+CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
 CORTXCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CORTXCLI_PATH)
 
 # Support Bundle
@@ -549,7 +548,7 @@ ALERTS_SERVICE = "alerts_service"
 ALERT_RETRY_COUNT = 3
 COMMON = "common"
 
-SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+SUPPORT_BUNDLE_SHELL_COMMAND = "sh {cortxcli_path}/cli/schema/create_support_bundle.sh {args}"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
 SUPPORT_MSG = "Please contact Seagate Support. Visit https://www.seagate.com/support/contact-support/ for details on how to contact Seagate Support."
 ID = "id"

@@ -62,6 +62,15 @@ rm_list() {
     for x in `cat ${1}`;do rm -r $x;done;
 }
 
+install_py_req() {
+    # Check python package
+    req_file=$BASE_DIR/cicd/pyinstaller/$1
+    echo "Installing python packages..."
+    pip install -r "$req_file" || {
+        echo "Unable to install package from $req_file"; exit 1;
+    };
+}
+
 usage() {
     echo """
 usage: $PROG_NAME [-v <csm version>]
@@ -170,12 +179,9 @@ if [ "$DEV" == true ]; then
     pip install --upgrade pip
     pip install pyinstaller==3.5
 
-    # Check python package
-    req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
-    echo "Installing python packages..."
-    pip install -r "$req_file" || {
-        echo "Unable to install package from $req_file"; exit 1;
-    };
+    install_py_req requirment.txt
+    install_py_req req_dev.txt
+
     # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
     pip uninstall -y numpy
     pip install numpy --no-binary :all:
@@ -185,11 +191,7 @@ else
     yum install -y eos-py-utils cortx-prvsnr
 
     # Check python package
-    req_file=$BASE_DIR/cicd/pyinstaller/requirment.txt
-    echo "Installing python packages..."
-    pip3 install --user -r "$req_file" || {
-        echo "Unable to install package from $req_file"; exit 1;
-    };
+    install_py_req requirment.txt
 fi
 ENV_END_TIME=$(date +%s)
 ################### Backend ##############################
@@ -215,8 +217,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R $BASE_DIR/schema $DIST/csm/
     cp -R $BASE_DIR/templates $DIST/csm/
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
-    mkdir -p  $DIST/csm/cli/
-    cp -R "$BASE_DIR/csm/cli/schema" "$DIST/csm/cli/"
+    cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
 
     cp $BASE_DIR/cicd/csm_agent.rm $TMPDIR/
     rm_list $TMPDIR/csm_agent.rm csm
@@ -269,7 +270,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     # Build CortxCli
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p $DIST/cli/conf/service
-    cp $CONF/cortxcli_setup.yaml $DIST/cli/conf
+    cp $CONF/cortxcli_setup.yaml $DIST/cli/conf/setup.yaml
     cp -R $CONF/etc $DIST/cli/conf
     cd $TMPDIR
 

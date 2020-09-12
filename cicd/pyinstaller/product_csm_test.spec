@@ -67,19 +67,6 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              cipher=block_cipher,
              noarchive=False)
 
-cortxcli = Analysis([csm_path + '/cli/cortxcli.py'],
-             pathex=[],
-             binaries=[],
-             datas=[],
-             hiddenimports=product_module_list,
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=[],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
-
 csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
              pathex=[],
              binaries=[],
@@ -120,7 +107,6 @@ csm_test = Analysis([csm_path + '/test/test_framework/csm_test.py'],
              noarchive=False)
 
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
-       (cortxcli, 'cortxcli', 'cortxcli'),
        (csm_setup, 'csm_setup', 'csm_setup'),
        (csm_cleanup, 'csm_cleanup', 'csm_cleanup'),
        (csm_test, 'csm_test', 'csm_test') )
@@ -134,22 +120,6 @@ csm_agent_exe = EXE(csm_agent_pyz,
           [],
           exclude_binaries=True,
           name='csm_agent',
-          debug=False,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=True,
-          console=True )
-
-# cortxcli
-cortxcli_pyz = PYZ(cortxcli.pure, cortxcli.zipped_data,
-             cipher=block_cipher)
-
-
-cortxcli_exe = EXE(cortxcli_pyz,
-          cortxcli.scripts,
-          [],
-          exclude_binaries=True,
-          name='cortxcli',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -207,12 +177,6 @@ coll = COLLECT(
                csm_agent.binaries,
                csm_agent.zipfiles,
                csm_agent.datas,
-
-               # cortxcli
-               cortxcli_exe,
-               cortxcli.binaries,
-               cortxcli.zipfiles,
-               cortxcli.datas,
 
                # csm_setup
                csm_setup_exe,

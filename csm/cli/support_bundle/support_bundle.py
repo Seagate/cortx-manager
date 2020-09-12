@@ -183,7 +183,7 @@ class SupportBundle:
             Log.debug(f"Connect to {hostname}")
             # Add Node Name to Shell Command
             shell_command = const.SUPPORT_BUNDLE_SHELL_COMMAND.format(
-                args=shell_args, csm_path=const.CSM_PATH)
+                args=shell_args, cortxcli_path=const.CORTXCLI_PATH)
             thread_obj = Thread(SupportBundle.execute_ssh(hostname,
                                                           current_user, ssh_key,
                                                           shell_command, node_list[index]),

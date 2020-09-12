@@ -37,17 +37,16 @@ cp -rp . ${RPM_BUILD_ROOT}<CORTXCLI_PATH>
 exit 0
 
 %post
-CSM_DIR=<CORTXCLI_PATH>
-CFG_DIR=$CSM_DIR/conf
+CLI_DIR=<CORTXCLI_PATH>
 PRODUCT=<PRODUCT>
 
 # Move binary file
-[ -d "${CSM_DIR}/lib" ] && {
-    ln -sf $CSM_DIR/lib/cortxcli_setup /usr/bin/cortxcli_setup
-    ln -sf $CSM_DIR/lib/cortxcli_setup $CSM_DIR/bin/cortxcli_setup
+[ -d "${CLI_DIR}/lib" ] && {
+    ln -sf $CLI_DIR/lib/cortxcli_setup /usr/bin/cortxcli_setup
+    ln -sf $CLI_DIR/lib/cortxcli_setup $CLI_DIR/bin/cortxcli_setup
 
-    ln -sf $CSM_DIR/lib/cortxcli /usr/bin/cortxcli
-    ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
+    ln -sf $CLI_DIR/lib/cortxcli /usr/bin/cortxcli
+    ln -sf $CLI_DIR/lib/cortxcli $CLI_DIR/bin/cortxcli
 }
 
 #TODO: add test for cli

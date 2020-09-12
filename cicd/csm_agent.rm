@@ -1,4 +1,3 @@
-<PATH>/cli/schema/cortxcli_setup.json
 <PATH>/conf/etc/csm/cortxcli.conf
 <PATH>/conf/etc/csm/database_cli.yaml
 <PATH>/schema/cli_default_roles.json
