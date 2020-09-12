@@ -46,6 +46,7 @@ product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("csm.cli.scripts")
 product_module_list.append("eos.utils.security.secure_storage")
+product_module_list.append("eos.utils.product_features.model")
 test_module_list = import_list(csm_path, test_path)
 db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
 cli_module_list = import_models(db_file_path)
