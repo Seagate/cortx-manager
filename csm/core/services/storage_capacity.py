@@ -29,7 +29,7 @@ class StorageCapacityService(ApplicationService):
     """
 
     @staticmethod
-    def _integer_to_human(capacity: int) -> str:
+    def _integer_to_human(capacity: int, unit) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
 
@@ -37,27 +37,29 @@ class StorageCapacityService(ApplicationService):
         :return: :type: str
         """
         capacity_float = float(capacity)
-        for unit in const.UNIT_LIST:
-            capacity_float = capacity_float / 1024
-            if capacity_float / 100 < 10:
+        for each_unit in const.UNIT_LIST:
+            if const.UNIT_LIST.index(each_unit) <= const.UNIT_LIST.index(unit):
+                capacity_float = capacity_float / 1024
+                # if capacity_float / 100 < 10:
+            else:
                 break
 
-        return f'{round(capacity_float, 2)} {unit}'
+        return round(capacity_float, 2)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_capacity_details(self, format: str = 'integer') -> Dict[str, Any]:
+    async def get_capacity_details(self, format: str = 'integer', unit=const.DEFAULT_CAPACITY_UNIT) -> Dict[str, Any]:
         """
         This method will return system disk details as per command
         :param format: Capacity format; integers by default, use 'human' for human-readable.
         :return: dict
         """
 
-        def convert_to_format(value: int) -> Any:
-            if format.lower() == 'human':
-                return StorageCapacityService._integer_to_human(value)
-            else:
+        def convert_to_format(value: int, unit: str) -> Any:
+            if unit.upper()==const.DEFAULT_CAPACITY_UNIT:
                 # keep original format (i.e., integer)
                 return value
+            if format.lower() == 'human':
+                return StorageCapacityService._integer_to_human(value, unit.upper())
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
@@ -70,14 +72,16 @@ class StorageCapacityService(ApplicationService):
         Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
         console_output = json.loads(stdout.decode('utf-8'))
         capacity_info = console_output.get('filesystem',{}).get('stats',{})
+
         if not capacity_info:
             raise CsmInternalError(f"System storage details not available.")
         formatted_output = {}
-        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]))
+        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit)
         formatted_output[const.USED] = convert_to_format(
-            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
-        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]))
-        formatted_output[const.USAGE_PERCENTAGE] = str(round((((int(capacity_info[const.TOTAL_SPACE]) -
+            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit)
+        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit)
+        formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
                                                              int(capacity_info[const.FREE_SPACE])) / 
-                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)) + ' %'       
+                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)
+        formatted_output[const.UNIT] = unit
         return formatted_output

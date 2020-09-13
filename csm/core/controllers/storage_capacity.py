@@ -17,9 +17,11 @@ from .view import CsmView, CsmAuth
 from eos.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
+from csm.common.errors import InvalidRequest
 
 
 @CsmView._app_routes.view("/api/v1/capacity")
+@CsmAuth.public
 class StorageCapacityView(CsmView):
     """
     GET REST API view implementation for getting disk capacity details.
@@ -31,6 +33,9 @@ class StorageCapacityView(CsmView):
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        return await self._service.get_capacity_details(format='human')
+        unit = self.request.query.get('unit','bytes')
+        if (not unit.upper() in const.UNIT_LIST) and (not unit.upper()==const.DEFAULT_CAPACITY_UNIT):
+            raise InvalidRequest(f"Invalid unit. Please enter units from {','.join(const.UNIT_LIST)}. Default unit is:{const.DEFAULT_CAPACITY_UNIT}")
+        return await self._service.get_capacity_details(format='human',unit=unit)
 
 
