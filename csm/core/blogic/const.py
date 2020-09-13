@@ -352,7 +352,7 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
 CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
-                            'updated_time', 'alert_notification']
+                            'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'

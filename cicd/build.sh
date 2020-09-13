@@ -190,6 +190,7 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     yum install -y eos-py-utils cortx-prvsnr
+    yum install -y python36-cortx-prvsnr
 
     # Check python package
     install_py_req requirment.txt
