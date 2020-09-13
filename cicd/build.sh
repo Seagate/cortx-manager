@@ -212,7 +212,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
 
     # Copy Backend files
     mkdir -p "$DIST/csm/lib" "$DIST/csm/bin" "$DIST/csm/conf" "$TMPDIR/csm"
-    cp -rs "$BASE_DIR/csm/*" "$TMPDIR/csm"
+    cp -rs $BASE_DIR/csm/* "$TMPDIR/csm"
     cp -rs "$BASE_DIR/test/" "$TMPDIR/csm"
 
     cp -R "$BASE_DIR/schema" "$DIST/csm/"
@@ -257,8 +257,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     fi
 
     gen_tar_file csm_agent csm
-    rm -rf "${TMPDIR}/csm/*"
-    rm -rf "${TMPDIR}/cli/*"
+    rm -rf ${TMPDIR}/csm/*
+    rm -rf ${TMPDIR}/cli/*
     CORE_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -277,7 +277,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
     # Copy Backend files
     mkdir -p "$DIST/cli/lib" "$DIST/cli/bin" "$DIST/cli/conf" "$TMPDIR/csm"
-    cp -rs "$BASE_DIR/csm/*" "$TMPDIR/csm"
+    cp -rs $BASE_DIR/csm/* "$TMPDIR/csm"
     #TODO: Allow test to work with cli
 
     cp -R "$BASE_DIR/schema" "$DIST/cli/"
@@ -311,8 +311,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     fi
 
     gen_tar_file cli cli
-    rm -rf "${TMPDIR}/csm/*"
-    rm -rf "${TMPDIR}/cli/*"
+    rm -rf ${TMPDIR}/csm/*
+    rm -rf ${TMPDIR}/cli/*
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -337,7 +337,7 @@ RPM_BUILD_END_TIME=$(date +%s)
 BUILD_END_TIME=$(date +%s)
 
 echo "CSM RPMs ..."
-find "$BASE_DIR" -name *.rpm
+find "$BASE_DIR" -name ./*.rpm
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
@@ -353,17 +353,17 @@ find "$BASE_DIR" -name *.rpm
 }
 
 printf "COPY TIME:      \t\t"
-print_time $(( $COPY_END_TIME - $COPY_START_TIME ))
+print_time $(( COPY_END_TIME - COPY_START_TIME ))
 printf "ENV BUILD TIME:\t\t\t"
-print_time $(( $ENV_END_TIME - $ENV_START_TIME ))
+print_time $(( ENV_END_TIME - ENV_START_TIME ))
 
-show_stat backend $CORE_BUILD_START_TIME $CORE_BUILD_END_TIME CORE
-show_stat cli $CLI_BUILD_START_TIME $CLI_BUILD_END_TIME CLI
+show_stat backend "$CORE_BUILD_START_TIME" "$CORE_BUILD_END_TIME" CORE
+show_stat cli "$CLI_BUILD_START_TIME" "$CLI_BUILD_END_TIME" CLI
 
 printf "Time taken in creating TAR: \t"
 print_time $TAR_TOTAL_TIME
 printf "Time taken in creating RPM: \t"
-print_time $(( $RPM_BUILD_END_TIME - $RPM_BUILD_START_TIME ))
+print_time $(( RPM_BUILD_END_TIME - RPM_BUILD_START_TIME ))
 
 printf "Total build time: \t\t"
-print_time $(( $BUILD_END_TIME - $BUILD_START_TIME ))
+print_time $(( BUILD_END_TIME - BUILD_START_TIME ))
