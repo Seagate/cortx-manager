@@ -59,7 +59,7 @@ TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
 
 rm_list() {
     sed -i -e "s|<PATH>|${DIST}/$2|g" "$1"
-    for x in $(cat "$1");do rm -r $x;done;
+    for x in $(cat "$1");do rm -r "$x";done;
 }
 
 install_py_req() {
@@ -203,19 +203,19 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
 
     # Build CSM Backend
     CORE_BUILD_START_TIME=$(date +%s)
-    mkdir -p $DIST/csm/conf/service
-    cp $CONF/setup.yaml $DIST/csm/conf
-    cp -R $CONF/etc $DIST/csm/conf
-    cp -R $CONF/service/csm_agent.service $DIST/csm/conf/service
-    cd $TMPDIR
+    mkdir -p "$DIST/csm/conf/service"
+    cp "$CONF/setup.yaml" "$DIST/csm/conf"
+    cp -R "$CONF/etc" "$DIST/csm/conf"
+    cp -R "$CONF/service/csm_agent.service" "$DIST/csm/conf/service"
+    cd "$TMPDIR"
 
     # Copy Backend files
-    mkdir -p $DIST/csm/lib $DIST/csm/bin $DIST/csm/conf $TMPDIR/csm
-    cp -rs $BASE_DIR/csm/* $TMPDIR/csm
-    cp -rs $BASE_DIR/test/ $TMPDIR/csm
+    mkdir -p "$DIST/csm/lib" "$DIST/csm/bin" "$DIST/csm/conf" "$TMPDIR/csm"
+    cp -rs "$BASE_DIR/csm/*" "$TMPDIR/csm"
+    cp -rs "$BASE_DIR/test/" "$TMPDIR/csm"
 
-    cp -R $BASE_DIR/schema $DIST/csm/
-    cp -R $BASE_DIR/templates $DIST/csm/
+    cp -R "$BASE_DIR/schema" "$DIST/csm/"
+    cp -R "$BASE_DIR/templates" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
 
@@ -226,33 +226,33 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     [ "$TEST" == true ] && {
         PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm_test.spec
         cp "$BASE_DIR/cicd/pyinstaller/product_csm_test.spec" "${PYINSTALLER_FILE}"
-        mkdir -p $DIST/csm/test
-        cp -R $BASE_DIR/test/plans $BASE_DIR/test/test_data $DIST/csm/test
+        mkdir -p "$DIST/csm/test"
+        cp -R "$BASE_DIR/test/plans" "$BASE_DIR/test/test_data" "$DIST/csm/test"
     } || {
         PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm.spec
         cp "$BASE_DIR/cicd/pyinstaller/product_csm.spec" "${PYINSTALLER_FILE}"
     }
 
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
-        -e "s|<CSM_PATH>|${TMPDIR}/csm|g" ${PYINSTALLER_FILE}
+        -e "s|<CSM_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
     python3 -m PyInstaller --clean -y --distpath "${DIST}/csm" --key "${KEY}" "${PYINSTALLER_FILE}"
 ################## Add CSM_PATH #################################
 
     # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-csm_agent/g" \
         -e "s|<CSM_PATH>|${CSM_PATH}|g" \
-        -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/csm_agent.spec
+        -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/csm_agent.spec"
 
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" $DIST/csm/schema/commands.yaml
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/csm/conf/etc/csm/csm.conf
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" $DIST/csm/conf/setup.yaml
-    sed -i -e "s|<PROVISIONER_CONFIG_PATH>|${PROVISIONER_CONFIG_PATH}|g" $DIST/csm/conf/etc/csm/csm.conf
+    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/csm/schema/commands.yaml"
+    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
+    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl"
+    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
+    sed -i -e "s|<PROVISIONER_CONFIG_PATH>|${PROVISIONER_CONFIG_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
 
     if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" $DIST/csm/conf/etc/csm/csm.conf
+        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" $DIST/csm/conf/etc/csm/csm.conf
+        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     fi
 
     gen_tar_file csm_agent csm
@@ -275,14 +275,14 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cd "$TMPDIR"
 
     # Copy Backend files
-    mkdir -p $DIST/cli/lib $DIST/cli/bin $DIST/cli/conf $TMPDIR/csm
-    cp -rs $BASE_DIR/csm/* $TMPDIR/csm
+    mkdir -p "$DIST/cli/lib" "$DIST/cli/bin" "$DIST/cli/conf" "$TMPDIR/csm"
+    cp -rs "$BASE_DIR/csm/*" "$TMPDIR/csm"
     #TODO: Allow test to work with cli
 
-    cp -R $BASE_DIR/schema $DIST/cli/
-    cp -R $BASE_DIR/templates $DIST/cli/
+    cp -R "$BASE_DIR/schema" "$DIST/cli/"
+    cp -R "$BASE_DIR/templates" "$DIST/cli/"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
-    mkdir -p  $DIST/cli/cli/
+    mkdir -p  "$DIST/cli/cli/"
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
     cp "$BASE_DIR/cicd/cortxcli.rm" "$TMPDIR/"
@@ -292,26 +292,26 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
 
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
-        -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" ${PYINSTALLER_FILE}
+        -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
     python3 -m PyInstaller --clean -y --distpath "${DIST}/cli" --key "${KEY}" "${PYINSTALLER_FILE}"
 ################## Add CORTXCLI_PATH #################################
 
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
-        -e "s/<PRODUCT>/${PRODUCT}/g" $TMPDIR/cortxcli.spec
+        -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
 
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" $DIST/cli/schema/commands.yaml
+    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/cli/schema/commands.yaml"
 
     if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
+        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/csm/cortxcli.conf"
     else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" $DIST/cli/conf/etc/csm/cortxcli.conf
+        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/cli/conf/etc/csm/cortxcli.conf"
     fi
 
     gen_tar_file cli cli
-    rm -rf ${TMPDIR}/csm/*
-    rm -rf ${TMPDIR}/cli/*
+    rm -rf "${TMPDIR}/csm/*"
+    rm -rf "${TMPDIR}/cli/*"
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -330,13 +330,13 @@ rpm_build cli cortxcli
 RPM_BUILD_END_TIME=$(date +%s)
 
 # Remove temporary directory
-\rm -rf ${DIST}/csm
-\rm -rf ${DIST}/cli
-\rm -rf ${TMPDIR}
+\rm -rf "${DIST}/csm"
+\rm -rf "${DIST}/cli"
+\rm -rf "${TMPDIR}"
 BUILD_END_TIME=$(date +%s)
 
 echo "CSM RPMs ..."
-find $BASE_DIR -name *.rpm
+find "$BASE_DIR" -name *.rpm
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
