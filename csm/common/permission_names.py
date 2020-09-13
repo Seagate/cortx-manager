@@ -34,6 +34,7 @@ class Resource:
     NOTIFICATION = 'notification'
     SECURITY = "security"
     LYVE_PILOT = 'lyve_pilot'
+    HEALTH = 'health'
 
 
 class Action:

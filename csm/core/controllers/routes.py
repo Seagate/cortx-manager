@@ -33,6 +33,7 @@ from csm.core.controllers.security import (SecurityInstallView, SecurityStatusVi
                                            SecurityUploadView)
 from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.version import ProductVersionView
+from csm.core.controllers.health import HealthResourceView
 
 
 class CsmRoutes():
