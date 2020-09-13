@@ -14,29 +14,12 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import sys
-import crypt
-import pwd
-import grp
-import shlex
-import json
 from eos.utils.log import Log
-from csm.common.conf import Conf
-from csm.common.payload import Yaml
 from csm.core.blogic import const
-from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, InvalidRequest
-from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
-from csm.common.cluster import Cluster
-from csm.core.agent.api import CsmApi
-import re
-import time
 import traceback
-import asyncio
-from csm.core.blogic.models.alerts import AlertModel
-from csm.core.services.alerts import AlertRepository
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from eos.utils.data.db.db_provider import GeneralConfig
 from csm.conf.setup import Setup
 import ipaddress;
 
@@ -77,6 +60,17 @@ class CortxCliSetup(Setup):
             except ValueError:
                 raise Exception("Incorrect ip address %s" %args[const.ADDRESS_PARAM])
 
+    def _rsyslog_cli(self):
+        """
+        Configure rsyslog
+        """
+        if os.path.exists(const.RSYSLOG_DIR):
+            Setup._run_cmd("cp -f " +const.CLI_SOURCE_RSYSLOG_PATH+ " " +const.CLI_RSYSLOG_PATH)
+            Setup._run_cmd("cp -f " +const.CLI_SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
+            Setup._run_cmd("systemctl restart rsyslog")
+        else:
+            raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
+
     def config(self, args):
         """
         Perform configuration for csm
@@ -85,6 +79,7 @@ class CortxCliSetup(Setup):
         """
         try:
             self._verify_args(args)
+            self._rsyslog_cli()
             self.Config.cli_create(args)
         except Exception as e:
             raise CsmSetupError(f"cortxcli_setup config failed. Error: {e} - {str(traceback.print_exc())}")

@@ -40,11 +40,7 @@ REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
-CSM_SETUP_CONF = '/etc/csm/setup.yaml'
-CSM_SETUP_INDEX = 'CSM_SETUP'
 CORTXCLI_SETUP_CMD = 'cortxcli_setup'
-CORTXCLI_SETUP_CONF = '/etc/csm/cortxcli_setup.yaml'
-CORTXCLI_SETUP_INDEX = 'CORTXCLI_SETUP'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
 CORTX Interactive Shell
@@ -431,8 +427,11 @@ S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
 SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
+CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
+CLI_RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
 SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 
 #cron dire

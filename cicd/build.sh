@@ -41,8 +41,8 @@ rpm_build() {
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "$1" ]; then
     echo "rpm build CSM $1 RPM"
     echo rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" \
-            -bb $BASE_DIR/cicd/$2.spec
-    rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb $TMPDIR/$2.spec
+            -bb "$BASE_DIR/cicd/$2.spec"
+    rpmbuild --define "version $VER" --define "dist $BUILD" --define "_topdir $TOPDIR" -bb "$TMPDIR/$2.spec"
 fi
 }
 
@@ -52,14 +52,14 @@ cd $BASE_DIR
 cd ${DIST}
 pwd
 echo "Creating tar for $1 build from $2 folder"
-    tar -czf ${DIST}/rpmbuild/SOURCES/${PRODUCT}-$1-${VER}.tar.gz $2
-TAR_END_TIME=$(( $(date +%s) - $TAR_START_TIME ))
-TAR_TOTAL_TIME=$(( $TAR_TOTAL_TIME + $TAR_END_TIME ))
+    tar -czf "${DIST}/rpmbuild/SOURCES/${PRODUCT}-$1-${VER}.tar.gz" "$2"
+TAR_END_TIME=$(($(date +%s) - TAR_START_TIME))
+TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
 }
 
 rm_list() {
-    sed -i -e "s|<PATH>|${DIST}/${2}|g" ${1}
-    for x in `cat ${1}`;do rm -r $x;done;
+    sed -i -e "s|<PATH>|${DIST}/$2|g" "$1"
+    for x in $(cat $1);do rm -r $x;done;
 }
 
 install_py_req() {
@@ -155,6 +155,7 @@ TMPDIR="$DIST/tmp"
 mkdir -p $TMPDIR
 
 CONF=$BASE_DIR/csm/conf/
+CLI_CONF=$BASE_DIR/csm/cli/conf/
 
 cd $BASE_DIR
 rm -rf ${DIST}/rpmbuild
@@ -213,7 +214,6 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -rs $BASE_DIR/csm/* $TMPDIR/csm
     cp -rs $BASE_DIR/test/ $TMPDIR/csm
 
-    CONF=$BASE_DIR/csm/conf/
     cp -R $BASE_DIR/schema $DIST/csm/
     cp -R $BASE_DIR/templates $DIST/csm/
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
@@ -270,7 +270,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     # Build CortxCli
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p $DIST/cli/conf/service
-    cp $CONF/cortxcli_setup.yaml $DIST/cli/conf/setup.yaml
+    cp $CLI_CONF/setup.yaml $DIST/cli/conf/setup.yaml
     cp -R $CONF/etc $DIST/cli/conf
     cd $TMPDIR
 
@@ -279,7 +279,6 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cp -rs $BASE_DIR/csm/* $TMPDIR/csm
     #TODO: Allow test to work with cli
 
-    CONF=$BASE_DIR/csm/conf/
     cp -R $BASE_DIR/schema $DIST/cli/
     cp -R $BASE_DIR/templates $DIST/cli/
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"

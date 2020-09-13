@@ -16,7 +16,7 @@
 import os
 import sys
 import errno
-from csm.conf.cortx_cli_setup import CortxCliSetup
+from csm.cli.conf.setup import CortxCliSetup
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Request, Response
 
@@ -38,6 +38,6 @@ class SetupProvider(Provider):
     def _process_request(self, request):
         try:
             getattr(self._cortxcli_setup, "%s" %(self._action))(request.options)
-            return Response(0, "CSM %s : PASS" %self._action)
+            return Response(0, "CLI %s : PASS" %self._action)
         except Exception as e:
-            return Response(errno.EINVAL, "CSM %s : Fail %s" %(self._action,e))
+            return Response(errno.EINVAL, "CLI %s : Fail %s" %(self._action,e))

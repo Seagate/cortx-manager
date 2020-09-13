@@ -65,7 +65,7 @@ cortxcli = Analysis([cc_path + '/cli/cortxcli.py'],
              cipher=block_cipher,
              noarchive=False)
 
-cortxcli_setup = Analysis([cc_path + '/conf/cortxcli_setup.py'],
+cortxcli_setup = Analysis([cc_path + '/cli/conf/cortxcli_setup.py'],
              pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
