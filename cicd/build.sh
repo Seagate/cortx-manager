@@ -143,7 +143,8 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     # add cortx-py-utils below
-    #yum install -y cortx-py-utils 
+    yum erase -y -q eos-py-utils
+    yum install -y cortx-py-utils 
     yum install -y python36-cortx-prvsnr
 
     # Check python package
@@ -152,9 +153,6 @@ else
     pip3 install --user -r "$req_file" || {
         echo "Unable to install package from $req_file"; exit 1;
     };
-    #   check need to remove below code
-    pip3  uninstall -y numpy
-    pip3  install numpy --no-binary :all:
 fi
 ################### Backend ##############################
 
