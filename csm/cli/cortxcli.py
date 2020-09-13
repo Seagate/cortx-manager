@@ -258,7 +258,6 @@ class CortxCli(Cmd):
 if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from csm.cli.command_factory import ArgumentParser
     from csm.cli.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from eos.utils.log import Log

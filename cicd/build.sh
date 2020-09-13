@@ -59,7 +59,7 @@ TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
 
 rm_list() {
     sed -i -e "s|<PATH>|${DIST}/$2|g" "$1"
-    for x in $(cat $1);do rm -r $x;done;
+    for x in $(cat "$1");do rm -r $x;done;
 }
 
 install_py_req() {
@@ -158,8 +158,8 @@ CONF=$BASE_DIR/csm/conf/
 CLI_CONF=$BASE_DIR/csm/cli/conf/
 
 cd $BASE_DIR
-rm -rf ${DIST}/rpmbuild
-mkdir -p ${DIST}/rpmbuild/SOURCES
+rm -rf "${DIST}/rpmbuild"
+mkdir -p "${DIST}/rpmbuild/SOURCES"
 COPY_END_TIME=$(date +%s)
 
 ################### Dependency ##########################
@@ -219,8 +219,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
 
-    cp $BASE_DIR/cicd/csm_agent.rm $TMPDIR/
-    rm_list $TMPDIR/csm_agent.rm csm
+    cp "$BASE_DIR/cicd/csm_agent.rm" "$TMPDIR/"
+    rm_list "$TMPDIR/csm_agent.rm" csm
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
@@ -256,8 +256,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     fi
 
     gen_tar_file csm_agent csm
-    rm -rf ${TMPDIR}/csm/*
-    rm -rf ${TMPDIR}/cli/*
+    rm -rf "${TMPDIR}/csm/*"
+    rm -rf "${TMPDIR}/cli/*"
     CORE_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -269,10 +269,10 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
     # Build CortxCli
     CLI_BUILD_START_TIME=$(date +%s)
-    mkdir -p $DIST/cli/conf/service
-    cp $CLI_CONF/setup.yaml $DIST/cli/conf/setup.yaml
-    cp -R $CONF/etc $DIST/cli/conf
-    cd $TMPDIR
+    mkdir -p "$DIST/cli/conf/service"
+    cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
+    cp -R "$CONF/etc" "$DIST/cli/conf"
+    cd "$TMPDIR"
 
     # Copy Backend files
     mkdir -p $DIST/cli/lib $DIST/cli/bin $DIST/cli/conf $TMPDIR/csm
@@ -285,8 +285,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     mkdir -p  $DIST/cli/cli/
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
-    cp $BASE_DIR/cicd/cortxcli.rm $TMPDIR/
-    rm_list $TMPDIR/cortxcli.rm cli
+    cp "$BASE_DIR/cicd/cortxcli.rm" "$TMPDIR/"
+    rm_list "$TMPDIR/cortxcli.rm" cli
 
     PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_cli.spec
     cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
