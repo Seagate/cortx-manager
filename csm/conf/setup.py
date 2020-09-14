@@ -588,12 +588,12 @@ class Setup:
         """
         This method stores CSM unsupported features in two ways:
         1. It first gets all the unsupported features lists of the components,
-        which CSM interacts with. Add all these features as CSM unsupported 
+        which CSM interacts with. Add all these features as CSM unsupported
         features. The list of components, CSM interacts with, is
-        stored in csm.conf file. So if there is change in name of any 
+        stored in csm.conf file. So if there is change in name of any
         component, csm.conf file must be updated accordingly.
         2. Installation/envioronment type and its mapping with CSM unsupported
-        features are maintained in unsupported_feature_schema. Based on the 
+        features are maintained in unsupported_feature_schema. Based on the
         installation/environment type received as argument, CSM unsupported
         features can be stored.
         """
