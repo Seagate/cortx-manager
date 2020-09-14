@@ -74,7 +74,7 @@ class MaintenanceAppService(ApplicationService):
         except Exception as e:
             Log.critical(f"{e}")
             raise CsmError(rc=CSM_INVALID_REQUEST,
-                            desc=const.STATUS_CHECK_FALED)
+                            desc=const.SERVICE_STATUS_CHECK_FAILED)
 
     async def shutdown(self, resource_name, **kwargs) -> Dict:
         """
