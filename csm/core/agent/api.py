@@ -209,7 +209,7 @@ class CsmRestApi(CsmApi, ABC):
                     if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
                         raise InvalidRequest(f"This feature {endpoint[const.FEATURE_NAME]} is not supported by {component} ")
             if not await unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
-                raise InvalidRequest(f"This feature {endpoint[const.FEATURE_NAME]} is not supported by CSM")       
+                raise InvalidRequest(f"This feature {endpoint[const.FEATURE_NAME]} is not supported by CSM")     
 
     @classmethod
     @web.middleware
@@ -238,7 +238,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'Public: {request}')
         request.session = session
         return await handler(request)
-                      
+
     @classmethod
     @web.middleware
     async def permission_middleware(cls, request, handler):

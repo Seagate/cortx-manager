@@ -57,7 +57,7 @@ class CsmAgent:
         feature_endpoint_map = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
         Conf.set(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX, feature_endpoint_map)
         Conf.save()
-       
+
         # Clearing cached files
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
         for f in cached_files:
