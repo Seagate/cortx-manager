@@ -38,9 +38,9 @@ import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.product_features import unsupported_features
 from eos.utils.schema.payload import Json
 from csm.common.payload import Text
+from eos.utils.product_features import unsupported_features
 
 # try:
 #     from salt import client
@@ -601,7 +601,7 @@ class Setup:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             self._loop = asyncio.get_event_loop()
-            components_list = Conf.get(const.CSM_GLOBAL_INDEX, const.COMPONENT_LIST)
+            components_list = self.get_component_list_from_features_endpoints()
             unsupported_features_list = []
             for component in components_list:
                 unsupported_features_of_component = self._loop.run_until_complete(
@@ -610,16 +610,25 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-
+            
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
 
             self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
-                component_name=str(const.CSM_COMPONENT_NAME, features=unsupported_features_list)))
+                component_name=str(const.CSM_COMPONENT_NAME, features=unsupported_features_list)))            
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+
+    def get_component_list_from_features_endpoints(self):
+        feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
+        component_list = []
+        for k,v in feature_endpoints.items():
+            for feature in v.get(const.DEPENDENT_ON):
+                if feature not in component_list:
+                    component_list.append(feature)
+        return component_list
     
     def _configure_system_auto_restart(self):
         """
@@ -741,7 +750,7 @@ class CsmSetup(Setup):
             self._rsyslog_common()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
-                self._config_cluster(args)
+                self._config_cluster(args)            
         except Exception as e:
             raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
 

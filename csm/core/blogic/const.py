@@ -567,7 +567,8 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
 
 #unsupported feature
 UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
-COMPONENT_LIST="FEATURE_COMPONENTS.components_list"
+FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
