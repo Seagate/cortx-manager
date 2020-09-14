@@ -340,13 +340,13 @@ class HealthAppService(ApplicationService):
             health = value.get(const.ALERT_HEALTH, "").lower()
             severity = value.get(const.ALERT_SEVERITY, "").lower()
             is_good_health = health in const.GOOD_HEALTH_VAL
-            if severity_val == "ok":
+            if severity_val == const.OK:
                 if is_good_health:
                     ret = True
-            elif severity_val == "critical":
+            elif severity_val == const.CRITICAL:
                 if severity in const.HIGH_RISK_SEVERITY and not is_good_health:
                     ret = True
-            elif severity_val == "warning":
+            elif severity_val == const.WARNING:
                 if severity in const.LOW_RISK_SEVERITY and not is_good_health:
                     ret = True
         except Exception as ex:
