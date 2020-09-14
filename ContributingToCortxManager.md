@@ -147,7 +147,8 @@ You can make changes to the code and save them in your files.
 
 
 1. Once you Push changes to GitHub, the output will display a URL for creating a Pull Request, as shown in the sample code above.
-:page_with_curl:**Note:** To resolve conflicts, follow the troubleshooting steps mentioned in git error messages.
+
+   :page_with_curl:**Note:** To resolve conflicts, follow the troubleshooting steps mentioned in git error messages.
 2. You'll be redirected to GitHib remote.
 3. Select **main** from the Branches/Tags drop-down list.
 4. Click **Create pull request** to create the pull request.
