@@ -138,7 +138,6 @@ class CsmUserService(ApplicationService):
             "user_type": user.user_type,
             "roles": user.roles,
             "email": user.email,
-            "alert_notification": user.alert_notification,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z'
         }
@@ -156,11 +155,12 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Create user service. user_id: {user_id}")
         user = User.instantiate_csm_user(user_id, password)
         user.update(kwargs)
+        user['alert_notification'] = True
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
     async def create_super_user(self, user_id: str, password: str,
-                                email: str, alert_notification: bool) -> dict:
+                                email: str) -> dict:
         """
         Handles the preboarding super user creation
         :param user_id: User identifier
@@ -182,7 +182,7 @@ class CsmUserService(ApplicationService):
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             await self._provisioner.create_system_user(user_id, password)
         user = User.instantiate_csm_user(user_id, password, email=email, roles=roles,
-                                         alert_notification=alert_notification)
+                                         alert_notification=True)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
