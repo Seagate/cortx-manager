@@ -189,11 +189,11 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    yum install -y eos-py-utils cortx-prvsnr
-    yum install -y python36-cortx-prvsnr
-
     # Check python package
     install_py_req requirment.txt
+
+    yum install -y eos-py-utils python36-cortx-prvsnr
+
 fi
 ENV_END_TIME=$(date +%s)
 ################### Backend ##############################
@@ -212,7 +212,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
 
     # Copy Backend files
     mkdir -p "$DIST/csm/lib" "$DIST/csm/bin" "$DIST/csm/conf" "$TMPDIR/csm"
-    cp -rs $BASE_DIR/csm/* "$TMPDIR/csm"
+    cp -rs "$BASE_DIR/csm/"* "$TMPDIR/csm"
     cp -rs "$BASE_DIR/test/" "$TMPDIR/csm"
 
     cp -R "$BASE_DIR/schema" "$DIST/csm/"
@@ -257,8 +257,8 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     fi
 
     gen_tar_file csm_agent csm
-    rm -rf ${TMPDIR}/csm/*
-    rm -rf ${TMPDIR}/cli/*
+    rm -rf "${TMPDIR}/csm/"*
+    rm -rf "${TMPDIR}/cli/"*
     CORE_BUILD_END_TIME=$(date +%s)
 fi
 
@@ -277,7 +277,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
     # Copy Backend files
     mkdir -p "$DIST/cli/lib" "$DIST/cli/bin" "$DIST/cli/conf" "$TMPDIR/csm"
-    cp -rs $BASE_DIR/csm/* "$TMPDIR/csm"
+    cp -rs "$BASE_DIR/csm/"* "$TMPDIR/csm"
     #TODO: Allow test to work with cli
 
     cp -R "$BASE_DIR/schema" "$DIST/cli/"
@@ -311,8 +311,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     fi
 
     gen_tar_file cli cli
-    rm -rf ${TMPDIR}/csm/*
-    rm -rf ${TMPDIR}/cli/*
+    rm -rf "${TMPDIR}/csm/"*
+    rm -rf "${TMPDIR}/cli/"*
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 
