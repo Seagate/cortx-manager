@@ -57,11 +57,6 @@ TAR_END_TIME=$(($(date +%s) - TAR_START_TIME))
 TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
 }
 
-rm_list() {
-    sed -i -e "s|<PATH>|${DIST}/$2|g" "$1"
-    for x in $(cat "$1");do rm -r "$x";done;
-}
-
 install_py_req() {
     # Check python package
     req_file=$BASE_DIR/cicd/pyinstaller/$1
@@ -190,9 +185,10 @@ else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
     # Check python package
-    install_py_req requirment.txt
+    yum install -y eos-py-utils cortx-prvsnr
+    yum install -y python36-cortx-prvsnr
 
-    yum install -y eos-py-utils python36-cortx-prvsnr
+    install_py_req requirment.txt
 
 fi
 ENV_END_TIME=$(date +%s)
@@ -219,9 +215,6 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R "$BASE_DIR/templates" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
-
-    cp "$BASE_DIR/cicd/csm_agent.rm" "$TMPDIR/"
-    rm_list "$TMPDIR/csm_agent.rm" csm
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
@@ -272,7 +265,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p "$DIST/cli/conf/service"
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    cp -R "$CONF/etc" "$DIST/cli/conf"
+    cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
     cd "$TMPDIR"
 
     # Copy Backend files
@@ -285,9 +278,6 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
     mkdir -p  "$DIST/cli/cli/"
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
-
-    cp "$BASE_DIR/cicd/cortxcli.rm" "$TMPDIR/"
-    rm_list "$TMPDIR/cortxcli.rm" cli
 
     PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_cli.spec
     cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
@@ -305,9 +295,9 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/cli/schema/commands.yaml"
 
     if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/csm/cortxcli.conf"
+        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"
     else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/cli/conf/etc/csm/cortxcli.conf"
+        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"
     fi
 
     gen_tar_file cli cli
@@ -337,7 +327,7 @@ RPM_BUILD_END_TIME=$(date +%s)
 BUILD_END_TIME=$(date +%s)
 
 echo "CSM RPMs ..."
-find "$BASE_DIR" -name ./*.rpm
+find "$BASE_DIR" -name "*.rpm"
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)

@@ -240,7 +240,7 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
-        csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
+        csm_conf_file_name = os.path.join(const.CORTXCLI_CONF_PATH,
                                           const.CORTXCLI_CONF_FILE_NAME)
         if not os.path.exists(csm_conf_file_name):
             raise CsmError(rc=errno.ENOENT, output="Config file is not exist")

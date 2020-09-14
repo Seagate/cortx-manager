@@ -21,9 +21,10 @@ CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
-CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CORTXCLI_PATH)
+CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
+CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CORTXCLI_SETUP_LOG_DIR = "/tmp"
@@ -120,13 +121,13 @@ TYPE_S3_SERVER = 'S3_SERVER'
 # Config
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
-CORTXCLI_CONF = '/etc/csm/cortxcli.conf'
+CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
 CORTXCLI_SECTION = 'CORTXCLI'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
-DATABASE_CLI_CONF = '/etc/csm/database_cli.yaml'
+DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
 CSM_SERVICE_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH]
@@ -304,7 +305,7 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CORTXCLI_PATH)
+CLI_DEFAULTS_ROLES = '{}/cli/schema/cli_default_roles.json'.format(CORTXCLI_PATH)
 
 # S3
 S3_HOST = 'S3.host'
@@ -429,8 +430,7 @@ RSYSLOG_DIR = "/etc/rsyslog.d"
 SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
 CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
-CLI_RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
-SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+CLI_RSYSLOG_PATH = "{}/0-cortxcli_logs.conf".format(RSYSLOG_DIR)
 CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 

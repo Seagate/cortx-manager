@@ -325,7 +325,11 @@ class Setup:
             This Function Creates the CortxCli Conf File on Required Location.
             :return:
             """
-            cli_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
+            os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_PATH)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_CONF_PATH)
+            cli_conf_target_path = os.path.join(const.CORTXCLI_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
             cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
             # Read Current CortxCli Config FIle.
             conf_file_data = Yaml(cli_conf_path).load()
@@ -459,7 +463,6 @@ class Setup:
         """
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("cp -f " +const.SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
             Setup._run_cmd("systemctl restart rsyslog")
         else:
             raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
@@ -497,9 +500,9 @@ class Setup:
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
@@ -529,7 +532,7 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
+
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
