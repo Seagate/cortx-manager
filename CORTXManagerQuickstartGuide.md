@@ -2,6 +2,10 @@
 
 This guide provides a step-by-step walkthrough for getting you CORTX-Manager ready.
 
+- [1.0 Prerequisites](##10-Prerequisites)
+- [1.2 Install Cortx Manager](#12-Install-Cortx-Manager)
+- [1.3 Deploy CORTX-Manager on Test VM](#13-Deploy-CORTX-Manager-on-Test-VM)
+
 ## 1.0 Prerequisites
 
 <details>
@@ -45,13 +49,13 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
      4. Click on add user and enter the following details:
         
-        > username: sspluser 
+        > **username:** sspluser 
 
-        > password:sspl4ever
+        > **password:** sspl4ever
         
     5. Added user will be listed in users table. Click on added user.
-
-       ![Added  user](../dev/images/Image 3.jpg)
+      
+       ![Added user](../dev/images/Image 3.jpg)
     
     6. Set all permissions and select virtual host as SSPL
        
@@ -59,14 +63,15 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
   3. Install Elastic Search:
   
-  ```shell
+     ```shell
 
      $ yum install -y https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.3.2-x86_64.rpm
      $ vim /etc/elasticsearch/elasticsearch.yml       
      $ systemctl enable elasticsearch
      $ systemctl start elasticsearch
-  ```
-    ![Successful elasticsearch.yml installation](../dev/images/Image 5.jpg)
+     ```
+    
+   ![Successful elasticsearch.yml installation](../dev/images/Image 5.jpg)
 
   4. Install Consul
   
@@ -125,19 +130,19 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         ```
   8. Install provisioner
   
-    1. Go to your home directory.
-    2. Git clone the provisioner repository, and follow the steps below:
+     1. Go to your home directory.
+     2. Git clone the provisioner repository, and follow the steps below:
     
-       ```shell
-
-       $ git clone git@github.com:Seagate/cortx-prvsnr.git
-       $ mkdir /opt/seagate/cortx/provisioner
-       $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
+        ```shell
+        $ git clone git@github.com:Seagate/cortx-prvsnr.git
+        $ mkdir /opt/seagate/cortx/provisioner
+        $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
        ```
+       
 </p>
 </details>
 
-## Install Cortx Manager
+## 1.2 Install Cortx Manager
 
  The cortx-manager repository is available at https://github.com/Seagate/cortx-csm-agent
  
@@ -161,14 +166,15 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
      - To build cortx-manager with integration tests, run: `sudo cicd/build.sh -i`
      - To build cortx-manager with log level debug, run: `sudo cicd/build.sh -q true`
+     
  4. Prepare your environment by deploying CORTX on your system. Refer to [Auto-deployment of VM](https://github.com/Seagate/cortx-prvsnr/wiki/Deployment-on-VM_Auto-Deploy)
 
-### Deploy CORTX-Manager on Test VM
+## 1.3 Deploy CORTX-Manager on Test VM
 
 All the dependencies should be preinstalled and prerequisites met before you run the CORTX-Manager. Follow these steps:
 
-     1. SSH-Login to VM with GitHub ID and Password.
-     2. Remove previously installed CORTX-Manager RPMs, if any:
+   1. SSH-Login to VM with GitHub ID and Password.
+   2. Remove previously installed CORTX-Manager RPMs, if any:
 
         For pkg in 
         
@@ -178,13 +184,13 @@ All the dependencies should be preinstalled and prerequisites met before you run
         
         `yum remove -y $pkg`
 
-  5. Install CORTX-Manager [RPM](http://cortx-storage.colo.seagate.com/releases/cortx/components/dev/multibranch/cortx-manager/) using:
+   3. Install CORTX-Manager [RPM](http://cortx-storage.colo.seagate.com/releases/cortx/components/dev/multibranch/cortx-manager/) using:
   
      ```shell
      
      yum install -i <cortx-manager-rpm-link>
      
-  6. Executing the cortx-manager setup commands should pass: 
+   4. Executing the cortx-manager setup commands should pass: 
   
      ```shell
      
@@ -192,7 +198,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
      csm_setup config
      csm_setup init
      ```
-  7. Enable and Restart cortx-manager usig: 
+  5. Enable and Restart cortx-manager usig: 
      
      ```shell
 
