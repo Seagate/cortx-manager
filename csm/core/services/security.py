@@ -42,7 +42,7 @@ from csm.core.blogic import const
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
-CERT_CORTX_TMP_DIR = f"{CERT_BASE_TMP_DIR}/eos/"  # Certificates for both S3 and CSM services
+CERT_CORTX_TMP_DIR = f"{CERT_BASE_TMP_DIR}/cortx/"  # Certificates for both S3 and CSM services
 
 DATE_TEMPLATE = "%m-%d-%Y_%H:%M:%S.%f"
 
