@@ -53,11 +53,11 @@ class CsmAgent:
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
-        # Setting feature endpoint map to conf. 
+        # Setting feature endpoint map to conf.
         feature_endpoint_map = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
         Conf.set(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX, feature_endpoint_map)
         Conf.save()
-        
+       
         # Clearing cached files
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
         for f in cached_files:
