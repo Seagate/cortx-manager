@@ -45,6 +45,7 @@ from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
+import re
 
 
 class CsmApi(ABC):
@@ -193,16 +194,22 @@ class CsmRestApi(CsmApi, ABC):
         Check whether the endpoint is supported. If not, send proper error
         reponse.
         """
+        def getMatchingEndpoint(endpoint_map, path):
+            for key,value in endpoint_map.items():
+                map_re = f'^{key}$'.replace("*", "[\w\d]*")
+                if re.search(rf"{map_re}", path):
+                    return value
+
         feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
-        endpoint = feature_endpoint_map.get(request.path) or feature_endpoint_map.get(request.url.parent.path)
-        unsupported_feature_instance = UnsupportedFeaturesDB()
+        endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
         if endpoint:
+            unsupported_feature_instance = UnsupportedFeaturesDB()
             if endpoint[const.DEPENDENT_ON]:
                 for component in endpoint[const.DEPENDENT_ON]:
                     if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
-                        raise InvalidRequest(f"This feature: {endpoint[const.FEATURE_NAME]} is not supported by {component} ")
+                        raise InvalidRequest(f"This feature {endpoint[const.FEATURE_NAME]} is not supported by {component} ")
             if not await unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
-                raise InvalidRequest(f"This feature: {endpoint[const.FEATURE_NAME]} is not supported by CSM ")        
+                raise InvalidRequest(f"This feature {endpoint[const.FEATURE_NAME]} is not supported by CSM")        
 
     @classmethod
     @web.middleware
@@ -257,8 +264,10 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
+
         try:
             await CsmRestApi.check_for_unsupported_endpoint(request)
+
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)

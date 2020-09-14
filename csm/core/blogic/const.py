@@ -557,9 +557,14 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
 
+
 HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
 GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
+EDGE_INSTALL_TYPE ={ "nodes": 1,
+                    "servers_per_node": 2,
+                    "storage_type": ["5u84", "PODS"],
+                    "server_type": "physical"}
 
 #unsupported feature
 FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
@@ -567,7 +572,3 @@ FEATURE_NAME = "feature_name"
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
-EDGE_INSTALL_TYPE ={ "nodes": 1,
-                    "servers_per_node": 2,
-                    "storage_type": ["5u84", "PODS"],
-                    "server_type": "physical"}

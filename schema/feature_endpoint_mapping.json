@@ -1,234 +1,288 @@
 {
-    "/api/v1/alerts": {
-      "feature_name": "alerts",
-      "dependent_on": [
-        "sspl"
-      ]
-    },
-    "/api/v1/alerts_history": {
-      "feature_name": "alerts",
-      "dependent_on": [
-        "sspl"
-      ]
-    },
-    "/api/v1/sysconfig": {
-      "feature_name": "",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/stats": {
-      "feature_name": "performance",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/csm/users": {
-      "feature_name": "cortx_account",
-      "dependent_on": []
-    },
-    "/api/v1/login": {
-      "feature_name": "",
-      "dependent_on": []
-    },
-    "/api/v1/preboarding/user": {
-      "feature_name": "admin_user",
-      "dependent_on": []
-    },
-    "/api/v1/logout": {
-      "feature_name": "",
-      "dependent_on": []
-    },
-    "/usl/v1/registerDevice": {
-      "feature_name": "udx_registration",
-      "dependent_on": []
-    },
-    "/usl/v1/registrationToken": {
-      "feature_name": "udx_registration",
-      "dependent_on": []
-    },
-    "/usl/v1/devices": {
-      "feature_name": "udx_registration",
-      "dependent_on": []
-    },
-    "/api/v1/s3_accounts": {
-      "feature_name": "s3_account",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/iam_users": {
-      "feature_name": "s3_iam_user",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/s3/bucket": {
-      "feature_name": "s3_bucket",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/s3/access_keys": {
-      "feature_name": "s3_account",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/capacity": {
-      "feature_name": "capacity",
-      "dependent_on": [
-        "hare"
-      ]
-    },
-    "/api/v1/s3/bucket_policy": {
-      "feature_name": "s3_bucket",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/permissions": {
-      "feature_name": "cortx_account",
-      "dependent_on": []
-    },
-    "/api/v1/license/onboarding": {
-      "feature_name": "licence_agreement",
-      "dependent_on": []
-    },
-    "/api/v1/auditlogs": {
-      "feature_name": "auditlog",
-      "dependent_on": [
-        "s3"
-      ]
-    },
-    "/api/v1/maintenance/cluster": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/node_status": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/stop": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/start": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/shutdown": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/replace_node": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/maintenance/cluster/replace_node_status": {
-      "feature_name": "cluster_management",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/system/health/summary": {
-      "feature_name": "health",
-      "dependent_on": [
-        "sspl"
-      ]
-    },
-    "/api/v1/system/health/view": {
-      "feature_name": "health",
-      "dependent_on": [
-        "sspl"
-      ]
-    },
-    "/api/v1/system/health/node": {
-      "feature_name": "health",
-      "dependent_on": [
-        "sspl"
-      ]
-    },
-    "/api/v1/sysconfig_helpers/email_test": {
-      "feature_name": "settings_email_notifications",
-      "dependent_on": []
-    },
-    "/api/v1/update/hotfix/status": {
-      "feature_name": "SW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/hotfix/upload": {
-      "feature_name": "SW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/hotfix/start": {
-      "feature_name": "SW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/firmware/upload": {
-      "feature_name": "FW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/firmware/start": {
-      "feature_name": "FW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/firmware/availability": {
-      "feature_name": "FW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/update/firmware/status": {
-      "feature_name": "FW_Update",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/tls/bundle/upload": {
-      "feature_name": "",
-      "dependent_on": []
-    },
-    "/api/v1/tls/bundle/install": {
-      "feature_name": "",
-      "dependent_on": []
-    },
-    "/api/v1/tls/bundle/status": {
-      "feature_name": "",
-      "dependent_on": []
-    },
-    "/api/v1/product_version": {
-      "feature_name": "",
-      "dependent_on": [
-        "provisioner"
-      ]
-    },
-    "/api/v1/system/health/components": {
-      "feature_name": "health",
-      "dependent_on": [
-        "sspl"
-      ]
-    }
+  "/api/v1/alerts": {
+    "feature_name": "alerts",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/alerts/*": {
+    "feature_name": "alerts",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/alerts/*/comments": {
+    "feature_name": "alerts",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/alerts_history": {
+    "feature_name": "alerts",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/alerts_history/*": {
+    "feature_name": "alerts",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/auditlogs/show/*": {
+    "feature_name": "auditlog",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/auditlogs/download/*": {
+    "feature_name": "auditlog",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/csm/file/transfer": {
+    "feature_name": "file_transfer",
+    "dependent_on": []
+  },
+  "/api/v1/update/firmware/upload": {
+    "feature_name": "FW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/update/firmware/start": {
+    "feature_name": "FW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/update/firmware/availability": {
+    "feature_name": "FW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/update/firmware/status": {
+    "feature_name": "FW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/system/health/summary": {
+    "feature_name": "health",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/system/health/view": {
+    "feature_name": "health",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/system/health/node": {
+    "feature_name": "health",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/system/health/components": {
+    "feature_name": "health",
+    "dependent_on": [
+      "sspl"
+    ]
+  },
+  "/api/v1/update/hotfix/status": {
+    "feature_name": "SW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/update/hotfix/upload": {
+    "feature_name": "SW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/update/hotfix/start": {
+    "feature_name": "SW_Update",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/login": {
+    "feature_name": "user_management",
+    "dependent_on": []
+  },
+  "/api/v1/logout": {
+    "feature_name": "user_management",
+    "dependent_on": []
+  },
+  "/api/v1/maintenance/cluster": {
+    "feature_name": "cluster_management",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/maintenance/cluster/*": {
+    "feature_name": "cluster_management",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/onboarding/state": {
+    "feature_name": "onboarding",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/permissions": {
+    "feature_name": "cortx_account",
+    "dependent_on": []
+  },
+  "/api/v1/permissions/*": {
+    "feature_name": "cortx_account",
+    "dependent_on": []
+  },
+  "/api/v1/s3/access_keys": {
+    "feature_name": "s3_account",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3/access_keys/*": {
+    "feature_name": "s3_account",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3_accounts/*": {
+    "feature_name": "s3_account",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3_accounts": {
+    "feature_name": "s3_account",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3/bucket": {
+    "feature_name": "s3_bucket",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3/bucket/*": {
+    "feature_name": "s3_bucket",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/s3/bucket_policy/*": {
+    "feature_name": "s3_bucket",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/iam_users": {
+    "feature_name": "s3_iam_user",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/iam_users/*": {
+    "feature_name": "s3_iam_user",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/tls/bundle/upload": {
+    "feature_name": "support_bundle",
+    "dependent_on": []
+  },
+  "/api/v1/tls/bundle/install": {
+    "feature_name": "support_bundle",
+    "dependent_on": []
+  },
+  "/api/v1/tls/bundle/status": {
+    "feature_name": "support_bundle",
+    "dependent_on": []
+  },
+  "/api/v1/stats/*": {
+    "feature_name": "performance",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/stats": {
+    "feature_name": "performance",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/v1/capacity": {
+    "feature_name": "capacity",
+    "dependent_on": [
+      "hare"
+    ]
+  },
+  "/api/v1/sysconfig": {
+    "feature_name": "sysconfig",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/sysconfig/*": {
+    "feature_name": "sysconfig",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/sysconfig_helpers/email_test": {
+    "feature_name": "settings_email_notifications",
+    "dependent_on": []
+  },
+  "/api/v1/license/onboarding": {
+    "feature_name": "licence_agreement",
+    "dependent_on": []
+  },
+  "/api/v1/provisioner/status": {
+    "feature_name": "onboarding",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/api/v1/csm/users": {
+    "feature_name": "cortx_account",
+    "dependent_on": []
+  },
+  "/api/v1/csm/users/*": {
+    "feature_name": "cortx_account",
+    "dependent_on": []
+  },
+  "/api/v1/preboarding/user": {
+    "feature_name": "admin_user",
+    "dependent_on": []
+  },
+  "/api/v1/product_version": {
+    "feature_name": "about",
+    "dependent_on": [
+      "provisioner"
+    ]
+  },
+  "/usl/v1/registerDevice": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/registrationToken": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/devices": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
   }
+}
