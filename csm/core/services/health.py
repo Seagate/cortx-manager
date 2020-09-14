@@ -120,11 +120,16 @@ class HealthAppService(ApplicationService):
             node_details = await self._get_resource_details(key, severity)
             for items in node_details:
                 resources.append(items)
-            #node_health_details.append(node_details)
-        #return node_health_details
         return {"total_count": len(resources), "resources": resources}
 
     async def _get_resource_details(self, component_id, severity):
+        """
+        Fetches the information of the leaf nodes based on severity for a
+        particular component.
+        :param component_id: storage_encl, node names
+        :param severity: ok, critical, warning
+        :retun: List of filtered resources.
+        """
         health_count_map = {}
         leaf_nodes = []
         alert_uuid_map = {}
@@ -132,11 +137,6 @@ class HealthAppService(ApplicationService):
         health_schema = self._get_schema(component_id)
         self._get_leaf_node_health(health_schema, health_count_map,
                                leaf_nodes, alert_uuid_map, severity)
-        for component in leaf_nodes:
-            component_details.append(component)
-        #health_summary = self._get_health_count(health_count_map, leaf_nodes)
-        resource_details = {"resource_count": len(component_details), "components": component_details}
-        #return resource_details
         return leaf_nodes
 
     async def fetch_component_health_view(self, **kwargs):
