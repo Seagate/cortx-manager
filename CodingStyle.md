@@ -89,7 +89,7 @@ return 'Hello ' + name
 
 [Python 3.6](https://www.python.org/dev/peps/pep-0498/) supports `f` string hence using `f` strings format is preferred than adding two strings as they create an extra object. 
 
-**Example:**
+**Example: 1**
 
 ```python
 import datetime
@@ -98,19 +98,19 @@ age = 50
 anniversary = datetime.date(1991, 10, 12)
 ```
 
-**Example:**
+**Example 2:**
 
 ```python
 f'My name is {name}, my age next year is {age+1}, my anniversary is {anniversary:%A, %B %d, %Y}.'
 ```
 
-**Example:**
+**Example: 3**
 
 ```python
 'My name is Fred, my age next year is 51, my anniversary is Saturday, October 12, 1991.'
 ```
 
-**Example:**
+**Example: 4**
 
 ```python
 f'He said his name is {name!r}.'
