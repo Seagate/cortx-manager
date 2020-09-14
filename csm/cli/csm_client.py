@@ -142,7 +142,7 @@ class CsmRestClient(CsmClient):
     async def call(self, cmd, headers={}):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
-        if status == 401 or status == 403:
+        if status == 401:
             raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
@@ -160,7 +160,7 @@ class CsmRestClient(CsmClient):
         url = f"{self._url}{url}"
         rest_obj = DirectRestRequest(url, session, method, params_json, body_json)
         body, headers, status = await rest_obj.request()
-        if status == 401 or status ==403:
+        if status == 401:
             raise CsmUnauthorizedError(errno.EACCES, self.not_authorized)
         try:
             data = json.loads(body)
