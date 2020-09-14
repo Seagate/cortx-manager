@@ -51,7 +51,9 @@ class HealthView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """Calling Health Get Method"""
+        """
+        Calling Health Get Method
+        """
         Log.debug(f"Fetch Health view. "
                   f"user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
@@ -71,7 +73,9 @@ class HealthComponentView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """Calling Health Get Method"""
+        """
+        Calling Health Get Method
+        """
         Log.debug(f"Fetch Health view. "
                   f"user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
@@ -89,9 +93,11 @@ class NodeHealthView(CsmView):
         super().__init__(request)
         self.health_service = self.request.app[const.HEALTH_SERVICE]
 
-    @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}}) 
+    @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """Calling Health Get Method"""
+        """
+        Calling Health Get Method
+        """
         Log.debug(f"Fetch Health view. "
                   f"user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
@@ -111,7 +117,9 @@ class HealthResourceView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """Calling Get Method to show resources based on severity"""
+        """
+        Calling Get Method to show resources based on severity
+        """
         Log.debug(f"Fetching health based on severity. "
                   f"user_id: {self.request.session.credentials.user_id}")
         try:

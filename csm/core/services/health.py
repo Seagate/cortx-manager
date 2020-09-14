@@ -107,18 +107,17 @@ class HealthAppService(ApplicationService):
         await self.update_health_schema_with_db()
         component_id = kwargs.get(const.ALERT_COMPONENT_ID, "")
         severity = kwargs.get(const.ALERT_SEVERITY)
-        node_health_details = []
         keys = []
         resources = []
-        node_details = {}
+        resource_details = {}
         if component_id:
             keys.append(component_id)
         else:
             parent_health_schema = self._get_schema(const.KEY_NODES)
             keys = self._get_child_node_keys(parent_health_schema)
         for key in keys:
-            node_details = await self._get_resource_details(key, severity)
-            for items in node_details:
+            resource_details = await self._get_resource_details(key, severity)
+            for items in resource_details:
                 resources.append(items)
         return {"total_count": len(resources), "resources": resources}
 
@@ -133,7 +132,6 @@ class HealthAppService(ApplicationService):
         health_count_map = {}
         leaf_nodes = []
         alert_uuid_map = {}
-        component_details = []
         health_schema = self._get_schema(component_id)
         self._get_leaf_node_health(health_schema, health_count_map,
                                leaf_nodes, alert_uuid_map, severity)
@@ -335,6 +333,19 @@ class HealthAppService(ApplicationService):
         return health_schema
 
     def _check_resource_for_severity(self, value, severity_val):
+        """
+        This method checks whether the given severity matches the severity of
+        the resource. If the severity matches it returns true else false
+        Logic:
+        1. If the health value falls in the category of GOOD health then the
+        resource has good health.
+        2. If the health falls in the non-good category then we check for sevrity.
+            2.1. If the severity is "critical" or "erroe" then the severity is critical.
+            2.2. If the severity is "warning" or "na" then it is warning.
+        param: value: Resource dict
+        param: severity_val: Severity to be checked for
+        return: true or false
+        """
         ret = False
         try:
             health = value.get(const.ALERT_HEALTH, "").lower()
@@ -406,7 +417,7 @@ class HealthAppService(ApplicationService):
         :param obj:
         :return:
         """
-        for key, value in obj.items():
+        for value in obj.values():
             if isinstance(value, dict):
                 return True
 
