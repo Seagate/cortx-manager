@@ -186,18 +186,19 @@ All the dependencies should be preinstalled and prerequisites met before you run
 
    3. Install CORTX-Manager [RPM](http://cortx-storage.colo.seagate.com/releases/cortx/components/dev/multibranch/cortx-manager/) using:
   
-     ```shell
+      ```shell
      
-     yum install -i <cortx-manager-rpm-link>
+         yum install -i <cortx-manager-rpm-link>
+      ```
      
    4. Executing the cortx-manager setup commands should pass: 
   
-     ```shell
+      ```shell
      
-     csm_setup post_install
-     csm_setup config
-     csm_setup init
-     ```
+      csm_setup post_install
+      csm_setup config
+      csm_setup init
+      ```
   5. Enable and Restart cortx-manager usig: 
      
      ```shell
