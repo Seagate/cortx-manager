@@ -120,6 +120,9 @@ CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
+CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
+CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
+CSM_SERVICE_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH]
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
@@ -148,7 +151,7 @@ PRIMARY_ROLE='primary'
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
 GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
-BAD_ALERT = ['missing', 'fault', 'threshold_breached:low']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'threshold_breached:high']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
@@ -318,6 +321,7 @@ S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
 S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeysResult'
 S3_PARAM_ACCESS_KEY_METADATA = 'AccessKeyMetadata'
 S3_PARAM_IS_TRUNCATED = 'IsTruncated'
+S3_PARAM_USER_NAME = 'UserName'
 S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'
 S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
@@ -340,11 +344,11 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
 CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
-                            'updated_time', 'alert_notification']
+                            'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
-CSM_USER_OLD_PASSWORD = 'old_password'
+CSM_USER_CURRENT_PASSWORD = 'current_password'
 CSM_USER_NAME = 'username'
 # CONSTANT
 UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
@@ -520,6 +524,7 @@ REPLACE_NODE_STATUS = "replace_node_status"
 NODE_STATUS = "node_status"
 INVALID_PASSWORD = f"Invalid {PASSWORD}"
 STATUS_CHECK_FALED = "Node status can't be checked. HCTL command failed"
+SERVICE_STATUS_CHECK_FAILED = "Service status can not be checked as services are restarting. Please check after sometime."
 SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
@@ -553,3 +558,10 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
+GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
+LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
+EDGE_INSTALL_TYPE ={ "nodes": 1,
+                    "servers_per_node": 2,
+                    "storage_type": ["5u84", "PODS"],
+                    "server_type": "physical"}

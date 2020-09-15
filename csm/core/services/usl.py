@@ -118,7 +118,9 @@ class UslService(ApplicationService):
 
         return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid"))
 
-    def _format_udx_register_device_params(self, url: str, pin: str, token: str) -> Dict[str, str]:
+    def _format_lyve_pilot_register_device_params(
+        self, url: str, pin: str, token: str
+    ) -> Dict[str, str]:
         register_device_params = {
             'url': url,
             'regPin': pin,
@@ -126,7 +128,7 @@ class UslService(ApplicationService):
         }
         return register_device_params
 
-    async def _format_udx_access_params(
+    async def _format_lyve_pilot_access_params(
         self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
         bucket: Bucket
     ) -> Dict[str, Any]:
@@ -145,11 +147,11 @@ class UslService(ApplicationService):
         }
         return access_params
 
-    async def _cleanup_on_udx_registration_error(
+    async def _cleanup_on_lyve_pilot_registration_error(
         self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
         bucket: Bucket
     ) -> None:
-        Log.debug('Cleaning up UDX resources...')
+        Log.debug('Cleaning up Lyve Pilot resources...')
         access_key = s3_account.get('access_key')
         secret_key = s3_account.get('secret_key')
         Log.debug('Remove bucket')
@@ -180,9 +182,9 @@ class UslService(ApplicationService):
         except (S3ServiceError, Exception) as e:
             reason = f'Failed to remove account {s3_credentials.user_id}'
             Log.error(f'{reason} --- {e}')
-        Log.info('UDX resources cleanup complete.')
+        Log.info('Lyve Pilot resources cleanup complete.')
 
-    async def _initialize_udx_s3_resources(
+    async def _initialize_lyve_pilot_s3_resources(
         self,
         s3_account_name: str,
         s3_account_email: str,
@@ -251,9 +253,9 @@ class UslService(ApplicationService):
             iam_client = self._s3plugin.get_iam_client(
                 access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
             )
-            existing_iam_user = await self._get_udx_iam_user(iam_client, iam_user_name)
+            existing_iam_user = await self._get_lyve_pilot_iam_user(iam_client, iam_user_name)
             if existing_iam_user is None:
-                iam_user = await self._create_udx_iam_user(
+                iam_user = await self._create_lyve_pilot_iam_user(
                     iam_client, iam_user_name, iam_user_password
                 )
             elif not repair_mode:
@@ -271,10 +273,10 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         Log.debug('Create access key for IAM user')
         try:
-            # Rationale: keep only one access key for UDX IAM user
+            # Rationale: keep only one access key for Lyve Pilot IAM user
             if repair_mode:
-                await self._delete_udx_iam_user_credentials(iam_client, iam_user.user_name)
-            iam_user_access_key = await self._create_udx_iam_user_credentials(
+                await self._delete_lyve_pilot_iam_user_credentials(iam_client, iam_user.user_name)
+            iam_user_access_key = await self._create_lyve_pilot_iam_user_credentials(
                 iam_client, iam_user_name)
         except CsmInternalError as e:
             await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
@@ -286,11 +288,11 @@ class UslService(ApplicationService):
             s3_client = self._s3plugin.get_s3_client(
                 access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
             )
-            existing_bucket = await self._get_udx_bucket(s3_client, bucket_name)
+            existing_bucket = await self._get_lyve_pilot_bucket(s3_client, bucket_name)
             if existing_bucket is None:
-                bucket = await self._create_udx_bucket(s3_client, bucket_name)
-                await self._tag_udx_bucket(s3_client, bucket_name)
-                await self._set_udx_policy(s3_client, iam_user, bucket_name)
+                bucket = await self._create_lyve_pilot_bucket(s3_client, bucket_name)
+                await self._tag_lyve_pilot_bucket(s3_client, bucket_name)
+                await self._set_lyve_pilot_policy(s3_client, iam_user, bucket_name)
             elif not repair_mode:
                 reason = 'Bucket already exists'
                 Log.error(f'{reason}')
@@ -317,9 +319,9 @@ class UslService(ApplicationService):
             cast(Bucket, existing_bucket or bucket),
         )
 
-    async def _get_udx_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
+    async def _get_lyve_pilot_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
         """
-        Checks UDX IAM user exists and returns it
+        Checks Lyve Pilot IAM user exists and returns it
         """
 
         # TODO: Currently the IAM server does not support 'get-user' operation.
@@ -334,41 +336,47 @@ class UslService(ApplicationService):
 
         return None
 
-    async def _create_udx_iam_user(self, iam_cli, user_name: str, user_passwd: str) -> IamUser:
+    async def _create_lyve_pilot_iam_user(
+        self, iam_cli, user_name: str, user_passwd: str
+    ) -> IamUser:
         """
-        Creates UDX IAM user inside the currently logged in S3 account
+        Creates Lyve Pilot IAM user inside the currently logged in S3 account
         """
 
-        Log.debug(f'Creating UDX IAM user {user_name}')
+        Log.debug(f'Creating Lyve Pilot IAM user {user_name}')
         iam_user_resp = await iam_cli.create_user(user_name)
         if hasattr(iam_user_resp, "error_code"):
             erorr_msg = iam_user_resp.error_message
-            raise CsmInternalError(f'Failed to create UDX IAM user: {erorr_msg}')
-        Log.info(f'UDX IAM user {user_name} is created')
+            raise CsmInternalError(f'Failed to create Lyve Pilot IAM user: {erorr_msg}')
+        Log.info(f'Lyve Pilot IAM user {user_name} is created')
 
         iam_login_resp = await iam_cli.create_user_login_profile(user_name, user_passwd, False)
         if hasattr(iam_login_resp, "error_code"):
             # Remove the user if the login profile creation failed
             await iam_cli.delete_user(user_name)
             error_msg = iam_login_resp.error_message
-            raise CsmInternalError(f'Failed to create login profile for UDX IAM user {error_msg}')
-        Log.info(f'Login profile for UDX IAM user {user_name} is created')
+            raise CsmInternalError(
+                f'Failed to create login profile for Lyve Pilot IAM user {error_msg}')
+        Log.info(f'Login profile for Lyve Pilot IAM user {user_name} is created')
 
         return iam_user_resp
 
-    async def _create_udx_iam_user_credentials(self, iam_cli, user_name: str) -> IamUserCredentials:
+    async def _create_lyve_pilot_iam_user_credentials(
+        self, iam_cli, user_name: str
+    ) -> IamUserCredentials:
         """
-        Gets the access key id and secret key for UDX IAM user
+        Gets the access key id and secret key for Lyve Pilot IAM user
         """
 
         creds = await iam_cli.create_user_access_key(user_name=user_name)
         if hasattr(creds, 'error_code'):
             error_msg = creds.error_message
-            raise CsmInternalError(f'Failed to create access key for UDX IAM user: {error_msg}')
+            raise CsmInternalError(
+                f'Failed to create access key for Lyve Pilot IAM user: {error_msg}')
         return creds
 
-    async def _delete_udx_iam_user_credentials(self, iam_cli, user_name: str):
-        Log.debug(f'Deleting UDX IAM user {user_name} credentials')
+    async def _delete_lyve_pilot_iam_user_credentials(self, iam_cli, user_name: str) -> None:
+        Log.debug(f'Deleting Lyve Pilot IAM user {user_name} credentials')
         access_keys_resp = await iam_cli.list_user_access_keys(user_name=user_name)
         for access_key in access_keys_resp.access_keys:
             res = await iam_cli.delete_user_access_key(access_key.access_key_id, user_name=user_name)
@@ -378,52 +386,53 @@ class UslService(ApplicationService):
                                        f'{error_msg}')
         Log.info(f'IAM user {user_name} credentials are deleted')
 
-    async def _get_udx_bucket(self, s3_cli, bucket_name: str):
+    async def _get_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
         """
-        Checks if UDX bucket already exists and returns it
+        Checks if Lyve Pilot bucket already exists and returns it
         """
 
-        Log.debug(f'Getting UDX bucket')
+        Log.debug('Getting Lyve Pilot bucket')
         bucket = await s3_cli.get_bucket(bucket_name)
 
         return bucket
 
-    async def _create_udx_bucket(self, s3_cli, bucket_name: str) -> Bucket:
+    async def _create_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
         """
-        Creates UDX bucket inside the curretnly logged in S3 account
+        Creates Lyve Pilot bucket inside the curretnly logged in S3 account
         """
 
-        Log.debug(f'Creating UDX bucket {bucket_name}')
+        Log.debug(f'Creating Lyve Pilot bucket {bucket_name}')
         bucket = await s3_cli.create_bucket(bucket_name)
-        Log.info(f'UDX bucket {bucket_name} is created')
+        Log.info(f'Lyve Pilot bucket {bucket_name} is created')
         return bucket
 
-    async def _is_bucket_udx_enabled(self, s3_cli, bucket):
+    async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
-        Checks if bucket is UDX enabled
+        Checks if bucket is enabled for Lyve Pilot
 
-        The UDX enabled bucket contains tag {Key=udx,Value=enabled}
+        Buckets enabled for Lyve Pilot contain tag {Key=udx,Value=enabled}
         """
 
         tags = await s3_cli.get_bucket_tagging(bucket)
         return tags.get('udx', 'disabled') == 'enabled'
 
-    async def _tag_udx_bucket(self, s3_cli, bucket_name: str):
+    async def _tag_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> None:
         """
-        Puts the UDX tag on a specified bucket
+        Puts the Lyve Pilot tag on a specified bucket
         """
 
-        Log.debug(f'Tagging bucket {bucket_name} with UDX tag')
+        Log.debug(f'Tagging bucket {bucket_name} with Lyve Pilot tag')
         bucket_tags = {"udx": "enabled"}
         await s3_cli.put_bucket_tagging(bucket_name, bucket_tags)
-        Log.info(f'UDX bucket {bucket_name} is taggged with {bucket_tags}')
+        Log.info(f'Lyve Pilot bucket {bucket_name} is taggged with {bucket_tags}')
 
-    async def _set_udx_policy(self, s3_cli, iam_user, bucket_name: str):
+    async def _set_lyve_pilot_policy(self, s3_cli, iam_user, bucket_name: str):
         """
         Grants the specified IAM user full access to the specified bucket
         """
 
-        Log.debug(f'Setting UDX policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
+        Log.debug(
+            f'Setting Lyve Pilot policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
         policy = {
             'Version': str(date.today()),
             'Statement': [{
@@ -441,7 +450,8 @@ class UslService(ApplicationService):
             }]
         }
         await s3_cli.put_bucket_policy(bucket_name, policy)
-        Log.info(f'UDX policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
+        Log.info(
+            f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
 
     async def _get_volume_name(self, bucket_name: str) -> str:
@@ -449,7 +459,7 @@ class UslService(ApplicationService):
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
-        return uuid5(self.get_device_uuid(), bucket_name)
+        return uuid5(self._get_device_uuid(), bucket_name)
 
     async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
         bucket_name = bucket.name
@@ -462,7 +472,7 @@ class UslService(ApplicationService):
         return Volume.instantiate(
             volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
 
-    async def _get_udx_volume_list(
+    async def _get_lyve_pilot_volume_list(
         self, access_key_id: str, secret_access_key: str
     ) -> Dict[UUID, Volume]:
         s3_client = self._s3plugin.get_s3_client(
@@ -470,7 +480,7 @@ class UslService(ApplicationService):
         )
         volumes = {}
         for bucket in await s3_client.get_all_buckets():
-            if not await self._is_bucket_udx_enabled(s3_client, bucket):
+            if not await self._is_bucket_lyve_pilot_enabled(s3_client, bucket):
                 continue
             volume = await self._format_bucket_as_volume(bucket)
             volumes[volume.uuid] = volume
@@ -511,22 +521,22 @@ class UslService(ApplicationService):
         """
         if device_id != self._get_device_uuid():
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
+        volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _,v in volumes.items()]
 
-    async def _handle_udx_volume_mount_umount(
+    async def _handle_lyve_pilot_volume_mount_umount(
         self, device_id: UUID, volume_id: UUID, uri: str,
         access_key_id: str, secret_access_key: str, mount=True,
     ) -> Dict[str, str]:
         """
-        Handles UDX volume mount/umount
+        Handles Lyve Pilot volume mount/umount
 
         Checks the device and the volume with the specified IDs exist and return
         the required mount/umount information
         """
         if device_id != self._get_device_uuid():
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._get_udx_volume_list(access_key_id, secret_access_key)
+        volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
             raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
                                         f'on the device with ID {device_id}')
@@ -551,7 +561,7 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        return await self._handle_udx_volume_mount_umount(
+        return await self._handle_lyve_pilot_volume_mount_umount(
             device_id, volume_id, uri, access_key_id, secret_access_key, mount=True)
 
     async def post_device_volume_unmount(
@@ -569,7 +579,7 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
-        return await self._handle_udx_volume_mount_umount(
+        return await self._handle_lyve_pilot_volume_mount_umount(
             device_id, volume_id, uri, access_key_id, secret_access_key, mount=False)
 
     async def get_events(self) -> None:
@@ -594,8 +604,8 @@ class UslService(ApplicationService):
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
 
-        :param url: Registration URL as provided by the UDX portal
-        :param pin: Registration PIN as provided by the UDX portal
+        :param url: Registration URL as provided by the Lyve Pilot portal
+        :param pin: Registration PIN as provided by the Lyve Pilot portal
         """
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
@@ -605,9 +615,9 @@ class UslService(ApplicationService):
             reason = 'UDS base URL is not valid'
             Log.error(reason)
             raise CsmInternalError(desc=reason)
-        # Let ``_initialize_udx_s3_resources()`` propagate its exceptions
-        (udx_s3_account, udx_iam_user, udx_iam_user_access_key,
-         udx_bucket) = await self._initialize_udx_s3_resources(
+        # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
+        (lyve_pilot_s3_account, lyve_pilot_iam_user, lyve_pilot_iam_user_access_key,
+         lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
             s3_account_name,
             s3_account_email,
             s3_account_password,
@@ -616,17 +626,25 @@ class UslService(ApplicationService):
             bucket_name,
         )
         try:
-            register_device_params = self._format_udx_register_device_params(url, pin, self._token)
-            access_params = await self._format_udx_access_params(
-                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket
+            register_device_params = self._format_lyve_pilot_register_device_params(
+                url, pin, self._token)
+            access_params = await self._format_lyve_pilot_access_params(
+                lyve_pilot_s3_account,
+                lyve_pilot_iam_user,
+                lyve_pilot_iam_user_access_key,
+                lyve_pilot_bucket,
             )
             registration_body = {
                 'registerDeviceParams': register_device_params,
                 'accessParams': access_params,
             }
         except Exception as e:
-            await self._cleanup_on_udx_registration_error(
-                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket)
+            await self._cleanup_on_lyve_pilot_registration_error(
+                lyve_pilot_s3_account,
+                lyve_pilot_iam_user,
+                lyve_pilot_iam_user_access_key,
+                lyve_pilot_bucket,
+            )
             reason = 'Error on registration body assembly'
             Log.error(f'{reason}---{str(e)}')
             raise CsmInternalError(desc=reason)
@@ -662,8 +680,8 @@ class UslService(ApplicationService):
                     raise CsmGatewayTimeout(desc=reason)
                 return {
                     's3_account': {
-                        'access_key': udx_s3_account['access_key'],
-                        'secret_key': udx_s3_account['secret_key'],
+                        'access_key': lyve_pilot_s3_account['access_key'],
+                        'secret_key': lyve_pilot_s3_account['secret_key'],
                     },
                     'iam_user': {
                         'access_key': access_params['credentials']['accessKey'],
@@ -671,8 +689,12 @@ class UslService(ApplicationService):
                     },
                 }
         except Exception as e:
-            await self._cleanup_on_udx_registration_error(
-                udx_s3_account, udx_iam_user, udx_iam_user_access_key, udx_bucket)
+            await self._cleanup_on_lyve_pilot_registration_error(
+                lyve_pilot_s3_account,
+                lyve_pilot_iam_user,
+                lyve_pilot_iam_user_access_key,
+                lyve_pilot_bucket,
+            )
             raise e
 
     async def get_register_device(self) -> None:

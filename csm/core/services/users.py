@@ -51,7 +51,7 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist("Such user already exists", USERS_MSG_ALREADY_EXISTS,existing_user.user_id)
+            raise ResourceExist(f"User already exists: {existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
 
         return await self.storage(User).store(user)
 
@@ -138,7 +138,6 @@ class CsmUserService(ApplicationService):
             "user_type": user.user_type,
             "roles": user.roles,
             "email": user.email,
-            "alert_notification": user.alert_notification,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z'
         }
@@ -156,11 +155,12 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Create user service. user_id: {user_id}")
         user = User.instantiate_csm_user(user_id, password)
         user.update(kwargs)
+        user['alert_notification'] = True
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
     async def create_super_user(self, user_id: str, password: str,
-                                email: str, alert_notification: bool) -> dict:
+                                email: str) -> dict:
         """
         Handles the preboarding super user creation
         :param user_id: User identifier
@@ -182,7 +182,7 @@ class CsmUserService(ApplicationService):
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             await self._provisioner.create_system_user(user_id, password)
         user = User.instantiate_csm_user(user_id, password, email=email, roles=roles,
-                                         alert_notification=alert_notification)
+                                         alert_notification=True)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
@@ -193,7 +193,7 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Get user service user id: {user_id}")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         return self._user_to_dict(user)
 
     async def get_user_list(self, limit, offset, sort_by, sort_dir):
@@ -220,7 +220,7 @@ class CsmUserService(ApplicationService):
         Log.debug(f"Delete user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
             raise CsmPermissionDenied("Can't delete super user",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
@@ -235,23 +235,30 @@ class CsmUserService(ApplicationService):
         return {"message": "User Deleted Successfully."}
 
     async def _validation_for_update_by_superuser(self, user_id: str, user: User, new_values: dict):
-        old_password = new_values.get("old_password", None)
-        if self.is_super_user(user) and not old_password:
-            raise InvalidRequest("Super user old password is required",
+        """
+        Validation done for updation by super user.
+        """
+        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
+        if self.is_super_user(user) and not current_password:
+            raise InvalidRequest("Super user current password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
         if self.is_super_user(user) and ('roles' in new_values):
             raise CsmPermissionDenied("Cannot change roles for super user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
+
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
                                                     new_values: dict):
-        old_password = new_values.get("old_password", None)
+        """
+        Validation done for updation by normal  user.
+        """
+        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non super user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
         
-        if not old_password:
-            raise InvalidRequest("Old password is required",
+        if not current_password:
+            raise InvalidRequest("Current password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
         if 'roles' in new_values:
@@ -259,12 +266,15 @@ class CsmUserService(ApplicationService):
                                       USERS_MSG_PERMISSION_DENIED, user_id)
        
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
+        """
+        Update user .
+        """
         Log.debug(f"Update user service user_id: {user_id}.")
         user = await self.user_mgr.get(user_id)
         if not user:
-            raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND)
+            raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
 
-        old_password = new_values.get("old_password", None)
+        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
         # Is Logged in user super user
         if self.is_super_user(loggedin_user):
@@ -272,15 +282,18 @@ class CsmUserService(ApplicationService):
         else:
             await self._validation_for_update_by_normal_user(user_id, loggedin_user_id, new_values)
         
-        if old_password and not self._verfiy_old_password(user, old_password):
-            raise InvalidRequest("Cannot change password without valid old password",
+        if current_password and not self._verfiy_current_password(user, current_password):
+            raise InvalidRequest("Cannot update user details without valid current password",
                                       USERS_MSG_UPDATE_NOT_ALLOWED)
         
         user.update(new_values)
         await self.user_mgr.save(user)
         return self._user_to_dict(user)
 
-    def _verfiy_old_password(self, user: User, password):
+    def _verfiy_current_password(self, user: User, password):
+        """
+        Verify current password of user .
+        """
         return Passwd.verify(password, user.password_hash)
 
     def is_super_user(self, user: User):

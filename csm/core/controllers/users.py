@@ -57,7 +57,6 @@ class CsmSuperUserCreateSchema(Schema):
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
     email = fields.Email(required=True)
-    alert_notification = fields.Boolean(missing=False, default=False)
 
 
 # TODO: find out about policies for names and passwords
@@ -65,11 +64,10 @@ class CsmUserCreateSchema(CsmSuperUserCreateSchema):
     roles = RolesList(required=True)
 
 class CsmUserPatchSchema(Schema):
-    old_password = fields.Str(validate=[PasswordValidator()])
+    current_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
     roles = RolesList()
     email = fields.Email()
-    alert_notification = fields.Boolean()
 
     """
     Validate PATCH body pre  marshamallow validation
@@ -88,8 +86,8 @@ class CsmUserPatchSchema(Schema):
         if not data:
             raise InvalidRequest("Request effective body is empty", INVALID_REQUEST_PARAMETERS)
 
-        # just old_password in body is invalid
-        if len(data) == 1 and const.CSM_USER_OLD_PASSWORD in data:
+        # just current_password in body is invalid
+        if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
             raise InvalidRequest(f"Request effective body has no impact {data}", INVALID_REQUEST_PARAMETERS)
         return data
 
@@ -107,7 +105,6 @@ class CsmGetUsersSchema(Schema):
     sort_by = GetUsersSortBy(validate=validate.OneOf(['user_id',
                                                       'username',
                                                       'user_type',
-                                                      'alert_notification',
                                                       'email',
                                                       'created_time',
                                                       'updated_time']),

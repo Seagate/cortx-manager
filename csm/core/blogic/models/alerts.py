@@ -83,6 +83,7 @@ class AlertModel(CsmModel):
     module = StringType()
     node_id = StringType()
     support_message = StringType()
+    resource_id = StringType()
 
     def to_primitive(self) -> dict:
         obj = super().to_primitive()
@@ -157,7 +158,7 @@ class IAlertStorage(ABC):
     Interface for Alerts repository
     """
     @abstractmethod
-    async def store(self, alert: Alert):
+    async def store(self, alert: AlertModel):
         """
         Store an alert.
         It is supposed that the passed object already has the unique key
@@ -168,7 +169,7 @@ class IAlertStorage(ABC):
         pass
 
     @abstractmethod
-    async def retrieve(self, alert_id, def_val=None) -> Optional[Alert]:
+    async def retrieve(self, alert_id, def_val=None) -> Optional[AlertModel]:
         """
         Retrieves an alert by its unique key.
 
@@ -177,7 +178,7 @@ class IAlertStorage(ABC):
         pass
 
     @abstractmethod
-    async def update(self, alert: Alert):
+    async def update(self, alert: AlertModel):
         """
         Saves the alert object
 
@@ -189,7 +190,7 @@ class IAlertStorage(ABC):
     @abstractmethod
     async def retrieve_by_range(
             self, time_range: DateTimeRange, sort: Optional[SortBy],
-            limits: Optional[QueryLimits]) -> Iterable[Alert]:
+            limits: Optional[QueryLimits]) -> Iterable[AlertModel]:
         """
         Retrieves alerts that occured within the specified time range
 
