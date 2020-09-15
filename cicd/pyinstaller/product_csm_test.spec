@@ -49,8 +49,8 @@ product_module_list.append("eos.utils.security.secure_storage")
 product_module_list.append("eos.utils.product_features.model")
 test_module_list = import_list(csm_path, test_path)
 db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
-cli_module_list = import_models(db_file_path)
-product_module_list.extend(cli_module_list)
+models_list = import_models(db_file_path)
+product_module_list.extend(models_list)
 test_module_list.remove('csm.test.test_framework.csm_test')
 block_cipher = None
 
