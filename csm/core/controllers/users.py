@@ -57,7 +57,6 @@ class CsmSuperUserCreateSchema(Schema):
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
     email = fields.Email(required=True)
-    alert_notification = fields.Boolean(missing=False, default=False)
 
 
 # TODO: find out about policies for names and passwords
@@ -69,7 +68,6 @@ class CsmUserPatchSchema(Schema):
     password = fields.Str(validate=[PasswordValidator()])
     roles = RolesList()
     email = fields.Email()
-    alert_notification = fields.Boolean()
 
     """
     Validate PATCH body pre  marshamallow validation
@@ -107,7 +105,6 @@ class CsmGetUsersSchema(Schema):
     sort_by = GetUsersSortBy(validate=validate.OneOf(['user_id',
                                                       'username',
                                                       'user_type',
-                                                      'alert_notification',
                                                       'email',
                                                       'created_time',
                                                       'updated_time']),

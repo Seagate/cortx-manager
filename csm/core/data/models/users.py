@@ -70,7 +70,7 @@ class User(CsmModel):
         self.updated_time = datetime.now(timezone.utc)
 
     @staticmethod
-    def instantiate_csm_user(user_id, password, email="", roles=[], alert_notification=False):
+    def instantiate_csm_user(user_id, password, email="", roles=[], alert_notification=True):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
@@ -90,7 +90,7 @@ class User(CsmModel):
         user.password_hash = None
         user.roles = roles
         user.email = ""
-        user.alert_notification = False
+        user.alert_notification = True
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
