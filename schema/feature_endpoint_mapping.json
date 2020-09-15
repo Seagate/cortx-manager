@@ -284,5 +284,37 @@
   "/usl/v1/devices": {
     "feature_name": "udx_registration",
     "dependent_on": []
+  },
+  "/usl/v1/devices/*/volumes": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/devices/*/volumes/*/mount": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/devices/*/volumes/*/umount": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/events": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/system": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/system/certificates": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/system/certificates/*": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
+  },
+  "/usl/v1/system/network/interfaces": {
+    "feature_name": "udx_registration",
+    "dependent_on": []
   }
 }
