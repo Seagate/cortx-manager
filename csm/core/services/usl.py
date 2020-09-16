@@ -56,7 +56,7 @@ from eos.utils.security.secure_storage import SecureStorage
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
 USL_API_KEY_UPDATE_PERIOD = 24 * 60 * 60
 
-class BogusException(Exception):
+class BogusException(ClusterIdFetchError):
     pass
 
 
