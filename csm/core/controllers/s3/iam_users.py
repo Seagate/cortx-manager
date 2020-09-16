@@ -18,7 +18,6 @@ from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
-from csm.core.blogic import const
 from csm.core.controllers.validators import (PathPrefixValidator,
                                              PasswordValidator,
                                              UserNameValidator)
@@ -81,9 +80,8 @@ class IamUserListView(S3AuthenticatedView):
         Log.debug(f"Handling list IAM USER get request. "
                   f"user_id: {self.request.session.credentials.user_id}")
         # Execute List User Task
-        urls_service = self.request.app[const.URLS_SERVICE]
         with self._guard_service():
-            return await self._service.list_users(self._s3_session, urls_service)
+            return await self._service.list_users(self._s3_session)
 
     @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.CREATE}})
     async def post(self):

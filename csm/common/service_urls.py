@@ -16,15 +16,20 @@
 
 from typing import Union, List
 
-from csm.common.services import ApplicationService
 from csm.common.conf import Conf
 from csm.core.blogic import const
 
 
-class UrlsService(ApplicationService):
+class ServiceUrls:
+    """
+    Helper class that manages CORTX URLS.
+
+    Provides various CORTX URLs retrieved from the provisioner in a clean and user-friendly format.
+    """
+
     def __init__(self, provisioner):
         """
-        Initialize UrlsService.
+        Initialize ServiceUrls.
 
         :param provisioner: provisioner object.
         """

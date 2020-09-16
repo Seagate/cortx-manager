@@ -52,10 +52,9 @@ class S3AccountsListView(S3BaseView):
                   f" user_id: {self.request.session.credentials.user_id}")
         limit = self.request.rel_url.query.get("limit", None)
         marker = self.request.rel_url.query.get("continue", None)
-        urls_service = self.request.app[const.URLS_SERVICE]
         with self._guard_service():
             return await self._service.list_accounts(self.request.session.credentials,
-                                                     urls_service, marker, limit)
+                                                     marker, limit)
 
     """
     POST REST implementation for S3 account fetch request

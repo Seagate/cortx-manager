@@ -16,7 +16,6 @@
 import json
 from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
-from csm.core.blogic import const
 from csm.core.controllers.validators import BucketNameValidator
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
@@ -55,9 +54,8 @@ class S3BucketListView(S3AuthenticatedView):
         Log.debug(f"Handling list s3 buckets fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         # TODO: in future we can add some parameters for pagination
-        urls_service = self.request.app[const.URLS_SERVICE]
         with self._guard_service():
-            return await self._service.list_buckets(self._s3_session, urls_service)
+            return await self._service.list_buckets(self._s3_session)
 
     @CsmAuth.permissions({Resource.S3BUCKETS: {Action.CREATE}})
     async def post(self):
@@ -76,11 +74,9 @@ class S3BucketListView(S3AuthenticatedView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
-        urls_service = self.request.app[const.URLS_SERVICE]
         with self._guard_service():
             # NOTE: body is empty
-            result = await self._service.create_bucket(self._s3_session, urls_service,
-                                                       **bucket_creation_body)
+            result = await self._service.create_bucket(self._s3_session, **bucket_creation_body)
             return result
 
 
