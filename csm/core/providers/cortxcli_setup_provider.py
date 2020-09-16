@@ -18,10 +18,12 @@ from csm.cli.conf.setup import CortxCliSetup
 from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Response
 
+
 class SetupProvider(Provider):
+
     """Provider implementation for csm initialization."""
     def __init__(self):
-        """Init SetupProvider"""
+        """Init SetupProvider."""
         super(SetupProvider, self).__init__(const.CORTXCLI_SETUP_CMD)
         self._cortxcli_setup = CortxCliSetup()
         self.arg_list = {}

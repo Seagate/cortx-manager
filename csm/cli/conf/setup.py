@@ -39,10 +39,9 @@ class ProvisionerCliError(InvalidRequest):
 # TODO: Optimise use of args for like product, force, component
 class CortxCliSetup(Setup):
 
-    """
-    Provides functions to handle cortxcli_setup arguments.
-    """
+    """Provides functions to handle cortxcli_setup arguments."""
     def __init__(self):
+        """Init CortxCliSetup."""
         super(CortxCliSetup, self).__init__()
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
