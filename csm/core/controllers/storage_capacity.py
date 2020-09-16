@@ -21,7 +21,6 @@ from csm.common.errors import InvalidRequest
 
 
 @CsmView._app_routes.view("/api/v1/capacity")
-@CsmAuth.public
 class StorageCapacityView(CsmView):
     """
     GET REST API view implementation for getting disk capacity details.
