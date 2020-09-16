@@ -19,18 +19,15 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Provider, Response
 
 class SetupProvider(Provider):
-    """
-    Provider implementation for csm initialization
-    """
+    """Provider implementation for csm initialization"""
     def __init__(self):
+        """Init SetupProvider"""
         super(SetupProvider, self).__init__(const.CORTXCLI_SETUP_CMD)
         self._cortxcli_setup = CortxCliSetup()
         self.arg_list = {}
 
     def _validate_request(self, request):
-        """
-        Validate setup command request
-        """
+        """Validate setup command request"""
         self._action = request.options["sub_command_name"]
 
     def _process_request(self, request):

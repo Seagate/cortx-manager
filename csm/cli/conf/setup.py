@@ -17,9 +17,7 @@ import os
 from eos.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import CsmSetupError, InvalidRequest
-from csm.common.ha_framework import PcsHAFramework
 import traceback
-from eos.utils.data.db.db_provider import GeneralConfig
 from csm.conf.setup import Setup
 import ipaddress;
 
@@ -40,16 +38,19 @@ class ProvisionerCliError(InvalidRequest):
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CortxCliSetup(Setup):
+
+    """
+    Provides functions to handle cortxcli_setup arguments
+    """
     def __init__(self):
         super(CortxCliSetup, self).__init__()
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
 
-    def _verify_args(self, args):
-        """
-        Verify args for actions
-        """
+    @staticmethod
+    def _verify_args(args):
+        """Verify args for actions"""
         if "Product" in args.keys() and args["Product"] != "cortx":
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
@@ -60,10 +61,9 @@ class CortxCliSetup(Setup):
             except ValueError:
                 raise Exception("Incorrect ip address %s" %args[const.ADDRESS_PARAM])
 
-    def _rsyslog_cli(self):
-        """
-        Configure rsyslog
-        """
+    @staticmethod
+    def _rsyslog_cli():
+        """Configure rsyslog"""
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd("cp -f " +const.CLI_SOURCE_RSYSLOG_PATH+ " " +const.CLI_RSYSLOG_PATH)
             Setup._run_cmd("cp -f " +const.CLI_SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
@@ -78,16 +78,14 @@ class CortxCliSetup(Setup):
         Config is used to move update conf files one time configuration
         """
         try:
-            self._verify_args(args)
-            self._rsyslog_cli()
+            CortxCliSetup._verify_args(args)
+            CortxCliSetup._rsyslog_cli()
             self.Config.cli_create(args)
         except Exception as e:
             raise CsmSetupError(f"cortxcli_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
     def refresh_config(self, args):
-        """
-        Refresh context for CSM
-        """
+        """Refresh context for CSM"""
         try:
             node_id = self._get_faulty_node_uuid()
             self._resolve_faulty_node_alerts(node_id)

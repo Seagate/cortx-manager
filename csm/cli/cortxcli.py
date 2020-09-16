@@ -264,6 +264,7 @@ if __name__ == '__main__':
     from csm.common.conf import Conf
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
+    from csm.common.payload import Yaml
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     try:
