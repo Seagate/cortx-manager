@@ -203,7 +203,7 @@ class CsmRestApi(CsmApi, ABC):
         feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
         endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
         if endpoint:
-            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             if endpoint[const.DEPENDENT_ON]:
                 for component in endpoint[const.DEPENDENT_ON]:
                     if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
