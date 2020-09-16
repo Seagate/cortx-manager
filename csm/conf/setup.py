@@ -625,7 +625,7 @@ class Setup:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
 
             self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
-                component_name=str(const.CSM_COMPONENT_NAME, features=unsupported_features_list)))
+                component_name=str(const.CSM_COMPONENT_NAME), features=unsupported_features_list))
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
