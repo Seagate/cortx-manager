@@ -15,6 +15,7 @@
 
 from csm.core.blogic import const
 from csm.common.conf import Conf
+from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
@@ -28,8 +29,15 @@ class S3AccountService(S3BaseService):
     """
     Service for S3 account management
     """
-    def __init__(self, s3plugin):
+    def __init__(self, s3plugin, provisioner):
+        """
+        Initialize S3AccountService.
+
+        :param s3plugin: S3 plugin object.
+        :param provisioner: provisioner object.
+        """
         self._s3plugin = s3plugin
+        self._provisioner = provisioner
         #TODO
         """
         Password should be taken as input and not read from conf file directly.
@@ -85,12 +93,11 @@ class S3AccountService(S3BaseService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_accounts(self, session, urls_service, continue_marker=None, page_limit=None,
+    async def list_accounts(self, session, continue_marker=None, page_limit=None,
                             demand_all_accounts=False) -> dict:
         """
         Fetch a list of s3 accounts.
         :param session: session object of S3Credentials or LocalCredentials
-        :param urls_service: service object that is able to retrieve S3 server's URL
         :param continue_marker: Marker that must be used in order to fetch another
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
@@ -129,10 +136,13 @@ class S3AccountService(S3BaseService):
                         }
                     )
                     break
-        resp = {"s3_accounts": accounts_list}
+        service_urls = ServiceUrls(self._provisioner)
+        resp = {
+            "s3_accounts": accounts_list,
+            "s3_urls": await service_urls.get_s3_url()
+        }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
-        resp["s3_urls"] = await urls_service.get_s3_url()
         Log.debug(f"List account response: {resp}")
         return resp
 

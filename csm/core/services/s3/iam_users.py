@@ -15,11 +15,10 @@
 
 from typing import Union, Dict
 from cortx.utils.log import Log
-from csm.common.services import ApplicationService
+from csm.common.service_urls import ServiceUrls
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
-from csm.core.services.urls import UrlsService
 from csm.plugins.eos.s3 import IamClient
 
 
@@ -28,10 +27,11 @@ class IamUsersService(S3BaseService):
     Service for IAM user management
     """
 
-    def __init__(self, s3plugin):
+    def __init__(self, s3plugin, provisioner):
         self._s3plugin = s3plugin
         # S3 Connection Object.
         self._iam_connection_config = CsmS3ConfigurationFactory.get_iam_connection_config()
+        self._provisioner = provisioner
 
     @Log.trace_method(Log.DEBUG)
     async def fetch_iam_client(self, s3_session: Dict) -> IamClient:
@@ -84,12 +84,10 @@ class IamUsersService(S3BaseService):
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def list_users(self, s3_session: Dict, urls_service: UrlsService) -> Union[
-        Response, Dict]:
+    async def list_users(self, s3_session: Dict) -> Union[Response, Dict]:
         """
         This Method Fetches Iam User's
         :param s3_session: S3 session's details. :type: dict
-        :param urls_service: service object that is able to retrieve S3 server's URL.
         :return:
         """
         s3_client = await  self.fetch_iam_client(s3_session)
@@ -102,7 +100,8 @@ class IamUsersService(S3BaseService):
         iam_users_list["iam_users"] = [vars(each_user)
                                        for each_user in iam_users_list["iam_users"]
                                        if not vars(each_user)["user_name"] == "root" ]
-        iam_users_list["s3_urls"] = await urls_service.get_s3_url()
+        service_urls = ServiceUrls(self._provisioner)
+        iam_users_list["s3_urls"] = await service_urls.get_s3_url()
         return iam_users_list
 
     @Log.trace_method(Log.DEBUG)
