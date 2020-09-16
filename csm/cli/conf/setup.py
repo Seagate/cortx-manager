@@ -38,6 +38,7 @@ class ProvisionerCliError(InvalidRequest):
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CortxCliSetup(Setup):
+
     """Provides functions to handle cortxcli_setup arguments."""
 
     def __init__(self):
@@ -72,9 +73,9 @@ class CortxCliSetup(Setup):
 
     def config(self, args):
         """
-        Perform configuration for csm
-            : Move conf file to etc
-        Config is used to move update conf files one time configuration
+            Perform configuration for csm
+                : Move conf file to etc
+            Config is used to move update conf files one time configuration.
         """
         try:
             CortxCliSetup._verify_args(args)

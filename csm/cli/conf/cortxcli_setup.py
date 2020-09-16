@@ -22,6 +22,7 @@ import pathlib
 
 
 class CortxCliSetupCommand:
+
     """
         Provide cli to setup cortxcli. Create user for cortxcli to allow basic
         permission like log, bundle path.

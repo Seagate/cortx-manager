@@ -20,6 +20,7 @@ from csm.core.providers.providers import Provider, Response
 
 
 class SetupProvider(Provider):
+
     """Provider implementation for csm initialization."""
 
     def __init__(self):
