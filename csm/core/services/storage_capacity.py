@@ -29,7 +29,7 @@ class StorageCapacityService(ApplicationService):
     """
 
     @staticmethod
-    def _integer_to_human(capacity: int, unit=str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE : int) -> str:
+    def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
 
