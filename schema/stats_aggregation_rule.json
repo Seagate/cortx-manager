@@ -170,7 +170,7 @@
                 ]
             },
             {
-                "name": "avarage_latency",
+                "name": "average",
                 "node": [
                    {
                         "val": {
