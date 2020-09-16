@@ -11,7 +11,7 @@
         {
           "flag": "-d",
           "dest": "duration",
-          "nargs": "?",
+          "nargs": "+",
           "type": "str",
           "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
           "default": "60s",
@@ -20,7 +20,7 @@
         {
           "flag": "-l",
           "dest": "limit",
-          "nargs": "?",
+          "nargs": "+",
           "type": "int",
           "help": "No. of Alerts",
           "default": "1000",
@@ -74,7 +74,6 @@
         "table": {
           "headers": {
             "alert_uuid": "Alert Id",
-            "health": "Health",
             "description": "Description",
             "support_message": "Remarks",
             "severity": "Severity",
@@ -95,7 +94,7 @@
         {
           "flag": "-d",
           "dest": "duration",
-          "nargs": "?",
+          "nargs": "+",
           "type": "str",
           "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
           "default": "60s",
@@ -104,7 +103,7 @@
         {
           "flag": "-l",
           "dest": "limit",
-          "nargs": "?",
+          "nargs": "+",
           "type": "int",
           "help": "No. of Alerts",
           "default": "1000",
@@ -113,7 +112,7 @@
         {
           "flag": "-s",
           "dest": "start_date",
-          "nargs": "?",
+          "nargs": "+",
           "type": "str",
           "help": "Start date for fetching alerts.",
           "default": "",
@@ -122,7 +121,7 @@
         {
           "flag": "-e",
           "dest": "end_date",
-          "nargs": "?",
+          "nargs": "+",
           "type": "str",
           "help": "End date for fetching alerts.",
           "default": "",
@@ -131,7 +130,7 @@
         {
           "flag": "-i",
           "dest": "sensor_info",
-          "nargs": "?",
+          "nargs": "+",
           "type": "str",
           "help": "Sensor info of the resource.",
           "default": "",
