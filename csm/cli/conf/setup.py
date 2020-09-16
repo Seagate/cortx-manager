@@ -38,8 +38,8 @@ class ProvisionerCliError(InvalidRequest):
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CortxCliSetup(Setup):
-
     """Provides functions to handle cortxcli_setup arguments."""
+
     def __init__(self):
         """Init CortxCliSetup."""
         super(CortxCliSetup, self).__init__()

@@ -22,11 +22,11 @@ import pathlib
 
 
 class CortxCliSetupCommand:
-
     """
         Provide cli to setup cortxcli. Create user for cortxcli to allow basic
         permission like log, bundle path.
     """
+
     def __init__(self, argv):
         """Check cortxcli setup command and initialize."""
         self._args = argv

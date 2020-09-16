@@ -20,8 +20,8 @@ from csm.core.providers.providers import Provider, Response
 
 
 class SetupProvider(Provider):
-
     """Provider implementation for csm initialization."""
+
     def __init__(self):
         """Init SetupProvider."""
         super(SetupProvider, self).__init__(const.CORTXCLI_SETUP_CMD)
