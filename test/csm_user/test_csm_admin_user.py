@@ -13,24 +13,24 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.common.errors import CsmPermissionDenied
-from csm.core.services.users import CsmUserService, UserManager
-from csm.common.errors import InvalidRequest, CsmPermissionDenied
-from csm.core.blogic import const
-from csm.common.payload import Yaml
 import asyncio
-import sys
-import os
 import unittest
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+
+from csm.common.errors import CsmPermissionDenied, InvalidRequest
+from csm.common.payload import Yaml
+from csm.core.blogic import const
+from csm.core.services.users import CsmUserService, UserManager
 
 t = unittest.TestCase()
+
 
 class MockProvisioner():
 
     async def create_system_user(self, *args, **kwargs):
         return True
+
 
 def init(args):
     conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
@@ -130,9 +130,9 @@ def test_csm_admin_user_delete(args):
 
 
 test_list = [
-             test_csm_admin_user_create,
-             test_csm_admin_user_update_without_current_password,
-             test_csm_admin_user_update_password,
-             test_csm_admin_user_update_roles,
-             test_csm_admin_user_delete
-            ]
+    test_csm_admin_user_create,
+    test_csm_admin_user_update_without_current_password,
+    test_csm_admin_user_update_password,
+    test_csm_admin_user_update_roles,
+    test_csm_admin_user_delete
+]

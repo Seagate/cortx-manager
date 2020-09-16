@@ -13,23 +13,23 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from abc import ABC, ABCMeta, abstractmethod
-from csm.common.errors import CsmError
 import errno
+from abc import ABCMeta, abstractmethod
+
+from csm.common.errors import CsmError
+
 
 class CsmPlugin(metaclass=ABCMeta):
     """
     This is an abstract class. Various plugins will implement this interface
     i.e. Alert plugin, S3 plugin etc.
     """
+
     @abstractmethod
     def init(self, **kwargs):
         raise CsmError(errno.ENOSYS, 'init not implemented for Plugin class')
 
     @abstractmethod
     def process_request(self, **kwargs):
-        """
-        This method will handle GET/POST calls. 
-        """
-        raise CsmError(errno.ENOSYS, 'process_request not implemented\
-                for Plugin class') 
+        """This method will handle GET/POST calls."""
+        raise CsmError(errno.ENOSYS, 'process_request not implemented for Plugin class')

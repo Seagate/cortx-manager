@@ -14,26 +14,25 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
-import sys
-import os
 import json
 import unittest
-import uuid
+
 from csm.common.payload import Json, Payload
-from csm.core.services.alerts import AlertsAppService, AlertRepository
+from csm.core.services.alerts import AlertRepository, AlertsAppService
 from csm.test.common import Const
 
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
+
 def _read_health_summary_json():
-    """ utility function to read test data from json file"""
-    with open(file_path + "health_summary_output.json") as health_summary_output:
+    """utility function to read test data from json file"""
+    with open(f"{file_path}health_summary_output.json") as health_summary_output:
         return json.load(health_summary_output)
-    
+
 
 def init(args):
-    """ test initialization """
+    """test initialization"""
     repo = AlertRepository(None)
     health_schema = Payload(Json(Const.HEALTH_SCHEMA))
     repo.health_schema = health_schema._data
@@ -42,12 +41,14 @@ def init(args):
     args["service"] = service
     args["loop"] = loop
 
+
 def test_fetch_health_summary(args):
-    """ test for fetch health summary """
+    """test for fetch health summary"""
     loop = args["loop"]
     service = args["service"]
     actual_output = loop.run_until_complete(service.fetch_health_summary())
     expected_output = _read_health_summary_json()
-    t.assertEqual(actual_output, expected_output)    
+    t.assertEqual(actual_output, expected_output)
+
 
 test_list = [test_fetch_health_summary]

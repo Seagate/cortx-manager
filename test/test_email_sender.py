@@ -15,21 +15,18 @@
 
 import asyncio
 import asyncore
-import os
-import sys
 import threading
 import unittest
-from smtpd import SMTPServer
 from email import message_from_bytes
-from queue import Queue, Empty
+from queue import Empty, Queue
+from smtpd import SMTPServer
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from cortx.utils.log import Log
-from csm.common.email import SmtpServerConfiguration, EmailSender, OutOfAttemptsEmailError
+from csm.common.email import EmailSender, OutOfAttemptsEmailError, SmtpServerConfiguration
 from csm.core.email.email_queue import EmailSenderQueue
 
+
 class TestSMTPServer(SMTPServer):
-    """ Helper class - STMP server that puts messages into a queue """
+    """Helper class - SMTP server that puts messages into a queue"""
     def __init__(self, *args, queue=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.queue = queue
@@ -43,10 +40,11 @@ class TestSMTPServer(SMTPServer):
 
 
 class TestSMTPThread(threading.Thread):
-    """ Heper class - SMTP server that runs in a separate thread """
+    """Helper class - SMTP server that runs in a separate thread"""
     def __init__(self, queue):
         threading.Thread.__init__(self)
         self.server = TestSMTPServer(('localhost', 0), ('localhost', 25), queue=queue)
+        self._should_stop = None
 
     def get_port(self):
         return self.server.get_port()
@@ -68,10 +66,11 @@ async def remote_email_send_example():
     config.smtp_login = "some_account@gmail.com"
     config.smtp_password = "SomePassword"
     config.smtp_use_ssl = True
-    
+
     s = EmailSender(config)
-    await s.send("some_account@gmail.com", 
-        "target@email.com", "Subject", "<html><body>Hi!</body></html>", "Plain text")
+    await s.send("some_account@gmail.com", "target@email.com", "Subject",
+                 "<html><body>Hi!</body></html>", "Plain text")
+
 
 async def local_email_send_example():
     # Run python3 -m smtpd -c DebuggingServer -n localhost:9999
@@ -80,10 +79,10 @@ async def local_email_send_example():
     config.smtp_port = 9999
     config.smtp_login = None
     config.smtp_use_ssl = False
-    
+
     s = EmailSender(config)
-    await s.send("some_account@gmail.com", 
-        "target@email.com", "Subject", "<html><body>Hi!</body></html>", "Plain text")
+    await s.send("some_account@gmail.com",
+                 "target@email.com", "Subject", "<html><body>Hi!</body></html>", "Plain text")
 
 t = unittest.TestCase()
 
@@ -92,6 +91,7 @@ TEST_HTML_BODY = "<html><body>Hello!</body></html>"
 TEST_PLAIN_BODY = "Some plain body"
 TEST_SENDER = "sender@mail.com"
 TEST_RECIPIENT = "to@mail.com"
+
 
 async def test_local_multipart_email():
     queue = Queue()
@@ -105,8 +105,8 @@ async def test_local_multipart_email():
     try:
         config.smtp_port = server_thread.get_port()
         sender = EmailSender(config)
-        await sender.send(TEST_SENDER, TEST_RECIPIENT,
-            TEST_SUBJECT, TEST_HTML_BODY, TEST_PLAIN_BODY)
+        await sender.send(TEST_SENDER, TEST_RECIPIENT, TEST_SUBJECT, TEST_HTML_BODY,
+                          TEST_PLAIN_BODY)
         msg = queue.get(True, 1)  # 1 second timeout
 
         contents = {}
@@ -121,15 +121,14 @@ async def test_local_multipart_email():
         t.assertEqual(msg['To'], TEST_RECIPIENT)
         t.assertEqual(msg['From'], TEST_SENDER)
     except:
-        t.assertTrue(False, 'Unexpected exception')
+        t.fail('Unexpected exception')
     finally:
         server_thread.abort()
         server_thread.join()
 
+
 async def test_local_email_queue():
-    """
-    Check if EmailSenderQueue alows to queue and process 2 email messages
-    """
+    """Check if EmailSenderQueue allows to queue and process 2 email messages"""
     queue_plugin = EmailSenderQueue()
     await queue_plugin.start_worker()
 
@@ -143,14 +142,14 @@ async def test_local_email_queue():
     config.smtp_use_ssl = False
     try:
         config.smtp_port = server_thread.get_port()
-        message = EmailSender.make_multipart(TEST_SENDER, TEST_RECIPIENT,
-            TEST_SUBJECT, TEST_HTML_BODY, TEST_PLAIN_BODY)
+        message = EmailSender.make_multipart(TEST_SENDER, TEST_RECIPIENT, TEST_SUBJECT,
+                                             TEST_HTML_BODY, TEST_PLAIN_BODY)
         await queue_plugin.enqueue_email(message, config)
         await queue_plugin.enqueue_email(message, config)
         await queue_plugin.join_worker()
 
-        msg = queue.get(True, 0.5)  # half second timeout
-        msg = queue.get(True, 0.5)  # half second timeout
+        queue.get(True, 0.5)  # half second timeout
+        queue.get(True, 0.5)  # half second timeout
     except Empty:
         t.fail('Email messages were not delivered')
     finally:
@@ -158,33 +157,31 @@ async def test_local_email_queue():
         server_thread.abort()
         server_thread.join()
 
+
 async def test_local_email_wo_server():
     config = SmtpServerConfiguration()
     config.smtp_host = "localhost"
     config.smtp_port = 25255
     config.smtp_login = None
     config.smtp_use_ssl = False
+    email_error = False
     try:
         sender = EmailSender(config)
-        await sender.send(TEST_SENDER, TEST_RECIPIENT,
-            TEST_SUBJECT, TEST_HTML_BODY, TEST_PLAIN_BODY)
+        await sender.send(TEST_SENDER, TEST_RECIPIENT, TEST_SUBJECT, TEST_HTML_BODY,
+                          TEST_PLAIN_BODY)
     except OutOfAttemptsEmailError:
-        t.assertTrue(True, 'OutOfAttemptsEmailError exception')
+        email_error = True
     except:
-        t.assertTrue(False, 'Unexpected exception')
+        t.fail('Unexpected exception')
+    if not email_error:
+        t.fail('OutOfAttemptsEmailError not raised')
 
-def init(args):
-    pass
 
-def run_tests(args = {}):
+def run_tests():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_local_multipart_email())
     loop.run_until_complete(test_local_email_queue())
     loop.run_until_complete(test_local_email_wo_server())
 
+
 test_list = [run_tests]
-
-if __name__ == '__main__':
-    Log.init('test', '.')
-    run_tests()
-

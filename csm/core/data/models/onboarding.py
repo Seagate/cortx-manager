@@ -13,10 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from enum import Enum
 from schematics.types import StringType
-from csm.core.blogic.models import CsmModel
 
+from csm.core.blogic.models import CsmModel
 
 ONBOARDING_PHASES = [
     'uninitialized',
@@ -42,15 +41,10 @@ ONBOARDING_PHASES = [
 
 
 class OnboardingConfig(CsmModel):
-    """
-    Data model for Onboarding Config
-    TODO: Should be part of the system config in the future
-    """
-
-    # Our current GenericDB implementation requires
-    # a 'primary key' field for every data model
+    """Data model for Onboarding Config"""
+    # TODO: Should be part of the system config in the future
+    # Our current GenericDB implementation requires a 'primary key' field for every data model
     _id = 'config_id'
     config_id = StringType(default='onboarding')
 
-    phase = StringType(choices=ONBOARDING_PHASES,
-                       default=ONBOARDING_PHASES[0])
+    phase = StringType(choices=ONBOARDING_PHASES, default=ONBOARDING_PHASES[0])

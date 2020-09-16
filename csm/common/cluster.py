@@ -13,38 +13,37 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import subprocess
-import getpass
-import yaml
 import errno
+import getpass
 
-from csm.core.blogic import const
+import yaml
+
 from csm.common.errors import CsmError
-from cortx.utils.log import Log
+from csm.core.blogic import const
 
-class Node(object):
-    """ Contains all the attributes of the nodes.  """
 
+class Node:
+    """Contains all the attributes of the nodes."""
     def __init__(self, host_name, node_type, sw_list, admin_user):
         self._host_name = host_name
         self._type = node_type
         self._sw_list = sw_list
         self._user = getpass.getuser()
         self._admin_user = admin_user
-        self._active = True  # TODO - return state based on ssh connectivity
+        self._active = True  # TODO: - return state based on ssh connectivity
 
     def __str__(self):
-        return '%s: %s %s %s' %(self._host_name, self._user, self._type, self._sw_list)
+        return f'{self._host_name}: {self._user} {self._type} {self._sw_list}'
 
     def admin_user(self):
         return self._admin_user
 
     def user(self):
-        """ Returns admin user name """
+        """Returns admin user name"""
         return self._user
 
     def sw_components(self):
-        """ Returns a list of components. """
+        """Returns a list of components."""
         return self._sw_list
 
     def host_name(self):
@@ -54,11 +53,11 @@ class Node(object):
         return self._type
 
     def is_active(self):
-        # TODO - return state based on ssh connectivity
+        # TODO: return state based on ssh connectivity
         return self._active
 
 
-class Cluster(object):
+class Cluster:
     """
     This class handles cluster/node related operations.
     Common responsibility includes,
@@ -87,15 +86,18 @@ class Cluster(object):
         self._ha_framework = ha_framework
         for node_type in self._inventory.keys():
             if const.KEY_COMPONENTS not in self._inventory[node_type].keys():
-                raise CsmError(errno.EINVAL,
-                    'invalid cluster configuration. No components for type %s' %node_type)
+                raise CsmError(
+                    errno.EINVAL,
+                    'invalid cluster configuration. No components for type %s' % node_type)
 
             if const.KEY_NODES not in self._inventory[node_type].keys():
-                raise CsmError(errno.EINVAL,
-                    'invalid cluster configuration. No nodes for type %s' %node_type)
+                raise CsmError(
+                    errno.EINVAL,
+                    'invalid cluster configuration. No nodes for type %s' % node_type)
             if const.ADMIN_USER not in self._inventory[node_type].keys():
-                raise CsmError(errno.EINVAL,
-                    'invalid cluster configuration. No admin user for type %s' %node_type)
+                raise CsmError(
+                    errno.EINVAL,
+                    'invalid cluster configuration. No admin user for type %s' % node_type)
 
             sw_components = self._inventory[node_type][const.KEY_COMPONENTS]
             admin_user = self._inventory[node_type][const.ADMIN_USER]
@@ -108,32 +110,32 @@ class Cluster(object):
         self._ha_framework.init(force_flag)
 
     def node_list(self, node_type=None):
-        """ Nodes of specified type """
-        if node_type == None:
-            return [ self._node_list[x] for x in self._node_list.keys() ]
-        return [ self._node_list[x] for x in self._node_list.keys() \
-            if self._node_list[x].node_type() == node_type ]
+        """Nodes of specified type"""
+        if node_type is None:
+            return [self._node_list[x] for x in self._node_list]
+        return [self._node_list[x] for x in self._node_list
+                if self._node_list[x].node_type() == node_type]
 
     def host_list(self, node_type=None):
-        """ Returns the list of all SSUs in the cluster.  """
-        if node_type == None:
-            return [ self._node_list[x].host_name() for x in self._node_list.keys() ]
-        return [ self._node_list[x].host_name()  for x in self._node_list.keys() \
-            if self._node_list[x].node_type() == node_type ]
+        """Returns the list of all SSUs in the cluster."""
+        if node_type is None:
+            return [self._node_list[x].host_name() for x in self._node_list]
+        return [self._node_list[x].host_name() for x in self._node_list
+                if self._node_list[x].node_type() == node_type]
 
     def sw_components(self, node_type):
-        """ Returns a list of components. """
+        """Returns a list of components."""
         return self._inventory[node_type][const.KEY_COMPONENTS]
 
     def active_node_list(self):
-        """ Returns all the active nodes in the cluster """
-        # TODO - Scan the list and identify reachable nodes
-        return [ self._node_list[x] for x in self._node_list.keys() \
-            if self._node_list[x].is_active() == True ]
+        """Returns all the active nodes in the cluster"""
+        # TODO: Scan the list and identify reachable nodes
+        return [self._node_list[x] for x in self._node_list
+                if self._node_list[x].is_active() is True]
 
     def state(self):
         """
-            Return tuple containing two things:
+        :return: tuple containing two things:
             1. Cluster state, i.e. 'up', 'down' or 'degraded'
             2. List of active nodes
             3. List of inactive nodes
@@ -143,25 +145,32 @@ class Cluster(object):
         active_node_list = []
         inactive_node_list = []
         for node in self._node_list:
-            if node.is_active(): active_node_list.append(node)
-            else: inactive_node_list.append(node)
+            if node.is_active():
+                active_node_list.append(node)
+            else:
+                inactive_node_list.append(node)
 
-        if len(active_node_list) == 0: state = const.STATE_DOWN
-        elif len(inactive_node_list) == 0: state = const.STATE_UP
-        else: state = const.STATE_DEGRADED
+        if len(active_node_list) == 0:
+            state = const.STATE_DOWN
+        elif len(inactive_node_list) == 0:
+            state = const.STATE_UP
+        else:
+            state = const.STATE_DEGRADED
 
         return state, active_node_list, inactive_node_list
 
     def get_nodes(self):
         """
-            Return following things
+        :return: following things
             1. List of active nodes
             2. List of inactive nodes
         """
+
         return self._ha_framework.get_nodes()
 
     def get_status(self):
         """
-            Return if HAFramework in up or down
+        :return: if HAFramework in up or down
         """
+
         return self._ha_framework.get_status()

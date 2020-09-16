@@ -14,20 +14,19 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
-from cortx.utils.log import Log
+
 
 class ProductVersionService(ApplicationService):
-    """
-    Service for product version information
-    """
-    
+    """Service for product version information"""
     def __init__(self, provisioner):
+        super().__init__()
         self._provisioner = provisioner
-    
+
     async def get_current_version(self):
         """
-        Fetch current installed product version information using 
-        provisioner plugin.
-        :returns: Dict having installed product version.
+        Fetch current installed product version information using provisioner plugin.
+
+        :return: Dict having installed product version.
         """
+
         return await self._provisioner.get_current_version()

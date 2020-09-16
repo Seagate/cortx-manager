@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,19 +14,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
+from marshmallow import Schema, fields
 
-from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.core.controllers.schemas import HotFixFileFieldSchema
-from csm.core.controllers.validators import FileRefValidator
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
-from csm.common.permission_names import Resource, Action
+from csm.common.permission_names import Action, Resource
 from csm.core.blogic import const
-
-from aiohttp import web
-from marshmallow import Schema, fields, validate, exceptions
+from csm.core.services.file_transfer import FileCache
+from .schemas import HotFixFileFieldSchema
+from .view import CsmAuth, CsmView
 
 
 class HotFixUploadSchema(Schema):
@@ -39,11 +34,9 @@ class CsmHotfixUploadView(CsmView):
         self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    POST REST implementation for uploading hotfix packages
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
+        """POST REST implementation for uploading hotfix packages"""
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
             multipart_data = HotFixUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
@@ -60,11 +53,9 @@ class CsmHotfixStartView(CsmView):
         self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    POST REST implementation for starting a hotfix update
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
+        """POST REST implementation for starting a hotfix update"""
         return await self._service.start_update()
 
 
@@ -75,9 +66,7 @@ class CsmHotfixStatusView(CsmView):
         self._service = self.request.app[const.HOTFIX_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for starting a hotfix update
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for starting a hotfix update"""
         return await self._service.get_current_status()

@@ -17,10 +17,7 @@ from typing import Callable
 
 
 class Decorators:
-    """
-    A collection of general-purpose decorators.
-    """
-
+    """A collection of general-purpose decorators."""
     @staticmethod
     def decorate_if(condition: bool, f: Callable) -> Callable:
         """
@@ -28,7 +25,7 @@ class Decorators:
 
         :param condition: Determines if the decorator is going to be used
         :param f: Decorator to be used in case the condition applies.
-        :returns: The decorator ``f`` if ``condition`` is ``True``, the identity function is used as
+        :return: The decorator ``f`` if ``condition`` is ``True``, the identity function is used as
             a decorator otherwise.
         """
 

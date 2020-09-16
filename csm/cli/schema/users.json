@@ -10,14 +10,14 @@
       "args": [
         {
           "flag": "-o",
-          "type": "Validatiors.positive_int",
+          "type": "Validators.positive_int",
           "dest": "offset",
           "help": "Amount of users you want to get",
           "params": true
         },
         {
           "flag": "-l",
-          "type": "Validatiors.positive_int",
+          "type": "Validators.positive_int",
           "dest": "limit",
           "help": "Limit of amount of users you want to view",
           "params": true

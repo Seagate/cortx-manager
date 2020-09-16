@@ -13,8 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from marshmallow import Schema, fields, validates, ValidationError
 from typing import Dict, Tuple
+
+from marshmallow import Schema, ValidationError, fields, validates
 
 
 class S3CredentialsSchema(Schema):
@@ -26,8 +27,9 @@ class S3AccessParamsSchema(Schema):
     uri = fields.String(required=True)
     credentials = fields.Nested(S3CredentialsSchema, required=True)
 
+    @staticmethod
     @validates('uri')
-    def validate_uri(self, value: str) -> None:
+    def validate_uri(value: str) -> None:
         if not value.startswith('s3://'):
             raise ValidationError('Invalid S3 URI')
 
@@ -35,7 +37,6 @@ class S3AccessParamsSchema(Schema):
 class AccessParamsSchema(Schema):
     """
     USL access parameters schema.
-
     Required at endpoints that expose S3 services.
     """
 
@@ -50,6 +51,7 @@ class AccessParamsSchema(Schema):
         :return: Tuple with flattened values from ``params``, namely: URI, access key, and secret
             access key.
         """
+
         return (
             params['access_params']['uri'],
             params['access_params']['credentials']['access_key'],

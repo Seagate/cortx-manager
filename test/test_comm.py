@@ -13,52 +13,60 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os, getpass, socket, filecmp
+import filecmp
+import json
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.comm import SSHChannel, AmqpComm
 from cortx.utils.log import Log
+
+from csm.common.cluster import Cluster
+from csm.common.comm import SSHChannel
+from csm.common.conf import Conf
+from csm.common.ha_framework import PcsHAFramework
+from csm.core.blogic import const
+from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.test.common import Const, TestFailed
-from csm.common.cluster import Cluster, Node
-import json, time
 
 client = None
 file_path = Const.MOCK_PATH
 
+
 def init(args):
-    args[Const.CLUSTER] = Cluster(args[Const.INVENTORY_FILE])
-    global client
+    csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
+    csm_ra = {"csm_resource_agent": CsmResourceAgent(csm_resources)}
+    ha_framework = PcsHAFramework(csm_ra)
+    args['cluster'] = Cluster(args[Const.INVENTORY_FILE], ha_framework)
+    global client  # pylint: disable=global-statement
     client = args['amqp_client']
 
-def test1(args):
-    """ SSH Command """
 
+def test1(args):
+    """SSH Command"""
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user())
         channel.connect()
         cmd = "ls -l /tmp"
         rc, output = channel.execute(cmd)
         channel.disconnect()
-        Log.debug('rc=%d, output=%s' %(rc, output))
+        Log.debug('rc=%d, output=%s' % (rc, output))
         if rc != 0:
             raise TestFailed('remote command failed to execute')
 
-def test2(args):
-    """ SSH Command (Invalid) """
 
+def test2(args):
+    """SSH Command (Invalid)"""
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user())
         channel.connect()
         cmd = "ls -l /invalid_path"
         rc, output = channel.execute(cmd)
         channel.disconnect()
-        Log.debug('rc=%d, output=%s' %(rc, output))
+        Log.debug('rc=%d, output=%s' % (rc, output))
         if rc == 0:
             raise TestFailed('invalid command returned 0')
 
-def test3(args):
-    """ SSH Copy """
 
+def test3(args):
+    """SSH Copy"""
     for node in args['cluster'].node_list():
         channel = SSHChannel(node.host_name(), node.user(), True)
         channel.connect()
@@ -68,30 +76,34 @@ def test3(args):
         if not filecmp.cmp("/etc/hosts", "/tmp/hosts1"):
             raise TestFailed('File Copy failed')
 
+
 def amqp_callback(body):
-    with open(file_path + 'output.text', 'w+') as json_file:
+    with open(f"{file_path}output.text", 'w+') as json_file:
         json.dump(json.loads(body), json_file, indent=4)
         json_file.close()
         compare_results()
-        global client
+        global client  # pylint: disable=global-statement
         client.acknowledge()
         client.stop()
 
+
 def compare_results():
-    if not filecmp.cmp(file_path + 'input.text', file_path + 'output.text'):
+    if not filecmp.cmp(f"{file_path}input.text", f"{file_path}output.text"):
         raise TestFailed('Input and Output alerts do not match.')
 
-def send_recv(args):
-    """ Receive alerts from RMQ Channel """
 
-    global client
-    client.init() 
-    with open(file_path + 'input.text') as json_file:
+def send_recv():
+    """Receive alerts from RMQ Channel"""
+    global client  # pylint: disable=global-statement
+    client.init()
+    with open(f"{file_path}input.text") as json_file:
         data = json.load(json_file)
         client.send(data)
     client.recv(amqp_callback)
 
-def test4(args):
-    send_recv(args)
 
-test_list = [ test1, test2, test3, test4 ]
+def test4():
+    send_recv()
+
+
+test_list = [test1, test2, test3, test4]

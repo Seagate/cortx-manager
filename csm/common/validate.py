@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,9 +14,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+
 class Validator:
     @staticmethod
     def validate_type(obj, typ, name):
         if type(obj) is not typ:
             raise ValueError(f'Type of {name} should be a {typ.__name__}')
-

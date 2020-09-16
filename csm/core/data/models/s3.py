@@ -13,15 +13,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import List
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List
 
 
 class S3ConnectionConfig:
-    """
-    Configuration options for IAM server access
-    """
+    """Configuration options for IAM server access"""
     host: str
     port: int
     use_ssl: bool = False
@@ -32,9 +30,7 @@ class S3ConnectionConfig:
 
 
 class IamAccount:
-    """
-    Primitive information about IAM account - as it is returned by listing them
-    """
+    """Primitive information about IAM account - as it is returned by listing them"""
     account_id: str
     account_name: str
     account_email: str
@@ -42,27 +38,21 @@ class IamAccount:
 
 
 class ExtendedIamAccount(IamAccount):
-    """
-    Information about IAM account that is only available after its creation
-    """
+    """Information about IAM account that is only available after its creation"""
     access_key_id: str
     secret_key_id: str
     status: str
 
 
 class IamLoginProfile:
-    """
-    Information about login profile
-    """
+    """Information about login profile"""
     account_name: str
     password_reset_required: bool
     create_date: str  # or datetime?
 
 
 class IamUser:
-    """
-    Information about IAM user
-    """
+    """Information about IAM user"""
     path: str
     user_id: str
     user_name: str
@@ -107,9 +97,7 @@ class IamAccessKeysListResponse:
 
 
 class IamTempCredentials:
-    """
-    Information about temorary auth credentials for some login profile
-    """
+    """Information about temporary auth credentials for some login profile"""
     user_name: str  # TODO: server output is very strange for this field
     access_key: str
     secret_key: str
@@ -119,7 +107,7 @@ class IamTempCredentials:
 
 
 class IamErrors(Enum):
-    """ Enum with error responses """
+    """Enum with error responses"""
     EntityAlreadyExists = 'EntityAlreadyExists'
     OperationNotSupported = 'OperationNotSupported'
     InvalidAccessKeyId = 'InvalidAccessKeyId'
@@ -127,7 +115,7 @@ class IamErrors(Enum):
     NoSuchEntity = 'NoSuchEntity'
     ExpiredCredential = 'ExpiredCredential'
     InvalidLdapUserId = 'InvalidLdapUserId'
-    PasswordPolicyVoilation = 'PasswordPolicyVoilation'
+    PasswordPolicyViolation = 'PasswordPolicyViolation'
     AccountNotEmpty = 'AccountNotEmpty'
     ExtendedIamAccount = 'ExtendedIamAccount'
     EmailAlreadyExists = 'EmailAlreadyExists'
@@ -138,9 +126,7 @@ class IamErrors(Enum):
 
 
 class IamError:
-    """
-    Class that describes a non-successful result
-    """
+    """Class that describes a non-successful result"""
     http_status: int
     error_code: IamErrors
     error_message: str

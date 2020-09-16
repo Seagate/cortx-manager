@@ -13,31 +13,44 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
-from argparse import ArgumentError
 import unittest
 
-alerts_command = CommandFactory.get_command(
-    [const.ALERTS_COMMAND, 'acknowledge', '1', 'comment_1'])
+from csm.cli.command_factory import CommandFactory
+from csm.core.blogic import const
+
+alerts_command = CommandFactory.get_command([const.ALERTS_COMMAND, 'acknowledge', '1', 'comment_1'],
+                                            {const.ALERTS_COMMAND: {'update': True}})
 t = unittest.TestCase()
 
-def init(args):
-    pass
 
-def test_patch_action(args):
+def test_patch_action():
     expected_output = 'acknowledge'
-    actual_output = alerts_command.action()
+    actual_output = alerts_command.sub_command_name
     t.assertEqual(actual_output, expected_output)
 
-def test_patch_options(args):
-    expected_output = {'alert_id': '1', 'comment': 'comment_1'}
-    actual_output = alerts_command.options()
+
+def test_patch_options():
+    expected_output = {
+        'acknowledged': False,
+        'alerts_id': '1',
+        'comm': {
+            'json': {'acknowledged': ''},
+            'method': 'patch',
+            'params': {},
+            'target': '/{version}/alerts/{alerts_id}',
+            'type': 'rest',
+            'version': 'v1'},
+        'need_confirmation': True,
+        'output': {'success': 'Alert Updated.'},
+        'sub_command_name': 'acknowledge'}
+    actual_output = alerts_command.options
     t.assertDictEqual(actual_output, expected_output)
 
-def test_patch_method(args):
+
+def test_patch_method():
     expected_output = 'patch'
-    actual_output = alerts_command.method('acknowledge')
+    actual_output = alerts_command.method
     t.assertEqual(actual_output, expected_output)
+
 
 test_list = [test_patch_action, test_patch_options, test_patch_method]

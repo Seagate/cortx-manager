@@ -13,37 +13,37 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
 import os
+import sys
 import unittest
-import mock
 from argparse import Namespace
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from unittest.mock import MagicMock
 
 from cortx.utils.log import Log
-from csm.api.api_client import CsmApiClient
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from csm.api.api_client import CsmApiClient  # noqa: E402
+
 
 class CsmApiClientTest(unittest.TestCase):
-    """ Unit tests for command factory class.  """
+    """Unit tests for command factory class."""
     def setUp(self):
         Log.init("csm", log_path=".")
         self.csm_api_client = CsmApiClient()
-        self.command = mock.MagicMock()
+        self.command = MagicMock()
         self.command.name.return_value = 'support_bundle'
         self.command.action.return_value = 'create'
         self.command.args.return_value = Namespace(args=[])
 
     def test_call(self):
-        """ Test functionality of call method.  """
-
+        """Test functionality of call method."""
         response = self.csm_api_client.call(self.command)
-        print('rc=%d output=%s' %(response.rc(), response.output()))
+        print('rc=%d output=%s' % (response.rc(), response.output()))
 
         self.assertEqual(response.rc(), 0)
 
     def test_support_bundle(self):
-        """ Test functionality of support_bundle method.  """
+        """Test functionality of support_bundle method."""
         expected_value = "support_bundle: {'action': 'create'}"
 
         actual_value = self.csm_api_client.call(self.command)

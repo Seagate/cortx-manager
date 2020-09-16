@@ -13,25 +13,29 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import os
-import traceback
+import argparse
 import asyncio
 import errno
-import shlex
-from getpass import getpass
-from cmd import Cmd
+import os
 import pathlib
-import argparse
+import shlex
+import sys
+import traceback
+from cmd import Cmd
+from getpass import getpass
+
+from cortx.utils.log import Log
+
 
 class ArgumentError(argparse.ArgumentError):
     def __init__(self, rc, message, argument=None):
-        super(ArgumentError, self).__init__(argument, message)
+        super().__init__(argument, message)
         self.rc = rc
-        self.messgae = message
+        self.message = message
 
     def __str__(self):
         return f"{self.rc}: {self.message}"
+
 
 class Terminal:
     @staticmethod
@@ -45,16 +49,15 @@ class Terminal:
         """
 
         while True:
-            # Postive answer is default
+            # Positive answer is default
             sys.stdout.write(f'Are you sure you want to perform "{name}" command? [Y/n] ')
 
             usr_input = input().lower()
             if usr_input in ['y', 'yes', '']:
                 return True
-            elif usr_input in ['n', 'no']:
+            if usr_input in ['n', 'no']:
                 return False
-            else:
-                sys.stdout.write("Please answer with 'yes' or 'no'\n")
+            sys.stdout.write("Please answer with 'yes' or 'no'\n")
 
     @staticmethod
     def logout_alert(is_logged_out: bool):
@@ -62,7 +65,7 @@ class Terminal:
             sys.stdout.write('Successfully logged out\n')
         else:
             Log.error(traceback.format_exc())
-            sys.stderr('Logout failed\n')
+            sys.stderr.write("Logout failed\n")
 
     @staticmethod
     def get_current_password(value):
@@ -78,28 +81,27 @@ class Terminal:
 
     @staticmethod
     def get_password(value, confirm_pass_flag=True):
-        """
-        Fetches the Password from Terminal in Non-Echo Mode.
-        :return:
-        """
-        sys.stdout.write(("\nPassword must contain the following.\n1) 1 upper and lower "
-        "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
-                          "characters.\n"))
+        """Fetches the Password from Terminal in Non-Echo Mode."""
+        sys.stdout.write(
+            "\nPassword Must Contain the Following.\n"
+            "1) 1 Upper and Lower Case Character.\n"
+            "2) 1 Numeric Character.\n"
+            "3) 1 of the !@#$%^&*()_+-=[]{}|' Character.\n")
         value = value or getpass(prompt="Password: ")
         if not value:
             raise ArgumentError(errno.EINVAL, const.EMPTY_PASS_FIELD)
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
             if not confirm_password:
-                raise ArgumentError(errno.EINVAL,
-                                    f"Confirm {const.EMPTY_PASS_FIELD}")
+                raise ArgumentError(errno.EINVAL, f"Confirm {const.EMPTY_PASS_FIELD}")
             if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
 
+
 class CsmCli(Cmd):
     def __init__(self, args):
-        super(CsmCli, self).__init__()
+        super().__init__()
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
         if len(args) > 1:
@@ -112,31 +114,27 @@ class CsmCli(Cmd):
         self._session_token = None
         self.headers = {}
         self._permissions = Json(const.CLI_DEFAULTS_ROLES).load()
-        self.some_error_occured = 'Some error occurred.\nPlease try login again.\n'
+        self.some_error_occurred = 'Some error occurred.\nPlease try login again.\n'
         self.session_expired_error = 'Session expired.\nPlease try login again.\n'
         self.server_down = 'CSM service is not found.\nPlease check whether CSM is running.\n'
 
-
     def preloop(self):
-        """
-        Initialize Log for CSM CLI and Set the API for Rest API
-        :return:
-        """
-        #Set Logger
+        """Initialize Log for CSM CLI and Set the API for Rest API"""
+        # Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm_cli",
-             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
-             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-             file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-             log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+                 syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
+                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+                 level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV:
             Conf.decrypt_conf()
-        #Set Rest API for CLI
-        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
-        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
+        # Set Rest API for CLI
+        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_port')
+        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_host')
         csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_base_url')
         csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
         self.rest_client = CsmRestClient(csm_agent_url)
@@ -155,8 +153,10 @@ class CsmCli(Cmd):
     def login(self):
         """
         Function Takes Responsibility for Login into CSM CLI.
-        :return:None
+
+        :return: None
         """
+
         try:
             self.username = input('Username: ').strip()
             Log.debug(f"{self.username} attempted to Login.")
@@ -179,14 +179,15 @@ class CsmCli(Cmd):
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(self.some_error_occured)
+            self.do_exit(self.some_error_occurred)
 
     def precmd(self, command):
         """
         Pre-Process the Entered Command.
+
         :param command: Command Entered by User.
-        :return:
         """
+
         if command.strip():
             self.args = shlex.split(command)
         return command
@@ -195,34 +196,31 @@ class CsmCli(Cmd):
         obj = CsmDirectClient()
         response = self.loop.run_until_complete(obj.call(command))
         if response:
-            command.process_response(out=sys.stdout, err=sys.stderr,
-                                 response=response)
+            command.process_response(out=sys.stdout, err=sys.stderr, response=response)
 
     def process_rest_command(self, command):
-        response, _ = self.loop.run_until_complete(self.rest_client.call(command,
-                                                                 self.headers))
-        command.process_response(out=sys.stdout, err=sys.stderr,
-                                 response=response)
+        response, _ = self.loop.run_until_complete(self.rest_client.call(command, self.headers))
+        command.process_response(out=sys.stdout, err=sys.stderr, response=response)
 
     def default(self, cmd):
         """
         Default Function for Initializing each Command.
-        :param cmd: Command Entered by User :type:str
-        :return:
+
+        :param cmd: Command Entered by User :type: str
         """
+
         try:
             Log.debug(f"{self.username}: {cmd}")
             command = CommandFactory.get_command(self.args, self._permissions)
             if command.need_confirmation:
-                res = Terminal.get_quest_answer(" ".join((command.name,
-                                                    command.sub_command_name)))
+                res = Terminal.get_quest_answer(" ".join((command.name, command.sub_command_name)))
                 if not res:
                     return None
             channel_name = f"""process_{command.comm.get("type", "")}_command"""
             if not hasattr(self, channel_name):
                 err_str = f"Invalid communication protocol {command.comm.get('type','')} selected."
                 Log.error(f"{self.username}:{err_str}")
-                sys.stderr(err_str)
+                sys.stderr.write(err_str)
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command executed")
         except CsmUnauthorizedError as e:
@@ -243,14 +241,15 @@ class CsmCli(Cmd):
             self.do_exit()
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
-            self.do_exit(self.some_error_occured)
+            self.do_exit(self.some_error_occurred)
+        return None
 
     def do_exit(self, args=""):
         """
         This Function Exits the Interactive Shell whenever "EXIT" or "QUIT" or
         Keyboard Interrupts are called.
-        :return:
         """
+
         if args:
             sys.stdout.write(f"{args}\n")
         if self._session_token:
@@ -262,25 +261,24 @@ class CsmCli(Cmd):
         Log.info(f"{self.username}: Logged out")
         sys.exit()
 
+
 if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from csm.cli.command_factory import CommandFactory, ArgumentParser
+    from csm.cli.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
-    from cortx.utils.log import Log
     from csm.common.conf import Conf
-    from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
-    from csm.common.payload import *
+    from csm.common.errors import (CsmError, CsmUnauthorizedError, CsmServiceNotAvailable,
+                                   InvalidRequest)
+    from csm.common.payload import Json, Yaml
     from csm.core.blogic import const
-    from csm.common.errors import InvalidRequest
     try:
         CsmCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
-        Log.debug(f"Stopped via keyboard interrupt.")
+        Log.debug("Stopped via keyboard interrupt.")
         sys.stdout.write("\n")
     except InvalidRequest as e:
-        raise InvalidRequest(f"{e}")
+        raise InvalidRequest(str(e))
     except Exception as e:
-        Log.critical(f"{e}")
+        Log.critical(str(e))
         sys.stderr.write('Some error occurred.\nPlease try login again.\n')
-

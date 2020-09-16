@@ -13,19 +13,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
-from csm.common.fs_utils import FSUtils
-from csm.common.services import Service, ApplicationService
-from cortx.utils.log import Log
-from csm.core.data.models.upgrade import UpdateStatusEntry
-from csm.core.blogic import const
-
 import os
+
+from cortx.utils.log import Log
+
+from csm.common.errors import CsmInternalError
+from csm.common.fs_utils import FSUtils
+from csm.common.services import ApplicationService
 
 
 class UpdateService(ApplicationService):
 
     def __init__(self, provisioner, update_repo):
+        super().__init__()
         self._provisioner = provisioner
         self._update_repo = update_repo
 
@@ -41,9 +41,11 @@ class UpdateService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def _get_renewed_model(self, update_id):
         """
-        Fetch the most up-to-date information about the most recent firmware and software update process.
+        Fetch the most up-to-date information about the most recent firmware and software
+        update process.
         Queries the DB, then queries the Provisioner if needed.
         """
+
         model = await self._update_repo.get_current_model(update_id)
         if model and model.is_in_progress():
             try:
@@ -58,12 +60,12 @@ class UpdateService(ApplicationService):
                     version = os.path.basename(fw_path)
                     model.version = version
                 await self._update_repo.save_model(model)
-                Log.debug(f'Save renewed model for {update_id} for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
+                Log.debug(f'Save renewed model for {update_id} '
+                          f'for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
             except Exception as e:
                 Log.error(f'Failed to fetch the status of an ongoing update process: {e}')
                 raise CsmInternalError('Failed to fetch the status of an ongoing update process')
         return model
-
 
     @Log.trace_method(Log.INFO)
     async def _get_current_status(self, update_id):
@@ -74,6 +76,7 @@ class UpdateService(ApplicationService):
         Returns {} if there is no information (e.g. because CSM has never been updated)
         Otherwise returns a dictionary that describes the process
         """
+
         model = await self._get_renewed_model(update_id)
         if not model:
             return {}

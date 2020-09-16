@@ -20,7 +20,6 @@ from csm.core.blogic.models import CsmModel
 
 class ReplaceNode(CsmModel):
     _id = "job_id"
-
     node_id = StringType()
     job_id = StringType()
     status = StringType()
@@ -31,12 +30,6 @@ class ReplaceNode(CsmModel):
 
     @staticmethod
     def generate_new(job_id, node_id, hostname, ssh_port):
-        """
-
-        :param job_id:
-        :param node_id:
-        :return:
-        """
         replace_node_obj = ReplaceNode()
         replace_node_obj.job_id = job_id
         replace_node_obj.node_id = node_id
@@ -49,10 +42,7 @@ class ReplaceNode(CsmModel):
 
 
 class JobStatus:
-    """
-    Repository Class for Node Replacement.
-    """
+    """Repository Class for Node Replacement."""
     Is_Running = "Running"
     Completed = "Completed"
     Not_Running = "Not Running"
-

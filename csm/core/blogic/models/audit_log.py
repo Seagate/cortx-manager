@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,17 +14,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from schematics.models import Model
-from schematics.types import DateType, StringType, DateTimeType
+from schematics.types import DateTimeType, StringType
+
 from csm.core.blogic.models import CsmModel
 
+
 class CsmAuditLogModel(CsmModel):
-    """ Model for csm audit logs """
+    """Model for csm audit logs"""
     message = StringType()
     timestamp = DateTimeType()
 
+
 class S3AuditLogModel(CsmModel):
-    """ Model for s3 audit logs """
+    """Model for s3 audit logs"""
     timestamp = DateTimeType()
     authentication_type = StringType()
     bucket = StringType()
@@ -33,7 +36,7 @@ class S3AuditLogModel(CsmModel):
     cipher_suite = StringType()
     error_code = StringType()
     host_header = StringType()
-    host_id = StringType() 
+    host_id = StringType()
     http_status = StringType()
     key = StringType()
     object_size = StringType()
@@ -49,4 +52,3 @@ class S3AuditLogModel(CsmModel):
     turn_around_time = StringType()
     user_agent = StringType()
     version_id = StringType()
-

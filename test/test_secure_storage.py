@@ -13,18 +13,15 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import os
 import asyncio
 import unittest
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 from cortx.utils.security.cipher import Cipher
 from cortx.utils.security.secure_storage import SecureStorage
+
 from csm.common.payload import Yaml
 from csm.core.blogic import const
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 
 t = unittest.TestCase()
 

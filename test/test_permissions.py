@@ -13,12 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.test.common import assert_equal
-from csm.common.permission_names import Resource, Action
+from csm.common.permission_names import Action, Resource
 from csm.core.services.permissions import PermissionSet
+from csm.test.common import assert_equal
 
 
-def test_permissions_union(*args):
+def test_permissions_union():
     lhs = PermissionSet({
         Resource.ALERTS: {Action.LIST, Action.UPDATE},
         Resource.USERS: {Action.CREATE, Action.DELETE, Action.UPDATE},
@@ -42,7 +42,7 @@ def test_permissions_union(*args):
     assert_equal(calculated, expected)
 
 
-def test_permissions_intersection(*args):
+def test_permissions_intersection():
     lhs = PermissionSet({
         Resource.ALERTS: {Action.LIST, Action.UPDATE},
         Resource.USERS: {Action.CREATE, Action.DELETE, Action.UPDATE},
@@ -62,10 +62,6 @@ def test_permissions_intersection(*args):
     })
 
     assert_equal(calculated, expected)
-
-
-def init(args):
-    pass
 
 
 test_list = [

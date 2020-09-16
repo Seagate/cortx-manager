@@ -24,10 +24,9 @@ from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
 
 
 class S3AccessKeysService(S3BaseService):
-    """
-    Service for S3 access keys management
-    """
+    """Service for S3 access keys management"""
     def __init__(self, s3_plugin):
+        super().__init__()
         self._s3_plugin = s3_plugin
         self._iam_connection_config = CsmS3ConfigurationFactory.get_iam_connection_config()
 
@@ -36,7 +35,7 @@ class S3AccessKeysService(S3BaseService):
         Creates IAM client for the current S3 session credentials
 
         :param s3_session: S3 session object
-        :returns: IAM client object
+        :return: IAM client object
         """
         return self._s3_plugin.get_iam_client(s3_session.access_key, s3_session.secret_key,
                                               self._iam_connection_config, s3_session.session_token)
@@ -47,7 +46,7 @@ class S3AccessKeysService(S3BaseService):
         Creates an S3 access key for the provided user
 
         :param s3_session: S3 session object
-        :returns: a dictionary with details about the new access key
+        :return: a dictionary with details about the new access key
         """
         Log.debug('Creating an access key')
         iam_client = self._fetch_iam_client(s3_session)
@@ -62,7 +61,7 @@ class S3AccessKeysService(S3BaseService):
         Updates the status of the provided access key
 
         :param s3_session: S3 session object
-        :returns: a dictionary with details about the updated access key
+        :return: a dictionary with details about the updated access key
         """
         Log.debug(f'Updating the access key {access_key_id} with status {status}')
         iam_client = self._fetch_iam_client(s3_session)
@@ -82,7 +81,7 @@ class S3AccessKeysService(S3BaseService):
         :param s3_session: S3 session object
         :param marker: continuation marker from the previous list access keys operation
         :param limit: the maximum number of entities to return
-        :returns: a dictionary with access keys and continuation marker (if the list's limited)
+        :return: a dictionary with access keys and continuation marker (if the list's limited)
         """
         Log.debug(f'Listing access keys, marker {marker}, limit {limit}')
         iam_client = self._fetch_iam_client(s3_session)
@@ -111,7 +110,7 @@ class S3AccessKeysService(S3BaseService):
 
         :param s3_session: S3 session object
         :param access_key_id: access key ID
-        :returns: a dictionary containing a message about the deletion status
+        :return: a dictionary containing a message about the deletion status
         """
         Log.debug(f'Deleting access key {access_key_id}')
         iam_client = self._fetch_iam_client(s3_session)

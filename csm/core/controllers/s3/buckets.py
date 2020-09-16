@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -14,22 +15,20 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validate
-from marshmallow.exceptions import ValidationError
-from csm.core.controllers.validators import BucketNameValidator
-from csm.common.permission_names import Resource, Action
-from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.controllers.s3.base import S3AuthenticatedView
+
 from cortx.utils.log import Log
+from marshmallow import Schema, fields
+from marshmallow.exceptions import ValidationError
+
 from csm.common.errors import InvalidRequest
-from csm.core.providers.providers import Response
+from csm.common.permission_names import Action, Resource
+from csm.core.controllers.s3.base import S3AuthenticatedView
+from csm.core.controllers.validators import BucketNameValidator
+from csm.core.controllers.view import CsmAuth, CsmView
 
 
 class S3BucketCreationSchema(Schema):
-    """
-    Scheme for verification of POST request body for S3 bucket creation API
-
-    """
+    """Scheme for verification of POST request body for S3 bucket creation API"""
     bucket_name = fields.Str(required=True, validate=[BucketNameValidator()])
 
 
@@ -46,11 +45,7 @@ class S3BucketListView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3BUCKETS: {Action.LIST}})
     async def get(self):
-        """
-        GET REST implementation for S3 buckets fetch request
-
-        :return:
-        """
+        """GET REST implementation for S3 buckets fetch request"""
         Log.debug(f"Handling list s3 buckets fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         # TODO: in future we can add some parameters for pagination
@@ -59,20 +54,16 @@ class S3BucketListView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3BUCKETS: {Action.CREATE}})
     async def post(self):
-        """
-        POST REST implementation for S3 buckets post request
-
-        :return:
-        """
+        """POST REST implementation for S3 buckets post request"""
         Log.debug(f"Handling create s3 buckets post request."
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = S3BucketCreationSchema()
             bucket_creation_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
+        except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request body: {e}")
 
         with self._guard_service():
             # NOTE: body is empty
@@ -85,7 +76,6 @@ class S3BucketView(S3AuthenticatedView):
     """
     S3 Bucket view for DELETE REST API implementation:
         1. Delete bucket by its given name
-
     """
 
     def __init__(self, request):
@@ -93,10 +83,7 @@ class S3BucketView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3BUCKETS: {Action.DELETE}})
     async def delete(self):
-        """
-        DELETE REST implementation for s3 bucket delete request
-        :return:
-        """
+        """DELETE REST implementation for s3 bucket delete request"""
         Log.debug(f"Handling s3 bucket delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
@@ -116,11 +103,9 @@ class S3BucketPolicyView(S3AuthenticatedView):
     def __init__(self, request):
         super().__init__(request, 's3_bucket_service')
 
-    """
-    GET REST implementation for S3 bucket policy fetch request
-    """
     @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for S3 bucket policy fetch request"""
         Log.debug(f"Handling s3 bucket policy fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
@@ -128,11 +113,9 @@ class S3BucketPolicyView(S3AuthenticatedView):
             return await self._service.get_bucket_policy(self._s3_session,
                                                          bucket_name)
 
-    """
-    PUT REST implementation for S3 bucket policy put request
-    """
     @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.CREATE}})
     async def put(self):
+        """PUT REST implementation for S3 bucket policy put request"""
         Log.debug(f"Handling s3 bucket policy put request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]
@@ -142,11 +125,9 @@ class S3BucketPolicyView(S3AuthenticatedView):
                                                          bucket_name,
                                                          bucket_policy_body)
 
-    """
-    DELETE REST implementation for s3 bucket policy delete request
-    """
     @CsmAuth.permissions({Resource.S3BUCKET_POLICY: {Action.DELETE}})
     async def delete(self):
+        """DELETE REST implementation for s3 bucket policy delete request"""
         Log.debug(f"Handling s3 bucket policy delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         bucket_name = self.request.match_info["bucket_name"]

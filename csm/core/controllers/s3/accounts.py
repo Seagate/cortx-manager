@@ -14,15 +14,17 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validate
-from marshmallow.exceptions import ValidationError
+
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
-from csm.common.permission_names import Resource, Action
+from marshmallow import Schema, fields
+from marshmallow.exceptions import ValidationError
+
+from csm.common.errors import CsmNotFoundError, CsmPermissionDenied, InvalidRequest
+from csm.common.permission_names import Action, Resource
 from csm.core.blogic import const
+from csm.core.controllers.s3.base import S3AuthenticatedView, S3BaseView
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.controllers.s3.base import S3BaseView, S3AuthenticatedView
+from csm.core.controllers.view import CsmAuth, CsmView
 
 
 # TODO: find out about policies for names and passwords
@@ -42,12 +44,9 @@ class S3AccountsListView(S3BaseView):
     def __init__(self, request):
         super().__init__(request, const.S3_ACCOUNT_SERVICE)
 
-    """
-    GET REST implementation for S3 account fetch request
-    """
     @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.LIST}})
     async def get(self):
-        """Calling Stats Get Method"""
+        """GET REST implementation for S3 account fetch request"""
         Log.debug(f"Handling list s3 accounts fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         limit = self.request.rel_url.query.get("limit", None)
@@ -56,22 +55,19 @@ class S3AccountsListView(S3BaseView):
             return await self._service.list_accounts(self.request.session.credentials,
                                                      marker, limit)
 
-    """
-    POST REST implementation for S3 account fetch request
-    """
     @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.CREATE}})
     @Log.trace_method(Log.INFO)
     async def post(self):
-        """Calling Stats Post Method"""
+        """POST REST implementation for S3 account fetch request"""
         Log.debug(f"Handling create s3 accounts post request."
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = S3AccountCreationSchema()
             account_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
+        except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request body: {e}")
         # Check whether a CSM user with the same id already exists
         try:
             await self.request.app["csm_user_service"].get_user(account_body['account_name'])
@@ -80,7 +76,8 @@ class S3AccountsListView(S3BaseView):
             with self._guard_service():
                 return await self._service.create_account(**account_body)
         else:
-            raise InvalidRequest("CSM user with same username as passed S3 account name already exists")
+            raise InvalidRequest(
+                "CSM user with same username as passed S3 account name already exists")
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts/{account_id}")
@@ -91,38 +88,31 @@ class S3AccountsView(S3AuthenticatedView):
         if not self._s3_session.user_id == self.account_id:
             raise CsmPermissionDenied("Access denied. Verify account name.")
 
-    """
-    GET REST implementation for S3 account delete request
-    """
     @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.DELETE}})
     async def delete(self):
-        """Calling Stats Get Method"""
+        """GET REST implementation for S3 account delete request"""
         Log.debug(f"Handling s3 accounts delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         with self._guard_service():
-            response = await self._service.delete_account(self._s3_session,
-                                                          self.account_id)
+            response = await self._service.delete_account(self._s3_session, self.account_id)
             await self._cleanup_sessions()
             return response
 
-    """
-    PATCH REST implementation for S3 account
-    """
     @CsmAuth.permissions({Resource.S3ACCOUNTS: {Action.UPDATE}})
     async def patch(self):
+        """PATCH REST implementation for S3 account"""
         Log.debug(f"Handling update s3 accounts patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = S3AccountPatchSchema()
             patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
+        except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request body: {e}")
         with self._guard_service():
-            response = await self._service.patch_account(self._s3_session,
-                                                         self.account_id,
-                                                         **patch_body)
+            response = await self._service.patch_account(
+                self._s3_session, self.account_id, **patch_body)
             await self._cleanup_sessions()
             return response
 

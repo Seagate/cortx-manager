@@ -14,4 +14,5 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 alerts.test_alerts_command
+alerts.test_alerts_comment
 alerts.test_alerts_acknowledgement

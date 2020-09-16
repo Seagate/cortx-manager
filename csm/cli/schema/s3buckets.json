@@ -50,7 +50,7 @@
       "args": [
         {
           "flag": "bucket_name",
-          "type": "Validatiors.bucket_name",
+          "type": "Validators.bucket_name",
           "help": "Give a bucket name to create.",
           "json": true
         },

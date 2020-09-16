@@ -13,22 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from csm.common.conf import Conf
-from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
-from csm.common.errors import CsmInternalError, CsmNotFoundError
-from csm.common.services import ApplicationService
-from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
-from csm.core.services.sessions import S3Credentials, LocalCredentials
-from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory, IamRootClient
+
+
+from csm.common.service_urls import ServiceUrls
+from csm.core.data.models.s3 import IamError, IamErrors
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, IamRootClient, S3BaseService
+from csm.core.services.sessions import LocalCredentials, S3Credentials
 
 
 # TODO: the access to this service must be restricted to CSM users only (?)
 class S3AccountService(S3BaseService):
-    """
-    Service for S3 account management
-    """
+    """Service for S3 account management"""
     def __init__(self, s3plugin, provisioner):
         """
         Initialize S3AccountService.
@@ -36,37 +32,37 @@ class S3AccountService(S3BaseService):
         :param s3plugin: S3 plugin object.
         :param provisioner: provisioner object.
         """
+
+        super().__init__()
         self._s3plugin = s3plugin
         self._provisioner = provisioner
-        #TODO
-        """
-        Password should be taken as input and not read from conf file directly.
-        """
+        # TODO: Password should be taken as input and not read from conf file directly.
         self._s3_root_client = IamRootClient()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def create_account(self, account_name: str, account_email: str, password: str):
         """
         S3 account creation
-        :param account_name:
-        :param account_email:
-        :param password:
-        :returns: a dictionary describing the newly created S3 account. Exception otherwise.
+
+        :return: a dictionary describing the newly created S3 account. Exception otherwise.
         """
+
         Log.debug(f"Creating s3 account. account_name: {account_name}")
         account = await self._s3_root_client.create_account(account_name, account_email)
         if isinstance(account, IamError):
             self._handle_error(account, args={'account_name': account_name})
 
-        account_client = self._s3plugin.get_iam_client(account.access_key_id,
-            account.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
+        account_client = self._s3plugin.get_iam_client(
+            account.access_key_id, account.secret_key_id,
+            CsmS3ConfigurationFactory.get_iam_connection_config())
 
         try:
             # Note that the order of commands below is important
             # If profile creation fails, we can easily remove the account
             # If a profile is created, we can still remove the account
             Log.debug(f"Creating Login profile for account: {account}")
-            profile = await account_client.create_account_login_profile(account.account_name, password)
+            profile = await account_client.create_account_login_profile(account.account_name,
+                                                                        password)
             if isinstance(profile, IamError):
                 self._handle_error(profile, args={'account_name': account_name})
         except Exception as e:
@@ -97,6 +93,7 @@ class S3AccountService(S3BaseService):
                             demand_all_accounts=False) -> dict:
         """
         Fetch a list of s3 accounts.
+
         :param session: session object of S3Credentials or LocalCredentials
         :param continue_marker: Marker that must be used in order to fetch another
                                 portion of data
@@ -104,37 +101,31 @@ class S3AccountService(S3BaseService):
                            returned in one batch
         :demand_all_accounts: When set to True, returns full list of s3 account regardless
                               of session type. Needed for internal calls
-        :returns: a dictionary containing account list and, if the list is truncated, a marker
+        :return: a dictionary containing account list and, if the list is truncated, a marker
                   that can be used for fetching subsequent batches
         """
+
         # TODO: right now the remote server does not seem to support pagination
         Log.debug(f"Listing accounts. continue_marker:{continue_marker}, "
                   f"page_limit:{page_limit}")
         accounts = await self._s3_root_client.list_accounts(max_items=page_limit,
-            marker=continue_marker)
+                                                            marker=continue_marker)
         if isinstance(accounts, IamError):
             self._handle_error(accounts)
         accounts_list = []
         # CSM user is allowed to list all the S3 users in system.
         if isinstance(session, LocalCredentials) or demand_all_accounts:
             for acc in accounts.iam_accounts:
-                accounts_list.append(
-                        {
-                            "account_name": acc.account_name,
-                            "account_email": acc.account_email
-                        }
-                    )
+                accounts_list.append({
+                    "account_name": acc.account_name,
+                    "account_email": acc.account_email})
         # S3 user is not allowed to list all s3 user in system.
         # Allowed to list only himself.
         elif isinstance(session, S3Credentials):
             for acc in accounts.iam_accounts:
                 if acc.account_name.lower() == session.user_id.lower():
-                    accounts_list.append(
-                        {
-                            "account_name": acc.account_name,
-                            "account_email": acc.account_email
-                        }
-                    )
+                    accounts_list.append({"account_name": acc.account_name,
+                                          "account_email": acc.account_email})
                     break
         service_urls = ServiceUrls(self._provisioner)
         resp = {
@@ -152,13 +143,15 @@ class S3AccountService(S3BaseService):
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
+
         :param account_name: Name of an account to update
         :param password: If set, the password will be updated.
         :param reset_access_key: If set to True, account access and secret key will
                                  be reset
-        :returns: a dictionary describing the updated account.
+        :return: a dictionary describing the updated account.
                   In case of an error, an exception is raised.
         """
+
         Log.debug(f"Patch accounts. account_name:{account_name}, "
                   f"reset_access_key:{reset_access_key}")
         client = self._s3_root_client
@@ -166,7 +159,7 @@ class S3AccountService(S3BaseService):
             "account_name": account_name
         }
 
-        # # TODO: currently there is no way to fetch email of an already existing account
+        # TODO: currently there is no way to fetch email of an already existing account
         if reset_access_key:
             new_creds = await client.reset_account_access_key(account_name)
             if isinstance(new_creds, IamError):
@@ -175,12 +168,13 @@ class S3AccountService(S3BaseService):
             response["access_key"] = new_creds.access_key_id
             response["secret_key"] = new_creds.secret_key_id
 
-            client = self._s3plugin.get_iam_client(new_creds.access_key_id,
-                new_creds.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
+            client = self._s3plugin.get_iam_client(
+                new_creds.access_key_id, new_creds.secret_key_id,
+                CsmS3ConfigurationFactory.get_iam_connection_config())
         else:
-            client = self._s3plugin.get_iam_client(s3_session.access_key,
-                s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
-                s3_session.session_token)
+            client = self._s3plugin.get_iam_client(
+                s3_session.access_key, s3_session.secret_key,
+                CsmS3ConfigurationFactory.get_iam_connection_config(), s3_session.session_token)
 
         if password:
             # We will try to create login profile in case it doesn't exist
@@ -192,8 +186,7 @@ class S3AccountService(S3BaseService):
             if isinstance(new_profile, IamError):
                 # Profile already exists, we need to set new passord
                 Log.debug(f"Update Login Profile for account {account_name}")
-                new_profile = await client.update_account_login_profile(account_name,
-                    password)
+                new_profile = await client.update_account_login_profile(account_name, password)
 
             if isinstance(new_profile, IamError):
                 # Update failed
@@ -204,14 +197,16 @@ class S3AccountService(S3BaseService):
     async def delete_account(self, s3_session: S3Credentials, account_name: str):
         """
         S3 account deletion
+
         :param s3_session: S3 Accounts Session Details
         :param account_name: Account Name to Delete Account.
-        :returns: dictionary in case of success. Otherwise throws an exception.
+        :return: dictionary in case of success. Otherwise throws an exception.
         """
+
         Log.debug(f"Delete account service. account_name:{account_name}")
-        account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
-            s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
-            s3_session.session_token)
+        account_s3_client = self._s3plugin.get_iam_client(
+            s3_session.access_key, s3_session.secret_key,
+            CsmS3ConfigurationFactory.get_iam_connection_config(), s3_session.session_token)
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
             self._handle_error(result)

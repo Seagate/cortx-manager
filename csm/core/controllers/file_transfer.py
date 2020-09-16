@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,23 +14,21 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-
-from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.core.controllers.schemas import FileFieldSchema
-from csm.core.controllers.validators import FileRefValidator
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from aiohttp import web
 from cortx.utils.log import Log
+from marshmallow import Schema, fields
+
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-
-from aiohttp import web
-from marshmallow import Schema, fields, validate, exceptions
+from csm.core.services.file_transfer import FileCache, FileType
+from .schemas import FileFieldSchema
+from .view import CsmView
 
 
 class TextFieldSchema(Schema):
     content_type = fields.Str(required=True)
     content = fields.Str(required=True)
+
 
 class CsmFileUploadSchema(Schema):
     description = fields.Nested(TextFieldSchema())
@@ -40,9 +39,9 @@ class CsmFileUploadSchema(Schema):
 @CsmView._app_routes.view("/api/v1/csm/file/transfer")
 class CsmFileView(CsmView):
     """
-    This is not an active controller! If you want to test it 
+    This is not an active controller! If you want to test it
     add import of CsmFileView to src/core/controllers/__init__.py
-    This is an example (not real API) on how to implement 
+    This is an example (not real API) on how to implement
     downloading and uploading functionality in controllers.
     "get" stands for download and "post" stands for upload.
     """
@@ -52,13 +51,8 @@ class CsmFileView(CsmView):
         self._service = self.request.app["download_service"]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for downloading file
-    """
     async def get(self):
-        """
-        Example of handling download request
-        """
+        """GET REST implementation for downloading file. Example of handling download request"""
         Log.debug("Handling file download request")
         filename = self.request.rel_url.query.get("filename")
 
@@ -68,18 +62,14 @@ class CsmFileView(CsmView):
         file_response = self._service.get_file_response(FileType.ETC_CSM, filename)
         return file_response
 
-    """
-    POST REST implementation for uploading file
-    """
     async def post(self):
-        """
-        Example of post multipart request handler.
-        We are expecting that request includes text field and file field
-        """
+        """POST REST implementation for uploading file"""
+        # Example of post multipart request handler.
+        # We are expecting that request includes text field and file field
         # We use FileCache context manager if we expect a file in the incoming request
         with FileCache() as cache:
 
-            # parse_multipart_request parse multipart request and returns dict 
+            # parse_multipart_request parse multipart request and returns dict
             # which maps multipart fields names to TextFieldSchema or FileFieldSchema
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
 

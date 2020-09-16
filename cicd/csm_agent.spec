@@ -89,7 +89,7 @@ exit 0
 %clean
 
 %files
-# TODO - Verify permissions, user and groups for directory.
+# TODO: Verify permissions, user and groups for directory.
 %defattr(-, root, root, -)
 <CSM_PATH>/*
 

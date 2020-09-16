@@ -15,43 +15,39 @@
 
 import asyncio
 import time
-
-from aiohttp import ClientSession, TCPConnector
-from aiohttp import ClientError as HttpClientError
-from boto.s3.bucket import Bucket
-from botocore.exceptions import ClientError as BotoClientError
 from datetime import date
 from random import SystemRandom
-from marshmallow import ValidationError
-from marshmallow.validate import URL
-from typing import cast, Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from uuid import UUID, uuid4, uuid5
 
-from csm.common.conf import Conf
-from csm.common.errors import (
-    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied,
-    CsmServiceConflict
-)
-from csm.common.periodic import Periodic
+from aiohttp import ClientError as HttpClientError
+from aiohttp import ClientSession, TCPConnector
+from boto.s3.bucket import Bucket
+from botocore.exceptions import ClientError as BotoClientError
 from cortx.utils.data.access import Query
 from cortx.utils.log import Log
+from cortx.utils.security.cipher import Cipher
+from cortx.utils.security.secure_storage import SecureStorage
+from marshmallow import ValidationError
+from marshmallow.validate import URL
+
+from csm.common.conf import Conf
+from csm.common.errors import (CsmGatewayTimeout, CsmInternalError, CsmNotFoundError,
+                               CsmPermissionDenied, CsmServiceConflict)
+from csm.common.periodic import Periodic
 from csm.common.runtime import Options
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.services.storage_capacity import StorageCapacityService
-from csm.core.services.sessions import S3Credentials
-from csm.core.services.s3.accounts import S3AccountService
 from csm.core.data.models.s3 import IamUser, IamUserCredentials
 from csm.core.data.models.system_config import ApplianceName
-from csm.core.data.models.usl import Device, Volume, ApiKey
+from csm.core.data.models.usl import ApiKey, Device, Volume
+from csm.core.services.s3.accounts import S3AccountService
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
-from csm.core.services.usl_certificate_manager import (
-    USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
-)
-from cortx.utils.security.secure_storage import SecureStorage
-from csm.plugins.cortx.provisioner import ClusterIdFetchError
-from cortx.utils.security.cipher import Cipher
-
+from csm.core.services.sessions import S3Credentials
+from csm.core.services.storage_capacity import StorageCapacityService
+from csm.core.services.usl_certificate_manager import (CertificateError,
+                                                       USLDomainCertificateManager,
+                                                       USLNativeCertificateManager)
 
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
 USL_API_KEY_UPDATE_PERIOD = 24 * 60 * 60
@@ -61,7 +57,8 @@ class UslApiKeyDispatcher:
     def __init__(self, storage):
         self._key = None
         self._storage = storage
-        self._updater = Periodic(USL_API_KEY_UPDATE_PERIOD, self._update_key)
+        self._updater = Periodic(USL_API_KEY_UPDATE_PERIOD, self._update_key,
+                                 asyncio.get_event_loop())
         self._updater.start()
 
     async def _update_key(self) -> None:
@@ -76,10 +73,8 @@ class UslApiKeyDispatcher:
 
 
 class UslService(ApplicationService):
-    """
-    Implements USL service operations.
-    """
-    # FIXME improve token management
+    """Implements USL service operations."""
+    # FIXME: improve token management
     _token: str
     _s3plugin: Any
     _domain_certificate_manager: USLDomainCertificateManager
@@ -87,9 +82,7 @@ class UslService(ApplicationService):
     _api_key_dispatch: UslApiKeyDispatcher
 
     def __init__(self, s3_plugin, storage, provisioner) -> None:
-        """
-        Constructor.
-        """
+        super().__init__()
         self._token = ''
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
@@ -110,23 +103,21 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return str(appliance_name)
 
-    def _get_device_uuid(self) -> UUID:
-        """
-        Returns the CORTX cluster ID as in CSM configuration file.
-        """
+    @staticmethod
+    def _get_device_uuid() -> UUID:
+        """Returns the CORTX cluster ID as in CSM configuration file."""
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.cluster_id')
         if Options.debug and cluster_id is None:
             cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG.default_cluster_id')
         device_uuid = cluster_id
         if device_uuid is None:
             reason = 'Could not obtain cluster ID from CSM configuration file'
-            Log.error(f'{reason}')
+            Log.error(reason)
             raise CsmInternalError(desc=reason)
         return UUID(device_uuid)
 
-    def _format_lyve_pilot_register_device_params(
-        self, url: str, pin: str, token: str
-    ) -> Dict[str, str]:
+    @staticmethod
+    def _format_lyve_pilot_register_device_params(url: str, pin: str, token: str) -> Dict[str, str]:
         register_device_params = {
             'url': url,
             'regPin': pin,
@@ -135,13 +126,12 @@ class UslService(ApplicationService):
         return register_device_params
 
     async def _format_lyve_pilot_access_params(
-        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
-        bucket: Bucket
-    ) -> Dict[str, Any]:
+            self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
+            bucket: Bucket) -> Dict[str, Any]:
         network = await self._provisioner.get_network_configuration()
         access_params = {
             'accountName': s3_account.get('account_name'),
-            # TODO find a better way to obtain S3 server host and port
+            # TODO: find a better way to obtain S3 server host and port
             'uri': 's3://{}:{}'.format(
                 network.cluster_ip,
                 Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
@@ -154,9 +144,8 @@ class UslService(ApplicationService):
         return access_params
 
     async def _cleanup_on_lyve_pilot_registration_error(
-        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
-        bucket: Bucket
-    ) -> None:
+            self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
+            bucket: Bucket) -> None:
         Log.debug('Cleaning up Lyve Pilot resources...')
         access_key = s3_account.get('access_key')
         secret_key = s3_account.get('secret_key')
@@ -191,16 +180,9 @@ class UslService(ApplicationService):
         Log.info('Lyve Pilot resources cleanup complete.')
 
     async def _initialize_lyve_pilot_s3_resources(
-        self,
-        s3_account_name: str,
-        s3_account_email: str,
-        s3_account_password: str,
-        iam_user_name: str,
-        iam_user_password: str,
-        bucket_name: str,
-        *,
-        repair_mode: bool = False,
-    ) -> Tuple[Dict, IamUser, IamUserCredentials, Bucket]:
+            self, s3_account_name: str, s3_account_email: str, s3_account_password: str,
+            iam_user_name: str, iam_user_password: str, bucket_name: str, *,
+            repair_mode: bool = False,) -> Tuple[Dict, IamUser, IamUserCredentials, Bucket]:
         s3_account: Optional[Dict] = None
         iam_user: Optional[IamUser] = None
         existing_iam_user: Optional[IamUser] = None
@@ -326,10 +308,7 @@ class UslService(ApplicationService):
         )
 
     async def _get_lyve_pilot_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
-        """
-        Checks Lyve Pilot IAM user exists and returns it
-        """
-
+        """Checks Lyve Pilot IAM user exists and returns it"""
         # TODO: Currently the IAM server does not support 'get-user' operation.
         # Thus there is no way to obtain details about existing IAM user: ID and ARN.
         # Workaround: delete IAM user even if it exists (and recreate then).
@@ -343,17 +322,13 @@ class UslService(ApplicationService):
         return None
 
     async def _create_lyve_pilot_iam_user(
-        self, iam_cli, user_name: str, user_passwd: str
-    ) -> IamUser:
-        """
-        Creates Lyve Pilot IAM user inside the currently logged in S3 account
-        """
-
+            self, iam_cli, user_name: str, user_passwd: str) -> IamUser:
+        """Creates Lyve Pilot IAM user inside the currently logged in S3 account"""
         Log.debug(f'Creating Lyve Pilot IAM user {user_name}')
         iam_user_resp = await iam_cli.create_user(user_name)
         if hasattr(iam_user_resp, "error_code"):
-            erorr_msg = iam_user_resp.error_message
-            raise CsmInternalError(f'Failed to create Lyve Pilot IAM user: {erorr_msg}')
+            error_msg = iam_user_resp.error_message
+            raise CsmInternalError(f'Failed to create Lyve Pilot IAM user: {error_msg}')
         Log.info(f'Lyve Pilot IAM user {user_name} is created')
 
         iam_login_resp = await iam_cli.create_user_login_profile(user_name, user_passwd, False)
@@ -368,12 +343,8 @@ class UslService(ApplicationService):
         return iam_user_resp
 
     async def _create_lyve_pilot_iam_user_credentials(
-        self, iam_cli, user_name: str
-    ) -> IamUserCredentials:
-        """
-        Gets the access key id and secret key for Lyve Pilot IAM user
-        """
-
+            self, iam_cli, user_name: str) -> IamUserCredentials:
+        """Gets the access key id and secret key for Lyve Pilot IAM user"""
         creds = await iam_cli.create_user_access_key(user_name=user_name)
         if hasattr(creds, 'error_code'):
             error_msg = creds.error_message
@@ -385,7 +356,8 @@ class UslService(ApplicationService):
         Log.debug(f'Deleting Lyve Pilot IAM user {user_name} credentials')
         access_keys_resp = await iam_cli.list_user_access_keys(user_name=user_name)
         for access_key in access_keys_resp.access_keys:
-            res = await iam_cli.delete_user_access_key(access_key.access_key_id, user_name=user_name)
+            res = await iam_cli.delete_user_access_key(
+                access_key.access_key_id, user_name=user_name)
             if hasattr(res, 'error_code'):
                 error_msg = res.error_message
                 raise CsmInternalError(f'Failed to delete access key {access_key.access_key_id}: '
@@ -393,20 +365,14 @@ class UslService(ApplicationService):
         Log.info(f'IAM user {user_name} credentials are deleted')
 
     async def _get_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
-        """
-        Checks if Lyve Pilot bucket already exists and returns it
-        """
-
+        """Checks if Lyve Pilot bucket already exists and returns it"""
         Log.debug('Getting Lyve Pilot bucket')
         bucket = await s3_cli.get_bucket(bucket_name)
 
         return bucket
 
     async def _create_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
-        """
-        Creates Lyve Pilot bucket inside the curretnly logged in S3 account
-        """
-
+        """Creates Lyve Pilot bucket inside the currently logged in S3 account"""
         Log.debug(f'Creating Lyve Pilot bucket {bucket_name}')
         bucket = await s3_cli.create_bucket(bucket_name)
         Log.info(f'Lyve Pilot bucket {bucket_name} is created')
@@ -415,7 +381,6 @@ class UslService(ApplicationService):
     async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
         Checks if bucket is enabled for Lyve Pilot
-
         Buckets enabled for Lyve Pilot contain tag {Key=udx,Value=enabled}
         """
 
@@ -423,20 +388,14 @@ class UslService(ApplicationService):
         return tags.get('udx', 'disabled') == 'enabled'
 
     async def _tag_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> None:
-        """
-        Puts the Lyve Pilot tag on a specified bucket
-        """
-
+        """Puts the Lyve Pilot tag on a specified bucket"""
         Log.debug(f'Tagging bucket {bucket_name} with Lyve Pilot tag')
         bucket_tags = {"udx": "enabled"}
         await s3_cli.put_bucket_tagging(bucket_name, bucket_tags)
-        Log.info(f'Lyve Pilot bucket {bucket_name} is taggged with {bucket_tags}')
+        Log.info(f'Lyve Pilot bucket {bucket_name} is tagged with {bucket_tags}')
 
     async def _set_lyve_pilot_policy(self, s3_cli, iam_user, bucket_name: str):
-        """
-        Grants the specified IAM user full access to the specified bucket
-        """
-
+        """Grants the specified IAM user full access to the specified bucket"""
         Log.debug(
             f'Setting Lyve Pilot policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
         policy = {
@@ -459,7 +418,6 @@ class UslService(ApplicationService):
         Log.info(
             f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
 
-
     async def _get_volume_name(self, bucket_name: str) -> str:
         return await self._get_system_friendly_name() + ": " + bucket_name
 
@@ -479,8 +437,7 @@ class UslService(ApplicationService):
             volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
 
     async def _get_lyve_pilot_volume_list(
-        self, access_key_id: str, secret_access_key: str
-    ) -> Dict[UUID, Volume]:
+            self, access_key_id: str, secret_access_key: str) -> Dict[UUID, Volume]:
         s3_client = self._s3plugin.get_s3_client(
             access_key_id, secret_access_key, CsmS3ConfigurationFactory.get_s3_connection_config()
         )
@@ -492,7 +449,7 @@ class UslService(ApplicationService):
             volumes[volume.uuid] = volume
         return volumes
 
-    # TODO replace stub
+    # TODO: replace stub
     async def _format_device_info(self) -> Device:
         device_uuid = self._device_uuid
         return Device.instantiate(
@@ -513,9 +470,8 @@ class UslService(ApplicationService):
         device = await self._format_device_info()
         return [device.to_primitive()]
 
-    async def get_device_volumes_list(
-        self, device_id: UUID, uri: str, access_key_id: str, secret_access_key: str
-    ) -> List[Dict[str, Any]]:
+    async def get_device_volumes_list(self, device_id: UUID, uri: str, access_key_id: str,
+                                      secret_access_key: str) -> List[Dict[str, Any]]:
         """
         Provides a list of all volumes associated to a specific device.
 
@@ -528,12 +484,11 @@ class UslService(ApplicationService):
         if device_id != self._device_uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
-        return [v.to_primitive(role='public') for _,v in volumes.items()]
+        return [v.to_primitive(role='public') for _, v in volumes.items()]
 
     async def _handle_lyve_pilot_volume_mount_umount(
-        self, device_id: UUID, volume_id: UUID, uri: str,
-        access_key_id: str, secret_access_key: str, mount=True,
-    ) -> Dict[str, str]:
+            self, device_id: UUID, volume_id: UUID, uri: str,
+            access_key_id: str, secret_access_key: str, mount=True,) -> Dict[str, str]:
         """
         Handles Lyve Pilot volume mount/umount
 
@@ -551,12 +506,11 @@ class UslService(ApplicationService):
                 'mountPath': volumes[volume_id].bucketName,
                 'handle': volumes[volume_id].bucketName
             }
-        else:
-            return volumes[volume_id].bucketName
+        return volumes[volume_id].bucketName
 
     async def post_device_volume_mount(
-        self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
-    ) -> Dict[str, str]:
+            self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str,
+            secret_access_key: str) -> Dict[str, str]:
         """
         Attaches a volume associated to a specific device to a mount point.
 
@@ -567,12 +521,13 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
+
         return await self._handle_lyve_pilot_volume_mount_umount(
             device_id, volume_id, uri, access_key_id, secret_access_key, mount=True)
 
     async def post_device_volume_unmount(
-        self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
-    ) -> str:
+            self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str,
+            secret_access_key: str) -> str:
         """
         Detaches a volume associated to a specific device from its current mount point.
 
@@ -585,27 +540,18 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
+
         return await self._handle_lyve_pilot_volume_mount_umount(
             device_id, volume_id, uri, access_key_id, secret_access_key, mount=False)
 
     async def get_events(self) -> None:
-        """
-        Returns USL events one-by-one
-        """
-        # TODO implement
-        pass
+        """Returns USL events one-by-one"""
+        # TODO: implement
 
     async def post_register_device(
-        self,
-        url: str,
-        pin: str,
-        s3_account_name: str,
-        s3_account_email: str,
-        s3_account_password: str,
-        iam_user_name: str,
-        iam_user_password: str,
-        bucket_name: str,
-    ) -> Dict:
+            self, url: str, pin: str, s3_account_name: str, s3_account_email: str,
+            s3_account_password: str, iam_user_name: str, iam_user_password: str,
+            bucket_name: str, ) -> Dict:
         """
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
@@ -613,6 +559,7 @@ class UslService(ApplicationService):
         :param url: Registration URL as provided by the Lyve Pilot portal
         :param pin: Registration PIN as provided by the Lyve Pilot portal
         """
+
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
             validate_url = URL(schemes=('http', 'https'))
@@ -621,16 +568,11 @@ class UslService(ApplicationService):
             reason = 'UDS base URL is not valid'
             Log.error(reason)
             raise CsmInternalError(desc=reason)
-        # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
+        # Let "_initialize_lyve_pilot_s3_resources()" propagate its exceptions
         (lyve_pilot_s3_account, lyve_pilot_iam_user, lyve_pilot_iam_user_access_key,
          lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
-            s3_account_name,
-            s3_account_email,
-            s3_account_password,
-            iam_user_name,
-            iam_user_password,
-            bucket_name,
-        )
+             s3_account_name, s3_account_email, s3_account_password, iam_user_name,
+             iam_user_password, bucket_name,)
         try:
             register_device_params = self._format_lyve_pilot_register_device_params(
                 url, pin, self._token)
@@ -672,7 +614,7 @@ class UslService(ApplicationService):
                             if response.status == 200:
                                 Log.info('Device registration successful')
                                 break
-                            elif response.status != 201:
+                            if response.status != 201:
                                 reason = 'Device registration failed'
                                 Log.error(f'{reason}---unexpected status code {response.status}')
                                 raise CsmInternalError(desc=reason)
@@ -706,19 +648,20 @@ class UslService(ApplicationService):
     async def get_register_device(self) -> None:
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
-        # FIXME add relevant certificates to SSL context instead of disabling validation
+        # FIXME: add relevant certificates to SSL context instead of disabling validation
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
             async with session.get(endpoint_url) as response:
                 if response.status != 200:
                     raise CsmNotFoundError()
 
-    # TODO replace stub
+    # TODO: replace stub
     async def get_registration_token(self) -> Dict[str, str]:
         """
         Generates a random registration token.
 
         :return: A 12-digit token.
         """
+
         self._token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
         return {'registrationToken': self._token}
 
@@ -733,8 +676,8 @@ class UslService(ApplicationService):
         port = \
             Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
         scheme = 'https' if ssl_check else 'http'
-        host = f'{network_configuration.mgmt_vip}'
-        url = scheme + '://' + host + ':' + str(port)
+        host = str(network_configuration.mgmt_vip)
+        url = f"{scheme}://{host}:{port}"
         mgmt_url = {
             'name': 'mgmtUrl',
             'url': url,
@@ -753,7 +696,7 @@ class UslService(ApplicationService):
         service_urls.append(mgmt_url)
         return service_urls
 
-    # TODO replace stub
+    # TODO: replace stub
     async def get_system(self) -> Dict[str, str]:
         """
         Provides information about the system.
@@ -775,8 +718,9 @@ class UslService(ApplicationService):
         """
         Create USL domain key pair in case it does not exist.
 
-        :returns: USL public key as raw bytes
+        :return: USL public key as raw bytes
         """
+
         if await self._domain_certificate_manager.get_private_key_bytes() is not None:
             reason = 'Domain certificate already exists'
             raise CsmPermissionDenied(reason)
@@ -805,10 +749,7 @@ class UslService(ApplicationService):
             raise CsmInternalError(reason)
 
     async def delete_system_certificates(self) -> None:
-        """
-        Delete all key material related with the USL domain certificate.
-        """
-
+        """Delete all key material related with the USL domain certificate."""
         deleted = await self._domain_certificate_manager.delete_key_material()
         if not deleted:
             reason = 'Failed to delete the domain certificate'
@@ -821,6 +762,7 @@ class UslService(ApplicationService):
         :param material_type: Key material type
         :return: The corresponding key material as raw bytes
         """
+
         get_material_bytes = {
             'domainCertificate': self._domain_certificate_manager.get_certificate_bytes,
             'domainPrivateKey': self._domain_certificate_manager.get_private_key_bytes,
@@ -837,7 +779,7 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(reason)
         return material
 
-    # TODO replace stub
+    # TODO: replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
         """
         Provides a list of all network interfaces in a system.
@@ -845,6 +787,7 @@ class UslService(ApplicationService):
         :return: A list containing dictionaries, each containing information about a specific
             network interface.
         """
+
         return [
             {
                 'name': 'tbd',

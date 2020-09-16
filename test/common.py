@@ -15,13 +15,15 @@
 
 import asyncio
 import inspect
-import traceback
-from functools import wraps
+import time
 from contextlib import contextmanager
-from csm.core.providers.provider_factory import ProviderFactory
-from csm.core.providers.providers import Request, Response
-from csm.core.blogic import const
+from functools import wraps
+
 from csm.core.agent.api import CsmApi
+from csm.core.blogic import const
+from csm.core.providers.provider_factory import ProviderFactory
+from csm.core.providers.providers import Request
+
 
 class Const:
     CSM_GLOBAL_INDEX = 'CSM'
@@ -33,29 +35,32 @@ class Const:
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
     CSM_PATH = '/opt/seagate/cortx/csm'
-    HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
-    MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)
+    HEALTH_SCHEMA = f'{CSM_PATH}/schema/health_schema.json'
+    MOCK_PATH = f'{CSM_PATH}/test/test_data/'
     DEV = 'dev'
     STATSD_PORT = 8125
     DEV = "dev"
 
+
 class TestFailed(Exception):
     def __init__(self, desc):
-        desc = '[%s] %s' %(inspect.stack()[1][3], desc)
-        super(TestFailed, self).__init__(desc)
+        desc = '[%s] %s' % (inspect.stack()[1][3], desc)
+        super().__init__(desc)
 
-class TestProvider(object):
+
+class TestProvider:
     def __init__(self, provider_name, cluster=None):
         if cluster is None:
             CsmApi.init()
             cluster = CsmApi.get_cluster()
         self._provider = ProviderFactory.get_provider(provider_name, cluster)
+        self._response = None
 
     def process(self, cmd, args):
         self._response = None
         request = Request(cmd, args)
         self._provider.process_request(request, self._process_response)
-        while self._response == None:
+        while self._response is None:
             time.sleep(const.RESPONSE_CHECK_INTERVAL)
         return self._response
 
@@ -87,12 +92,12 @@ def async_return(result):
 
 
 def assert_equal(lhs, rhs):
-    if not (lhs == rhs):
+    if not lhs == rhs:
         raise TestFailed(f'"{lhs}" != "{rhs}"')
 
 
 def assert_not_equal(lhs, rhs):
-    if not (lhs != rhs):
+    if not lhs != rhs:
         raise TestFailed(f'"{lhs}" == "{rhs}"')
 
 

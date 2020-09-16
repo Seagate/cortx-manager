@@ -13,28 +13,26 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os, sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from cortx.utils.log import Log
 
-def init(args):
-    pass
 
-def test1_1(args={}):
+def test1_1():
     Log.init('csm_agent', log_path="/tmp")
     Log.debug('test1_1: hello world')
     Log.info('test1_1: hello world')
-    Log.audit_log("test1_1: audit log ")
+    Log.audit("test1_1: audit log ")
 
-def test1_2(args={}):
+
+def test1_2():
     Log.init('csm_setup', log_path="/tmp", level="INFO")
     Log.debug('test1_2: hello world')
     Log.info('test1_2: hello world')
 
-def test1_3(args={}):
+
+def test1_3():
     Log.init('csm_cli', log_path="/tmp", level="INFO")
     Log.debug('test1_3: hello world')
     Log.info('test1_3: hello world')
 
-test_list = [ test1_1, test1_2, test1_3]
+
+test_list = [test1_1, test1_2, test1_3]

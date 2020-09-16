@@ -14,11 +14,14 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import sys
-from csm.core.blogic import const
-from csm.common.process import AsyncioSubprocess
+
 from cortx.utils.log import Log
-from csm.common.errors import CSM_OPERATION_SUCESSFUL
+
+from csm.common.errors import CSM_OPERATION_SUCCESSFUL
+from csm.common.process import AsyncioSubprocess
+from csm.core.blogic import const
 from csm.core.providers.providers import Response
+
 
 class System:
 
@@ -26,11 +29,9 @@ class System:
     async def unmaintenance(command):
         """
         Wrapper method for HCTL commands.
+
         :param command: Command object from argparser.
-        :return:
         """
-        _user = const.NON_ROOT_USER
-        _password = const.NON_ROOT_USER_PASS
         _command = "start"
 
         Log.debug(f"executing command :-  "
@@ -43,4 +44,4 @@ class System:
             Log.error(f"_output={_output}\n _err={_err}")
             sys.stderr.write(const.HCTL_ERR_MSG)
             return
-        return Response(output = "Starting System ...", rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output="Starting System ...", rc=CSM_OPERATION_SUCCESSFUL)

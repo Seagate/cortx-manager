@@ -13,20 +13,16 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
 import time
-import asyncio
-import requests
 import traceback
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.conf import Conf
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.core.blogic import const
-from cortx.utils.log import Log
-from csm.common.errors import CsmError
 
-def init(args):
-    pass
+import requests
+from cortx.utils.log import Log
+
+from csm.common.conf import Conf
+from csm.core.blogic import const
+from csm.test.common import TestFailed
+
 
 def process_request(url):
     return requests.get(url, verify=False)
@@ -34,40 +30,32 @@ def process_request(url):
 #################
 # Tests
 #################
-def test1(args):
-    """
-    Check status for csm agent service
-    """
-    try:
-        Log.console('Testing csm_agent service ...')
-        time.sleep(5)
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.ssl_check")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.host")
-        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.port")
-        url = "http://" if not ssl_check else "https://"
-        url = url + host + ":" + str(port)
-        resp = process_request(url)
-        if resp.status_code != 401:
-            raise
-    except Exception as e:
-        raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
 
-def test2(args):
-    """
-    Check status for csm web service
-    """
-    try:
-        Log.console('Testing csm_web service ...')
-        time.sleep(5)
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.ssl_check")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.host")
-        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.port")
-        url = "http://" if not ssl_check else "https://"
-        url = url + host + ":" + str(port)
-        resp = process_request(url)
-        if resp.status_code != 200:
-            raise
-    except Exception as e:
-        raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
-test_list = [ test1 ]
+def test1():
+    """Check status for csm agent service"""
+    Log.console('Testing csm_agent service ...')
+    time.sleep(5)
+    ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.ssl_check")
+    host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.host")
+    port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.port")
+    url = f'{"http://" if not ssl_check else "https://"}{host}:{port}'
+    resp = process_request(url)
+    if resp.status_code != 401:
+        raise TestFailed(f"csm_agent service is not running. Error: {traceback.format_exc()}")
+
+
+def test2():
+    """Check status for csm web service"""
+    Log.console('Testing csm_web service ...')
+    time.sleep(5)
+    ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.ssl_check")
+    host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.host")
+    port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.port")
+    url = f'{"http://" if not ssl_check else "https://"}{host}:{port}'
+    resp = process_request(url)
+    if resp.status_code != 200:
+        raise TestFailed(f"csm_web service is not running. Error: {traceback.format_exc()}")
+
+
+test_list = [test1]

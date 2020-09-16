@@ -14,21 +14,21 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import errno
-from csm.core.providers.providers import EmailProvider
+
 from csm.common.errors import CsmError
 from csm.core.blogic import const
+from csm.core.providers.providers import EmailProvider
 
-class ProviderFactory(object):
-    """ Factory for representing and instantiating providers """
 
+class ProviderFactory:
+    """Factory for representing and instantiating providers"""
     providers = {
         const.EMAIL_CONFIGURATION: EmailProvider,
     }
 
     @staticmethod
     def get_provider(name, cluster):
-        """ Returns provider instance corresponding to given name """
-
+        """Returns provider instance corresponding to given name"""
         if name not in ProviderFactory.providers:
-            raise CsmError(errno.EINVAL, 'Provider %s not loaded' %name)
+            raise CsmError(errno.EINVAL, f'Provider {name} not loaded')
         return ProviderFactory.providers[name](cluster)

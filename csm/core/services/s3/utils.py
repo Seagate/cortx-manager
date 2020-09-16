@@ -15,26 +15,21 @@
 
 from typing import Any, Optional
 
-from csm.core.blogic import const
-from csm.common.conf import Conf
-from cortx.utils.log import Log
-from csm.common.services import ApplicationService
-from csm.core.data.models.s3 import S3ConnectionConfig, IamErrors, IamError
-from csm.plugins.cortx.s3 import IamClient
 from botocore.exceptions import ClientError
+from cortx.utils.log import Log
+
+from csm.common.conf import Conf
+from csm.common.services import ApplicationService
+from csm.core.blogic import const
+from csm.core.data.models.s3 import IamError, S3ConnectionConfig
+from csm.plugins.cortx.s3 import IamClient
 
 
 class CsmS3ConfigurationFactory:
-    """
-    Factory for the most common CSM S3 connections configurations
-    """
-
+    """Factory for the most common CSM S3 connections configurations"""
     @staticmethod
     def get_iam_connection_config():
-        """
-        Creates a configuration for S3 IAM connection
-        """
-
+        """Creates a configuration for S3 IAM connection"""
         iam_connection_config = S3ConnectionConfig()
         iam_connection_config.host = Conf.get(
             const.CSM_GLOBAL_INDEX, const.S3_HOST)
@@ -46,10 +41,7 @@ class CsmS3ConfigurationFactory:
 
     @staticmethod
     def get_s3_connection_config():
-        """
-        Creates a configuration for S3 connection
-        """
-
+        """Creates a configuration for S3 connection"""
         Log.debug("Get s3 connection config")
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_HOST)
@@ -61,10 +53,7 @@ class CsmS3ConfigurationFactory:
 
 
 class IamRootClient(IamClient):
-    """
-    IAM client with the root privileges
-    """
-
+    """IAM client with the root privileges"""
     def __init__(self):
         ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN)
         # TODO: Password should be taken as input and not read from conf file directly.
@@ -72,9 +61,14 @@ class IamRootClient(IamClient):
         iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
         super().__init__(ldap_login, ldap_password, iam_conf)
 
+    async def get_user(self, user_name):
+        # TODO: Currently is not supported by IamRootClient.
+        raise NotImplementedError()
+
 
 class S3ServiceError(Exception):
     def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
+        super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
@@ -82,24 +76,17 @@ class S3ServiceError(Exception):
 
 
 class S3BaseService(ApplicationService):
-    def _handle_error(self, error, args: Optional[Any] = None):
-        """ A helper method for raising exceptions on S3-related errors """
-
-        # TODO: Change this method after unified error handling
-        #       implemnetation in the S3 plugin.
-
+    @staticmethod
+    def _handle_error(error, args: Optional[Any] = None):
+        """A helper method for raising exceptions on S3-related errors"""
+        # TODO: Change this method after unified error handling implementation in the S3 plugin.
         if isinstance(error, IamError):
-            raise S3ServiceError(error.http_status,
-                                 error.error_code.value,
-                                 error.error_message,
-                                 args)
+            raise S3ServiceError(
+                error.http_status, error.error_code.value, error.error_message, args)
 
         if isinstance(error, ClientError):
             error_code = error.response['Error']['Code']
             error_message = error.response["Error"]["Message"]
             http_status_code = error.response['ResponseMetadata']['HTTPStatusCode']
             # Can be useful? request_id = error.response['ResponseMetadata']['RequestId']
-            raise S3ServiceError(http_status_code,
-                                 error_code,
-                                 error_message,
-                                 args)
+            raise S3ServiceError(http_status_code, error_code, error_message, args)

@@ -13,48 +13,46 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from aiohttp import web
 from ipaddress import ip_address
 from json import JSONDecodeError
-from marshmallow import Schema, ValidationError, fields, validates
 from typing import Any, Dict, List, Type
 
-from csm.common.decorators import Decorators
-from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
+from aiohttp import web
 from cortx.utils.log import Log
+from marshmallow import Schema, ValidationError, fields, validates
+
 from csm.common.conf import Conf
-from csm.common.permission_names import Resource, Action
+from csm.common.decorators import Decorators
+from csm.common.errors import CsmError, CsmNotFoundError, CsmPermissionDenied
+from csm.common.permission_names import Action, Resource
 from csm.common.runtime import Options
 from csm.core.blogic import const
-from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
+from .usl_access_parameters_schema import AccessParamsSchema
+from .view import CsmAuth, CsmView
+
+# TODO: replace this workaround with a proper firewall, or serve USL on a separate socket
 
 
-# TODO replace this workaround with a proper firewall, or serve USL on a separate socket
 class _Proxy:
     @staticmethod
-    def on_loopback_only(cls: Type['_View']) -> Type['_View']:
+    def on_loopback_only(cls_arg: Type['_View']) -> Type['_View']:
 
-        old_init = cls.__init__
+        old_init = cls_arg.__init__
 
         def new_init(obj, request: web.Request) -> None:
             if request.transport is not None:
                 peername = request.transport.get_extra_info('peername')
-                if (peername is None or
-                    peername[0] is None or
-                    not ip_address(peername[0]).is_loopback
-                ):
+                if (peername is None or peername[0] is None
+                        or not ip_address(peername[0]).is_loopback):
                     raise web.HTTPNotFound()
             old_init(obj, request)
 
-        setattr(cls, '__init__', new_init)
-        return cls
+        setattr(cls_arg, '__init__', new_init)
+        return cls_arg
 
 
 class _View(CsmView):
-    """
-    Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
-    """
+    """Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service."""
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._service = self._request.app[const.USL_SERVICE]
@@ -83,9 +81,7 @@ class _SecuredView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registerDevice")
 class DeviceRegistrationView(_View):
-    """
-    Device registration view.
-    """
+    """Device registration view."""
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.UPDATE}})
     async def post(self) -> Dict:
 
@@ -99,8 +95,9 @@ class DeviceRegistrationView(_View):
             iam_user_password = fields.Str(required=True)
             bucket_name = fields.Str(required=True)
 
+            @staticmethod
             @validates('pin')
-            def validate_pin(self, value: str) -> None:
+            def validate_pin(value: str) -> None:
                 if len(value) != 4 or not value.isdecimal():
                     raise ValidationError('Invalid PIN format')
 
@@ -121,9 +118,7 @@ class DeviceRegistrationView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registrationToken")
 class RegistrationTokenView(_View):
-    """
-    Registration token generation view.
-    """
+    """Registration token generation view."""
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> Dict[str, str]:
         return await self._service.get_registration_token()
@@ -133,9 +128,7 @@ class RegistrationTokenView(_View):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices")
 class DeviceView(_SecuredView):
-    """
-    Devices list view.
-    """
+    """Devices list view."""
     async def get(self) -> List[Dict[str, str]]:
         return await self._service.get_device_list()
 
@@ -144,9 +137,7 @@ class DeviceView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes")
 class DeviceVolumesListView(_SecuredView):
-    """
-    Volumes list view.
-    """
+    """Volumes list view."""
     async def get(self) -> List[Dict[str, Any]]:
 
         class MethodSchema(Schema):
@@ -174,9 +165,7 @@ class DeviceVolumesListView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/mount")
 class DeviceVolumeMountView(_SecuredView):
-    """
-    Volume mount view.
-    """
+    """Volume mount view."""
     async def post(self) -> Dict[str, str]:
 
         class MethodSchema(Schema):
@@ -207,19 +196,15 @@ class DeviceVolumeMountView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/umount")
 class DeviceVolumeUnmountView(_SecuredView):
-    """
-    Volume unmount view.
-    """
+    """Volume unmount view."""
     async def post(self) -> str:
 
         class MethodSchema(Schema):
             device_id = fields.UUID(required=True)
             volume_id = fields.UUID(required=True)
 
-
         class UmountAccessParamsSchema(AccessParamsSchema):
             handle = fields.Str(required=True)
-
 
         try:
             params = MethodSchema().load(self.request.match_info)
@@ -245,9 +230,7 @@ class DeviceVolumeUnmountView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/events")
 class UdsEventsView(_SecuredView):
-    """
-    UDS Events view.
-    """
+    """UDS Events view."""
     async def get(self) -> str:
         return await self._service.get_events()
 
@@ -256,9 +239,7 @@ class UdsEventsView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system")
 class SystemView(_SecuredView):
-    """
-    System information view.
-    """
+    """System information view."""
     async def get(self) -> Dict[str, str]:
         return await self._service.get_system()
 
@@ -267,9 +248,7 @@ class SystemView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates")
 class SystemCertificatesView(_SecuredView):
-    """
-    System certificates view.
-    """
+    """System certificates view."""
     async def post(self) -> web.Response:
         try:
             public_key = await self._service.post_system_certificates()
@@ -298,16 +277,15 @@ class SystemCertificatesView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates/{type}")
 class SystemCertificatesByTypeView(_SecuredView):
-    """
-    System certificates view by type.
-    """
+    """System certificates view by type."""
     async def get(self) -> web.Response:
 
         class MethodSchema(Schema):
             type = fields.Str(required=True)
 
+            @staticmethod
             @validates('type')
-            def validate_type(self, value: str) -> None:
+            def validate_type(value: str) -> None:
                 valid_values = (
                     'nativeCertificate',
                     'domainCertificate',
@@ -333,8 +311,6 @@ class SystemCertificatesByTypeView(_SecuredView):
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/network/interfaces")
 class NetworkInterfacesView(_SecuredView):
-    """
-    Network interfaces list view.
-    """
+    """Network interfaces list view."""
     async def get(self) -> List[Dict[str, Any]]:
         return await self._service.get_network_interfaces()

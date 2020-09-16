@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,18 +14,15 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from marshmallow import Schema, fields, validate, ValidationError
 from cortx.utils.log import Log
+from marshmallow import Schema, ValidationError, fields
+
 from csm.common.errors import InvalidRequest
-from csm.common.permission_names import Resource, Action
+from csm.common.permission_names import Action, Resource
 from csm.core.blogic import const
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.controllers.schemas import FirmwareUpdateFileFieldSchema
-from csm.core.controllers.validators import FileRefValidator
-from csm.core.services.file_transfer import FileType, FileCache, FileRef
-from csm.common.errors import CsmNotFoundError
-from csm.common.conf import Conf
-import os
+from csm.core.services.file_transfer import FileCache
+from .schemas import FirmwareUpdateFileFieldSchema
+from .view import CsmAuth, CsmView
 
 
 class FirmwareUploadSchema(Schema):
@@ -38,19 +36,17 @@ class FirmwarePackageUploadView(CsmView):
         self._service = self.request.app[const.FW_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    POST REST implementation to upload firmware packages
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
+        """POST REST implementation to upload firmware packages"""
         Log.debug(f"Handling firmware package upload api"
-                 f" user_id: {self.request.session.credentials.user_id}")
+                  f" user_id: {self.request.session.credentials.user_id}")
         with FileCache() as cache:
             parsed_multipart = await self.parse_multipart_request(self.request, cache)
             try:
                 multipart_data = FirmwareUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
-            except ValidationError as val_err:
-                raise InvalidRequest(f"Invalid Package. {val_err}")
+            except ValidationError as e:
+                raise InvalidRequest(f"Invalid Package. {e}")
             package_ref = multipart_data['package']['file_ref']
             file_name = multipart_data['package']['filename']
             return await self._service.upload_package(package_ref, file_name)
@@ -62,15 +58,13 @@ class FirmwareUpdateView(CsmView):
         super().__init__(request)
         self._service = self.request.app[const.FW_UPDATE_SERVICE]
 
-    """
-    POST REST implementation to trigger firmware update
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})
     async def post(self):
+        """POST REST implementation to trigger firmware update"""
         Log.debug(f"Handling firmware package update api"
-                 f" user_id: {self.request.session.credentials.user_id}")
-        availibility_status =  await self._service.check_for_package_availability()
-        if availibility_status:
+                  f" user_id: {self.request.session.credentials.user_id}")
+        availability_status = await self._service.check_for_package_availability()
+        if availability_status:
             return await self._service.start_update()
 
 
@@ -81,28 +75,24 @@ class FirmwareUpdateStatusView(CsmView):
         self._service = self.request.app[const.FW_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for getting current status of firmware update
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for getting current status of firmware update"""
         Log.debug(f"Handling get firmware update status api"
-                 f" user_id: {self.request.session.credentials.user_id}")
+                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.get_current_status()
 
 
 @CsmView._app_routes.view("/api/v1/update/firmware/availability")
-class FirmwarePackageAvailibility(CsmView):
+class FirmwarePackageAvailability(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.FW_UPDATE_SERVICE]
         self._service_dispatch = {}
 
-    """
-    Get REST implementation to check package availability at given path.
-    """
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.LIST}})
     async def get(self):
+        """Get REST implementation to check package availability at given path."""
         Log.debug(f"Handling get request to check firmware package availability status api"
-                 f" user_id: {self.request.session.credentials.user_id}")
+                  f" user_id: {self.request.session.credentials.user_id}")
         return await self._service.check_for_package_availability()

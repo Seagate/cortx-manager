@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,41 +14,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-#!/usr/bin/env python3
 
-"""
- ****************************************************************************
- Filename:          Validate.py
- Description:       Compare JsonSchema marshmallow and Schematics validation
-                    from efficiency.
-
- Creation Date:     10/19/2019
- Author:            Naval Patel
-
- Do NOT modify or remove this copyright and confidentiality notice!
- Copyright (c) 2001 - $Date: 2015/01/14 $ Seagate Technology, LLC.
- The code contained herein is CONFIDENTIAL to Seagate Technology, LLC.
- Portions are also trade secret. Any use, duplication, derivation, distribution
- or disclosure of this code, for any reason, not expressly authorized is
- prohibited. All other rights are expressly reserved by Seagate Technology, LLC.
- ****************************************************************************
-"""
-
-
-import jsonschema
 import json
 import timeit
-from marshmallow import Schema, fields, pprint, ValidationError
-from schematics.models import Model
-from schematics.types import StringType, DecimalType, DateTimeType, IntType
-from schematics.types.compound import DictType, ModelType, ListType
-from schematics.exceptions import ValidationError
 
+import jsonschema
+from marshmallow import Schema, ValidationError, fields, pprint
+from schematics.exceptions import ValidationError as SchematicsValidationError
+from schematics.models import Model
+from schematics.types import IntType, StringType
+from schematics.types.compound import ModelType
 
 NUMBER_OF_TIMES = 10000000
-"""
-Marshmallow schema creation
-"""
+"""Marshmallow schema creation"""
 
 
 class ValidateInfo(Schema):
@@ -97,11 +76,7 @@ class ValidateJson(Schema):
     time = fields.DateTime(required=True, format='%Y-%m-%d %H:%M:%S.%f')
 
 
-"""
-schematics schema creation 
-"""
-
-
+# schematics schema creation
 class SsplMsgHeader(Model):
     msg_version = StringType(required=True)
     schema_version = StringType(required=True)
@@ -157,9 +132,9 @@ def marshmallow_validator():
     try:
         data = validate.load(json_obj)
         pprint(data)
-    except ValidationError as ve:
-        pprint(ve.messages)
-        # print(ve.valid_data)
+    except ValidationError as e:
+        pprint(str(e))
+        # print(e.valid_data)
 
 
 def json_validator_time():
@@ -170,7 +145,7 @@ def json_validator_time():
                           repeat=3,
                           number=NUMBER_OF_TIMES)
 
-    print('json_validator time: {}'.format(sum(times)))
+    print(f'json_validator time: {sum(times)}')
 
 
 def marshmallow_validator_time():
@@ -181,15 +156,15 @@ def marshmallow_validator_time():
                           repeat=3,
                           number=NUMBER_OF_TIMES)
 
-    print('marshmallow_validator time: {}'.format(sum(times)))
+    print(f'marshmallow_validator time: {sum(times)}')
 
 
 def schematics_validator():
     try:
         alerts = BaseAlerts(json_obj)
         alerts.validate()
-    except ValidationError as ve:
-        pprint(ve.messages)
+    except SchematicsValidationError as e:
+        pprint(str(e))
 
 
 def schematics_validator_time():
@@ -201,7 +176,7 @@ def schematics_validator_time():
                           repeat=3,
                           number=NUMBER_OF_TIMES)
 
-    print('schematics_validator time: {}'.format(sum(times)))
+    print(f'schematics_validator time: {sum(times)}')
 
 
 if __name__ == "__main__":

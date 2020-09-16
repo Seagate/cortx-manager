@@ -186,7 +186,7 @@
             {
               "flag": "--port",
               "dest": "ssh_port",
-              "type": "Validatiors.positive_int",
+              "type": "Validators.positive_int",
               "help": "ssh port for new node. Default is same as before",
               "json": true
             },

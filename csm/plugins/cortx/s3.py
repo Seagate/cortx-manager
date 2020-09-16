@@ -14,34 +14,31 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
+import json
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from http import HTTPStatus
+from typing import Union
+
 import boto
 import boto3
-from botocore.exceptions import ClientError
-from functools import partial
-from enum import Enum
-from concurrent.futures import ThreadPoolExecutor
-from typing import Union, List
-from boto.iam.connection import IAMConnection
-from boto.s3.connection import S3Connection, OrdinaryCallingFormat
-from boto.connection import DEFAULT_CA_CERTS_FILE
 from boto import config as boto_config
-from http import HTTPStatus
+from boto.connection import DEFAULT_CA_CERTS_FILE
+from boto.iam.connection import IAMConnection
+from botocore.exceptions import ClientError
 from cortx.utils.log import Log
-import json
+
 from csm.common.errors import CsmInternalError
 from csm.core.blogic import const
-from csm.core.data.models.s3 import (S3ConnectionConfig, IamAccount, ExtendedIamAccount,
-                                     IamLoginProfile, IamUser, IamUserListResponse,
-                                     IamAccountListResponse, IamTempCredentials, IamUserCredentials,
-                                     IamAccessKeyMetadata, IamAccessKeysListResponse,
-                                     IamAccessKeyLastUsed, IamErrors, IamError)
+from csm.core.data.models.s3 import (ExtendedIamAccount, IamAccessKeyLastUsed, IamAccessKeyMetadata,
+                                     IamAccessKeysListResponse, IamAccount, IamAccountListResponse,
+                                     IamError, IamErrors, IamLoginProfile, IamTempCredentials,
+                                     IamUser, IamUserCredentials, IamUserListResponse,
+                                     S3ConnectionConfig)
 
 
 class BaseClient:
-    """
-    Base class for IAM API operations.
-    """
-
+    """Base class for IAM API operations."""
     def __init__(self, access_key: str, secret_key: str, config: S3ConnectionConfig,
                  loop=asyncio.get_event_loop(), session_token=None):
         self._loop = loop
@@ -57,7 +54,8 @@ class BaseClient:
                                 session_token=None):
         """
         Helper function that creates IAM connection for the given credentials and configuration
-        :returns: an IAMConnection object
+
+        :return: an IAMConnection object
         """
 
         # Here we're overwriting the global boto config parameters.
@@ -79,8 +77,7 @@ class BaseClient:
                                                    is_secure=config.use_ssl,
                                                    debug=(2 if config.debug else 0),
                                                    validate_certs=config.verify_ssl_cert,
-                                                   security_token=session_token
-                                                   )
+                                                   security_token=session_token)
 
         if config.max_retries_num:
             conn.num_retries = config.max_retries_num
@@ -89,7 +86,8 @@ class BaseClient:
     async def _run_async(self, function):
         return await self._loop.run_in_executor(self._executor, function)
 
-    def _parse_body(self, body, list_marker=None) -> dict:
+    @staticmethod
+    def _parse_body(body, list_marker=None) -> dict:
         if not body:
             return {}
 
@@ -104,6 +102,7 @@ class BaseClient:
     async def _query_conn(self, action, params, path, verb, list_marker=None):
         Log.debug(f"Make query:action:{action}, params:{params}, "
                   f"path:{path}, verb:{verb}, list_marker:{list_marker}")
+
         def _execute():
             return self.connection.make_request(action, params, path, verb)
 
@@ -115,23 +114,23 @@ class BaseClient:
         except Exception as e:
             raise e  # TODO: create some custom exception for this?
 
-    def _create_response(self, cls, data, mapping):
+    @staticmethod
+    def _create_response(cls_par, data, mapping):
         """
-        Creates an instance of type `cls` and fills its fields
-        according to mapping
-        :returns: an instance of `cls` type
+        Creates an instance of type `cls_par` and fills its fields according to mapping
+
+        :return: an instance of `cls_par` type
         """
 
-        resp = cls()
+        resp = cls_par()
         for key in mapping:
             setattr(resp, mapping[key], data[key])
 
         return resp
 
-    def _create_error(self, status, body) -> IamError:
-        """
-        Converts a body of a failed query into IamError object
-        """
+    @staticmethod
+    def _create_error(status, body) -> IamError:
+        """Converts a body of a failed query into IamError object"""
         Log.error(f"Create error body: {body}")
         if 'ErrorResponse' not in body:
             return None
@@ -148,10 +147,7 @@ class BaseClient:
 
 
 class IamClient(BaseClient):
-    """
-    A management object that alows to perform IAM management operations
-    """
-
+    """A management object that allows to perform IAM management operations"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -213,8 +209,9 @@ class IamClient(BaseClient):
         In order to perform this operation, LDAP credentials must be provided into
         the class constructor.
 
-        :returns: ExtendedIamAccount in case of success, IamError otherwise
+        :return: ExtendedIamAccount in case of success, IamError otherwise
         """
+
         Log.debug(f"Create account profile. account_name:{account_name}, "
                   f"account_email:{account_email}")
         params = {
@@ -226,13 +223,12 @@ class IamClient(BaseClient):
         Log.debug(f"Create account profile status: {code}")
         if code != 201:
             return self._create_error(code, body)
-        else:
-            account = body['CreateAccountResponse']['CreateAccountResult']['Account']
-            resp = self._create_response(ExtendedIamAccount, account, self.EXT_ACCOUNT_MAPPING)
+        account = body['CreateAccountResponse']['CreateAccountResult']['Account']
+        resp = self._create_response(ExtendedIamAccount, account, self.EXT_ACCOUNT_MAPPING)
 
-            # For some strange reason there is no email field in the server response
-            resp.account_email = account_email
-            return resp
+        # For some strange reason there is no email field in the server response
+        resp.account_email = account_email
+        return resp
 
     @Log.trace_method(Log.DEBUG, exclude_args=['account_password'])
     async def create_account_login_profile(self, account_name, account_password,
@@ -241,8 +237,9 @@ class IamClient(BaseClient):
         Login profile creation.
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
-        :returns: IamLoginProfile in case of success, IamError otherwise
+        :return: IamLoginProfile in case of success, IamError otherwise
         """
+
         Log.debug(f"Create account login profile. account_name:{account_name}, "
                   f"require_reset:{require_reset}")
         params = {
@@ -255,10 +252,9 @@ class IamClient(BaseClient):
         Log.debug(f"Create login profile status: {code}")
         if code != 201:
             return self._create_error(code, body)
-        else:
-            profile = body['CreateAccountLoginProfileResponse']['CreateAccountLoginProfileResult']
-            profile = profile['LoginProfile']
-            return self._create_response(IamLoginProfile, profile, self.LOGIN_PROFILE_MAPPING)
+        profile = body['CreateAccountLoginProfileResponse']['CreateAccountLoginProfileResult']
+        profile = profile['LoginProfile']
+        return self._create_response(IamLoginProfile, profile, self.LOGIN_PROFILE_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['account_password'])
     async def update_account_login_profile(self, account_name, account_password,
@@ -267,8 +263,9 @@ class IamClient(BaseClient):
         Login profile update.
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
-        :returns: True in case of success, IamError otherwise
+        :return: True in case of success, IamError otherwise
         """
+
         Log.debug(f"Update account login profile: account_name:{account_name}, "
                   f"require_reset:{require_reset}")
 
@@ -282,8 +279,7 @@ class IamClient(BaseClient):
         Log.debug(f"Update account profile status: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            return True
+        return True
 
     @Log.trace_method(Log.DEBUG)
     async def list_account_login_profiles(self, account_name) -> Union[bool, IamError]:
@@ -291,8 +287,9 @@ class IamClient(BaseClient):
         Login profile update.
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
-        :returns: True in case of success, IamError otherwise
+        :return: True in case of success, IamError otherwise
         """
+
         Log.debug(f"List account login profile. account_name:{account_name}")
         params = {
             'AccountName': account_name
@@ -302,8 +299,7 @@ class IamClient(BaseClient):
         Log.debug(f"List account profile status: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            return True
+        return True
 
     @Log.trace_method(Log.DEBUG)
     async def get_account(self, account_name) -> Union[IamAccount, IamError]:
@@ -322,8 +318,9 @@ class IamClient(BaseClient):
         Fetches the list of S3 accounts from the IAM server.
         Note that max_items and marker parameters are not supported yet!
 
-        :returns: IamAccountListResponse or IamError
+        :return: IamAccountListResponse or IamError
         """
+
         Log.debug(f"List account status. max_items:{max_items}, marker:{marker}")
         params = {}
 
@@ -338,30 +335,31 @@ class IamClient(BaseClient):
         Log.debug(f"List account status: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            users = body['ListAccountsResponse']['ListAccountsResult']['Accounts']
-            converted_accounts = []
-            for raw_user in users:
-                converted_accounts.append(self._create_response(IamAccount, raw_user,
-                                                                self.ACCOUNT_MAPPING))
 
-            resp = IamAccountListResponse()
-            resp.iam_accounts = converted_accounts
-            raw = body['ListAccountsResponse']['ListAccountsResult']['IsTruncated']
+        users = body['ListAccountsResponse']['ListAccountsResult']['Accounts']
+        converted_accounts = []
+        for raw_user in users:
+            converted_accounts.append(
+                self._create_response(IamAccount, raw_user, self.ACCOUNT_MAPPING))
 
-            resp.is_truncated = raw == 'true'
-            if resp.is_truncated:
-                resp.marker = body['ListAccountsResponse']['ListAccountsResult']['Marker']
+        resp = IamAccountListResponse()
+        resp.iam_accounts = converted_accounts
+        raw = body['ListAccountsResponse']['ListAccountsResult']['IsTruncated']
 
-            return resp
+        resp.is_truncated = raw == 'true'
+        if resp.is_truncated:
+            resp.marker = body['ListAccountsResponse']['ListAccountsResult']['Marker']
+
+        return resp
 
     @Log.trace_method(Log.DEBUG)
     async def reset_account_access_key(self, account_name) -> Union[ExtendedIamAccount, IamError]:
         """
         Reset access and secret key
 
-        :returns: ExtendedIamAccount in case of success, IamError otherwise
+        :return: ExtendedIamAccount in case of success, IamError otherwise
         """
+
         Log.debug(f"Reset account access key. account_name:{account_name}")
         params = {
             'AccountName': account_name
@@ -371,13 +369,12 @@ class IamClient(BaseClient):
         Log.debug(f"Reset account access key status code: {code}")
         if code != 201:
             return self._create_error(code, body)
-        else:
-            result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
-            resp = self._create_response(ExtendedIamAccount, result['Account'],
-                self.EXT_ACCOUNT_MAPPING)
+        result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
+        resp = self._create_response(
+            ExtendedIamAccount, result['Account'], self.EXT_ACCOUNT_MAPPING)
 
-            # TODO: find out why there is no email the response
-            return resp
+        # TODO: find out why there is no email the response
+        return resp
 
     @Log.trace_method(Log.DEBUG)
     async def delete_account(self, account_name, force=False) -> Union[bool, IamError]:
@@ -385,8 +382,9 @@ class IamClient(BaseClient):
         Note that in order to delete account_name we need to use access key
         and secret key of account_name
 
-        :returns: True in case of success, IamError in case of problem
+        :return: True in case of success, IamError in case of problem
         """
+
         Log.debug(f"Delete account access key: account_name:{account_name}, "
                   f"force:{force}")
         params = {
@@ -400,16 +398,16 @@ class IamClient(BaseClient):
         Log.debug(f"Delete account status code: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            return True
+        return True
 
     @Log.trace_method(Log.DEBUG)
     async def create_user(self, user_name) -> Union[IamUser, IamError]:
         """
         Create an IAM user.
 
-        :returns: IamUser in case of success, IamError otherwise
+        :return: IamUser in case of success, IamError otherwise
         """
+
         Log.debug(f"Create iam user. user_name:{user_name}")
         params = {
             'UserName': user_name
@@ -419,9 +417,8 @@ class IamClient(BaseClient):
         Log.debug(f"Create iam user status code: {code}")
         if code != 201:
             return self._create_error(code, body)
-        else:
-            user = body['CreateUserResponse']['CreateUserResult']['User']
-            return self._create_response(IamUser, user, self.IAM_USER_MAPPING)
+        user = body['CreateUserResponse']['CreateUserResult']['User']
+        return self._create_response(IamUser, user, self.IAM_USER_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
     async def create_user_login_profile(self, user_name, user_password, require_reset=False):
@@ -438,8 +435,7 @@ class IamClient(BaseClient):
         Log.debug(f"Create user profile status code: {code}")
         if code != 201:
             return self._create_error(code, body)
-        else:
-            return None
+        return None
 
     @Log.trace_method(Log.DEBUG)
     async def list_users(self, marker=None,
@@ -447,8 +443,9 @@ class IamClient(BaseClient):
         """
         Note that max_items and marker are not working for now!!
 
-        :returns: IamUserListResponse in case of success, IamError otherwise
+        :return: IamUserListResponse in case of success, IamError otherwise
         """
+
         Log.debug(f"List iam user. marker:{marker}, "
                   f"max_items:{max_items}")
         params = {}
@@ -463,28 +460,29 @@ class IamClient(BaseClient):
         Log.debug(f"List iam User status code: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            users = body['ListUsersResponse']['ListUsersResult']['Users']
-            converted_users = []
-            for raw in users:
-                converted_users.append(self._create_response(IamUser, raw, self.IAM_USER_MAPPING))
+        users = body['ListUsersResponse']['ListUsersResult']['Users']
+        converted_users = []
+        for raw in users:
+            converted_users.append(self._create_response(IamUser, raw, self.IAM_USER_MAPPING))
 
-            resp = IamUserListResponse()
-            resp.iam_users = converted_users
-            raw = body['ListUsersResponse']['ListUsersResult']['IsTruncated']
+        resp = IamUserListResponse()
+        resp.iam_users = converted_users
+        raw = body['ListUsersResponse']['ListUsersResult']['IsTruncated']
 
-            resp.is_truncated = raw == 'true'
-            if resp.is_truncated:
-                resp.marker = body['ListUsersResponse']['ListUsersResult']['Marker']
+        resp.is_truncated = raw == 'true'
+        if resp.is_truncated:
+            resp.marker = body['ListUsersResponse']['ListUsersResult']['Marker']
 
-            return resp
+        return resp
 
     @Log.trace_method(Log.DEBUG)
     async def delete_user(self, user_name) -> Union[bool, IamError]:
         """
         IAM user deletion.
-        :returns: True in case of success, IamError in case of problem
+
+        :return: True in case of success, IamError in case of problem
         """
+
         Log.debug(f"Delete iam User: {user_name}")
         params = {
             'UserName': user_name
@@ -494,8 +492,7 @@ class IamClient(BaseClient):
         Log.debug(f"Delete iam User status code: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            return True
+        return True
 
     @Log.trace_method(Log.DEBUG)
     async def get_user(self, user_name) -> Union[IamUser, IamError]:
@@ -503,19 +500,21 @@ class IamClient(BaseClient):
         Queries a single IAM user.
 
         TODO: Currently is not supported by our IAM server.
-        :returns: IamUser in case of success, IamError in case of problem
+        :return: IamUser in case of success, IamError in case of problem
         """
+
         raise NotImplementedError()
 
-        params = {
-            'UserName': user_name
-        }
+        # TODO: Code below was commented due to unreachable code warning
+        # params = {
+        #    'UserName': user_name
+        # }
 
-        (code, body) = await self._query_conn('GetUser', params, '/', 'POST')
-        if code != 200:
-            return self._create_error(code, body)
-        else:
-            return None
+        # (code, body) = await self._query_conn('GetUser', params, '/', 'POST')
+        # if code != 200:
+        #     return self._create_error(code, body)
+        # else:
+        #    return None
 
     @Log.trace_method(Log.DEBUG)
     async def update_user(self, user_name,
@@ -525,10 +524,10 @@ class IamClient(BaseClient):
 
         :param user_name: TODO: find out details about this field
         :param new_user_name: If not None, user will be renamed accordingly
-        :returns: True in case of success, IamError in case of problem
+        :return: True in case of success, IamError in case of problem
         """
-        Log.debug(f"Update iam User: {user_name} "
-                  f"new_user_name:{new_user_name}")
+
+        Log.debug(f"Update iam User: {user_name} new_user_name:{new_user_name}")
         params = {
             'UserName': user_name
         }
@@ -540,16 +539,15 @@ class IamClient(BaseClient):
         Log.debug(f"Update iam User status code: {code}")
         if code != 200:
             return self._create_error(code, body)
-        else:
-            # TODO: our IAM server does not return the updated user information
-            return True
+        # TODO: our IAM server does not return the updated user information
+        return True
 
     async def create_user_access_key(self, user_name=None) -> Union[ExtendedIamAccount, IamError]:
         """
         Creates an access key id and secret key for IAM user.
 
         :param user_name: IAM user name, if None, user is deduced from the current session
-        :returns: credentials in case of success, IamError in case of problem
+        :return: credentials in case of success, IamError in case of problem
         """
 
         Log.audit(f"Create access key for user: {user_name}")
@@ -557,17 +555,13 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._query_conn(const.S3_IAM_CMD_CREATE_ACCESS_KEY,
-                                              params, '/', 'POST')
+        code, body = await self._query_conn(const.S3_IAM_CMD_CREATE_ACCESS_KEY, params, '/', 'POST')
         Log.audit(f"Create access key status code: {code}")
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
-        else:
-            creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
-                            const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
-                                const.S3_PARAM_ACCESS_KEY]
-            return self._create_response(IamUserCredentials, creds,
-                                         self.IAM_USER_CREDENTIALS_MAPPING)
+        creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
+            const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][const.S3_PARAM_ACCESS_KEY]
+        return self._create_response(IamUserCredentials, creds, self.IAM_USER_CREDENTIALS_MAPPING)
 
     async def update_user_access_key(self, access_key_id, status, user_name=None) -> bool:
         """
@@ -576,7 +570,7 @@ class IamClient(BaseClient):
         :param user_name: IAM user name, if None, user is deduced from the current session
         :param access_key_id: access key ID
         :param status: new active key status (Active/inactive)
-        :returns: true in case of success, IamError in case of problem
+        :return: true in case of success, IamError in case of problem
         """
 
         Log.audit(f"Update access key {access_key_id} for user: {user_name}"
@@ -591,20 +585,18 @@ class IamClient(BaseClient):
         (code, body) = await self._query_conn(const.S3_IAM_CMD_UPDATE_ACCESS_KEY,
                                               params, '/', 'POST')
         Log.audit(f"Update access key status code: {code}")
-        if code != HTTPStatus.OK:
-            return self._create_error(code, body)
-        else:
-            return True
+        return self._create_error(code, body) if code != HTTPStatus.OK else True
 
-    async def get_user_access_key_last_used(self, access_key_id,
-                                            user_name=None) -> Union[IamAccessKeyLastUsed, IamError]:
+    async def get_user_access_key_last_used(
+            self, access_key_id, user_name=None) -> Union[IamAccessKeyLastUsed, IamError]:
         """
         Retrieves the timestamp of the last access key usage.
 
         :param access_key_id: access key ID
         :param user_name: IAM user name, if None, user is deduced from the current session
-        :returns: timestamp in case of success, IamError in case of problem
+        :return: timestamp in case of success, IamError in case of problem
         """
+
         Log.audit(f"Get last used time of IAM user's {user_name} access key {access_key_id}")
         params = {
             'AccessKeyId': access_key_id
@@ -617,12 +609,10 @@ class IamClient(BaseClient):
         Log.audit(f"Update access key status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
-        else:
-            info = body[const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP][
-                const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT][
-                    const.S3_PARAM_ACCESS_KEY_LAST_USED]
-            return self._create_response(IamAccessKeyLastUsed, info,
-                                         self.IAM_ACCESS_KEY_LAST_USED_MAPPING)
+        info = body[const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP][
+            const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT][const.S3_PARAM_ACCESS_KEY_LAST_USED]
+        return self._create_response(
+            IamAccessKeyLastUsed, info, self.IAM_ACCESS_KEY_LAST_USED_MAPPING)
 
     async def list_user_access_keys(self, user_name=None, marker=None,
                                     max_items=None) -> Union[IamAccessKeysListResponse, IamError]:
@@ -633,8 +623,9 @@ class IamClient(BaseClient):
         :param user_name: IAM user name, if None, user is deduced from the current session
         :param marker: pagination marker from the previous response
         :param max_items: maximum number of access keys to return in single response
-        :returns: IamAccessKeysListResponse in case of success, IamError otherwise
+        :return: IamAccessKeysListResponse in case of success, IamError otherwise
         """
+
         Log.audit(f"List IAM user's {user_name} access keys. marker: {marker},"
                   f" max_items: {max_items}")
         params = {}
@@ -647,34 +638,29 @@ class IamClient(BaseClient):
         if max_items:
             params[const.S3_PARAM_MAX_ITEMS] = max_items
 
-        (code, body) = await self._query_conn(const.S3_IAM_CMD_LIST_ACCESS_KEYS, params,
-                                              '/', 'POST',
-                                              list_marker=const.S3_PARAM_ACCESS_KEY_METADATA)
+        code, body = await self._query_conn(const.S3_IAM_CMD_LIST_ACCESS_KEYS, params, '/', 'POST',
+                                            list_marker=const.S3_PARAM_ACCESS_KEY_METADATA)
         Log.audit(f"List IAM user's access keys status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
-        else:
-            keys = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                                const.S3_PARAM_ACCESS_KEY_METADATA]
-            converted_keys = []
-            for raw in keys:
-                converted_keys.append(self._create_response(IamAccessKeyMetadata, raw,
-                                      self.IAM_ACCESS_KEY_METADATA_MAPPING))
+        keys = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][const.S3_PARAM_ACCESS_KEY_METADATA]
+        converted_keys = []
+        for raw in keys:
+            converted_keys.append(self._create_response(
+                IamAccessKeyMetadata, raw, self.IAM_ACCESS_KEY_METADATA_MAPPING))
 
-            resp = IamAccessKeysListResponse()
-            resp.access_keys = converted_keys
-            raw = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                                const.S3_PARAM_IS_TRUNCATED]
+        resp = IamAccessKeysListResponse()
+        resp.access_keys = converted_keys
+        raw = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][const.S3_PARAM_IS_TRUNCATED]
 
-            resp.is_truncated = raw == 'true'
-            if resp.is_truncated:
-                resp.marker = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                                        const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                                            const.S3_PARAM_MARKER]
+        resp.is_truncated = raw == 'true'
+        if resp.is_truncated:
+            resp.marker = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
+                const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][const.S3_PARAM_MARKER]
 
-            return resp
+        return resp
 
     async def delete_user_access_key(self, access_key_id, user_name=None) -> Union[bool, IamError]:
         """
@@ -682,7 +668,7 @@ class IamClient(BaseClient):
 
         :param user_name: IAM user name, if None, user is deduced from the current session
         :param access_key_id: ID of the access key to be deleted
-        :returns: true in case of success, IamError in case of problem
+        :return: true in case of success, IamError in case of problem
         """
 
         Log.audit(f"Delete access key {access_key_id} for IAM user {user_name}")
@@ -692,23 +678,17 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._query_conn(const.S3_IAM_CMD_DELETE_ACCESS_KEY, params,
-                                              '/', 'POST')
+        code, body = await self._query_conn(const.S3_IAM_CMD_DELETE_ACCESS_KEY, params, '/', 'POST')
         Log.debug(f"Delete iam User status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
-        else:
-            return True
+        return True
 
 
 class S3Client(BaseClient):
-    """
-    Class represents S3 server connection that manages buckets
-    """
-
+    """Class represents S3 server connection that manages buckets"""
     def _create_boto_connection_object(self, **kwargs):
         """Creates S3 server connection"""
-
         is_secure = kwargs.get('is_secure', False)
         proto = 'https' if is_secure else 'http'
         url = f"{proto}://{kwargs.get('host', 'localhost')}:{kwargs.get('port', '80')}"
@@ -723,20 +703,19 @@ class S3Client(BaseClient):
         """
         Create a S3 bucket using credentials passed during client creation.
 
-        :returns: S3.Bucket
+        :return: S3.Bucket
         """
+
         Log.debug(f"create bucket: {bucket_name}")
-        return await self._loop.run_in_executor(self._executor,
-                                                partial(self.connection.create_bucket,
-                                                        Bucket=bucket_name))
+        return await self._loop.run_in_executor(
+            self._executor,
+            partial(self.connection.create_bucket, Bucket=bucket_name))  # pylint: disable=no-member
 
     @Log.trace_method(Log.DEBUG)
     async def get_bucket(self, bucket_name):
-        """
-        Checks if a bucket with a specified name exists and returns it
-        """
+        """Checks if a bucket with a specified name exists and returns it"""
         Log.debug(f"get bucket: {bucket_name}")
-        bucket = self.connection.Bucket(bucket_name)
+        bucket = self.connection.Bucket(bucket_name)  # pylint: disable=no-member
         try:
             coro = partial(self.connection.meta.client.head_bucket, Bucket=bucket_name)
             await self._loop.run_in_executor(self._executor, coro)
@@ -751,9 +730,10 @@ class S3Client(BaseClient):
     @Log.trace_method(Log.DEBUG)
     async def delete_bucket(self, bucket_name: str):
         Log.debug(f"delete bucket: {bucket_name}")
-        bucket = await self._loop.run_in_executor(self._executor, self.connection.Bucket, bucket_name)
+        bucket = await self._loop.run_in_executor(
+            self._executor, self.connection.Bucket, bucket_name)  # pylint: disable=no-member
         # NOTE: according to boto3 documentation all of the keys should be deleted before
-        #  bucket deletion itself
+        # bucket deletion itself
         for key in bucket.objects.all():
             await self._loop.run_in_executor(self._executor, key.delete)
 
@@ -761,8 +741,9 @@ class S3Client(BaseClient):
 
     @Log.trace_method(Log.DEBUG)
     async def get_all_buckets(self):
-        Log.debug(f"Get all buckets ")
-        return await self._loop.run_in_executor(self._executor, self.connection.buckets.all)
+        Log.debug("Get all buckets ")
+        return await self._loop.run_in_executor(
+            self._executor, self.connection.buckets.all)  # pylint: disable=no-member
 
     @Log.trace_method(Log.DEBUG)
     async def get_bucket_tagging(self, bucket):
@@ -776,12 +757,13 @@ class S3Client(BaseClient):
             tags = []
         # Tags are stored in form [{'Key': <key value>, 'Value' : <actual value>}, ...]
         # Convert to ordinary Python dict
-        res = {tag['Key'] : tag['Value'] for tag in tags}
+        res = {tag['Key']: tag['Value'] for tag in tags}
         return res
 
     @Log.trace_method(Log.DEBUG)
     async def put_bucket_tagging(self, bucket_name, tags: dict):
         Log.debug(f"Put bucket tagging: bucket_name:{bucket_name}, tags:{tags}")
+
         def _run():
             tag_set = {
                 'TagSet': [
@@ -791,7 +773,7 @@ class S3Client(BaseClient):
                     } for key in tags
                 ]
             }
-            tagging = self.connection.BucketTagging(bucket_name)
+            tagging = self.connection.BucketTagging(bucket_name)  # pylint: disable=no-member
             return tagging.put(Tagging=tag_set)
         return await self._loop.run_in_executor(self._executor, _run)
 
@@ -801,12 +783,13 @@ class S3Client(BaseClient):
         Fetch s3 bucket policy by given bucket details.
 
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
-        :returns: A dict of bucket policy
+        :return: A dict of bucket policy
         """
+
         Log.debug(f"Get bucket tagging: {bucket_name}")
+
         def _run():
-            bucket = self.connection.BucketPolicy(bucket_name)
+            bucket = self.connection.BucketPolicy(bucket_name)  # pylint: disable=no-member
             return json.loads(bucket.policy)
 
         return await self._loop.run_in_executor(self._executor, _run)
@@ -817,14 +800,13 @@ class S3Client(BaseClient):
         Create or update s3 bucket policy for given bucket details.
 
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
         :param policy: s3 bucket name
-        :type policy: dict
-        :returns:
         """
+
         Log.debug(f"Put bucket tagging: bucket_name: {bucket_name}, policy: {policy}")
+
         def _run():
-            bucket = self.connection.BucketPolicy(bucket_name)
+            bucket = self.connection.BucketPolicy(bucket_name)  # pylint: disable=no-member
             bucket_policy = json.dumps(policy)
             return bucket.put(Bucket=bucket_name, Policy=bucket_policy)
 
@@ -836,14 +818,11 @@ class S3Client(BaseClient):
         Delete s3 bucket policy by given bucket details.
 
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
-        :returns:
         """
 
         Log.debug(f"Delete bucket tagging: {bucket_name}")
-        bucket = await self._loop.run_in_executor(self._executor,
-                                                  self.connection.BucketPolicy,
-                                                  bucket_name)
+        bucket = await self._loop.run_in_executor(
+            self._executor, self.connection.BucketPolicy, bucket_name)  # pylint: disable=no-member
         return await self._loop.run_in_executor(self._executor, bucket.delete)
 
 
@@ -875,45 +854,44 @@ class S3Plugin:
     the get_temp_credentials function, e.g.
         creds = await s3plugin.get_temp_credentials('login', 'pwd', connection_config=config)
     """
+
     def __init__(self):
         Log.info('S3 plugin is loaded')
 
-    @Log.trace_method(Log.DEBUG, exclude_args=['access_key','secret_key','session_token'])
-    def get_iam_client(self, access_key, secret_key, connection_config=None, session_token=None) -> IamClient:
-        """
-        Returns a management object for S3/IAM accounts.
-        """
+    @staticmethod
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
+    def get_iam_client(access_key, secret_key, connection_config=None,
+                       session_token=None) -> IamClient:
+        """Returns a management object for S3/IAM accounts."""
         if not connection_config:
             raise CsmInternalError('Connection configuration must be provided')
 
         return IamClient(access_key, secret_key, connection_config,
                          asyncio.get_event_loop(), session_token)
 
-    @Log.trace_method(Log.DEBUG, exclude_args=['access_key','secret_key','session_token'])
-    def get_s3_client(self, access_key, secret_key, connection_config=None, session_token=None) -> S3Client:
-        """
-        Returns a management object for S3/IAM accounts.
-        """
+    @staticmethod
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
+    def get_s3_client(access_key, secret_key, connection_config=None,
+                      session_token=None) -> S3Client:
+        """Returns a management object for S3/IAM accounts."""
         if not connection_config:
             raise CsmInternalError('Connection configuration must be provided')
 
         return S3Client(access_key, secret_key, connection_config,
                         asyncio.get_event_loop(), session_token)
 
-
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def get_temp_credentials(self, account_name, password, duration=None,
                                    user_name=None, connection_config=None):
         """
         Authentication via some Login Profile
-        :param account_name:
-        :param password:
-        :param duration: Session expiry time (in seconds). If set, it must be
-                         greater than 900.
+
+        :param duration: Session expiry time (in seconds). If set, it must be greater than 900.
         :param user_name: TODO: find out details about this field
         :param connection_config: TODO: find out details about this field
-        :returns: An instance of IamTempCredentials object
+        :return: An instance of IamTempCredentials object
         """
+
         Log.debug(f"Get temp credentials: {account_name}, user_name:{user_name}")
         iamcli = IamClient('', '', connection_config, asyncio.get_event_loop())
         params = {
@@ -929,13 +907,11 @@ class S3Plugin:
         (code, body) = await iamcli._query_conn('GetTempAuthCredentials', params, '/', 'POST')
         if code != 201:
             return iamcli._create_error(code, body)
-        else:
-            creds = body['GetTempAuthCredentialsResponse']['GetTempAuthCredentialsResult']
-            return iamcli._create_response(IamTempCredentials, creds['AccessKey'], {
-                'UserName': 'user_name',
-                'AccessKeyId': 'access_key',
-                'SecretAccessKey': 'secret_key',
-                'Status': 'status',
-                'ExpiryTime': 'expiry_time',
-                'SessionToken': 'session_token'
-            })
+        creds = body['GetTempAuthCredentialsResponse']['GetTempAuthCredentialsResult']
+        return iamcli._create_response(IamTempCredentials, creds['AccessKey'], {
+            'UserName': 'user_name',
+            'AccessKeyId': 'access_key',
+            'SecretAccessKey': 'secret_key',
+            'Status': 'status',
+            'ExpiryTime': 'expiry_time',
+            'SessionToken': 'session_token'})

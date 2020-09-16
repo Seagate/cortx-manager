@@ -13,90 +13,67 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from schematics.types import UUIDType, StringType, IntType
+from uuid import UUID
+
 from schematics.transforms import blacklist
 
 # TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
 # to https://github.com/schematics/schematics/issues/613 requesting this.
 
-from uuid import UUID
+from schematics.types import IntType, StringType, UUIDType
 
 from csm.core.blogic.models import CsmModel
 
 
 class Device(CsmModel):
-    """
-    Class depicts Device model for USL
-    """
-
+    """Class depicts Device model for USL"""
     _id = "uuid"
-
     name = StringType()
-    productID = StringType()
-    serialNumber = StringType()
+    product_id = StringType()
+    serial_number = StringType()
     type = StringType()
     uuid = UUIDType()
-    vendorID = StringType()
+    vendor_id = StringType()
 
     @staticmethod
-    def instantiate(name, productID, serialNumber, type, uuid, vendorID):
-        """
-        Creates a Device instance
-        """
-
+    def instantiate(name, product_id, serial_number, type_par, uuid, vendor_id):
+        """Creates a Device instance"""
         d = Device()
         d.name = name
-        d.productID = productID
-        d.serialNumber = serialNumber
-        d.type = type
+        d.product_id = product_id
+        d.serial_number = serial_number
+        d.type = type_par
         d.uuid = uuid
-        d.vendorID = vendorID
+        d.vendor_id = vendor_id
         return d
 
 
 class Volume(CsmModel):
-    """
-    Class depicts device's Volume model for USL
-    """
-
+    """Class depicts device's Volume model for USL"""
     _id = "uuid"
 
     name = StringType()
-    bucketName = StringType()
-    deviceUuid = UUIDType()
+    bucket_name = StringType()
+    device_uuid = UUIDType()
     uuid = UUIDType()
     size = IntType()
     used = IntType()
     filesystem = StringType()
 
     class Options:
-        """
-        Class describes fields visibility Options for Volume objects during serialization
-        """
-
+        """Class describes fields visibility Options for Volume objects during serialization"""
         roles = {'public': blacklist('bucketName')}
         # TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
         # to https://github.com/schematics/schematics/issues/613 requesting this.
 
-
     @staticmethod
-    def instantiate(
-        name: str,
-        bucketName: str,
-        deviceUuid: UUID,
-        uuid: UUID,
-        size: int,
-        used: int,
-        filesystem: str = 's3',
-    ) -> 'Volume':
-        """
-        Creates a volume instance
-        """
-
+    def instantiate(name: str, bucket_name: str, device_uuid: UUID, uuid: UUID, size: int,
+                    used: int, filesystem: str = 's3',) -> 'Volume':
+        """Creates a volume instance"""
         v = Volume()
         v.name = name
-        v.bucketName = bucketName
-        v.deviceUuid = deviceUuid
+        v.bucket_name = bucket_name
+        v.device_uuid = device_uuid
         v.uuid = uuid
         v.size = size
         v.used = used
@@ -106,12 +83,8 @@ class Volume(CsmModel):
 
 
 class ApiKey(CsmModel):
-    """
-    Represents the USL API key
-    """
-
+    """Represents the USL API key"""
     _id = "key"
-
     key = UUIDType()
 
     @staticmethod

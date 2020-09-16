@@ -14,29 +14,28 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import subprocess
 
 from cortx.utils.log import Log
-from csm.common.payload import *
+
 from csm.common.conf import Conf
 from csm.common.errors import CsmError
+from csm.common.ha_framework import PcsResourceAgent
 from csm.core.blogic import const
-from csm.common.ha_framework import PcsHAFramework, PcsResourceAgent
+
 
 class CsmResourceAgent(PcsResourceAgent):
-    ''' Provide initalization on csm resources '''
-
+    """Provide initialization on csm resources"""
     def __init__(self, resources):
-        super(CsmResourceAgent, self).__init__(resources)
+        super().__init__(resources)
         self._resources = resources
         self._csm_index = const.CSM_GLOBAL_INDEX
         self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.primary")
         self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.secondary")
 
     def init(self, force_flag):
-        ''' Perform initalization for CSM resources '''
+        """Perform initialization for CSM resources"""
         try:
-            Log.info("Starting configuring HA for CSM..")
+            Log.info("Starting configuring HA for CSM.")
 
             if force_flag:
                 if self.is_available():
@@ -54,22 +53,22 @@ class CsmResourceAgent(PcsResourceAgent):
             self._ra_init()
 
             for resource in self._resources:
-                service = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".service")
-                provider = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".provider")
-                interval = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".interval")
-                timeout = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".timeout")
+                service = Conf.get(const.CSM_GLOBAL_INDEX, f"RESOURCES.{resource}.service")
+                provider = Conf.get(const.CSM_GLOBAL_INDEX, f"RESOURCES.{resource}.provider")
+                interval = Conf.get(const.CSM_GLOBAL_INDEX, f"RESOURCES.{resource}.interval")
+                timeout = Conf.get(const.CSM_GLOBAL_INDEX, f"RESOURCES.{resource}.timeout")
                 self._init_resource(resource, service, provider, interval, timeout)
 
-            # TODO- check score for failback
+            # TODO: check score for failback
             self._init_constraint("INFINITY")
             self._execute_config()
             open(const.HA_INIT, 'a').close()
-            Log.info("Successed: Configuring HA for CSM..")
+            Log.info("Success: Configuring HA for CSM..")
             return True
-        except CsmError as err:
-            Log.exception("%s" %err)
+        except CsmError as e:
+            Log.exception(e)
             raise CsmError(-1, "Error: Unable to configure csm resources...")
 
     def failover(self):
-        #TODO
+        # TODO:
         pass

@@ -13,15 +13,17 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.controllers.view import CsmView, CsmAuth
 from cortx.utils.log import Log
+
 from csm.core.blogic import const
+from .view import CsmAuth, CsmView
+
 
 @CsmView._app_routes.view("/api/v1/product_version")
 @CsmAuth.public
 class ProductVersionView(CsmView):
     def __init__(self, request):
-        super(ProductVersionView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app[const.PRODUCT_VERSION_SERVICE]
         self._service_dispatch = {}
 
@@ -31,4 +33,3 @@ class ProductVersionView(CsmView):
     async def get(self):
         Log.debug("Handling product version information fetch request")
         return await self._service.get_current_version()
-    

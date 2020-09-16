@@ -59,7 +59,7 @@
         
         {
           "flag": "Statement",
-          "type": "Validatiors.file_parser",
+          "type": "Validators.file_parser",
           "help": "Path to file",
           "json": true
         },

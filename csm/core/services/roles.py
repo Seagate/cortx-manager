@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -14,9 +15,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from typing import Iterable, Text
+
 from cortx.utils.log import Log
-from csm.common.validate import Validator
+
 from csm.common.services import ApplicationService
+from csm.common.validate import Validator
 from csm.core.services.permissions import PermissionSet
 
 
@@ -40,10 +43,8 @@ class Role:
 
 
 class RoleManager:
-    """
-    This class manages user roles.
-    TODO: Use a data base for storing roles persistently.
-    """
+    """This class manages user roles."""
+    # TODO: Use a data base for storing roles persistently.
 
     NO_ROLE = Role(None, PermissionSet())
 
@@ -73,7 +74,7 @@ class RoleManager:
             Validator.validate_type(value, dict, 'role value')
             permissions = value.get('permissions', None)
             if permissions is None:
-                raise ValueError(f'Permission set should be specified for a role')
+                raise ValueError('Permission set should be specified for a role')
             cls._validate_role(name, permissions)
 
     def __init__(self, predefined_roles):
@@ -84,19 +85,14 @@ class RoleManager:
         roles in the RoleDB during the onboarding.
         """
 
-        Log.info(f'Initializing role manager with predefined roles')
+        Log.info('Initializing role manager with predefined roles')
         self._validate_roles(predefined_roles)
 
-        self._roles = {
-            name: Role(name, PermissionSet(value['permissions']))
-                for name, value in predefined_roles.items()
-        }
+        self._roles = {name: Role(name, PermissionSet(value['permissions']))
+                       for name, value in predefined_roles.items()}
 
     async def calc_effective_permissions(self, *role_names):
-        """
-        Calculate effective set of permissions from a given set of user roles.
-        """
-
+        """Calculate effective set of permissions from a given set of user roles."""
         permissions = PermissionSet()
         for role_name in role_names:
             role = self._roles.get(role_name, self.NO_ROLE)
@@ -106,10 +102,7 @@ class RoleManager:
         return permissions
 
     async def add_role(self, name, permissions):
-        """
-        Add new user role
-        """
-
+        """Add new user role"""
         self._validate_role(name, permissions)
         if name in self._roles:
             Log.error(f'Role "{name}" is already present')
@@ -119,10 +112,7 @@ class RoleManager:
         return True
 
     async def delete_role(self, name):
-        """
-        Delete existing user role
-        """
-
+        """Delete existing user role"""
         self._validate_name(name)
         if self._roles.pop(name, None) is not None:
             Log.info(f'Existing role "{name}" has been successfully deleted')
@@ -131,11 +121,9 @@ class RoleManager:
 
 
 class RoleManagementService(ApplicationService):
-    """
-    Role management application service used by controllers
-    """
-
+    """Role management application service used by controllers"""
     def __init__(self, role_manager: RoleManager):
+        super().__init__()
         self._role_manager = role_manager
 
     async def get_permissions(self, role_names: Iterable[Text]) -> PermissionSet:

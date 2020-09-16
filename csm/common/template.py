@@ -13,9 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-import inspect
-from typing import Callable
 from .errors import CsmInternalError
 
 
@@ -24,6 +21,7 @@ class Template:
     Currently this class is just a wrapper over a standard Python's formatting utilities.
     Later it might be modified to support more advanced templating features.
     """
+
     def __init__(self, raw_template: str):
         self.template = raw_template
 

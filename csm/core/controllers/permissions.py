@@ -13,32 +13,28 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
-from csm.common.errors import CsmNotFoundError
-from csm.common.permission_names import Resource, Action
-from csm.core.services.permissions import PermissionSet
 
+from csm.common.errors import CsmNotFoundError
+from csm.common.permission_names import Action, Resource
+from csm.core.services.permissions import PermissionSet
+from .view import CsmAuth, CsmView
 
 USERS_MSG_USER_NOT_FOUND = "users_not_found"
 
 
 class BasePermissionsView(CsmView):
-    """
-    Base class for permissions handling
-    """
-
-    def __init__(self, request):
-        super(BasePermissionsView, self).__init__(request)
-
-    def transform_permissions(self, permissions: PermissionSet) -> dict:
+    """Base class for permissions handling"""
+    @staticmethod
+    def transform_permissions(permissions: PermissionSet) -> dict:
         """
         Transform our internal representation of the permission set
         to the format expected by the UI, e.g.
         'alert': ['list, 'update']
-        to 
+        to
         'alert': {'list': True, 'update': True}
         """
+
         mod_permissions = {}
         for resource, action_list in permissions._items.items():
             action_dict = {}
@@ -52,33 +48,25 @@ class BasePermissionsView(CsmView):
 
 @CsmView._app_routes.view("/api/v1/permissions")
 class CurrentPermissionsView(BasePermissionsView):
-    def __init__(self, request):
-        super(CurrentPermissionsView, self).__init__(request)
-
-    """
-    GET REST implementation for security permissions request
-    """
+    """GET REST implementation for security permissions request"""
     @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
-        """
-        Calling Security get permissions Get Method
-        """
-        permissions = self.transform_permissions(self.request.session.permissions) 
+        """Calling Security get permissions Get Method"""
+        permissions = self.transform_permissions(self.request.session.permissions)
         return permissions
+
 
 @CsmView._app_routes.view("/api/v1/permissions/{user_id}")
 class UserPermissionsView(BasePermissionsView):
     def __init__(self, request):
-        super(UserPermissionsView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["csm_user_service"]
         self._service_dispatch = {}
         self._roles_service = self.request.app["roles_service"]
 
     @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
-        """
-        Calling Security get csm user permissions Get Method
-        """
+        """Calling Security get csm user permissions Get Method"""
         Log.debug("Handling csm users permissions get request")
         user_id = self.request.match_info["user_id"]
         try:

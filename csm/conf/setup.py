@@ -13,44 +13,48 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-import sys
+import asyncio
 import crypt
-import pwd
-import grp
 import errno
-import shlex
+import grp
 import json
-from cortx.utils.log import Log
-from csm.common.conf import Conf
-from csm.common.payload import Yaml
-from csm.core.blogic import const
-from csm.common.process import SimpleProcess
-from csm.common.errors import CsmSetupError, InvalidRequest
-from csm.core.blogic.csm_ha import CsmResourceAgent
-from csm.common.ha_framework import PcsHAFramework
-from csm.common.cluster import Cluster
-from csm.core.agent.api import CsmApi
+import os
+import pwd
 import re
+import shlex
 import time
 import traceback
-import asyncio
+
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from cortx.utils.log import Log
+from cortx.utils.product_features import unsupported_features
+from cortx.utils.schema.payload import Json
+
+from csm.common.cluster import Cluster
+from csm.common.conf import Conf
+from csm.common.errors import CsmSetupError, InvalidRequest
+from csm.common.ha_framework import PcsHAFramework
+from csm.common.payload import Text, Yaml
+from csm.common.process import SimpleProcess
+from csm.core.agent.api import CsmApi
+from csm.core.blogic import const
+from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
-from cortx.utils.schema.payload import Json
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.common.payload import Text
-from cortx.utils.product_features import unsupported_features
 
 # try:
 #     from salt import client
 # except ModuleNotFoundError:
 client = None
 
+
 class InvalidPillarDataError(InvalidRequest):
     pass
+
+
 class PillarDataFetchError(InvalidRequest):
     pass
+
 
 class ProvisionerCliError(InvalidRequest):
     pass
@@ -62,43 +66,42 @@ class Setup:
         self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
         self._setup_info = dict()
+        self._csm_resources = None
+        self._csm_ra = None
+        self._ha_framework = None
+        self._cluster = None
+        self._loop = None
 
     @staticmethod
     def _run_cmd(cmd):
-        """
-        Run command and throw error if cmd failed
-        """
+        """Run command and throw error if cmd failed"""
         try:
             _err = ""
             _proc = SimpleProcess(cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
-                raise
+                raise Exception("Returncode is non-zero")
             return _output, _err, _rc
         except Exception as e:
-            raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
+            raise CsmSetupError(f"Csm setup is failed Error: {e} {_err}")
 
     def _is_user_exist(self):
-        """
-        Check if user exists
-        """
+        """Check if user exists"""
         try:
             u = pwd.getpwnam(self._user)
             self._uid = u.pw_uid
             self._gid = u.pw_gid
             return True
-        except KeyError as err:
+        except KeyError:
             return False
 
     @staticmethod
     def _is_group_exist(user_group):
-        """
-        Check if user group exists
-        """
+        """Check if user group exists"""
         try:
             grp.getgrnam(user_group)
             return True
-        except KeyError as err:
+        except KeyError:
             return False
 
     @staticmethod
@@ -114,6 +117,7 @@ class Setup:
         if rc == 0 and res != "":
             result = json.loads(res)
             return result[const.LOCAL]
+        return None
 
     @staticmethod
     def get_salt_data_with_exception(method, key):
@@ -128,6 +132,7 @@ class Setup:
         if rc == 0 and res != "":
             result = json.loads(res)
             return result[const.LOCAL]
+        return None
 
     @staticmethod
     def get_salt_data_faulty_node_uuid(minion_id, method, key):
@@ -142,6 +147,7 @@ class Setup:
         if rc == 0 and res != "":
             result = json.loads(res)
             return result[minion_id]
+        return None
 
     @staticmethod
     def get_data_from_provisioner_cli(method, output_format="json"):
@@ -156,109 +162,109 @@ class Setup:
         if rc == 0 and res != "":
             result = json.loads(res)
             return result[const.RET]
+        return None
 
-    def _check_if_dir_exist_remote_host(self, dir, host):
+    @staticmethod
+    def _check_if_dir_exist_remote_host(dir_arg, host):
         try:
-            process = SimpleProcess("ssh "+ host +" ls "+ dir)
-            stdout, stderr, rc = process.run()
+            process = SimpleProcess(f"ssh {host} ls {dir_arg}")
+            _, stderr, rc = process.run()
         except Exception as e:
             Log.logger.warn(f"Error in command execution : {e}")
         if stderr:
             Log.logger.warn(stderr)
-        if rc == 0:
-            return True
+        return rc == 0
 
     def _create_ssh_config(self, path, private_key):
-        ssh_config = '''Host *
-    User {user}
+        ssh_config = f"""Host *
+    User {self._user}
     UserKnownHostsFile /dev/null
     StrictHostKeyChecking no
     IdentityFile {private_key}
     IdentitiesOnly yes
-    LogLevel ERROR'''.format(user=self._user, private_key=private_key )
+    LogLevel ERROR"""
         try:
             with open(path, "w") as fh:
                 fh.write(ssh_config)
-        except OSError as err:
-            if err.errno != errno.EEXIST: raise
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     def _passwordless_ssh(self, home_dir):
-        """
-        make passwordless ssh to nodes
-        """
-        Setup._run_cmd("mkdir "+os.path.join(home_dir, const.SSH_DIR))
-        cmd = shlex.split("ssh-keygen -N '' -f "+os.path.join(home_dir, const.SSH_PRIVATE_KEY))
+        """make passwordless ssh to nodes"""
+        Setup._run_cmd(f"mkdir {os.path.join(home_dir, const.SSH_DIR)}")
+        cmd = shlex.split(f"ssh-keygen -N '' -f {os.path.join(home_dir, const.SSH_PRIVATE_KEY)}")
         Setup._run_cmd(cmd)
-        self._create_ssh_config(os.path.join(home_dir, const.SSH_CONFIG), os.path.join(home_dir, const.SSH_PRIVATE_KEY))
-        Setup._run_cmd("cp "+os.path.join(home_dir, const.SSH_PUBLIC_KEY)+" " +
-                                                     os.path.join(home_dir, const.SSH_AUTHORIZED_KEY))
-        Setup._run_cmd("chown -R "+self._user+":"+self._user+" "+os.path.join(home_dir, const.SSH_DIR))
-        Setup._run_cmd("chmod 400 "+os.path.join(const.CSM_USER_HOME, const.SSH_PRIVATE_KEY))
+        self._create_ssh_config(os.path.join(home_dir, const.SSH_CONFIG),
+                                os.path.join(home_dir, const.SSH_PRIVATE_KEY))
+        Setup._run_cmd(f"cp {os.path.join(home_dir, const.SSH_PUBLIC_KEY)} "
+                       + os.path.join(home_dir, const.SSH_AUTHORIZED_KEY))
+        Setup._run_cmd(
+            f"chown -R {self._user}:{self._user} {os.path.join(home_dir, const.SSH_DIR)}")
+        Setup._run_cmd(f"chmod 400 {os.path.join(const.CSM_USER_HOME, const.SSH_PRIVATE_KEY)}")
 
     def _config_user(self, reset=False):
         """
-        Check user already exist and create if not exist
+        Check user already exist and create if not exist.
         If reset true then delete user
         """
+
         if not reset:
             if not self._is_user_exist():
-                Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
-                Setup._run_cmd("usermod -aG wheel " + self._user)
+                Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {self._password} {self._user}")
+                Setup._run_cmd(f"usermod -aG wheel {self._user}")
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
                 primary = Setup.get_salt_data(const.GRAINS_GET, "roles")
-                if ( node_name is None or const.PRIMARY_ROLE in primary):
+                if node_name is None or const.PRIMARY_ROLE in primary:
                     self._passwordless_ssh(const.CSM_USER_HOME)
                 nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
-                if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
+                if (primary and const.PRIMARY_ROLE in primary
+                        and nodes is not None and len(nodes) > 1):
                     nodes.remove(node_name)
                     for node in nodes:
-                        if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
-                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+
-                                      node+":"+const.CSM_USER_HOME)
-                            Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
-                                                 os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
+                        if self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node):
+                            Setup._run_cmd(
+                                f"scp -pr {os.path.join(const.CSM_USER_HOME, const.SSH_DIR)}"
+                                f" {node}:{const.CSM_USER_HOME}")
+                            Setup._run_cmd(
+                                f" ssh {node} chown -R {self._user}:{self._user} "
+                                + os.path.join(const.CSM_USER_HOME, const.SSH_DIR))
         else:
             if self._is_user_exist():
-                Setup._run_cmd("userdel -r " +self._user)
+                Setup._run_cmd(f"userdel -r {self._user}")
         if self._is_user_exist() and Setup._is_group_exist(const.HA_CLIENT_GROUP):
             Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
 
     def _config_user_permission_set(self, bundle_path, crt, key):
-        """
-        Set User Permission
-        """
+        """Set User Permission"""
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
         os.makedirs(bundle_path, exist_ok=True)
         os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_TMP_FILE_CACHE_DIR)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + bundle_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_CONF_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PIDFILE_PATH)
-        Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PATH}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_TMP_FILE_CACHE_DIR}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {bundle_path}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
+        Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
+        Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
+        Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {key}")
         Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
-    def _config_user_permission_unset(self, bundle_path):
-        """
-        Unset user permission
-        """
-        Setup._run_cmd("rm -rf " + const.CSM_TMP_FILE_CACHE_DIR)
-        Setup._run_cmd("rm -rf " + bundle_path)
-        Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
-
+    @staticmethod
+    def _config_user_permission_unset(bundle_path):
+        """Unset user permission"""
+        Setup._run_cmd(f"rm -rf {const.CSM_TMP_FILE_CACHE_DIR}")
+        Setup._run_cmd(f"rm -rf {bundle_path}")
+        Setup._run_cmd(f"rm -rf {const.CSM_PIDFILE_PATH}")
 
     def _config_user_permission(self, reset=False):
-        """
-        Create user and allow permission for csm resources
-        """
+        """Create user and allow permission for csm resources"""
         bundle_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.bundle_path")
         crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
         key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.private_key_path")
@@ -268,24 +274,18 @@ class Setup:
             self._config_user_permission_unset(bundle_path)
 
     class Config:
-        """
-        Action for csm config
-            create: Copy configuraion file
-            load: Load configuraion file
-            reset: Reset configuraion file
-            delete: Delete configuration file
-        """
-
+        """Action for csm config"""
         @staticmethod
         def store_encrypted_password(conf_data):
             # read username's and password's for S3 and RMQ
-            open_ldap_credentials = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.OPENLDAP)
+            open_ldap_credentials = Setup.get_salt_data_with_exception(
+                const.PILLAR_GET, const.OPENLDAP)
             # Edit Current Config File.
             if open_ldap_credentials and type(open_ldap_credentials) is dict:
                 conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.USER)
+                    const.IAM_ADMIN, {}).get(const.USER)
                 conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.SECRET)
+                    const.IAM_ADMIN, {}).get(const.SECRET)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
             sspl_config = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.SSPL)
@@ -294,24 +294,21 @@ class Setup:
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            cluster_id =  Setup.get_salt_data_with_exception(const.GRAINS_GET, const.CLUSTER_ID)
+            cluster_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
             conf_data[const.PROVISIONER] = provisioner_data
 
         @staticmethod
         def create(args):
-            """
-            This Function Creates the CSM Conf File on Required Location.
-            :return:
-            """
+            """This Function Creates the CSM Conf File on Required Location."""
             csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             csm_conf_path = os.path.join(const.CSM_SOURCE_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            # Read Current CSM Config FIle.
+            # Read current CSM config file.
             conf_file_data = Yaml(csm_conf_path).load()
             if conf_file_data:
                 if args[const.DEBUG]:
-                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE: const.DEV}
                 else:
                     Setup.Config.store_encrypted_password(conf_file_data)
                     # Update the Current Config File.
@@ -326,38 +323,37 @@ class Setup:
         def load():
             csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):
-                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
+                raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
             Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
-            """
-            Loading databse config
-            """
+            # Loading database config
             Setup.Config.load_db()
 
         @staticmethod
         def load_db():
             db_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.DB_CONF_FILE_NAME)
             if not os.path.exists(db_conf_target_path):
-                raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
+                raise CsmSetupError(f"{const.DB_CONF_FILE_NAME} file is missing for csm setup")
             Conf.load(const.DATABASE_INDEX, Yaml(db_conf_target_path))
 
         @staticmethod
         def delete():
-            Setup._run_cmd("rm -rf " + const.CSM_CONF_PATH)
+            """Delete configuration file"""
+            Setup._run_cmd(f"rm -rf {const.CSM_CONF_PATH}")
 
         @staticmethod
         def reset():
+            """Reset configuration file"""
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-            Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
+            Setup._run_cmd(f"cp -rf {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     def _config_cluster(self, args):
         """
         Instantiation of csm cluster with resources
         Create csm user
         """
+
         self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
-        self._csm_ra = {
-            "csm_resource_agent": CsmResourceAgent(self._csm_resources)
-        }
+        self._csm_ra = {"csm_resource_agent": CsmResourceAgent(self._csm_resources)}
         self._ha_framework = PcsHAFramework(self._csm_ra)
         self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
         self._cluster.init(args['f'])
@@ -369,7 +365,8 @@ class Setup:
             : If csm_cleanup present then configure cronjob
             : If csm_cleanup not present then through error
         """
-        _proc = SimpleProcess("crontab -u " +self._user+ " -l")
+
+        _proc = SimpleProcess(f"crontab -u {self._user} -l")
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if not reset:
             if "no crontab" not in _err:
@@ -379,114 +376,103 @@ class Setup:
             with open("/tmp/csm.cron", "w") as fi:
                 if "no crontab" not in _err:
                     fi.write(_output)
-                fi.write("0 1 * * *    {}\n".format(const.CSM_CRON_JOB))
-            _output = Setup._run_cmd("crontab -u " +self._user+ " /tmp/csm.cron")
+                fi.write(f"0 1 * * *    {const.CSM_CRON_JOB}\n")
+            _output = Setup._run_cmd(f"crontab -u {self._user} /tmp/csm.cron")
             os.remove("/tmp/csm.cron")
         else:
             if self._is_user_exist():
                 if "no crontab" not in _err:
-                    Setup._run_cmd("crontab -u " +self._user+ " -r")
+                    Setup._run_cmd(f"crontab -u {self._user} -r")
 
-    def _log_cleanup(self):
-        """
-        Delete all logs
-        """
+    @staticmethod
+    def _log_cleanup():
+        """Delete all logs"""
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
-        Setup._run_cmd("rm -rf " +log_path)
+        Setup._run_cmd(f"rm -rf {log_path}")
 
     class ConfigServer:
-        """
-        Manage Csm service
-            stop: Stop csm service
-            restart: restart csm service
-            reload: reload systemd deamon
-        """
-
+        """Manage Csm service"""
         @staticmethod
         def stop():
+            """Stop csm service"""
             _proc = SimpleProcess("systemctl is-active csm_agent")
-            _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
+            _, _, _rc_agent = _proc.run(universal_newlines=True)
             _proc = SimpleProcess("systemctl is-active csm_web")
-            _output_web, _err_web, _rc_web = _proc.run(universal_newlines=True)
+            _, _, _rc_web = _proc.run(universal_newlines=True)
             if _rc_agent == 0:
                 _proc = SimpleProcess("systemctl stop csm_agent")
-                _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
+                _, _, _rc_agent = _proc.run(universal_newlines=True)
             if _rc_web == 0:
                 _proc = SimpleProcess("systemctl stop csm_web")
-                _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
+                _, _, _rc_agent = _proc.run(universal_newlines=True)
 
         @staticmethod
         def reload():
+            """reload systemd deamon"""
             Setup._run_cmd("systemctl daemon-reload")
 
         @staticmethod
         def restart():
+            """restart csm service"""
             _proc = SimpleProcess("systemctl is-active csm_agent")
-            _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
+            _, _, _rc_agent = _proc.run(universal_newlines=True)
             _proc = SimpleProcess("systemctl is-active csm_web")
-            _output_web, _err_web, _rc_web = _proc.run(universal_newlines=True)
+            _, _, _rc_web = _proc.run(universal_newlines=True)
             if _rc_agent == 0:
                 Setup._run_cmd("systemctl restart csm_agent")
             if _rc_web == 0:
                 Setup._run_cmd("systemctl restart csm_web")
 
-    def _rsyslog(self):
-        """
-        Configure rsyslog
-        """
+    @staticmethod
+    def _rsyslog():
+        """Configure rsyslog"""
         if os.path.exists(const.RSYSLOG_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("cp -f " +const.SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
+            Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
+            Setup._run_cmd(f"cp -f {const.SOURCE_SUPPORT_BUNDLE_CONF} {const.SUPPORT_BUNDLE_CONF}")
             Setup._run_cmd("systemctl restart rsyslog")
         else:
-            raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
+            raise CsmSetupError(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
 
-    def _rsyslog_common(self):
-        """
-        Configure common rsyslog and logrotate
-        """
+    @staticmethod
+    def _rsyslog_common():
+        """Configure common rsyslog and logrotate"""
         if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
+            Setup._run_cmd(f"cp -f {const.CLEANUP_LOGROTATE_PATH} {const.LOGROTATE_PATH}")
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR} dir missing.")
         if os.path.exists(const.CRON_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
+            Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
         else:
-            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
+            raise CsmSetupError(f"cron failed. {const.CRON_DIR} dir missing.")
 
-    def _logrotate(self):
-        """
-        Configure logrotate
-        """
+    @staticmethod
+    def _logrotate():
+        """Configure logrotate"""
         if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "csm_agent_log.conf")
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "cleanup_log.conf")
+            Setup._run_cmd(f"cp -f {const.SOURCE_LOGROTATE_PATH} {const.LOGROTATE_PATH}")
+            Setup._run_cmd(f"cp -f {const.CLEANUP_LOGROTATE_PATH} {const.LOGROTATE_PATH}")
+            Setup._run_cmd(f"chmod 644 {const.LOGROTATE_PATH}csm_agent_log.conf")
+            Setup._run_cmd(f"chmod 644 {const.LOGROTATE_PATH}cleanup_log.conf")
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR} dir missing.")
 
-    def _set_rmq_node_id(self):
-        """
-        This method gets the nodes id from provisioner cli and updates
-        in the config.
-        """
+    @staticmethod
+    def _set_rmq_node_id():
+        """This method gets the nodes id from provisioner cli and updates in the config."""
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
-                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
-                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
+                     f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
+                     f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
-            raise CsmSetupError(f"Unable to fetch system node ids info.")
+            raise CsmSetupError("Unable to fetch system node ids info.")
 
-    def _set_rmq_cluster_nodes(self):
-        """
-        This method gets the nodes names of the the rabbitmq cluster and writes
-        in the config.
-        """
+    @staticmethod
+    def _set_rmq_cluster_nodes():
+        """This method gets the nodes names of the the rabbitmq cluster and writes in the config."""
         nodes = []
         nodes_found = False
         try:
@@ -504,29 +490,29 @@ class Setup:
                 Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
                 Conf.save(const.CSM_GLOBAL_INDEX)
             else:
-                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+                raise CsmSetupError("Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
-            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {traceback.format_exc()}")
 
-    def _set_consul_vip(self):
+    @staticmethod
+    def _set_consul_vip():
         """
         This method gets the consul VIP for the current node and sets the
         value in database.yaml config.
         Seting the default values in case of command failure.
         """
+
         minion_id = None
         consul_host = None
         try:
             minion_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
             if not minion_id:
-                Log.logger.warn(f"Unable to fetch minion id for the node." \
-                    f"Using {const.MINION_NODE1_ID}.")
+                Log.logger.warn(
+                    f"Unable to fetch minion id for the node. Using {const.MINION_NODE1_ID}.")
                 minion_id = const.MINION_NODE1_ID
-            consul_vip_cmd = f"{const.CLUSTER}:{minion_id}:{const.NETWROK}:"\
-                f"{const.DATA_NW}:{const.ROAMING_IP}"
-            consul_host = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                consul_vip_cmd)
+            consul_vip_cmd = (f"{const.CLUSTER}:{minion_id}:{const.NETWORK}:"
+                              f"{const.DATA_NW}:{const.ROAMING_IP}")
+            consul_host = Setup.get_salt_data_with_exception(const.PILLAR_GET, consul_vip_cmd)
             if consul_host:
                 Conf.set(const.DATABASE_INDEX, const.CONSUL_HOST_KEY, consul_host)
                 Conf.save(const.DATABASE_INDEX)
@@ -534,7 +520,7 @@ class Setup:
             raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
 
     @classmethod
-    def _get_faulty_node_uuid(self):
+    def _get_faulty_node_uuid(cls):
         """
         This method will get the faulty node uuid from provisioner.
         This uuid will be used to resolve the faulty alerts for replaced node.
@@ -543,13 +529,13 @@ class Setup:
         faulty_node_uuid = ''
         try:
             faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                faulty_minion_id_cmd)
+            faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET,
+                                                                  faulty_minion_id_cmd)
             if not faulty_minion_id:
                 Log.logger.warn("Fetching faulty node minion id failed.")
                 raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = Setup.get_salt_data_faulty_node_uuid\
-                (faulty_minion_id, const.GRAINS_GET, 'node_id')
+            faulty_node_uuid = Setup.get_salt_data_faulty_node_uuid(faulty_minion_id,
+                                                                    const.GRAINS_GET, 'node_id')
             if not faulty_node_uuid:
                 Log.logger.warn("Fetching faulty node uuid failed.")
                 raise CsmSetupError("Fetching faulty node uuid failed.")
@@ -558,11 +544,9 @@ class Setup:
             Log.logger.warn(f"Fetching faulty node uuid failed. {e}")
             raise CsmSetupError(f"Fetching faulty node uuid failed. {e}")
 
-
-    def _resolve_faulty_node_alerts(self, node_id):
-        """
-        This method resolves all the alerts for a fault replaced node.
-        """
+    @staticmethod
+    def _resolve_faulty_node_alerts(node_id):
+        """This method resolves all the alerts for a fault replaced node."""
         try:
             conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
             db = DataBaseProvider(conf)
@@ -570,20 +554,20 @@ class Setup:
             if db:
                 loop = asyncio.get_event_loop()
                 alerts_repository = AlertRepository(db)
-                alerts = loop.run_until_complete\
-                    (alerts_repository.retrieve_unresolved_by_node_id(node_id))
+                alerts = loop.run_until_complete(
+                    alerts_repository.retrieve_unresolved_by_node_id(node_id))
                 if alerts:
                     for alert in alerts:
-                        if not const.ENCLOSURE in alert.module_name:
+                        if const.ENCLOSURE not in alert.module_name:
                             alert.acknowledged = AlertModel.acknowledged.to_native(True)
                             alert.resolved = AlertModel.resolved.to_native(True)
                             loop.run_until_complete(alerts_repository.update(alert))
                 else:
                     Log.logger.warn(f"No alerts found for node id: {node_id}")
             else:
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
-        except Exception as ex:
-            raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
+                raise CsmSetupError("csm_setup refresh_config failed. Unable to load db.")
+        except Exception as e:
+            raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {e}")
 
     def set_unsupported_feature_info(self):
         """
@@ -593,18 +577,19 @@ class Setup:
         features. The list of components, CSM interacts with, is
         stored in csm.conf file. So if there is change in name of any
         component, csm.conf file must be updated accordingly.
-        2. Installation/envioronment type and its mapping with CSM unsupported
+        2. Installation/environment type and its mapping with CSM unsupported
         features are maintained in unsupported_feature_schema. Based on the
         installation/environment type received as argument, CSM unsupported
         features can be stored.
         """
         def get_component_list_from_features_endpoints():
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-            component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
+            component_list = [feature for v in feature_endpoints.values()
+                              for feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
-  
+
         try:
-            self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            self._setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             self._loop = asyncio.get_event_loop()
             components_list = get_component_list_from_features_endpoints()
@@ -616,15 +601,17 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            
+
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
             unsupported_features_list = list(set(unsupported_features_list))
             unique_unsupported_features_list = list(filter(None, unsupported_features_list))
             if unique_unsupported_features_list:
-                self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
-                    component_name=str(const.CSM_COMPONENT_NAME), features=unique_unsupported_features_list))
+                self._loop.run_until_complete(
+                    unsupported_feature_instance.store_unsupported_features(
+                        component_name=str(const.CSM_COMPONENT_NAME),
+                        features=unique_unsupported_features_list))
             else:
                 Log.info("Unsupported features list is empty.")
         except Exception as e_:
@@ -634,15 +621,16 @@ class Setup:
 
     def _configure_system_auto_restart(self):
         """
-        Check's System Installation Type an dUpdate the Service File
-        Accordingly.
+        Check's system installation type and update the service file accordingly.
+
         :return: None
         """
+
         is_auto_restart_required = list()
         if self._setup_info:
             for each_key in self._setup_info:
                 comparison_data = const.EDGE_INSTALL_TYPE.get(each_key, None)
-                #Check Key Exists:
+                # Check key exists:
                 if comparison_data is None:
                     Log.logger.warn(f"Edge Installation missing key {each_key}")
                     continue
@@ -659,40 +647,36 @@ class Setup:
             Log.logger.warn("Setup info does not exist.")
             is_auto_restart_required.append(True)
         if any(is_auto_restart_required):
-            Log.logger.debug("Updating All setup file for Auto Restart on "
-                             "Failure")
-            Setup._update_service_file("#< RESTART_OPTION >",
-                                      "RESTART=on-failure")
+            Log.logger.debug("Updating all setup file for auto restart on failure")
+            Setup._update_service_file("#< RESTART_OPTION >", "RESTART=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
     def _update_service_file(key, value):
-        """
-        Update CSM Agent and CSM Web service Files Depending on Job Type of
-        Setup.
-        """
+        """Update CSM Agent and CSM Web service files depending on setup job type."""
         for each_service_file in const.CSM_SERVICE_FILES:
             service_file_data = Text(each_service_file).load()
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
 
-# TODO: Devide changes in backend and frontend
+# TODO: Divide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
+
+
 class CsmSetup(Setup):
     def __init__(self):
-        super(CsmSetup, self).__init__()
+        super().__init__()
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
 
-    def _verify_args(self, args):
-        """
-        Verify args for actions
-        """
+    @staticmethod
+    def _verify_args(args):
+        """Verify args for actions"""
         if "Product" in args.keys() and args["Product"] != "cortx":
-            raise Exception("Not implemented for Product %s" %args["Product"])
+            raise Exception(f'Not implemented for Product {args["Product"]}')
         if "Component" in args.keys() and args["Component"] != "all":
-            raise Exception("Not implemented for Component %s" %args["Component"])
+            raise Exception(f'Not implemented for Component {args["Component"]}')
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
 
@@ -702,18 +686,19 @@ class CsmSetup(Setup):
             : Configure csm user
             : Add Permission for csm user
             : Add cronjob for csm cleanup
-        Post install is used after just all rpms are install but
-        no service are started
+        Post install is used after just all rpms are install but no service are started
         """
+
         try:
             self._verify_args(args)
             self._config_user()
             self.set_unsupported_feature_info()
             self._cleanup_job()
             self._configure_system_auto_restart()
-            
+
         except Exception as e:
-            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(
+                f"csm_setup post_install failed. Error: {e} - {traceback.format_exc()}")
 
     def config(self, args):
         """
@@ -721,25 +706,27 @@ class CsmSetup(Setup):
             : Move conf file to etc
         Config is used to move update conf files one time configuration
         """
+
         try:
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
         except Exception as e:
-            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {traceback.format_exc()}")
 
     def init(self, args):
         """
-        Check and move required configuration file
-        Init is used after all dependency service started
+        Check and move required configuration file.
+        Init is used after all dependency service started.
         """
+
         try:
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
             if not self._replacement_node_flag:
                 self._set_rmq_cluster_nodes()
-                #TODO: Adding this implementation in try..except block to avoid build failure
+                # TODO: Adding this implementation in try..except block to avoid build failure
                 # This workaround will be fixed once JIRA ticket #10551 is resolved
                 try:
                     self._set_rmq_node_id()
@@ -754,11 +741,11 @@ class CsmSetup(Setup):
             if ha_check:
                 self._config_cluster(args)
         except Exception as e:
-            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {traceback.format_exc()}")
 
     def reset(self, args):
         """
-        Reset csm configuraion
+        Reset csm configuration
         Soft: Soft Reset is used to restrat service with log cleanup
             - Cleanup all log
             - Reset conf
@@ -771,6 +758,7 @@ class CsmSetup(Setup):
             - Disable csm service
             - Delete csm user
         """
+
         try:
             self._verify_args(args)
             if args["hard"]:
@@ -785,15 +773,13 @@ class CsmSetup(Setup):
                 self.Config.reset()
                 self.ConfigServer.restart()
         except Exception as e:
-            raise CsmSetupError("csm_setup reset failed. Error: %s" %e)
+            raise CsmSetupError(f"csm_setup reset failed. Error: {e}")
 
     def refresh_config(self, args):
-        """
-        Refresh context for CSM
-        """
+        """Refresh context for CSM"""
         try:
             node_id = self._get_faulty_node_uuid()
             self._resolve_faulty_node_alerts(node_id)
-            Log.logger.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
+            Log.logger.info(f"Resolved and acknowledged all the faulty node: {node_id} alerts")
         except Exception as e:
-            raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)
+            raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")

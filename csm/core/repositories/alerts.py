@@ -13,11 +13,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from copy import deepcopy
 from datetime import datetime
-from copy import  deepcopy
-from typing import Optional, Iterable
-from csm.core.blogic.models.alerts import IAlertStorage, Alert
-from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
+from typing import Iterable, Optional
+
+from cortx.utils.data.access import SortOrder
+
+from csm.common.queries import DateTimeRange, QueryLimits, SortBy
+from csm.core.blogic.models.alerts import Alert, IAlertStorage
 
 
 class AlertSimpleStorage(IAlertStorage):
@@ -64,19 +67,15 @@ class AlertSimpleStorage(IAlertStorage):
             return True
 
         alerts = await self.retrieve_all()
-        if time_range is not None:
-            return [x for x in alerts if _check_alert_date(x.data()['created_time'])]
-        else:
-            return alerts
+        return alerts if time_range is None else [x for x in alerts if _check_alert_date(
+            x.data()['created_time'])]
 
-    async def retrieve_by_range(
-            self, time_range: DateTimeRange, sort: Optional[SortBy],
-            limits: Optional[QueryLimits]) -> Iterable[Alert]:
+    async def retrieve_by_range(self, time_range: DateTimeRange, sort: Optional[SortBy],
+                                limits: Optional[QueryLimits]) -> Iterable[Alert]:
         alerts = await self._retrieve_by_range(time_range)
         if sort is not None:
             alerts = sorted(alerts,
-                            key=lambda item: item.data().get(sort.field,
-                                "created_time"),
+                            key=lambda item: item.data().get(sort.field, "created_time"),
                             reverse=(sort.order == SortOrder.ASC))
 
         if limits is not None:
@@ -89,7 +88,7 @@ class AlertSimpleStorage(IAlertStorage):
     async def count_by_range(self, time_range: DateTimeRange):
         return len(await self._retrieve_by_range(time_range))
 
-    # todo: Remove the Below Commeted code this is just to dump the data while starting the server.
+    # TODO: Remove the Below Commeted code this is just to dump the data while starting the server.
     # @staticmethod
     # def random_date():
     #     """
@@ -180,5 +179,3 @@ class AlertSimpleStorage(IAlertStorage):
 #         return (alert
 #             async for key, alert in self._kvs.items()
 #                 if predicate(key, alert))
-
-

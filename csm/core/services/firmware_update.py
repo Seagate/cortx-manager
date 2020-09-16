@@ -13,16 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.services import ApplicationService
-from cortx.utils.log import Log
-from csm.core.blogic import const
-from csm.common.conf import Conf
+import os
+
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
+from csm.core.blogic import const
 from csm.core.data.models.upgrade import UpdateStatusEntry
 from csm.core.services.update_service import UpdateService
-
-import os
-import datetime
 
 
 class FirmwareUpdateService(UpdateService):
@@ -35,12 +31,14 @@ class FirmwareUpdateService(UpdateService):
     async def upload_package(self, package_ref, filename):
         """
         Service to upload and validate firmware package. Also returns last
-        firmware ugrade status
+        firmware upgrade status
+
         :param package_ref: FileRef object
-        :param filename: str
-        :return: dict
+        :param filename: :type: str
+        :return: :type: dict
         """
-        firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
+
+        package_ref.save_file(self._fw_storage_path, filename, True)
         model = await self._update_repo.get_current_model(const.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
             raise InvalidRequest("You can't upload a new package while there is an ongoing update")
@@ -58,16 +56,19 @@ class FirmwareUpdateService(UpdateService):
         software_update_model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
 
         if software_update_model and software_update_model.is_in_progress():
-            raise InvalidRequest("Software update is already in progress. Please wait until it is done.")
+            raise InvalidRequest(
+                "Software update is already in progress. Please wait until it is done.")
 
         firmware_update_model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
         if not firmware_update_model:
             raise CsmInternalError("Internal DB is inconsistent. Please upload the package again")
 
         if firmware_update_model.is_in_progress():
-            raise InvalidRequest("Firmware update is already in progress. Please wait until it is done.")
+            raise InvalidRequest(
+                "Firmware update is already in progress. Please wait until it is done.")
 
-        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_update(firmware_update_model.file_path)
+        firmware_update_model.provisioner_id = await self._provisioner.trigger_firmware_update(
+            firmware_update_model.file_path)
         firmware_update_model.mark_started()
         await self._update_repo.save_model(firmware_update_model)
         return firmware_update_model.to_printable()
@@ -75,8 +76,10 @@ class FirmwareUpdateService(UpdateService):
     async def check_for_package_availability(self):
         """
         Service to check package is available at configured path
-        :return: dict
+
+        :return: :type: dict
         """
+
         model = await self._get_renewed_model(const.FIRMWARE_UPDATE_ID)
         if not model:
             raise CsmError(desc="Internal DB is inconsistent. Please upload the package again")

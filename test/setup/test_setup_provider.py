@@ -13,50 +13,47 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
-import traceback
+import time
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.core.blogic import const
 from cortx.utils.log import Log
+
 from csm.core.agent.api import CsmApi
-from csm.core.providers.providers import Request, Response
+from csm.core.blogic import const
+from csm.core.providers.providers import Request
 from csm.core.providers.setup_provider import SetupProvider
+from csm.test.common import TestFailed
+
 
 class TestSetupProvider:
     def __init__(self):
-        options = {'f':False}
+        options = {'f': False}
         self._cluster = CsmApi.get_cluster()
         self._provider = SetupProvider(self._cluster, options)
+        self._response = None
 
     def process(self, cmd, args):
         self._response = None
         request = Request(cmd, args)
         self._provider.process_request(request, self._process_response)
-        while self._response == None:
+        while self._response is None:
             time.sleep(const.RESPONSE_CHECK_INTERVAL)
         return self._response
 
     def _process_response(self, response):
         self._response = response
 
-def init(args):
-    pass
 
-#################
-# Tests
-#################
-def test1(args):
-    """ Use init provider to initalize csm """
-
+def test1():
+    """Use init provider to initialize csm"""
     tp = TestSetupProvider()
     arg_list = []
 
     # Init Component
     Log.console('Initalizing CSM Component ...')
     response = tp.process('init', arg_list)
-    if response.rc() != 0: raise TestFailed('%s' %response.output())
-    Log.console('Init CSM: response=%s' %response)
+    if response.rc() != 0:  # pylint: disable=no-member
+        raise TestFailed(str(response.output()))  # pylint: disable=no-member
+    Log.console('Init CSM: response=%s' % response)
 
-test_list = [ test1 ]
+
+test_list = [test1]

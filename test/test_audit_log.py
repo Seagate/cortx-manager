@@ -14,28 +14,20 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
-import sys
-import os
 import unittest
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.payload import Yaml
-from csm.core.blogic import const
-from csm.core.services.audit_log import AuditService, AuditLogManager
-from csm.common.errors import CsmPermissionDenied
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.common.queries import DateTimeRange
+
+from csm.core.services.audit_log import AuditService
+
 t = unittest.TestCase()
 
-class MockAuditManager():
 
+class MockAuditManager():
     async def retrieve_by_range(self, *args, **kwargs):
         return []
 
     async def count_by_range(self, *args, **kwargs):
         return 0
 
-def init(args):
-    pass
 
 async def test_show_audit_log_service():
     mock_mngr = MockAuditManager()
@@ -44,12 +36,14 @@ async def test_show_audit_log_service():
     expected_value = []
     t.assertEqual(actual_value, expected_value)
 
+
 async def test_download_audit_log_service():
     mock_mngr = MockAuditManager()
     audit_service = AuditService(mock_mngr)
     actual_value = await audit_service.get_audit_log_zip("csm", 1581490848, 1581922908)
     expected_value = "csm.12-02-2020.17-02-2020"
     t.assertIn(expected_value, actual_value)
+
 
 def test_filename_service():
     mock_mngr = MockAuditManager()
@@ -58,11 +52,12 @@ def test_filename_service():
     expected_value = "csm.12-02-2020.17-02-2020"
     t.assertIn(expected_value, actual_value)
 
-def run_tests(args = {}):
+
+def run_tests():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_show_audit_log_service())
     loop.run_until_complete(test_download_audit_log_service())
     test_filename_service()
 
+
 test_list = [run_tests]
-			 
