@@ -32,7 +32,7 @@ from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
 from eos.utils.log import Log
-from eos.utils.product_features.unsupported_features import UnsupportedFeaturesDB
+from eos.utils.product_features import unsupported_features
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -203,7 +203,7 @@ class CsmRestApi(CsmApi, ABC):
         feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
         endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
         if endpoint:
-            unsupported_feature_instance = UnsupportedFeaturesDB()
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB
             if endpoint[const.DEPENDENT_ON]:
                 for component in endpoint[const.DEPENDENT_ON]:
                     if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
