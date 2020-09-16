@@ -56,6 +56,9 @@ from eos.utils.security.secure_storage import SecureStorage
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
 USL_API_KEY_UPDATE_PERIOD = 24 * 60 * 60
 
+class BogusException(Exception):
+    pass
+
 
 class UslApiKeyDispatcher:
     def __init__(self, storage):
@@ -121,7 +124,7 @@ class UslService(ApplicationService):
         try:
             loop = asyncio.get_event_loop()
             device_uuid = loop.run_until_complete(self._provisioner.get_cluster_id())
-        except ClusterIdFetchError as e:
+        except BogusException as e:
             default_cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG.default_cluster_id")
             if Options.debug and default_cluster_id is not None:
                 device_uuid = default_cluster_id
