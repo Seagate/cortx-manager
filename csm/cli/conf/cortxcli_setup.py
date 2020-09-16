@@ -28,7 +28,7 @@ class CortxCliSetupCommand:
         permission like log, bundle path.
     """
     def __init__(self, argv):
-        '''Check cortxcli setup command and initialize'''
+        """Check cortxcli setup command and initialize."""
         self._args = argv
         self._args[0] = 'cortxcli_setup'
         self._validate()
@@ -37,12 +37,12 @@ class CortxCliSetupCommand:
                 level=const.LOG_LEVEL)
 
     def _validate(self):
-        '''Validate setup command'''
+        """Validate setup command."""
         if len(self._args) < 2:
             raise Exception('Usage: cortxcli_setup -h')
 
     def _get_command(self):
-        '''Parse cortxcli setup command'''
+        """Parse cortxcli setup command."""
         parser = argparse.ArgumentParser(description='CORTX CLI Setup', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
@@ -57,7 +57,7 @@ class CortxCliSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        '''Parse args for cortxcli_setup and execute cmd to print output'''
+        """Parse args for cortxcli_setup and execute cmd to print output."""
         self._cmd = self._get_command()
         self._response = None
         self._request = Request(self._cmd._name, self._cmd.args, self._cmd.options)

@@ -40,7 +40,7 @@ class ProvisionerCliError(InvalidRequest):
 class CortxCliSetup(Setup):
 
     """
-    Provides functions to handle cortxcli_setup arguments
+    Provides functions to handle cortxcli_setup arguments.
     """
     def __init__(self):
         super(CortxCliSetup, self).__init__()
@@ -50,7 +50,7 @@ class CortxCliSetup(Setup):
 
     @staticmethod
     def _verify_args(args):
-        """Verify args for actions"""
+        """Verify args for actions."""
         if "Product" in args.keys() and args["Product"] != "cortx":
             raise Exception("Not implemented for Product %s" %args["Product"])
         if "Component" in args.keys() and args["Component"] != "all":
@@ -63,7 +63,7 @@ class CortxCliSetup(Setup):
 
     @staticmethod
     def _rsyslog_cli():
-        """Configure rsyslog"""
+        """Configure rsyslog."""
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd("cp -f " +const.CLI_SOURCE_RSYSLOG_PATH+ " " +const.CLI_RSYSLOG_PATH)
             Setup._run_cmd("cp -f " +const.CLI_SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
@@ -85,7 +85,7 @@ class CortxCliSetup(Setup):
             raise CsmSetupError(f"cortxcli_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
     def refresh_config(self, args):
-        """Refresh context for CSM"""
+        """Refresh context for CSM."""
         try:
             node_id = self._get_faulty_node_uuid()
             self._resolve_faulty_node_alerts(node_id)
