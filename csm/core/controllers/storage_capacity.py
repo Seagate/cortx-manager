@@ -21,6 +21,7 @@ from csm.common.errors import InvalidRequest
 
 
 @CsmView._app_routes.view("/api/v1/capacity")
+@CsmAuth.public
 class StorageCapacityView(CsmView):
     """
     GET REST API view implementation for getting disk capacity details.
@@ -33,8 +34,7 @@ class StorageCapacityView(CsmView):
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         unit = self.request.query.get('unit','bytes')
+        round_off_value = int(self.request.query.get('roundoff',const.DEFAULT_ROUNDOFF_VALUE))
         if (not unit.upper() in const.UNIT_LIST) and (not unit.upper()==const.DEFAULT_CAPACITY_UNIT):
             raise InvalidRequest(f"Invalid unit. Please enter units from {','.join(const.UNIT_LIST)}. Default unit is:{const.DEFAULT_CAPACITY_UNIT}")
-        return await self._service.get_capacity_details(format='human',unit=unit)
-
-
+        return await self._service.get_capacity_details(unit=unit, round_off_value=round_off_value)

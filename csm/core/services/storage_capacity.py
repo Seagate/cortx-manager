@@ -29,7 +29,7 @@ class StorageCapacityService(ApplicationService):
     """
 
     @staticmethod
-    def _integer_to_human(capacity: int, unit) -> str:
+    def _integer_to_human(capacity: int, unit, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
 
@@ -44,22 +44,21 @@ class StorageCapacityService(ApplicationService):
             else:
                 break
 
-        return round(capacity_float, 2)
+        return round(capacity_float, round_off_value)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_capacity_details(self, format: str = 'integer', unit=const.DEFAULT_CAPACITY_UNIT) -> Dict[str, Any]:
+    async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
         """
         This method will return system disk details as per command
-        :param format: Capacity format; integers by default, use 'human' for human-readable.
+
         :return: dict
         """
 
-        def convert_to_format(value: int, unit: str) -> Any:
+        def convert_to_format(value: int, unit: str ,round_off_value:int) -> Any:
             if unit.upper()==const.DEFAULT_CAPACITY_UNIT:
                 # keep original format (i.e., integer)
                 return value
-            if format.lower() == 'human':
-                return StorageCapacityService._integer_to_human(value, unit.upper())
+            return StorageCapacityService._integer_to_human(value, unit.upper(), round_off_value)
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
@@ -72,16 +71,15 @@ class StorageCapacityService(ApplicationService):
         Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
         console_output = json.loads(stdout.decode('utf-8'))
         capacity_info = console_output.get('filesystem',{}).get('stats',{})
-
         if not capacity_info:
             raise CsmInternalError(f"System storage details not available.")
         formatted_output = {}
-        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit)
+        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
         formatted_output[const.USED] = convert_to_format(
-            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit)
-        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit)
+            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit,round_off_value)
+        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit,round_off_value)
         formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
                                                              int(capacity_info[const.FREE_SPACE])) / 
-                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)
+                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
         formatted_output[const.UNIT] = unit
         return formatted_output
