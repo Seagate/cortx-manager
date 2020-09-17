@@ -207,9 +207,13 @@ class CsmRestApi(CsmApi, ABC):
             if endpoint[const.DEPENDENT_ON]:
                 for component in endpoint[const.DEPENDENT_ON]:
                     if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
+                        Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {component}")
                         raise InvalidRequest("This feature is not supported on this environment.")
             if not await unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
+                Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {const.CSM_COMPONENT_NAME}")
                 raise InvalidRequest("This feature is not supported on this environment.")
+        else:
+            Log.debug(f"Feature endpoint is not found for {request.path}")
 
     @classmethod
     @web.middleware
