@@ -13,23 +13,29 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import errno
-import os
-import random
-import string
 import sys
-from importlib import import_module
+import os
+import string
+import random
+import asyncio
+import shutil
+import errno
+import getpass
+from threading import Thread
+from csm.common.payload import Yaml, JsonMessage
+from csm.core.blogic import const
+from csm.common.comm import SSHChannel
+from csm.core.services.support_bundle import SupportBundleRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.log import Log
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.common.errors import CsmError
+from csm.core.providers.providers import Response
 from csm.common import errors
 from csm.common.conf import Conf
-from csm.common.errors import CSM_OPERATION_SUCESSFUL, CsmError
-from csm.common.payload import JsonMessage, Yaml
+from eos.utils.log import Log
+import time
 from csm.common.process import SimpleProcess
-from csm.core.blogic import const
-from csm.core.providers.providers import Response
-from csm.core.services.support_bundle import SupportBundleRepository
-from csm.plugins.eos.provisioner import PackageValidationError
 
 class SupportBundle:
     """
@@ -84,21 +90,20 @@ class SupportBundle:
         :return: hostnames : List of Hostname :type: List
         :return: node_list : : List of Node Name :type: List
         """
-        Log.info(
-            "Falling back to reading cluster information from the cluster.sls.")
+        Log.info("Falling back to reading cluster information from cluster.sls.")
         cluster_file_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                      "SUPPORT_BUNDLE.cluster_file_path")
         if not cluster_file_path or not os.path.exists(cluster_file_path):
             repsonse_msg = {"message": (f"{cluster_file_path} not Found. \n"
                                         f"Please check if cluster info file is correctly configured.")}
-            return Response(rc = errno.ENOENT, output = repsonse_msg), None
+            return Response(rc=errno.ENOENT, output=repsonse_msg), None
         cluster_info = Yaml(cluster_file_path).load().get("cluster", {})
         active_nodes = cluster_info.get("node_list", [])
         if not active_nodes:
             response_msg = {
                 "message": "No active nodes found. Cluster file may not be valid"}
-            return Response(output = response_msg,
-                            rc = errors.CSM_ERR_INVALID_VALUE), None
+            return Response(output=response_msg,
+                            rc=errors.CSM_ERR_INVALID_VALUE), None
         hostnames = []
         for each_node in active_nodes:
             hostnames.append(cluster_info.get(each_node, {}).get("hostname"))

@@ -25,14 +25,14 @@ class Process:
         pass
 
 class SimpleProcess(Process):
-    """Execute process and provide output"""
+    ''' Execute process and provide output '''
     def __init__(self, cmd):
         super(SimpleProcess, self).__init__(cmd)
-        self.shell = False
-        self.cwd = None
-        self.timeout = None
-        self.env = None
-        self.universal_newlines = None
+        self.shell=False
+        self.cwd=None
+        self.timeout=None
+        self.env=None
+        self.universal_newlines=None
 
     def run(self, **args):
         ''' This will can run simple process '''

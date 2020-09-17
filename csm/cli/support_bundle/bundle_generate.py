@@ -32,7 +32,6 @@ class ComponentsBundle:
     """
     This class handles generation for support bundles for different components.
     """
-
     @staticmethod
     def publish_log(msg, level, bundle_id, node_name, comment):
         """
@@ -46,19 +45,18 @@ class ComponentsBundle:
         """
         #Initilize Logger for Uploading the Final Comment to ElasticSearch.
         Log.init("support_bundle",
-            syslog_server = Conf.get(const.CSM_GLOBAL_INDEX,
-                "Log.syslog_server"),
-            syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-            backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-            file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-            log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-            level = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+                 syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
+                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX,
+                                          "Log.file_size"),
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
+                 level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         result = "Success"
         if level == ERROR:
             result = ERROR.capitalize()
-        message = (
-            f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|"
-            f"{result}|{msg}")
+        message = (f"{const.SUPPORT_BUNDLE_TAG}|{bundle_id}|{node_name}|{comment}|"
+                   f"{result}|{msg}")
         Log.support_bundle(message)
 
     @staticmethod
@@ -109,8 +107,7 @@ class ComponentsBundle:
                 raise Exception((f"Failed to connect to {protocol}, "
                                  f"please check credentials."))
             try:
-                channel_obj.send_file(file_path,
-                    protocol_details.get('remote_file'))
+                channel_obj.send_file(file_path, protocol_details.get('remote_file'))
             except Exception as e:
                 Log.error(f"File upload failed. {e}")
                 raise Exception(f"Could not upload the file to {protocol}.")
@@ -135,24 +132,23 @@ class ComponentsBundle:
         components = command.options.get(const.SB_COMPONENTS, [])
         ftp_msg, file_link_msg, components_list = "", "", []
 
-        Log.debug((
-            f"{const.SB_BUNDLE_ID}: {bundle_id}, {const.SB_NODE_NAME}: {node_name}, "
-            f" {const.SB_COMMENT}: {comment}, {const.SB_COMPONENTS}: {components},"
-            f" {const.SOS_COMP}"))
+        Log.debug((f"{const.SB_BUNDLE_ID}: {bundle_id}, {const.SB_NODE_NAME}: {node_name}, "
+                   f" {const.SB_COMMENT}: {comment}, {const.SB_COMPONENTS}: {components},"
+                   f" {const.SOS_COMP}"))
         # Read Commands.Yaml and Check's If It Exists.
         support_bundle_config = Yaml(const.COMMANDS_FILE).load()
         if not support_bundle_config:
             ComponentsBundle.publish_log(f"No such file {const.COMMANDS_FILE}",
-                ERROR, bundle_id, node_name, comment)
+                                         ERROR, bundle_id, node_name, comment)
             return None
         # Path Location for creating Support Bundle.
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-            f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}"))
+                                     f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}"))
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
             except PermissionError:
-                Log.warn(const.PERMISSION_ERROR_MSG.format(path = path))
+                Log.warn(const.PERMISSION_ERROR_MSG.format(path=path))
 
         bundle_path = os.path.join(path, bundle_id)
         os.makedirs(bundle_path)
@@ -162,9 +158,7 @@ class ComponentsBundle:
         # OS Logs are specifically generated hence here Even When All is Selected O.S. Logs Will Be Skipped.
         if components:
             if "all" not in components:
-                components_list = list(
-                    set(command_files_info.keys()).intersection(
-                        set(components)))
+                components_list = list(set(command_files_info.keys()).intersection(set(components)))
             else:
                 components_list = list(command_files_info.keys())
                 components_list.remove(const.SOS_COMP)
@@ -176,33 +170,33 @@ class ComponentsBundle:
             for file_path in components_files:
                 file_data = Yaml(file_path).load()
                 if file_data:
-                    components_commands = file_data.get(
-                        const.SUPPORT_BUNDLE.lower(), [])
+                    components_commands = file_data.get(const.SUPPORT_BUNDLE.lower(), [])
                 if components_commands:
                     thread_obj = threading.Thread(
                         ComponentsBundle.exc_components_cmd(components_commands,
                             bundle_id, f"{bundle_path}{os.sep}", each_component,
                             node_name, comment))
                     thread_obj.start()
-                    Log.debug(
-                        f"Started: Thread -> {thread_obj.ident}  Component -> {each_component}")
+                    Log.debug(f"Started thread -> {thread_obj.ident}  Component -> {each_component}")
                     threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
-            f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}")
+                                  f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}")
         tar_file_name = os.path.join(directory_path,
-            f"{bundle_id}_{node_name}.tar.gz")
+                                     f"{bundle_id}_{node_name}.tar.gz")
         # Create Summary File for Tar.
         summary_file_path = os.path.join(bundle_path, "summary.yaml")
         Log.debug(f"Adding summary file at {summary_file_path}")
-        summary_data = {const.SB_BUNDLE_ID: str(bundle_id),
-            const.SB_NODE_NAME: str(node_name), const.SB_COMMENT: repr(comment),
-            "Generated Time": str(datetime.isoformat(datetime.now()))}
+        summary_data = {
+            const.SB_BUNDLE_ID: str(bundle_id),
+            const.SB_NODE_NAME: str(node_name),
+            const.SB_COMMENT: repr(comment),
+            "Generated Time": str(datetime.isoformat(datetime.now()))
+        }
         try:
             Yaml(summary_file_path).dump(summary_data)
         except PermissionError as e:
-            ComponentsBundle.publish_log(
-                f"Permission denied for creating summary file {e}", ERROR,
-                bundle_id, node_name, comment)
+            ComponentsBundle.publish_log(f"Permission denied for creating summary file {e}",
+                                         ERROR, bundle_id, node_name, comment)
             return None
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
@@ -223,37 +217,34 @@ class ComponentsBundle:
         for each_thread in threads:
             Log.debug(
                 f"Waiting for thread - {each_thread.ident} to complete process")
-            each_thread.join(timeout = 1800)
+            each_thread.join(timeout=1800)
         try:
-            Log.debug(
-                f"Generating tar.gz file on path {tar_file_name} from {bundle_path}")
+            Log.debug(f"Generating tar.gz file on path {tar_file_name} from {bundle_path}")
             Tar(tar_file_name).dump([bundle_path])
         except Exception as e:
-            ComponentsBundle.publish_log(f"Could not generate tar file {e}",
-                ERROR, bundle_id, node_name, comment)
+            ComponentsBundle.publish_log(f"Could not generate tar file {e}", ERROR, bundle_id,
+                                         node_name, comment)
             return None
         try:
             Log.debug("Create soft-link for generated tar.")
             os.symlink(tar_file_name, os.path.join(symlink_path,
-                f"{const.SUPPORT_BUNDLE}.{bundle_id}"))
-            ComponentsBundle.publish_log(
-                f"Tar file linked at location - {symlink_path}", INFO,
-                bundle_id, node_name, comment)
+                                                   f"{const.SUPPORT_BUNDLE}.{bundle_id}"))
+            ComponentsBundle.publish_log(f"Tar file linked at location - {symlink_path}", INFO, bundle_id, node_name,
+                                         comment)
         except Exception as e:
-            ComponentsBundle.publish_log(f"Linking failed {e}", ERROR,
-                bundle_id, node_name, comment)
+            ComponentsBundle.publish_log(f"Linking failed {e}", ERROR, bundle_id,
+                                         node_name, comment)
 
         # Upload the File.
         try:
-            uploaded = ComponentsBundle.send_file(
-                Conf.get(const.CSM_GLOBAL_INDEX, const.SUPPORT_BUNDLE),
-                tar_file_name)
+            uploaded = ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
+                                        const.SUPPORT_BUNDLE), tar_file_name)
             if uploaded:
-                ComponentsBundle.publish_log("Uploaded on configured location.",
-                    INFO, bundle_id, node_name, comment)
+                 ComponentsBundle.publish_log("Uploaded on configured location.",
+                                      INFO, bundle_id, node_name, comment)
         except Exception as e:
             ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
-                comment)
+                                         comment)
         finally:
             if os.path.isdir(bundle_path):
                 shutil.rmtree(bundle_path)
