@@ -72,6 +72,8 @@ class Terminal:
         :return:
         """
         value = value or getpass(prompt="Current Password: ")
+        if not value:
+            raise ArgumentError(errno.EINVAL, const.EMPTY_PASSWORD)
         return value
 
     @staticmethod
@@ -84,9 +86,14 @@ class Terminal:
         "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
                           "characters.\n"))
         value = value or getpass(prompt="Password: ")
+        if not value:
+            raise ArgumentError(errno.EINVAL, const.EMPTY_PASSWORD)
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
-            if not confirm_password==value:
+            if not confirm_password:
+                raise ArgumentError(errno.EINVAL,
+                                    f"Confirm {const.EMPTY_PASSWORD}")
+            if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
 
