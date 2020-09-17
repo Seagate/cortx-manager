@@ -565,4 +565,4 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
 OK = 'ok'
-EMPTY_PASSWORD = "Password field can't be empty."
+EMPTY_PASS_FIELD = "Password field can't be empty."
