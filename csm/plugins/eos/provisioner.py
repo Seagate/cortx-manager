@@ -456,7 +456,7 @@ class ProvisionerPlugin:
                       f"targets={target_node_id}")
             return self.provisioner.cmd_run(cmd_name=const.CORTXCLI,
                 cmd_args=str(command_args), targets=target_node_id,
-                                            cmd_stdin="")
+                                            cmd_stdin="", nowait=True)
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Command Execution error: {e}")
             raise PackageValidationError(f"Command Execution error: {e}")
