@@ -11,14 +11,17 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 <details>
 <summary>Before you begin</summary>
 <p>
+   
+   <details>
+   <summary>Click to view the process for manually installing the full stack</summary>
+   <p>
 
 1. You'll need to install the following components:
 
    - [Provisioner](https://github.com/Seagate/cortx-prvsnr/blob/dev/Cortx-ProvisionerQuickstartGuide.md)
    - [S3 Server](https://github.com/Seagate/cortx-s3server/blob/dev/docs/CORTX-S3%20Server%20Quick%20Start%20Guide.md)
-   - [Hare](https://github.com/Seagate/cortx-hare}
-   - [Monitor](https://github.com/Seagate/cortx-monitor/blob/dev/cortx-monitorQuickstartGuide.md
-   - UDX
+   - [Hare](https://github.com/Seagate/cortx-hare)
+   - [Monitor](https://github.com/Seagate/cortx-monitor/blob/dev/cortx-monitorQuickstartGuide.md)
 
 2. Login with super user:
    
@@ -116,9 +119,23 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
         `$ nohup consul agent --dev &`
 
-  6. Install Python 3
+  6. Install provisioner
   
-     `$ yum –y install python3`
+     1. Go to your home directory.
+     2. Git clone the provisioner repository, and follow the steps below:
+     
+      ```shell
+         $ git clone git@github.com:Seagate/cortx-prvsnr.git
+         $ mkdir /opt/seagate/cortx/provisioner
+         $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
+      ```
+      
+     <details>
+   <sumary>Click to expand!</summary>
+   <p>
+      
+  To skip the process, you can install the OVA and install these prerequisites:
+  
      
   7. Install GitHub.
      
@@ -138,16 +155,14 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         $ cd cortx
         $ ln -s /<path-to-cortx-py-utils>/cortx-py-utils/src/utils
         ```
-  9. Install provisioner
+  9. Install Python 3
   
-     1. Go to your home directory.
-     2. Git clone the provisioner repository, and follow the steps below:
+     `$ yum –y install python3`
      
-      ```shell
-         $ git clone git@github.com:Seagate/cortx-prvsnr.git
-         $ mkdir /opt/seagate/cortx/provisioner
-         $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
-      ```
+   </p>
+   </details>
+     
+     
        
 </p>
 </details>
@@ -170,15 +185,13 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     $ cd cortx-cortx-manager
     $ sudo cicd/build.sh
     ```
- 3. Run `$ sudo cicd/build.sh -h` to list build options in more detail. 
+ 3. Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
  
     **Examples:**
      
      - To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
      - To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
      
- 4. Prepare your environment by deploying CORTX on your system. Refer to [Auto-deployment of VM](https://github.com/Seagate/cortx-prvsnr/wiki/Deployment-on-VM_Auto-Deploy)
-
 ## 1.3 Deploy CORTX-Manager on Test VM
 
 All the dependencies should be preinstalled and prerequisites met before you run the CORTX-Manager. Follow these steps:
@@ -194,11 +207,11 @@ All the dependencies should be preinstalled and prerequisites met before you run
         
         `$ yum remove -y $pkg`
 
-   3. Install CORTX-Manager [RPM](http://cortx-storage.colo.seagate.com/releases/cortx/components/dev/multibranch/cortx-manager/) using:
+   3. Install CORTX-Manager [RPM] using:
    
       ```shell
       
-         $ yum install -i <cortx-manager-rpm-link>
+         $ yum install -i <rpm-created-by-dest-directory>
          
       ```
      
