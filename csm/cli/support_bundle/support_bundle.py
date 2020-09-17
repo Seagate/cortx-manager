@@ -17,24 +17,17 @@ import sys
 import os
 import string
 import random
-import asyncio
-import shutil
 import errno
-import getpass
-from threading import Thread
+from importlib import import_module
 from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
-from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.providers.providers import Response
-from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.errors import CsmError
+from csm.common.errors import CSM_OPERATION_SUCESSFUL, CsmError, InvalidRequest
 from csm.core.providers.providers import Response
-from csm.common import errors
 from csm.common.conf import Conf
 from eos.utils.log import Log
-import time
 from csm.common.process import SimpleProcess
 
 class SupportBundle:
@@ -161,7 +154,7 @@ class SupportBundle:
                 await provisioner.begin_bundle_generation(
                     f"bundle_generate '{bundle_id}' '{comment}' "
                     f"'{hostname}' {comp_list}", node_list[index])
-            except PackageValidationError:
+            except InvalidRequest:
                 return Response(output = "Bundle generation failed.\nPlease "
                          "check CLI for details.", rc = str(errno.ENOENT))
             except Exception as e:
