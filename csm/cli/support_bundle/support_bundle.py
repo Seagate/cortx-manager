@@ -23,8 +23,8 @@ from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
 from csm.core.services.support_bundle import SupportBundleRepository
 from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from csm.core.providers.providers import Response
-from csm.common.errors import CSM_OPERATION_SUCESSFUL, CsmError, InvalidRequest
+from csm.common.errors import (CSM_OPERATION_SUCESSFUL, CsmError,
+                            InvalidRequest, CSM_ERR_INVALID_VALUE)
 from csm.core.providers.providers import Response
 from csm.common.conf import Conf
 from eos.utils.log import Log
@@ -96,7 +96,7 @@ class SupportBundle:
             response_msg = {
                 "message": "No active nodes found. Cluster file may not be valid"}
             return Response(output=response_msg,
-                            rc=errors.CSM_ERR_INVALID_VALUE), None
+                            rc=CSM_ERR_INVALID_VALUE), None
         hostnames = []
         for each_node in active_nodes:
             hostnames.append(cluster_info.get(each_node, {}).get("hostname"))
@@ -173,7 +173,7 @@ class SupportBundle:
             f"\nPlease Find the file on -> {symlink_path} .\n")
 
         return Response(output = response_msg,
-                        rc = errors.CSM_OPERATION_SUCESSFUL)
+                        rc =CSM_OPERATION_SUCESSFUL)
 
     @staticmethod
     async def bundle_status(command):
@@ -189,7 +189,7 @@ class SupportBundle:
         all_nodes_status = await repo.retrieve_all(bundle_id)
         response = {"status": [each_status.to_primitive() for each_status in
                                all_nodes_status]}
-        return Response(output = response, rc = errors.CSM_OPERATION_SUCESSFUL)
+        return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
 
     @staticmethod
     async def fetch_ftp_data(ftp_details):
