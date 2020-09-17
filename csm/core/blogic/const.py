@@ -181,7 +181,7 @@ ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
 ALERT_EVENTS = 'events'
 ALERT_NAME = 'name'
-ALERT_COMPONENET_ID = 'component_id'
+ALERT_COMPONENT_ID = 'component_id'
 ALERT_EVENT_REASON = 'event_reason'
 ALERT_EVENT_RECOMMENDATION = 'event_recommendation'
 ALERT_HEALTH_REASON = 'health_reason'
@@ -567,3 +567,4 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
+OK = 'ok'
