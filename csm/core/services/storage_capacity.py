@@ -73,9 +73,9 @@ class StorageCapacityService(ApplicationService):
         capacity_info = console_output.get('filesystem',{}).get('stats',{})
 
         if not capacity_info:
-            raise CsmInternalError(f"System storage details not available.")
+            raise CsmInternalError("System storage details not available.")
         if int(capacity_info[const.TOTAL_SPACE]) <= 0:
-            raise CsmInternalError(f"Total space cannot be zero", message_args=capacity_info)
+            raise CsmInternalError("Total space cannot be zero", message_args=capacity_info)
         formatted_output = {}
         formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
         formatted_output[const.USED] = convert_to_format(
