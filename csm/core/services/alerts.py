@@ -409,7 +409,7 @@ class AlertsAppService(ApplicationService):
                 severity, resolved, acknowledged, show_active)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.to_primitive() for alert in alerts_list]
+            "alerts": [alert.to_primitive_filter_empty() for alert in alerts_list]
         }
 
     async def fetch_alert(self, alert_id):
@@ -423,7 +423,7 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()
+        return alert.to_primitive_filter_empty()
 
     async def fetch_all_alerts_history(self, duration, direction, sort_by, \
                                         offset: Optional[int] = None \
@@ -477,7 +477,7 @@ class AlertsAppService(ApplicationService):
         alerts_count = await self.repo.count_alerts_history(time_range, sensor_info)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.to_primitive() for alert in alerts_list]
+            "alerts": [alert.to_primitive_filter_empty() for alert in alerts_list]
         }
 
     async def fetch_alert_history(self, alert_id):
@@ -490,7 +490,7 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve_alert_history(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive()
+        return alert.to_primitive_filter_empty()
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager,
