@@ -55,7 +55,7 @@ class CortxCliSetupCommand:
         for attr in ['command', 'action', 'args']:
             setattr(sys_module, attr, getattr(namespace, attr))
             delattr(namespace, attr)
-        return command(action, vars(namespace), args)
+        return command(action, vars(namespace), args) # pylint: disable=undefined-variable
 
     def process(self):
         """Parse args for cortxcli_setup and execute cmd to print output."""
