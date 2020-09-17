@@ -161,7 +161,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     ```shell
     
     $ git clone https://github.com/Seagate/cortx-manager.git
-    $ git clone git@github.com:Seagate/cortx-manager-agent.git
+    $ git clone git@github.com:Seagate/cortx-manager.git
     ```
  2. Once you have obtained the sources, build the cortx-manager by running: 
  
