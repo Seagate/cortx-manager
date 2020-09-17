@@ -73,10 +73,11 @@ class CortxCliSetup(Setup):
 
     def config(self, args):
         """
-            Perform configuration for csm
-                : Move conf file to etc
-            Config is used to move update conf files one time configuration.
+        Perform configuration for csm
+            : Move conf file to etc
+        Config is used to move update conf files one time configuration.
         """
+
         try:
             CortxCliSetup._verify_args(args)
             CortxCliSetup._rsyslog_cli()
