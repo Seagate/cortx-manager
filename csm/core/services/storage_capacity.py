@@ -15,7 +15,7 @@
 
 import json
 from csm.common.process import SimpleProcess,AsyncioSubprocess
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError

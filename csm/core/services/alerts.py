@@ -20,16 +20,16 @@ import time
 from csm.common.observer import Observable
 from datetime import datetime, timedelta, timezone
 from threading import Event, Thread
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.email import EmailSender
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic.models.alerts import IAlertStorage, Alert
 from csm.common.errors import CsmNotFoundError, CsmError, InvalidRequest
 from csm.core.blogic import const
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.data.access.filters import Compare, And, Or
-from eos.utils.data.access import Query, SortOrder
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.alerts import AlertModel, AlertsHistoryModel
 from csm.core.blogic.models.comments import CommentModel
 from csm.core.services.system_config import SystemConfigManager

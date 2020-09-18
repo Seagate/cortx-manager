@@ -19,16 +19,16 @@ import asyncio
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.data.models.users import User, UserType, Passwd
 from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
                                 CsmPermissionDenied, ResourceExist)
 import time
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.data.access.filters import Compare, And, Or
-from eos.utils.data.access import Query, SortOrder
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType

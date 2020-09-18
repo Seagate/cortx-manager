@@ -23,7 +23,7 @@ from threading import Thread
 
 from csm.common.cluster import Node, Cluster
 from csm.common.file_collector import RemoteFileCollector
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError
