@@ -360,30 +360,6 @@ class Setup:
         self._cluster.init(args['f'])
         CsmApi.set_cluster(self._cluster)
 
-    def _cleanup_job(self, reset=False):
-        """
-        Check if csm_cleanup present is csm
-            : If csm_cleanup present then configure cronjob
-            : If csm_cleanup not present then through error
-        """
-        _proc = SimpleProcess("crontab -u " +self._user+ " -l")
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        if not reset:
-            if "no crontab" not in _err:
-                for job in _output.split('\n'):
-                    if const.CSM_CRON_JOB in job:
-                        return
-            with open("/tmp/csm.cron", "w") as fi:
-                if "no crontab" not in _err:
-                    fi.write(_output)
-                fi.write("0 1 * * *    {}\n".format(const.CSM_CRON_JOB))
-            _output = Setup._run_cmd("crontab -u " +self._user+ " /tmp/csm.cron")
-            os.remove("/tmp/csm.cron")
-        else:
-            if self._is_user_exist():
-                if "no crontab" not in _err:
-                    Setup._run_cmd("crontab -u " +self._user+ " -r")
-
     def _log_cleanup(self):
         """
         Delete all logs
@@ -441,6 +417,7 @@ class Setup:
     def _rsyslog_common(self):
         """
         Configure common rsyslog and logrotate
+        Alson cleanup statsd
         """
         if os.path.exists(const.LOGROTATE_DIR):
             Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
@@ -658,7 +635,6 @@ class CsmSetup(Setup):
         try:
             self._verify_args(args)
             self._config_user()
-            self._cleanup_job()
             self._configure_system_auto_restart()
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
@@ -726,7 +702,6 @@ class CsmSetup(Setup):
                 self.ConfigServer.stop()
                 self._log_cleanup()
                 self._config_user_permission(reset=True)
-                self._cleanup_job(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
             else:
