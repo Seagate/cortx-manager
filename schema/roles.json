@@ -6,7 +6,8 @@
             "notification": ["update"],
             "security": ["read", "update"],
             "lyve_pilot": ["list", "update"],
-            "replace_node": ["create", "list"]
+            "replace_node": ["create", "list"],
+            "health": ["list"]
         }
     },
     "manage":{
@@ -19,7 +20,8 @@
             "users": ["list", "update", "delete", "create"],
             "s3accounts": ["list", "create"],
             "auditlog": ["list", "read"],
-            "replace_node": ["list"]
+            "replace_node": ["list"],
+            "health": ["list"]
 
         }
     },
@@ -33,7 +35,8 @@
             "users": ["list", "update"],
             "s3accounts": ["list"],
             "auditlog": ["list", "read"],
-             "replace_node": ["list"]
+            "replace_node": ["list"],
+            "health": ["list"]
         }
     },
     "s3": {

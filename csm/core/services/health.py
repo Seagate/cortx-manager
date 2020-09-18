@@ -26,8 +26,8 @@ from csm.core.services.alerts import AlertRepository
 import asyncio
 
 class HealthRepository:
-    def __init__(self):        
-        self._health_schema = None     
+    def __init__(self):
+        self._health_schema = None
 
     @property
     def health_schema(self):
@@ -45,7 +45,7 @@ class HealthRepository:
         :param health_schema
         :returns: None
         """
-        self._health_schema = health_schema    
+        self._health_schema = health_schema
 
 class HealthAppService(ApplicationService):
     """
@@ -94,6 +94,49 @@ class HealthAppService(ApplicationService):
             node_health_details.append(node_details)
         return node_health_details
 
+    async def get_resources(self, **kwargs):
+        """
+        Fetches health details of the resources based on severity and components.
+        1.) Fetches the resources based on severity i.e. ok, critical or warning.
+        1.) If component is specified, get the schema for the provided component.
+        2.) If component is not provided, get all the data for all the components.
+        3.) Here components can be storage_encl, node names
+        :param kwargs:
+        :return: List of resources
+        """
+        await self.update_health_schema_with_db()
+        component_id = kwargs.get(const.ALERT_COMPONENT_ID, "")
+        severity = kwargs.get(const.ALERT_SEVERITY)
+        keys = []
+        resources = []
+        resource_details = {}
+        if component_id:
+            keys.append(component_id)
+        else:
+            parent_health_schema = self._get_schema(const.KEY_NODES)
+            keys = self._get_child_node_keys(parent_health_schema)
+        for key in keys:
+            resource_details = await self._get_resource_details(key, severity)
+            for items in resource_details:
+                resources.append(items)
+        return {"total_count": len(resources), "resources": resources}
+
+    async def _get_resource_details(self, component_id, severity):
+        """
+        Fetches the information of the leaf nodes based on severity for a
+        particular component.
+        :param component_id: storage_encl, node names
+        :param severity: ok, critical, warning
+        :retun: List of filtered resources.
+        """
+        health_count_map = {}
+        leaf_nodes = []
+        alert_uuid_map = {}
+        health_schema = self._get_schema(component_id)
+        self._get_leaf_node_health(health_schema, health_count_map,
+                               leaf_nodes, alert_uuid_map, severity)
+        return leaf_nodes
+
     async def fetch_component_health_view(self, **kwargs):
         """
         Fetches health details like health summary and components for the provided
@@ -104,6 +147,7 @@ class HealthAppService(ApplicationService):
         :param kwargs:
         :return: List of components
         """
+        await self.update_health_schema_with_db()
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
         node_health_details = []
         keys = []
@@ -203,15 +247,13 @@ class HealthAppService(ApplicationService):
         health_count_map = {}
         leaf_nodes = []
         alert_uuid_map = {}
+        component_details = []
         health_schema = self._get_schema(node_id)
         self._get_leaf_node_health(health_schema, health_count_map,
                                    leaf_nodes, alert_uuid_map)
-        health_summary = self._get_health_count(health_count_map, leaf_nodes)
-        component_details = []
-
         for component in leaf_nodes:
             component_details.append(component)
-
+        health_summary = self._get_health_count(health_count_map, leaf_nodes)
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, "components": component_details}}
         return node_details
 
@@ -256,7 +298,7 @@ class HealthAppService(ApplicationService):
         health_summary[const.TOTAL] = total_leaf_nodes
         """
         Since we are getting health as "NA" for node sensors we will consider
-        it as a good. 
+        it as a good.
         """
         for value in health_count_map:
             health = value.split('-')[0]
@@ -290,7 +332,39 @@ class HealthAppService(ApplicationService):
             health_schema = self._get_health_schema_by_key(health_schema, key)
         return health_schema
 
-    def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes, alert_uuid_map):
+    def _check_resource_for_severity(self, value, severity_val):
+        """
+        This method checks whether the given severity matches the severity of
+        the resource. If the severity matches it returns true else false
+        Logic:
+        1. If the health value falls in the category of GOOD health then the
+        resource has good health.
+        2. If the health falls in the non-good category then we check for sevrity.
+            2.1. If the severity is "critical" or "erroe" then the severity is critical.
+            2.2. If the severity is "warning" or "na" then it is warning.
+        param: value: Resource dict
+        param: severity_val: Severity to be checked for
+        return: true or false
+        """
+        ret = False
+        try:
+            health = value.get(const.ALERT_HEALTH, "").lower()
+            severity = value.get(const.ALERT_SEVERITY, "").lower()
+            is_good_health = health in const.GOOD_HEALTH_VAL
+            if severity_val == const.OK:
+                if is_good_health:
+                    ret = True
+            elif severity_val == const.CRITICAL:
+                if severity in const.HIGH_RISK_SEVERITY and not is_good_health:
+                    ret = True
+            elif severity_val == const.WARNING:
+                if severity in const.LOW_RISK_SEVERITY and not is_good_health:
+                    ret = True
+        except Exception as ex:
+            Log.warn(f"Fetching severity failed for {value}. {ex}")
+        return ret
+
+    def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes, alert_uuid_map, severity_val=None):
         """
         Identify non-empty leaf nodes of in-memory health schema
         and get health summary.
@@ -306,30 +380,34 @@ class HealthAppService(ApplicationService):
         :returns: Health Summary Json
         """
         if health_schema:
-            for k, v in health_schema.items():
-                if isinstance(v, dict):
-                    if(self._checkchilddict(v)):
-                        self._get_leaf_node_health(v, health_count_map, leaf_nodes, alert_uuid_map)
+            for key, value in health_schema.items():
+                if isinstance(value, dict):
+                    if(self._checkchilddict(value)):
+                        self._get_leaf_node_health(value, health_count_map, leaf_nodes, alert_uuid_map, severity_val)
                     else:
-                        if v:
-                            leaf_nodes.append(v)
-                            v["component_id"] = k
-                            health = v.get(const.ALERT_HEALTH, "").lower()
-                            severity = v.get(const.ALERT_SEVERITY, "").lower()
-                            health_status = f'{health}-{severity}'
-                            if v.get(const.ALERT_HEALTH):
-                                if health_count_map.get(health_status):
-                                    health_count_map[health_status] += 1
-                                else:
-                                    health_count_map[health_status] = 1
+                        if value:
+                            add_resource = True
+                            if severity_val:
+                                add_resource = self._check_resource_for_severity(value, severity_val)
+                            if add_resource:
+                                leaf_nodes.append(value)
+                                value["component_id"] = key
+                                health = value.get(const.ALERT_HEALTH, "").lower()
+                                severity = value.get(const.ALERT_SEVERITY, "").lower()
+                                health_status = f'{health}-{severity}'
+                                if value.get(const.ALERT_HEALTH):
+                                    if health_count_map.get(health_status):
+                                        health_count_map[health_status] += 1
+                                    else:
+                                        health_count_map[health_status] = 1
 
-                            if v.get(const.ALERT_UUID):
-                                if alert_uuid_map.get(health_status):  
-                                    alert_uuids = alert_uuid_map[health_status]
-                                    if v.get(const.ALERT_UUID) not in alert_uuids:
-                                        alert_uuids.append(v.get(const.ALERT_UUID))
-                                else:
-                                    alert_uuid_map[health_status] = [v.get(const.ALERT_UUID)]
+                                if value.get(const.ALERT_UUID):
+                                    if alert_uuid_map.get(health_status):
+                                        alert_uuids = alert_uuid_map[health_status]
+                                        if value.get(const.ALERT_UUID) not in alert_uuids:
+                                            alert_uuids.append(value.get(const.ALERT_UUID))
+                                    else:
+                                        alert_uuid_map[health_status] = [value.get(const.ALERT_UUID)]
         else:
             Log.warn(f"Empty health_schema")
 
@@ -339,8 +417,8 @@ class HealthAppService(ApplicationService):
         :param obj:
         :return:
         """
-        for k, v in obj.items():
-            if isinstance(v, dict):
+        for value in obj.values():
+            if isinstance(value, dict):
                 return True
 
     def _get_child_node_keys(self, obj):
@@ -350,13 +428,13 @@ class HealthAppService(ApplicationService):
         :return:
         """
         keys = []
-        if obj: 
-            for k, v in obj.items():
-                if isinstance(v, dict):
-                    keys.append(k)
+        if obj:
+            for key, value in obj.items():
+                if isinstance(value, dict):
+                    keys.append(key)
         return keys
 
-    def _get_health_schema_by_key(self, obj, key):
+    def _get_health_schema_by_key(self, obj, node_key):
         """
         Get the schema for the provided key
         :param obj:
@@ -365,20 +443,20 @@ class HealthAppService(ApplicationService):
         """
         def getvalue(obj):
             try:
-                for k, v in obj.items():
-                    if (key == k):
-                        return v
+                for key, value in obj.items():
+                    if (node_key == key):
+                        return value
 
-                    if isinstance(v, dict):
-                        if (self._checkchilddict(v)):
-                            kk = getvalue(v)
-                            if kk:
-                                return kk
+                    if isinstance(value, dict):
+                        if (self._checkchilddict(value)):
+                            ret_value = getvalue(value)
+                            if ret_value:
+                                return ret_value
             except Exception as ex:
                 Log.warn(f"Getting health schema by key failed:{ex}")
         return getvalue(obj)
 
-    def _set_health_schema_by_key(self, obj, key, value):
+    def _set_health_schema_by_key(self, obj, node_key, node_value):
         """
         Get the schema for the provided key
         :param obj:
@@ -387,13 +465,13 @@ class HealthAppService(ApplicationService):
         """
         def setValue(obj):
             try:
-                for k, v in obj.items():
-                    if (key == k):
-                        obj[k] = value
+                for key, value in obj.items():
+                    if (node_key == key):
+                        obj[key] = node_value
 
-                    if isinstance(v, dict):
-                        if (self._checkchilddict(v)):
-                            setValue(v)
+                    if isinstance(value, dict):
+                        if (self._checkchilddict(value)):
+                            setValue(value)
             except Exception as ex:
                 Log.warn(f"Setting health schema by key failed:{ex}")
 

@@ -339,9 +339,9 @@ class AlertPlugin(CsmPlugin):
                 """
                 if const.ALERT_NAME in items:
                     description_dict[const.ALERT_NAME] = items[const.ALERT_NAME]
-                elif const.ALERT_COMPONENET_ID in items:
+                elif const.ALERT_COMPONENT_ID in items:
                     description_dict[const.ALERT_NAME] = \
-                        items[const.ALERT_COMPONENET_ID]
+                        items[const.ALERT_COMPONENT_ID]
                 description_dict[const.ALERT_EVENT_REASON] = \
                     items[const.ALERT_HEALTH_REASON]
                 description_dict[const.ALERT_EVENT_RECOMMENDATION] = \

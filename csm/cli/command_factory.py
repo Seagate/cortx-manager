@@ -53,7 +53,7 @@ class CommandFactory(object):
         if permissions:
             # common commands both in commands and permissions key list
             commands = [command for command in commands if command in permissions.keys()]
-        parser = ArgumentParser(description='CSM CLI command')
+        parser = ArgumentParser(description='Cortx cli commands')
         metavar = set(commands).difference(set(const.HIDDEN_COMMANDS))
         subparsers = parser.add_subparsers(metavar=metavar)
         if argv[0] in commands:
