@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 
 from csm.common.conf import Conf
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import CsmError, CsmInternalError
 from csm.common.payload import *
 

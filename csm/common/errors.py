@@ -15,8 +15,8 @@
 
 import inspect
 
-from eos.utils.errors import BaseError
-from eos.utils.log import Log
+from cortx.utils.errors import BaseError
+from cortx.utils.log import Log
 
 CSM_OPERATION_SUCESSFUL     = 0x0000
 CSM_ERR_INVALID_VALUE       = 0x1001

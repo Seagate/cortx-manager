@@ -19,7 +19,7 @@ import time
 import asyncio
 from csm.common.comm import AmqpComm
 from csm.common.errors import CsmError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict
 from csm.common.plugin import CsmPlugin
 from csm.core.blogic import const
@@ -27,7 +27,7 @@ from marshmallow import Schema, fields, ValidationError
 from concurrent.futures import ThreadPoolExecutor
 from csm.common.services import Service
 try:
-    from eos.utils.ha.dm.decision_maker import DecisionMaker
+    from cortx.utils.ha.dm.decision_maker import DecisionMaker
 except ModuleNotFoundError:
     Log.warn("Unable to import HA Decision Maker Library.")
     DecisionMaker = None

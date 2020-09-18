@@ -15,14 +15,14 @@
 
 from asyncio import Lock
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import load_pem_x509_certificate
-from eos.utils.security.key_manager import KeyMaterialStore
-from eos.utils.security.secure_storage import SecureStorage
+from cortx.utils.security.key_manager import KeyMaterialStore
+from cortx.utils.security.secure_storage import SecureStorage
 from pathlib import PosixPath
 from typing import Optional
 
