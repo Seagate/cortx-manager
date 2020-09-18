@@ -45,9 +45,11 @@ from csm.core.data.models.s3 import IamUser, IamUserCredentials
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
+from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
+from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from cortx.utils.security.secure_storage import SecureStorage
 from cortx.utils.security.cipher import Cipher
 
@@ -837,7 +839,6 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(reason)
         return material
 
-    # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
         """
         Provides a list of all network interfaces in a system.
@@ -845,20 +846,17 @@ class UslService(ApplicationService):
         :return: A list containing dictionaries, each containing information about a specific
             network interface.
         """
-        return [
-            {
-                'name': 'tbd',
-                'type': 'tbd',
-                'macAddress': 'AA:BB:CC:DD:EE:FF',
-                'isActive': True,
-                'isLoopback': False,
-                'ipv4': '127.0.0.1',
-                'netmask': '255.0.0.0',
-                'broadcast': '127.255.255.255',
-                'gateway': '127.255.255.254',
-                'ipv6': '::1',
-                'link': 'tbd',
-                'duplex': 'tbd',
-                'speed': 0,
-            }
-        ]
+        try:
+            conf = await self._provisioner.get_network_configuration()
+            ip = conf.cluster_ip
+        except NetworkConfigFetchError as e:
+            reason = 'Could not obtain network configuration from provisioner'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+        try:
+            iface_data = get_interface_details(ip)
+        except (ValueError, RuntimeError) as e:
+            reason = f'Could not obtain interface details from address {ip}'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+        return [iface_data.to_native()]
