@@ -181,7 +181,7 @@ ALERT_EVENT_DETAILS = 'event_details'
 ALERT_EXTENDED_INFO = 'extended_info'
 ALERT_EVENTS = 'events'
 ALERT_NAME = 'name'
-ALERT_COMPONENET_ID = 'component_id'
+ALERT_COMPONENT_ID = 'component_id'
 ALERT_EVENT_REASON = 'event_reason'
 ALERT_EVENT_RECOMMENDATION = 'event_recommendation'
 ALERT_HEALTH_REASON = 'health_reason'
@@ -524,6 +524,7 @@ REPLACE_NODE_STATUS = "replace_node_status"
 NODE_STATUS = "node_status"
 INVALID_PASSWORD = f"Invalid {PASSWORD}"
 STATUS_CHECK_FALED = "Node status can't be checked. HCTL command failed"
+SERVICE_STATUS_CHECK_FAILED = "Service status can not be checked as services are restarting. Please check after sometime."
 SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
@@ -563,3 +564,4 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
+OK = 'ok'
