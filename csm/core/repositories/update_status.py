@@ -14,10 +14,10 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import datetime
-from eos.utils.data.db.db_provider import DataBaseProvider
-from eos.utils.data.access.filters import Compare, And, Or
-from eos.utils.data.access import Query, SortOrder
-from eos.utils.log import Log
+from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.access import Query, SortOrder
+from cortx.utils.log import Log
 from csm.core.data.models.upgrade import UpdateStatusEntry
 
 

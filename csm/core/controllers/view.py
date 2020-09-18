@@ -16,7 +16,7 @@
 import json
 import asyncio
 from csm.common.errors import InvalidRequest
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
 
 from aiohttp import web

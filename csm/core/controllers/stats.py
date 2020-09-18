@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .view import CsmView, CsmAuth
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.permission_names import Resource, Action
 
 

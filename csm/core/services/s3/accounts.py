@@ -15,7 +15,7 @@
 
 from csm.core.blogic import const
 from csm.common.conf import Conf
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
