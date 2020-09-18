@@ -31,7 +31,7 @@ from csm.core.providers.providers import Request, Response
 from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -149,7 +149,7 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = f'{str(err)}'
 
         audit = CsmRestApi.http_request_to_log_string(request)
-        if request.session is not None:
+        if getattr(request, "session", None) is not None:
             Log.audit(f'User: {request.session.credentials.user_id} '
                       f'{audit} RC: {resp["error_code"]}')
         else:

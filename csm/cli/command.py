@@ -26,7 +26,7 @@ from prettytable import PrettyTable
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.cli.cortxcli import Terminal, ArgumentError
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.controllers.validators import BucketNameValidator
 from csm.common.payload import CommonPayload
 
@@ -105,6 +105,11 @@ class Validatiors:
             raise ArgumentError(errno.EINVAL,
                 ("File operations failed. "
                  "Please check if the file is valid or not"))
+        except FileNotFoundError as err:
+            Log.error(f"No such file present. {value}: {err}")
+            raise ArgumentError(errno.ENOENT,
+                ("File operation failed. "
+                 "Please check if the file exists."))
 
     @staticmethod
     def bucket_name(value):

@@ -13,10 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from eos.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.blogic.models.support_bundle import SupportBundleModel
-from eos.utils.data.access import Query
-from eos.utils.data.access.filters import Compare
+from cortx.utils.data.access import Query
+from cortx.utils.data.access.filters import Compare
 
 class SupportBundleRepository:
     def __init__(self, storage: DataBaseProvider):

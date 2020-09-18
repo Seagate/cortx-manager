@@ -33,8 +33,9 @@ from csm.common.errors import (
     CsmServiceConflict
 )
 from csm.common.periodic import Periodic
-from eos.utils.data.access import Query
-from eos.utils.log import Log
+from cortx.utils.data.access import Query
+from cortx.utils.log import Log
+from csm.common.runtime import Options
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.storage_capacity import StorageCapacityService
@@ -47,8 +48,9 @@ from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
-from eos.utils.security.cipher import Cipher
-from eos.utils.security.secure_storage import SecureStorage
+from cortx.utils.security.secure_storage import SecureStorage
+from csm.plugins.cortx.provisioner import ClusterIdFetchError
+from cortx.utils.security.cipher import Cipher
 
 
 DEFAULT_CORTX_DEVICE_VENDOR = 'Seagate'
@@ -92,13 +94,8 @@ class UslService(ApplicationService):
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
-        # FIXME: the provisioner call fails on the build machine, so can't get the cluster id
-        # Use the device UUID as a temporary solution
-        # loop = asyncio.get_event_loop()
-        # cluster_id = loop.run_until_complete(self._provisioner.get_cluster_id())
-        # key = Cipher.generate_key(cluster_id, str(dev_uuid))
-        dev_uuid = self._get_device_uuid()
-        key = Cipher.generate_key(str(dev_uuid), 'USL')
+        self._device_uuid = self._get_device_uuid()
+        key = Cipher.generate_key(str(self._device_uuid), 'USL')
         secure_storage = SecureStorage(self._storage, key)
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
@@ -114,9 +111,25 @@ class UslService(ApplicationService):
         return str(appliance_name)
 
     def _get_device_uuid(self) -> UUID:
-        """Obtains the CORTX device UUID from config."""
+        """
+        Returns the CORTX cluster ID in case of success.
 
-        return UUID(Conf.get(const.CSM_GLOBAL_INDEX, "PRODUCT.uuid"))
+        In case of failure, it raises ``CsmInternalError``. In debug mode, it also attempts to read
+        a fake cluster ID entry from the configuration file if the CORTX cluster ID cannot be
+        obtained.
+        """
+        try:
+            loop = asyncio.get_event_loop()
+            device_uuid = loop.run_until_complete(self._provisioner.get_cluster_id())
+        except ClusterIdFetchError as e:
+            default_cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG.default_cluster_id")
+            if Options.debug and default_cluster_id is not None:
+                device_uuid = default_cluster_id
+            else:
+                reason = 'Could not obtain cluster ID'
+                Log.error(f'{reason}---{str(e)}')
+                raise CsmInternalError(desc=reason) from e
+        return UUID(device_uuid)
 
     def _format_lyve_pilot_register_device_params(
         self, url: str, pin: str, token: str
@@ -459,12 +472,12 @@ class UslService(ApplicationService):
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
-        return uuid5(self._get_device_uuid(), bucket_name)
+        return uuid5(self._device_uuid, bucket_name)
 
     async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
         bucket_name = bucket.name
         volume_name = await self._get_volume_name(bucket_name)
-        device_uuid = self._get_device_uuid()
+        device_uuid = self._device_uuid
         volume_uuid = self._get_volume_uuid(bucket_name)
         capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
@@ -488,7 +501,7 @@ class UslService(ApplicationService):
 
     # TODO replace stub
     async def _format_device_info(self) -> Device:
-        device_uuid = self._get_device_uuid()
+        device_uuid = self._device_uuid
         return Device.instantiate(
             await self._get_system_friendly_name(),
             '0000',
@@ -519,7 +532,7 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-        if device_id != self._get_device_uuid():
+        if device_id != self._device_uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _,v in volumes.items()]
@@ -534,7 +547,7 @@ class UslService(ApplicationService):
         Checks the device and the volume with the specified IDs exist and return
         the required mount/umount information
         """
-        if device_id != self._get_device_uuid():
+        if device_id != self._device_uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
@@ -759,7 +772,7 @@ class UslService(ApplicationService):
         return {
             'model': 'CORTX',
             'type': 'ees',
-            'serialNumber': self._get_device_uuid(),
+            'serialNumber': self._device_uuid,
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
             'serviceUrls': service_urls,

@@ -18,7 +18,7 @@ from contextlib import suppress
 from datetime import datetime, timezone, timedelta
 from typing import Awaitable
 
-from eos.utils.log import Log
+from cortx.utils.log import Log
 
 
 class Periodic:

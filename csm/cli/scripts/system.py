@@ -16,7 +16,7 @@
 import sys
 from csm.core.blogic import const
 from csm.common.process import AsyncioSubprocess
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.core.providers.providers import Response
 
