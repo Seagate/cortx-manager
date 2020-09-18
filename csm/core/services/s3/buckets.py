@@ -21,7 +21,7 @@ from boto.s3.bucket import Bucket
 from cortx.utils.log import Log
 from csm.common.service_urls import ServiceUrls
 
-from csm.plugins.eos.s3 import S3Plugin, S3Client
+from csm.plugins.cortx.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory

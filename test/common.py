@@ -32,7 +32,7 @@ class Const:
     INVENTORY_FILE = '/etc/csm/cluster.conf'
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
-    CSM_PATH = '/opt/seagate/eos/csm'
+    CSM_PATH = '/opt/seagate/cortx/csm'
     HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
     MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)
     DEV = 'dev'

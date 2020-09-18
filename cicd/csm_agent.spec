@@ -18,7 +18,7 @@ Version: %{version}
 Release: %{dist}
 Summary: CSM Tools
 License: Seagate Proprietary
-URL: http://gitlab.mero.colo.seagate.com/eos/csm
+URL: https://github.com/Seagate/cortx-csm-agent
 Source0: <PRODUCT>-csm_agent-%{version}.tar.gz
 %define debug_package %{nil}
 
