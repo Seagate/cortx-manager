@@ -31,7 +31,7 @@ from csm.core.providers.providers import Request, Response
 from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster

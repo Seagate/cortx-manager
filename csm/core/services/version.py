@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
-from eos.utils.log import Log
+from cortx.utils.log import Log
 
 class ProductVersionService(ApplicationService):
     """

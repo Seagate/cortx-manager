@@ -414,6 +414,9 @@ IS_DHCP = 'is_dhcp'
 SYSTEM_CONFIG_SERVICE = "system_config_service"
 PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"
+S3_ACCOUNT_SERVICE = "s3_account_service"
+S3_IAM_USERS_SERVICE = "s3_iam_users_service"
+S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 
 # Rsyslog

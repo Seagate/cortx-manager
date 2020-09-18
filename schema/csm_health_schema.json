@@ -27,7 +27,7 @@
     "enclosure:fru:fan": {
         "key": "cluster.sites.site_id.rack.rack_id.nodes.storage_encl.hw.fru.fans.fans_info"
     },
-    "enclosure:eos:logical_volume": {
+    "enclosure:cortx:logical_volume": {
         "key": "cluster.sites.site_id.rack.rack_id.nodes.storage_encl.sw.logical_volume"
     },
     "enclosure:interface:sas": {

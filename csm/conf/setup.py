@@ -21,7 +21,7 @@ import grp
 import errno
 import shlex
 import json
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -37,7 +37,7 @@ import traceback
 import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 
 # try:

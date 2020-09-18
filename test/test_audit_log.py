@@ -22,7 +22,7 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.core.services.audit_log import AuditService, AuditLogManager
 from csm.common.errors import CsmPermissionDenied
-from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 from csm.common.queries import DateTimeRange
 t = unittest.TestCase()
 

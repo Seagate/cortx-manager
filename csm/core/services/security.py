@@ -31,8 +31,8 @@ from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
 from csm.common.conf import Conf
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
-from eos.utils.log import Log
-from eos.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.log import Log
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.system_config import (CertificateConfig, SecurityConfig,
                                                 CertificateInstallationStatus)
 from csm.core.services.file_transfer import FileRef

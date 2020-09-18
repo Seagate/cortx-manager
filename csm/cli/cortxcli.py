@@ -267,7 +267,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from csm.cli.command_factory import CommandFactory, ArgumentParser
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     from csm.common.conf import Conf
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
