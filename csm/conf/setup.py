@@ -599,13 +599,9 @@ class Setup:
         """
         def get_component_list_from_features_endpoints():
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-            component_list = []
-            for v in feature_endpoints.values():
-                for feature in v.get(const.DEPENDENT_ON):
-                    if feature not in component_list:
-                        component_list.append(feature)
-            return component_list
-            
+            component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
+            return list(set(component_list))
+  
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
@@ -623,10 +619,11 @@ class Setup:
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
-            
-            if unsupported_features_list:
+            unsupported_features_list = list(set(unsupported_features_list))
+            unique_unsupported_features_list = list(filter(None, unsupported_features_list))
+            if unique_unsupported_features_list:
                 self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
-                    component_name=str(const.CSM_COMPONENT_NAME), features=unsupported_features_list))
+                    component_name=str(const.CSM_COMPONENT_NAME), features=unique_unsupported_features_list))
             else:
                 Log.info("Unsupported features list is empty.")
         except Exception as e_:
@@ -707,11 +704,11 @@ class CsmSetup(Setup):
         no service are started
         """
         try:
-            self._verify_args(args)
-            self._config_user()
+            # self._verify_args(args)
+            # self._config_user()
             self.set_unsupported_feature_info()
-            self._cleanup_job()
-            self._configure_system_auto_restart()
+            # self._cleanup_job()
+            # self._configure_system_auto_restart()
             
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
