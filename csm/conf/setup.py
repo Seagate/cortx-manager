@@ -417,7 +417,7 @@ class Setup:
     def _rsyslog_common(self):
         """
         Configure common rsyslog and logrotate
-        Alson cleanup statsd
+        Also cleanup statsd
         """
         if os.path.exists(const.LOGROTATE_DIR):
             Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)

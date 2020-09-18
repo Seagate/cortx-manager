@@ -90,7 +90,7 @@ def process_auditlogs(args):
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
     es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
 
-def add_auditlog_subcommand(main_parser):
+def add_stats_subcommand(main_parser):
     subparsers = main_parser.add_parser("stats", help='cleanup of stats log')
     subparsers.set_defaults(func=process_stats)
     subparsers.add_argument("-d", type=int, default=90,
@@ -100,7 +100,7 @@ def add_auditlog_subcommand(main_parser):
     subparsers.add_argument("-e", action='store_true',
             help="emulate, do not really delete indexes")
 
-def add_stats_subcommand(main_parser):
+def add_auditlog_subcommand(main_parser):
     subparsers = main_parser.add_parser("auditlogs", help='cleanup of audit log')
     subparsers.set_defaults(func=process_auditlogs)
     subparsers.add_argument("-d", type=int, default=90,
