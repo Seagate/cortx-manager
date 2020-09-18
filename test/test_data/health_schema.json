@@ -820,7 +820,7 @@
                 "sw": {
                   "health": "",
                   "logical_volume": {
-                    "enclosure:eos:logical_volume-dg01-0000": {
+                    "enclosure:cortx:logical_volume-dg01-0000": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -828,7 +828,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0001": {
+                    "enclosure:cortx:logical_volume-dg01-0001": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -836,7 +836,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0002": {
+                    "enclosure:cortx:logical_volume-dg01-0002": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -844,7 +844,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0003": {
+                    "enclosure:cortx:logical_volume-dg01-0003": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -852,7 +852,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0004": {
+                    "enclosure:cortx:logical_volume-dg01-0004": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -860,7 +860,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0005": {
+                    "enclosure:cortx:logical_volume-dg01-0005": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -868,7 +868,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0006": {
+                    "enclosure:cortx:logical_volume-dg01-0006": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",
@@ -876,7 +876,7 @@
                       "health": "OK",
                       "fetch_time": 1582302357
                     },
-                    "enclosure:eos:logical_volume-dg01-0007": {
+                    "enclosure:cortx:logical_volume-dg01-0007": {
                       "alert_type": "NA",
                       "severity": "NA",
                       "alert_uuid": "NA",

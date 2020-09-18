@@ -39,12 +39,12 @@
     "message.sensor_response_type.specific_info.unhealthy_components": "events",
     "message.sensor_response_type.specific_info.name": "name"
   },
-  "enclosure:eos:logical_volume": {
+  "enclosure:cortx:logical_volume": {
     "message.sensor_response_type.specific_info.disk_group": "events",
     "message.sensor_response_type.specific_info.volume_group": "volume_group",
     "message.sensor_response_type.specific_info.volume_name": "name"
   },
-  "node:eos:volume": {
+  "node:cortx:volume": {
     "message.sensor_response_type.specific_info.disk_group": "events",
     "message.sensor_response_type.specific_info.size": "volume_size",
     "message.sensor_response_type.specific_info.total_size": "volume_total_size"

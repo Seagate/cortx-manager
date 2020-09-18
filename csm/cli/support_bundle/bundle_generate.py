@@ -22,7 +22,7 @@ from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
 from datetime import datetime
 from csm.common.conf import Conf
-from eos.utils.log import Log
+from cortx.utils.log import Log
 
 ERROR = "error"
 INFO = "info"

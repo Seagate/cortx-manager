@@ -17,7 +17,7 @@ import yaml
 import errno
 from threading import Thread
 from csm.common.errors import CsmError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic.email_conf import EmailConfig
 from csm.common.conf import Conf
 from csm.core.blogic import const

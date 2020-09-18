@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from typing import Union, Dict
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
