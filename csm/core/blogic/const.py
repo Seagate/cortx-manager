@@ -27,8 +27,7 @@ CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
-PLUGIN_DIR = 'eos'
-WEB_DIR = 'eos'
+PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 
 # Access log of aiohttp
@@ -414,6 +413,9 @@ IS_DHCP = 'is_dhcp'
 SYSTEM_CONFIG_SERVICE = "system_config_service"
 PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"
+S3_ACCOUNT_SERVICE = "s3_account_service"
+S3_IAM_USERS_SERVICE = "s3_iam_users_service"
+S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 
 # Rsyslog
@@ -552,7 +554,7 @@ MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
-    "enclosure:eos:logical_volume", "enclosure:interface:sas",
+    "enclosure:cortx:logical_volume", "enclosure:interface:sas",
     "enclosure:sensor:current", "enclosure:sensor:temperature",
     "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",

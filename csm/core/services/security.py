@@ -31,18 +31,18 @@ from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
 from csm.common.conf import Conf
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
-from eos.utils.log import Log
-from eos.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.log import Log
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.data.models.system_config import (CertificateConfig, SecurityConfig,
                                                 CertificateInstallationStatus)
 from csm.core.services.file_transfer import FileRef
-from csm.plugins.eos.provisioner import ProvisionerPlugin
+from csm.plugins.cortx.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.blogic import const
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
-CERT_EOS_TMP_DIR = f"{CERT_BASE_TMP_DIR}/eos/"  # Certificates for both S3 and CSM services
+CERT_CORTX_TMP_DIR = f"{CERT_BASE_TMP_DIR}/cortx/"  # Certificates for both S3 and CSM services
 
 DATE_TEMPLATE = "%m-%d-%Y_%H:%M:%S.%f"
 
@@ -156,7 +156,7 @@ class SecurityService(ApplicationService):
         time_stamp = saving_time.strftime(DATE_TEMPLATE)
         cert_dir = self._cert_dir_base_name.substitute(USER=user,
                                                        TIME_STAMP=time_stamp)
-        cert_dir = os.path.join(CERT_EOS_TMP_DIR, cert_dir)
+        cert_dir = os.path.join(CERT_CORTX_TMP_DIR, cert_dir)
         if not os.path.exists(cert_dir):
             try:
                 self._fs_utils.create_dir(cert_dir)

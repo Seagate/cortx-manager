@@ -21,7 +21,7 @@ import grp
 import errno
 import shlex
 import json
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -37,10 +37,10 @@ import traceback
 import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.schema.payload import Json
+from cortx.utils.schema.payload import Json
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
-from eos.utils.product_features import unsupported_features
+from cortx.utils.product_features import unsupported_features
 
 # try:
 #     from salt import client
@@ -738,7 +738,7 @@ class CsmSetup(Setup):
             if not self._replacement_node_flag:
                 self._set_rmq_cluster_nodes()
                 #TODO: Adding this implementation in try..except block to avoid build failure
-                # Its a work around and it will be fixed once EOS-10551 resolved
+                # This workaround will be fixed once JIRA ticket #10551 is resolved
                 try:
                     self._set_rmq_node_id()
                 except Exception as e:

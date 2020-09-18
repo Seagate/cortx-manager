@@ -21,7 +21,7 @@ import mock
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.file_collector import RemoteFileCollector
 
 class RemoteFileCollector(unittest.TestCase):

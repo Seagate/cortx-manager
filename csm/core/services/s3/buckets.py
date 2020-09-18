@@ -18,10 +18,10 @@ from typing import Union
 from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
 
-from eos.utils.log import Log
-from csm.common.services import ApplicationService
+from cortx.utils.log import Log
+from csm.common.service_urls import ServiceUrls
 
-from csm.plugins.eos.s3 import S3Plugin, S3Client
+from csm.plugins.cortx.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
@@ -33,9 +33,10 @@ class S3BucketService(S3BaseService):
     Service for S3 account management
     """
 
-    def __init__(self, s3plugin: S3Plugin):
+    def __init__(self, s3plugin: S3Plugin, provisioner):
         self._s3plugin = s3plugin
         self._s3_connection_config = CsmS3ConfigurationFactory.get_s3_connection_config()
+        self._provisioner = provisioner
 
     async def get_s3_client(self, s3_session: S3Credentials) -> S3Client:
         """
@@ -70,8 +71,12 @@ class S3BucketService(S3BaseService):
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
-
-        return {"bucket_name": bucket_name}  # bucket Can be None
+        service_urls = ServiceUrls(self._provisioner)
+        bucket_url = await service_urls.get_s3_url(scheme='https', bucket_name=bucket_name)
+        return {
+            "bucket_name": bucket_name,
+            "bucket_url": bucket_url
+        }  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
     async def list_buckets(self, s3_session: S3Credentials) -> dict:
@@ -83,7 +88,7 @@ class S3BucketService(S3BaseService):
         :return:
         """
         # TODO: pagination can be added later
-        Log.debug(f"Retrieve the whole list of buckets for active user session")
+        Log.debug("Retrieve the whole list of buckets for active user session")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
             bucket_list = await s3_client.get_all_buckets()
@@ -91,8 +96,15 @@ class S3BucketService(S3BaseService):
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
 
+        service_urls = ServiceUrls(self._provisioner)
         # TODO: create model for response
-        bucket_list = [{"name": bucket.name} for bucket in bucket_list]
+        bucket_list = [
+            {
+                "name": bucket.name,
+                "bucket_url": await service_urls.get_s3_url(scheme='https',
+                                                            bucket_name=bucket.name)
+            }
+            for bucket in bucket_list]
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)

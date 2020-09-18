@@ -15,7 +15,7 @@
 
 import sys
 from csm.common.errors import CsmError, CsmNotFoundError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from datetime import datetime, timedelta, timezone
 from abc import ABC, abstractmethod
 from csm.common.queries import SortBy, QueryLimits, DateTimeRange
@@ -44,12 +44,12 @@ class AlertModel(CsmModel):
     status = StringType()
     #TODO
     """
-    1. Currently we are not consuming alert_type so keeping the 
+    1. Currently we are not consuming alert_type so keeping the
     placeholder for now.
     2. alert_type should be derived from SSPL message's
     info.resource_type field
     3. Once a requirement comes for consuming alert_type, we should
-    make use of info.resource_type and derive the alert type. 
+    make use of info.resource_type and derive the alert type.
     type = StringType()
     """
     enclosure_id = IntType()
@@ -76,7 +76,7 @@ class AlertModel(CsmModel):
     volume_total_size = StringType()
     version = StringType()
     disk_slot = IntType()
-    durable_id = StringType() 
+    durable_id = StringType()
     host_id = StringType()
     source = StringType()
     component = StringType()
@@ -96,6 +96,11 @@ class AlertModel(CsmModel):
                     int(self.created_time.replace(tzinfo=timezone.utc).timestamp())
         return obj
 
+    def to_primitive_filter_empty(self) -> dict:
+        obj = self.to_primitive()
+        obj_filtered = {key: value for key, value in obj.items() if value is not None}
+        return obj_filtered
+
     def __hash__(self):
         return hash(self.alert_uuid)
 
@@ -106,7 +111,7 @@ class AlertsHistoryModel(AlertModel, CsmModel):
     This is done because Generic DB can't decide which collection it
     should use during store-method.
     """
-    _id = "alert_uuid"  
+    _id = "alert_uuid"
     alert_uuid = StringType()
 
 # TODO: probably, it makes more sense to put alert data directly into the fields of
