@@ -30,11 +30,15 @@ def init(args):
     global client
     client = args['amqp_client']
 
-def test1(args):
-    """ SSH Command """
+def  test1(args):
+    """ 
+    
+    
+    
+    
+    SSH Command """
 
-    for node in args['cluster'].node_list():
-        channel = SSHChannel(node.host_name(), node.user())
+    for node  in args['cluster'].node_list():         channel = SSHChannel(node.host_name(), node.user())
         channel.connect()
         cmd = "ls -l /tmp"
         rc, output = channel.execute(cmd)
