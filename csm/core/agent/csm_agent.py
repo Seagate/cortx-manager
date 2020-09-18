@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
     from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework, PcsHAFramework
-    from eos.utils.cron import CronJob
+    from cortx.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
     from cortx.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
