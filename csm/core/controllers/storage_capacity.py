@@ -32,8 +32,8 @@ class StorageCapacityView(CsmView):
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        unit = self.request.query.get('unit','bytes')
-        round_off_value = int(self.request.query.get('roundoff',const.DEFAULT_ROUNDOFF_VALUE))
+        unit = self.request.query.get(const.UNIT,const.DEFAULT_CAPACITY_UNIT)
+        round_off_value = int(self.request.query.get(const.ROUNDOFF_VALUE,const.DEFAULT_ROUNDOFF_VALUE))
         if round_off_value <= 0:
             raise InvalidRequest(f"Round off value should be greater that 0. Default value:{const.DEFAULT_ROUNDOFF_VALUE}")
         if (not unit.upper() in const.UNIT_LIST) and (not unit.upper()==const.DEFAULT_CAPACITY_UNIT):
