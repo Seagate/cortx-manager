@@ -59,23 +59,23 @@ usage()
 {
     echo "\
 This script will remove existing csm rpms and 
-install csm rpms from  target build Also 
+install csm rpms from  target build also 
 do cleanup of consul data and elasticsearch data
 
 Usage:
-sh install_csm.sh -t <target build url for EOS>
+sh update_csm.sh -t <target build url for CORTX>
 
 For Single Node:
-sh update_csm.sh -S -t <target build url for EOS>
+sh update_csm.sh -S -t <target build url for CORTX>
 
 For Dual Node:
-sh update_csm.sh -t <target build url for EOS>
+sh update_csm.sh -t <target build url for CORTX>
 
 For Dual Node HW: 
-sh update_csm.sh -H -t <target build url for EOS>
+sh update_csm.sh -H -t <target build url for CORTX>
 
 Optional Arguments:
--rm             Remove conule data and  elasticsearch data
+-rm             Remove consul and elasticsearch data
 "
 }
 while [[ $# -gt 0 ]]; do
