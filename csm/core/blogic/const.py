@@ -351,10 +351,6 @@ CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
 CSM_USER_CURRENT_PASSWORD = 'current_password'
 CSM_USER_NAME = 'username'
 # CONSTANT
-UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-DEFAULT_CAPACITY_UNIT = 'BYTES'
-DEFAULT_ROUNDOFF_VALUE = 2
-UNIT = 'unit'
 STRING_MAX_VALUE = 250
 PATH_PREFIX_MAX_VALUE = 512
 PORT_MIN_VALUE = 0
@@ -465,6 +461,11 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
+UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+DEFAULT_CAPACITY_UNIT = 'BYTES'
+DEFAULT_ROUNDOFF_VALUE = 2
+UNIT = 'unit'
+ROUNDOFF_VALUE = 'roundoff'
 FILESYSTEM_STAT_CMD = 'hctl status --json'
 TOTAL_SPACE = 'fs_total_disk'
 FREE_SPACE = 'fs_free_disk'
