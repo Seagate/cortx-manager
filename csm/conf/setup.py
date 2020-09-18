@@ -419,7 +419,7 @@ class Setup:
     def _rsyslog_common(self):
         """
         Configure common rsyslog and logrotate
-        Alson cleanup statsd
+        Also cleanup statsd
         """
         setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
         if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
