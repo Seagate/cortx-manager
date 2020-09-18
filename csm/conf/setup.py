@@ -613,9 +613,9 @@ class Setup:
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []
             for component in components_list:
-                unsupported_features_of_component = self._loop.run_until_complete(
+                unsupported = self._loop.run_until_complete(
                     unsupported_feature_instance.get_unsupported_features(component_name=component))
-                for feature in unsupported_features_of_component:
+                for feature in unsupported:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
