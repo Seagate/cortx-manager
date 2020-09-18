@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Type
 
 from csm.common.decorators import Decorators
 from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options

@@ -20,7 +20,7 @@ import shutil
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.file_collector import RemoteFileCollector, LocalFileCollector
 from csm.common.errors import CsmError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.test.common import TestFailed
 import yaml
 
