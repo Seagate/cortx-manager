@@ -553,7 +553,7 @@ MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
-    "enclosure:eos:logical_volume", "enclosure:interface:sas",
+    "enclosure:cortx:logical_volume", "enclosure:interface:sas",
     "enclosure:sensor:current", "enclosure:sensor:temperature",
     "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
