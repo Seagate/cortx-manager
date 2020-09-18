@@ -20,7 +20,7 @@ from csm.core.controllers.validators import BucketNameValidator
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.providers.providers import Response
 

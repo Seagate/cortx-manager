@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from typing import Iterable, Text
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.validate import Validator
 from csm.common.services import ApplicationService
 from csm.core.services.permissions import PermissionSet

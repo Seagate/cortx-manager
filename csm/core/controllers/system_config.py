@@ -19,7 +19,7 @@ import uuid
 from typing import Dict
 
 from csm.common.errors import InvalidRequest
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
 

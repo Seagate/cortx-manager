@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest

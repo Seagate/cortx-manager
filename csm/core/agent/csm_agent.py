@@ -45,7 +45,7 @@ class CsmAgent:
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             Conf.decrypt_conf()
-        from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         #Remove all Old Shutdown Cron Jobs
@@ -207,7 +207,7 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
     from csm.common.conf import Conf, ConfSection, DebugConf
@@ -238,16 +238,16 @@ if __name__ == '__main__':
 
     from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import PcsHAFramework
-    from eos.utils.cron import CronJob
+    from cortx.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
-    from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
+    from cortx.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
     from csm.core.services.audit_log import  AuditLogManager, AuditService
     from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
-    from eos.utils.security.cipher import Cipher, CipherInvalidToken
+    from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     try:
         # try:

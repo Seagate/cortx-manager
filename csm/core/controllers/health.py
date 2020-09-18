@@ -20,7 +20,7 @@ from csm.core.controllers.view import CsmView
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.controllers.validators import ValidationErrorFormatter, Enum
 from csm.common.errors import InvalidRequest
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
