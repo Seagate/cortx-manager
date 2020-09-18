@@ -66,7 +66,7 @@ class CortxHAFramework(HAFramework):
         if _rc != 0:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
                 _live_node_cmd, _rc, _err))
-        if _output and _output.lower() == "online":
+        if _output and _output.lower().strip() == "online":
             online = True
         return {"node_status": [{"name": "cluster", "online": online,
                                  "standby": False, }]}
