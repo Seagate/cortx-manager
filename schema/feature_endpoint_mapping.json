@@ -122,13 +122,13 @@
   "/api/v1/maintenance/cluster": {
     "feature_name": "cluster_management",
     "dependent_on": [
-      "provisioner"
+      "hare"
     ]
   },
   "/api/v1/maintenance/cluster/*": {
     "feature_name": "cluster_management",
     "dependent_on": [
-      "provisioner"
+      "hare"
     ]
   },
   "/api/v1/onboarding/state": {
