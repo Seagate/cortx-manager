@@ -29,22 +29,6 @@
       "sspl"
     ]
   },
-  "/api/v1/auditlogs/show/*": {
-    "feature_name": "auditlog",
-    "dependent_on": [
-      "s3"
-    ]
-  },
-  "/api/v1/auditlogs/download/*": {
-    "feature_name": "auditlog",
-    "dependent_on": [
-      "s3"
-    ]
-  },
-  "/api/v1/csm/file/transfer": {
-    "feature_name": "file_transfer",
-    "dependent_on": []
-  },
   "/api/v1/update/firmware/upload": {
     "feature_name": "FW_Update",
     "dependent_on": [
@@ -111,14 +95,6 @@
       "provisioner"
     ]
   },
-  "/api/v1/login": {
-    "feature_name": "user_management",
-    "dependent_on": []
-  },
-  "/api/v1/logout": {
-    "feature_name": "user_management",
-    "dependent_on": []
-  },
   "/api/v1/maintenance/cluster": {
     "feature_name": "cluster_management",
     "dependent_on": [
@@ -136,14 +112,6 @@
     "dependent_on": [
       "provisioner"
     ]
-  },
-  "/api/v1/permissions": {
-    "feature_name": "cortx_account",
-    "dependent_on": []
-  },
-  "/api/v1/permissions/*": {
-    "feature_name": "cortx_account",
-    "dependent_on": []
   },
   "/api/v1/s3/access_keys": {
     "feature_name": "s3_account",
@@ -241,10 +209,6 @@
       "provisioner"
     ]
   },
-  "/api/v1/sysconfig_helpers/email_test": {
-    "feature_name": "settings_email_notifications",
-    "dependent_on": []
-  },
   "/api/v1/license/onboarding": {
     "feature_name": "licence_agreement",
     "dependent_on": []
@@ -255,18 +219,6 @@
       "provisioner"
     ]
   },
-  "/api/v1/csm/users": {
-    "feature_name": "cortx_account",
-    "dependent_on": []
-  },
-  "/api/v1/csm/users/*": {
-    "feature_name": "cortx_account",
-    "dependent_on": []
-  },
-  "/api/v1/preboarding/user": {
-    "feature_name": "admin_user",
-    "dependent_on": []
-  },
   "/api/v1/product_version": {
     "feature_name": "about",
     "dependent_on": [
@@ -274,47 +226,47 @@
     ]
   },
   "/usl/v1/registerDevice": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/registrationToken": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/devices": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/devices/*/volumes": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/devices/*/volumes/*/mount": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/devices/*/volumes/*/umount": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/events": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/system": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/system/certificates": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/system/certificates/*": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   },
   "/usl/v1/system/network/interfaces": {
-    "feature_name": "udx_registration",
+    "feature_name": "lyve_pilot",
     "dependent_on": []
   }
 }
