@@ -98,7 +98,7 @@ class AlertModel(CsmModel):
 
     def to_primitive_filter_empty(self) -> dict:
         obj = self.to_primitive()
-        obj_filtered = {k: v for k, v in obj.items() if v is not None}
+        obj_filtered = {key: value for key, value in obj.items() if value is not None}
         return obj_filtered
 
     def __hash__(self):
