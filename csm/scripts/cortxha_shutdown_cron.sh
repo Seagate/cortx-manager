@@ -17,4 +17,4 @@
 
 PATH=/usr/bin:/sbin:/usr/sbin;export PATH
 source /opt/seagate/cortx/csm/home/.bashrc
-cortxha cluster shutdown
+cortxha cluster stop
