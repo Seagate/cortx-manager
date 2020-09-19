@@ -86,7 +86,7 @@ class CortxHAFramework(HAFramework):
         except Exception as e:
             raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
 
-    def shutdown(self):
+    def shutdown(self, node):
         """Shutdown the current Cluster or Node."""
         _command = "{CSM_PATH}/scripts/cortxha_shutdown_cron.sh"
         _cluster_shutdown_cmd = _command.format(CSM_PATH = const.CSM_PATH)
