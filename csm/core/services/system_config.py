@@ -28,7 +28,7 @@ from cortx.utils.log import Log
 from csm.core.data.models.system_config import (ApplianceName, SystemConfigSettings,
             EmailConfig, OnboardingLicense, CertificateInstallationStatus)
 from csm.core.services.security import SecurityService
-from csm.plugins.eos.provisioner import ProvisionerPlugin
+from csm.plugins.cortx.provisioner import ProvisionerPlugin
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 

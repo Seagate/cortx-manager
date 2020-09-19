@@ -54,7 +54,6 @@ class S3BucketListView(S3AuthenticatedView):
         Log.debug(f"Handling list s3 buckets fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         # TODO: in future we can add some parameters for pagination
-
         with self._guard_service():
             return await self._service.list_buckets(self._s3_session)
 
@@ -77,8 +76,7 @@ class S3BucketListView(S3AuthenticatedView):
 
         with self._guard_service():
             # NOTE: body is empty
-            result = await self._service.create_bucket(self._s3_session,
-                                                       **bucket_creation_body)
+            result = await self._service.create_bucket(self._s3_session, **bucket_creation_body)
             return result
 
 

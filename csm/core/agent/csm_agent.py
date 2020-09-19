@@ -107,13 +107,6 @@ class CsmAgent:
         CsmRestApi._app["roles_service"] = roles_service
 
 
-        #S3 Plugin creation
-        s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
-        CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
-        CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
-        CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
-
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
         #global base_path
@@ -139,6 +132,13 @@ class CsmAgent:
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
+
+        # S3 Plugin creation
+        s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3, provisioner)
+        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3, provisioner)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3, provisioner)
+        CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
 
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
