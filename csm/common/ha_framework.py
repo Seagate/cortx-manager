@@ -63,7 +63,7 @@ class CortxHAFramework(HAFramework):
         Log.debug(f"executing command :- {_live_node_cmd}")
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines = True)
-        if _rc != 0:
+        if _rc not in [0, 1]:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
                 _live_node_cmd, _rc, _err))
         if _output and _output.lower().strip() == "online":
@@ -79,7 +79,7 @@ class CortxHAFramework(HAFramework):
             Log.debug(f"executing command :-  {_start_cmd}")
             _proc = SimpleProcess(_start_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _rc != 0:
+            if _rc not in [0, 1]:
                 raise Exception(_err)
             return {"message": const.STATE_CHANGE.format(node="cluster",
                                                           state='start')}
