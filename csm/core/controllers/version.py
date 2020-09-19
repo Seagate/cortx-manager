@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.core.controllers.view import CsmView, CsmAuth
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 
 @CsmView._app_routes.view("/api/v1/product_version")

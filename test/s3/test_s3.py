@@ -18,9 +18,9 @@ import os
 import asyncio
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from eos.utils.log import Log
-from csm.plugins.eos.s3 import S3ConnectionConfig, S3Plugin
-from csm.plugins.eos.s3 import ExtendedIamAccount, IamAccountListResponse
+from cortx.utils.log import Log
+from csm.plugins.cortx.s3 import S3ConnectionConfig, S3Plugin
+from csm.plugins.cortx.s3 import ExtendedIamAccount, IamAccountListResponse
 from csm.test.common import TestFailed
 
 Log.init('test', '.')
@@ -104,9 +104,6 @@ async def _test_delete_account(iam_client, account: ExtendedIamAccount):
 
 
 async def is_lyve_pilot_bucket(s3_client, bucket):
-    # TODO: Ref: EOS-4272: This part of testcases will be added to the actual CSM
-    #       code in future. Commiting this functionality as testcase.
-    #       [test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket]
     tag = await s3_client.get_bucket_tagging(bucket)
     if tag.get("udx") == "enabled":
         return True

@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 from csm.common.errors import CsmPermissionDenied
 from csm.core.services.users import CsmUserService, UserManager
 from csm.common.errors import InvalidRequest, CsmPermissionDenied

@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.services.sessions import LoginService
 from csm.common.errors import InvalidRequest
 from .view import CsmView, CsmResponse, CsmAuth

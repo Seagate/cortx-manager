@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from eos.utils.data.access import BaseModel
+from cortx.utils.data.access import BaseModel
 
 
 class CsmModel(BaseModel):

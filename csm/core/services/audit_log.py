@@ -19,13 +19,13 @@ import time
 import os
 import tarfile
 from datetime import datetime, timedelta, timezone
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic import const
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from eos.utils.data.access.filters import Compare, And, Or
-from eos.utils.data.access import Query, SortOrder
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common import queries
 from schematics import Model

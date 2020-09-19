@@ -15,7 +15,8 @@
 
 from csm.core.blogic import const
 from csm.common.conf import Conf
-from eos.utils.log import Log
+from csm.common.service_urls import ServiceUrls
+from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
@@ -28,8 +29,15 @@ class S3AccountService(S3BaseService):
     """
     Service for S3 account management
     """
-    def __init__(self, s3plugin):
+    def __init__(self, s3plugin, provisioner):
+        """
+        Initialize S3AccountService.
+
+        :param s3plugin: S3 plugin object.
+        :param provisioner: provisioner object.
+        """
         self._s3plugin = s3plugin
+        self._provisioner = provisioner
         #TODO
         """
         Password should be taken as input and not read from conf file directly.
@@ -94,7 +102,7 @@ class S3AccountService(S3BaseService):
                                 portion of data
         :param page_limit: If set, this will limit the maximum number of items tha will be
                            returned in one batch
-        :demand_all_accounts: When set to True, returns full list of s3 account regardless 
+        :demand_all_accounts: When set to True, returns full list of s3 account regardless
                               of session type. Needed for internal calls
         :returns: a dictionary containing account list and, if the list is truncated, a marker
                   that can be used for fetching subsequent batches
@@ -128,7 +136,11 @@ class S3AccountService(S3BaseService):
                         }
                     )
                     break
-        resp = {"s3_accounts": accounts_list}
+        service_urls = ServiceUrls(self._provisioner)
+        resp = {
+            "s3_accounts": accounts_list,
+            "s3_urls": await service_urls.get_s3_url()
+        }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
         Log.debug(f"List account response: {resp}")
