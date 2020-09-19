@@ -706,11 +706,11 @@ class CsmSetup(Setup):
         no service are started
         """
         try:
-            # self._verify_args(args)
-            # self._config_user()
+            self._verify_args(args)
+            self._config_user()
             self.set_unsupported_feature_info()
-            # self._cleanup_job()
-            # self._configure_system_auto_restart()
+            self._cleanup_job()
+            self._configure_system_auto_restart()
             
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
