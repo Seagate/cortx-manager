@@ -72,6 +72,7 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
+CORTXHA_CLUSTER = 'cortxha cluster {command}'
 HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
 HCTL_NOT_INSTALLED = "System is not provisioned correctly."
 INVALID_RESOURCE = "Invalid resource selected."

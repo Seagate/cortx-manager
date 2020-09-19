@@ -165,7 +165,7 @@ class CsmAgent:
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
-        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
+        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(CortxHAFramework(),  provisioner, db)
 
     @staticmethod
     def _daemonize():
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
     from csm.common.timeseries import TimelionProvider
-    from csm.common.ha_framework import PcsHAFramework
+    from csm.common.ha_framework import CortxHAFramework, PcsHAFramework
     from cortx.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
     from cortx.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
