@@ -122,7 +122,7 @@ class PcsHAFramework(HAFramework):
         _live_node_cmd = const.HCTL_NODE.format(command='status',
                         user=self._user, pwd=self._password)
         Log.debug(f"executing command :- "
-          f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
+              f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:

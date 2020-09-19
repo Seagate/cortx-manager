@@ -72,7 +72,6 @@ HA_INIT = '/var/csm/ha_initialized'
 
 #HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
-CORTXHA_CLUSTER = 'cortxha cluster {command}'
 HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
 HCTL_NOT_INSTALLED = "System is not provisioned correctly."
 INVALID_RESOURCE = "Invalid resource selected."
@@ -351,7 +350,6 @@ CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
 CSM_USER_CURRENT_PASSWORD = 'current_password'
 CSM_USER_NAME = 'username'
 # CONSTANT
-UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 STRING_MAX_VALUE = 250
 PATH_PREFIX_MAX_VALUE = 512
 PORT_MIN_VALUE = 0
@@ -465,6 +463,11 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
+UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+DEFAULT_CAPACITY_UNIT = 'BYTES'
+DEFAULT_ROUNDOFF_VALUE = 2
+UNIT = 'unit'
+ROUNDOFF_VALUE = 'roundoff'
 FILESYSTEM_STAT_CMD = 'hctl status --json'
 TOTAL_SPACE = 'fs_total_disk'
 FREE_SPACE = 'fs_free_disk'
@@ -503,6 +506,7 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
+GET_SETUP_INFO='get_setup_info'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -567,4 +571,14 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
+
+#unsupported feature
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+DEPENDENT_ON = "dependent_on"
+CSM_COMPONENT_NAME = "csm"
+FEATURE_NAME = "feature_name"
+SETUP_TYPES = "setup_types"
+UNSUPPORTED_FEATURES = "unsupported_features"
+STORAGE_TYPE = "storage_type"
 OK = 'ok'
