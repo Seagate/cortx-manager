@@ -51,57 +51,6 @@ class HAFramework:
     def get_status(self):
         pass
 
-class CortxHAFramework(HAFramework):
-    def __init__(self, resource_agents = None):
-        super(CortxHAFramework, self).__init__(resource_agents)
-        self._user = const.NON_ROOT_USER
-
-    def get_nodes(self):
-        """Return the status of Cortx HA Cluster/Nodes."""
-        online = False
-        _live_node_cmd = const.CORTXHA_CLUSTER.format(command = 'status')
-        Log.debug(f"executing command :- {_live_node_cmd}")
-        _proc = SimpleProcess(_live_node_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines = True)
-        if _rc not in [0, 1]:
-            raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
-                _live_node_cmd, _rc, _err))
-        if _output and _output.lower().strip() == "online":
-            online = True
-        return {"node_status": [{"name": "cluster", "online": online,
-                                 "standby": False, }]}
-
-    def make_node_active(self, node):
-        """Put node on standby node for maintenance use."""
-        try:
-            _start_cmd = const.HCTL_NODE.format(
-                command = const.CORTXHA_CLUSTER.format(command="start"))
-            Log.debug(f"executing command :-  {_start_cmd}")
-            _proc = SimpleProcess(_start_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _rc not in [0, 1]:
-                raise Exception(_err)
-            return {"message": const.STATE_CHANGE.format(node="cluster",
-                                                          state='start')}
-        except Exception as e:
-            raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
-
-    def shutdown(self):
-        """Shutdown the current Cluster or Node."""
-        _command = "{CSM_PATH}/scripts/cortxha_shutdown_cron.sh"
-        _cluster_shutdown_cmd = _command.format(CSM_PATH = const.CSM_PATH)
-        shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
-                                      "MAINTENANCE.shutdown_cron_time")
-        Log.debug(f"Setting Cron Command with args ->  user : {self._user}")
-        cron_job_obj = CronJob(self._user)
-        cron_job_obj.create_new_job(_cluster_shutdown_cmd,
-                                    const.SHUTDOWN_COMMENT,
-                                    cron_job_obj.create_run_time(
-                                        seconds = shutdown_cron_time))
-        return {
-            "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
-
-
 class PcsHAFramework(HAFramework):
     def __init__(self, resource_agents=None):
         super(PcsHAFramework, self).__init__(resource_agents)
@@ -122,7 +71,7 @@ class PcsHAFramework(HAFramework):
         _live_node_cmd = const.HCTL_NODE.format(command='status',
                         user=self._user, pwd=self._password)
         Log.debug(f"executing command :- "
-          f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
+              f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:
