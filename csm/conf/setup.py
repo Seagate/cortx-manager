@@ -244,7 +244,7 @@ class Setup:
         Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
-        Setup._run_cmd("chmod -x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
+        Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
     def _config_user_permission_unset(self, bundle_path):
         """
