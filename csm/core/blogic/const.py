@@ -564,6 +564,8 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+
+
 HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
 GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
@@ -581,4 +583,5 @@ FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
