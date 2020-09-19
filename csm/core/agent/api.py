@@ -32,6 +32,7 @@ from csm.common.observer import Observable
 from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
 from cortx.utils.log import Log
+from cortx.utils.product_features import unsupported_features
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -44,6 +45,7 @@ from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
+import re
 
 
 class CsmApi(ABC):
@@ -149,7 +151,8 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = f'{str(err)}'
 
         audit = CsmRestApi.http_request_to_log_string(request)
-        if getattr(request, "session", None) is not None:
+
+        if hasattr(request,"session"):
             Log.audit(f'User: {request.session.credentials.user_id} '
                       f'{audit} RC: {resp["error_code"]}')
         else:
@@ -185,6 +188,33 @@ class CsmRestApi(CsmApi, ABC):
     async def _get_permissions(cls, request):
         handler = await cls._resolve_handler(request)
         return CsmView.get_permissions(handler, request.method)
+
+    @staticmethod
+    async def check_for_unsupported_endpoint(request):
+        """
+        Check whether the endpoint is supported. If not, send proper error
+        reponse.
+        """
+        def getMatchingEndpoint(endpoint_map, path):
+            for key,value in endpoint_map.items():
+                map_re = f'^{key}$'.replace("*", "[\w\d]*")
+                if re.search(rf"{map_re}", path):
+                    return value
+
+        feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
+        endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
+        if endpoint:
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+            if endpoint[const.DEPENDENT_ON]:
+                for component in endpoint[const.DEPENDENT_ON]:
+                    if not await unsupported_feature_instance.is_feature_supported(component,endpoint[const.FEATURE_NAME]):
+                        Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {component}")
+                        raise InvalidRequest("This feature is not supported on this environment.")
+            if not await unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
+                Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {const.CSM_COMPONENT_NAME}")
+                raise InvalidRequest("This feature is not supported on this environment.")
+        else:
+            Log.debug(f"Feature endpoint is not found for {request.path}")
 
     @classmethod
     @web.middleware
@@ -238,9 +268,11 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
-        try:
-            resp = await handler(request)
 
+        try:
+            await CsmRestApi.check_for_unsupported_endpoint(request)
+
+            resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
                 file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'

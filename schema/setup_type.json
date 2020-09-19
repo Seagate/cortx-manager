@@ -1,0 +1,20 @@
+{
+    "setup_types": [
+        {
+            "name":"virtual",
+            "unsupported_features": ["alerts","health", "cluster_management", "lyve_pilot"]
+        },
+        {
+            "name":"5u84",
+            "unsupported_features": []
+        },
+        {
+            "name":"PODS",
+            "unsupported_features": []
+        },
+        {
+            "name":"JBOD",
+            "unsupported_features": ["lyve_pilot"]
+        }
+    ]
+}

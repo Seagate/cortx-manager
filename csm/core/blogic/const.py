@@ -350,7 +350,6 @@ CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
 CSM_USER_CURRENT_PASSWORD = 'current_password'
 CSM_USER_NAME = 'username'
 # CONSTANT
-UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 STRING_MAX_VALUE = 250
 PATH_PREFIX_MAX_VALUE = 512
 PORT_MIN_VALUE = 0
@@ -464,6 +463,11 @@ PATCH = "PATCH"
 DELETE = "DELETE"
 
 # Capacity api related constants
+UNIT_LIST = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+DEFAULT_CAPACITY_UNIT = 'BYTES'
+DEFAULT_ROUNDOFF_VALUE = 2
+UNIT = 'unit'
+ROUNDOFF_VALUE = 'roundoff'
 FILESYSTEM_STAT_CMD = 'hctl status --json'
 TOTAL_SPACE = 'fs_total_disk'
 FREE_SPACE = 'fs_free_disk'
@@ -502,6 +506,7 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
+GET_SETUP_INFO='get_setup_info'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -559,6 +564,8 @@ ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
     "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
+
+
 HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
 GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
@@ -566,4 +573,18 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
+
+
+#unsupported feature
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+DEPENDENT_ON = "dependent_on"
+CSM_COMPONENT_NAME = "csm"
+FEATURE_NAME = "feature_name"
+SETUP_TYPES = "setup_types"
+UNSUPPORTED_FEATURES = "unsupported_features"
+STORAGE_TYPE = "storage_type"
+FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
+EMPTY_PASS_FIELD = "Password field can't be empty."
+
