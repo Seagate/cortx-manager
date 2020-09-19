@@ -19,7 +19,7 @@ from csm.common.service_urls import ServiceUrls
 from csm.core.data.models.s3 import IamErrors, IamError
 from csm.core.providers.providers import Response
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
-from csm.plugins.eos.s3 import IamClient
+from csm.plugins.cortx.s3 import IamClient
 
 
 class IamUsersService(S3BaseService):
