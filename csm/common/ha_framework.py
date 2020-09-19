@@ -69,7 +69,7 @@ class CortxHAFramework(HAFramework):
         if _output and _output.lower().strip() == "online":
             online = True
         return {"node_status": [{"name": "cluster", "online": online,
-                                 "standby": False, }]}
+                                 "standby": not online}]}
 
     def make_node_active(self, node):
         """Put node on standby node for maintenance use."""
