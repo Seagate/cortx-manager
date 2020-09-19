@@ -112,23 +112,16 @@ class UslService(ApplicationService):
 
     def _get_device_uuid(self) -> UUID:
         """
-        Returns the CORTX cluster ID in case of success.
-
-        In case of failure, it raises ``CsmInternalError``. In debug mode, it also attempts to read
-        a fake cluster ID entry from the configuration file if the CORTX cluster ID cannot be
-        obtained.
+        Returns the CORTX cluster ID as in CSM configuration file.
         """
-        try:
-            loop = asyncio.get_event_loop()
-            device_uuid = loop.run_until_complete(self._provisioner.get_cluster_id())
-        except ClusterIdFetchError as e:
-            default_cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG.default_cluster_id")
-            if Options.debug and default_cluster_id is not None:
-                device_uuid = default_cluster_id
-            else:
-                reason = 'Could not obtain cluster ID'
-                Log.error(f'{reason}---{str(e)}')
-                raise CsmInternalError(desc=reason) from e
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.cluster_id')
+        if Options.debug and cluster_id is None:
+            cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG.default_cluster_id')
+        device_uuid = cluster_id
+        if device_uuid is None:
+            reason = 'Could not obtain cluster ID from CSM configuration file'
+            Log.error(f'{reason}')
+            raise CsmInternalError(desc=reason)
         return UUID(device_uuid)
 
     def _format_lyve_pilot_register_device_params(
