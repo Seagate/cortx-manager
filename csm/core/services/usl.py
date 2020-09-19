@@ -112,6 +112,7 @@ class UslService(ApplicationService):
 
     def _get_device_uuid(self) -> UUID:
         """
+
         Returns the CORTX cluster ID as in CSM configuration file.
         """
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.cluster_id')

@@ -574,6 +574,7 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
 
+
 #unsupported feature
 UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
 FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
@@ -586,3 +587,4 @@ STORAGE_TYPE = "storage_type"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
+
