@@ -151,7 +151,6 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = f'{str(err)}'
 
         audit = CsmRestApi.http_request_to_log_string(request)
-
         if hasattr(request,"session"):
             Log.audit(f'User: {request.session.credentials.user_id} '
                       f'{audit} RC: {resp["error_code"]}')
@@ -201,7 +200,7 @@ class CsmRestApi(CsmApi, ABC):
                 if re.search(rf"{map_re}", path):
                     return value
 
-        feature_endpoint_map = Conf.get(const.CSM_GLOBAL_INDEX, const.FEATURE_ENDPOINT_MAP_INDEX)
+        feature_endpoint_map = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
         endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
         if endpoint:
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
