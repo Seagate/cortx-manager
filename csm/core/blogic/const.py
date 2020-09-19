@@ -507,6 +507,7 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
+GET_SETUP_INFO='get_setup_info'
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -571,4 +572,14 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
                     "storage_type": ["5u84", "PODS"],
                     "server_type": "physical"}
+
+#unsupported feature
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+DEPENDENT_ON = "dependent_on"
+CSM_COMPONENT_NAME = "csm"
+FEATURE_NAME = "feature_name"
+SETUP_TYPES = "setup_types"
+UNSUPPORTED_FEATURES = "unsupported_features"
+STORAGE_TYPE = "storage_type"
 OK = 'ok'
