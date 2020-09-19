@@ -31,12 +31,12 @@ class System:
         """
         _user = const.NON_ROOT_USER
         _password = const.NON_ROOT_USER_PASS
-        _command = "unmaintenance"
+        _command = "start"
 
         Log.debug(f"executing command :-  "
-                  f"{const.HCTL_NODE.format(command=_command, user=_user, pwd='*****')}")
+                  f"{const.CORTXHA_CLUSTER.format(command=_command)}")
 
-        _unstandby_cmd = const.HCTL_NODE.format(command=_command, user=_user, pwd=_password)
+        _unstandby_cmd = const.CORTXHA_CLUSTER.format(command=_command)
         subprocess_obj = AsyncioSubprocess(_unstandby_cmd)
         _output, _err = await subprocess_obj.run()
         if _err:
