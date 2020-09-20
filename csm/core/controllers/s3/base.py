@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from contextlib import contextmanager
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmPermissionDenied
 from csm.core.controllers.view import CsmView, CsmHttpException
 from csm.core.services.sessions import S3Credentials

@@ -22,12 +22,13 @@ from importlib import import_module
 from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
 from csm.core.services.support_bundle import SupportBundleRepository
-from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import (CSM_OPERATION_SUCESSFUL, CsmError,
                             InvalidRequest, CSM_ERR_INVALID_VALUE)
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.providers.providers import Response
 from csm.common.conf import Conf
-from eos.utils.log import Log
+from cortx.utils.log import Log
+import time
 from csm.common.process import SimpleProcess
 
 class SupportBundle:

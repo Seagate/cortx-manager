@@ -17,10 +17,10 @@ from typing import Any, Optional
 
 from csm.core.blogic import const
 from csm.common.conf import Conf
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamErrors, IamError
-from csm.plugins.eos.s3 import IamClient
+from csm.plugins.cortx.s3 import IamClient
 from botocore.exceptions import ClientError
 
 

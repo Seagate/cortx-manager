@@ -18,7 +18,7 @@ import datetime
 import os
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,

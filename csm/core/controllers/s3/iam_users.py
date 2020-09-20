@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from typing import Dict
 from marshmallow import (Schema, fields, ValidationError, validates_schema)
 from csm.common.errors import InvalidRequest

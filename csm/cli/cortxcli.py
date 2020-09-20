@@ -72,6 +72,8 @@ class Terminal:
         :return:
         """
         value = value or getpass(prompt="Current Password: ")
+        if not value:
+            raise ArgumentError(errno.EINVAL, f"Current {const.EMPTY_PASS_FIELD}")
         return value
 
     @staticmethod
@@ -84,9 +86,14 @@ class Terminal:
         "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
                           "characters.\n"))
         value = value or getpass(prompt="Password: ")
+        if not value:
+            raise ArgumentError(errno.EINVAL, const.EMPTY_PASS_FIELD)
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
-            if not confirm_password==value:
+            if not confirm_password:
+                raise ArgumentError(errno.EINVAL,
+                                    f"Confirm {const.EMPTY_PASS_FIELD}")
+            if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
 
@@ -260,7 +267,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from csm.cli.command_factory import CommandFactory, ArgumentParser
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     from csm.common.conf import Conf
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *

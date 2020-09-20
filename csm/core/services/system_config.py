@@ -21,14 +21,14 @@ from csm.common.queries import SortBy
 from csm.common.services import ApplicationService
 from csm.common.template import Template
 from csm.core.blogic import const
-from eos.utils.data.access import Query
-from eos.utils.data.access.filters import Compare
-from eos.utils.data.db.db_provider import (DataBaseProvider)
-from eos.utils.log import Log
+from cortx.utils.data.access import Query
+from cortx.utils.data.access.filters import Compare
+from cortx.utils.data.db.db_provider import (DataBaseProvider)
+from cortx.utils.log import Log
 from csm.core.data.models.system_config import (ApplianceName, SystemConfigSettings,
             EmailConfig, OnboardingLicense, CertificateInstallationStatus)
 from csm.core.services.security import SecurityService
-from csm.plugins.eos.provisioner import ProvisionerPlugin
+from csm.plugins.cortx.provisioner import ProvisionerPlugin
 
 SYSTEM_CONFIG_NOT_FOUND = "system_config_not_found"
 

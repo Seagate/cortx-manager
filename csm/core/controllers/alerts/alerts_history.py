@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import re
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from aiohttp import web
 from typing import Dict
 from marshmallow import Schema, fields, validate, ValidationError, validates, \

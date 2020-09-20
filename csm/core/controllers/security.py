@@ -26,7 +26,7 @@ from csm.common.errors import CsmInternalError, CsmTypeError, InvalidRequest, Cs
 from csm.core.services.file_transfer import FileCache
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.file_transfer import FileFieldSchema
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.permission_names import Resource, Action
 from csm.core.data.models.system_config import SecurityConfig
 
