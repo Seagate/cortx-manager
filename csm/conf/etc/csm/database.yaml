@@ -101,7 +101,7 @@ models:
     config:
         consul_db:
             collection: "update_status_entries"
--   import_path: "eos.utils.security.secure_storage.NamedEncryptedBytes"
+-   import_path: "cortx.utils.security.secure_storage.NamedEncryptedBytes"
     database: "consul_db"
     config:
         consul_db:

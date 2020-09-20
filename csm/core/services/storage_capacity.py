@@ -15,7 +15,7 @@
 
 import json
 from csm.common.process import SimpleProcess,AsyncioSubprocess
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
@@ -29,7 +29,7 @@ class StorageCapacityService(ApplicationService):
     """
 
     @staticmethod
-    def _integer_to_human(capacity: int) -> str:
+    def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
 
@@ -37,27 +37,28 @@ class StorageCapacityService(ApplicationService):
         :return: :type: str
         """
         capacity_float = float(capacity)
-        for unit in const.UNIT_LIST:
-            capacity_float = capacity_float / 1024
-            if capacity_float / 100 < 10:
+        for each_unit in const.UNIT_LIST:
+            if const.UNIT_LIST.index(each_unit) <= const.UNIT_LIST.index(unit):
+                capacity_float = capacity_float / 1024
+                # if capacity_float / 100 < 10:
+            else:
                 break
 
-        return f'{round(capacity_float, 2)} {unit}'
+        return round(capacity_float, round_off_value)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_capacity_details(self, format: str = 'integer') -> Dict[str, Any]:
+    async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
         """
         This method will return system disk details as per command
-        :param format: Capacity format; integers by default, use 'human' for human-readable.
+
         :return: dict
         """
 
-        def convert_to_format(value: int) -> Any:
-            if format.lower() == 'human':
-                return StorageCapacityService._integer_to_human(value)
-            else:
+        def convert_to_format(value: int, unit: str ,round_off_value:int) -> Any:
+            if unit.upper()==const.DEFAULT_CAPACITY_UNIT:
                 # keep original format (i.e., integer)
                 return value
+            return StorageCapacityService._integer_to_human(value, unit.upper(), round_off_value)
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
@@ -70,14 +71,18 @@ class StorageCapacityService(ApplicationService):
         Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
         console_output = json.loads(stdout.decode('utf-8'))
         capacity_info = console_output.get('filesystem',{}).get('stats',{})
+
         if not capacity_info:
-            raise CsmInternalError(f"System storage details not available.")
+            raise CsmInternalError("System storage details not available.")
+        if int(capacity_info[const.TOTAL_SPACE]) <= 0:
+            raise CsmInternalError("Total space cannot be zero", message_args=capacity_info)
         formatted_output = {}
-        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]))
+        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
         formatted_output[const.USED] = convert_to_format(
-            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]))
-        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]))
-        formatted_output[const.USAGE_PERCENTAGE] = str(round((((int(capacity_info[const.TOTAL_SPACE]) -
+            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit,round_off_value)
+        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit,round_off_value)
+        formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
                                                              int(capacity_info[const.FREE_SPACE])) / 
-                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),2)) + ' %'       
+                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
+        formatted_output[const.UNIT] = unit
         return formatted_output

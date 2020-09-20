@@ -16,7 +16,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from eos.utils.data.access import SortOrder
+from cortx.utils.data.access import SortOrder
 
 class SortBy:
     def __init__(self, field, order: SortOrder):
