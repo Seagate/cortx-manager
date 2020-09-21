@@ -23,8 +23,8 @@ CSM_PATH="${CORTX_PATH}csm"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
-SETUP_TYPE_JSON_PATH="${CORTX_PATH}schema/setup_type.json"
-BRAND_SETUP_TYPE_PATH="/config/setup_type.json"
+CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+UNSUPPORTED_FEATURES_PATH="/config/csm/unsupported_features.json"
 
 usage() {
     echo """
@@ -42,7 +42,7 @@ Options:
     -p : Provide product name default cortx
     -c : Build rpm for [all|backend|frontend]
     -n : brand name
-    -l : brand config file path
+    -l : brand file path
     -t : Build rpm with test plan
     -d : Build dev env
     -i : Build csm with integration test
@@ -226,8 +226,8 @@ fi
 
 ################### BRAND SPECIFIC CHANGES ######################
 if [ "$BRAND_CONFIG_PATH" ]; then
-    cp "$BRAND_CONFIG_PATH$BRAND_SETUP_TYPE_PATH" "$SETUP_TYPE_JSON_PATH"
-    echo "updated set_type.json from $BRAND_CONFIG_PATH$BRAND_SETUP_TYPE_PATH"
+    cp "$BRAND_CONFIG_PATH$UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
+    echo "updated set_type.json from $BRAND_CONFIG_PATH$UNSUPPORTED_FEATURES_PATH"
 fi
 
 ################### TAR & RPM BUILD ##############################
