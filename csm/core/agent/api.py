@@ -151,7 +151,8 @@ class CsmRestApi(CsmApi, ABC):
             resp["message"] = f'{str(err)}'
 
         audit = CsmRestApi.http_request_to_log_string(request)
-        if hasattr(request,"session"):
+        if ((hasattr(request, "session") and request.session is not None) and
+            (hasattr(request.session, "credentials") and request.session.credentials is not None)):
             Log.audit(f'User: {request.session.credentials.user_id} '
                       f'{audit} RC: {resp["error_code"]}')
         else:
