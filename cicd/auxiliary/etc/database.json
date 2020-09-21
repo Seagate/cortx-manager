@@ -12,7 +12,7 @@
     },
     "models": [
         {
-            "import_path": "eos.utils.ha.dm.models.decisiondb.DecisionModel",
+            "import_path": "cortx.utils.ha.dm.models.decisiondb.DecisionModel",
             "database": "consul_db",
             "config": {
                 "consul_db": {

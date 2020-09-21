@@ -184,8 +184,11 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
-    # Check python package
-    yum install -y eos-py-utils cortx-prvsnr
+
+    # add cortx-py-utils below
+    # Need to remove erase of eos-py-utils after re changes
+    yum erase -y -q eos-py-utils
+    yum install -y cortx-py-utils 
     yum install -y python36-cortx-prvsnr
 
     install_py_req requirment.txt

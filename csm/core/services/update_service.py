@@ -16,7 +16,7 @@
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.common.fs_utils import FSUtils
 from csm.common.services import Service, ApplicationService
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.data.models.upgrade import UpdateStatusEntry
 from csm.core.blogic import const
 

@@ -16,7 +16,7 @@
 import json
 from marshmallow import Schema, fields, validate, validates
 from marshmallow.exceptions import ValidationError
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth

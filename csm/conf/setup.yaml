@@ -44,7 +44,7 @@ csm:
             - reset --hard
 
     ha:
-        script: /opt/seagate/cortx/ha/conf/script/build-ees-ha-csm
+        script: /opt/seagate/cortx/ha/conf/script/build-ha-csm
         args:
             - /opt/seagate/cortx/ha/conf/build-ees-ha-csm-args.yaml
 

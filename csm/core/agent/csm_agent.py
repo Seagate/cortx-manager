@@ -45,7 +45,7 @@ class CsmAgent:
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             Conf.decrypt_conf()
-        from eos.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         #Remove all Old Shutdown Cron Jobs
@@ -107,13 +107,6 @@ class CsmAgent:
         CsmRestApi._app["roles_service"] = roles_service
 
 
-        #S3 Plugin creation
-        s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        CsmRestApi._app["s3_iam_users_service"] = IamUsersService(s3)
-        CsmRestApi._app["s3_account_service"] = S3AccountService(s3)
-        CsmRestApi._app['s3_bucket_service'] = S3BucketService(s3)
-        CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
-
         #TODO : This is a temporary fix for build failure.
         # We need to figure out a better solution.
         #global base_path
@@ -140,6 +133,13 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
+        # S3 Plugin creation
+        s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3, provisioner)
+        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3, provisioner)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3, provisioner)
+        CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
+
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
@@ -160,7 +160,7 @@ class CsmAgent:
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
-        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
+        CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(CortxHAFramework(),  provisioner, db)
 
     @staticmethod
     def _daemonize():
@@ -207,7 +207,7 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
     from csm.common.conf import Conf, ConfSection, DebugConf
@@ -237,17 +237,17 @@ if __name__ == '__main__':
     from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
     from csm.common.timeseries import TimelionProvider
-    from csm.common.ha_framework import PcsHAFramework
-    from eos.utils.cron import CronJob
+    from csm.common.ha_framework import CortxHAFramework, PcsHAFramework
+    from cortx.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
-    from eos.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
+    from cortx.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
     from csm.core.services.audit_log import  AuditLogManager, AuditService
     from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
-    from eos.utils.security.cipher import Cipher, CipherInvalidToken
+    from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     try:
         # try:

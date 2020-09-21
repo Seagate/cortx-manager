@@ -19,7 +19,7 @@ from csm.core.services.file_transfer import FileType, FileCache, FileRef
 from csm.core.controllers.schemas import FileFieldSchema
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 

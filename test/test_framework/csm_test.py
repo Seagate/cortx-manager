@@ -120,7 +120,7 @@ def tmain(argp, argv):
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     from csm.common.errors import CsmError
     from csm.common.payload import *
     from csm.common.conf import Conf

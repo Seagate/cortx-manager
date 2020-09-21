@@ -5,7 +5,7 @@
     "enclosure:fru:disk": "resource_id",
     "enclosure:fru:controller": "resource_id",
     "enclosure:fru:sideplane": "cluster.sites.site_id.rack.rack_id.storage_encl.hw.fru.sideplane_expander.sideplane_info.resource_key",
-    "enclosure:eos:logical_volume": "resource_id",
+    "enclosure:cortx:logical_volume": "resource_id",
     "node:fru:fan": "resource_id",
     "node:fru:psu": "resource_id",
     "node:fru:disk": "resource_id",

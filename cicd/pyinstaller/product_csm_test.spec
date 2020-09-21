@@ -39,14 +39,14 @@ def import_models(file_name):
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-plugin_product_dir = 'eos'
+plugin_product_dir = 'cortx'
 product_path = '<CSM_PATH>' + '/plugins/' + plugin_product_dir
 test_path = '<CSM_PATH>' + '/test'
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("csm.cli.scripts")
-product_module_list.append("eos.utils.security.secure_storage")
-product_module_list.append("eos.utils.product_features.model")
+product_module_list.append("cortx.utils.security.secure_storage")
+product_module_list.append("cortx.utils.product_features.model")
 test_module_list = import_list(csm_path, test_path)
 db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
 models_list = import_models(db_file_path)

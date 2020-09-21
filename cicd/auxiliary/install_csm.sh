@@ -70,7 +70,7 @@ This script will remove existing csm rpms and
 install csm rpms from  target build
 
 Usage:
-sh install_csm.sh -t <target build url for EOS>
+sh install_csm.sh -t <target build url for CORTX>
 
 "
 }
