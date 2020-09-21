@@ -60,6 +60,7 @@ EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
+ROLES_SCHEMA = '{}/schema/roles.json'.format(CSM_PATH)
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -297,6 +298,8 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
 CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+PERMISSIONS="permissions"
+LYVE_PILOT="lyve_pilot"
 
 # S3
 S3_HOST = 'S3.host'

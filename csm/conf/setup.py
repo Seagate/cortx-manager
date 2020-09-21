@@ -632,6 +632,23 @@ class Setup:
             # TODO: Suppressing the error for now.
             # raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
+    def update_roles_permissions(self):
+        """
+        This method updates roles and permissions based on setup storage type
+		and brand name.
+        """
+        csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
+        roles = Json(const.ROLES_SCHEMA).load()
+        
+        for setup in csm_unsupported_feature[const.SETUP_TYPES]:
+            if setup[const.NAME] == self._setup_info.get(const.STORAGE_TYPE) and const.LYVE_PILOT in setup.get(const.UNSUPPORTED_FEATURES):
+                for permissions in roles.values():
+                    if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
+                        del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
+                        Log.debug("Deleted Lyve Pilot permission as it not supported")
+		
+        roles = Json(const.ROLES_SCHEMA).dump(roles)
+
     def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
@@ -702,6 +719,8 @@ class CsmSetup(Setup):
             : Configure csm user
             : Add Permission for csm user
             : Add cronjob for csm cleanup
+            : store unsupported features for setup type
+            : update roles and permissions based on setup type
         Post install is used after just all rpms are install but
         no service are started
         """
@@ -709,6 +728,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self._config_user()
             self.set_unsupported_feature_info()
+            self.update_roles_permissions()
             self._cleanup_job()
             self._configure_system_auto_restart()
             
