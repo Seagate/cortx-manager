@@ -49,7 +49,6 @@ from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
 from cortx.utils.security.secure_storage import SecureStorage
-from csm.plugins.cortx.provisioner import ClusterIdFetchError
 from cortx.utils.security.cipher import Cipher
 
 
