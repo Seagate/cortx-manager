@@ -296,6 +296,8 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
 CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+PERMISSIONS="permissions"
+LYVE_PILOT="lyve_pilot"
 
 # S3
 S3_HOST = 'S3.host'
@@ -576,7 +578,7 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
 
 
 #unsupported feature
-UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/unsupported_features.json'.format(CSM_PATH)
 FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"

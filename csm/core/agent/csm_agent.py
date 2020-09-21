@@ -94,6 +94,19 @@ class CsmAgent:
 
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
+
+        # Remove lyve_pilot permission if it is not supported
+        unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+        loop = asyncio.get_event_loop()
+        feature_supported = loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
+        if not feature_supported:
+            for permissions in roles.values():
+                if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
+                    del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]		
+            Json(const.ROLES_MANAGEMENT).dump(roles)
+        
+        roles = Json(const.ROLES_MANAGEMENT).load()
+        
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
