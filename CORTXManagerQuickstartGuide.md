@@ -51,12 +51,12 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
      1. Login with your admin password.
      2. Select Virtual host as SSPL.
-
-        ![virtual host](../dev/images/Image-1.jpg)
+     
+        ![Virtual Hosts](../dev/images/Image 1.jpg)
 
      3. Navigate to the Admin section.
         
-        ![Admin section](..dev/images/Image-2.jpg)
+        ![Admin section](../dev/images/Image-2.jpg)
 
      4. Click on add user and enter the following details:
         
@@ -82,7 +82,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      $ systemctl start elasticsearch
      ```
     
-   ![Successful elasticsearch.yml installation](../dev/images/Image-5.jpg)
+     ![Successful elasticsearch.yml installation](images/Image-5.jpg)
 
   5. Install Consul
   
@@ -129,19 +129,20 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
          $ mkdir /opt/seagate/cortx/provisioner
          $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
       ```
+      </p>
+      </details>
       
      <details>
-   <sumary>Click to expand!</summary>
+   <sumary>To skip the process, you can install the OVA and install these prerequisites.</summary>
    <p>
       
-  To skip the process, you can install the OVA and install these prerequisites:
-  
+  Please refer to the documentation to [Import the CORTX Open Virtual Appliance (OVA)](https://github.com/Seagate/cortx/blob/main/doc/Importing_OVA_File.rst).
      
-  7. Install GitHub.
+  1. Install GitHub.
      
      Refer to the [Contributing to CORTX Manager](ContributingToCortxManager.md) document to install GitHub and clone cortx-manager and its dependent repos.
 
-  8. Install pyutils that is custom-built for CORTX project:
+  2. Install pyutils that is custom-built for CORTX project:
   
      1. Go to your home directory
      2. Git clone `cortx-py-utils` and follow the steps below:
@@ -155,7 +156,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         $ cd cortx
         $ ln -s /<path-to-cortx-py-utils>/cortx-py-utils/src/utils
         ```
-  9. Install Python 3
+  3. Install Python 3
   
      `$ yum –y install python3`
      
