@@ -22,7 +22,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.conf import Conf
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import CsmError
 
 def init(args):

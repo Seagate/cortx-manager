@@ -16,7 +16,7 @@
 import asyncio
 import copy
 import functools
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.email import SmtpServerConfiguration, EmailSender, EmailError
 from email.message import EmailMessage
 

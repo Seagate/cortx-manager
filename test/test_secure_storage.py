@@ -20,11 +20,11 @@ import unittest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from eos.utils.security.cipher import Cipher
-from eos.utils.security.secure_storage import SecureStorage
+from cortx.utils.security.cipher import Cipher
+from cortx.utils.security.secure_storage import SecureStorage
 from csm.common.payload import Yaml
 from csm.core.blogic import const
-from eos.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 
 t = unittest.TestCase()
 

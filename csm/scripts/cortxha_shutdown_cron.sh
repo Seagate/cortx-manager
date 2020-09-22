@@ -1,3 +1,5 @@
+#!/bin/bash -x
+
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,35 +15,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-class Resource:
-    ''' Resource Names '''
-
-    ALERTS = 'alerts'
-    STATS = 'stats'
-    USERS = 'users'
-    CAPACITY = 'capacity'
-    SYSCONFIG = 'sysconfig'
-    S3ACCOUNTS = 's3accounts'
-    S3IAMUSERS = 's3iamusers'
-    S3BUCKETS = 's3buckets'
-    S3BUCKET_POLICY = 's3bucketpolicy'
-    S3ACCESSKEYS = 's3accesskeys'
-    AUDITLOG = 'auditlog'
-    SYSTEM = 'system'
-    MAINTENANCE = 'maintenance'
-    NODE_REPLACEMENT = 'replace_node'
-    PERMISSIONS = 'permissions'
-    NOTIFICATION = 'notification'
-    SECURITY = "security"
-    LYVE_PILOT = 'lyve_pilot'
-    HEALTH = 'health'
-
-
-class Action:
-    ''' Action Names '''
-
-    LIST = 'list'
-    READ = 'read'
-    CREATE = 'create'
-    DELETE = 'delete'
-    UPDATE = 'update'
+PATH=/usr/bin:/sbin:/usr/sbin;export PATH
+source /opt/seagate/cortx/csm/home/.bashrc
+cortxha cluster stop

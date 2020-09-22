@@ -17,7 +17,7 @@ import argparse
 import sys
 import os
 from csm.core.blogic import const
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.payload import Json
 from csm.cli.command import CommandParser
 
@@ -53,7 +53,7 @@ class CommandFactory(object):
         if permissions:
             # common commands both in commands and permissions key list
             commands = [command for command in commands if command in permissions.keys()]
-        parser = ArgumentParser(description='CSM CLI command')
+        parser = ArgumentParser(description='Cortx cli commands')
         metavar = set(commands).difference(set(const.HIDDEN_COMMANDS))
         subparsers = parser.add_subparsers(metavar=metavar)
         if argv[0] in commands:

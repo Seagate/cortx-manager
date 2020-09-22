@@ -16,7 +16,7 @@
 import os
 import subprocess
 
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.payload import *
 from csm.common.conf import Conf
 from csm.common.errors import CsmError

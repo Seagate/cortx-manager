@@ -18,7 +18,7 @@ from csm.common.payload import *
 from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
-from eos.utils.security.cipher import Cipher, CipherInvalidToken
+from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
 class ClusterIdFetchError(InvalidRequest):
     pass

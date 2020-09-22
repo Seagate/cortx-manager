@@ -22,7 +22,7 @@ import sys
 import os
 import pathlib
 import json
-from eos.utils.cleanup.es_data_cleanup import esCleanup
+from cortx.utils.cleanup.es_data_cleanup import esCleanup
 
 if __name__ == '__main__':
 

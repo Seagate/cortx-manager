@@ -15,7 +15,7 @@
 
 import json
 import re
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from aiohttp import web
 from marshmallow import Schema, fields, validate, ValidationError, validates
 from csm.core.services.alerts import AlertsAppService
@@ -25,7 +25,7 @@ from csm.common.permission_names import Resource, Action
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.controllers.view import CsmView
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
