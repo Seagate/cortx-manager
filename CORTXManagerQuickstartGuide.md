@@ -13,7 +13,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 <p>
    
    <details>
-   <summary>Click to view the process for manually installing the full stack</summary>
+   <summary>Click to view the process to manually install the full stack.</summary>
    <p>
 
 1. You'll need to install the following components:
@@ -52,11 +52,11 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      1. Login with your admin password.
      2. Select Virtual host as SSPL.
      
-        ![Virtual Hosts](../dev/images/Image 1.jpg)
+        <img src="../images/Image-1.jpg?raw=true">
 
      3. Navigate to the Admin section.
         
-        ![Admin section](../dev/images/Image-2.jpg)
+        <img src="../images/Image-2.jpg?raw=true>
 
      4. Click on add user and enter the following details:
         
@@ -66,11 +66,11 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         
      5. Added user will be listed in users table. Click on added user.
       
-        ![Added user](../dev/images/Image-3.jpg)
+        <img src="../images/Image-3.jpg?raw=true>
     
      6. Set all permissions and select virtual host as SSPL
        
-        ![User permissions](../dev/images/Image-4.jpg)
+        <img src="../images/Image-4.jpg?raw=true>
 
   4. Install Elastic Search:
   
@@ -133,7 +133,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       </details>
       
      <details>
-   <sumary>To skip the process, you can install the OVA and install these prerequisites.</summary>
+   <summary>Install OVA and these prerequisites to skip manual installation.</summary>
    <p>
       
   Please refer to the documentation to [Import the CORTX Open Virtual Appliance (OVA)](https://github.com/Seagate/cortx/blob/main/doc/Importing_OVA_File.rst).
@@ -162,15 +162,18 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
    </p>
    </details>
-     
-     
+      
        
 </p>
 </details>
 
-## 1.2 Install Cortx Manager
+## 1.2 Install Cortx-Manager
 
  The cortx-manager repository is available at https://github.com/Seagate/cortx-manager
+ 
+ <details>
+   <summary>Follow these steps to Install CORTX-Manager</summary>
+   <p>
  
  1. Clone cortx-manager using HTTP or SSH:
  
@@ -193,9 +196,16 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      - To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
      - To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
      
+     </p>
+     </details>
+     
 ## 1.3 Deploy CORTX-Manager on Test VM
 
-All the dependencies should be preinstalled and prerequisites met before you run the CORTX-Manager. Follow these steps:
+All the dependencies should be preinstalled and prerequisites met before you run the CORTX-Manager. 
+
+<details>
+   <summary>Follow these steps to deploy the CORTX-Manager on a Test VM</summary>
+   <p>
 
    1. SSH-Login to VM with GitHub ID and Password.
    2. Remove previously installed CORTX-Manager RPMs, if any:
@@ -231,6 +241,10 @@ All the dependencies should be preinstalled and prerequisites met before you run
      $ systemctl enable cortx_manager
      $ systemctl restart cortx_manager
      ```
+     
+     </p>
+     </details>
+     
 
 ## You're All Set & You're Awesome!
 
@@ -244,7 +258,4 @@ Refer to our [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/ma
 
 ### Reach Out to Us
 
-You can reach out to us with your questions, feedback, and comments through our CORTX Communication Channels:
-
-- Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
-- If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
+Please refer to the [Support](SUPPORT.md) document to know the various communication channels for reaching out to us.
