@@ -130,7 +130,7 @@ class CsmRestApi(CsmApi, ABC):
                     del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
                     Log.debug(f"{const.LYVE_PILOT} permissions removed.")
             Json(const.ROLES_MANAGEMENT).dump(roles)
-            
+
     @staticmethod
     def is_debug(request) -> bool:
         return 'debug' in request.rel_url.query
