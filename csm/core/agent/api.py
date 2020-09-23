@@ -33,6 +33,7 @@ from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
+from csm.common.payload import Json
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -121,7 +122,7 @@ class CsmRestApi(CsmApi, ABC):
         unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
         loop = asyncio.get_event_loop()
         feature_supported = loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
-        
+
         if not feature_supported:
             Log.debug(f"{const.LYVE_PILOT} is not supported.")
             for permissions in roles.values():
