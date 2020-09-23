@@ -109,9 +109,13 @@ class CsmRestClient(CsmClient):
         url = "/v1/login"
         method = const.POST
         body = {"username": username, "password": password}
-        async with aiohttp.ClientSession() as session:
-            response, headers = await self.process_direct_request(
-                url, session, method, {}, body)
+        try: 
+            async with aiohttp.ClientSession() as session:
+                response, headers = await self.process_direct_request(
+                    url, session, method, {}, body)
+        except CsmError as e:
+            # during login we want to logout on  any error
+            return False 
         token = headers.get('Authorization', "").split(' ')
         if self._failed(response) and len(token) != 2 and token[0] != 'Bearer':
             return False
