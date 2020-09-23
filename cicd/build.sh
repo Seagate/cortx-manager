@@ -100,12 +100,11 @@ cd $BASE_DIR
 [ -z "$KEY" ] && KEY="cortx@ees@csm@pr0duct"
 [ -z "$COMPONENT" ] && COMPONENT="all"
 [ -z "$TEST" ] && TEST=false
-INTEGRATION=false
+[ -z "$INTEGRATION" ] && INTEGRATION=false
 [ -z "$DEV" ] && DEV=false
 [ -z "$QA" ] && QA=false
 
 echo "Using VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
-echo "Dev=${DEV} QA=${QA} Integration=${INTEGRATION} Brand config path=${BRAND_CONFIG_PATH}"
 
 ################### COPY FRESH DIR ##############################
 

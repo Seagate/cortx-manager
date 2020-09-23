@@ -113,7 +113,7 @@ class CsmRestApi(CsmApi, ABC):
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
-        CsmRestApi.update_roles_permission()
+        #CsmRestApi.update_roles_permission()
 
     @staticmethod
     def update_roles_permission():
