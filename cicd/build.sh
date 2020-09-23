@@ -227,7 +227,7 @@ fi
 ################### BRAND SPECIFIC CHANGES ######################
 if [ "$BRAND_CONFIG_PATH" ]; then
     cp "$BRAND_CONFIG_PATH$UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
-    echo "updated set_type.json from $BRAND_CONFIG_PATH$UNSUPPORTED_FEATURES_PATH"
+    echo "updated unsupported_features.json from $BRAND_CONFIG_PATH$UNSUPPORTED_FEATURES_PATH"
 fi
 
 ################### TAR & RPM BUILD ##############################

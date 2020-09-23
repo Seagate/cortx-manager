@@ -296,8 +296,8 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
 CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
-PERMISSIONS="permissions"
-LYVE_PILOT="lyve_pilot"
+PERMISSIONS = "permissions"
+LYVE_PILOT = "lyve_pilot"
 
 # S3
 S3_HOST = 'S3.host'
