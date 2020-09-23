@@ -844,6 +844,7 @@ class AlertMonitorService(Service, Observable):
             """
             Adding support message if alert is bad.
             """
+            Log.info(f"Support message: {const.SUPPORT_MSG}")
             if self._is_bad_alert(AlertModel(alert)):
                 alert[const.SUPPORT_MESSAGE] = const.SUPPORT_MSG
         except Exception as ex:
