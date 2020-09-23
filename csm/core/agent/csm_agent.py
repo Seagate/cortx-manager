@@ -102,9 +102,9 @@ class CsmAgent:
         if not feature_supported:
             for permissions in roles.values():
                 if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
-                    del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]		
+                    del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
             Json(const.ROLES_MANAGEMENT).dump(roles)
-        
+
         roles = Json(const.ROLES_MANAGEMENT).load()
 
         auth_service = AuthService()
