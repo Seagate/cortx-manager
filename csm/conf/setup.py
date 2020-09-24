@@ -37,8 +37,10 @@ import traceback
 import asyncio
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
+from cortx.utils.schema.payload import Json
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
+from cortx.utils.product_features import unsupported_features
 
 # try:
 #     from salt import client
@@ -242,6 +244,7 @@ class Setup:
         Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
         Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
+        Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
     def _config_user_permission_unset(self, bundle_path):
         """
@@ -582,6 +585,53 @@ class Setup:
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
+    def set_unsupported_feature_info(self):
+        """
+        This method stores CSM unsupported features in two ways:
+        1. It first gets all the unsupported features lists of the components,
+        which CSM interacts with. Add all these features as CSM unsupported
+        features. The list of components, CSM interacts with, is
+        stored in csm.conf file. So if there is change in name of any
+        component, csm.conf file must be updated accordingly.
+        2. Installation/envioronment type and its mapping with CSM unsupported
+        features are maintained in unsupported_feature_schema. Based on the
+        installation/environment type received as argument, CSM unsupported
+        features can be stored.
+        """
+        def get_component_list_from_features_endpoints():
+            feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
+            component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
+            return list(set(component_list))
+  
+        try:
+            self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+            self._loop = asyncio.get_event_loop()
+            components_list = get_component_list_from_features_endpoints()
+            unsupported_features_list = []
+            for component in components_list:
+                unsupported = self._loop.run_until_complete(
+                    unsupported_feature_instance.get_unsupported_features(component_name=component))
+                for feature in unsupported:
+                    unsupported_features_list.append(feature.get(const.FEATURE_NAME))
+
+            csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
+            
+            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
+                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
+                    unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
+            unsupported_features_list = list(set(unsupported_features_list))
+            unique_unsupported_features_list = list(filter(None, unsupported_features_list))
+            if unique_unsupported_features_list:
+                self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
+                    component_name=str(const.CSM_COMPONENT_NAME), features=unique_unsupported_features_list))
+            else:
+                Log.info("Unsupported features list is empty.")
+        except Exception as e_:
+            Log.error(f"Error in storing unsupported features: {e_}")
+            # TODO: Suppressing the error for now.
+            # raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+
     def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
@@ -658,8 +708,10 @@ class CsmSetup(Setup):
         try:
             self._verify_args(args)
             self._config_user()
+            self.set_unsupported_feature_info()
             self._cleanup_job()
             self._configure_system_auto_restart()
+            
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
