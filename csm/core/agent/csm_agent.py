@@ -94,22 +94,6 @@ class CsmAgent:
 
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
-        try:
-            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            loop = asyncio.get_event_loop()
-            feature_supported = loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
-
-            if not feature_supported:
-                Log.debug(f"{const.LYVE_PILOT} is not supported.")
-                for permissions in roles.values():
-                    if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
-                        del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
-                        Log.debug(f"{const.LYVE_PILOT} permissions removed.")
-                Json(const.ROLES_MANAGEMENT).dump(roles)
-                roles = Json(const.ROLES_MANAGEMENT).load()
-        except Exception as e_:
-            Log.error(f"Error occurred while updating permissions: {e_}")
-        
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
@@ -229,8 +213,6 @@ if __name__ == '__main__':
     from csm.common.conf import Conf, ConfSection, DebugConf
     from csm.common.payload import Yaml
     from csm.common.payload import Payload, Json, JsonMessage, Dict
-    from cortx.utils.product_features import unsupported_features
-    import asyncio
     from csm.common.template import Template
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
