@@ -93,7 +93,7 @@ class CsmAgent:
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
 
         # User/Role/Session management services
-        roles = Json(const.ROLES_MANAGEMENT).load()
+        roles = CsmRestApi.update_roles_permission()
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
