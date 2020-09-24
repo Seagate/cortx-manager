@@ -130,9 +130,9 @@ class CsmRestApi(CsmApi, ABC):
                     if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
                         del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
                         Log.debug(f"{const.LYVE_PILOT} permissions removed.")
-                Json(const.ROLES_MANAGEMENT).dump(roles)        
+                Json(const.ROLES_MANAGEMENT).dump(roles)
         except Exception as e_:
-            Log.error(f"Error occurred while updating permissions: {e_}")        
+            Log.error(f"Error occurred while updating permissions: {e_}")
 
     @staticmethod
     def is_debug(request) -> bool:
