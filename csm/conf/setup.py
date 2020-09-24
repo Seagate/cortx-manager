@@ -686,6 +686,9 @@ class Setup:
         """
         for each_service_file in const.CSM_SERVICE_FILES:
             service_file_data = Text(each_service_file).load()
+            if not service_file_data:
+                Log.logger.warn(f"File {each_service_file} not updated.")
+                continue
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
 
