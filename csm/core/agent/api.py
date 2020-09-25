@@ -120,18 +120,24 @@ class CsmRestApi(CsmApi, ABC):
         # Remove lyve_pilot permission if it is not supported
         try:
             roles = Json(const.ROLES_MANAGEMENT).load()
+            print(f"1.--- {roles}")
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             loop = asyncio.get_event_loop()
             feature_supported = loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
-
+            print(f"2.--- {feature_supported}")
             if not feature_supported:
                 Log.debug(f"{const.LYVE_PILOT} is not supported.")
+                print(f"3.--- {const.LYVE_PILOT} is not supported.")
                 for permissions in roles.values():
                     if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
                         del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
                         Log.debug(f"{const.LYVE_PILOT} permissions removed.")
+                        print(f"4.---{const.LYVE_PILOT} permissions removed.")
                 Json(const.ROLES_MANAGEMENT).dump(roles)
+                roles = Json(const.ROLES_MANAGEMENT).load()
+                print(f"5.--- {roles}")
         except Exception as e_:
+            print(f"6.--- Error occurred while updating permissions: {e_}")
             Log.error(f"Error occurred while updating permissions: {e_}")
 
     @staticmethod
