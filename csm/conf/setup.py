@@ -675,7 +675,7 @@ class Setup:
             Log.logger.debug("Updating All setup file for Auto Restart on "
                              "Failure")
             Setup._update_service_file("#< RESTART_OPTION >",
-                                      "Restart=on-failure")
+                                      "RESTART=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
