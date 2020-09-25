@@ -121,8 +121,7 @@ class CsmRestApi(CsmApi, ABC):
         try:
             roles = Json(const.ROLES_MANAGEMENT).load()
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            loop = asyncio.get_event_loop()
-            feature_supported = loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
+            feature_supported = CsmRestApi._app._loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
 
             if not feature_supported:
                 Log.debug(f"{const.LYVE_PILOT} is not supported.")
