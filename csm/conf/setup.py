@@ -362,30 +362,6 @@ class Setup:
         self._cluster.init(args['f'])
         CsmApi.set_cluster(self._cluster)
 
-    def _cleanup_job(self, reset=False):
-        """
-        Check if csm_cleanup present is csm
-            : If csm_cleanup present then configure cronjob
-            : If csm_cleanup not present then through error
-        """
-        _proc = SimpleProcess("crontab -u " +self._user+ " -l")
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        if not reset:
-            if "no crontab" not in _err:
-                for job in _output.split('\n'):
-                    if const.CSM_CRON_JOB in job:
-                        return
-            with open("/tmp/csm.cron", "w") as fi:
-                if "no crontab" not in _err:
-                    fi.write(_output)
-                fi.write("0 1 * * *    {}\n".format(const.CSM_CRON_JOB))
-            _output = Setup._run_cmd("crontab -u " +self._user+ " /tmp/csm.cron")
-            os.remove("/tmp/csm.cron")
-        else:
-            if self._is_user_exist():
-                if "no crontab" not in _err:
-                    Setup._run_cmd("crontab -u " +self._user+ " -r")
-
     def _log_cleanup(self):
         """
         Delete all logs
@@ -443,13 +419,21 @@ class Setup:
     def _rsyslog_common(self):
         """
         Configure common rsyslog and logrotate
+        Also cleanup statsd
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
+        setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+        if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+            logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
+            cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            logrotate_conf = const.CLEANUP_LOGROTATE_PATH
+            cron_conf = const.SOURCE_CRON_PATH
+        if os.path.exists(const.LOGROTATE_DIR):
+            Setup._run_cmd("cp -f " + logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
+        else:
+            raise CsmSetupError("logrotate failed. %s dir missing." % const.LOGROTATE_DIR)
         if os.path.exists(const.CRON_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
+            Setup._run_cmd("cp -f " + cron_conf + " " + const.DEST_CRON_PATH)
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
@@ -457,11 +441,18 @@ class Setup:
         """
         Configure logrotate
         """
+        setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+        if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+            source_logrotate_conf = const.SOURCE_LOGROTATE_PATH_VIRTUAL
+            cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
+        else:
+            source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
+            cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH
         if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "csm_agent_log.conf")
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "cleanup_log.conf")
+            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.SOURCE_LOGROTATE_DEST)
+            Setup._run_cmd("cp -f " + cleanup_logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.SOURCE_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CLEANUP_LOGROTATE_DEST)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
@@ -473,9 +464,9 @@ class Setup:
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
@@ -505,7 +496,7 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
+
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
@@ -601,7 +592,7 @@ class Setup:
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
-  
+
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
@@ -615,7 +606,7 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            
+
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
@@ -672,6 +663,9 @@ class Setup:
         """
         for each_service_file in const.CSM_SERVICE_FILES:
             service_file_data = Text(each_service_file).load()
+            if not service_file_data:
+                Log.logger.warn(f"File {each_service_file} not updated.")
+                continue
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
 
@@ -700,7 +694,6 @@ class CsmSetup(Setup):
         Perform post-install for csm
             : Configure csm user
             : Add Permission for csm user
-            : Add cronjob for csm cleanup
         Post install is used after just all rpms are install but
         no service are started
         """
@@ -708,9 +701,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             self._config_user()
             self.set_unsupported_feature_info()
-            self._cleanup_job()
             self._configure_system_auto_restart()
-            
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -777,7 +768,6 @@ class CsmSetup(Setup):
                 self.ConfigServer.stop()
                 self._log_cleanup()
                 self._config_user_permission(reset=True)
-                self._cleanup_job(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
             else:

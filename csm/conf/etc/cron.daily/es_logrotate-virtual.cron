@@ -15,6 +15,5 @@
 
 FILE=/usr/bin/csm_cleanup
 if [ -f "$FILE" ]; then
-    $FILE auditlogs -i csmauditlog -d 7
-    $FILE stats -d 90
+    $FILE auditlogs -i csmauditlog -d 2
 fi

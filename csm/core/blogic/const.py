@@ -16,7 +16,6 @@
 # Csm Setup
 CSM_PATH = "/opt/seagate/cortx/csm"
 CSM_PIDFILE_PATH = "/var/run/csm"
-CSM_CRON_JOB = "/usr/bin/csm_cleanup stats -d 90"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
@@ -296,6 +295,8 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
 CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+PERMISSIONS = "permissions"
+LYVE_PILOT = "lyve_pilot"
 
 # S3
 S3_HOST = 'S3.host'
@@ -427,6 +428,7 @@ SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 #cron dire
 CRON_DIR="/etc/cron.daily"
 SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
+SOURCE_CRON_PATH_VIRTUAL="{0}/conf{1}/es_logrotate-virtual.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 #logrotate
@@ -437,8 +439,14 @@ STATUS_CREATED = 201
 STATUS_CONFLICT = 409
 
 SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
+SOURCE_LOGROTATE_PATH_VIRTUAL = "{0}/conf{1}/csm/csm_agent_log-virtual.conf".format(CSM_PATH,
+                                                                                    LOGROTATE_DIR)
 CLEANUP_LOGROTATE_PATH = "{0}/conf{1}/common/cleanup_log.conf".format(CSM_PATH, LOGROTATE_DIR)
+CLEANUP_LOGROTATE_PATH_VIRTUAL = "{0}/conf{1}/common/cleanup_log-virtual.conf".format(CSM_PATH,
+                                                                                      LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
+SOURCE_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR)
+CLEANUP_LOGROTATE_DEST = "{0}/cleanup_log.conf".format(LOGROTATE_DIR)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
@@ -545,6 +553,7 @@ ALERT_RETRY_COUNT = 3
 COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
 SUPPORT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
@@ -576,7 +585,7 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
 
 
 #unsupported feature
-UNSUPPORTED_FEATURE_SCHEMA='{}/schema/setup_type.json'.format(CSM_PATH)
+UNSUPPORTED_FEATURE_SCHEMA='{}/schema/unsupported_features.json'.format(CSM_PATH)
 FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
@@ -588,3 +597,4 @@ FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 
+STORAGE_TYPE_VIRTUAL = "virtual"
