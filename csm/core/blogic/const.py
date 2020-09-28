@@ -547,6 +547,7 @@ ALERT_RETRY_COUNT = 3
 COMMON = "common"
 
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
 SUPPORT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
