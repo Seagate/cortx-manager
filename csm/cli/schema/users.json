@@ -107,7 +107,7 @@
         {
           "flag": "roles",
           "type": "str",
-          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
+          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. *Role Changes only allowed to User with Admin Access.",
           "choices": [
             "monitor",
             "manage"
