@@ -239,7 +239,7 @@ class Output:
         # TODO: Check 201 response code also for creation requests.
         if self.rc not in  (200, 201, CSM_OPERATION_SUCESSFUL) :
             if isinstance(self.output, str):
-                errstr = Output.error(self.rc, self.output)    
+                errstr = Output.error(self.rc, self.output)
             else:
                 errstr = Output.error(self.rc, kwargs.get("error") ,
                                   self.output)
