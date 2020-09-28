@@ -439,3 +439,24 @@ class ProvisionerPlugin:
         except AttributeError as error:
             Log.critical(f"{error}")
             raise PackageValidationError("Node replacement is not implemented by provisioner.")
+
+    async def begin_bundle_generation(self, command_args, target_node_id):
+        """
+        Execute Bundle Generation via Salt Script.
+        :param command_args: Arguments to be parsed to Bundle Generate Command. :type: String
+        :param target_node_id: Node_id for target node intended. :type: String
+        :return:
+        """
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            Log.debug(f"Invoking Provisioner command run with "
+                      f"arguments --> cmd_name={const.CORTXCLI} "
+                      f"cmd_args={repr(command_args)} "
+                      f"targets={target_node_id}")
+            return self.provisioner.cmd_run(cmd_name=const.CORTXCLI,
+                cmd_args=str(command_args), targets=target_node_id,
+                                            nowait=True)
+        except self.provisioner.errors.ProvisionerError as e:
+            Log.error(f"Command Execution error: {e}")
+            raise PackageValidationError(f"Command Execution error: {e}")

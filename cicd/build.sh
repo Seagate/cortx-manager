@@ -23,6 +23,8 @@ CSM_PATH="${CORTX_PATH}csm"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
+CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 
 usage() {
     echo """
@@ -39,6 +41,8 @@ Options:
     -k : Provide key for encryption of code
     -p : Provide product name default cortx
     -c : Build rpm for [all|backend|frontend]
+    -n : brand name
+    -l : brand file path
     -t : Build rpm with test plan
     -d : Build dev env
     -i : Build csm with integration test
@@ -47,7 +51,7 @@ Options:
     exit 1;
 }
 
-while getopts ":g:v:b:p:k:c:tdiq" o; do
+while getopts ":g:v:b:p:k:c:n:l:tdiq" o; do
     case "${o}" in
         v)
             VER=${OPTARG}
@@ -63,6 +67,12 @@ while getopts ":g:v:b:p:k:c:tdiq" o; do
             ;;
         c)
             COMPONENT=${OPTARG}
+            ;;
+        n)
+            BRAND_NAME=${OPTARG}
+            ;;
+        l)
+            BRAND_CONFIG_PATH=${OPTARG}
             ;;
         t)
             TEST=true
@@ -212,6 +222,12 @@ if [ "$QA" == true ]; then
     sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" $DIST/csm/conf/etc/csm/csm.conf
 else
     sed -i -e "s|<LOG_LEVEL>|${INFO}|g" $DIST/csm/conf/etc/csm/csm.conf
+fi
+
+################### BRAND SPECIFIC CHANGES ######################
+if [ "$BRAND_CONFIG_PATH" ]; then
+    cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
+    echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
 fi
 
 ################### TAR & RPM BUILD ##############################
