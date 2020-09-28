@@ -24,7 +24,7 @@ DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
 CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
-BRAND_UNSUPPORTED_FEATURES_PATH="/config/csm/unsupported_features.json"
+BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 
 usage() {
     echo """
@@ -226,8 +226,8 @@ fi
 
 ################### BRAND SPECIFIC CHANGES ######################
 if [ "$BRAND_CONFIG_PATH" ]; then
-    cp "$BRAND_CONFIG_PATH$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
-    echo "updated unsupported_features.json from $BRAND_CONFIG_PATH$BRAND_UNSUPPORTED_FEATURES_PATH"
+    cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
+    echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
 fi
 
 ################### TAR & RPM BUILD ##############################
