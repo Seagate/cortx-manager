@@ -17,21 +17,15 @@ import sys
 import os
 import string
 import random
-import asyncio
-import shutil
 import errno
-import getpass
-from threading import Thread
+from importlib import import_module
 from csm.common.payload import Yaml, JsonMessage
 from csm.core.blogic import const
-from csm.common.comm import SSHChannel
 from csm.core.services.support_bundle import SupportBundleRepository
+from csm.common.errors import (CSM_OPERATION_SUCESSFUL, CsmError,
+                            InvalidRequest, CSM_ERR_INVALID_VALUE)
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.core.providers.providers import Response
-from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.errors import CsmError
-from csm.core.providers.providers import Response
-from csm.common import errors
 from csm.common.conf import Conf
 from cortx.utils.log import Log
 import time
@@ -43,48 +37,23 @@ class SupportBundle:
     """
 
     @staticmethod
-    def execute_ssh(ip_address: str, current_user: str, ssh_key: str,
-                    command: str, node_name: str):
-        """
-        This Method makes Connection on each node and Executes Bundle Generation Command.
-        For Using this Method Need to setup ssh keys in ~/.ssh/ folder.
-
-        Please use the Following commands to do so.
-
-        $ssh-keygen
-        $ ssh-copy-id ./id_rsa.pub <username>@<host>
-
-        Once Implemented the code will be able to connect to the node.
-
-        :param ip_address: Ip Address of the Node. :type: str
-        :param bundle_id: Unique ID of the Bundle needed to be generated. :type: str
-        :param comment: Reason to generate the SB. :type: str
-        :param node_name: Name of the NODE in CORTX Term :type: str
-        :param current_user : Local User Name for SSH :type str
-        :param ssh_key: SSH Key Path :type str.
-        :return:
-        """
+    def import_provisioner_plugin():
+        """Import Plugin for Provisioner."""
         try:
-            ssh_conn_object = SSHChannel(ip_address, user=current_user,
-                                         key_filename=ssh_key)
-            ssh_conn_object.connect()
-
-            try:
-                # Executes Shell Script to Run in Background.
-                # Time out releases the connection rather than waiting for cmd.
-                # Since Shell Runs in Background no response is expected from Shell Command.
-                Log.debug(f"Executing command {command} -n {node_name} &")
-                ssh_conn_object.execute(f"{command} -n {node_name} &", timeout=120)
-            except CsmError:
-                Log.debug(f"Started bundle generation on {ip_address}")
-            ssh_conn_object.disconnect()
-        except CsmError:
-            sys.stderr.write(f"Could not connect to {ip_address}\n")
+            params = {"username": const.NON_ROOT_USER,
+                      "password": const.NON_ROOT_USER_PASS}
+            provisioner = import_module(
+                f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
+                **params)
+        except ImportError as e:
+            Log.error(f"Provisioner package not installed on system. {e}")
+            return None
+        return provisioner
 
     @staticmethod
     async def fetch_host_from_salt():
         """
-        This Method Fetchs Hostname for all nodes from Salt DB
+        This method fetch hostname for all nodes from Salt DB
         :return: hostnames : List of Hostname :type: List
         :return: node_list : : List of Node Name :type: List
         """
@@ -128,75 +97,84 @@ class SupportBundle:
             response_msg = {
                 "message": "No active nodes found. Cluster file may not be valid"}
             return Response(output=response_msg,
-                            rc=errors.CSM_ERR_INVALID_VALUE), None
+                            rc=CSM_ERR_INVALID_VALUE), None
         hostnames = []
         for each_node in active_nodes:
             hostnames.append(cluster_info.get(each_node, {}).get("hostname"))
         return hostnames, active_nodes
 
+    @staticmethod
+    def generate_bundle_id():
+        """Generate Unique Bundle ID."""
+        alphabet = string.ascii_lowercase + string.digits
+        return f"SB{''.join(random.choices(alphabet, k = 8))}"
+
+    @staticmethod
+    def get_components(components):
+        """Get Components to Generate Support Bundle."""
+        if components and "all" not in components:
+            Log.info(f"Generating bundle for  {' '.join(components)}")
+            shell_args = f"{' '.join(components)}"
+        else:
+            Log.info("Generating bundle for all CORTX components.")
+            shell_args = "all"
+        return f" -c {shell_args}"
 
     @staticmethod
     async def bundle_generate(command) -> sys.stdout:
         """
         Initializes the process for Generating Support Bundle on Each CORTX Node.
         :param command: Csm_cli Command Object :type: command
-        :return: None
+        :return: None.
         """
-        current_user = str(getpass.getuser())
-        # Check if User is Root User.
-        if current_user.lower() != const.SSH_USER_NAME:
-            repsonse_msg = f"Support Bundle {const.ROOT_PRIVILEGES_MSG}"
-            return Response(rc=errno.EACCES, output=repsonse_msg)
-        # Generate Unique Bundle ID
-        alphabet = string.ascii_lowercase + string.digits
-        bundle_id = f"SB{''.join(random.choices(alphabet, k=8))}"
+        bundle_id = SupportBundle.generate_bundle_id()
+        provisioner = SupportBundle.import_provisioner_plugin()
+        if not provisioner:
+            return Response(output = "Provisioner package not found.",
+                            rc = str(errno.ENOENT))
         # Get Arguments From Command
         comment = command.options.get(const.SB_COMMENT)
-        components = command.options.get(const.SB_COMPONENTS, [])
-        sos = True if command.options.get(const.SOS_COMP, False) == "true" else False
-        # Create Shell Command.
-        shell_args = f"-i {bundle_id} -m {repr(comment)} "
-        if sos:
-            Log.debug("Generating OS logs.")
-            shell_args = f"{shell_args} -s"
-        if components:
-            if "all" not in components:
-                Log.info(f"Generating bundle for  {' '.join(components)}")
-                shell_args = f"{shell_args} -c {' '.join(components)}"
-            else:
-                Log.info(f"Generating bundle for all CORTX components.")
-                shell_args = f"{shell_args} -c all"
-        if not components and not sos:
-            Log.info("Generating complete support bundle for SOS and components logs.")
-            shell_args = f"{shell_args} -c all -s"
+        components = command.options.get(const.SB_COMPONENTS)
+        if not components:
+            components = []
+        if command.options.get(const.SOS_COMP, False) == "true":
+            components.append("os")
+        comp_list = SupportBundle.get_components(components)
+
         # Get HostNames and Node Names.
         hostnames, node_list = await SupportBundle.fetch_host_from_salt()
         if not hostnames or not node_list:
             hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
         if not isinstance(hostnames, list):
             return hostnames
-        #GET SSH KEY for Root User
-        ssh_key = os.path.expanduser(os.path.join("~", const.SSH_DIR, const.SSH_KEY))
-        Log.debug(f"Current User > {current_user}, ssh key > {ssh_key}")
-        # Start Daemon Threads for Starting SB Generation on all Nodes.
+
+        # Start SB Generation on all Nodes.
         for index, hostname in enumerate(hostnames):
             Log.debug(f"Connect to {hostname}")
-            # Add Node Name to Shell Command
-            shell_command = const.SUPPORT_BUNDLE_SHELL_COMMAND.format(
-                args=shell_args, csm_path=const.CSM_PATH)
-            thread_obj = Thread(SupportBundle.execute_ssh(hostname,
-                                                          current_user, ssh_key,
-                                                          shell_command, node_list[index]),
-                                daemon=True)
-            thread_obj.start()
+            try:
+                await provisioner.begin_bundle_generation(
+                    f"bundle_generate '{bundle_id}' '{comment}' "
+                    f"'{hostname}' {comp_list}", node_list[index])
+            except InvalidRequest:
+                return Response(output = "Bundle generation failed.\nPlease "
+                         "check CLI for details.", rc = str(errno.ENOENT))
+            except Exception as e:
+                Log.error(f"Provisioner API call failed : {e}")
+                return Response(output = "Bundle Generation Failed.",
+                                rc = str(errno.ENOENT))
+
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
+        display_string_len = len(bundle_id) + 4
         response_msg = (
             f"Please use the below bundle id for checking the status of support bundle."
-            f" \n{bundle_id}"
+            f"\n{'-' * display_string_len}"
+            f"\n| {bundle_id} |"
+            f"\n{'-' * display_string_len}"
             f"\nPlease Find the file on -> {symlink_path} .\n")
 
-        return Response(output=response_msg, rc=errors.CSM_OPERATION_SUCESSFUL)
+        return Response(output = response_msg,
+                        rc =CSM_OPERATION_SUCESSFUL)
 
     @staticmethod
     async def bundle_status(command):
@@ -205,14 +183,14 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None
         """
-        bundle_id = command.options.get("bundle_id")
+        bundle_id = command.options.get("bundle_id", "")
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)
         all_nodes_status = await repo.retrieve_all(bundle_id)
-        response = {"status": [each_status.to_primitive()
-                               for each_status in all_nodes_status]}
-        return Response(output=response, rc=errors.CSM_OPERATION_SUCESSFUL)
+        response = {"status": [each_status.to_primitive() for each_status in
+                               all_nodes_status]}
+        return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
 
     @staticmethod
     async def fetch_ftp_data(ftp_details):
@@ -227,7 +205,8 @@ class SupportBundle:
         try:
             ftp_details[const.PORT] = int(input("Input FTP Port:  "))
         except ValueError:
-            raise CsmError(errno.EINVAL, f"{const.PORT} must be a integer type.")
+            raise CsmError(rc = errno.EINVAL,
+                           desc = f"{const.PORT} must be a integer type.")
         ftp_details[const.USER] = str(input("Input FTP User: "))
         ftp_details[const.PASS] = str(input("Input FTP Password: "))
         ftp_details['remote_file'] = str(input("Input FTP Remote File Path: "))
@@ -243,7 +222,8 @@ class SupportBundle:
         csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
                                           const.CSM_CONF_FILE_NAME)
         if not os.path.exists(csm_conf_file_name):
-            raise CsmError(rc=errno.ENOENT, output="Config file is not exist")
+            raise CsmError(rc = errno.ENOENT,
+                           desc = "Config file does not exist.")
         conf_file_data = Yaml(csm_conf_file_name).load()
         ftp_details = conf_file_data.get(const.SUPPORT_BUNDLE)
         ftp_details = await SupportBundle.fetch_ftp_data(ftp_details)
@@ -257,17 +237,17 @@ class SupportBundle:
         for hostname in hostnames:
             process = SimpleProcess(
                 f"scp {csm_conf_file_name}  {hostname}:{csm_conf_file_name}")
-            stdout, stderr, rc = process.run()
+            process.run()
 
     @staticmethod
     async def show_config(command):
         """
         Display Config for Current FTP.
-        # Todo: Need to change this command to display the FTP Configuration
-        # for individual node.
+        # Todo: Need to change this command to display the FTP configuration for an individual node.
         :param command: Csm_cli Command Object :type: command
         :return:
         """
         support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
                                          const.SUPPORT_BUNDLE)
-        return Response(output=support_bundle_config, rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output = support_bundle_config,
+                        rc = CSM_OPERATION_SUCESSFUL)
