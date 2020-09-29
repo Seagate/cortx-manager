@@ -67,12 +67,16 @@ class MaintenanceAppService(ApplicationService):
         """
         Return status of cluster. List of active and passive node
         """
-        Log.debug("Get cluster status")
+        Log.info("Get cluster status")
         try:
             node_info = await self._loop.run_in_executor(self._executor,
                                                 self._ha.get_nodes)
+            Log.info(f"node_info_before: {node_info}")
             for each_resource in node_info.get("node_status"):
+                Log.info(f"Conf--->:{Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}")}")
                 each_resource["hostname"] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}", each_resource[const.NAME])
+                Log.info(f"Each-resource: {each_resource}")
+            Log.info(f"node_info_after: {node_info}")
             return node_info
         except Exception as e:
             Log.critical(f"{e}")
