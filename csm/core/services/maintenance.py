@@ -73,6 +73,9 @@ class MaintenanceAppService(ApplicationService):
                                                 self._ha.get_nodes)
             Log.info(f"node_info_before: {node_info}")
             for each_resource in node_info.get("node_status"):
+                hn = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}", each_resource[const.NAME])
+                Log.info(f"hn:  {hn}")
+                Log.info(f"{const.MAINTENANCE}.{each_resource[const.NAME]}")
                 each_resource["hostname"] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}", each_resource[const.NAME])
                 Log.info(f"Each-resource: {each_resource}")
             Log.info(f"node_info_after: {node_info}")
