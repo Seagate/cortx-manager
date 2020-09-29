@@ -16,6 +16,7 @@
 from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
+from csm.common.conf import Conf
 from csm.core.blogic import const
 from csm.core.controllers.validators import Enum, ValidationErrorFormatter, Server, PortValidator
 from marshmallow import (Schema, fields, ValidationError)
