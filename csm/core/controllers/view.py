@@ -18,6 +18,7 @@ import asyncio
 from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
+from csm.common.fs_utils import FSUtils
 
 from aiohttp import web
 from csm.core.services.permissions import PermissionSet
@@ -180,6 +181,12 @@ class CsmView(web.View):
         parse_results = {}
 
         reader = await request.multipart()
+        
+        try:
+            FSUtils.create_dir(file_cache.cache_dir)
+        except Exception as e:
+            Log.debug(f"Can not create directory {e}")
+        
         while True:
             field = await reader.next()
             if field is None:
