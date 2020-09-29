@@ -30,13 +30,12 @@ class ArgumentError(argparse.ArgumentError):
         self.rc = rc
         self.messgae = message
 
-    def __str__(self):Password field can't be empty."
-
+    def __str__(self):
         return f"{self.rc}: {self.message}"
 
 class Terminal:
 
-    EMPTY_PASS_FIELD = "
+    EMPTY_PASS_FIELD = "Password field can't be empty."
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
