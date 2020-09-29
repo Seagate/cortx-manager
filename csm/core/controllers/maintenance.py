@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .view import CsmView, CsmAuth
-from cortx.utils.log import Log
+from eos.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.core.controllers.validators import Enum, ValidationErrorFormatter, Server, PortValidator
@@ -66,6 +66,12 @@ class MaintenanceView(CsmView):
         action = self.request.match_info[const.ACTION]
         body = await self.request.json()
         body[const.ACTION] = action
+
+        #if hostname is obtained in request body then get the nodeid mapped to the hostname.
+        hostname_nodeid_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
+        rev_hostname_nodeid_map = {v:k for k, v in hostname_nodeid_map.items()}
+        if rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME]):
+            body[const.RESOURCE_NAME] = rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME])
         try:
             PostMaintenanceSchema().load(body,
                                          unknown=const.MARSHMALLOW_EXCLUDE)

@@ -116,6 +116,18 @@ class Setup:
             return result[const.LOCAL]
 
     @staticmethod
+    def set_fqdn_for_nodeid():
+        nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+        if nodes:
+            for each_node in nodes:
+                hostname = Setup.get_salt_data(const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                if hostname:
+                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
+                else:
+                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
+            Conf.save(const.CSM_GLOBAL_INDEX)
+
+    @staticmethod
     def get_salt_data_with_exception(method, key):
         try:
             process = SimpleProcess(f"salt-call {method} {key} --out=json")
@@ -745,6 +757,7 @@ class CsmSetup(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
+            self.set_fqdn_for_nodeid()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster(args)

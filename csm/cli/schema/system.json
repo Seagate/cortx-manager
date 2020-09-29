@@ -129,6 +129,7 @@
         "table": {
           "headers": {
             "name": "Node ID",
+            "hostname": "Hostname",
             "online": "Online",
             "standby": "Stand-By Status"
           },
