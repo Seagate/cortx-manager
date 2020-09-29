@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .view import CsmView, CsmAuth
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.core.controllers.validators import Enum, ValidationErrorFormatter, Server, PortValidator
