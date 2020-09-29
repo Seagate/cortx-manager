@@ -72,8 +72,7 @@ class MaintenanceAppService(ApplicationService):
             node_info = await self._loop.run_in_executor(self._executor,
                                                 self._ha.get_nodes)
             for each_resource in node_info.get("node_status"):
-                each_resource["hostname"] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}", 
-                                                            each_resource[const.NAME])
+                each_resource["hostname"] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}", each_resource[const.NAME])
             return node_info
         except Exception as e:
             Log.critical(f"{e}")
