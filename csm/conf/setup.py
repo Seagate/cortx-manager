@@ -421,8 +421,12 @@ class Setup:
         Configure common rsyslog and logrotate
         Also cleanup statsd
         """
-        setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-        if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+        setup_info = dict()
+        try:
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+        except ProvisionerCliError as e:
+            Log.warn(f"Salt command failed {e}")
+        if setup_info.get(const.STORAGE_TYPE) == const.STORAGE_TYPE_VIRTUAL:
             logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
             cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
