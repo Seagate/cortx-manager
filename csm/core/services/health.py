@@ -364,6 +364,19 @@ class HealthAppService(ApplicationService):
             Log.warn(f"Fetching severity failed for {value}. {ex}")
         return ret
 
+    @staticmethod
+    def add_default_values(value):
+        """
+        For JBOD related health view for cortx_sw and operating_system the
+        below fields are not applicable and are not in health view JSON.
+        CSM UI needs these fiels to display the health view.
+        So, in case of health key missing we are adding the default value.
+        """
+        value[const.ALERT_HEALTH] = const.NA
+        value[const.ALERT_SEVERITY] = const.NA
+        value[const.ALERT_UUID] = const.NA
+        value[const.HEALTH_ALERT_TYPE] = const.NA
+
     def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes, alert_uuid_map, severity_val=None):
         """
         Identify non-empty leaf nodes of in-memory health schema
@@ -386,6 +399,8 @@ class HealthAppService(ApplicationService):
                         self._get_leaf_node_health(value, health_count_map, leaf_nodes, alert_uuid_map, severity_val)
                     else:
                         if value:
+                            if not const.ALERT_HEALTH in value:
+                                HealthAppService.add_default_values(value)
                             add_resource = True
                             if severity_val:
                                 add_resource = self._check_resource_for_severity(value, severity_val)
@@ -506,11 +521,11 @@ class HealthAppService(ApplicationService):
                     resource_schema_dict[const.ALERT_UUID] \
                         = msg_body.get(const.ALERT_UUID, "NA")
                     resource_schema_dict[const.FETCH_TIME] \
-                        = msg_body.get(const.FETCH_TIME, "")
+                        = msg_body.get(const.FETCH_TIME, "NA")
                     resource_schema_dict[const.ALERT_HEALTH] \
-                        = items.get(const.ALERT_HEALTH, "")
+                        = items.get(const.ALERT_HEALTH, "NA")
                     resource_schema_dict[const.ALERT_DURABLE_ID] \
-                        = items.get(const.ALERT_DURABLE_ID, "")
+                        = items.get(const.ALERT_DURABLE_ID, "NA")
                     self._set_health_schema_by_key\
                             (resource_map, key, resource_schema_dict)
                     Log.debug(f"Health map updated for: {key}")
