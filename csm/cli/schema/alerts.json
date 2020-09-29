@@ -13,7 +13,7 @@
           "dest": "duration",
           "nargs": "+",
           "type": "str",
-          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
+          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively. Past 60 seconds alerts will be displayed if not set explicitly.",
           "default": "60s",
           "params": true
         },
@@ -22,7 +22,7 @@
           "dest": "limit",
           "nargs": "+",
           "type": "int",
-          "help": "No. of Alerts",
+          "help": "No. of Alerts to be Displayed on Terminal. 1000 Alerts will be displayed if not set explicitly.",
           "default": "1000",
           "params": true
         },
@@ -96,7 +96,7 @@
           "dest": "duration",
           "nargs": "+",
           "type": "str",
-          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively",
+          "help": "Time period, for which we request alerts. Format: <x>s <y>m <z>h <q>d. Where x, y, z, q is amounts of seconds, minutes, hours, days respectively. Past 60 seconds alerts will be displayed if not set explicitly.",
           "default": "60s",
           "params": true
         },
