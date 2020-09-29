@@ -30,10 +30,13 @@ class ArgumentError(argparse.ArgumentError):
         self.rc = rc
         self.messgae = message
 
-    def __str__(self):
+    def __str__(self):Password field can't be empty."
+
         return f"{self.rc}: {self.message}"
 
 class Terminal:
+
+    EMPTY_PASS_FIELD = "
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
@@ -73,7 +76,8 @@ class Terminal:
         """
         value = value or getpass(prompt="Current Password: ")
         if not value:
-            raise ArgumentError(errno.EINVAL, f"Current {const.EMPTY_PASS_FIELD}")
+            raise ArgumentError(errno.EINVAL,
+                                f"Current {Terminal.EMPTY_PASS_FIELD}")
         return value
 
     @staticmethod
@@ -87,12 +91,12 @@ class Terminal:
                           "characters.\n"))
         value = value or getpass(prompt="Password: ")
         if not value:
-            raise ArgumentError(errno.EINVAL, const.EMPTY_PASS_FIELD)
+            raise ArgumentError(errno.EINVAL, Terminal.EMPTY_PASS_FIELD)
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
             if not confirm_password:
                 raise ArgumentError(errno.EINVAL,
-                                    f"Confirm {const.EMPTY_PASS_FIELD}")
+                                    f"Confirm {Terminal.EMPTY_PASS_FIELD}")
             if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
