@@ -440,7 +440,7 @@ class Setup:
 
     def _create_cron(self):
         Log.info("Creating First Crontab.")
-        Setup._run_cmd('echo "1 0 1 1 1  test" | crontab -u csm -')
+        Setup._run_cmd('echo "1 0 1 1 1  echo csm" | crontab -u csm -')
 
     def _logrotate(self):
         """
