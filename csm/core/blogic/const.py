@@ -428,11 +428,17 @@ SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 
 #cron dire
 CRON_DIR="/etc/cron.daily"
+CRON_DIR_HOURLY="/etc/cron.hourly"
 SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
+
+CRON_DIR_HOURLY="/etc/cron.hourly"
+DEST_LOGROTATE_CRON_PATH="{}/logrotate".format(CRON_DIR_HOURLY)
+
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
+LOGROTATE_DIR_DEST = "/etc/csm/logrotate"
 
 # https status code
 STATUS_CREATED = 201

@@ -431,6 +431,11 @@ class Setup:
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
+        if os.path.exists(const.CRON_DIR_HOURLY):
+            Setup._run_cmd("cp -f " + cron_conf + " " + const.DEST_LOGROTATE_CRON_PATH)
+        else:
+            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR_HOURLY)
+
     def _logrotate(self):
         """
         Configure logrotate
