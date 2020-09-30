@@ -179,8 +179,7 @@ class HealthPlugin(CsmPlugin):
             health_value = self._derive_health(message, resource_schema\
                 [const.HEALTH_ALERT_TYPE])
             resources[const.DURABLE_ID] = info.get(const.ALERT_RESOURCE_ID, "")
-            resources[const.KEY] = resource_type + "-" + \
-                info.get(const.ALERT_RESOURCE_ID, "")
+            resources[const.KEY] = f"{resource_type}-{resources[const.DURABLE_ID]}"
             resources[const.ALERT_HEALTH] = health_value
             resource_schema[const.RESOURCE_LIST].append(resources)
         except Exception as ex:
