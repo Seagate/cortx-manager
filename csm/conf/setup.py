@@ -19,7 +19,6 @@ import crypt
 import pwd
 import grp
 import errno
-from datetime import datetime
 import shlex
 import json
 from cortx.utils.log import Log
@@ -422,8 +421,12 @@ class Setup:
         Configure common rsyslog and logrotate
         Also cleanup statsd
         """
-        setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-        if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+        setup_info = dict()
+        try:
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+        except ProvisionerCliError as e:
+            Log.warn(f"Salt command failed {e}")
+        if setup_info.get(const.STORAGE_TYPE) == const.STORAGE_TYPE_VIRTUAL:
             logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
             cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
@@ -460,6 +463,20 @@ class Setup:
             Setup._run_cmd("chmod 644 " + const.CLEANUP_LOGROTATE_DEST)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+
+    @staticmethod
+    def _set_fqdn_for_nodeid():
+        nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+        Log.debug("Node ids obtained from salt-call:{nodes}")
+        if nodes:
+            for each_node in nodes:
+                hostname = Setup.get_salt_data(const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
+                if hostname:
+                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
+                else:
+                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
+            Conf.save(const.CSM_GLOBAL_INDEX)
 
     def _set_rmq_node_id(self):
         """
@@ -746,6 +763,7 @@ class CsmSetup(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
+            Setup._set_fqdn_for_nodeid()
             self._create_cron()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:

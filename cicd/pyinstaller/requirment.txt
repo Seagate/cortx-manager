@@ -25,4 +25,4 @@ urllib3==1.25.7
 cryptography==2.8
 python-crontab==2.5.1
 confluent-kafka==1.5.0
-croniter==0.3.5
+netifaces==0.10.9
