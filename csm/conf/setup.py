@@ -449,7 +449,7 @@ class Setup:
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
             Setup._run_cmd("cp -f " + cleanup_logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
-            Setup._run_cmd("chmod 644 " + const.SOURCE_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
             Setup._run_cmd("chmod 644 " + const.CLEANUP_LOGROTATE_DEST)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
