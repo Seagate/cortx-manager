@@ -183,16 +183,19 @@ class CsmView(web.View):
 
         reader = await request.multipart()
         
-        try:
-            original_mask = os.umask(0o007)
-            Log.debug(f"original mask: {original_mask}")
-            FSUtils.create_dir(file_cache.cache_dir)
-        except Exception as e:
-            Log.debug(f"Can not create directory {e}")
-            raise Exception(f"Can not create directory {e}")
-        finally:
-            new_mask = os.umask(original_mask)
-            Log.debug(f"new mask: {new_mask}")
+        if not os.path.exists(file_cache.cache_dir):
+            try:
+                original_mask = os.umask(0o007)
+                Log.debug(f"original mask: {original_mask}")
+                os.makedirs(file_cache.cache_dir)
+            except Exception as e:
+                Log.debug(f"Can not create directory {e}")
+                raise Exception(f"Can not create directory {e}")
+            finally:
+                new_mask = os.umask(original_mask)
+                Log.debug(f"new mask: {new_mask}")
+        else:
+            Log.debug(f"Cache dir already exists: {file_cache.cache_dir}")
         
         while True:
             field = await reader.next()
