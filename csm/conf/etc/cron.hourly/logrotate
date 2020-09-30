@@ -1,6 +1,6 @@
 #!/bin/sh
 
-/usr/sbin/logrotate -s /var/lib/logrotate/logrotate.status /etc/csm/logrotate/csm_agentlog.conf
+/usr/sbin/logrotate -s /var/lib/logrotate/logrotate.status /etc/csm/logrotate/csm_agent_log.conf
 EXITVALUE=$?
 if [ $EXITVALUE != 0 ]; then
     /usr/bin/logger -t logrotate "ALERT exited abnormally with [$EXITVALUE]"

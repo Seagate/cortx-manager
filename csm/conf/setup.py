@@ -445,7 +445,7 @@ class Setup:
         cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH
 
         if not os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd("mkdir -p " + const.CSM_LOGROTATE_DEST)
+            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
             Setup._run_cmd("cp -f " + cleanup_logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
