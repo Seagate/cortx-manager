@@ -433,7 +433,7 @@ class Setup:
 
         if os.path.exists(const.CRON_DIR_HOURLY):
             logrotate_conf_path = const.SOURCE_CRON_PATH_LOGROTATE
-            Setup._run_cmd("cp -f " + logrotate_cron_conf + " " + const.DEST_LOGROTATE_CRON_PATH)
+            Setup._run_cmd("cp -f " + logrotate_conf_path + " " + const.DEST_LOGROTATE_CRON_PATH)
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR_HOURLY)
 
