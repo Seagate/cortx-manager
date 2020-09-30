@@ -70,7 +70,7 @@ class MaintenanceView(CsmView):
 
         #if hostname is obtained in request body then get the nodeid mapped to the hostname.
         hostname_nodeid_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
-        rev_hostname_nodeid_map = {v:k for k, v in hostname_nodeid_map.items()}
+        rev_hostname_nodeid_map = {host:node for node, host in hostname_nodeid_map.items()}
         if rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME]):
             body[const.RESOURCE_NAME] = rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME])
         try:
