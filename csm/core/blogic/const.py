@@ -598,3 +598,4 @@ OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 
 STORAGE_TYPE_VIRTUAL = "virtual"
+HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
