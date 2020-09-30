@@ -18,7 +18,6 @@ import asyncio
 from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
-from csm.common.fs_utils import FSUtils
 import os
 
 from aiohttp import web
