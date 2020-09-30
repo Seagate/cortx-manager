@@ -47,7 +47,6 @@ class HealthRepository:
         """
         self._health_schema = health_schema
 
-
 class HealthAppService(ApplicationService):
     """
         Provides operations on in memory health schema
@@ -67,7 +66,6 @@ class HealthAppService(ApplicationService):
         schema to verify whether the default health keys are present or not.
         If not we will add the default fields to in-memory schema.
         This operation will be performed only once when csm agent starts/re-starts.
-        Get the schema for the provided key
         :param health_schema:
         :return:
         """
