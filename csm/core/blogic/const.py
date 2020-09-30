@@ -434,6 +434,7 @@ DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 
 CRON_DIR_HOURLY="/etc/cron.hourly"
+SOURCE_CRON_PATH_LOGROTATE="{0}/conf{1}/logrotate".format(CSM_PATH, CRON_DIR_HOURLY)
 DEST_LOGROTATE_CRON_PATH="{}/logrotate".format(CRON_DIR_HOURLY)
 
 #logrotate
@@ -451,8 +452,8 @@ CLEANUP_LOGROTATE_PATH = "{0}/conf{1}/common/cleanup_log.conf".format(CSM_PATH, 
 CLEANUP_LOGROTATE_PATH_VIRTUAL = "{0}/conf{1}/common/cleanup_log-virtual.conf".format(CSM_PATH,
                                                                                       LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
-SOURCE_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR)
-CLEANUP_LOGROTATE_DEST = "{0}/cleanup_log.conf".format(LOGROTATE_DIR)
+CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
+CLEANUP_LOGROTATE_DEST = "{0}/cleanup_log.conf".format(LOGROTATE_DIR_DEST)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
