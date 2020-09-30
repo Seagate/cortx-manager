@@ -38,6 +38,8 @@ class MaintenanceView(CsmView):
     def __init__(self, request):
         super(MaintenanceView, self).__init__(request)
         self._service = self.request.app[const.MAINTENANCE_SERVICE]
+        self.hostname_nodeid_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
+        self.rev_hostname_nodeid_map = {host:node for node, host in self.hostname_nodeid_map.items()}
 
     @CsmAuth.permissions({Resource.SYSTEM: {Action.LIST}})
     async def get(self):
@@ -69,10 +71,8 @@ class MaintenanceView(CsmView):
         body[const.ACTION] = action
 
         #if hostname is obtained in request body then get the nodeid mapped to the hostname.
-        hostname_nodeid_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
-        rev_hostname_nodeid_map = {host:node for node, host in hostname_nodeid_map.items()}
-        if rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME]):
-            body[const.RESOURCE_NAME] = rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME])
+        if self.rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME]):
+            body[const.RESOURCE_NAME] = self.rev_hostname_nodeid_map.get(body[const.RESOURCE_NAME])
         try:
             PostMaintenanceSchema().load(body,
                                          unknown=const.MARSHMALLOW_EXCLUDE)
