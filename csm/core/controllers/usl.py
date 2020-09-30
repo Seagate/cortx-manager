@@ -58,6 +58,7 @@ class _View(CsmView):
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._service = self._request.app[const.USL_SERVICE]
+        self._s3_account_service = self._request.app[const.S3_ACCOUNT_SERVICE]
 
 
 class _SecuredView(_View):
@@ -107,7 +108,7 @@ class DeviceRegistrationView(_View):
         try:
             body = await self.request.json()
             params = MethodSchema().load(body)
-            return await self._service.post_register_device(**params)
+            return await self._service.post_register_device(self._s3_account_service, **params)
         except (JSONDecodeError, ValidationError) as e:
             desc = 'Malformed input payload'
             Log.error(f'{desc}: {e}')
