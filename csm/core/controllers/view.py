@@ -18,6 +18,7 @@ import asyncio
 from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
+from csm.common.errors import CsmInternalError
 import os
 
 from aiohttp import web
@@ -189,7 +190,8 @@ class CsmView(web.View):
                 os.makedirs(file_cache.cache_dir)
             except Exception as e:
                 Log.debug(f"Can not create directory {e}")
-                raise Exception(f"Can not create directory {e}")
+                raise CsmInternalError(f"System error during directory creation for "
+                                       f"path='{file_cache.cache_dir}': {e}")
             finally:
                 new_mask = os.umask(original_mask)
                 Log.debug(f"new mask: {new_mask}")
