@@ -19,6 +19,7 @@ import crypt
 import pwd
 import grp
 import errno
+from datetime import datetime
 import shlex
 import json
 from cortx.utils.log import Log
@@ -439,7 +440,7 @@ class Setup:
 
     def _create_cron(self):
         Log.info("Creating First Crontab.")
-        Setup._run_cmd('echo "1 0 1 1 * echo csm_cron" | tee -a /var/spool/cron/csm')
+        Setup._run_cmd('echo "1 0 1 1 1 echo csm_cron" | tee -a /var/spool/cron/csm')
 
     def _logrotate(self):
         """
