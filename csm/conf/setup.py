@@ -236,7 +236,6 @@ class Setup:
         os.makedirs(bundle_path, exist_ok=True)
         os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.TMP_DIR)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_TMP_FILE_CACHE_DIR)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + bundle_path)
         Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
