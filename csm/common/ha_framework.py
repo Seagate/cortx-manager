@@ -20,9 +20,7 @@ import crypt
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
-from crontab import CronTab
 from csm.core.blogic import const
-import datetime
 
 from csm.common.conf import Conf
 from cortx.utils.log import Log
@@ -142,20 +140,9 @@ class PcsHAFramework(HAFramework):
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
                                        "MAINTENANCE.shutdown_cron_time")
         Log.debug(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
-        try:
-            self._cron = CronTab(user=self._user)
-        except OSError as e:
-            Log.error(f"Cron User Error : {e}")
-            self._cron = None
-        except Exception as e:
-            Log.error(f"Cron Error : {e}")
-        if not self._cron:
-            Log.error("Cron Job Object is not Instantiated")
-            self._cron = CronTab(user = True)
-        Log.debug(f"Creating cron job for comment { const.SHUTDOWN_COMMENT}")
-        _job = self._cron.new(command=_cluster_shutdown_cmd, comment= const.SHUTDOWN_COMMENT)
-        _job.setall(datetime.datetime.now() + datetime.timedelta(minutes = 1))
-        self._cron.write()
+        cron_job_obj = CronJob(self._user)
+        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT,
+                                    cron_job_obj.create_run_time(seconds=shutdown_cron_time))
         return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
 class ResourceAgent:

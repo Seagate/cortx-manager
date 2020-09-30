@@ -437,6 +437,11 @@ class Setup:
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
+    def _create_cron(self):
+        Log.info("Creating First Crontab.")
+        Setup._run_cmd('echo "1 0 1 1 * echo csm_cron" | tee -a '
+                       '/var/spool/cron/csm')
+
     def _logrotate(self):
         """
         Configure logrotate
@@ -741,6 +746,7 @@ class CsmSetup(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
+            self._create_cron()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster(args)
