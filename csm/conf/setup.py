@@ -460,11 +460,14 @@ class Setup:
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
-    def _set_fqdn_for_nodeid(self):
+    @staticmethod
+    def _set_fqdn_for_nodeid():
         nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+        Log.debug("Node ids obtained from salt-call:{nodes}")
         if nodes:
             for each_node in nodes:
                 hostname = Setup.get_salt_data(const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
                 if hostname:
                     Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
                 else:
@@ -756,7 +759,7 @@ class CsmSetup(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
-            self._set_fqdn_for_nodeid()
+            Setup._set_fqdn_for_nodeid()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster(args)
