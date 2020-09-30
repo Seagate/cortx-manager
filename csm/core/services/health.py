@@ -47,6 +47,7 @@ class HealthRepository:
         """
         self._health_schema = health_schema
 
+
 class HealthAppService(ApplicationService):
     """
         Provides operations on in memory health schema
@@ -60,6 +61,27 @@ class HealthAppService(ApplicationService):
         self._health_plugin = plugin
         self._init_health_schema()
 
+    def set_default_values(self, health_schema):
+        """
+        Once the health json is loaded in memory we will iterate over the
+        schema to verify whether the default health keys are present or not.
+        If not we will add the default fields to in-memory schema.
+        This operation will be performed only once when csm agent starts/re-starts.
+        Get the schema for the provided key
+        :param health_schema:
+        :return:
+        """
+        try:
+            for value in health_schema.values():
+                if isinstance(value, dict):
+                    if self._checkchilddict(value):
+                        self.set_default_values(value)
+                    else:
+                        if value and not value.keys() >= const.HEALTH_REQUIRED_FIELDS:
+                            HealthAppService.add_default_values(value)
+        except Exception as ex:
+            Log.warn(f"Setting default values for health schema failed:{ex}")
+
     def _init_health_schema(self):
         health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                       'HEALTH.health_schema')
@@ -67,6 +89,7 @@ class HealthAppService(ApplicationService):
             self._health_schema = Payload(Json(health_schema_path))
             self.repo.health_schema = self._health_schema
             self.repo.health_schema.dump()
+            self.set_default_values(self.repo.health_schema.data())
         except Exception as ex:
             Log.error(f"Error occured in reading health schema. Path: {health_schema_path}, {ex}")
 
@@ -399,8 +422,6 @@ class HealthAppService(ApplicationService):
                         self._get_leaf_node_health(value, health_count_map, leaf_nodes, alert_uuid_map, severity_val)
                     else:
                         if value:
-                            if not const.ALERT_HEALTH in value:
-                                HealthAppService.add_default_values(value)
                             add_resource = True
                             if severity_val:
                                 add_resource = self._check_resource_for_severity(value, severity_val)
@@ -521,7 +542,7 @@ class HealthAppService(ApplicationService):
                     resource_schema_dict[const.ALERT_UUID] \
                         = msg_body.get(const.ALERT_UUID, "NA")
                     resource_schema_dict[const.FETCH_TIME] \
-                        = msg_body.get(const.FETCH_TIME, "NA")
+                        = msg_body.get(const.FETCH_TIME)
                     resource_schema_dict[const.ALERT_HEALTH] \
                         = items.get(const.ALERT_HEALTH, "NA")
                     resource_schema_dict[const.ALERT_DURABLE_ID] \

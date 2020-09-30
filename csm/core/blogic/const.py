@@ -589,3 +589,4 @@ STORAGE_TYPE = "storage_type"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
+HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
