@@ -19,6 +19,7 @@ from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
 from csm.core.services.file_transfer import FileRef, FileCache
 from csm.common.fs_utils import FSUtils
+import os
 
 from aiohttp import web
 from csm.core.services.permissions import PermissionSet
@@ -183,9 +184,14 @@ class CsmView(web.View):
         reader = await request.multipart()
         
         try:
+            original_mask = os.umask(0o007)
+            Log.debug(f"original mask: {original_mask}")    
             FSUtils.create_dir(file_cache.cache_dir)
         except Exception as e:
             Log.debug(f"Can not create directory {e}")
+        finally:
+            new_mask = os.umask(original_mask)
+            Log.debug(f"new mask: {new_mask}")
         
         while True:
             field = await reader.next()
