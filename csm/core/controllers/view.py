@@ -189,6 +189,7 @@ class CsmView(web.View):
             FSUtils.create_dir(file_cache.cache_dir)
         except Exception as e:
             Log.debug(f"Can not create directory {e}")
+            raise Exception(f"Can not create directory {e}")
         finally:
             new_mask = os.umask(original_mask)
             Log.debug(f"new mask: {new_mask}")
