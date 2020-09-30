@@ -492,22 +492,22 @@ class HealthAppService(ApplicationService):
 
     def _set_health_schema_by_key(self, obj, node_key, node_value):
         """
-        Get the schema for the provided key
+        Set the schema for the provided key
         :param obj:
         :param node_key:
+        "param node_value:
         :return:
         """
-        def setValue(obj):
-            try:
-                for key, value in obj.items():
-                    if (node_key == key):
-                        obj[key] = node_value
+        try:
+            for key, value in obj.items():
+                if (node_key == key):
+                    obj[key] = node_value
 
-                    if isinstance(value, dict):
-                        if (self._checkchilddict(value)):
-                            setValue(value)
-            except Exception as ex:
-                Log.warn(f"Setting health schema by key failed:{ex}")
+                if isinstance(value, dict):
+                    if (self._checkchilddict(value)):
+                        self._set_health_schema_by_key(value, node_key, node_value)
+        except Exception as ex:
+            Log.warn(f"Setting health schema by key failed:{ex}")
 
     def update_health_map(self, msg_body):
         Log.debug(f"Updating health map : {msg_body}")
