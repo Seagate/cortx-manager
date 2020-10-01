@@ -139,7 +139,6 @@ class SupportBundle:
             components = []
         if command.options.get(const.SOS_COMP, False) == "true":
             components.append("os")
-        Log.debug(str(components))
         comp_list = SupportBundle.get_components(components)
 
         # Get HostNames and Node Names.
