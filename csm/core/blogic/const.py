@@ -555,7 +555,8 @@ MAINTENANCE = "MAINTENANCE"
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
-SUPPORT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
+SUPPORT_MSG = "alerts_support_message"
+SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
 NETWROK = "network"
@@ -598,3 +599,5 @@ OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 
 STORAGE_TYPE_VIRTUAL = "virtual"
+
+TEXTS_SCHEMA = '{}/schema/texts.json'.format(CSM_PATH)

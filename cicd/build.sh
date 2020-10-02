@@ -23,8 +23,10 @@ CSM_PATH="${CORTX_PATH}csm"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
-CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+CORTX_UNSUPPORTED_FEATURES_PATH="${CSM_PATH}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
+CORTX_TEXTS_PATH="${CSM_PATH}/schema/texts.json"
+BRAND_TEXTS_PATH="config/csm/texts.json"
 
 usage() {
     echo """
@@ -228,6 +230,9 @@ fi
 if [ "$BRAND_CONFIG_PATH" ]; then
     cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
     echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
+
+    cp "$BRAND_CONFIG_PATH/$BRAND_TEXTS_PATH" "$CORTX_TEXTS_PATH"
+    echo "updated texts.json from $BRAND_CONFIG_PATH/$BRAND_TEXTS_PATH"
 fi
 
 ################### TAR & RPM BUILD ##############################
