@@ -446,7 +446,7 @@ class Setup:
         Configure logrotate
         """
         setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-        if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+        if setup_info and setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
             source_logrotate_conf = const.SOURCE_LOGROTATE_PATH_VIRTUAL
             cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
         else:
