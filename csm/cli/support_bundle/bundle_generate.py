@@ -78,7 +78,7 @@ class ComponentsBundle:
             cmd_proc = SimpleProcess(f"{command} {bundle_id} {path}")
             output, err, return_code = cmd_proc.run()
             Log.debug(f"Command Output -> {output} {err}, {return_code}")
-            if return_code == -1:
+            if return_code != 0:
                 ComponentsBundle.publish_log(
                     f"Bundle generation failed for {component}", ERROR,
                     bundle_id, node_name, comment)
