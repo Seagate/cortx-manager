@@ -659,11 +659,14 @@ class Setup:
                     Log.logger.warn(f"Edge Installation missing key {each_key}")
                     continue
                 if isinstance(comparison_data, list):
-                    if self._setup_info[each_key] in comparison_data:
+                    data_list = []
+                    for data in comparison_data:
+                        data_list.append(data.upper())
+                    if self._setup_info[each_key].upper() in data_list:
                         is_auto_restart_required.append(False)
                     else:
                         is_auto_restart_required.append(True)
-                elif self._setup_info[each_key] == comparison_data:
+                elif str(self._setup_info[each_key]).upper() == str(comparison_data).upper():
                     is_auto_restart_required.append(False)
                 else:
                     is_auto_restart_required.append(True)
