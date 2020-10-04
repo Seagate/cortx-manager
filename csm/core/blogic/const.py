@@ -574,7 +574,7 @@ GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
 EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
-                    "storage_type": ["5u84", "PODS"],
+                    "storage_type": ["5u84", "PODS","RBOD"],
                     "server_type": "physical"}
 
 #unsupported feature
