@@ -652,8 +652,10 @@ class Setup:
         """
         is_auto_restart_required = list()
         if self._setup_info:
+            Log.logger.debug(f"Got setup infor as {self._setup_info}")
             for each_key in self._setup_info:
                 comparison_data = const.EDGE_INSTALL_TYPE.get(each_key, None)
+                Log.logger.debug(f"Got setup infor as {comparision_data}")
                 #Check Key Exists:
                 if comparison_data is None:
                     Log.logger.warn(f"Edge Installation missing key {each_key}")
@@ -670,6 +672,7 @@ class Setup:
         else:
             Log.logger.warn("Setup info does not exist.")
             is_auto_restart_required.append(True)
+        Log.logger.debug(f"Got setup infor as {is_auto_restart_required}")
         if any(is_auto_restart_required):
             Log.logger.debug("Updating All setup file for Auto Restart on "
                              "Failure")
