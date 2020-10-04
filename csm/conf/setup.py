@@ -474,9 +474,9 @@ class Setup:
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
@@ -506,7 +506,7 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
+
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
@@ -602,7 +602,7 @@ class Setup:
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
-  
+
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
@@ -616,7 +616,7 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            
+
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
@@ -662,7 +662,7 @@ class Setup:
             Log.logger.debug("Updating All setup file for Auto Restart on "
                              "Failure")
             Setup._update_service_file("#< RESTART_OPTION >",
-                                      "RESTART=on-failure")
+                                      "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
@@ -711,7 +711,7 @@ class CsmSetup(Setup):
             self.set_unsupported_feature_info()
             self._cleanup_job()
             self._configure_system_auto_restart()
-            
+
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
