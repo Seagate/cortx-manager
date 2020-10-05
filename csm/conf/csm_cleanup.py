@@ -84,18 +84,12 @@ def process_stats(args):
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
     remove_old_indexes(es, args.d, args.n, args.e)
 
-def process_auditlogs(args):
-    # Pass arguments to worker function
-    # remove data older than given number of days
-    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
-
 def process_es_cleanup(args):
     # Pass arguments to worker function
     # remove data older than given number of days
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    es.remove_old_data_from_indexes(args.d, args.n, "csmauditlog", "timestamp")
-    es.remove_old_data_from_indexes(args.d, args.n, "alerts", "created_time")
+    es.remove_old_data_from_indexes(args.d, args.n, ["csmauditlog"], "timestamp")
+    es.remove_old_data_from_indexes(args.d, args.n, ["alerts"], "created_time")
     remove_old_indexes(es, args.d, args.n, args.e)
 
     cmd = "du -BM /var/log/elasticsearch/"
