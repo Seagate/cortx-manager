@@ -27,7 +27,6 @@ CSM_INTERNAL_ERROR          = 0x1005
 CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
 CSM_OPERATION_NOT_PERMITTED = 0x1008
-CSM_UNAUTHORIZED_ERROR      = 0x1009
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
@@ -156,12 +155,6 @@ class CsmGatewayTimeout(CsmError):
 class CsmUnauthorizedError(CsmError):
 
     """This error represents HTTP 401 Unauthorized Error"""
-
-    _desc = "Authentication failed."
-
-    def __init__(self, _desc=None, message_id=None, message_args=None):
-        super(CsmUnauthorizedError, self).__init__(
-            CSM_UNAUTHORIZED_ERROR, _desc, message_id, message_args)
 
 class CsmServiceNotAvailable(CsmError):
 

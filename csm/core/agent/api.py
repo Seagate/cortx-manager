@@ -39,8 +39,7 @@ from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
-                               CsmNotImplemented, CsmServiceConflict,
-                               CsmGatewayTimeout, CsmUnauthorizedError)
+                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.usl import UslService
@@ -330,8 +329,6 @@ class CsmRestApi(CsmApi, ABC):
         except InvalidRequest as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=400)
-        except CsmUnauthorizedError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=401)
         except CsmNotFoundError as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request), status=404)
         except CsmPermissionDenied as e:
