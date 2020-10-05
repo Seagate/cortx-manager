@@ -447,7 +447,6 @@ STATUS_CONFLICT = 409
 SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
 SOURCE_LOGROTATE_PATH_VIRTUAL = "{0}/conf{1}/csm/csm_agent_log-virtual.conf".format(CSM_PATH,
                                                                                     LOGROTATE_DIR)
-                                                                                      LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
 CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
 
