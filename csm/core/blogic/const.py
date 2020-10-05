@@ -445,10 +445,8 @@ STATUS_CREATED = 201
 STATUS_CONFLICT = 409
 
 SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
-CLEANUP_LOGROTATE_PATH = "{0}/conf{1}/common/cleanup_log.conf".format(CSM_PATH, LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
 CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
-CLEANUP_LOGROTATE_DEST = "{0}/cleanup_log.conf".format(LOGROTATE_DIR_DEST)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
