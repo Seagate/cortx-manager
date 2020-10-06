@@ -427,19 +427,24 @@ class Setup:
         except ProvisionerCliError as e:
             Log.warn(f"Salt command failed {e}")
         if setup_info.get(const.STORAGE_TYPE) == const.STORAGE_TYPE_VIRTUAL:
-            logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
             cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
-            logrotate_conf = const.CLEANUP_LOGROTATE_PATH
             cron_conf = const.SOURCE_CRON_PATH
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " + logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
-        else:
-            raise CsmSetupError("logrotate failed. %s dir missing." % const.LOGROTATE_DIR)
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " + cron_conf + " " + const.DEST_CRON_PATH)
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
+
+        if os.path.exists(const.CRON_DIR_HOURLY):
+            logrotate_conf_path = const.SOURCE_CRON_PATH_LOGROTATE
+            Setup._run_cmd("cp -f " + logrotate_conf_path + " " + const.DEST_LOGROTATE_CRON_PATH)
+            Setup._run_cmd("chmod 755 " + const.DEST_LOGROTATE_CRON_PATH)
+        else:
+            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR_HOURLY)
+
+    def _create_cron(self):
+        Log.info("Creating First Crontab.")
+        os.system('echo "1 0 1 1 1  echo csm" | crontab -u csm -')
 
     def _logrotate(self):
         """
@@ -448,15 +453,14 @@ class Setup:
         setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
         if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
             source_logrotate_conf = const.SOURCE_LOGROTATE_PATH_VIRTUAL
-            cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
         else:
             source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
-            cleanup_logrotate_conf = const.CLEANUP_LOGROTATE_PATH
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.SOURCE_LOGROTATE_DEST)
-            Setup._run_cmd("cp -f " + cleanup_logrotate_conf + " " + const.CLEANUP_LOGROTATE_DEST)
-            Setup._run_cmd("chmod 644 " + const.SOURCE_LOGROTATE_DEST)
-            Setup._run_cmd("chmod 644 " + const.CLEANUP_LOGROTATE_DEST)
+
+        if not os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
+        if os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
 
@@ -655,11 +659,14 @@ class Setup:
                     Log.logger.warn(f"Edge Installation missing key {each_key}")
                     continue
                 if isinstance(comparison_data, list):
-                    if self._setup_info[each_key] in comparison_data:
+                    data_list = []
+                    for data in comparison_data:
+                        data_list.append(data.upper())
+                    if self._setup_info[each_key].upper() in data_list:
                         is_auto_restart_required.append(False)
                     else:
                         is_auto_restart_required.append(True)
-                elif self._setup_info[each_key] == comparison_data:
+                elif str(self._setup_info[each_key]).upper() == str(comparison_data).upper():
                     is_auto_restart_required.append(False)
                 else:
                     is_auto_restart_required.append(True)
@@ -670,7 +677,7 @@ class Setup:
             Log.logger.debug("Updating All setup file for Auto Restart on "
                              "Failure")
             Setup._update_service_file("#< RESTART_OPTION >",
-                                      "RESTART=on-failure")
+                                      "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
@@ -760,6 +767,7 @@ class CsmSetup(Setup):
             self._logrotate()
             self._rsyslog_common()
             Setup._set_fqdn_for_nodeid()
+            self._create_cron()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster(args)
