@@ -79,10 +79,6 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
         else:
             Log.debug("Nothing to remove")
 
-def process_stats(args):
-    # Pass arguments to worker function
-    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    remove_old_indexes(es, args.d, args.n, args.e)
 
 def process_es_cleanup(args):
     # Pass arguments to worker function
