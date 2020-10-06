@@ -79,38 +79,41 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
         else:
             Log.debug("Nothing to remove")
 
-def process_stats(args):
-    # Pass arguments to worker function
-    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    remove_old_indexes(es, args.d, args.n, args.e)
 
-def process_auditlogs(args):
+def process_es_cleanup(args):
     # Pass arguments to worker function
     # remove data older than given number of days
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
+    es.remove_old_data_from_indexes(args.d, args.n, ["csmauditlog"], "timestamp")
+    es.remove_old_data_from_indexes(args.d, args.n, ["alerts"], "created_time")
+    remove_old_indexes(es, args.d, args.n, args.e)
 
-def add_stats_subcommand(main_parser):
-    subparsers = main_parser.add_parser("stats", help='cleanup of stats log')
-    subparsers.set_defaults(func=process_stats)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
-    subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
-    subparsers.add_argument("-e", action='store_true',
-            help="emulate, do not really delete indexes")
+    cmd = "du -BM /var/log/elasticsearch/"
+    sp = SimpleProcess(cmd)
+    res = sp.run()
+    res = res[0]
+    res = int(res.decode("utf-8").split('\t')[0].split('M')[0])
+    es_db_capping = (int(args.s) * int(args.e)) / 100
 
-def add_auditlog_subcommand(main_parser):
-    subparsers = main_parser.add_parser("auditlogs", help='cleanup of audit log')
-    subparsers.set_defaults(func=process_auditlogs)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
-    subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
-    subparsers.add_argument("-f", type=str, default="timestamp",
-            help="field of index of elasticsearch service")
-    subparsers.add_argument("-i", nargs='+', default=[],
-            help="index of elasticsearch")
+    while int(args.p) > int(args.c):
+        res = sp.run()
+        res = res[0]
+        if int(res.decode("utf-8").split('\t')[0].split('M')[0]) <= es_db_capping:
+            break
+        es.remove_old_data_from_indexes(1, args.n, ["csmauditlog"], "timestamp")
+        es.remove_old_data_from_indexes(1, args.n, ["alerts"], "created_time")
+        remove_old_indexes(es, 1, args.n, args.e)
+
+def add_cleanup_subcommand(main_parser):
+    subparsers = main_parser.add_parser("es_cleanup", help='cleanup of audit log')
+    subparsers.set_defaults(func=process_es_cleanup)
+    subparsers.add_argument("-s", type=str, help="Total /var/log storage capacity")
+    subparsers.add_argument("-p", type=str, help=" /var/log usage percentage")
+    subparsers.add_argument("-d", type=int, default=90, help="days to keep data")
+    subparsers.add_argument("-c", type=int, default=90, help="Capping for /var/log in percentage")
+    subparsers.add_argument("-e", type=str, default=30, help="Elasticsearch db size cap in percentage")
+    subparsers.add_argument("-n", type=str, default="localhost:9200", help="address:port of elasticsearch service")
+
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
@@ -119,6 +122,7 @@ if __name__ == '__main__':
     from csm.common.conf import Conf, ConfSection, DebugConf
     from csm.core.blogic import const
     from csm.common.payload import Yaml
+    from csm.common.process import SimpleProcess
     Conf.init()
     Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
     Log.init(const.CSM_CLEANUP_LOG_FILE,
@@ -131,8 +135,7 @@ if __name__ == '__main__':
     try:
         argParser = argparse.ArgumentParser()
         subparsers = argParser.add_subparsers()
-        add_auditlog_subcommand(subparsers)
-        add_stats_subcommand(subparsers)
+        add_cleanup_subcommand(subparsers)
         args = argParser.parse_args()
         args.func(args)
     except Exception as e:
