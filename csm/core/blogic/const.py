@@ -545,7 +545,7 @@ ALERTS_SERVICE = "alerts_service"
 
 ALERT_RETRY_COUNT = 3
 COMMON = "common"
-
+MAINTENANCE = "MAINTENANCE"
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
