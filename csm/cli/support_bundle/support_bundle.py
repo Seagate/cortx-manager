@@ -17,6 +17,7 @@ import sys
 import os
 import string
 import random
+import getpass
 import errno
 from importlib import import_module
 from csm.common.payload import Yaml, JsonMessage
@@ -127,6 +128,10 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None.
         """
+        current_user = str(getpass.getuser())
+        # Check if User is Root User.
+        if current_user.lower() != const.SSH_USER_NAME:
+            repsonse_msg = f"Support Bundle {const.ROOT_PRIVILEGES_MSG}"
         bundle_id = SupportBundle.generate_bundle_id()
         provisioner = SupportBundle.import_provisioner_plugin()
         if not provisioner:
