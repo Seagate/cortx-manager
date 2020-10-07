@@ -855,7 +855,7 @@ class UslService(ApplicationService):
         """
         try:
             conf = await self._provisioner.get_network_configuration()
-            ip = conf.cluster_ip
+            ip = conf.mgmt_vip
         except NetworkConfigFetchError as e:
             reason = 'Could not obtain network configuration from provisioner'
             Log.error(f'{reason}: {e}')
