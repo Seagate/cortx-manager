@@ -15,7 +15,5 @@
 
 FILE=/usr/bin/csm_cleanup
 if [ -f "$FILE" ]; then
-    TOTAL_STORAGE=$( df -BM "/var/log" | awk '{print $2}' | grep -iv "1M-blocks" | cut -d'M' -f1)
-    USAGE_PERCENTAGE=$( df -h "/var/log" | awk '{print $5}' | grep -iv "USE" | cut -d'%' -f1)
-    $FILE es_cleanup -s $TOTAL_STORAGE -p $USAGE_PERCENTAGE -d 90 -c 90 -e 30
+    $FILE es_cleanup -d 90 -c 90 -e 30
 fi
