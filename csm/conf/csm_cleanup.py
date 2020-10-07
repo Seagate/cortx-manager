@@ -134,7 +134,7 @@ def process_es_cleanup(args):
         days_to_keep_data = days_to_keep_data-1
         # Break if current ES storage is less than ES capping OR
         # Break if no of days is less than or equal 2
-        if (get_du_data() <= es_db_capping) or (days_to_keep_data<=2):
+        if (get_du_data()<=es_db_capping) or (days_to_keep_data<=2):
             break
         days_to_keep_data = days_to_keep_data-1
         clean_indexes(es, days_to_keep_data, args.host_port)
