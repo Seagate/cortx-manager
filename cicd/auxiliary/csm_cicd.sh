@@ -31,9 +31,9 @@ cp -f $CSM_REPO_PATH/cicd/auxiliary/stx.pem /etc/ssl/stx/
 
 groupadd haclient
 
-mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
-cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
-chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
+#mkdir -p /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+#cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/ees-schema.json /opt/seagate/cortx/provisioner/generated_configs/healthmap/
+#chmod 777 /opt/seagate/cortx/provisioner/generated_configs/healthmap/ees-schema.json
 
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
