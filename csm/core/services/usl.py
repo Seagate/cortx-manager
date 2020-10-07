@@ -680,7 +680,7 @@ class UslService(ApplicationService):
                                 Log.info('Device registration successful')
                                 break
                             elif response.status != 201:
-                                reason = 'Device registration failed'
+                                reason = 'Lyve Pilot failed to register the device'
                                 Log.error(f'{reason}---unexpected status code {response.status}')
                                 raise CsmInternalError(desc=reason)
                     except HttpClientError as e:
