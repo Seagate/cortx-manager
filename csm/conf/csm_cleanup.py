@@ -32,6 +32,13 @@ import sys
 import os
 import pathlib
 
+index_field_map = {
+    "alerts":"created_time",
+    "alerts-history":"created_time",
+    "csmauditlog":"timestamp",
+    "s3-rsys-index":"timestamp"
+}
+
 # Search outdated indexes in es reply and generate list of outdated indexes
 def filter_out_old_indexes(date_before, indexes):
     index_start = indexes.find('index')
@@ -80,39 +87,62 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
             Log.debug("Nothing to remove")
 
 
+def clean_indexes(es,no_of_days,host_port):
+    for index,field in index_field_map.items():
+        Log.debug(f"Removing data for old index:{index} for {no_of_days} days.")
+        es.remove_old_data_from_indexes(no_of_days, host_port, [index], field)
+    remove_old_indexes(es, no_of_days, host_port, args.emulate)
+
+def get_du_data():
+    cmd = "sudo du -BM /var/log/elasticsearch/"
+    sp_es = SimpleProcess(cmd)
+    Log.debug(f"Running {cmd}")
+    res = sp_es.run()
+    Log.debug(f"Resulted: {res}")
+    res = int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
+    return res
+
+def get_df_data():
+    cmd = " df -BM /var/log"
+    sp_es = SimpleProcess(cmd)
+    Log.debug(f"Running {cmd}")
+    cmd_data = sp_es.run()
+    Log.debug(f"Resulted: {cmd_data}")
+    storage_info = cmd_data[0].decode('utf-8').split('\n').pop(1).split(' ')
+    result = [ele for ele in storage_info if len(ele)>0]
+    return int(result[1].split('M')[0]),  int(result[4].split('%')[0])
+
 def process_es_cleanup(args):
     # Pass arguments to worker function
     # remove data older than given number of days
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    es.remove_old_data_from_indexes(args.d, args.n, ["csmauditlog"], "timestamp")
-    es.remove_old_data_from_indexes(args.d, args.n, ["alerts"], "created_time")
-    remove_old_indexes(es, args.d, args.n, args.e)
+    days_to_keep_data = int(args.days_to_keep_data)
+    clean_indexes(es, days_to_keep_data, args.host_port)
+    var_log_storage, var_log_usage_percent = get_df_data() #get current /var/log storage
 
-    cmd = "du -BM /var/log/elasticsearch/"
-    sp = SimpleProcess(cmd)
-    res = sp.run()
-    res = res[0]
-    res = int(res.decode("utf-8").split('\t')[0].split('M')[0])
-    es_db_capping = (int(args.s) * int(args.e)) / 100
+    #calculate es_db_capp Eg. var_log_storage=8000MB es_storage_cap_percent=30%
+    es_db_capping = (var_log_storage * int(args.es_storage_cap_percent)) / 100
 
-    while int(args.p) > int(args.c):
-        res = sp.run()
-        res = res[0]
-        if int(res.decode("utf-8").split('\t')[0].split('M')[0]) <= es_db_capping:
+    while var_log_usage_percent > int(args.var_log_cap_percent):
+        days_to_keep_data = days_to_keep_data-1
+        # Break if current ES storage is less than ES capping OR
+        # Break if no of days is less than or equal 2
+        if (get_du_data() <= es_db_capping) or (days_to_keep_data<=2):
             break
-        es.remove_old_data_from_indexes(1, args.n, ["csmauditlog"], "timestamp")
-        es.remove_old_data_from_indexes(1, args.n, ["alerts"], "created_time")
-        remove_old_indexes(es, 1, args.n, args.e)
+        days_to_keep_data = days_to_keep_data-1 
+        clean_indexes(es, days_to_keep_data, args.host_port)
+        var_log_storage, var_log_usage_percent = get_df_data() #get current /var/log usage %
+
 
 def add_cleanup_subcommand(main_parser):
     subparsers = main_parser.add_parser("es_cleanup", help='cleanup of audit log')
     subparsers.set_defaults(func=process_es_cleanup)
-    subparsers.add_argument("-s", type=str, help="Total /var/log storage capacity")
-    subparsers.add_argument("-p", type=str, help=" /var/log usage percentage")
-    subparsers.add_argument("-d", type=int, default=90, help="days to keep data")
-    subparsers.add_argument("-c", type=int, default=90, help="Capping for /var/log in percentage")
-    subparsers.add_argument("-e", type=str, default=30, help="Elasticsearch db size cap in percentage")
-    subparsers.add_argument("-n", type=str, default="localhost:9200", help="address:port of elasticsearch service")
+
+    subparsers.add_argument("-d","--days_to_keep_data", type=int, default=90, help="days to keep data")
+    subparsers.add_argument("-c","--var_log_cap_percent", type=int, default=90, help="Capping for /var/log in percentage")
+    subparsers.add_argument("-e","--es_storage_percent", type=str, default=30, help="ES size in '%' of /var/log storage")
+    subparsers.add_argument("-n","--host_port", type=str, default="localhost:9200", help="address:port of elasticsearch service")
+    subparsers.add_argument("-m","--emulate", action='store_true', help="emulate, do not really delete indexes")
 
 
 if __name__ == '__main__':
