@@ -10,7 +10,7 @@
       "args": [
         {
           "flag": "resource_name",
-          "help": "Node-ID for stopping the node.",
+          "help": "Node-ID or Hostname for stopping the node.",
           "type": "str",
           "json": true
         },
@@ -40,7 +40,7 @@
       "args": [
         {
           "flag": "resource_name",
-          "help": "Provide node-id for shutting down the resource.",
+          "help": "Provide node-id or hostname for shutting down the resource.",
           "type": "str",
           "json": true
         },
@@ -70,7 +70,7 @@
       "args": [
         {
           "flag": "resource_name",
-          "help": "Node Name",
+          "help": "Node Name or Hostname of resource",
           "type": "str",
           "json": true
         },
@@ -129,6 +129,7 @@
         "table": {
           "headers": {
             "name": "Node ID",
+            "hostname": "Hostname",
             "online": "Online",
             "standby": "Stand-By Status"
           },
@@ -157,102 +158,6 @@
         "class": "System",
         "is_static": true
       }
-    },
-    {
-      "name": "replace_node",
-      "description": "Provision new node.",
-      "permissions_tag": "update",
-      "sub_commands": [
-        {
-          "name": "start",
-          "description": "Start node replacement.",
-          "need_confirmation": true,
-          "permissions_tag": "update",
-          "args": [
-            {
-              "flag": "resource_name",
-              "type": "str",
-              "help": "Resource name for node replace.",
-              "json": true
-
-            },
-            {
-              "flag": "--hostname",
-              "dest": "hostname",
-              "type": "str",
-              "help": "Hostname for new node. Default is same as before ",
-              "json": true
-            },
-            {
-              "flag": "--port",
-              "dest": "ssh_port",
-              "type": "Validatiors.positive_int",
-              "help": "ssh port for new node. Default is same as before",
-              "json": true
-            },
-            {
-              "flag": "args",
-              "default": [],
-              "suppress_help": true,
-              "nargs": "?",
-              "help": ""
-            }
-          ],
-          "comm": {
-            "type": "rest",
-            "method": "post",
-            "target": "/{version}/maintenance/cluster/replace_node",
-            "version": "v1"
-          },
-          "output": {
-            "success": "Node replacement started successfully."
-          }
-        },
-        {
-          "name": "status",
-          "description": "Get node replacement status.",
-          "need_confirmation": false,
-          "permissions_tag": "list",
-          "args": [
-            {
-              "flag": "-f",
-              "dest": "format",
-              "help": "Format of Output",
-              "default": "table",
-              "type": "str",
-              "choices": [
-                "table",
-                "xml",
-                "json"
-              ]
-            },
-            {
-              "flag": "args",
-              "default": [],
-              "suppress_help": true,
-              "nargs": "?",
-              "help": ""
-            }
-          ],
-          "comm": {
-            "type": "rest",
-            "method": "get",
-            "target": "/{version}/maintenance/cluster/replace_node_status",
-            "version": "v1"
-          },
-          "output": {
-            "table": {
-              "headers": {
-                "node_id": "Node Id",
-                "job_id": "Job Id",
-                "status": "Status",
-                "created_time": "Created Time",
-                "updated_time": "Updated Time"
-              }
-            }
-          }
-        }
-      ]
     }
   ]
 }

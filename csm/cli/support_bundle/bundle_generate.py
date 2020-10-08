@@ -78,7 +78,7 @@ class ComponentsBundle:
             cmd_proc = SimpleProcess(f"{command} {bundle_id} {path}")
             output, err, return_code = cmd_proc.run()
             Log.debug(f"Command Output -> {output} {err}, {return_code}")
-            if err:
+            if return_code != 0:
                 ComponentsBundle.publish_log(
                     f"Bundle generation failed for {component}", ERROR,
                     bundle_id, node_name, comment)
@@ -234,17 +234,6 @@ class ComponentsBundle:
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking failed {e}", ERROR, bundle_id,
                                          node_name, comment)
-
-        # Upload the File.
-        try:
-            uploaded = ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                        const.SUPPORT_BUNDLE), tar_file_name)
-            if uploaded:
-                 ComponentsBundle.publish_log("Uploaded on configured location.",
-                                      INFO, bundle_id, node_name, comment)
-        except Exception as e:
-            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
-                                         comment)
         finally:
             if os.path.isdir(bundle_path):
                 shutil.rmtree(bundle_path)
