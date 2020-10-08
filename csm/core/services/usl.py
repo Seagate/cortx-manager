@@ -19,19 +19,16 @@ import time
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
-from botocore.exceptions import ClientError as BotoClientError
 from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
-from typing import cast, Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4, uuid5
 
 from csm.common.conf import Conf
 from csm.common.errors import (
-    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied,
-    CsmServiceConflict
-)
+    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied)
 from csm.common.periodic import Periodic
 from cortx.utils.data.access import Query
 from cortx.utils.log import Log
@@ -41,7 +38,9 @@ from csm.core.blogic import const
 from csm.core.services.storage_capacity import StorageCapacityService
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
-from csm.core.data.models.s3 import IamUser, IamUserCredentials
+from csm.core.services.s3.iam_users import IamUsersService
+from csm.core.services.s3.access_keys import S3AccessKeysService
+from csm.core.services.s3.buckets import S3BucketService
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
@@ -136,10 +135,8 @@ class UslService(ApplicationService):
         }
         return register_device_params
 
-    async def _format_lyve_pilot_access_params(
-        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
-        bucket: Bucket
-    ) -> Dict[str, Any]:
+    async def _format_lyve_pilot_access_params(self, s3_account: Dict,
+                                               iam_user_access_key: Dict) -> Dict[str, Any]:
         network = await self._provisioner.get_network_configuration()
         access_params = {
             'accountName': s3_account.get('account_name'),
@@ -149,273 +146,100 @@ class UslService(ApplicationService):
                 Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
             ),
             'credentials': {
-                'accessKey': iam_user_access_key.access_key_id,
-                'secretKey': iam_user_access_key.secret_key,
+                'accessKey': iam_user_access_key.get('access_key_id'),
+                'secretKey': iam_user_access_key.get('secret_key'),
             },
         }
         return access_params
 
-    async def _cleanup_on_lyve_pilot_registration_error(
-        self,
-        s3_account_service: S3AccountService,
-        s3_account: Dict,
-        iam_user: IamUser,
-        iam_user_access_key: IamUserCredentials,
-        bucket: Bucket,
-    ) -> None:
-        Log.debug('Cleaning up Lyve Pilot resources...')
-        access_key = s3_account.get('access_key')
-        secret_key = s3_account.get('secret_key')
-        Log.debug('Remove bucket')
-        s3_client = self._s3plugin.get_s3_client(
-            access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
-        )
-        await s3_client.delete_bucket(bucket.name)
-        Log.debug('Remove IAM user access key')
-        iam_client = self._s3plugin.get_iam_client(
-            access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
-        )
-        await iam_client.delete_user_access_key(
-            iam_user_access_key.access_key_id, user_name=iam_user.user_name)
-        Log.debug('Remove IAM user')
-        await iam_client.delete_user(iam_user.user_name)
-        Log.debug('Remove S3 account')
-        s3_credentials = S3Credentials(
-            str(s3_account.get('account_name')),
-            str(s3_account.get('access_key')),
-            str(s3_account.get('secret_key')),
-            '',
-        )
+    async def _cleanup(self,
+                       s3_account_service: S3AccountService,
+                       s3_iam_users_service: IamUsersService,
+                       s3_access_keys_service: S3AccessKeysService,
+                       s3_bucket_service: S3BucketService,
+                       s3_credentials: Optional[S3Credentials] = None,
+                       s3_account_name: Optional[str] = None,
+                       iam_user_name: Optional[str] = None,
+                       iam_user_access_key_id: Optional[str] = None,
+                       bucket_name: Optional[str] = None) -> None:
+        if s3_credentials is None:
+            Log.debug('No cleaning to be done')
+            return
         try:
-            await s3_account_service.delete_account(
-                s3_credentials, s3_credentials.user_id
-            )
+            if bucket_name is not None:
+                Log.debug(f'Deleting bucket {bucket_name}')
+                await s3_bucket_service.delete_bucket(bucket_name, s3_credentials)
+            if iam_user_access_key_id is not None:
+                Log.debug(f'Deleting access key {iam_user_access_key_id}')
+                await s3_access_keys_service.delete_access_key(
+                    s3_credentials, iam_user_access_key_id, user_name=iam_user_name)
+            if iam_user_name is not None:
+                Log.debug(f'Deleting IAM user {iam_user_name}')
+                await s3_iam_users_service.delete_user(s3_credentials, iam_user_name)
+            if s3_account_name is not None:
+                Log.debug(f'Deleting S3 account {s3_account_name}')
+                await s3_account_service.delete_account(s3_credentials, s3_account_name)
         except (S3ServiceError, Exception) as e:
-            reason = f'Failed to remove account {s3_credentials.user_id}'
-            Log.error(f'{reason} --- {e}')
-        Log.info('Lyve Pilot resources cleanup complete.')
+            # Supress any errors from the cleanup, don't bother the user
+            Log.error(f'Cleanup failed --- {str(e)}')
 
     async def _initialize_lyve_pilot_s3_resources(
         self,
         s3_account_service: S3AccountService,
+        s3_iam_users_service: IamUsersService,
+        s3_access_keys_service: S3AccessKeysService,
+        s3_bucket_service: S3BucketService,
         s3_account_name: str,
         s3_account_email: str,
         s3_account_password: str,
         iam_user_name: str,
         iam_user_password: str,
         bucket_name: str,
-        *,
-        repair_mode: bool = False,
-    ) -> Tuple[Dict, IamUser, IamUserCredentials, Bucket]:
+    ) -> Tuple[S3Credentials, Dict, Dict, Dict, Dict]:
+        s3_credentials: Optional[S3Credentials] = None
         s3_account: Optional[Dict] = None
-        iam_user: Optional[IamUser] = None
-        existing_iam_user: Optional[IamUser] = None
-        iam_user_access_key: Optional[IamUserCredentials] = None
-        bucket: Optional[Bucket] = None
-        existing_bucket: Optional[Bucket] = None
+        iam_user: Optional[Dict] = None
+        iam_user_access_key: Optional[Dict] = None
+        iam_user_access_key_id: Optional[str] = None
+        bucket: Optional[Dict] = None
 
-        async def cleanup(*, s3_account_service=None, iam_client=None, s3_client=None):
-            # Remove bucket if it exists
-            if s3_client is not None and bucket is not None:
-                await s3_client.delete_bucket(bucket.name)
-            # Remove IAM user's access key if it exists
-            if iam_client is not None and iam_user_access_key is not None:
-                await iam_client.delete_user_access_key(
-                    iam_user_access_key.access_key_id,
-                    user_name=iam_user.user_name)
-            # Remove IAM user if it exists
-            if iam_client is not None and iam_user is not None:
-                await iam_client.delete_user(iam_user.user_name)
-            # Remove S3 account if it exists
-            if s3_account_service is not None and s3_account is not None:
-                s3_credentials = S3Credentials(
-                    str(s3_account.get('account_name')),
-                    str(s3_account.get('access_key')),
-                    str(s3_account.get('secret_key')),
-                    '',
-                )
-                try:
-                    await s3_account_service.delete_account(
-                        s3_credentials, s3_credentials.user_id
-                    )
-                except (S3ServiceError, Exception) as e:
-                    reason = f'Failed to remove account {s3_credentials.user_id}'
-                    Log.error(f'{reason} --- {e}')
-
-        Log.debug('Create S3 account')
         try:
+            Log.debug('Create S3 account')
             s3_account = await s3_account_service.create_account(
-                s3_account_name, s3_account_email, s3_account_password,
-            )
-            # FIXME `cast()` is unsafe; mypy could not derive type correctly
-            s3_account = cast(Dict, s3_account)
-            access_key = s3_account.get('access_key')
-            secret_key = s3_account.get('secret_key')
-            assert s3_account is not None
-        # FIXME There is no way to extract meaningful error codes from ``CsmInternalError``.
-        #   For that reason, we raise internal server errors in all of those cases.
+                s3_account_name, s3_account_email, s3_account_password)
+            s3_credentials = S3Credentials(
+                str(s3_account.get('account_name')),
+                str(s3_account.get('access_key')),
+                str(s3_account.get('secret_key')),
+                '')
+            Log.debug('Create IAM user')
+            iam_user = await s3_iam_users_service.create_user(
+                s3_credentials, iam_user_name, iam_user_password)
+            iam_user_arn = str(iam_user.get('arn'))
+            Log.debug('Create IAM user access key')
+            iam_user_access_key = await s3_access_keys_service.create_access_key(
+                s3_credentials, user_name=iam_user_name)
+            iam_user_access_key_id = str(iam_user_access_key.get('access_key_id'))
+            Log.debug('Create bucket')
+            bucket = await s3_bucket_service.create_bucket(s3_credentials, bucket_name)
+            Log.debug('Tag bucket')
+            await self._tag_lyve_pilot_bucket(s3_credentials, s3_bucket_service, bucket_name)
+            Log.debug('Put bucket policy')
+            await self._set_lyve_pilot_policy(s3_credentials, s3_bucket_service, iam_user_arn, bucket_name)
         except (S3ServiceError, CsmInternalError, Exception) as e:
-            await cleanup(s3_account_service=s3_account_service)
-            reason = 'S3 account creation failed'
+            await self._cleanup(s3_account_service,
+                                s3_iam_users_service,
+                                s3_access_keys_service,
+                                s3_bucket_service,
+                                s3_credentials,
+                                s3_account_name,
+                                iam_user_name,
+                                iam_user_access_key_id,
+                                bucket_name)
+            reason = 'S3 resources preparation failed'
             Log.error(f'{reason}---{str(e)}')
-            raise CsmInternalError(desc=reason)
-        Log.debug('Create IAM user')
-        try:
-            iam_client = self._s3plugin.get_iam_client(
-                access_key, secret_key, CsmS3ConfigurationFactory.get_iam_connection_config()
-            )
-            existing_iam_user = await self._get_lyve_pilot_iam_user(iam_client, iam_user_name)
-            if existing_iam_user is None:
-                iam_user = await self._create_lyve_pilot_iam_user(
-                    iam_client, iam_user_name, iam_user_password
-                )
-            elif not repair_mode:
-                reason = 'IAM user already exists'
-                Log.error(f'{reason}')
-                raise CsmServiceConflict(desc=reason)
-            assert existing_iam_user is not None or iam_user is not None
-        except CsmServiceConflict as e:
-            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
             raise e
-        except Exception as e:
-            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
-            reason = 'IAM user creation failed'
-            Log.error(f'{reason}---{str(e)}')
-            raise CsmInternalError(desc=reason)
-        Log.debug('Create access key for IAM user')
-        try:
-            # Rationale: keep only one access key for Lyve Pilot IAM user
-            if repair_mode:
-                await self._delete_lyve_pilot_iam_user_credentials(iam_client, iam_user.user_name)
-            iam_user_access_key = await self._create_lyve_pilot_iam_user_credentials(
-                iam_client, iam_user_name)
-        except CsmInternalError as e:
-            await cleanup(s3_account_service=s3_account_service, iam_client=iam_client)
-            reason = 'IAM user access key creation failed'
-            Log.error(f'{reason}---{str(e)}')
-            raise CsmInternalError(desc=reason)
-        Log.debug('Create bucket')
-        try:
-            s3_client = self._s3plugin.get_s3_client(
-                access_key, secret_key, CsmS3ConfigurationFactory.get_s3_connection_config()
-            )
-            existing_bucket = await self._get_lyve_pilot_bucket(s3_client, bucket_name)
-            if existing_bucket is None:
-                bucket = await self._create_lyve_pilot_bucket(s3_client, bucket_name)
-                await self._tag_lyve_pilot_bucket(s3_client, bucket_name)
-                await self._set_lyve_pilot_policy(s3_client, iam_user, bucket_name)
-            elif not repair_mode:
-                reason = 'Bucket already exists'
-                Log.error(f'{reason}')
-                raise CsmServiceConflict(desc=reason)
-        except CsmServiceConflict as e:
-            await cleanup(
-                s3_account_service=s3_account_service, iam_client=iam_client, s3_client=s3_client
-            )
-            raise e
-        except Exception as e:
-            await cleanup(
-                s3_account_service=s3_account_service, iam_client=iam_client, s3_client=s3_client
-            )
-            reason = 'Bucket creation failed'
-            Log.error(f'{reason}---{str(e)}')
-            raise CsmInternalError(desc=reason)
-        # In case we are running on repair mode, suffice to test if the resources already exist.
-        # In case we are not, exceptions should have been raised previously.
-        # FIXME `cast()` is unsafe; mypy could not derive types correctly
-        return (
-            s3_account,
-            cast(IamUser, existing_iam_user or iam_user),
-            iam_user_access_key,
-            cast(Bucket, existing_bucket or bucket),
-        )
-
-    async def _get_lyve_pilot_iam_user(self, iam_cli, user_name: str) -> Optional[IamUser]:
-        """
-        Checks Lyve Pilot IAM user exists and returns it
-        """
-
-        # TODO: Currently the IAM server does not support 'get-user' operation.
-        # Thus there is no way to obtain details about existing IAM user: ID and ARN.
-        # Workaround: delete IAM user even if it exists (and recreate then).
-        # When get-user is implemented on the IAM server side workaround could be removed.
-        try:
-            await iam_cli.delete_user(user_name)
-        except BotoClientError:
-            # Ignore errors in deletion, user might not exist
-            pass
-
-        return None
-
-    async def _create_lyve_pilot_iam_user(
-        self, iam_cli, user_name: str, user_passwd: str
-    ) -> IamUser:
-        """
-        Creates Lyve Pilot IAM user inside the currently logged in S3 account
-        """
-
-        Log.debug(f'Creating Lyve Pilot IAM user {user_name}')
-        iam_user_resp = await iam_cli.create_user(user_name)
-        if hasattr(iam_user_resp, "error_code"):
-            erorr_msg = iam_user_resp.error_message
-            raise CsmInternalError(f'Failed to create Lyve Pilot IAM user: {erorr_msg}')
-        Log.info(f'Lyve Pilot IAM user {user_name} is created')
-
-        iam_login_resp = await iam_cli.create_user_login_profile(user_name, user_passwd, False)
-        if hasattr(iam_login_resp, "error_code"):
-            # Remove the user if the login profile creation failed
-            await iam_cli.delete_user(user_name)
-            error_msg = iam_login_resp.error_message
-            raise CsmInternalError(
-                f'Failed to create login profile for Lyve Pilot IAM user {error_msg}')
-        Log.info(f'Login profile for Lyve Pilot IAM user {user_name} is created')
-
-        return iam_user_resp
-
-    async def _create_lyve_pilot_iam_user_credentials(
-        self, iam_cli, user_name: str
-    ) -> IamUserCredentials:
-        """
-        Gets the access key id and secret key for Lyve Pilot IAM user
-        """
-
-        creds = await iam_cli.create_user_access_key(user_name=user_name)
-        if hasattr(creds, 'error_code'):
-            error_msg = creds.error_message
-            raise CsmInternalError(
-                f'Failed to create access key for Lyve Pilot IAM user: {error_msg}')
-        return creds
-
-    async def _delete_lyve_pilot_iam_user_credentials(self, iam_cli, user_name: str) -> None:
-        Log.debug(f'Deleting Lyve Pilot IAM user {user_name} credentials')
-        access_keys_resp = await iam_cli.list_user_access_keys(user_name=user_name)
-        for access_key in access_keys_resp.access_keys:
-            res = await iam_cli.delete_user_access_key(access_key.access_key_id, user_name=user_name)
-            if hasattr(res, 'error_code'):
-                error_msg = res.error_message
-                raise CsmInternalError(f'Failed to delete access key {access_key.access_key_id}: '
-                                       f'{error_msg}')
-        Log.info(f'IAM user {user_name} credentials are deleted')
-
-    async def _get_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
-        """
-        Checks if Lyve Pilot bucket already exists and returns it
-        """
-
-        Log.debug('Getting Lyve Pilot bucket')
-        bucket = await s3_cli.get_bucket(bucket_name)
-
-        return bucket
-
-    async def _create_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> Bucket:
-        """
-        Creates Lyve Pilot bucket inside the curretnly logged in S3 account
-        """
-
-        Log.debug(f'Creating Lyve Pilot bucket {bucket_name}')
-        bucket = await s3_cli.create_bucket(bucket_name)
-        Log.info(f'Lyve Pilot bucket {bucket_name} is created')
-        return bucket
+        return (s3_credentials, s3_account, iam_user, iam_user_access_key, bucket)
 
     async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
@@ -427,29 +251,27 @@ class UslService(ApplicationService):
         tags = await s3_cli.get_bucket_tagging(bucket)
         return tags.get('udx', 'disabled') == 'enabled'
 
-    async def _tag_lyve_pilot_bucket(self, s3_cli, bucket_name: str) -> None:
+    async def _tag_lyve_pilot_bucket(self, s3_credentials: S3Credentials,
+                                     s3_bucket_service: S3BucketService, bucket_name: str) -> None:
         """
         Puts the Lyve Pilot tag on a specified bucket
         """
-
-        Log.debug(f'Tagging bucket {bucket_name} with Lyve Pilot tag')
         bucket_tags = {"udx": "enabled"}
-        await s3_cli.put_bucket_tagging(bucket_name, bucket_tags)
+        await s3_bucket_service.put_bucket_tagging(s3_credentials, bucket_name, bucket_tags)
         Log.info(f'Lyve Pilot bucket {bucket_name} is taggged with {bucket_tags}')
 
-    async def _set_lyve_pilot_policy(self, s3_cli, iam_user, bucket_name: str):
+    async def _set_lyve_pilot_policy(self, s3_credentials: S3Credentials,
+                                     s3_bucket_service: S3BucketService, iam_user_arn: str,
+                                     bucket_name: str) -> None:
         """
         Grants the specified IAM user full access to the specified bucket
         """
-
-        Log.debug(
-            f'Setting Lyve Pilot policy for bucket {bucket_name} and IAM user {iam_user.user_name}')
         policy = {
             'Version': str(date.today()),
             'Statement': [{
                 'Sid': 'UdxIamAccountPerm',
                 'Effect': 'Allow',
-                'Principal': {"AWS": iam_user.arn},
+                'Principal': {"AWS": iam_user_arn},
                 'Action': ['s3:GetObject', 's3:PutObject',
                            's3:ListMultipartUploadParts', 's3:AbortMultipartUpload',
                            's3:GetObjectAcl', 's3:PutObjectAcl',
@@ -460,10 +282,9 @@ class UslService(ApplicationService):
                 'Resource': f'arn:aws:s3:::{bucket_name}/*',
             }]
         }
-        await s3_cli.put_bucket_policy(bucket_name, policy)
+        await s3_bucket_service.put_bucket_policy(s3_credentials, bucket_name, policy)
         Log.info(
-            f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user {iam_user.user_name}')
-
+            f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user (arn) {iam_user_arn}')
 
     async def _get_volume_name(self, bucket_name: str) -> str:
         return await self._get_system_friendly_name() + ": " + bucket_name
@@ -603,6 +424,9 @@ class UslService(ApplicationService):
     async def post_register_device(
         self,
         s3_account_service: S3AccountService,
+        s3_iam_users_service: IamUsersService,
+        s3_access_keys_service: S3AccessKeysService,
+        s3_bucket_service: S3BucketService,
         url: str,
         pin: str,
         s3_account_name: str,
@@ -628,9 +452,13 @@ class UslService(ApplicationService):
             Log.error(reason)
             raise CsmInternalError(desc=reason)
         # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
-        (lyve_pilot_s3_account, lyve_pilot_iam_user, lyve_pilot_iam_user_access_key,
+        (lyve_pilot_s3_credentials, lyve_pilot_s3_account, lyve_pilot_iam_user,
+         lyve_pilot_iam_user_access_key,
          lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
             s3_account_service,
+            s3_iam_users_service,
+            s3_access_keys_service,
+            s3_bucket_service,
             s3_account_name,
             s3_account_email,
             s3_account_password,
@@ -643,21 +471,23 @@ class UslService(ApplicationService):
                 url, pin, self._token)
             access_params = await self._format_lyve_pilot_access_params(
                 lyve_pilot_s3_account,
-                lyve_pilot_iam_user,
                 lyve_pilot_iam_user_access_key,
-                lyve_pilot_bucket,
             )
             registration_body = {
                 'registerDeviceParams': register_device_params,
                 'accessParams': access_params,
             }
         except Exception as e:
-            await self._cleanup_on_lyve_pilot_registration_error(
+            await self._cleanup(
                 s3_account_service,
-                lyve_pilot_s3_account,
-                lyve_pilot_iam_user,
-                lyve_pilot_iam_user_access_key,
-                lyve_pilot_bucket,
+                s3_iam_users_service,
+                s3_access_keys_service,
+                s3_bucket_service,
+                lyve_pilot_s3_credentials,
+                lyve_pilot_s3_account.get('account_name'),
+                lyve_pilot_iam_user.get('user_name'),
+                lyve_pilot_iam_user_access_key.get('access_key_id'),
+                lyve_pilot_bucket.get('bucket_name'),
             )
             reason = 'Error on registration body assembly'
             Log.error(f'{reason}---{str(e)}')
@@ -681,7 +511,7 @@ class UslService(ApplicationService):
                                 Log.info('Device registration successful')
                                 break
                             elif response.status != 201:
-                                reason = 'Device registration failed'
+                                reason = 'Lyve Pilot failed to register the device'
                                 Log.error(f'{reason}---unexpected status code {response.status}')
                                 raise CsmInternalError(desc=reason)
                     except HttpClientError as e:
@@ -703,12 +533,16 @@ class UslService(ApplicationService):
                     },
                 }
         except Exception as e:
-            await self._cleanup_on_lyve_pilot_registration_error(
+            await self._cleanup(
                 s3_account_service,
-                lyve_pilot_s3_account,
-                lyve_pilot_iam_user,
-                lyve_pilot_iam_user_access_key,
-                lyve_pilot_bucket,
+                s3_iam_users_service,
+                s3_access_keys_service,
+                s3_bucket_service,
+                lyve_pilot_s3_credentials,
+                lyve_pilot_s3_account.get('account_name'),
+                lyve_pilot_iam_user.get('user_name'),
+                lyve_pilot_iam_user_access_key.get('access_key_id'),
+                lyve_pilot_bucket.get('bucket_name'),
             )
             raise e
 
