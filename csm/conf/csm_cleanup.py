@@ -92,26 +92,24 @@ def clean_indexes(es, no_of_days, host_port):
         es.remove_old_data_from_indexes(no_of_days, host_port, [index], field)
     remove_old_indexes(es, no_of_days, host_port, args.emulate)
 
+def execute_cmd(cmd=""):
+    sp_es = SimpleProcess(cmd)
+    Log.debug(f"Running {cmd}")
+    res = sp_es.run()
+    Log.debug(f"Resulted: {res}")
+    return res
+
 def get_du_data():
     try:
-        cmd = "sudo du -BM /var/log/elasticsearch/"
-        sp_es = SimpleProcess(cmd)
-        Log.debug(f"Running {cmd}")
-        res = sp_es.run()
-        Log.debug(f"Resulted: {res}")
-        res = int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
-        return res
+        res = execute_cmd(cmd="sudo du -BM /var/log/elasticsearch/")
+        return int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
     except Exception as e:
         Log.error(f"Error in processing {cmd}: {e}")
         raise Exception(f"Error in processing {cmd}: {e}")
 
 def get_df_data():
     try:
-        cmd = " df -BM /var/log"
-        sp_es = SimpleProcess(cmd)
-        Log.debug(f"Running {cmd}")
-        cmd_data = sp_es.run()
-        Log.debug(f"Resulted: {cmd_data}")
+        cmd_data = execute_cmd(cmd=" df -BM /var/log")
         storage_info = cmd_data[0].decode('utf-8').split('\n').pop(1).split(' ')
         result = [ele for ele in storage_info if len(ele)>0]
         return int(result[1].split('M')[0]),  int(result[4].split('%')[0])
