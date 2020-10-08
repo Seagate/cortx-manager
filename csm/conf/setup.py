@@ -427,7 +427,6 @@ class Setup:
         except ProvisionerCliError as e:
             Log.warn(f"Salt command failed {e}")
         if setup_info and setup_info.get(const.STORAGE_TYPE) == const.STORAGE_TYPE_VIRTUAL:
-            logrotate_conf = const.CLEANUP_LOGROTATE_PATH_VIRTUAL
             cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
             cron_conf = const.SOURCE_CRON_PATH
