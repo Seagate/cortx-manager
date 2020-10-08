@@ -87,7 +87,7 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
             Log.debug("Nothing to remove")
 
 def clean_indexes(es, no_of_days, host_port):
-    for index,field in index_field_map.items():
+    for index, field in index_field_map.items():
         Log.debug(f"Removing data for old index:{index} for {no_of_days} days.")
         es.remove_old_data_from_indexes(no_of_days, host_port, [index], field)
     remove_old_indexes(es, no_of_days, host_port, args.emulate)
