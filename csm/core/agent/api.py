@@ -143,6 +143,21 @@ class CsmRestApi(CsmApi, ABC):
         method = request.method
         user_agent = request.headers.get('User-Agent')
         return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} User-Agent:{user_agent}")
+    
+    @staticmethod
+    def process_audit_log(resp, request):
+        url = request.path
+        if (not request.app["usl_polling_log"]) \
+                and ("/usl/" in url) \
+                and (url not in ["/usl/v1/registerDevice"]):
+            return
+        audit = CsmRestApi.http_request_to_log_string(request)
+        if (getattr(request, "session", None) is not None
+                and getattr(request.session, "credentials", None) is not None):
+            Log.audit(f'User: {request.session.credentials.user_id} '
+                      f'{audit} RC: {resp["error_code"]}')
+        else:
+            Log.audit(f'{audit} RC: {resp["error_code"]}')
 
     @staticmethod
     def error_response(err: Exception, request) -> dict:
@@ -169,13 +184,8 @@ class CsmRestApi(CsmApi, ABC):
         else:
             resp["message"] = f'{str(err)}'
 
-        audit = CsmRestApi.http_request_to_log_string(request)
-        if (getattr(request, "session", None) is not None
-                and getattr(request.session, "credentials", None) is not None):
-            Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'{audit} RC: {resp["error_code"]}')
-        else:
-            Log.audit(f'{audit} RC: {resp["error_code"]}')
+        
+        CsmRestApi.process_audit_log(resp, request)
         return resp
 
     @staticmethod
@@ -368,7 +378,7 @@ class CsmRestApi(CsmApi, ABC):
             ssl_context = None
 
         web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context,
-                    access_log=Log.logger, access_log_format=const.REST_ACCESS_FORMAT)
+                    access_log=None, access_log_format=const.REST_ACCESS_FORMAT)
 
     @staticmethod
     async def process_request(request):
