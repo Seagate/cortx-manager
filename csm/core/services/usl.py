@@ -206,22 +206,20 @@ class UslService(ApplicationService):
             Log.debug('Create S3 account')
             s3_account = await s3_account_service.create_account(
                 s3_account_name, s3_account_email, s3_account_password)
-            assert s3_account is not None
             s3_credentials = S3Credentials(
                 str(s3_account.get('account_name')),
                 str(s3_account.get('access_key')),
                 str(s3_account.get('secret_key')),
                 '')
             Log.debug('Create IAM user')
-            assert iam_user is not None
+            iam_user = await s3_iam_users_service.create_user(
+                s3_credentials, iam_user_name, iam_user_password)
             iam_user_arn = str(iam_user.get('arn'))
             Log.debug('Create IAM user access key')
                 s3_credentials, user_name=iam_user_name)
-            assert iam_user_access_key is not None
             iam_user_access_key_id = str(iam_user_access_key.get('access_key_id'))
             Log.debug('Create bucket')
             bucket = await s3_bucket_service.create_bucket(s3_credentials, bucket_name)
-            assert bucket is not None
             Log.debug('Tag bucket')
             await self._tag_lyve_pilot_bucket(s3_credentials, s3_bucket_service, bucket_name)
             Log.debug('Put bucket policy')

@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Union, Dict
+from typing import Dict
 
 from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
