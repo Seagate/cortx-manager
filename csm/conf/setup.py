@@ -679,17 +679,17 @@ class Setup:
         minion_id = None
         healthmap_folder_path = None
         healthmap_filename = None
+        """
+        Fetching the minion id of the node where this cli command is fired.
+        This minion id will be required to fetch the healthmap path.
+        Will use 'srvnode-1' in case the salt command fails to fetch the id.
+        """
+        minion_id = Setup.get_salt_data(const.GRAINS_GET, const.ID)
+        if not minion_id:
+            Log.logger.warn(f"Unable to fetch minion id for the node." \
+                f"Using {const.MINION_NODE1_ID}.")
+            minion_id = const.MINION_NODE1_ID
         try:
-            """
-            Fetching the minion id of the node where this cli command is fired.
-            This minion id will be required to fetch the healthmap path.
-            Will use 'srvnode-1' in case the salt command fails to fetch the id.
-            """
-            minion_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
-            if not minion_id:
-                Log.logger.warn(f"Unable to fetch minion id for the node." \
-                    f"Using {const.MINION_NODE1_ID}.")
-                minion_id = const.MINION_NODE1_ID
             healthmap_folder_path = Setup.get_salt_data_using_minion_id\
                 (minion_id, const.PILLAR_GET, 'sspl:health_map_path')
             if not healthmap_folder_path:
