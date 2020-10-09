@@ -156,11 +156,11 @@ class UslService(ApplicationService):
                        s3_iam_users_service: IamUsersService,
                        s3_access_keys_service: S3AccessKeysService,
                        s3_bucket_service: S3BucketService,
-                       s3_credentials: Optional[S3Credentials] = None,
-                       s3_account_name: Optional[str] = None,
-                       iam_user_name: Optional[str] = None,
-                       iam_user_access_key_id: Optional[str] = None,
-                       bucket_name: Optional[str] = None) -> None:
+                       s3_credentials: Optional[S3Credentials],
+                       s3_account_name: Optional[str],
+                       iam_user_name: Optional[str],
+                       iam_user_access_key_id: Optional[str],
+                       bucket_name: Optional[str]) -> None:
         if s3_credentials is None:
             Log.debug('No cleaning to be done')
             return
@@ -168,7 +168,7 @@ class UslService(ApplicationService):
             if bucket_name is not None:
                 Log.debug(f'Deleting bucket {bucket_name}')
                 await s3_bucket_service.delete_bucket(bucket_name, s3_credentials)
-            if iam_user_access_key_id is not None:
+            if iam_user_access_key_id is not None and iam_user_name is not None:
                 Log.debug(f'Deleting access key {iam_user_access_key_id}')
                 await s3_access_keys_service.delete_access_key(
                     s3_credentials, iam_user_access_key_id, user_name=iam_user_name)
@@ -196,44 +196,47 @@ class UslService(ApplicationService):
         bucket_name: str,
     ) -> Tuple[S3Credentials, Dict, Dict, Dict, Dict]:
         s3_credentials: Optional[S3Credentials] = None
-        s3_account: Optional[Dict] = None
-        iam_user: Optional[Dict] = None
-        iam_user_access_key: Optional[Dict] = None
-        iam_user_access_key_id: Optional[str] = None
-        bucket: Optional[Dict] = None
+        lyve_pilot_acc_name: Optional[str] = None
+        lyve_pilot_user_name: Optional[str] = None
+        lyve_pilot_access_key_id: Optional[str] = None
+        lyve_pilot_bucket_name: Optional[str] = None
 
         try:
             Log.debug('Create S3 account')
             s3_account = await s3_account_service.create_account(
                 s3_account_name, s3_account_email, s3_account_password)
+            lyve_pilot_acc_name = s3_account.get('account_name')
             s3_credentials = S3Credentials(
-                str(s3_account.get('account_name')),
+                lyve_pilot_acc_name,
                 str(s3_account.get('access_key')),
                 str(s3_account.get('secret_key')),
                 '')
             Log.debug('Create IAM user')
             iam_user = await s3_iam_users_service.create_user(
                 s3_credentials, iam_user_name, iam_user_password)
-            iam_user_arn = str(iam_user.get('arn'))
+            lyve_pilot_user_name = str(iam_user.get('user_name'))
             Log.debug('Create IAM user access key')
                 s3_credentials, user_name=iam_user_name)
-            iam_user_access_key_id = str(iam_user_access_key.get('access_key_id'))
+            lyve_pilot_access_key_id = str(iam_user_access_key.get('access_key_id'))
             Log.debug('Create bucket')
             bucket = await s3_bucket_service.create_bucket(s3_credentials, bucket_name)
+            lyve_pilot_bucket_name = str(bucket.get('bucket_name'))
             Log.debug('Tag bucket')
             await self._tag_lyve_pilot_bucket(s3_credentials, s3_bucket_service, bucket_name)
             Log.debug('Put bucket policy')
-            await self._set_lyve_pilot_policy(s3_credentials, s3_bucket_service, iam_user_arn, bucket_name)
+            iam_user_arn = str(iam_user.get('arn'))
+            await self._set_lyve_pilot_policy(s3_credentials, s3_bucket_service, iam_user_arn,
+                                              bucket_name)
         except (S3ServiceError, CsmInternalError, Exception) as e:
             await self._cleanup(s3_account_service,
                                 s3_iam_users_service,
                                 s3_access_keys_service,
                                 s3_bucket_service,
                                 s3_credentials,
-                                s3_account_name,
-                                iam_user_name,
-                                iam_user_access_key_id,
-                                bucket_name)
+                                lyve_pilot_acc_name,
+                                lyve_pilot_user_name,
+                                lyve_pilot_access_key_id,
+                                lyve_pilot_bucket_name)
             reason = 'S3 resources preparation failed'
             Log.error(f'{reason}---{str(e)}')
             raise e
