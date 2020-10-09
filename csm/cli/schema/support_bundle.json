@@ -4,7 +4,7 @@
   "sub_commands": [
     {
       "name": "generate",
-      "description": "Displays Alerts On the cli",
+      "description": "Generate Support Bundle",
       "need_confirmation": false,
       "permissions_tag": "create",
       "args": [

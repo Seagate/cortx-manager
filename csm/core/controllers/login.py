@@ -18,6 +18,7 @@ from cortx.utils.log import Log
 from csm.core.services.sessions import LoginService
 from csm.common.errors import InvalidRequest
 from .view import CsmView, CsmResponse, CsmAuth
+from aiohttp import web
 
 
 @CsmView._app_routes.view("/api/v1/login")
@@ -39,7 +40,7 @@ class LoginView(CsmView):
         session_id = await self.request.app.login_service.login(username, password)
         Log.debug(f"Obtained session id for {username}")
         if not session_id:
-            raise InvalidRequest(message_args="Invalid username or password")
+            raise web.HTTPUnauthorized()
 
         Log.debug(f'User: {username} successfully logged in.')
         headers = { CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}' }

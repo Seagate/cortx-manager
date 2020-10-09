@@ -24,6 +24,8 @@ CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
+CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 
 print_time() {
     printf "%02d:%02d:%02d\n" $(( $1 / 3600 )) $(( ( $1 / 60 ) % 60 )) $(( $1 % 60 ))
@@ -81,6 +83,8 @@ Options:
     -k : Provide key for encryption of code
     -p : Provide product name default cortx
     -c : Build rpm for [all|backend|cli]
+    -n : brand name
+    -l : brand file path
     -t : Build rpm with test plan
     -d : Build dev env
     -i : Build csm with integration test
@@ -89,7 +93,7 @@ Options:
     exit 1;
 }
 
-while getopts ":g:v:b:p:k:c:tdiq" o; do
+while getopts ":g:v:b:p:k:c:n:l:tdiq" o; do
     case "${o}" in
         v)
             VER=${OPTARG}
@@ -105,6 +109,12 @@ while getopts ":g:v:b:p:k:c:tdiq" o; do
             ;;
         c)
             COMPONENT=${OPTARG}
+            ;;
+        n)
+            BRAND_NAME=${OPTARG}
+            ;;
+        l)
+            BRAND_CONFIG_PATH=${OPTARG}
             ;;
         t)
             TEST=true
@@ -233,6 +243,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
         -e "s|<CSM_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
     python3 -m PyInstaller --clean -y --distpath "${DIST}/csm" --key "${KEY}" "${PYINSTALLER_FILE}"
+
 ################## Add CSM_PATH #################################
 
     # Genrate spec file for CSM
@@ -250,6 +261,12 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
         sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     else
         sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/csm/conf/etc/csm/csm.conf"
+    fi
+
+################### BRAND SPECIFIC CHANGES ######################
+    if [ "$BRAND_CONFIG_PATH" ]; then
+        cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
+        echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
     fi
 
     gen_tar_file csm_agent csm
@@ -288,6 +305,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
         -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
     python3 -m PyInstaller --clean -y --distpath "${DIST}/cli" --key "${KEY}" "${PYINSTALLER_FILE}"
+
 ################## Add CORTXCLI_PATH #################################
 
 # Genrate spec file for CSM
@@ -308,7 +326,6 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     rm -rf "${TMPDIR}/cli/"*
     CLI_BUILD_END_TIME=$(date +%s)
 fi
-
 
 ################### RPM BUILD ##############################
 
