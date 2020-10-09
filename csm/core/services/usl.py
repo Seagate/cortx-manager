@@ -42,7 +42,7 @@ from csm.core.services.s3.iam_users import IamUsersService
 from csm.core.services.s3.buckets import S3BucketService
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
-from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory
 from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
@@ -171,7 +171,7 @@ class UslService(ApplicationService):
             if s3_account_name is not None:
                 Log.debug(f'Deleting S3 account {s3_account_name}')
                 await s3_account_service.delete_account(s3_credentials, s3_account_name)
-        except (S3ServiceError, Exception) as e:
+        except Exception as e:
             # Supress any errors from the cleanup, don't bother the user
             Log.error(f'Cleanup failed --- {str(e)}')
 
@@ -215,7 +215,7 @@ class UslService(ApplicationService):
             iam_user_arn = str(iam_user.get('arn'))
             await self._set_lyve_pilot_policy(s3_credentials, s3_bucket_service, iam_user_arn,
                                               bucket_name)
-        except (S3ServiceError, CsmInternalError, Exception) as e:
+        except Exception as e:
             await self._cleanup(s3_account_service,
                                 s3_iam_users_service,
                                 s3_bucket_service,
