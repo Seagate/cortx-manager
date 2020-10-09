@@ -87,7 +87,7 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
             Log.debug("Nothing to remove")
 
 def clean_indexes(es, no_of_days, host_port):
-    for index,field in index_field_map.items():
+    for index, field in index_field_map.items():
         Log.debug(f"Removing data for old index:{index} for {no_of_days} days.")
         es.remove_old_data_from_indexes(no_of_days, host_port, [index], field)
     remove_old_indexes(es, no_of_days, host_port, args.emulate)
@@ -104,8 +104,8 @@ def get_du_data():
         res = execute_cmd(cmd="sudo du -BM /var/log/elasticsearch/")
         return int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
     except Exception as e:
-        Log.error(f"Error in processing {cmd}: {e}")
-        raise Exception(f"Error in processing {cmd}: {e}")
+        Log.error(f"Error in processing du cmd: {e}")
+        raise Exception(f"Error in processing du cmd: {e}")
 
 def get_df_data():
     try:
@@ -114,8 +114,8 @@ def get_df_data():
         result = [ele for ele in storage_info if len(ele)>0]
         return int(result[1].split('M')[0]),  int(result[4].split('%')[0])
     except Exception as e:
-        Log.error(f"Error in processing {cmd}: {e}")
-        raise Exception(f"Error in processing {cmd}: {e}")
+        Log.error(f"Error in processing df cmd: {e}")
+        raise Exception(f"Error in processing df cmd: {e}")
 
 def process_es_cleanup(args):
     # Pass arguments to worker function
@@ -141,15 +141,15 @@ def process_es_cleanup(args):
 def add_cleanup_subcommand(main_parser):
     subparsers = main_parser.add_parser("es_cleanup", help='cleanup of audit log')
     subparsers.set_defaults(func=process_es_cleanup)
-    subparsers.add_argument("-d","--days_to_keep_data", type=int, default=90, 
+    subparsers.add_argument("-d","--days_to_keep_data", type=int, default=90,
                                             help="days to keep data")
-    subparsers.add_argument("-c","--var_log_cap_percent", type=int, default=90, 
+    subparsers.add_argument("-c","--var_log_cap_percent", type=int, default=90,
                                             help="Capping for /var/log in percentage")
-    subparsers.add_argument("-e","--es_storage_percent", type=str, default=30, 
+    subparsers.add_argument("-e","--es_storage_percent", type=str, default=30,
                                             help="ES size in '%' of /var/log storage")
-    subparsers.add_argument("-n","--host_port", type=str, default="localhost:9200", 
+    subparsers.add_argument("-n","--host_port", type=str, default="localhost:9200",
                                             help="address:port of elasticsearch service")
-    subparsers.add_argument("-m","--emulate", action='store_true', 
+    subparsers.add_argument("-m","--emulate", action='store_true',
                                             help="emulate, do not really delete indexes")
 
 if __name__ == '__main__':
