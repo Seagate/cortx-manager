@@ -234,17 +234,6 @@ class ComponentsBundle:
         except Exception as e:
             ComponentsBundle.publish_log(f"Linking failed {e}", ERROR, bundle_id,
                                          node_name, comment)
-
-        # Upload the File.
-        try:
-            uploaded = ComponentsBundle.send_file(Conf.get(const.CSM_GLOBAL_INDEX,
-                                        const.SUPPORT_BUNDLE), tar_file_name)
-            if uploaded:
-                 ComponentsBundle.publish_log("Uploaded on configured location.",
-                                      INFO, bundle_id, node_name, comment)
-        except Exception as e:
-            ComponentsBundle.publish_log(f"{e}", ERROR, bundle_id, node_name,
-                                         comment)
         finally:
             if os.path.isdir(bundle_path):
                 shutil.rmtree(bundle_path)
