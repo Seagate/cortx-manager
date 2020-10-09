@@ -87,9 +87,9 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
             Log.debug("Nothing to remove")
 
 def clean_indexes(es, no_of_days, host_port):
-    for index, field in index_field_map.items():
+    for index, timestamp_field in index_field_map.items():
         Log.debug(f"Removing data for old index:{index} for {no_of_days} days.")
-        es.remove_old_data_from_indexes(no_of_days, host_port, [index], field)
+        es.remove_old_data_from_indexes(no_of_days, host_port, [index], timestamp_field)
     remove_old_indexes(es, no_of_days, host_port, args.emulate)
 
 def parse_dir_usage():
@@ -97,6 +97,7 @@ def parse_dir_usage():
         res = StorageInfo.get_dir_usage(dir="/var/log/elasticsearch/", unit="M")
         es_storage = int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
         Log.debug(f"ES storage:{es_storage}")
+        return es_storage
     except Exception as e:
         Log.error(f"Error in processing du cmd: {e}")
         raise Exception(f"Error in processing du cmd: {e}")
@@ -142,7 +143,7 @@ def add_cleanup_subcommand(main_parser):
                                             help="days to keep data")
     subparsers.add_argument("-c","--var_log_cap_percent", type=int, default=90,
                                             help="Capping for /var/log in percentage")
-    subparsers.add_argument("-e","--es_storage_percent", type=str, default=30,
+    subparsers.add_argument("-e","--es_storage_cap_percent", type=str, default=30,
                                             help="ES size in '%' of /var/log storage")
     subparsers.add_argument("-n","--host_port", type=str, default="localhost:9200",
                                             help="address:port of elasticsearch service")

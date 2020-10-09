@@ -1,16 +1,17 @@
 from csm.common.process import SimpleProcess
+from cortx.utils.log import Log
 
 class StorageInfo:
 
     @staticmethod
     def get_dir_usage(dir="", unit="K"):
         cmd = f"sudo du -B{unit} {dir}"
-        return execute_cmd(cmd)
+        return StorageInfo.execute_cmd(cmd)
 
     @staticmethod
     def get_fs_usage(fs="", unit="K"):
         cmd = f"df -B{unit} {fs}"
-        return execute_cmd(cmd)
+        return StorageInfo.execute_cmd(cmd)
 
     @staticmethod
     def execute_cmd(cmd=""):
