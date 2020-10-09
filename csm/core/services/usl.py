@@ -39,7 +39,6 @@ from csm.core.services.storage_capacity import StorageCapacityService
 from csm.core.services.sessions import S3Credentials
 from csm.core.services.s3.accounts import S3AccountService
 from csm.core.services.s3.iam_users import IamUsersService
-from csm.core.services.s3.access_keys import S3AccessKeysService
 from csm.core.services.s3.buckets import S3BucketService
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
@@ -135,7 +134,7 @@ class UslService(ApplicationService):
         return register_device_params
 
     async def _format_lyve_pilot_access_params(self, s3_account: Dict,
-                                               iam_user_access_key: Dict) -> Dict[str, Any]:
+                                               iam_user: Dict) -> Dict[str, Any]:
         network = await self._provisioner.get_network_configuration()
         access_params = {
             'accountName': s3_account.get('account_name'),
@@ -145,8 +144,8 @@ class UslService(ApplicationService):
                 Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
             ),
             'credentials': {
-                'accessKey': iam_user_access_key.get('access_key_id'),
-                'secretKey': iam_user_access_key.get('secret_key'),
+                'accessKey': iam_user.get('access_key_id'),
+                'secretKey': iam_user.get('secret_key'),
             },
         }
         return access_params
@@ -154,12 +153,10 @@ class UslService(ApplicationService):
     async def _cleanup(self,
                        s3_account_service: S3AccountService,
                        s3_iam_users_service: IamUsersService,
-                       s3_access_keys_service: S3AccessKeysService,
                        s3_bucket_service: S3BucketService,
                        s3_credentials: Optional[S3Credentials],
                        s3_account_name: Optional[str],
                        iam_user_name: Optional[str],
-                       iam_user_access_key_id: Optional[str],
                        bucket_name: Optional[str]) -> None:
         if s3_credentials is None:
             Log.debug('No cleaning to be done')
@@ -168,10 +165,6 @@ class UslService(ApplicationService):
             if bucket_name is not None:
                 Log.debug(f'Deleting bucket {bucket_name}')
                 await s3_bucket_service.delete_bucket(bucket_name, s3_credentials)
-            if iam_user_access_key_id is not None and iam_user_name is not None:
-                Log.debug(f'Deleting access key {iam_user_access_key_id}')
-                await s3_access_keys_service.delete_access_key(
-                    s3_credentials, iam_user_access_key_id, user_name=iam_user_name)
             if iam_user_name is not None:
                 Log.debug(f'Deleting IAM user {iam_user_name}')
                 await s3_iam_users_service.delete_user(s3_credentials, iam_user_name)
@@ -186,7 +179,6 @@ class UslService(ApplicationService):
         self,
         s3_account_service: S3AccountService,
         s3_iam_users_service: IamUsersService,
-        s3_access_keys_service: S3AccessKeysService,
         s3_bucket_service: S3BucketService,
         s3_account_name: str,
         s3_account_email: str,
@@ -194,11 +186,10 @@ class UslService(ApplicationService):
         iam_user_name: str,
         iam_user_password: str,
         bucket_name: str,
-    ) -> Tuple[S3Credentials, Dict, Dict, Dict, Dict]:
+    ) -> Tuple[S3Credentials, Dict, Dict, Dict]:
         s3_credentials: Optional[S3Credentials] = None
         lyve_pilot_acc_name: Optional[str] = None
         lyve_pilot_user_name: Optional[str] = None
-        lyve_pilot_access_key_id: Optional[str] = None
         lyve_pilot_bucket_name: Optional[str] = None
 
         try:
@@ -215,9 +206,6 @@ class UslService(ApplicationService):
             iam_user = await s3_iam_users_service.create_user(
                 s3_credentials, iam_user_name, iam_user_password)
             lyve_pilot_user_name = str(iam_user.get('user_name'))
-            Log.debug('Create IAM user access key')
-                s3_credentials, user_name=iam_user_name)
-            lyve_pilot_access_key_id = str(iam_user_access_key.get('access_key_id'))
             Log.debug('Create bucket')
             bucket = await s3_bucket_service.create_bucket(s3_credentials, bucket_name)
             lyve_pilot_bucket_name = str(bucket.get('bucket_name'))
@@ -230,17 +218,15 @@ class UslService(ApplicationService):
         except (S3ServiceError, CsmInternalError, Exception) as e:
             await self._cleanup(s3_account_service,
                                 s3_iam_users_service,
-                                s3_access_keys_service,
                                 s3_bucket_service,
                                 s3_credentials,
                                 lyve_pilot_acc_name,
                                 lyve_pilot_user_name,
-                                lyve_pilot_access_key_id,
                                 lyve_pilot_bucket_name)
             reason = 'S3 resources preparation failed'
             Log.error(f'{reason}---{str(e)}')
             raise e
-        return (s3_credentials, s3_account, iam_user, iam_user_access_key, bucket)
+        return (s3_credentials, s3_account, iam_user, bucket)
 
     async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
@@ -426,7 +412,6 @@ class UslService(ApplicationService):
         self,
         s3_account_service: S3AccountService,
         s3_iam_users_service: IamUsersService,
-        s3_access_keys_service: S3AccessKeysService,
         s3_bucket_service: S3BucketService,
         url: str,
         pin: str,
@@ -454,11 +439,9 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
         (lyve_pilot_s3_credentials, lyve_pilot_s3_account, lyve_pilot_iam_user,
-         lyve_pilot_iam_user_access_key,
          lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
             s3_account_service,
             s3_iam_users_service,
-            s3_access_keys_service,
             s3_bucket_service,
             s3_account_name,
             s3_account_email,
@@ -472,7 +455,7 @@ class UslService(ApplicationService):
                 url, pin, self._token)
             access_params = await self._format_lyve_pilot_access_params(
                 lyve_pilot_s3_account,
-                lyve_pilot_iam_user_access_key,
+                lyve_pilot_iam_user,
             )
             registration_body = {
                 'registerDeviceParams': register_device_params,
@@ -482,12 +465,10 @@ class UslService(ApplicationService):
             await self._cleanup(
                 s3_account_service,
                 s3_iam_users_service,
-                s3_access_keys_service,
                 s3_bucket_service,
                 lyve_pilot_s3_credentials,
                 lyve_pilot_s3_account.get('account_name'),
                 lyve_pilot_iam_user.get('user_name'),
-                lyve_pilot_iam_user_access_key.get('access_key_id'),
                 lyve_pilot_bucket.get('bucket_name'),
             )
             reason = 'Error on registration body assembly'
@@ -537,12 +518,10 @@ class UslService(ApplicationService):
             await self._cleanup(
                 s3_account_service,
                 s3_iam_users_service,
-                s3_access_keys_service,
                 s3_bucket_service,
                 lyve_pilot_s3_credentials,
                 lyve_pilot_s3_account.get('account_name'),
                 lyve_pilot_iam_user.get('user_name'),
-                lyve_pilot_iam_user_access_key.get('access_key_id'),
                 lyve_pilot_bucket.get('bucket_name'),
             )
             raise e
