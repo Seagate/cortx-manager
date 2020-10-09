@@ -845,7 +845,8 @@ class AlertMonitorService(Service, Observable):
             Adding support message if alert is bad.
             """
             if self._is_bad_alert(AlertModel(alert)):
-                alert[const.SUPPORT_MESSAGE] = const.SUPPORT_MSG
+                texts = Json(const.L18N_SCHEMA).load()
+                alert[const.SUPPORT_MESSAGE] = texts.get(const.SUPPORT_MSG, const.SUPPORT_DEFAULT_MSG)
         except Exception as ex:
             Log.error(f"Addition of support message failed. {ex}")
 
