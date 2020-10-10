@@ -13,10 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
 from csm.core.blogic import const
 from typing import Optional, Iterable, Dict
 from csm.common.services import Service, ApplicationService
-from csm.common.payload import Payload, Json
+from csm.common.payload import Payload, Json, JsonMessage
 from csm.core.blogic.models.alerts import AlertModel
 from csm.common.conf import Conf
 from cortx.utils.log import Log
@@ -24,6 +25,7 @@ from csm.common.observer import Observable
 from threading import Event, Thread
 from csm.core.services.alerts import AlertRepository
 import asyncio
+from csm.common.process import SimpleProcess
 
 class HealthRepository:
     def __init__(self):
@@ -58,6 +60,7 @@ class HealthAppService(ApplicationService):
         self.alerts_repo = alerts_repo
         self._is_map_updated_with_db = False
         self._health_plugin = plugin
+        self._node_hostname_map = dict()
         self._init_health_schema()
 
     def _init_health_schema(self):
@@ -105,6 +108,7 @@ class HealthAppService(ApplicationService):
         :return: List of resources
         """
         await self.update_health_schema_with_db()
+        #await self.fetch_host_from_salt()
         component_id = kwargs.get(const.ALERT_COMPONENT_ID, "")
         severity = kwargs.get(const.ALERT_SEVERITY)
         keys = []
@@ -148,6 +152,7 @@ class HealthAppService(ApplicationService):
         :return: List of components
         """
         await self.update_health_schema_with_db()
+        #await self.fetch_host_from_salt()
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
         node_health_details = []
         keys = []
@@ -182,6 +187,7 @@ class HealthAppService(ApplicationService):
         summary call, a boolean flag is maintained.
         """
         await self.update_health_schema_with_db()
+        #await self.fetch_host_from_salt()
         node_id = kwargs.get(const.ALERT_NODE_ID, "")
         node_health_details = []
         keys = []
@@ -214,6 +220,13 @@ class HealthAppService(ApplicationService):
         summary call, a boolean flag is maintained.
         """
         await self.update_health_schema_with_db()
+        start = time.time()
+        await self.fetch_host_from_salt()
+        end = time.time()
+        print(f"Runtime of fetch_host_from_salt is {end - start}")
+        print("Hostname, node dict:", self._node_hostname_map)
+        Log.info(f"Runtime of fetch_host_from_salt is {end - start}")
+        Log.info(f"Hostname, node dict: {self._node_hostname_map}")
         health_schema = self._get_schema()
         health_count_map = {}
         leaf_nodes = []
@@ -545,6 +558,34 @@ class HealthAppService(ApplicationService):
                 self._is_map_updated_with_db = True
             except Exception as e:
                 Log.warn(f"Error in update_health_schema_with db: {e}")
+
+    async def fetch_host_from_salt(self):
+        """
+        This method fetch hostname for all nodes from Salt DB
+        :return: hostnames : List of Hostname :type: List
+        :return: node_list : : List of Node Name :type: List
+        """
+        if not self._node_hostname_map:
+            process = SimpleProcess(
+                "salt-call pillar.get cluster:node_list --out=json")
+            _out, _err, _rc = process.run()
+            if _rc != 0:
+                Log.error(f"Salt command failed : {_err}")
+                return
+            output = JsonMessage(_out.strip()).load()
+            nodes = output.get("local", [])
+            #hostnames = []
+            for each_node in nodes:
+                process = SimpleProcess(
+                    f"salt-call pillar.get cluster:{each_node}:hostname --out=json")
+                _out, _err, _rc = process.run()
+                if _rc != 0:
+                    Log.error(f"Salt command failed : {_err}")
+                    return
+                output = JsonMessage(_out.strip()).load()
+                self._node_hostname_map[each_node] = output.get("local", "")
+                #hostnames.append(output.get("local", ""))
+            #return hostnames, nodes
 
 class HealthMonitorService(Service, Observable):
     """
