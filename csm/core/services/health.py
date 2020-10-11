@@ -61,6 +61,13 @@ class HealthAppService(ApplicationService):
         self._node_hostname_map = dict()
         self._init_health_schema()
 
+    def _create_node_hostname_map(self):
+        """
+        This method creates an in-memory map of minion-id to hostname and
+        vice-versa.
+        """
+        
+
     def _init_health_schema(self):
         health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                       'HEALTH.health_schema')
