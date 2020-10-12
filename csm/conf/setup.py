@@ -416,17 +416,26 @@ class Setup:
         else:
             raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
 
-    def _rsyslog_common(self):
+    def _is_storage_type_virtual(self):
         """
-        Configure common rsyslog and logrotate
-        Also cleanup statsd
+        Get setup info from provisioner
+        Check if storage type is virtual
         """
         setup_info = dict()
         try:
             setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
         except ProvisionerCliError as e:
             Log.warn(f"Salt command failed {e}")
-        if setup_info and setup_info.get(const.STORAGE_TYPE) == const.STORAGE_TYPE_VIRTUAL:
+        if setup_info and setup_info.get(const.STORAGE_TYPE).lower() == (const.STORAGE_TYPE_VIRTUAL).lower():
+            return True
+        return False
+        
+    def _rsyslog_common(self):
+        """
+        Configure common rsyslog and logrotate
+        Also cleanup statsd
+        """
+        if self._is_stroage_type_virtual():
             cron_conf = const.SOURCE_CRON_PATH_VIRTUAL
         else:
             cron_conf = const.SOURCE_CRON_PATH
@@ -450,8 +459,7 @@ class Setup:
         """
         Configure logrotate
         """
-        setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-        if setup_info and setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+        if self._is_stroage_type_virtual():
             source_logrotate_conf = const.SOURCE_LOGROTATE_PATH_VIRTUAL
         else:
             source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
