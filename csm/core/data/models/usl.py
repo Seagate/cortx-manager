@@ -13,15 +13,53 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from schematics.types import UUIDType, StringType, IntType
+from schematics.types import BooleanType, IPv4Type, IntType, MACAddressType, StringType, UUIDType
 from schematics.transforms import blacklist
 
 # TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
 # to https://github.com/schematics/schematics/issues/613 requesting this.
 
-from uuid import UUID
-
 from csm.core.blogic.models import CsmModel
+from uuid import UUID
+from typing import Optional
+
+
+class NetIface(CsmModel):
+    _id = 'macAddress'
+
+    name = StringType(required=True, min_length=1)
+    mac_address = MACAddressType(required=True, serialized_name='macAddress')
+    iface_type = StringType(required=True, serialized_name='type')
+    is_active = BooleanType(required=True, serialized_name='isActive')
+    is_loopback = BooleanType(required=True, serialized_name='isLoopback')
+    ipv4 = IPv4Type()
+    netmask = StringType()
+    broadcast = StringType()
+
+    @staticmethod
+    def instantiate(
+        name: str,
+        mac_address: str,
+        iface_type: str,
+        is_active: bool,
+        is_loopback: bool,
+        ipv4: Optional[str] = None,
+        netmask: Optional[str] = None,
+        broadcast: Optional[str] = None,
+    ) -> 'NetIface':
+        i = NetIface()
+        i.name = name
+        i.mac_address = mac_address
+        i.iface_type = iface_type
+        i.is_active = is_active
+        i.is_loopback = is_loopback
+        if ipv4 is not None:
+            i.ipv4 = ipv4
+        if netmask is not None:
+            i.netmask = netmask
+        if broadcast is not None:
+            i.broadcast = broadcast
+        return i
 
 
 class Device(CsmModel):
