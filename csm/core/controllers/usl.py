@@ -61,7 +61,6 @@ class _View(CsmView):
         self._s3_account_service = self._request.app[const.S3_ACCOUNT_SERVICE]
         self._s3_iam_user_service = self._request.app[const.S3_IAM_USERS_SERVICE]
         self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
-        self._s3_access_keys_service = self._request.app[const.S3_ACCESS_KEYS_SERVICE]
 
 
 class _SecuredView(_View):
@@ -113,8 +112,7 @@ class DeviceRegistrationView(_View):
             params = MethodSchema().load(body)
             return await self._service.post_register_device(
                 self._s3_account_service, self._s3_iam_user_service,
-                self._s3_access_keys_service, self._s3_buckets_service,
-                **params)
+                self._s3_buckets_service, **params)
         except (JSONDecodeError, ValidationError) as e:
             desc = 'Malformed input payload'
             Log.error(f'{desc}: {e}')
