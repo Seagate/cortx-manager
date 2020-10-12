@@ -377,7 +377,7 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context)
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
     @staticmethod
     async def process_request(request):
