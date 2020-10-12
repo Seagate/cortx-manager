@@ -185,7 +185,6 @@ class CsmRestApi(CsmApi, ABC):
         else:
             resp["message"] = f'{str(err)}'
 
-        
         CsmRestApi.process_audit_log(resp, request)
         return resp
 
