@@ -429,7 +429,7 @@ class Setup:
         if setup_info and setup_info.get(const.STORAGE_TYPE).lower() == (const.STORAGE_TYPE_VIRTUAL).lower():
             return True
         return False
-        
+
     def _rsyslog_common(self):
         """
         Configure common rsyslog and logrotate
