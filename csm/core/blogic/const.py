@@ -31,7 +31,6 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 
 # Access log of aiohttp
 # format
-REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
