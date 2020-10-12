@@ -63,7 +63,7 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
 
-        # settting usl polling 
+        # settting usl polling
         usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
         CsmRestApi._app["usl_polling_log"] = usl_polling_log
         #Heath configuration

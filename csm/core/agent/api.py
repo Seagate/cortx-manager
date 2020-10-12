@@ -144,7 +144,7 @@ class CsmRestApi(CsmApi, ABC):
         method = request.method
         user_agent = request.headers.get('User-Agent')
         return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} User-Agent:{user_agent}")
-    
+
     @staticmethod
     def process_audit_log(resp, request):
         url = request.path
