@@ -52,12 +52,10 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      1. Login with your admin password.
      2. Select Virtual host as SSPL.
      
-        <img src="../dev/images/Image%1.jpg?raw=true">
-
+        ![](images/Image%201.jpg)
      3. Navigate to the Admin section.
         
-        <img src="../dev/images/Image-2.jpg?raw=true">
-
+        ![](images/Image%202.jpg)
      4. Click on add user and enter the following details:
         
         > **username:** sspluser 
@@ -66,12 +64,10 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         
      5. Added user will be listed in users table. Click on added user.
       
-        <img src="../dev/images/Image-3.jpg?raw=true">
-    
+        ![](images/Image%203.jpg)
      6. Set all permissions and select virtual host as SSPL
        
-        <img src="../dev/images/Image-4.jpg?raw=true">
-
+        ![](images/Image%204.jpg)
   4. Install Elastic Search:
   
      ```shell
@@ -254,7 +250,7 @@ We thank you for stopping by to check out the CORTX Community. We are fully dedi
 
 Please contribute to the [CORTX Open Source project](https://github.com/Seagate/cortx/blob/main/doc/SuggestedContributions.md) and join our movement to make data storage better, efficient, and more accessible.
 
-Refer to our [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/doc/CORTXContributionGuide.md) to get started with your first contribution.
+Refer to our [CORTX Contribution Guide](CONTRIBUTING.md) to get started with your first contribution.
 
 ### Reach Out to Us
 
