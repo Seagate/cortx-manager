@@ -427,13 +427,6 @@ class Setup:
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
-        if os.path.exists(const.CRON_DIR_HOURLY):
-            logrotate_conf_path = const.SOURCE_CRON_PATH_LOGROTATE
-            Setup._run_cmd("cp -f " + logrotate_conf_path + " " + const.DEST_LOGROTATE_CRON_PATH)
-            Setup._run_cmd("chmod 755 " + const.DEST_LOGROTATE_CRON_PATH)
-        else:
-            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR_HOURLY)
-
     def _logrotate(self):
         """
         Configure logrotate
@@ -446,7 +439,7 @@ class Setup:
             Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
             Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR_DEST)
 
     @staticmethod
     def _set_fqdn_for_nodeid():
