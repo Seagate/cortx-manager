@@ -76,13 +76,20 @@ class HealthAppService(ApplicationService):
         """
         Returns minion id for the corresponding hostname.
         """
-        return self._hostname_node_map.get(hostname, "")
+        minion_id = self._hostname_node_map.get(hostname, "")
+        if not minion_id:
+            Log.error(f"Node server id not found for {hostname}")
+            raise CsmError("Node server id not found.")
+        return minion_id
 
     def get_hostname(self, minion_id):
         """
         Returns hostname for the corresponding minion id.
         """
-        return self._node_hostname_map.get(minion_id, "")
+        hostname = self._node_hostname_map.get(minion_id, "")
+        if not hostname:
+            Log.error(f"Hostname not found for {minion_id}")
+        return hostname
 
     def _init_health_schema(self):
         health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
