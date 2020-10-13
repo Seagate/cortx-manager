@@ -24,10 +24,10 @@ from csm.common.permission_names import Resource, Action
 
 
 class GetMaintenanceSchema(Schema):
-    action = fields.Str(required=True, validate=[Enum([const.NODE_STATUS, const.REPLACE_NODE_STATUS])])
+    action = fields.Str(required=True, validate=[Enum([const.NODE_STATUS])])
 
 class PostMaintenanceSchema(Schema):
-    action_items = [const.SHUTDOWN, const.START, const.STOP, const.REPLACE_NODE]
+    action_items = [const.SHUTDOWN, const.START, const.STOP]
     resource_name = fields.Str(required=True)
     action = fields.Str(required=True, validate=[Enum(action_items)])
     hostname = fields.Str(missing=True, required=False, validate=[Server()])
