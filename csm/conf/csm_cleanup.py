@@ -94,7 +94,7 @@ def clean_indexes(es, no_of_days, host_port):
 
 def parse_dir_usage():
     try:
-        res = StorageInfo.get_dir_usage(dir="/var/log/elasticsearch/", unit="M")
+        res = StorageInfo.get_dir_usage(dir_path="/var/log/elasticsearch/", unit="M")
         es_storage = int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
         Log.debug(f"ES storage:{es_storage}")
         return es_storage
@@ -130,7 +130,7 @@ def process_es_cleanup(args):
         # Break if current ES storage is less than ES capping OR
         # Break if no of days is less than or equal 5. Keep data for last 5days
         if (parse_dir_usage()<=es_db_capping) or (days_to_keep_data<=5):
-            Log.debug(f"Breaking out.")
+            Log.debug("Breaking out.")
             break
         days_to_keep_data = days_to_keep_data-1
         clean_indexes(es, days_to_keep_data, args.host_port)
