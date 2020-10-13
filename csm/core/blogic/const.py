@@ -565,6 +565,7 @@ NETWROK = "network"
 DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
+HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -603,3 +604,4 @@ EMPTY_PASS_FIELD = "Password field can't be empty."
 STORAGE_TYPE_VIRTUAL = "virtual"
 
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
+SHUTDOWN_CRON_TIME = "shutdown_cron_time"
