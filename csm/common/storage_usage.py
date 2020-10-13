@@ -53,5 +53,5 @@ class StorageInfo:
         sp_es = SimpleProcess(cmd)
         Log.debug(f"Running {cmd}")
         res = sp_es.run()
-        Log.debug(f"Resulted: {res}")
+        Log.debug(f"Output: {res[0]}\nError: {res[1]}\nRC: {res[2]}")
         return res
