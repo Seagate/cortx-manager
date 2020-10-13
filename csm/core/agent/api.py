@@ -148,7 +148,7 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def process_audit_log(resp, request):
         url = request.path
-        if (not request.app["usl_polling_log"]
+        if (not request.app[const.USL_POLLING_LOG]
                 and url.startswith('/usl/')
                 and url != "/usl/v1/registerDevice"):
             return
