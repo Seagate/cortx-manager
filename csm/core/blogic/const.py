@@ -603,3 +603,4 @@ EMPTY_PASS_FIELD = "Password field can't be empty."
 STORAGE_TYPE_VIRTUAL = "virtual"
 
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
+SHUTDOWN_CRON_TIME = "shutdown_cron_time"

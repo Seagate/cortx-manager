@@ -24,6 +24,7 @@ from csm.common.observer import Observable
 from threading import Event, Thread
 from csm.core.services.alerts import AlertRepository
 import asyncio
+from csm.common.errors import CsmError
 
 class HealthRepository:
     def __init__(self):
@@ -58,7 +59,38 @@ class HealthAppService(ApplicationService):
         self.alerts_repo = alerts_repo
         self._is_map_updated_with_db = False
         self._health_plugin = plugin
+        self._node_hostname_map = dict()
+        self._hostname_node_map = dict()
+        self._create_node_hostname_map()
         self._init_health_schema()
+
+    def _create_node_hostname_map(self):
+        """
+        This method creates an in-memory map of minion-id to hostname and
+        vice-versa.
+        """
+        self._node_hostname_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
+        self._node_hostname_map.pop(const.SHUTDOWN_CRON_TIME)
+        self._hostname_node_map = {host:node for node, host in self._node_hostname_map.items()}
+
+    def get_minion_id(self, hostname):
+        """
+        Returns minion id for the corresponding hostname.
+        """
+        minion_id = self._hostname_node_map.get(hostname, "")
+        if not minion_id:
+            Log.error(f"Node server id not found for {hostname}")
+            raise CsmError("Node server id not found.")
+        return minion_id
+
+    def get_hostname(self, minion_id):
+        """
+        Returns hostname for the corresponding minion id.
+        """
+        hostname = self._node_hostname_map.get(minion_id, "")
+        if not hostname:
+            Log.error(f"Hostname not found for {minion_id}")
+        return hostname
 
     def _init_health_schema(self):
         health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -111,6 +143,9 @@ class HealthAppService(ApplicationService):
         resources = []
         resource_details = {}
         if component_id:
+            if "node" in component_id:
+                minion_id = self.get_minion_id(component_id.split(':')[1])
+                component_id = f"node:{minion_id}"
             keys.append(component_id)
         else:
             parent_health_schema = self._get_schema(const.KEY_NODES)
@@ -158,6 +193,9 @@ class HealthAppService(ApplicationService):
             parent_health_schema = self._get_schema(const.KEY_NODES)
             keys = self._get_child_node_keys(parent_health_schema)
         for key in keys:
+            if "node" in key:
+                minion_id = self.get_minion_id(key.split(':')[1])
+                key = f"node:{minion_id}"
             node_details = await self._get_component_details(key)
             node_health_details.append(node_details)
         return node_health_details
@@ -254,6 +292,9 @@ class HealthAppService(ApplicationService):
         for component in leaf_nodes:
             component_details.append(component)
         health_summary = self._get_health_count(health_count_map, leaf_nodes)
+        if "node" in node_id:
+            hostname = self.get_hostname(node_id.split(':')[1])
+            node_id = f"node:{hostname}"
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary, "components": component_details}}
         return node_details
 
@@ -270,6 +311,9 @@ class HealthAppService(ApplicationService):
         self._get_leaf_node_health(health_schema, health_count_map,
                                    leaf_nodes, alert_uuid_map)
         health_summary = self._get_health_count(health_count_map, leaf_nodes)
+        if "node" in node_id:
+            hostname = self.get_hostname(node_id.split(':')[1])
+            node_id = f"node:{hostname}"
         node_details = {node_id: {const.HEALTH_SUMMARY: health_summary}}
         return node_details
 
@@ -485,7 +529,11 @@ class HealthAppService(ApplicationService):
             is_node_response = msg_body.get(const.NODE_RESPONSE, False)
             resource_key = msg_body.get(const.RESOURCE_KEY, "")
             sub_resource_map = self.repo.health_schema.get(resource_key)
-            node_id = "node:" + msg_body.get(const.ALERT_NODE_ID, "")
+            """
+            Converting hostname to minion id.
+            """
+            minion_id = self.get_minion_id(msg_body.get(const.ALERT_NODE_ID, ""))
+            node_id = f"node:{minion_id}"
             if is_node_response:
                 resource_map = self._get_health_schema_by_key\
                         (sub_resource_map, node_id)
