@@ -24,6 +24,7 @@ from csm.common.observer import Observable
 from threading import Event, Thread
 from csm.core.services.alerts import AlertRepository
 import asyncio
+from csm.common.errors import CsmError
 
 class HealthRepository:
     def __init__(self):
