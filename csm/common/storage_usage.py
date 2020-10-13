@@ -27,7 +27,7 @@ class StorageInfo:
         dir_path: Path to find disk usage info :default: "" :type:str
         unit: Unit to define data block : default: "K" :type:str
         :return: 
-        :type:str
+        :type:tuple
         """
 
         cmd = f"sudo du -B{unit} {dir_path}"
@@ -42,7 +42,7 @@ class StorageInfo:
         dir_path: Path to find disk usage of filesystem info :default: "" :type:str
         unit: Unit to define data block : default: "K" :type:str
         :return: 
-        :type:str
+        :type:tuple
         """
 
         cmd = f"df -B{unit} {fs}"
