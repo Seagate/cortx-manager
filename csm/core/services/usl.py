@@ -45,11 +45,12 @@ from csm.core.data.models.s3 import IamUser, IamUserCredentials
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3ServiceError
+from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
+from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from cortx.utils.security.secure_storage import SecureStorage
-from csm.plugins.cortx.provisioner import ClusterIdFetchError
 from cortx.utils.security.cipher import Cipher
 
 
@@ -154,8 +155,12 @@ class UslService(ApplicationService):
         return access_params
 
     async def _cleanup_on_lyve_pilot_registration_error(
-        self, s3_account: Dict, iam_user: IamUser, iam_user_access_key: IamUserCredentials,
-        bucket: Bucket
+        self,
+        s3_account_service: S3AccountService,
+        s3_account: Dict,
+        iam_user: IamUser,
+        iam_user_access_key: IamUserCredentials,
+        bucket: Bucket,
     ) -> None:
         Log.debug('Cleaning up Lyve Pilot resources...')
         access_key = s3_account.get('access_key')
@@ -174,7 +179,6 @@ class UslService(ApplicationService):
         Log.debug('Remove IAM user')
         await iam_client.delete_user(iam_user.user_name)
         Log.debug('Remove S3 account')
-        s3_account_service = S3AccountService(self._s3plugin)
         s3_credentials = S3Credentials(
             str(s3_account.get('account_name')),
             str(s3_account.get('access_key')),
@@ -192,6 +196,7 @@ class UslService(ApplicationService):
 
     async def _initialize_lyve_pilot_s3_resources(
         self,
+        s3_account_service: S3AccountService,
         s3_account_name: str,
         s3_account_email: str,
         s3_account_password: str,
@@ -238,7 +243,6 @@ class UslService(ApplicationService):
 
         Log.debug('Create S3 account')
         try:
-            s3_account_service = S3AccountService(self._s3plugin)
             s3_account = await s3_account_service.create_account(
                 s3_account_name, s3_account_email, s3_account_password,
             )
@@ -597,6 +601,7 @@ class UslService(ApplicationService):
 
     async def post_register_device(
         self,
+        s3_account_service: S3AccountService,
         url: str,
         pin: str,
         s3_account_name: str,
@@ -624,6 +629,7 @@ class UslService(ApplicationService):
         # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
         (lyve_pilot_s3_account, lyve_pilot_iam_user, lyve_pilot_iam_user_access_key,
          lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
+            s3_account_service,
             s3_account_name,
             s3_account_email,
             s3_account_password,
@@ -646,6 +652,7 @@ class UslService(ApplicationService):
             }
         except Exception as e:
             await self._cleanup_on_lyve_pilot_registration_error(
+                s3_account_service,
                 lyve_pilot_s3_account,
                 lyve_pilot_iam_user,
                 lyve_pilot_iam_user_access_key,
@@ -696,6 +703,7 @@ class UslService(ApplicationService):
                 }
         except Exception as e:
             await self._cleanup_on_lyve_pilot_registration_error(
+                s3_account_service,
                 lyve_pilot_s3_account,
                 lyve_pilot_iam_user,
                 lyve_pilot_iam_user_access_key,
@@ -837,7 +845,6 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(reason)
         return material
 
-    # TODO replace stub
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
         """
         Provides a list of all network interfaces in a system.
@@ -845,20 +852,17 @@ class UslService(ApplicationService):
         :return: A list containing dictionaries, each containing information about a specific
             network interface.
         """
-        return [
-            {
-                'name': 'tbd',
-                'type': 'tbd',
-                'macAddress': 'AA:BB:CC:DD:EE:FF',
-                'isActive': True,
-                'isLoopback': False,
-                'ipv4': '127.0.0.1',
-                'netmask': '255.0.0.0',
-                'broadcast': '127.255.255.255',
-                'gateway': '127.255.255.254',
-                'ipv6': '::1',
-                'link': 'tbd',
-                'duplex': 'tbd',
-                'speed': 0,
-            }
-        ]
+        try:
+            conf = await self._provisioner.get_network_configuration()
+            ip = conf.mgmt_vip
+        except NetworkConfigFetchError as e:
+            reason = 'Could not obtain network configuration from provisioner'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+        try:
+            iface_data = get_interface_details(ip)
+        except (ValueError, RuntimeError) as e:
+            reason = f'Could not obtain interface details from address {ip}'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+        return [iface_data.to_native()]
