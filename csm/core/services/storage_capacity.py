@@ -62,7 +62,7 @@ class StorageCapacityService(ApplicationService):
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
-            stdout, stderr = await process.run()
+            stdout, stderr, rc = await process.run()
         except Exception as e:
             raise CsmInternalError(f"Error in command execution command : {e}")
         if not stdout:
