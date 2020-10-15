@@ -17,6 +17,7 @@ import os
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar
 from csm.common.conf import Conf
+from cortx.utils.log import Log
 
 class CSMBundle:
     """
@@ -50,6 +51,10 @@ class CSMBundle:
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
-        Tar(tar_file_name).dump(component_data[component_name])
+        if os.path.exists(component_data[component_name][0]):
+            Tar(tar_file_name).dump(component_data[component_name])
+        else:
+            Log.Error(f"Component log file missing: {component_data[component_name][0]}")
+            # TODO raise exception or return error
 
 
