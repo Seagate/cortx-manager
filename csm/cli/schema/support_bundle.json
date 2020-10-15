@@ -34,7 +34,9 @@
             "provisioner",
             "os",
             "health_map",
-            "manifest"
+            "manifest",
+            "uds",
+            "elasticsearch"
           ],
           "nargs": "+",
           "help": "Generate Bundle for Specific components defined."

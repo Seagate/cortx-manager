@@ -41,7 +41,9 @@ class CSMBundle:
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
-        component_data = {"csm": [log_directory_path], "uds": ["/var/log/uds"]}
+        component_data = {"csm": [log_directory_path],
+                          "uds": ["/var/log/uds"],
+                          "elasticsearch": ["/var/log/elasticsearch/elasticsearch_cluster.log"]}
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
