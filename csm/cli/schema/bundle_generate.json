@@ -34,7 +34,7 @@
         "os",
         "health_map",
         "manifest",
-        "uds"
+        "uds",
         "elasticsearch"
       ],
       "nargs": "+",
