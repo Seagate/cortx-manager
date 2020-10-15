@@ -4,6 +4,11 @@
   "permissions_tag": "create",
   "args": [
     {
+      "flag": "component",
+      "type": "str",
+      "help": "Specify the Name of component for Generating Bundle."
+    },
+    {
       "flag": "bundle_id",
       "type": "str",
       "help": "Specify the Bundle Id for Generating Bundle."
