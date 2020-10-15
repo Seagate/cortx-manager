@@ -43,7 +43,7 @@ class StorageInfo:
         unit: Unit to define data block : default: "K" :type:str
         :return:
         :type:tuple"""
-        cmd = f"df -B{unit} {fs}"
+        cmd = f"df -B{unit} {fs} "
         return StorageInfo.execute_cmd(cmd)
 
     @staticmethod
