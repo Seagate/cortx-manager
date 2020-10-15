@@ -6,6 +6,11 @@
     {
       "flag": "component",
       "type": "str",
+      "choices":[
+        "csm",
+        "uds",
+        "elasticsearch"
+      ],`
       "help": "Specify the Name of component for Generating Bundle."
     },
     {
