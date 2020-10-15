@@ -431,14 +431,9 @@ SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
 SOURCE_CRON_PATH_VIRTUAL="{0}/conf{1}/es_logrotate-virtual.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
-
-CRON_DIR_HOURLY="/etc/cron.hourly"
-SOURCE_CRON_PATH_LOGROTATE="{0}/conf{1}/csm_logrotate".format(CSM_PATH, CRON_DIR_HOURLY)
-DEST_LOGROTATE_CRON_PATH="{}/csm_logrotate".format(CRON_DIR_HOURLY)
-
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/csm/logrotate"
+LOGROTATE_DIR_DEST = "/etc/logrotate_hourly.d"
 
 # https status code
 STATUS_CREATED = 201
@@ -565,6 +560,7 @@ NETWROK = "network"
 DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
+HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -603,3 +599,4 @@ EMPTY_PASS_FIELD = "Password field can't be empty."
 STORAGE_TYPE_VIRTUAL = "virtual"
 
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
+SHUTDOWN_CRON_TIME = "shutdown_cron_time"

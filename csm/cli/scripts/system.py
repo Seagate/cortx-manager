@@ -38,8 +38,8 @@ class System:
 
         _unstandby_cmd = const.HCTL_NODE.format(command=_command, user=_user, pwd=_password)
         subprocess_obj = AsyncioSubprocess(_unstandby_cmd)
-        _output, _err = await subprocess_obj.run()
-        if _err:
+        _output, _err, _rc = await subprocess_obj.run()
+        if _rc != 0:
             Log.error(f"_output={_output}\n _err={_err}")
             sys.stderr.write(const.HCTL_ERR_MSG)
             return
