@@ -23,13 +23,12 @@ class StorageInfo:
         """
         Method to get disk usage of provided dir_path
         eg: sudo du -BM /var/log
-        :params: 
+        :params:
         dir_path: Path to find disk usage info :default: "" :type:str
         unit: Unit to define data block : default: "K" :type:str
-        :return: 
+        :return:
         :type:tuple
         """
-
         cmd = f"sudo du -B{unit} {dir_path}"
         return StorageInfo.execute_cmd(cmd)
 
@@ -38,13 +37,12 @@ class StorageInfo:
         """
         Method to get disk usage of provided filesystem
         eg: df -BM /var/log/elasticsearch
-        :params: 
+        :params:
         dir_path: Path to find disk usage of filesystem info :default: "" :type:str
         unit: Unit to define data block : default: "K" :type:str
-        :return: 
+        :return:
         :type:tuple
         """
-
         cmd = f"df -B{unit} {fs}"
         return StorageInfo.execute_cmd(cmd)
 
