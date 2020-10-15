@@ -334,7 +334,6 @@ UDS_NATIVE_PRIVATE_KEY_FILENAME = 'native.key'
 UDS_NATIVE_CERTIFICATE_FILENAME = 'native.crt'
 UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
 UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
-UDS_LOG_PATH = '/var/log/uds'
 
 # USL S3 configuration (CES2020 only!)
 USL_S3_CONF = '/etc/uds/uds_s3.toml'
