@@ -47,6 +47,8 @@ class CSMBundle:
         component_data = {"csm": [csm_log_directory_path],
                           "uds": [uds_log_directory_path],
                           "elasticsearch": [elasticsearch_log_path]}
+        
+        Log.Info(f"Support bundle invoked for {component_name}")
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.

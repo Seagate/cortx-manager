@@ -35,6 +35,7 @@
         "health_map",
         "manifest",
         "uds"
+        "elasticsearch"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."
