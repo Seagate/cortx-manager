@@ -174,6 +174,8 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     CORE_BUILD_START_TIME=$(date +%s)
     mkdir -p $DIST/csm/conf/service
     cp $CONF/setup.yaml $DIST/csm/conf
+    cp $CONF/uds_setup.yaml $DIST/csm/conf
+    cp $CONF/elasticsearch_setup.yaml $DIST/csm/conf
     cp -R $CONF/etc $DIST/csm/conf
     cp -R $CONF/service/csm_agent.service $DIST/csm/conf/service
     cd $TMPDIR
