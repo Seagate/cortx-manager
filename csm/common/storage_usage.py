@@ -37,10 +37,10 @@ class StorageInfo:
         """
         Method to get disk usage of provided filesystem
         eg: df -BM /var/log/elasticsearch
-        :params: 
+        :params:
         dir_path: Path to find disk usage of filesystem info :default: "" :type:str
         unit: Unit to define data block : default: "K" :type:str
-        :return: 
+        :return:
         :type:tuple
         """
         cmd = f"df -B{unit} {fs}"
