@@ -21,6 +21,7 @@ class StorageInfo:
     @staticmethod
     def get_dir_usage(dir_path="", unit="K"):
         """Method to get disk usage of provided dir_path
+        
         eg: sudo du -BM /var/log
         :params:
         dir_path: Path to find disk usage info :default: "" :type:str
