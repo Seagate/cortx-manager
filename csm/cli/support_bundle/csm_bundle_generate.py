@@ -40,10 +40,12 @@ class CSMBundle:
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
-        path = os.path.join(path, const.CSM_GLOBAL_INDEX)
-        os.makedirs(path)
+        component_name = command.options.get("component", "csm")
+        component_data = {"csm": [log_directory_path], "uds": ["/var/log/uds"]}
+        temp_path = os.path.join(path, component_name)
+        os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
-        tar_file_name = os.path.join(path, f"csm_{bundle_id}.tar.gz")
-        Tar(tar_file_name).dump([log_directory_path])
+        tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
+        Tar(tar_file_name).dump(component_data[component_name])
 
 
