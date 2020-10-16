@@ -18,7 +18,7 @@ import errno
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar
 from csm.common.conf import Conf
-from cortx.utils.log import Log
+from csm.common.errors import CsmError
 
 class CSMBundle:
     """
