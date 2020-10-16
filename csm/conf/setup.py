@@ -425,7 +425,7 @@ class Setup:
         try:
             setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
         except ProvisionerCliError as e:
-            Log.warn(f"Salt command failed {e}")
+            Log.warn(f"provisioner command failed {e}")
         if setup_info and setup_info.get(const.STORAGE_TYPE).lower() == (const.STORAGE_TYPE_VIRTUAL).lower():
             return True
         return False
@@ -639,7 +639,7 @@ class Setup:
             else:
                 Log.info("Unsupported features list is empty.")
         except Exception as e_:
-            Log.error(f"Error in storing unsupported features: {e_}")
+            Log.warn(f"Error in storing unsupported features: {e_}")
             # TODO: Suppressing the error for now.
             # raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
