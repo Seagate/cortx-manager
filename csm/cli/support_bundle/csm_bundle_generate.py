@@ -56,5 +56,5 @@ class CSMBundle:
             Tar(tar_file_name).dump(component_data[component_name])
         else:
             raise CsmError(rc = errno.ENOENT,
-                           desc = f"Component log missing: {component_data[component_name][0]}")
+                           desc = f"Component log missing: {component_data[component_name]}")
 
