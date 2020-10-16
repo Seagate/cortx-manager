@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import errno
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar
 from csm.common.conf import Conf
@@ -51,9 +52,9 @@ class CSMBundle:
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
-        if os.path.exists(component_data[component_name][0]):
+        if all(map(os.path.exists, component_data[component_name])):
             Tar(tar_file_name).dump(component_data[component_name])
         else:
-            Log.Error(f"Component log file missing: {component_data[component_name][0]}")
-            # TODO raise exception or return error
+            raise CsmError(rc = errno.ENOENT,
+                           desc = f"Component log missing: {component_data[component_name][0]}")
 
