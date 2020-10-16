@@ -33,7 +33,8 @@
         "provisioner",
         "os",
         "health_map",
-        "manifest"
+        "manifest",
+        "alerts"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."

@@ -34,3 +34,5 @@ COMMANDS:
     - '<CORTX_PATH>/provisioner/conf/setup.yaml'
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
+  alerts:
+    - '<CORTX_PATH>/sspl/conf/alerts_setup.yaml'
