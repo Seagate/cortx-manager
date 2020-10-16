@@ -34,7 +34,8 @@
             "provisioner",
             "os",
             "health_map",
-            "manifest"
+            "manifest",
+            "ha"
           ],
           "nargs": "+",
           "help": "Generate Bundle for Specific components defined."
@@ -108,4 +109,3 @@
     }
   ]
 }
-
