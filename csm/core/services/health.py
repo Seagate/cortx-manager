@@ -70,8 +70,7 @@ class HealthAppService(ApplicationService):
         vice-versa.
         """
         self._node_hostname_map = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
-        self._node_hostname_map.pop(const.SHUTDOWN_CRON_TIME)
-        self._hostname_node_map = {host:node for node, host in self._node_hostname_map.items()}
+        self._hostname_node_map = {host:node for node, host in self._node_hostname_map.items() if node != const.SHUTDOWN_CRON_TIME}
 
     def get_minion_id(self, hostname):
         """
