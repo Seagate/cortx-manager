@@ -47,11 +47,13 @@ class CSMBundle:
         obj_alert_json.dump(alerts_data)
         # Creates CSM Directory
         path = command.options.get("path")
+        print(path)
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
         component_data = {"csm": [csm_log_directory_path],
                           "alerts": [alerts_file_path]}
         temp_path = os.path.join(path, component_name)
+        print(temp_path)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
