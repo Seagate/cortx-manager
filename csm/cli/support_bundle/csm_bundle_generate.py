@@ -21,6 +21,7 @@ from csm.common.conf import Conf
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
+from csm.core.services.alerts import AlertRepository
 
 class CSMBundle:
     """

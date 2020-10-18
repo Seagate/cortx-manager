@@ -35,4 +35,4 @@ COMMANDS:
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
   alerts:
-    - '<CORTX_PATH>/sspl/conf/alerts_setup.yaml'
+    - '<CORTX_PATH>/csm/conf/alerts_setup.yaml'
