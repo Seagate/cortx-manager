@@ -34,17 +34,17 @@ while getopts ":g:i:m:n:c:s" o; do
     esac
 done
 
-CSMCLI_COMMAND="cortxcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
+CORTXCLI_COMMAND="cortxcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
 
 if [ -n "$OS" ]
 then
-  CSMCLI_COMMAND="${CSMCLI_COMMAND} -o"
+  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -o"
 fi
 
 
 if [ -n "$COMPONENTS" ]
 then
-  CSMCLI_COMMAND="${CSMCLI_COMMAND} -c ${COMPONENTS}"
+  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -c ${COMPONENTS}"
 fi
 
-eval $CSMCLI_COMMAND
+eval $CORTXCLI_COMMAND

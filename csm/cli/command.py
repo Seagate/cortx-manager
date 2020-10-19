@@ -110,6 +110,11 @@ class Validatiors:
             raise ArgumentError(errno.ENOENT,
                 ("File operation failed. "
                  "Please check if the file exists."))
+        except KeyError as err:
+            Log.error(f"Check file type. {value}: {err}")
+            raise ArgumentError(errno.ENOENT,
+                ("File operation failed. "
+                 "Please check if the file exists and its type."))
 
     @staticmethod
     def bucket_name(value):
@@ -239,7 +244,7 @@ class Output:
         # TODO: Check 201 response code also for creation requests.
         if self.rc not in  (200, 201, CSM_OPERATION_SUCESSFUL) :
             if isinstance(self.output, str):
-                errstr = Output.error(self.rc, self.output)    
+                errstr = Output.error(self.rc, self.output)
             else:
                 errstr = Output.error(self.rc, kwargs.get("error") ,
                                   self.output)
