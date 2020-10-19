@@ -323,6 +323,36 @@ class Setup:
                 raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
 
         @staticmethod
+        def cli_create(args):
+            """
+            This Function Creates the CortxCli Conf File on Required Location.
+            :return:
+            """
+            os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
+            os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_PATH)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_CONF_PATH)
+            cli_conf_target_path = os.path.join(const.CORTXCLI_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            # Read Current CortxCli Config FIle.
+            conf_file_data = Yaml(cli_conf_path).load()
+            if conf_file_data:
+                if const.ADDRESS_PARAM in args.keys():
+                    conf_file_data[const.CORTXCLI_SECTION][const.CSM_AGENT_HOST_PARAM_NAME] =\
+                        args[const.ADDRESS_PARAM]
+                if args[const.DEBUG]:
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                else:
+                    Setup.Config.store_encrypted_password(conf_file_data)
+                    # Update the Current Config File.
+                    Yaml(cli_conf_path).dump(conf_file_data)
+                Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+                if args["f"] or args[const.DEBUG]:
+                    Yaml(cli_conf_target_path).dump(conf_file_data)
+            else:
+                raise CsmSetupError(f"Unable to load Cortx Cli config. Path:{cli_conf_path}")
+
+        @staticmethod
         def load():
             csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):
@@ -412,7 +442,6 @@ class Setup:
         """
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("cp -f " +const.SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
             Setup._run_cmd("systemctl restart rsyslog")
         else:
             raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
@@ -422,10 +451,6 @@ class Setup:
         Configure common rsyslog and logrotate
         Also cleanup statsd
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-        else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
         else:
@@ -435,13 +460,15 @@ class Setup:
         """
         Configure logrotate
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "csm_agent_log.conf")
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "cleanup_log.conf")
+        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
+
+        if not os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
+        if os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR_DEST)
 
     @staticmethod
     def _set_fqdn_for_nodeid():
@@ -465,9 +492,9 @@ class Setup:
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
@@ -497,7 +524,7 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
+
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
@@ -572,7 +599,7 @@ class Setup:
                 else:
                     Log.logger.warn(f"No alerts found for node id: {node_id}")
             else:
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
+                raise CsmSetupError("setup refresh_config failed. Unbale to load db.")
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 

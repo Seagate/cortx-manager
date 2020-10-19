@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -15,36 +13,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-while getopts ":g:i:m:n:c:s" o; do
-    case "${o}" in
-        i)
-            ID=${OPTARG}
-            ;;
-        m)
-            COMMENT=${OPTARG}
-            ;;
-        n)
-            NODE_NAME=${OPTARG}
-            ;;
-        c)
-            COMPONENTS=${OPTARG}
-            ;;
-        s)
-            OS=true
-    esac
-done
+databases:
+    es_db:
+        import_path: "ElasticSearchDB"
+        config:
+            host: "localhost"
+            port: 9200
+            login: ""
+            password: ""
+            replication: 1
+models:
+-   import_path: "csm.core.blogic.models.support_bundle.SupportBundleModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "supportbundle"
 
-CORTXCLI_COMMAND="cortxcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
-
-if [ -n "$OS" ]
-then
-  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -o"
-fi
-
-
-if [ -n "$COMPONENTS" ]
-then
-  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -c ${COMPONENTS}"
-fi
-
-eval $CORTXCLI_COMMAND
