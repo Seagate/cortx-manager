@@ -76,8 +76,8 @@ class AsyncioSubprocess(Process):
                                                             stderr=asyncio.subprocess.PIPE)
             self._output, self._err = await self._process.communicate()
 
-            return self._output, self._err
+            return self._output, self._err, self._process.returncode
         except Exception as err:
             self._err = "AsyncioSubProcess Error: " + str(err)
             self._output = ""
-            return self._output, self._err
+            return self._output, self._err, self._process.returncode
