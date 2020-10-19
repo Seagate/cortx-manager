@@ -13,30 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-#Component Commands file Path.
-COMMANDS:
-  health_map:
-    - '/opt/seagate/health_view/conf/setup.yaml'
-  os:
-    - '/opt/seagate/os/conf/setup.yaml'
-  csm:
-    - '<CORTX_PATH>/csm/conf/setup.yaml'
-  cortxcli:
-    - '<CORTX_PATH>/cli/conf/setup.yaml'
-  sspl:
-    - '<CORTX_PATH>/sspl/conf/setup.yaml'
-  s3server:
-    - '<CORTX_PATH>/s3/conf/setup.yaml'
-  core:
-    - '<CORTX_PATH>/core/conf/setup.yaml'
-  hare:
-    - '<CORTX_PATH>/hare/conf/setup.yaml'
-    - '<CORTX_PATH>/hare/conf/setup-ha.yaml'
-  provisioner:
-    - '<CORTX_PATH>/provisioner/conf/setup.yaml'
-  manifest:
-    - '<CORTX_PATH>/sspl/conf/manifest.yaml'
-  uds:
-    - '<CORTX_PATH>/csm/conf/uds_setup.yaml'
-  elasticsearch:
-    - '<CORTX_PATH>/csm/conf/elasticsearch_setup.yaml'
+cli:
+    config:
+        script: /usr/bin/cortxcli_setup
+        args: config
+
+support_bundle:
+    - cortxcli csm_bundle_generate

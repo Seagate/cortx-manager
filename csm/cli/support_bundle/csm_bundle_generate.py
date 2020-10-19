@@ -25,7 +25,7 @@ class CSMBundle:
     ThiS Class generates the Support Bundle for Component CSM.
 
     Currently Included Files in CSM Support Bundle:-
-    1) csmcli.log -- Logs for CLI .
+    1) cortxcli.log -- Logs for CLI .
     2) csm_agent.log -- Logs for CSM Backend Agent.
     3) csm_setup.log -- Logs generated during setup for CSM Component.
     """

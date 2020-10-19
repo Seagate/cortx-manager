@@ -246,8 +246,8 @@ class AdminUserView(CsmView):
         if not response:
             status = const.STATUS_CONFLICT
             response = {
-                'message_id': 'root_already_exists',
-                'message_text': 'Root user already exists',
+                'message_id': 'admin_already_exists',
+                'message_text': 'Admin user already exists',
                 'extended_message': user_body['user_id']
             }
 

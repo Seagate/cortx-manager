@@ -64,6 +64,5 @@ csm:
         script: /usr/bin/csm_setup
         args: refresh_config
 
-
 support_bundle:
     - cortxcli csm_bundle_generate csm

@@ -18,7 +18,7 @@ Version: %{version}
 Release: %{dist}
 Summary: CSM Tools
 License: Seagate Proprietary
-URL: https://github.com/Seagate/cortx-csm-agent
+URL: http://github.com/Seagate/cortx-manager
 Source0: <PRODUCT>-csm_agent-%{version}.tar.gz
 %define debug_package %{nil}
 
@@ -48,9 +48,6 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
     ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
 
-    ln -sf $CSM_DIR/lib/cortxcli /usr/bin/cortxcli
-    ln -sf $CSM_DIR/lib/cortxcli $CSM_DIR/bin/cortxcli
-
     ln -sf $CSM_DIR/lib/csm_agent /usr/bin/csm_agent
     ln -sf $CSM_DIR/lib/csm_agent $CSM_DIR/bin/csm_agent
 
@@ -78,7 +75,6 @@ systemctl stop csm_agent
 [ $1 -eq 1 ] && exit 0
 rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
-rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;
