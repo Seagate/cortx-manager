@@ -110,6 +110,11 @@ class Validatiors:
             raise ArgumentError(errno.ENOENT,
                 ("File operation failed. "
                  "Please check if the file exists."))
+        except KeyError as err:
+            Log.error(f"Check file type. {value}: {err}")
+            raise ArgumentError(errno.ENOENT,
+                ("File operation failed. "
+                 "Please check if the file exists and its type."))
 
     @staticmethod
     def bucket_name(value):
