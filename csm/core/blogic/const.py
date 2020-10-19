@@ -18,6 +18,7 @@ CSM_PATH = "/opt/seagate/cortx/csm"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
+CSM_S3_SANITY_LOG_FILE = "csm_s3_sanity"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CSM_CONF_PATH = "/etc/csm"
 ETC_PATH = "/etc"
