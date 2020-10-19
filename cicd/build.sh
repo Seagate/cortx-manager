@@ -287,8 +287,6 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
     cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
     cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
-    cp $CONF/uds_setup.yaml $DIST/csm/conf
-    cp $CONF/elasticsearch_setup.yaml $DIST/csm/conf
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
     cd "$TMPDIR"
 
