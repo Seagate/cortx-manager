@@ -215,8 +215,6 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     CORE_BUILD_START_TIME=$(date +%s)
     mkdir -p $DIST/csm/conf/service
     cp $CONF/setup.yaml $DIST/csm/conf
-    cp $CONF/uds_setup.yaml $DIST/csm/conf
-    cp $CONF/elasticsearch_setup.yaml $DIST/csm/conf
     cp -R $CONF/etc $DIST/csm/conf
     cp -R $CONF/service/csm_agent.service $DIST/csm/conf/service
     cd $TMPDIR
@@ -287,6 +285,10 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p "$DIST/cli/conf/service"
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
+    cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
+    cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
+    cp $CONF/uds_setup.yaml $DIST/csm/conf
+    cp $CONF/elasticsearch_setup.yaml $DIST/csm/conf
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
     cd "$TMPDIR"
 

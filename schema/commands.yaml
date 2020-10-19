@@ -20,8 +20,6 @@ COMMANDS:
   os:
     - '/opt/seagate/os/conf/setup.yaml'
   csm:
-    - '<CORTX_PATH>/csm/conf/setup.yaml'
-  cortxcli:
     - '<CORTX_PATH>/cli/conf/setup.yaml'
   sspl:
     - '<CORTX_PATH>/sspl/conf/setup.yaml'
