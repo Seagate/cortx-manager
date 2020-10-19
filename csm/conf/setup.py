@@ -451,10 +451,6 @@ class Setup:
         Configure common rsyslog and logrotate
         Also cleanup statsd
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-        else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
         else:
@@ -464,13 +460,15 @@ class Setup:
         """
         Configure logrotate
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "csm_agent_log.conf")
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "cleanup_log.conf")
+        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
+
+        if not os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
+        if os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR_DEST)
 
     @staticmethod
     def _set_fqdn_for_nodeid():
