@@ -36,6 +36,7 @@
         "manifest",
         "uds",
         "elasticsearch",
+        "alerts",
         "ha"
       ],
       "nargs": "+",
