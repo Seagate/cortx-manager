@@ -44,7 +44,7 @@ class CSMBundle:
         csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
         elasticsearch_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.elasticsearch_log_path")
-        # alerts_file_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_file_path")
+        alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_filename")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
@@ -55,11 +55,10 @@ class CSMBundle:
         if component_name == "alerts":
             # Fetch alerts for support bundle.
             alerts_data = await CSMBundle.fetch_and_save_alerts()
-            alerts_file_path = os.path.join(path, "fru_alerts.json")
+            alerts_file_path = os.path.join(path, alerts_filename)
             obj_alert_json = Json(alerts_file_path)
             obj_alert_json.dump(alerts_data)
             component_data["alerts"] = [alerts_file_path]
-            Log.info(f"alerts file patha: {alerts_file_path}") 
 
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
