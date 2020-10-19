@@ -35,6 +35,6 @@ COMMANDS:
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
   uds:
-    - '<CORTX_PATH>/csm/conf/uds_setup.yaml'
+    - '<CORTX_PATH>/cli/conf/uds_setup.yaml'
   elasticsearch:
-    - '<CORTX_PATH>/csm/conf/elasticsearch_setup.yaml'
+    - '<CORTX_PATH>/cli/conf/elasticsearch_setup.yaml'
