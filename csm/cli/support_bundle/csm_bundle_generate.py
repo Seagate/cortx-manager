@@ -43,21 +43,17 @@ class CSMBundle:
         # Read Config to Fetch Log File Path
         csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         alerts_file_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_file_path")
-        Log.info(f"Alerts path:{alerts_file_path}")
         # Fetch alerts for support bundle.
         alerts_data = await CSMBundle.fetch_and_save_alerts()
         obj_alert_json = Json(alerts_file_path)
         obj_alert_json.dump(alerts_data)
         # Creates CSM Directory
         path = command.options.get("path")
-        Log.info(f"path:{path}")
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
-        Log.info(f"component_name:{component_name}")
         component_data = {"csm": [csm_log_directory_path],
                           "alerts": [alerts_file_path]}
         temp_path = os.path.join(path, component_name)
-        Log.info(f"temp_path:{temp_path}")
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
