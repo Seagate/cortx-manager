@@ -40,14 +40,20 @@ class CSMBundle:
         # Read Config to Fetch Log File Path
         csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
-        elasticsearch_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.elasticsearch_log_path")
+        es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_cluster_log_path")
+        es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_gc_log_path")
+        es_indexing_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_indexing_log_path")
+        es_search_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_search_log_path")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
         component_data = {"csm": [csm_log_directory_path],
                           "uds": [uds_log_directory_path],
-                          "elasticsearch": [elasticsearch_log_path]}
+                          "elasticsearch": [es_cluster_log_path,
+                                            es_gc_log_path,
+                                            es_indexing_log_path,
+                                            es_search_log_path]}
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
