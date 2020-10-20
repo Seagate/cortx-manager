@@ -49,14 +49,14 @@ class S3AccessKeysService(S3BaseService):
         :param s3_session: S3 session object
         :returns: a dictionary with details about the new access key
         """
-        start_time = int(round(time.time() * 1000))
+        start_time = int(round(time.time()))
         Log.debug('Creating an access key')
         iam_client = self._fetch_iam_client(s3_session)
         resp = await iam_client.create_user_access_key(user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
-        end_time = int(round(time.time() * 1000))
-        Log.debug(f"Create Access Key completed in {end_time-start_time} ms")
+        end_time = int(round(time.time()))
+        Log.debug(f"Create Access Key completed in {end_time-start_time} s")
         return vars(resp)
 
     @Log.trace_method(Log.DEBUG)
@@ -67,14 +67,14 @@ class S3AccessKeysService(S3BaseService):
         :param s3_session: S3 session object
         :returns: a dictionary with details about the updated access key
         """
-        start_time = int(round(time.time() * 1000))
+        start_time = int(round(time.time()))
         Log.debug(f'Updating the access key {access_key_id} with status {status}')
         iam_client = self._fetch_iam_client(s3_session)
         resp = await iam_client.update_user_access_key(access_key_id, status, user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
-        end_time = int(round(time.time() * 1000))
-        Log.debug(f"update Access Key completed in {end_time-start_time} ms")
+        end_time = int(round(time.time()))
+        Log.debug(f"update Access Key completed in {end_time-start_time} s")
         return {
             "access_key_id": access_key_id,
             "status": status
@@ -90,7 +90,7 @@ class S3AccessKeysService(S3BaseService):
         :param limit: the maximum number of entities to return
         :returns: a dictionary with access keys and continuation marker (if the list's limited)
         """
-        start_time = int(round(time.time() * 1000))
+        start_time = int(round(time.time()))
         Log.debug(f'Listing access keys, marker {marker}, limit {limit}')
         iam_client = self._fetch_iam_client(s3_session)
         access_keys_resp = await iam_client.list_user_access_keys(
@@ -109,8 +109,8 @@ class S3AccessKeysService(S3BaseService):
         resp = {'access_keys': resp_keys}
         if access_keys_resp.is_truncated:
             resp['continue'] = access_keys_resp.marker
-        end_time = int(round(time.time() * 1000))
-        Log.debug(f"List Access Key completed in {end_time-start_time} ms")
+        end_time = int(round(time.time()))
+        Log.debug(f"List Access Key completed in {end_time-start_time} s")
         return resp
 
     @Log.trace_method(Log.DEBUG)
@@ -122,14 +122,14 @@ class S3AccessKeysService(S3BaseService):
         :param access_key_id: access key ID
         :returns: a dictionary containing a message about the deletion status
         """
-        start_time = int(round(time.time() * 1000))
+        start_time = int(round(time.time()))
         Log.debug(f'Deleting access key {access_key_id}')
         iam_client = self._fetch_iam_client(s3_session)
         resp = await iam_client.delete_user_access_key(access_key_id, user_name=user_name)
         if isinstance(resp, IamError):
             self._handle_error(resp)
-        end_time = int(round(time.time() * 1000))
-        Log.debug(f"Delete Access Key completed in {end_time-start_time} ms")
+        end_time = int(round(time.time()))
+        Log.debug(f"Delete Access Key completed in {end_time-start_time} s")
         return {
             "message": f"Access key {access_key_id} was successfully deleted"
         }
