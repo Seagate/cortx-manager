@@ -35,7 +35,6 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 
 # Access log of aiohttp
 # format
-REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
@@ -398,6 +397,7 @@ MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
 LOG_LEVEL = "INFO"
+USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
 MANAGEMENT_NETWORK = 'management_network_settings'
