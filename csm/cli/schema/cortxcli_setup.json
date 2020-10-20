@@ -1,0 +1,46 @@
+{
+    "name": "cortxcli_setup",
+    "description": "CortxCLI Setup Command",
+    "sub_commands": [
+        {
+            "name": "config",
+            "description": "Config Cortx CLI tool",
+            "need_confirmation": false,
+            "permissions_tag": "update",
+            "args": [
+                {
+                  "flag": "-a",
+                  "dest": "Address",
+                  "help": "CSM Agent Address",
+                  "default": "127.0.0.1",
+                  "type": "str",
+                  "nargs": "?"
+                },
+                {
+                    "flag": "-f",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "force config overwrite"
+                },
+                {
+                    "flag": "--debug",
+                    "action": "store_true",
+                    "default": false,
+                    "help": "config for dev mode"
+                },
+                {
+                    "flag": "args",
+                    "default": [],
+                    "suppress_help": true,
+                    "nargs": "?"
+                }
+            ],
+            "comm": {
+            "type":"CLI",
+            "method": "cmd",
+            "target": "",
+            "version": "v1"
+            }
+        }
+    ]
+}
