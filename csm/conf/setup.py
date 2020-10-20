@@ -130,7 +130,7 @@ class Setup:
             return result[const.LOCAL]
 
     @staticmethod
-    def get_salt_data_faulty_node_uuid(minion_id, method, key):
+    def get_salt_data_using_minion_id(minion_id, method, key):
         try:
             process = SimpleProcess(f"salt {minion_id} {method} {key} --out=json")
             stdout, stderr, rc = process.run()
@@ -323,6 +323,36 @@ class Setup:
                 raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
 
         @staticmethod
+        def cli_create(args):
+            """
+            This Function Creates the CortxCli Conf File on Required Location.
+            :return:
+            """
+            os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
+            os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_PATH)
+            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_CONF_PATH)
+            cli_conf_target_path = os.path.join(const.CORTXCLI_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
+            # Read Current CortxCli Config FIle.
+            conf_file_data = Yaml(cli_conf_path).load()
+            if conf_file_data:
+                if const.ADDRESS_PARAM in args.keys():
+                    conf_file_data[const.CORTXCLI_SECTION][const.CSM_AGENT_HOST_PARAM_NAME] =\
+                        args[const.ADDRESS_PARAM]
+                if args[const.DEBUG]:
+                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
+                else:
+                    Setup.Config.store_encrypted_password(conf_file_data)
+                    # Update the Current Config File.
+                    Yaml(cli_conf_path).dump(conf_file_data)
+                Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+                if args["f"] or args[const.DEBUG]:
+                    Yaml(cli_conf_target_path).dump(conf_file_data)
+            else:
+                raise CsmSetupError(f"Unable to load Cortx Cli config. Path:{cli_conf_path}")
+
+        @staticmethod
         def load():
             csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):
@@ -412,7 +442,6 @@ class Setup:
         """
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("cp -f " +const.SOURCE_SUPPORT_BUNDLE_CONF+ " " +const.SUPPORT_BUNDLE_CONF)
             Setup._run_cmd("systemctl restart rsyslog")
         else:
             raise CsmSetupError("rsyslog failed. %s directory missing." %const.RSYSLOG_DIR)
@@ -422,10 +451,6 @@ class Setup:
         Configure common rsyslog and logrotate
         Also cleanup statsd
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-        else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
         else:
@@ -435,13 +460,15 @@ class Setup:
         """
         Configure logrotate
         """
-        if os.path.exists(const.LOGROTATE_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("cp -f " +const.CLEANUP_LOGROTATE_PATH+ " " +const.LOGROTATE_PATH)
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "csm_agent_log.conf")
-            Setup._run_cmd("chmod 644 " + const.LOGROTATE_PATH + "cleanup_log.conf")
+        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
+
+        if not os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
+        if os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
-            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR)
+            raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR_DEST)
 
     @staticmethod
     def _set_fqdn_for_nodeid():
@@ -465,9 +492,9 @@ class Setup:
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
         if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}", 
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
@@ -497,7 +524,7 @@ class Setup:
             else:
                 raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
-            
+
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     def _set_consul_vip(self):
@@ -539,7 +566,7 @@ class Setup:
             if not faulty_minion_id:
                 Log.logger.warn("Fetching faulty node minion id failed.")
                 raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = Setup.get_salt_data_faulty_node_uuid\
+            faulty_node_uuid = Setup.get_salt_data_using_minion_id\
                 (faulty_minion_id, const.GRAINS_GET, 'node_id')
             if not faulty_node_uuid:
                 Log.logger.warn("Fetching faulty node uuid failed.")
@@ -572,7 +599,7 @@ class Setup:
                 else:
                     Log.logger.warn(f"No alerts found for node id: {node_id}")
             else:
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
+                raise CsmSetupError("setup refresh_config failed. Unbale to load db.")
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
@@ -593,7 +620,7 @@ class Setup:
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
-  
+
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
@@ -607,7 +634,7 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            
+
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
@@ -670,6 +697,48 @@ class Setup:
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
 
+    @staticmethod
+    def _set_healthmap_path():
+        """
+        This method gets the healthmap path fron salt command and saves the
+        value in csm.conf config.
+        """
+        minion_id = None
+        healthmap_folder_path = None
+        healthmap_filename = None
+        """
+        Fetching the minion id of the node where this cli command is fired.
+        This minion id will be required to fetch the healthmap path.
+        Will use 'srvnode-1' in case the salt command fails to fetch the id.
+        """
+        minion_id = Setup.get_salt_data(const.GRAINS_GET, const.ID)
+        if not minion_id:
+            Log.logger.warn(f"Unable to fetch minion id for the node." \
+                f"Using {const.MINION_NODE1_ID}.")
+            minion_id = const.MINION_NODE1_ID
+        try:
+            healthmap_folder_path = Setup.get_salt_data_using_minion_id\
+                (minion_id, const.PILLAR_GET, 'sspl:health_map_path')
+            if not healthmap_folder_path:
+                Log.logger.error("Fetching health map folder path failed.")
+                raise CsmSetupError("Fetching health map folder path failed.")
+            healthmap_filename = Setup.get_salt_data_using_minion_id\
+                (minion_id, const.PILLAR_GET, 'sspl:health_map_file')
+            if not healthmap_filename:
+                Log.logger.error("Fetching health map filename failed.")
+                raise CsmSetupError("Fetching health map filename failed.")
+            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
+            if not os.path.exists(healthmap_path):
+                Log.logger.error("Health map not available at {healthmap_path}")
+                raise CsmSetupError("Health map not available at {healthmap_path}")
+            """
+            Setting the health map path to csm.conf configuration file.
+            """
+            Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
+            Conf.save(const.CSM_GLOBAL_INDEX)
+        except Exception as e:
+            raise CsmSetupError(f"Setting Health map path failed. {e}")
+
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -703,7 +772,7 @@ class CsmSetup(Setup):
             self._config_user()
             self.set_unsupported_feature_info()
             self._configure_system_auto_restart()
-            
+
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -743,6 +812,7 @@ class CsmSetup(Setup):
             self._logrotate()
             self._rsyslog_common()
             Setup._set_fqdn_for_nodeid()
+            Setup._set_healthmap_path()
             ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
             if ha_check:
                 self._config_cluster(args)
