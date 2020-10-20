@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -15,36 +13,29 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-while getopts ":g:i:m:n:c:s" o; do
-    case "${o}" in
-        i)
-            ID=${OPTARG}
-            ;;
-        m)
-            COMMENT=${OPTARG}
-            ;;
-        n)
-            NODE_NAME=${OPTARG}
-            ;;
-        c)
-            COMPONENTS=${OPTARG}
-            ;;
-        s)
-            OS=true
-    esac
-done
-
-CORTXCLI_COMMAND="cortxcli bundle_generate '${ID}' '${COMMENT}' '${NODE_NAME}'"
-
-if [ -n "$OS" ]
-then
-  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -o"
-fi
+import errno
+from csm.cli.conf.setup import CortxCliSetup
+from csm.core.blogic import const
+from csm.core.providers.providers import Provider, Response
 
 
-if [ -n "$COMPONENTS" ]
-then
-  CORTXCLI_COMMAND="${CORTXCLI_COMMAND} -c ${COMPONENTS}"
-fi
+class SetupProvider(Provider):
 
-eval $CORTXCLI_COMMAND
+    """Provider implementation for csm initialization."""
+
+    def __init__(self):
+        """Init SetupProvider."""
+        super(SetupProvider, self).__init__(const.CORTXCLI_SETUP_CMD)
+        self._cortxcli_setup = CortxCliSetup()
+        self.arg_list = {}
+
+    def _validate_request(self, request):
+        """Validate setup command request."""
+        self._action = request.options["sub_command_name"]
+
+    def _process_request(self, request):
+        try:
+            getattr(self._cortxcli_setup, "%s" %(self._action))(request.options)
+            return Response(0, "CLI %s : PASS" %self._action)
+        except Exception as e:
+            return Response(errno.EINVAL, "CLI %s : Fail %s" %(self._action,e))
