@@ -620,7 +620,7 @@ class Setup:
             feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
-  
+
         try:
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
@@ -634,7 +634,7 @@ class Setup:
                     unsupported_features_list.append(feature.get(const.FEATURE_NAME))
 
             csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            
+
             for setup in csm_unsupported_feature[const.SETUP_TYPES]:
                 if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
                     unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
@@ -772,7 +772,7 @@ class CsmSetup(Setup):
             self._config_user()
             self.set_unsupported_feature_info()
             self._configure_system_auto_restart()
-            
+
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
