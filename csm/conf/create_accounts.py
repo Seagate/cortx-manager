@@ -9,7 +9,7 @@ import os
 import pathlib
 
 
-class CreateAccount:
+class S3AccountCreation:
     def __init__(self, host_port, no_of_s3_account, no_of_iam_users, no_of_buckets, csm_username, csm_password):
         self._host_port = host_port
         self._no_of_s3_account = no_of_s3_account
@@ -45,12 +45,12 @@ class CreateAccount:
             Log.debug(f"S3 account creation pauload: {s3accountobj}")
             res = requests.post(create_account_url, json = s3accountobj, headers= headers)
             if res.status_code == 401:
-                auth_token = CreateAccount.login(self._host_port, self._csm_username, self._csm_password)
+                auth_token = S3AccountCreation.login(self._host_port, self._csm_username, self._csm_password)
                 headers = {'Authorization': auth_token}
                 res = requests.post(create_account_url, json = s3accountobj, headers= headers)
             Log.info(f'S3 account creation response: {res.text}')
 
-            s3_auth = CreateAccount.login(self._host_port, account_name, self._password)
+            s3_auth = S3AccountCreation.login(self._host_port, account_name, self._password)
             s3_headers = {'Authorization': s3_auth}
             for j in range(1, self._no_of_iam_users + 1):
                 iamobj = {"path":"/","user_name":f"iam_{timestamp}_{j}","password": self._password, "require_reset":True}
@@ -67,8 +67,8 @@ class CreateAccount:
                 Log.info(f'Bucket creation response: {bucket_res.text}')            
 
 def process_s3_sanity(args):
-    create_account = CreateAccount(args.host_port, args.no_of_s3_account, args.no_of_iam_users, args.no_of_buckets, args.csm_username, args.csm_password)
-    auth_token = CreateAccount.login(args.host_port, args.csm_username, args.csm_password)
+    create_account = S3AccountCreation(args.host_port, args.no_of_s3_account, args.no_of_iam_users, args.no_of_buckets, args.csm_username, args.csm_password)
+    auth_token = S3AccountCreation.login(args.host_port, args.csm_username, args.csm_password)
     create_account.create_s3_account(auth_token)    
 
 def add_s3_sanity_subcommand(main_parser):
