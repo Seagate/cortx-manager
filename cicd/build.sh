@@ -23,8 +23,11 @@ CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
-CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
+CORTX_UNSUPPORTED_FEATURES_PATH="${CSM_PATH}schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
+CORTX_L18N_PATH="${CSM_PATH}/schema/l18n.json"
+BRAND_L18N_PATH="config/csm/l18n.json"
 
 print_time() {
     printf "%02d:%02d:%02d\n" $(( $1 / 3600 )) $(( ( $1 / 60 ) % 60 )) $(( $1 % 60 ))
@@ -262,16 +265,18 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     fi
 
 ################### BRAND SPECIFIC CHANGES ######################
-    if [ "$BRAND_CONFIG_PATH" ]; then
-        cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
-        echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
-    fi
+if [ "$BRAND_CONFIG_PATH" ]; then
+    cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
+    echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
 
-    gen_tar_file csm_agent csm
-    rm -rf "${TMPDIR}/csm/"*
-    rm -rf "${TMPDIR}/cli/"*
-    CORE_BUILD_END_TIME=$(date +%s)
+    cp "$BRAND_CONFIG_PATH/$BRAND_L18N_PATH" "$CORTX_L18N_PATH"
+    echo "updated l18n.json from $BRAND_CONFIG_PATH/$BRAND_L18N_PATH"
 fi
+
+gen_tar_file csm_agent csm
+rm -rf "${TMPDIR}/csm/"*
+rm -rf "${TMPDIR}/cli/"*
+CORE_BUILD_END_TIME=$(date +%s)
 
 ################### Cli ##############################
 
