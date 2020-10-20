@@ -96,13 +96,17 @@ class S3BucketService(S3BaseService):
         Log.debug("Retrieve the whole list of buckets for active user session")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
+            buckets_get_start_time = int(round(time.time()))
             bucket_list = await s3_client.get_all_buckets()
+            buckets_get_end_time = int(round(time.time()))
+            Log.debug(f"Time to get bucket list: {buckets_get_end_time-buckets_get_start_time}")
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
 
         service_urls = ServiceUrls(self._provisioner)
         # TODO: create model for response
+        bucket_url_start_time = int(round(time.time()))
         bucket_list = [
             {
                 "name": bucket.name,
@@ -111,6 +115,7 @@ class S3BucketService(S3BaseService):
             }
             for bucket in bucket_list]
         end_time = int(round(time.time()))
+        Log.debug(f"Time to get bucket URL for all buckets:  {end_time-bucket_url_start_time} s")
         Log.debug(f"Get list of buckets completed in {end_time-start_time} s")
         return {"buckets": bucket_list}
 
