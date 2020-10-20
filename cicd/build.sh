@@ -288,8 +288,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p "$DIST/cli/conf/service"
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    cp $CLI_CONF/uds_setup.yaml $DIST/cli/conf/uds_setup.yaml
-    cp $CLI_CONF/elasticsearch_setup.yaml $DIST/cli/conf/elasticsearch_setup.yaml
+    cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
+    cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
     cd "$TMPDIR"
 
