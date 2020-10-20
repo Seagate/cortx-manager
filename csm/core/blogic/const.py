@@ -35,7 +35,6 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 
 # Access log of aiohttp
 # format
-REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
@@ -398,6 +397,7 @@ MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
 LOG_LEVEL = "INFO"
+USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
 MANAGEMENT_NETWORK = 'management_network_settings'
@@ -569,6 +569,7 @@ NETWROK = "network"
 DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
+HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -587,7 +588,7 @@ GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
 EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
-                    "storage_type": ["5u84", "PODS"],
+                    "storage_type": ["5u84", "PODS", "RBOD"],
                     "server_type": "physical"}
 
 #unsupported feature
