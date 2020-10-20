@@ -23,7 +23,6 @@ CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
-PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
 CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 
@@ -255,7 +254,6 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
-    sed -i -e "s|<PROVISIONER_CONFIG_PATH>|${PROVISIONER_CONFIG_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
 
     if [ "$QA" == true ]; then
         sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/csm/conf/etc/csm/csm.conf"
