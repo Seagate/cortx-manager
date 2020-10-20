@@ -15,16 +15,20 @@
 
 # Csm Setup
 CSM_PATH = "/opt/seagate/cortx/csm"
+CORTXCLI_PATH = "/opt/seagate/cortx/cli"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
-CSM_CONF_PATH = "/etc/csm"
+CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
+CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SETUP_LOG_DIR = "/tmp"
+CORTXCLI_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
+CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
@@ -35,8 +39,7 @@ REST_ACCESS_FORMAT = '%a %P "%r" %s "%{Referer}i" "%{User-Agent}i" %D'
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
-CSM_SETUP_CONF = '/etc/csm/setup.yaml'
-CSM_SETUP_INDEX = 'CSM_SETUP'
+CORTXCLI_SETUP_CMD = 'cortxcli_setup'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
 CORTX Interactive Shell
@@ -51,17 +54,19 @@ ALERTS_COMMAND = 'alerts'
 BASE_DIR = '/opt/seagate/cortx'
 CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
-COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
+COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
-EXCLUDED_COMMANDS = ['csm_setup']
+EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
+CSM_AGENT_HOST_PARAM_NAME = "csm_agent_host"
+ADDRESS_PARAM = "Address"
 CSM_AGENT_PORT = 8101
 CSM_AGENT_BASE_URL = "http://"
 TIMEOUT = 60
@@ -115,10 +120,13 @@ TYPE_S3_SERVER = 'S3_SERVER'
 # Config
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
+CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
+CORTXCLI_SECTION = 'CORTXCLI'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
+DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
 CSM_SERVICE_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH]
@@ -273,11 +281,12 @@ FAULT_HEALTH = 'Fault'
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
-CSM_SETUP_FILE = '{}/cli/schema/csm_setup.json'.format(CSM_PATH)
+CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
+CORTXCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CORTXCLI_PATH)
 
 # Support Bundle
 SSH_USER_NAME = 'root'
-COMMANDS_FILE = "{}/schema/commands.yaml".format(CSM_PATH)
+COMMANDS_FILE = "{}/schema/commands.yaml".format(CORTXCLI_PATH)
 SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
 SOS_COMP = 'os'
@@ -295,7 +304,7 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-CLI_DEFAULTS_ROLES = '{}/schema/cli_default_roles.json'.format(CSM_PATH)
+CLI_DEFAULTS_ROLES = '{}/cli/schema/cli_default_roles.json'.format(CORTXCLI_PATH)
 PERMISSIONS = "permissions"
 LYVE_PILOT = "lyve_pilot"
 
@@ -422,25 +431,28 @@ S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
 SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
+CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
-SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CSM_PATH, RSYSLOG_DIR)
+CLI_RSYSLOG_PATH = "{}/0-cortxcli_logs.conf".format(RSYSLOG_DIR)
+CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 
-#cron dire
+#cron dir
 CRON_DIR="/etc/cron.daily"
 SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
+LOGROTATE_DIR_DEST = "/etc/logrotate_hourly.d"
 
 # https status code
 STATUS_CREATED = 201
 STATUS_CONFLICT = 409
 
 SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
-CLEANUP_LOGROTATE_PATH = "{0}/conf{1}/common/cleanup_log.conf".format(CSM_PATH, LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
+CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
@@ -546,7 +558,7 @@ ALERTS_SERVICE = "alerts_service"
 ALERT_RETRY_COUNT = 3
 COMMON = "common"
 MAINTENANCE = "MAINTENANCE"
-SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
+SUPPORT_BUNDLE_SHELL_COMMAND = "sh {cortxcli_path}/cli/schema/create_support_bundle.sh {args}"
 CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
 SUPPORT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
@@ -556,6 +568,7 @@ NETWROK = "network"
 DATA_NW = "data_nw"
 ROAMING_IP = "roaming_ip"
 CONSUL_HOST_KEY = "databases.consul_db.config.host"
+HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -574,7 +587,7 @@ GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
 LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
 EDGE_INSTALL_TYPE ={ "nodes": 1,
                     "servers_per_node": 2,
-                    "storage_type": ["5u84", "PODS"],
+                    "storage_type": ["5u84", "PODS", "RBOD"],
                     "server_type": "physical"}
 
 #unsupported feature
@@ -589,4 +602,5 @@ STORAGE_TYPE = "storage_type"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
+HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"

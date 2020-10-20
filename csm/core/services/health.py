@@ -64,6 +64,26 @@ class HealthAppService(ApplicationService):
         self._create_node_hostname_map()
         self._init_health_schema()
 
+    def set_default_values(self, health_schema):
+        """
+        Once the health json is loaded in memory we will iterate over the
+        schema to verify whether the default health keys are present or not.
+        If not we will add the default fields to in-memory schema.
+        This operation will be performed only once when csm agent starts/re-starts.
+        :param health_schema:
+        :return:
+        """
+        try:
+            for value in health_schema.values():
+                if isinstance(value, dict):
+                    if self._checkchilddict(value):
+                        self.set_default_values(value)
+                    else:
+                        if value and not value.keys() >= const.HEALTH_REQUIRED_FIELDS:
+                            HealthAppService.add_default_values(value)
+        except Exception as ex:
+            Log.warn(f"Setting default values for health schema failed:{ex}")
+
     def _create_node_hostname_map(self):
         """
         This method creates an in-memory map of minion-id to hostname and
@@ -98,6 +118,7 @@ class HealthAppService(ApplicationService):
             self._health_schema = Payload(Json(health_schema_path))
             self.repo.health_schema = self._health_schema
             self.repo.health_schema.dump()
+            self.set_default_values(self.repo.health_schema.data())
         except Exception as ex:
             Log.error(f"Error occured in reading health schema. Path: {health_schema_path}, {ex}")
 
@@ -407,6 +428,19 @@ class HealthAppService(ApplicationService):
             Log.warn(f"Fetching severity failed for {value}. {ex}")
         return ret
 
+    @staticmethod
+    def add_default_values(value):
+        """
+        For JBOD related health view for cortx_sw and operating_system the
+        below fields are not applicable and are not in health view JSON.
+        CSM UI needs these fiels to display the health view.
+        So, in case of health key missing we are adding the default value.
+        """
+        value[const.ALERT_HEALTH] = const.NA
+        value[const.ALERT_SEVERITY] = const.NA
+        value[const.ALERT_UUID] = const.NA
+        value[const.HEALTH_ALERT_TYPE] = const.NA
+
     def _get_leaf_node_health(self, health_schema, health_count_map, leaf_nodes, alert_uuid_map, severity_val=None):
         """
         Identify non-empty leaf nodes of in-memory health schema
@@ -501,22 +535,22 @@ class HealthAppService(ApplicationService):
 
     def _set_health_schema_by_key(self, obj, node_key, node_value):
         """
-        Get the schema for the provided key
+        Set the schema for the provided key
         :param obj:
         :param node_key:
+        "param node_value:
         :return:
         """
-        def setValue(obj):
-            try:
-                for key, value in obj.items():
-                    if (node_key == key):
-                        obj[key] = node_value
+        try:
+            for key, value in obj.items():
+                if (node_key == key):
+                    obj[key] = node_value
 
-                    if isinstance(value, dict):
-                        if (self._checkchilddict(value)):
-                            setValue(value)
-            except Exception as ex:
-                Log.warn(f"Setting health schema by key failed:{ex}")
+                if isinstance(value, dict):
+                    if (self._checkchilddict(value)):
+                        self._set_health_schema_by_key(value, node_key, node_value)
+        except Exception as ex:
+            Log.warn(f"Setting health schema by key failed:{ex}")
 
     def update_health_map(self, msg_body):
         Log.debug(f"Updating health map : {msg_body}")
@@ -553,11 +587,11 @@ class HealthAppService(ApplicationService):
                     resource_schema_dict[const.ALERT_UUID] \
                         = msg_body.get(const.ALERT_UUID, "NA")
                     resource_schema_dict[const.FETCH_TIME] \
-                        = msg_body.get(const.FETCH_TIME, "")
+                        = msg_body.get(const.FETCH_TIME)
                     resource_schema_dict[const.ALERT_HEALTH] \
-                        = items.get(const.ALERT_HEALTH, "")
+                        = items.get(const.ALERT_HEALTH, "NA")
                     resource_schema_dict[const.ALERT_DURABLE_ID] \
-                        = items.get(const.ALERT_DURABLE_ID, "")
+                        = items.get(const.ALERT_DURABLE_ID, "NA")
                     self._set_health_schema_by_key\
                             (resource_map, key, resource_schema_dict)
                     Log.debug(f"Health map updated for: {key}")
