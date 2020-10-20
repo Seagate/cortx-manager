@@ -66,4 +66,4 @@ csm:
 
 
 support_bundle:
-    - cortxcli csm_bundle_generate
+    - cortxcli csm_bundle_generate csm

@@ -14,9 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import errno
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar
 from csm.common.conf import Conf
+from csm.common.errors import CsmError
 
 class CSMBundle:
     """
@@ -36,14 +38,23 @@ class CSMBundle:
         :return:
         """
         # Read Config to Fetch Log File Path
-        log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
+        elasticsearch_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.elasticsearch_log_path")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
-        path = os.path.join(path, const.CSM_GLOBAL_INDEX)
-        os.makedirs(path)
+        component_name = command.options.get("component", "csm")
+        component_data = {"csm": [csm_log_directory_path],
+                          "uds": [uds_log_directory_path],
+                          "elasticsearch": [elasticsearch_log_path]}
+        temp_path = os.path.join(path, component_name)
+        os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
-        tar_file_name = os.path.join(path, f"csm_{bundle_id}.tar.gz")
-        Tar(tar_file_name).dump([log_directory_path])
-
+        tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
+        if all(map(os.path.exists, component_data[component_name])):
+            Tar(tar_file_name).dump(component_data[component_name])
+        else:
+            raise CsmError(rc = errno.ENOENT,
+                           desc = f"Component log missing: {component_data[component_name]}")
 
