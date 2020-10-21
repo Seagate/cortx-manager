@@ -444,7 +444,7 @@ DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/logrotate_hourly.d"
+LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
 # https status code
 STATUS_CREATED = 201
