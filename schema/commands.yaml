@@ -38,3 +38,5 @@ COMMANDS:
     - '<CORTX_PATH>/cli/conf/uds_setup.yaml'
   elasticsearch:
     - '<CORTX_PATH>/cli/conf/elasticsearch_setup.yaml'
+  ha:
+    - '/opt/seagate/cortx/ha/conf/setup.yaml'
