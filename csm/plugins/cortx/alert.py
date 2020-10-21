@@ -176,7 +176,7 @@ class AlertPlugin(CsmPlugin):
                     """
                     Calling HA Decision Maker for Alerts.
                     """
-                    if self.decision_maker_service:
+                    if self.decision_maker_service and status:
                         self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.

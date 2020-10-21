@@ -609,6 +609,27 @@ class AlertMonitorService(Service, Observable):
         except Exception as e:
             Log.warn(f"Error in stopping alert monitor thread: {e}")
 
+    def _get_previous_alert(self, sensor_info, module_type):
+        """
+        This method fetches the prev alert. Before saving the alert into
+        ES DB we get the previous state of the alert.
+        During fault on the private network ES might take some time to clone
+        the data. During this duration if an alert comes CSM wont be able to
+        save it in ES and alert will be lost.
+        So, to handle this corner case when an exception comes we will sleep for
+        5 seconds and then will retry the ES connection.
+        Even if more then one alert piles up on RMQ queue this fix will handle it.
+        """
+        prev_alert = None
+        try:
+            prev_alert = self._run_coroutine\
+                (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            return prev_alert
+        except Exception as ex:
+            Log.warn(f"Unabke to fetch previous alert.{ex}")
+            time.sleep(5)
+            self._get_previous_alert(sensor_info, module_type)
+
     def _consume(self, message):
         """
         This is a callback function which will receive
@@ -656,8 +677,7 @@ class AlertMonitorService(Service, Observable):
             """
             if is_node_alert and is_high_risk_severity:
                 self._add_support_message(message)
-            prev_alert = self._run_coroutine\
-                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            prev_alert = self._get_previous_alert(sensor_info, module_type)
             alert = AlertModel(message)
             if not prev_alert:
                 self._run_coroutine(self.repo.store(alert))
@@ -686,6 +706,7 @@ class AlertMonitorService(Service, Observable):
             self._run_coroutine(self.repo.store_alerts_history(alert_history))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
+            return False
 
         return True
 
