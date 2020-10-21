@@ -58,6 +58,7 @@ class ProvisionerPlugin:
     PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
 
     def __init__(self, username=None, password=None):
+        self.network_config = None
         try:
             self.provisioner = provisioner
             Log.info("Provisioner plugin is loaded")
@@ -251,23 +252,27 @@ class ProvisionerPlugin:
         :returns: an instance of NetworkConfiguirationResponse
         :raises: a CsmInternalError in case of query failure
         """
-        if not self.provisioner:
-            raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        if not self.network_config:
+            Log.debug("Netword config is not present in in-memory.")
+            if not self.provisioner:
+                raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
-        def _command_handler():
-            try:
-                response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
-                # The IPs are same for each node, so we can take any of them
-                for node, params in response.items():
-                    return NetworkConfiguirationResponse(
-                        mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
-                        cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
-                    )
-            except Exception as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
-
-        return await self._await_nonasync(_command_handler)
+            def _command_handler():
+                try:
+                    response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
+                    # The IPs are same for each node, so we can take any of them
+                    for node, params in response.items():
+                        return NetworkConfiguirationResponse(
+                            mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
+                            cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
+                        )
+                except Exception as error:
+                    Log.error(f"Provisioner api error : {error}")
+                    raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
+            self.network_config = await self._await_nonasync(_command_handler)
+            Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {self.network_config}")
+        
+        return self.network_config
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
