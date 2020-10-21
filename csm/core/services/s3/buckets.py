@@ -104,7 +104,7 @@ class S3BucketService(S3BaseService):
                 "bucket_url": await service_urls.get_s3_url(scheme='https',
                                                             bucket_name=bucket.name)
             }
-            for bucket in bucket_list]        
+            for bucket in bucket_list]
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)
@@ -127,7 +127,6 @@ class S3BucketService(S3BaseService):
         except ClientError as e:
             self._handle_error(e)
         return {"message": "Bucket Deleted Successfully."}
-
     @Log.trace_method(Log.INFO)
     async def get_bucket_policy(self, s3_session: S3Credentials,
                                 bucket_name: str) -> Dict:

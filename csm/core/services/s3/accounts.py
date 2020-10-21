@@ -73,7 +73,7 @@ class S3AccountService(S3BaseService):
                 self._handle_error(profile, args={'account_name': account_name})
         except Exception as e:
             await account_client.delete_account(account.account_name)
-            raise e        
+            raise e
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,
