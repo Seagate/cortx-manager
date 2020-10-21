@@ -24,7 +24,6 @@ from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError, IamErrors
 from csm.core.services.sessions import S3Credentials, LocalCredentials
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory, IamRootClient
-import time
 
 
 # TODO: the access to this service must be restricted to CSM users only (?)
@@ -74,8 +73,7 @@ class S3AccountService(S3BaseService):
                 self._handle_error(profile, args={'account_name': account_name})
         except Exception as e:
             await account_client.delete_account(account.account_name)
-            raise e
-        
+            raise e        
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,

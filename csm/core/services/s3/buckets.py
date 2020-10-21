@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import time
 from typing import Dict
 
 from botocore.exceptions import ClientError
@@ -92,7 +91,7 @@ class S3BucketService(S3BaseService):
         Log.debug("Retrieve the whole list of buckets for active user session")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
-            bucket_list = await s3_client.get_all_buckets()            
+            bucket_list = await s3_client.get_all_buckets()
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
@@ -105,8 +104,7 @@ class S3BucketService(S3BaseService):
                 "bucket_url": await service_urls.get_s3_url(scheme='https',
                                                             bucket_name=bucket.name)
             }
-            for bucket in bucket_list]
-        
+            for bucket in bucket_list]        
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)

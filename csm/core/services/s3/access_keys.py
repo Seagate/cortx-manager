@@ -17,7 +17,6 @@
  ****************************************************************************
 """
 
-import time
 from cortx.utils.log import Log
 from csm.core.data.models.s3 import IamError
 from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
