@@ -36,3 +36,5 @@ COMMANDS:
     - '<CORTX_PATH>/provisioner/conf/setup.yaml'
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
+  ha:
+    - '/opt/seagate/cortx/ha/conf/setup.yaml'
