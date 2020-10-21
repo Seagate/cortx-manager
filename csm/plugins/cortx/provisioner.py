@@ -28,6 +28,7 @@ from json import JSONDecodeError
 from csm.common.payload import JsonMessage
 import provisioner
 import provisioner.freeze
+from csm.common.conf import Conf
 
 
 class PackageValidationError(InvalidRequest):
@@ -58,7 +59,6 @@ class ProvisionerPlugin:
     PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
 
     def __init__(self, username=None, password=None):
-        self.network_config = None
         try:
             self.provisioner = provisioner
             Log.info("Provisioner plugin is loaded")
@@ -252,7 +252,7 @@ class ProvisionerPlugin:
         :returns: an instance of NetworkConfiguirationResponse
         :raises: a CsmInternalError in case of query failure
         """
-        if not self.network_config:
+        if not Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG):
             Log.debug("Netword config is not present in in-memory.")
             if not self.provisioner:
                 raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
@@ -269,10 +269,12 @@ class ProvisionerPlugin:
                 except Exception as error:
                     Log.error(f"Provisioner api error : {error}")
                     raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
-            self.network_config = await self._await_nonasync(_command_handler)
-            Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {self.network_config}")
+            network_config = await self._await_nonasync(_command_handler)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG, network_config)
+            Conf.save()
+            Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {network_config}")
         
-        return self.network_config
+        return Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG)
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
