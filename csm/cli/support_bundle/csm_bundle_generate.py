@@ -51,7 +51,7 @@ class CSMBundle:
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
-        tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
+        tar_file_name = os.path.join(temp_path, f"{component_name}_{bundle_id}.tar.gz")
         if all(map(os.path.exists, component_data[component_name])):
             Tar(tar_file_name).dump(component_data[component_name])
         else:
