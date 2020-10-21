@@ -56,7 +56,6 @@ class S3AccountService(S3BaseService):
         :param password:
         :returns: a dictionary describing the newly created S3 account. Exception otherwise.
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Creating s3 account. account_name: {account_name}")
         account = await self._s3_root_client.create_account(account_name, account_email)
         if isinstance(account, IamError):
@@ -76,9 +75,7 @@ class S3AccountService(S3BaseService):
         except Exception as e:
             await account_client.delete_account(account.account_name)
             raise e
-        end_time = int(round(time.time()))
-        Log.debug(f"Create S3 account completed in {end_time-start_time} s")
-
+        
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,
@@ -88,14 +85,11 @@ class S3AccountService(S3BaseService):
 
     @Log.trace_method(Log.DEBUG)
     async def get_account(self, account_name) -> dict:
-        start_time = int(round(time.time()))
         account = await self._s3_root_client.get_account(account_name)
         if isinstance(account, IamError):
             self._handle_error(account)
         if account is None:
             return None
-        end_time = int(round(time.time()))
-        Log.debug(f"Get S3 account completed in {end_time-start_time} s")
         return {
             "account_name": account.account_name,
             "account_email": account.account_email
@@ -116,7 +110,6 @@ class S3AccountService(S3BaseService):
         :returns: a dictionary containing account list and, if the list is truncated, a marker
                   that can be used for fetching subsequent batches
         """
-        start_time = int(round(time.time()))
         # TODO: right now the remote server does not seem to support pagination
         Log.debug(f"Listing accounts. continue_marker:{continue_marker}, "
                   f"page_limit:{page_limit}")
@@ -154,8 +147,6 @@ class S3AccountService(S3BaseService):
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
         Log.debug(f"List account response: {resp}")
-        end_time = int(round(time.time()))
-        Log.debug(f"Get List of S3 accounts completed in {end_time-start_time} s")
         return resp
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
@@ -171,7 +162,6 @@ class S3AccountService(S3BaseService):
         :returns: a dictionary describing the updated account.
                   In case of an error, an exception is raised.
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Patch accounts. account_name:{account_name}, "
                   f"reset_access_key:{reset_access_key}")
         client = self._s3_root_client
@@ -211,8 +201,6 @@ class S3AccountService(S3BaseService):
             if isinstance(new_profile, IamError):
                 # Update failed
                 self._handle_error(new_profile)
-        end_time = int(round(time.time()))
-        Log.debug(f"Update S3 account completed in {end_time-start_time} s")
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -223,7 +211,6 @@ class S3AccountService(S3BaseService):
         :param account_name: Account Name to Delete Account.
         :returns: dictionary in case of success. Otherwise throws an exception.
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Delete account service. account_name:{account_name}")
         account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
             s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
@@ -231,6 +218,4 @@ class S3AccountService(S3BaseService):
         result = await account_s3_client.delete_account(account_name)
         if isinstance(result, IamError):
             self._handle_error(result)
-        end_time = int(round(time.time()))
-        Log.debug(f"Delete S3 account completed in {end_time-start_time} s")
         return {"message": "Account Deleted Successfully."}

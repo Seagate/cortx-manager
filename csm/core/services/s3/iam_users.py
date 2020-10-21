@@ -61,7 +61,6 @@ class IamUsersService(S3BaseService):
         """
 
         # Create Iam User in System.
-        start_time = int(round(time.time()))
         s3_client = await self.fetch_iam_client(s3_session)
         Log.debug(f"Create IAM User service: \nusername:{user_name}")
         user_creation_resp = await s3_client.create_user(user_name)
@@ -79,8 +78,6 @@ class IamUsersService(S3BaseService):
         if isinstance(user_creds_resp, IamError):
             await s3_client.delete_user(user_name)
             self._handle_error(user_creds_resp)
-        end_time = int(round(time.time()))
-        Log.debug(f"Create IAM user completed in {end_time-start_time} s")
         return {
             **vars(user_creation_resp),
             'access_key_id': user_creds_resp.access_key_id,
@@ -94,7 +91,6 @@ class IamUsersService(S3BaseService):
         :param s3_session: S3 session's details. :type: dict
         :return:
         """
-        start_time = int(round(time.time()))
         s3_client = await  self.fetch_iam_client(s3_session)
         # Fetch IAM Users
         Log.debug(f"List IAM User service:")
@@ -107,8 +103,6 @@ class IamUsersService(S3BaseService):
                                        if not vars(each_user)["user_name"] == "root" ]
         service_urls = ServiceUrls(self._provisioner)
         iam_users_list["s3_urls"] = await service_urls.get_s3_url()
-        end_time = int(round(time.time()))
-        Log.debug(f"Get list of IAM users completed in {end_time-start_time} s")
         return iam_users_list
 
     @Log.trace_method(Log.DEBUG)
@@ -119,7 +113,6 @@ class IamUsersService(S3BaseService):
         :param user_name: S3 User Name :type: str
         :return:
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Delete IAM User service: Username:{user_name}")
         s3_client = await  self.fetch_iam_client(s3_session)
 
@@ -135,8 +128,6 @@ class IamUsersService(S3BaseService):
         user_delete_response = await  s3_client.delete_user(user_name)
         if isinstance(user_delete_response, IamError):
             self._handle_error(user_delete_response)
-        end_time = int(round(time.time()))
-        Log.debug(f"Delete IAM user completed in {end_time-start_time} s")
         return {"message": "User Deleted Successfully."}
 
     def update_user(self, user_name: str):

@@ -65,7 +65,6 @@ class S3BucketService(S3BaseService):
         :type bucket_name: str
         :return:
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Requested to create bucket by name = {bucket_name}")
         try:
             s3_client = await self.get_s3_client(s3_session)  # type: S3Client
@@ -75,8 +74,6 @@ class S3BucketService(S3BaseService):
             self._handle_error(e)
         service_urls = ServiceUrls(self._provisioner)
         bucket_url = await service_urls.get_s3_url(scheme='https', bucket_name=bucket_name)
-        end_time = int(round(time.time()))
-        Log.debug(f"Create bucket completed in {end_time-start_time} s")
         return {
             "bucket_name": bucket_name,
             "bucket_url": bucket_url
@@ -92,21 +89,16 @@ class S3BucketService(S3BaseService):
         :return:
         """
         # TODO: pagination can be added later
-        start_time = int(round(time.time()))
         Log.debug("Retrieve the whole list of buckets for active user session")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
-            buckets_get_start_time = int(round(time.time()))
-            bucket_list = await s3_client.get_all_buckets()
-            buckets_get_end_time = int(round(time.time()))
-            Log.debug(f"Time to get bucket list: {buckets_get_end_time-buckets_get_start_time}")
+            bucket_list = await s3_client.get_all_buckets()            
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
 
         service_urls = ServiceUrls(self._provisioner)
         # TODO: create model for response
-        bucket_url_start_time = int(round(time.time()))
         bucket_list = [
             {
                 "name": bucket.name,
@@ -114,9 +106,7 @@ class S3BucketService(S3BaseService):
                                                             bucket_name=bucket.name)
             }
             for bucket in bucket_list]
-        end_time = int(round(time.time()))
-        Log.debug(f"Time to get bucket URL for all buckets:  {end_time-bucket_url_start_time} s")
-        Log.debug(f"Get list of buckets completed in {end_time-start_time} s")
+        
         return {"buckets": bucket_list}
 
     @Log.trace_method(Log.INFO)
@@ -130,7 +120,6 @@ class S3BucketService(S3BaseService):
         :type s3_session: S3Credentials
         :return:
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Requested to delete bucket by name = {bucket_name}")
 
         s3_client = await self.get_s3_client(s3_session)  # TODO: s3_client can't be returned
@@ -139,8 +128,6 @@ class S3BucketService(S3BaseService):
             await s3_client.delete_bucket(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"Delete bucket completed in {end_time-start_time} s")
         return {"message": "Bucket Deleted Successfully."}
 
     @Log.trace_method(Log.INFO)
@@ -155,15 +142,12 @@ class S3BucketService(S3BaseService):
         :type bucket_name: str
         :returns: A dict of bucket policy
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Retrieve bucket bucket by name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
             bucket_policy = await s3_client.get_bucket_policy(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"Get bucket policy completed in {end_time-start_time} s")
         return bucket_policy
 
     @Log.trace_method(Log.INFO)
@@ -178,7 +162,6 @@ class S3BucketService(S3BaseService):
         :type bucket_name: str
         :returns: Success message
         """
-        start_time = int(round(time.time()))
         Log.debug(
             f"Requested to put bucket policy for bucket name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
@@ -186,8 +169,6 @@ class S3BucketService(S3BaseService):
             bucket_policy = await s3_client.put_bucket_policy(bucket_name, policy)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"update bucket policy completed in {end_time-start_time} s")
         return {"message": "Bucket Policy Updated Successfully."}
 
     @Log.trace_method(Log.INFO)
@@ -202,7 +183,6 @@ class S3BucketService(S3BaseService):
         :type bucket_name: str
         :returns: Success message
         """
-        start_time = int(round(time.time()))
         Log.debug(
             f"Requested to delete bucket policy for bucket name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
@@ -210,8 +190,6 @@ class S3BucketService(S3BaseService):
             bucket_policy = await s3_client.delete_bucket_policy(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"Delete bucket policy completed in {end_time-start_time} s")
         return {"message": "Bucket Policy Deleted Successfully."}
 
     @Log.trace_method(Log.INFO)
@@ -225,15 +203,12 @@ class S3BucketService(S3BaseService):
         :type bucket_name: str
         :returns: tagset of the provided bucket
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Put tags to the bucket {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
             tags = await s3_client.get_bucket_tagging(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"Get bucket tagging completed in {end_time-start_time} s")
         return {"tagset": tags}
 
     @Log.trace_method(Log.INFO)
@@ -250,13 +225,10 @@ class S3BucketService(S3BaseService):
         :type bucket_tags: dict
         :returns: Success message
         """
-        start_time = int(round(time.time()))
         Log.debug(f"Put tags to the bucket {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
             await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
         except ClientError as e:
             self._handle_error(e)
-        end_time = int(round(time.time()))
-        Log.debug(f"Update bucket tagging completed in {end_time-start_time} s")
         return {"message": "Tagged the bucket successfully"}
