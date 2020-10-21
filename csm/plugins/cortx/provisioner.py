@@ -253,7 +253,7 @@ class ProvisionerPlugin:
         :raises: a CsmInternalError in case of query failure
         """
         if not Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG):
-            Log.debug("Netword config is not present in in-memory.")
+            Log.debug("Network config is not present in in-memory.")
             if not self.provisioner:
                 raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
