@@ -95,7 +95,7 @@ remove_rpm "csm_agent"
 remove_conf
 #remove consul data
 echo "---- deleting data from consul ----"
-run_command "/opt/seagate/eos/hare/bin/consul kv delete -recurse eos/base/"
+run_command "consul kv delete -recurse eos/base/"
 echo "---- deleting elasticsearch indices ----"
 for i in "${indices[@]}"
 do
