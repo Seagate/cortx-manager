@@ -63,3 +63,4 @@ csm:
     refresh_config:
         script: /usr/bin/csm_setup
         args: refresh_config
+
