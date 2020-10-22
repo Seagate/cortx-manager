@@ -33,7 +33,10 @@
         "provisioner",
         "os",
         "health_map",
-        "manifest"
+        "manifest",
+        "uds",
+        "elasticsearch",
+        "ha"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."
