@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-from eos.utils.log import Log
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import CsmSetupError, InvalidRequest
 import traceback

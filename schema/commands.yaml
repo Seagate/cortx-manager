@@ -20,8 +20,6 @@ COMMANDS:
   os:
     - '/opt/seagate/os/conf/setup.yaml'
   csm:
-    - '<CORTX_PATH>/csm/conf/setup.yaml'
-  cortxcli:
     - '<CORTX_PATH>/cli/conf/setup.yaml'
   sspl:
     - '<CORTX_PATH>/sspl/conf/setup.yaml'
@@ -36,3 +34,9 @@ COMMANDS:
     - '<CORTX_PATH>/provisioner/conf/setup.yaml'
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
+  uds:
+    - '<CORTX_PATH>/cli/conf/uds_setup.yaml'
+  elasticsearch:
+    - '<CORTX_PATH>/cli/conf/elasticsearch_setup.yaml'
+  ha:
+    - '/opt/seagate/cortx/ha/conf/setup.yaml'
