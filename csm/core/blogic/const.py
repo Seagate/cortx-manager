@@ -390,6 +390,7 @@ MAX_RESULT_WINDOW = 10000
 LOG_LEVEL = "INFO"
 
 # Set network config
+NETWORK_CONFIG = 'NETWORK_CONFIG'
 MANAGEMENT_NETWORK = 'management_network_settings'
 DATA_NETWORK = 'data_network_settings'
 DNS_NETWORK = 'dns_network_settings'
