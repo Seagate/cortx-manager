@@ -1,7 +1,5 @@
 import requests
-import sys
 import time
-import io
 import argparse
 import traceback
 import sys
@@ -34,8 +32,8 @@ class S3AccountCreation:
             raise Exception(res.text)
 
     def create_s3_account(self, auth_token):
-        timestamp = int(round(time.time() * 1000))        
-        
+        timestamp = int(round(time.time() * 1000))
+
         for i in range(1, self._no_of_s3_account + 1):
             account_name = f"s3account_{timestamp}_{i}"
             account_email = f"{account_name}@seagate.com"
@@ -64,12 +62,12 @@ class S3AccountCreation:
                 create_bucket_url = f'http://{self._host_port}/api/v1/s3/bucket'
                 Log.debug(f"Bucket creation pauload: {bucketobj}")
                 bucket_res = requests.post(create_bucket_url, json = bucketobj, headers= s3_headers)
-                Log.info(f'Bucket creation response: {bucket_res.text}')            
+                Log.info(f'Bucket creation response: {bucket_res.text}')
 
 def process_s3_sanity(args):
     create_account = S3AccountCreation(args.host_port, args.no_of_s3_account, args.no_of_iam_users, args.no_of_buckets, args.csm_username, args.csm_password)
     auth_token = S3AccountCreation.login(args.host_port, args.csm_username, args.csm_password)
-    create_account.create_s3_account(auth_token)    
+    create_account.create_s3_account(auth_token)
 
 def add_s3_sanity_subcommand(main_parser):
     subparsers = main_parser.add_parser("s3_sanity_test", help='Create Accounts')
@@ -80,9 +78,9 @@ def add_s3_sanity_subcommand(main_parser):
                                             help="Number of IAM users to be created")
     subparsers.add_argument("-s","--host_port", type=str, default="localhost:28101",
                                             help="address:port of CSM")
-    subparsers.add_argument("-u","--csm_username", type=str, 
+    subparsers.add_argument("-u","--csm_username", type=str,
                                             help="CSM username")
-    subparsers.add_argument("-p","--csm_password", type=str, 
+    subparsers.add_argument("-p","--csm_password", type=str,
                                             help="CSM password")
     subparsers.add_argument("-b","--no_of_buckets", type=int, default=1,
                                             help="Number of buckets to be created")
@@ -90,7 +88,7 @@ def add_s3_sanity_subcommand(main_parser):
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from cortx.utils.log import Log
-    from csm.common.conf import Conf, ConfSection, DebugConf
+    from csm.common.conf import Conf
     from csm.core.blogic import const
     from csm.common.payload import Yaml
     Conf.init()
