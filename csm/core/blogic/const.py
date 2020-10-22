@@ -391,6 +391,7 @@ MAX_RESULT_WINDOW = 10000
 LOG_LEVEL = "INFO"
 
 # Set network config
+NETWORK_CONFIG = 'network_config'
 MANAGEMENT_NETWORK = 'management_network_settings'
 DATA_NETWORK = 'data_network_settings'
 DNS_NETWORK = 'dns_network_settings'
@@ -434,7 +435,7 @@ DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/logrotate_hourly.d"
+LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
 # https status code
 STATUS_CREATED = 201
