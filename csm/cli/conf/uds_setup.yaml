@@ -13,11 +13,5 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-# logrotations of all files in seagate/common
-/var/log/seagate/common/*.log
-{
-    rotate 10
-    size 10M
-    compress
-}
-
+support_bundle:
+    - cortxcli csm_bundle_generate uds

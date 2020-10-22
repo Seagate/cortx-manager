@@ -46,7 +46,7 @@ csm:
     ha:
         script: /opt/seagate/cortx/ha/conf/script/build-ha-csm
         args:
-            - /opt/seagate/cortx/ha/conf/build-ees-ha-csm-args.yaml
+            - /opt/seagate/cortx/ha/conf/build-ha-csm-args.yaml
 
     ha-cleanup:
         script: /opt/seagate/cortx/ha/conf/script/prov-ha-csm-reset
@@ -64,6 +64,3 @@ csm:
         script: /usr/bin/csm_setup
         args: refresh_config
 
-
-support_bundle:
-    - cortxcli csm_bundle_generate

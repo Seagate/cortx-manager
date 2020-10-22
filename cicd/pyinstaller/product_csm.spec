@@ -33,19 +33,21 @@ def import_models(file_name):
     with open(file_name, 'r') as f:
         db_conf = yaml.safe_load(f)
     for each_model in db_conf.get("models", []):
-        import_list.append(each_model.get("import_path"))
+        module_name = each_model.get("import_path")
+        import_list.append(module_name.rsplit('.', 1)[0])
     return import_list
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-product_path = '<CSM_PATH>' + '/plugins/' + product
-db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
+plugin_product_dir = 'eos'
+product_path = '<CSM_PATH>' + '/plugins/' + plugin_product_dir
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("csm.cli.scripts")
 product_module_list.append("cortx.utils.security.secure_storage")
-cli_module_list = import_models(db_file_path)
-cli_module_list.extend(product_module_list)
+db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
+models_list = import_models(db_file_path)
+product_module_list.extend(models_list)
 
 block_cipher = None
 
@@ -55,19 +57,6 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              binaries=[],
              datas=[],
              hiddenimports=product_module_list,
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=[],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
-
-csmcli = Analysis([csm_path + '/cli/csmcli.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
-             binaries=[],
-             datas=[],
-             hiddenimports=cli_module_list,
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -103,7 +92,6 @@ csm_cleanup = Analysis([csm_path + '/conf/csm_cleanup.py'],
              noarchive=False)
 
 MERGE( (csm_agent, 'csm_agent', 'csm_agent'),
-       (csmcli, 'csmcli', 'csmcli'),
        (csm_cleanup, 'csm_cleanup', 'csm_cleanup'),
        (csm_setup, 'csm_setup', 'csm_setup') )
 
@@ -116,21 +104,6 @@ csm_agent_exe = EXE(csm_agent_pyz,
           [],
           exclude_binaries=True,
           name='csm_agent',
-          debug=False,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=True,
-          console=True )
-
-# csmcli
-csmcli_pyz = PYZ(csmcli.pure, csmcli.zipped_data,
-             cipher=block_cipher)
-
-csmcli_exe = EXE(csmcli_pyz,
-          csmcli.scripts,
-          [],
-          exclude_binaries=True,
-          name='csmcli',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -173,12 +146,6 @@ coll = COLLECT(
                csm_agent.binaries,
                csm_agent.zipfiles,
                csm_agent.datas,
-
-               # csmcli
-               csmcli_exe,
-               csmcli.binaries,
-               csmcli.zipfiles,
-               csmcli.datas,
 
                # csm_setup
                csm_setup_exe,

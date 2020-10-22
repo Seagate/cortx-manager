@@ -23,6 +23,8 @@ test/common.py
 #Dynamic path
 schema/commands.yaml
 csm/conf/etc/csm/csm.conf
+csm/cli/conf/etc/cli/cortxcli.conf
 csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl
 csm/conf/service/csm_web.service
+csm/cli/conf/setup.yaml
 csm/conf/setup.yaml

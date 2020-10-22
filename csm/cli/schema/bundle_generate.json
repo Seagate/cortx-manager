@@ -20,14 +20,6 @@
       "help": "Current Node Name."
     },
     {
-      "flag": "-o",
-      "dest": "os_flag",
-      "action": "store_const",
-      "help": "Generate Only OS Logs",
-      "default": "false",
-      "const": "true"
-    },
-    {
       "flag": "-c",
       "dest": "components",
       "type": "str",
@@ -41,7 +33,10 @@
         "provisioner",
         "os",
         "health_map",
-        "manifest"
+        "manifest",
+        "uds",
+        "elasticsearch",
+        "ha"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."
