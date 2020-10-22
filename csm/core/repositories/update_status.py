@@ -52,6 +52,7 @@ class UpdateStatusRepository:
 
         model.updated_at = datetime.datetime.now()
         await self.db(UpdateStatusEntry).store(model)
+        Log.info(f"UpdateStatusEntry stored for {model.update_type}")
 
     @Log.trace_method(Log.DEBUG)
     async def drop_model(self, update_type: str) -> UpdateStatusEntry:
@@ -62,4 +63,6 @@ class UpdateStatusRepository:
         # This is a workaround to delete all records - that is currently not directly
         # supported by the generic db
         filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
+        Log.info(f"Deleting update status entry for update type {update_type}")
         await self.db(UpdateStatusEntry).delete(filter)
+        Log.info(f"Entry Deleted.")

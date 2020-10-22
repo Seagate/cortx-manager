@@ -18,6 +18,7 @@ import datetime
 from enum import Enum
 from schematics.types import IntType, StringType, DateType, ListType, DateTimeType
 from csm.core.blogic.models import CsmModel
+from cortx.utils.log import Log
 
 
 class PackageInformation:
@@ -106,12 +107,15 @@ class UpdateStatusEntry(CsmModel):
     def mark_uploaded(self):
         self.uploaded_at = datetime.datetime.now()
         self.status = str(UpdateStatus.Uploaded)
+        Log.info("Marking status for update as 'UPLOADED'.")
 
     def mark_started(self):
         self.started_at = datetime.datetime.now()
         self.status = str(UpdateStatus.InProgress)
+        Log.info("Marking status for update as 'UPDATE STARTED'.")
 
     def apply_status_update(self, update: ProvisionerStatusResponse):
+        Log.info(f"Updating status to {update.status}")
         if update.status in [ProvisionerCommandStatus.NotFound, ProvisionerCommandStatus.Failure]:
             self.status = str(UpdateStatus.Failure)
             self.details = update.details
