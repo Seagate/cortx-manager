@@ -1,0 +1,2 @@
+support_bundle:
+    - cortxcli csm_bundle_generate alerts
