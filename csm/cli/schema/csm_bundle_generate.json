@@ -9,7 +9,8 @@
       "choices":[
         "csm",
         "uds",
-        "elasticsearch"
+        "elasticsearch",
+        "alerts"
       ],
       "help": "Specify the Name of component for Generating Bundle."
     },

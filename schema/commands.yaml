@@ -40,4 +40,5 @@ COMMANDS:
     - '<CORTX_PATH>/csm/conf/elasticsearch_setup.yaml'
   ha:
     - '/opt/seagate/cortx/ha/conf/setup.yaml'
-
+  alerts:
+    - '<CORTX_PATH>/csm/conf/alerts_setup.yaml'
