@@ -43,15 +43,21 @@ class CSMBundle:
         # Read Config to Fetch Log File Path
         csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
-        elasticsearch_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.elasticsearch_log_path")
         alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_filename")
+        es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_cluster_log_path")
+        es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_gc_log_path")
+        es_indexing_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_indexing_log_path")
+        es_search_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_search_log_path")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
         component_data = {"csm": [csm_log_directory_path],
                           "uds": [uds_log_directory_path],
-                          "elasticsearch": [elasticsearch_log_path]}
+                          "elasticsearch": [es_cluster_log_path,
+                                            es_gc_log_path,
+                                            es_indexing_log_path,
+                                            es_search_log_path]}
         if component_name == "alerts":
             # Fetch alerts for support bundle.
             alerts_data = await CSMBundle.fetch_and_save_alerts()
@@ -63,7 +69,7 @@ class CSMBundle:
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
-        tar_file_name = os.path.join(path, f"{component_name}_{bundle_id}.tar.gz")
+        tar_file_name = os.path.join(temp_path, f"{component_name}_{bundle_id}.tar.gz")
         if all(map(os.path.exists, component_data[component_name])):
             Tar(tar_file_name).dump(component_data[component_name])
         else:
