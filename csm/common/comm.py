@@ -262,14 +262,12 @@ class AmqpChannel(Channel):
                                               self.exchange_type,
                                               str(err)))
             try:
-                debug_queue = self._channel.queue_declare(queue=self.exchange_queue,
+                self._channel.queue_declare(queue=self.exchange_queue,
                                             exclusive=self.exclusive, \
                                                     durable=self.durable)
                 self._channel.queue_bind(exchange=self.exchange,
                                          queue=self.exchange_queue,
                                          routing_key=self.routing_key)
-                Log.info(f"Pvt DATA network debug: Number of messages on queue: {self.exchange_queue}"
-                        f" is {debug_queue.method.message_count}")
                 Log.info(f'Initialized Exchange: {self.exchange}, '
                         f'Queue: {self.exchange_queue}, routing_key: {self.routing_key}')
             except AMQPError as err:
