@@ -183,9 +183,8 @@ class AlertPlugin(CsmPlugin):
                 Log.warn(f"Acknowledge incase of validation error {ve}")
                 self.comm_client.acknowledge()
             except Exception as e:
-                Log.warn(f"Silently acknowledge ill-formed CSM alerts: {e}")
-                # Silently acknowledge ill-formed CSM alerts
-                self.comm_client.acknowledge()
+                # Code should not reach here.
+                Log.warn(f"Error occured during processing alerts: {e}")
         if status:
             # Acknowledge the alert so that it could be
             # removed from the queue.

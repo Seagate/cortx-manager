@@ -40,6 +40,7 @@ from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
 from csm.common.payload import Payload, Json, JsonMessage
 import asyncio
+from csm.common.conf import Conf
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -623,6 +624,7 @@ class AlertMonitorService(Service, Observable):
         self.repo = repo
         self._health_plugin = health_plugin
         self._http_notfications = http_notifications
+        self._es_retry = Conf.get(const.CSM_GLOBAL_INDEX, const.ES_RETRY, 5)
         super().__init__()
 
     def _monitor(self):
@@ -672,14 +674,15 @@ class AlertMonitorService(Service, Observable):
         Even if more then one alert piles up on RMQ queue this fix will handle it.
         """
         prev_alert = None
-        try:
-            prev_alert = self._run_coroutine\
-                (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
-            return prev_alert
-        except Exception as ex:
-            Log.warn(f"Unabke to fetch previous alert.{ex}")
-            time.sleep(5)
-            self._get_previous_alert(sensor_info, module_type)
+        for count in range(0, self._es_retry):
+            try:
+                prev_alert = self._run_coroutine\
+                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+                return prev_alert
+            except Exception as ex:
+                Log.warn(f"Unable to fetch previous alert. Retrying : {count+1}.{ex}")
+                time.sleep(2**count)
+                continue
 
     def _consume(self, message):
         """
