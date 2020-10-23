@@ -24,9 +24,9 @@ CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
 PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
-CORTX_UNSUPPORTED_FEATURES_PATH="${CSM_PATH}/schema/unsupported_features.json"
+CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
-CORTX_L18N_PATH="${CSM_PATH}/schema/l18n.json"
+CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
 BRAND_L18N_PATH="config/csm/l18n.json"
 
 print_time() {
