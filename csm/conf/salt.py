@@ -26,13 +26,20 @@ class PillarDataFetchError(InvalidRequest):
 
 class SaltWrappers:
     @staticmethod
-    def get_salt_data(method, key):
+    def get_salt_call(method, key, on_salt_error='raise'):
+        if on_salt_error not in ('raise', 'log'):
+            raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
         try:
             process = SimpleProcess(f"salt-call {method} {key} --out=json")
             stdout, stderr, rc = process.run()
         except Exception as e:
-            Log.logger.warn(f"Error in command execution : {e}")
+            desc = f'Error in command execution : {e}'
+            if on_salt_error == 'raise':
+                raise PillarDataFetchError(desc)
+            Log.logger.warn(desc)
         if stderr:
+            if on_salt_error == 'raise':
+                raise PillarDataFetchError(stderr)
             Log.logger.warn(stderr)
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
@@ -40,29 +47,24 @@ class SaltWrappers:
             return result['local']
 
     @staticmethod
-    def get_salt_data_with_exception(method, key):
+    def get_salt(method, key, minion_id=None, on_salt_error='raise'):
+        if on_salt_error not in ('raise', 'log'):
+            raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
         try:
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
+            minion_arg = '*' if minion_id is None else minion_id
+            cmd = f'salt {minion_arg} {method} {key} --out=json --static'
+            process = SimpleProcess(cmd)
             stdout, stderr, rc = process.run()
         except Exception as e:
-            raise PillarDataFetchError(f"Error in command execution : {e}")
+            desc = f'Error in command execution : {e}'
+            if on_salt_error == 'raise':
+                raise PillarDataFetchError(desc)
+            Log.logger.warn(desc)
         if stderr:
-            raise PillarDataFetchError(stderr)
+            if on_salt_error == 'raise':
+                raise PillarDataFetchError(stderr)
+            Log.logger.warn(stderr)
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
-            return result['local']
-
-    @staticmethod
-    def get_salt_data_using_minion_id(minion_id, method, key):
-        try:
-            process = SimpleProcess(f"salt {minion_id} {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            raise PillarDataFetchError(f"Error in command execution : {e}")
-        if stderr:
-            raise PillarDataFetchError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[minion_id]
+            return result if minion_id is None else result[minion_id]
