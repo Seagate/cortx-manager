@@ -176,16 +176,15 @@ class AlertPlugin(CsmPlugin):
                     """
                     Calling HA Decision Maker for Alerts.
                     """
-                    if self.decision_maker_service:
+                    if self.decision_maker_service and status:
                         self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
             except ValidationError as ve:
                 # Acknowledge incase of validation error.
                 Log.warn(f"Acknowledge incase of validation error {ve}")
                 self.comm_client.acknowledge()
             except Exception as e:
-                Log.warn(f"Silently acknowledge ill-formed CSM alerts: {e}")
-                # Silently acknowledge ill-formed CSM alerts
-                self.comm_client.acknowledge()
+                # Code should not reach here.
+                Log.warn(f"Error occured during processing alerts: {e}")
         if status:
             # Acknowledge the alert so that it could be
             # removed from the queue.
