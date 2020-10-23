@@ -41,16 +41,17 @@ from cortx.utils.schema.payload import Json
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
+from csm.conf.salt import SaltWrappers
 
 # try:
 #     from salt import client
 # except ModuleNotFoundError:
 client = None
 
+
 class InvalidPillarDataError(InvalidRequest):
     pass
-class PillarDataFetchError(InvalidRequest):
-    pass
+
 
 class ProvisionerCliError(InvalidRequest):
     pass
@@ -100,48 +101,6 @@ class Setup:
             return True
         except KeyError as err:
             return False
-
-    @staticmethod
-    def get_salt_data(method, key):
-        try:
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.logger.warn(f"Error in command execution : {e}")
-        if stderr:
-            Log.logger.warn(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[const.LOCAL]
-
-    @staticmethod
-    def get_salt_data_with_exception(method, key):
-        try:
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            raise PillarDataFetchError(f"Error in command execution : {e}")
-        if stderr:
-            raise PillarDataFetchError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[const.LOCAL]
-
-    @staticmethod
-    def get_salt_data_using_minion_id(minion_id, method, key):
-        try:
-            process = SimpleProcess(f"salt {minion_id} {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            raise PillarDataFetchError(f"Error in command execution : {e}")
-        if stderr:
-            raise PillarDataFetchError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[minion_id]
 
     @staticmethod
     def get_data_from_provisioner_cli(method, output_format="json"):
@@ -206,11 +165,11 @@ class Setup:
                 Setup._run_cmd("usermod -aG wheel " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
-                node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
-                primary = Setup.get_salt_data(const.GRAINS_GET, "roles")
+                node_name = SaltWrappers.get_salt_data(const.GRAINS_GET, "id")
+                primary = SaltWrappers.get_salt_data(const.GRAINS_GET, "roles")
                 if ( node_name is None or const.PRIMARY_ROLE in primary):
                     self._passwordless_ssh(const.CSM_USER_HOME)
-                nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+                nodes = SaltWrappers.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
                 if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
                     nodes.remove(node_name)
                     for node in nodes:
@@ -279,7 +238,8 @@ class Setup:
         @staticmethod
         def store_encrypted_password(conf_data):
             # read username's and password's for S3 and RMQ
-            open_ldap_credentials = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.OPENLDAP)
+            open_ldap_credentials = SaltWrappers.get_salt_data_with_exception(
+                const.PILLAR_GET, const.OPENLDAP)
             # Edit Current Config File.
             if open_ldap_credentials and type(open_ldap_credentials) is dict:
                 conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
@@ -288,13 +248,14 @@ class Setup:
                                                     const.IAM_ADMIN, {}).get(const.SECRET)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
-            sspl_config = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.SSPL)
+            sspl_config = SaltWrappers.get_salt_data_with_exception(const.PILLAR_GET, const.SSPL)
             if sspl_config and type(sspl_config) is dict:
                 conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            cluster_id =  Setup.get_salt_data_with_exception(const.GRAINS_GET, const.CLUSTER_ID)
+            cluster_id =  SaltWrappers.get_salt_data_with_exception(
+                const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
             conf_data[const.PROVISIONER] = provisioner_data
@@ -472,11 +433,12 @@ class Setup:
 
     @staticmethod
     def _set_fqdn_for_nodeid():
-        nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+        nodes = SaltWrappers.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
         Log.debug("Node ids obtained from salt-call:{nodes}")
         if nodes:
             for each_node in nodes:
-                hostname = Setup.get_salt_data(const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                hostname = SaltWrappers.get_salt_data(
+                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
                 Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
                 if hostname:
                     Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
@@ -536,15 +498,15 @@ class Setup:
         minion_id = None
         consul_host = None
         try:
-            minion_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
+            minion_id = SaltWrappers.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
             if not minion_id:
                 Log.logger.warn(f"Unable to fetch minion id for the node." \
                     f"Using {const.MINION_NODE1_ID}.")
                 minion_id = const.MINION_NODE1_ID
             consul_vip_cmd = f"{const.CLUSTER}:{minion_id}:{const.NETWROK}:"\
                 f"{const.DATA_NW}:{const.ROAMING_IP}"
-            consul_host = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                consul_vip_cmd)
+            consul_host = SaltWrappers.get_salt_data_with_exception(
+                const.PILLAR_GET, consul_vip_cmd)
             if consul_host:
                 Conf.set(const.DATABASE_INDEX, const.CONSUL_HOST_KEY, consul_host)
                 Conf.save(const.DATABASE_INDEX)
@@ -561,13 +523,13 @@ class Setup:
         faulty_node_uuid = ''
         try:
             faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                faulty_minion_id_cmd)
+            faulty_minion_id = SaltWrappers.get_salt_data_with_exception(
+                const.PILLAR_GET, faulty_minion_id_cmd)
             if not faulty_minion_id:
                 Log.logger.warn("Fetching faulty node minion id failed.")
                 raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = Setup.get_salt_data_using_minion_id\
-                (faulty_minion_id, const.GRAINS_GET, 'node_id')
+            faulty_node_uuid = SaltWrappers.get_salt_data_using_minion_id(
+                faulty_minion_id, const.GRAINS_GET, 'node_id')
             if not faulty_node_uuid:
                 Log.logger.warn("Fetching faulty node uuid failed.")
                 raise CsmSetupError("Fetching faulty node uuid failed.")
@@ -711,19 +673,19 @@ class Setup:
         This minion id will be required to fetch the healthmap path.
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
-        minion_id = Setup.get_salt_data(const.GRAINS_GET, const.ID)
+        minion_id = SaltWrappers.get_salt_data(const.GRAINS_GET, const.ID)
         if not minion_id:
             Log.logger.warn(f"Unable to fetch minion id for the node." \
                 f"Using {const.MINION_NODE1_ID}.")
             minion_id = const.MINION_NODE1_ID
         try:
-            healthmap_folder_path = Setup.get_salt_data_using_minion_id\
-                (minion_id, const.PILLAR_GET, 'sspl:health_map_path')
+            healthmap_folder_path = SaltWrappers.get_salt_data_using_minion_id(
+                minion_id, const.PILLAR_GET, 'sspl:health_map_path')
             if not healthmap_folder_path:
                 Log.logger.error("Fetching health map folder path failed.")
                 raise CsmSetupError("Fetching health map folder path failed.")
-            healthmap_filename = Setup.get_salt_data_using_minion_id\
-                (minion_id, const.PILLAR_GET, 'sspl:health_map_file')
+            healthmap_filename = SaltWrappers.get_salt_data_using_minion_id(
+                minion_id, const.PILLAR_GET, 'sspl:health_map_file')
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")
