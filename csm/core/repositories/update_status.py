@@ -65,4 +65,4 @@ class UpdateStatusRepository:
         filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
         Log.info(f"Deleting update status entry for update type {update_type}")
         await self.db(UpdateStatusEntry).delete(filter)
-        Log.info(f"Entry Deleted.")
+        Log.info("Entry Deleted.")
