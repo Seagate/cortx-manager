@@ -22,9 +22,9 @@ CORTX_PATH="/opt/seagate/cortx/"
 CSM_PATH="${CORTX_PATH}csm"
 DEBUG="DEBUG"
 INFO="INFO"
-CORTX_UNSUPPORTED_FEATURES_PATH="${CSM_PATH}/schema/unsupported_features.json"
+CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
-CORTX_L18N_PATH="${CSM_PATH}/schema/l18n.json"
+CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
 BRAND_L18N_PATH="config/csm/l18n.json"
 
 usage() {
