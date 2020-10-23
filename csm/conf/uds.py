@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from salt.client import Caller, LocalClient
+from csm.conf.salt import SaltWrappers
 from pathlib import Path
 from pwd import getpwnam
 from shutil import copyfile, rmtree
@@ -40,19 +40,12 @@ class UDSConfigGenerator:
     UDS_CONFIG_PATH = f'{UDS_CONFIG_DIR}/uds-config.json'
     UDS_USERNAME = 'uds'
 
-    def __init__(self):
-        self.salt_caller = Caller()
-        self.salt_local_client = LocalClient()
-
-    def get_all_minions(self):
-        minions = list(self.salt_local_client.cmd('*', 'grains.get', ['id']).values())
+    @staticmethod
+    def generate_haproxy_config():
+        cluster_ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
+        minions = list(SaltWrappers.get_salt('grains.get', 'id').values())
         assert len(minions) == 2
         minions.sort()
-        return minions
-
-    def generate_haproxy_config(self):
-        cluster_ip = self.salt_caller.cmd('pillar.get', 'cluster:cluster_ip')
-        minions = self.get_all_minions()
         return f"""\
 frontend uds-frontend
     mode tcp
@@ -69,8 +62,9 @@ backend uds-backend
     server uds-2 {minions[1]}:5000 check\
 """
 
-    def generate_uds_config(self):
-        minion_id = self.salt_caller.cmd('grains.get', 'id')
+    @staticmethod
+    def generate_uds_config():
+        minion_id = SaltWrappers.get_salt_call('grains.get', 'id')
         d = {
             "version": "2.0",
             "service_config": {
@@ -127,13 +121,13 @@ backend uds-backend
         finally:
             os.umask(old_umask)
 
-    def update_haproxy_config(self):
-        cls = self.__class__
-        config = self.generate_haproxy_config()
+    @classmethod
+    def update_haproxy_config(cls):
+        config = cls.generate_haproxy_config()
         cls.write_haproxy_config(config)
 
-    def remove_haproxy_config(self):
-        cls = self.__class__
+    @classmethod
+    def remove_haproxy_config(cls):
         cls.write_haproxy_config(None)
 
     @classmethod
@@ -150,27 +144,21 @@ backend uds-backend
         finally:
             os.umask(old_umask)
 
-    def update_uds_config(self):
-        cls = self.__class__
-        config = self.generate_uds_config()
+    @classmethod
+    def update_uds_config(cls):
+        config = cls.generate_uds_config()
         cls.write_uds_config(f'{config}\n')
 
-    def remove_uds_config(self):
-        cls = self.__class__
+    @classmethod
+    def remove_uds_config(cls):
         rmtree(cls.UDS_CONFIG_DIR)
 
-    @staticmethod
-    def apply():
-        generator = UDSConfigGenerator()
-        generator.update_haproxy_config()
-        generator.update_uds_config()
+    @classmethod
+    def apply(cls):
+        cls.update_haproxy_config()
+        cls.update_uds_config()
 
-    @staticmethod
-    def delete():
-        generator = UDSConfigGenerator()
-        generator.remove_haproxy_config()
-        generator.remove_uds_config()
-
-
-if __name__ == '__main__':
-    UDSConfigGenerator.apply()
+    @classmethod
+    def delete(cls):
+        cls.remove_haproxy_config()
+        cls.remove_uds_config()
