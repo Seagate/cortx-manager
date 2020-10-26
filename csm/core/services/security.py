@@ -315,14 +315,12 @@ class SecurityService(ApplicationService):
         warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY.ssl_cert_expiry_warning_days")
         try:
             expiry_time = await self.get_certificate_expiry_time()
-            expiry_time_orig = expiry_time
             expiry_time = expiry_time.replace(tzinfo=timezone.utc)
             days_left = (expiry_time.date() - current_time.date()).days
-            Log.info(f'original {expiry_time_orig}, modified {expiry_time}')
             if expiry_time < current_time:
-                message = f'SSL certificate expired at {expiry_time_orig}'
+                message = f'SSL certificate expired at {expiry_time.isoformat()}'
             elif days_left in warning_days:
-                message = f'SSL certificate expires at {expiry_time} - {days_left} day(s) left'
+                message = f'SSL certificate expires at {expiry_time.isoformat()} - {days_left} day(s) left'
             else:
                 message = None
 
