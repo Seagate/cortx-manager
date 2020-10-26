@@ -772,6 +772,7 @@ class CsmSetup(Setup):
                 minion_id = cls._get_minion_id()
                 data_nw = cls._get_data_nw_info(minion_id)
                 cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
+                cls._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
