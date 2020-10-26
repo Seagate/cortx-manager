@@ -487,28 +487,45 @@ class Setup:
 
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
-    def _set_consul_vip(self):
+    @staticmethod
+    def _get_minion_id():
         """
-        This method gets the consul VIP for the current node and sets the
-        value in database.yaml config.
-        Seting the default values in case of command failure.
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
         """
-        minion_id = None
-        consul_host = None
+        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
+        if not minion_id:
+            raise CsmSetupError('Unable to obtain current minion id')
+        return minion_id
+
+    @staticmethod
+    def _get_data_nw_info(minion_id):
+        """
+        Obtains minion data network info.
+
+        :param minion_id: Minion id.
+        """
+        data_nw = SaltWrappers.get_salt_call(
+            const.PILLAR_GET, f'cluster:{minion_id}:network:data_nw')
+        if not data_nw:
+            raise CsmSetupError(f'Unable to obtain data nw info for {minion_id}')
+        return data_nw
+
+    @staticmethod
+    def _set_db_host_addr(backend, addr):
+        """
+        Sets database backend host address in CSM config.
+
+        :param backend: Databased backend. Supports Consul ('consul').
+        :param addr: Host address.
+        """
+        if backend not in ('consul'):
+            raise CsmSetupError(f'Invalid database backend "{addr}"')
+        key = f'databases.{backend}_db.config.host'
         try:
-            minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
-            if not minion_id:
-                Log.logger.warn(f"Unable to fetch minion id for the node." \
-                    f"Using {const.MINION_NODE1_ID}.")
-                minion_id = const.MINION_NODE1_ID
-            consul_vip_cmd = f"{const.CLUSTER}:{minion_id}:{const.NETWROK}:"\
-                f"{const.DATA_NW}:{const.ROAMING_IP}"
-            consul_host = SaltWrappers.get_salt_call(const.PILLAR_GET, consul_vip_cmd)
-            if consul_host:
-                Conf.set(const.DATABASE_INDEX, const.CONSUL_HOST_KEY, consul_host)
-                Conf.save(const.DATABASE_INDEX)
+            Conf.set(const.DATABASE_INDEX, key, addr)
+            Conf.save(const.DATABASE_INDEX)
         except Exception as e:
-            raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
+            raise CsmSetupError(f'Unable to set {backend} host address: {e}')
 
     @classmethod
     def _get_faulty_node_uuid(self):
@@ -751,6 +768,7 @@ class CsmSetup(Setup):
         Check and move required configuration file
         Init is used after all dependency service started
         """
+        cls = self.__class__
         try:
             self._verify_args(args)
             self.Config.load()
@@ -763,7 +781,9 @@ class CsmSetup(Setup):
                     self._set_rmq_node_id()
                 except Exception as e:
                     Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                self._set_consul_vip()
+                minion_id = cls._get_minion_id()
+                data_nw = cls._get_data_nw_info(minion_id)
+                cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
