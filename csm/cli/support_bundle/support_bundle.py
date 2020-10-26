@@ -205,7 +205,7 @@ class SupportBundle:
                             rc = str(errno.ECONNREFUSED))
         except Exception as e:
             Log.error(f"Failed to get bundle status: {e}")
-            return Response(output = "Failed  to get status of bundle.",
+            return Response(output = "Failed to get status of bundle.",
                             rc = str(errno.ENOENT))
 
     @staticmethod
