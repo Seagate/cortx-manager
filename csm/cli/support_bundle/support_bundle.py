@@ -192,7 +192,7 @@ class SupportBundle:
         """
         try:
             bundle_id = command.options.get("bundle_id", "")
-            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+            conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
             db = DataBaseProvider(conf)
             repo = SupportBundleRepository(db)
             all_nodes_status = await repo.retrieve_all(bundle_id)
@@ -205,7 +205,7 @@ class SupportBundle:
                             rc = str(errno.ECONNREFUSED))
         except Exception as e:
             Log.error(f"Failed to get bundle status: {e}")
-            return Response(output = "Failed  to get status of bundle.",
+            return Response(output = "Failed to get status of bundle.",
                             rc = str(errno.ENOENT))
 
     @staticmethod
