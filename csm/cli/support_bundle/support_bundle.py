@@ -26,6 +26,7 @@ from csm.core.services.support_bundle import SupportBundleRepository
 from csm.common.errors import (CSM_OPERATION_SUCESSFUL, CsmError,
                             InvalidRequest, CSM_ERR_INVALID_VALUE)
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.errors import DataAccessExternalError
 from csm.core.providers.providers import Response
 from csm.common.conf import Conf
 from cortx.utils.log import Log
@@ -189,14 +190,23 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None
         """
-        bundle_id = command.options.get("bundle_id", "")
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
-        db = DataBaseProvider(conf)
-        repo = SupportBundleRepository(db)
-        all_nodes_status = await repo.retrieve_all(bundle_id)
-        response = {"status": [each_status.to_primitive() for each_status in
+        try:
+            bundle_id = command.options.get("bundle_id", "")
+            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+            db = DataBaseProvider(conf)
+            repo = SupportBundleRepository(db)
+            all_nodes_status = await repo.retrieve_all(bundle_id)
+            response = {"status": [each_status.to_primitive() for each_status in
                                all_nodes_status]}
-        return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
+            return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
+        except DataAccessExternalError as e:
+            Log.error(f"Failed to connect to elasticsearch: {e}")
+            return Response(output = "Bundle status failed to connect to elasticsearch.",
+                            rc = str(errno.ECONNREFUSED))
+        except Exception as e:
+            Log.error(f"Failed to get bundle status: {e}")
+            return Response(output = "Failed  to get status of bundle.",
+                            rc = str(errno.ENOENT))
 
     @staticmethod
     async def fetch_ftp_data(ftp_details):
