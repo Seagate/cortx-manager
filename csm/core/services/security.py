@@ -342,6 +342,5 @@ class SecurityService(ApplicationService):
             handler=self._check_certificate_expiry_time,
             start=datetime(today.year, today.month, today.day,
                            tzinfo=timezone.utc),
-            #interval=timedelta(days=1)
-            interval=timedelta(minties=2)
+            interval=timedelta(days=1)
         )
