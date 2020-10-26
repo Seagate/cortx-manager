@@ -515,10 +515,10 @@ class Setup:
         """
         Sets database backend host address in CSM config.
 
-        :param backend: Databased backend. Supports Consul ('consul').
+        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
         :param addr: Host address.
         """
-        if backend not in ('consul'):
+        if backend not in ('es', 'consul'):
             raise CsmSetupError(f'Invalid database backend "{addr}"')
         key = f'databases.{backend}_db.config.host'
         try:
