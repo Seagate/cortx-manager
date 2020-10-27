@@ -25,9 +25,7 @@ class ApplianceInfoView(CsmView):
         self._service = self.request.app[const.APPLIANCE_INFO_SERVICE]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for fetching appliance information
-    """
+    ''' GET REST implementation for fetching appliance information '''
     async def get(self):
         Log.debug("Handling appliance information fetch request")
         return await self._service.get_appliance_info()

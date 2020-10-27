@@ -158,8 +158,7 @@ class CsmAgent:
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
-        serial_number_file_path = Conf.get(const.CSM_GLOBAL_INDEX, 'APPLIANCE_INFO.serial_number_file_path')
-        CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService(serial_number_file_path)
+        CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
