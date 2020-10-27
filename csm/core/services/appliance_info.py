@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
-from cortx.utils.log import Log
 from cortx.utils.appliance_info.appliance import ApplianceInfo
 
 class ApplianceInfoService(ApplicationService):
@@ -22,8 +21,8 @@ class ApplianceInfoService(ApplicationService):
     Service for acessing appliance information
     """
 
-    def __init__(self, file_path):
-        self._appliance_obj = ApplianceInfo(file_path)
+    def __init__(self):
+        self._appliance_obj = ApplianceInfo()
 
     async def get_appliance_info(self):
         """
