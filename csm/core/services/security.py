@@ -20,7 +20,6 @@ from datetime import datetime
 from string import Template
 from typing import Union
 from datetime import datetime, timedelta, timezone
-from tzlocal import get_localzone
 from concurrent.futures import ThreadPoolExecutor
 
 from cryptography import x509
@@ -316,7 +315,7 @@ class SecurityService(ApplicationService):
         """
         Convert utc aware time to local timezone and print in specific format
         """
-        local_time = from_time.astimezone(get_localzone())
+        local_time = from_time.astimezone()
         return local_time.strftime(const.CERT_TIME_FORMAT)
 
     async def _check_certificate_expiry_time(self, current_time):
