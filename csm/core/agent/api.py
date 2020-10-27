@@ -120,7 +120,8 @@ class CsmRestApi(CsmApi, ABC):
             CsmRestApi._app['ELASTIC_APM'] = {
                 'SERVICE_NAME': 'csm_agent'
             }
-            ElasticAPM(CsmRestApi._app)
+            apm = ElasticAPM(CsmRestApi._app)
+            Log.debug(f"Elastic APM initialized: {apm}")
         except Exception as e_:
             Log.error(f"Exception occurred while initialized Elastic APM: {e_}")
 
