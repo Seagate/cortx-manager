@@ -111,7 +111,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app['ELASTIC_APM'] = {
             'SERVICE_NAME': 'csm_agent'
         }
-        apm = ElasticAPM(CsmRestApi._app)
+        ElasticAPM(CsmRestApi._app)
 
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
