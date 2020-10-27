@@ -108,11 +108,6 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.permission_middleware]
         )
 
-        CsmRestApi._app['ELASTIC_APM'] = {
-            'SERVICE_NAME': 'csm_agent'
-        }
-        ElasticAPM(CsmRestApi._app)
-
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
@@ -120,6 +115,14 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
         CsmRestApi.update_roles_permission()
+
+        try:
+            CsmRestApi._app['ELASTIC_APM'] = {
+                'SERVICE_NAME': 'csm_agent'
+            }
+            ElasticAPM(CsmRestApi._app)
+        except Exception as e_:
+            Log.error(f"Exception occurred while initialized Elastic APM: {e_}")
 
     @staticmethod
     def update_roles_permission():
