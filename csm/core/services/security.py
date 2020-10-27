@@ -318,18 +318,18 @@ class SecurityService(ApplicationService):
         """
         local_time = from_time.astimezone(get_localzone())
         return local_time.strftime(const.CERT_TIME_FORMAT)
-        
+
     async def _check_certificate_expiry_time(self, current_time):
         warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY.ssl_cert_expiry_warning_days")
         try:
             expiry_time = await self.get_certificate_expiry_time()
             expiry_time = expiry_time.replace(tzinfo=timezone.utc)
-            local_time = self._local_timezone(expriy_time)
+            local_time = self._local_timezone(expiry_time)
             days_left = (expiry_time.date() - current_time.date()).days
             if expiry_time < current_time:
                 message = f'SSL certificate expired at {local_time}'
             elif days_left in warning_days:
-                message = f'SSL certificate expires at {local_timee} - {days_left} day(s) left'
+                message = f'SSL certificate expires at {local_time} - {days_left} day(s) left'
             else:
                 message = None
 
