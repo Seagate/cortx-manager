@@ -47,6 +47,7 @@ from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
 import re
+from elasticapm.contrib.aiohttp import ElasticAPM
 
 
 class CsmApi(ABC):
@@ -106,6 +107,11 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
         )
+
+        CsmRestApi._app['ELASTIC_APM'] = {
+            'SERVICE_NAME': 'csm_agent'
+        }
+        apm = ElasticAPM(CsmRestApi._app)
 
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
