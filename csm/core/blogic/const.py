@@ -95,6 +95,9 @@ OS_PERMISSION_DENIED = 2000
 # File Collector
 BUNDLE_FILE = 'files.tgz'
 
+# Security
+CERT_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
+
 # Poll check internal
 RESPONSE_CHECK_INTERVAL = 1
 
