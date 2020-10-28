@@ -42,11 +42,6 @@ class CSMBundle:
         """
         # Read Config to Fetch Log File Path
         csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
-        alerts_file_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_file_path")
-        # Fetch alerts for support bundle.
-        alerts_data = await CSMBundle.fetch_and_save_alerts()
-        obj_alert_json = Json(alerts_file_path)
-        obj_alert_json.dump(alerts_data)
         uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
         es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_cluster_log_path")
         es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_gc_log_path")
@@ -63,6 +58,15 @@ class CSMBundle:
                                             es_gc_log_path,
                                             es_indexing_log_path,
                                             es_search_log_path]}
+        if component_name == "alerts":
+            alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_filename")
+            # Fetch alerts for support bundle.
+            alerts_data = await CSMBundle.fetch_and_save_alerts()
+            alerts_file_path = os.path.join(path, alerts_filename)
+            obj_alert_json = Json(alerts_file_path)
+            obj_alert_json.dump(alerts_data)
+            component_data["alerts"] = [alerts_file_path]
+
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
