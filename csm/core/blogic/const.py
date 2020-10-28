@@ -95,6 +95,9 @@ OS_PERMISSION_DENIED = 2000
 # File Collector
 BUNDLE_FILE = 'files.tgz'
 
+# Security
+CERT_TIME_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
+
 # Poll check internal
 RESPONSE_CHECK_INTERVAL = 1
 
@@ -400,6 +403,7 @@ LOG_LEVEL = "INFO"
 USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
+NETWORK_CONFIG = 'network_config'
 MANAGEMENT_NETWORK = 'management_network_settings'
 DATA_NETWORK = 'data_network_settings'
 DNS_NETWORK = 'dns_network_settings'
@@ -444,7 +448,7 @@ DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
 
 #logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/logrotate_hourly.d"
+LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
 # https status code
 STATUS_CREATED = 201
@@ -561,7 +565,8 @@ MAINTENANCE = "MAINTENANCE"
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {cortxcli_path}/cli/schema/create_support_bundle.sh {args}"
 CORTXCLI = "cortxcli"
 RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
-SUPPORT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
+SUPPORT_MSG = "alerts_support_message"
+SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
 NETWROK = "network"
@@ -593,6 +598,7 @@ EDGE_INSTALL_TYPE ={ "nodes": 1,
 #unsupported feature
 UNSUPPORTED_FEATURE_SCHEMA='{}/schema/unsupported_features.json'.format(CSM_PATH)
 FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_NAME = "feature_name"
@@ -604,3 +610,4 @@ OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
+ES_RETRY = "ELASTICSEARCH.retry"

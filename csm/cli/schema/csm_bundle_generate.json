@@ -8,7 +8,9 @@
       "type": "str",
       "choices":[
         "csm",
-        "alerts"
+        "alerts",
+        "uds",
+        "elasticsearch"
       ],
       "help": "Specify the Name of component for Generating Bundle."
     },

@@ -57,8 +57,9 @@ class UpdateService(ApplicationService):
                     # FIXME: temporary solution, until the provisioner returns the proper version
                     version = os.path.basename(fw_path)
                     model.version = version
+                    Log.info(f"Version : {version} :: FW Directory Path :{fw_dir}")
                 await self._update_repo.save_model(model)
-                Log.debug(f'Save renewed model for {update_id} for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
+                Log.info(f'Save renewed model for {update_id} for provisioner_id:{model.provisioner_id}:{model.to_printable()}')
             except Exception as e:
                 Log.error(f'Failed to fetch the status of an ongoing update process: {e}')
                 raise CsmInternalError('Failed to fetch the status of an ongoing update process')
@@ -76,6 +77,7 @@ class UpdateService(ApplicationService):
         """
         model = await self._get_renewed_model(update_id)
         if not model:
+            Log.info(f"No Model Found for Update ID : {update_id}")
             return {}
 
         return model.to_printable()

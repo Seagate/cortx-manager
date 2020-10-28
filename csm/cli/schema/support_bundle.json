@@ -35,7 +35,10 @@
             "os",
             "health_map",
             "manifest",
-            "alerts"
+            "alerts",
+            "uds",
+            "elasticsearch",
+            "ha"
           ],
           "nargs": "+",
           "help": "Generate Bundle for Specific components defined."
@@ -109,4 +112,3 @@
     }
   ]
 }
-

@@ -23,8 +23,11 @@ CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
-CORTX_UNSUPPORTED_FEATURES_PATH="${CORTX_PATH}schema/unsupported_features.json"
+PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
+CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
+CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
+BRAND_L18N_PATH="config/csm/l18n.json"
 
 print_time() {
     printf "%02d:%02d:%02d\n" $(( $1 / 3600 )) $(( ( $1 / 60 ) % 60 )) $(( $1 % 60 ))
@@ -262,10 +265,13 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
         sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     fi
 
-################### BRAND SPECIFIC CHANGES ######################
+    ################### BRAND SPECIFIC CHANGES ######################
     if [ "$BRAND_CONFIG_PATH" ]; then
         cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
         echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
+
+        cp "$BRAND_CONFIG_PATH/$BRAND_L18N_PATH" "$CORTX_L18N_PATH"
+        echo "updated l18n.json from $BRAND_CONFIG_PATH/$BRAND_L18N_PATH"
     fi
 
     gen_tar_file csm_agent csm
@@ -284,6 +290,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_START_TIME=$(date +%s)
     mkdir -p "$DIST/cli/conf/service"
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
+    cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
+    cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
     cd "$TMPDIR"
 

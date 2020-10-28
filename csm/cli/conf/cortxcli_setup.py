@@ -85,7 +85,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.providers.providers import Request
     from csm.core.providers.cortxcli_setup_provider import SetupProvider
-    from eos.utils.log import Log
+    from cortx.utils.log import Log
     try:
         cortxcli_setup = CortxCliSetupCommand(sys.argv)
         sys.stdout.write('%s\n' % cortxcli_setup.process())

@@ -13,10 +13,5 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-cli:
-    config:
-        script: /usr/bin/cortxcli_setup
-        args: config
-
 support_bundle:
-    - cortxcli csm_bundle_generate csm
+    - cortxcli csm_bundle_generate uds
