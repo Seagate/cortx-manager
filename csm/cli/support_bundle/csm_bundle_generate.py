@@ -52,7 +52,6 @@ class CSMBundle:
         bundle_id = command.options.get("bundle_id")
         component_name = command.options.get("component", "csm")
         component_data = {"csm": [csm_log_directory_path],
-                          "alerts": [alerts_file_path],
                           "uds": [uds_log_directory_path],
                           "elasticsearch": [es_cluster_log_path,
                                             es_gc_log_path,
