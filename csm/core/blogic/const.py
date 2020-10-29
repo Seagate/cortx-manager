@@ -421,6 +421,7 @@ S3_ACCOUNT_SERVICE = "s3_account_service"
 S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
+APPLIANCE_INFO_SERVICE = "appliance_info_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
@@ -510,7 +511,6 @@ LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER='PROVISIONER'
-LOCAL='local'
 RET='ret'
 DEBUG='debug'
 NA='NA'
@@ -560,10 +560,6 @@ SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
-NETWROK = "network"
-DATA_NW = "data_nw"
-ROAMING_IP = "roaming_ip"
-CONSUL_HOST_KEY = "databases.consul_db.config.host"
 HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
