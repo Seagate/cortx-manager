@@ -323,7 +323,7 @@ class SecurityService(ApplicationService):
         try:
             expiry_time = await self.get_certificate_expiry_time()
             expiry_time = expiry_time.replace(tzinfo=timezone.utc)
-            expiry_time_ltz = self._local_timezone(expiry_time)
+            expiry_time_ltz = await self._local_timezone(expiry_time)
             days_left = (expiry_time.date() - current_time.date()).days
             if expiry_time < current_time:
                 message = f'SSL certificate expired at {expiry_time_ltz}'
