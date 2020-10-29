@@ -403,7 +403,7 @@ LOG_LEVEL = "INFO"
 USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
-NETWORK_CONFIG = 'network_config'
+NETWORK_CONFIG = 'NETWORK_CONFIG'
 MANAGEMENT_NETWORK = 'management_network_settings'
 DATA_NETWORK = 'data_network_settings'
 DNS_NETWORK = 'dns_network_settings'
