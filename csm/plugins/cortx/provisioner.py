@@ -271,7 +271,6 @@ class ProvisionerPlugin:
                     raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
             network_config = await self._await_nonasync(_command_handler)
             Conf.set(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG, network_config)
-            Conf.save()
             Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {network_config}")
 
         return Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG)
