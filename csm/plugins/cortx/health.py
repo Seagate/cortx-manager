@@ -302,4 +302,8 @@ class HealthPlugin(CsmPlugin):
         """
         This method will call comm's stop to stop consuming from the queue.
         """
+        Log.info("HealthPlugin:stop -- Started calling comm's stop")
+        start = time.time()
         self.comm_client.stop()
+        end = time.time()
+        Log.info(f"HealthPlugin:stop -- Finished calling comm's stop. Time taken: {end - start}")

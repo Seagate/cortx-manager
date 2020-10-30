@@ -655,10 +655,13 @@ class AlertMonitorService(Service, Observable):
     def stop(self):
         try:
             Log.info("Stopping Alert monitor thread")
+            start = time.time()
             self._alert_plugin.stop()
             self._monitor_thread.join()
             self._thread_started = False
             self._thread_running = False
+            end = time.time()
+            Log.info(f"Alert monitor thread stopped. Time taken : {end - start}")
         except Exception as e:
             Log.warn(f"Error in stopping alert monitor thread: {e}")
 

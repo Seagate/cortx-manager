@@ -295,7 +295,10 @@ class AmqpChannel(Channel):
         Disconnect the connection
         """
         try:
+            Log.info("Inside AmqpChannel's disconnect method")
             if self._connection:
+                Log.info("Started to close RabbitMQ connection")
+                start = time.time()
                 consumer_tag = const.CONSUMER_TAG
                 self._channel.basic_cancel(consumer_tag=consumer_tag)
                 self._channel.stop_consuming()
@@ -303,7 +306,8 @@ class AmqpChannel(Channel):
                 self._connection.close()
                 self._channel = None
                 self._connection = None
-                Log.debug(f"RabbitMQ connection closed.")
+                end = time.time()
+                Log.info(f"RabbitMQ connection closed. Time taken : {end - start}")
         except Exception as e:
             Log.error(f"Error closing RabbitMQ connection. {e}")
 
@@ -538,9 +542,13 @@ class AmqpComm(Comm):
     def disconnect(self):
         try:
             Log.debug(f"Disconnecting AMQPSensor RMQ communication")
+            Log.info("Inside AmqpComm stop method. started stop")
+            start = time.time()
             self._is_disconnect = True
             self._outChannel.disconnect()
             self._inChannel.disconnect()
+            end = time.time()
+            Log.info("Inside AmqpComm stop method. Finished Stopping. Time taken: {end - start}")
         except Exception as e:
             Log.exception(e)
 
@@ -574,7 +582,12 @@ class AmqpActuatorComm(Comm):
         raise Exception('acknowledge not implemented for AMQPActuator Comm')
 
     def stop(self):
+        Log.info("Inside AmqpActuatorComm stop method. Starting stop")
+        start = time.time()
         self.disconnect()
+        end = time.time()
+        Log.info("Inside AmqpActuatorComm stop method. Finished Stopping. Time taken: {end - start}")
+
 
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented for AMQPActuator Comm')

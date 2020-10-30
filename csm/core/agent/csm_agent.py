@@ -206,8 +206,12 @@ class CsmAgent:
         CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
+        Log.info("csm_agent.py:run -- Started stopping csm agent")
+        start_time = time.time()
         CsmAgent.alert_monitor.stop()
         CsmAgent.health_monitor.stop()
+        end_time = time.time()
+        Log.info(f"csm_agent.py:run -- Finished stopping csm agent. Time taken {end_time - start_time}")
 
 
 if __name__ == '__main__':
@@ -255,6 +259,7 @@ if __name__ == '__main__':
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
+    import time
     try:
         # try:
         #     from salt import client

@@ -25,6 +25,7 @@ from threading import Event, Thread
 from csm.core.services.alerts import AlertRepository
 import asyncio
 from csm.common.errors import CsmError
+import time
 
 class HealthRepository:
     def __init__(self):
@@ -640,10 +641,13 @@ class HealthMonitorService(Service, Observable):
     def stop(self):
         try:
             Log.info("Stopping Health monitor thread")
+            start = time.time()
             self._health_plugin.stop()
             self._monitor_thread.join()
             self._thread_started = False
             self._thread_running = False
+            end = time.time()
+            Log.info(f"Health monitor thread stopped. Time taken : {end - start}")
         except Exception as e:
             Log.warn(f"Error in stopping health monitor thread: {e}")
 
