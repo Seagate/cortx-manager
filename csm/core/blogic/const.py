@@ -431,6 +431,7 @@ S3_ACCOUNT_SERVICE = "s3_account_service"
 S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
+APPLIANCE_INFO_SERVICE = "appliance_info_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
