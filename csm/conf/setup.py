@@ -43,6 +43,7 @@ from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers, PillarDataFetchError
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
+from csm.conf.uds import UDSConfigGenerator
 
 # try:
 #     from salt import client
@@ -876,6 +877,10 @@ class CsmSetup(Setup):
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
+            UDSConfigGenerator.apply()
+            cls = self.__class__
+            cls._restart_uds()
+            cls._restart_haproxy()
         except Exception as e:
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
@@ -941,6 +946,7 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
+                UDSConfigGenerator.delete()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()
