@@ -57,6 +57,7 @@ class InvalidPillarDataError(InvalidRequest):
 class ProvisionerCliError(InvalidRequest):
     pass
 
+
 class Setup:
     def __init__(self):
         self._user = const.NON_ROOT_USER
@@ -239,10 +240,6 @@ class Setup:
         if haproxy is None:
             raise CsmSetupError(f'Unable to find haproxy local instance. Minion id: "{minion_id}"')
         Setup._run_cmd(f'pcs resource restart {haproxy}')
-
-    @staticmethod
-    def _restart_uds():
-        Setup._run_cmd('pcs resource restart uds')
 
     class Config:
         """
@@ -769,7 +766,6 @@ class CsmSetup(Setup):
                 self.Config.create(args)
             UDSConfigGenerator.apply()
             cls = self.__class__
-            cls._restart_uds()
             cls._restart_haproxy()
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
@@ -835,7 +831,6 @@ class CsmSetup(Setup):
                 self._config_user(reset=True)
                 UDSConfigGenerator.delete()
                 cls = self.__class__
-                cls._restart_uds()
                 cls._restart_haproxy()
             else:
                 self.Config.reset()
