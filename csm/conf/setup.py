@@ -42,6 +42,7 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
+from csm.conf.uds import UDSConfigGenerator
 
 # try:
 #     from salt import client
@@ -55,7 +56,6 @@ class InvalidPillarDataError(InvalidRequest):
 
 class ProvisionerCliError(InvalidRequest):
     pass
-
 
 class Setup:
     def __init__(self):
@@ -224,6 +224,25 @@ class Setup:
             self._config_user_permission_set(bundle_path, crt, key)
         else:
             self._config_user_permission_unset(bundle_path)
+
+    @staticmethod
+    def _get_haproxy_local_instance(minion_id):
+        return {
+            'srvnode-1': 'haproxy-c1',
+            'srvnode-2': 'haproxy-c2',
+        }.get(minion_id)
+
+    @staticmethod
+    def _restart_haproxy():
+        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
+        haproxy = Setup._get_haproxy_local_instance(minion_id)
+        if haproxy is None:
+            raise CsmSetupError(f'Unable to find haproxy local instance. Minion id: "{minion_id}"')
+        Setup._run_cmd(f'pcs resource restart {haproxy}')
+
+    @staticmethod
+    def _restart_uds():
+        Setup._run_cmd('pcs resource restart uds')
 
     class Config:
         """
@@ -734,6 +753,7 @@ class CsmSetup(Setup):
             self._config_user()
             self.set_unsupported_feature_info()
             self._configure_system_auto_restart()
+
         except Exception as e:
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -747,6 +767,10 @@ class CsmSetup(Setup):
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
+            UDSConfigGenerator.apply()
+            cls = self.__class__
+            cls._restart_uds()
+            cls._restart_haproxy()
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -809,6 +833,10 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
+                UDSConfigGenerator.delete()
+                cls = self.__class__
+                cls._restart_uds()
+                cls._restart_haproxy()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()
