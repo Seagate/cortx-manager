@@ -91,5 +91,5 @@ class CSMBundle:
             alerts = await repo.fetch_alert_for_support_bundle()
         except Exception as ex:
             Log.exception(f"Error occured while fetching alerts: {ex}")
-            alerts = [{"Error": "Internal error: Could not fetch alerts."}]
+            alerts = [{"Error": f"Internal error: Could not fetch alerts. {ex}"}]
         return alerts
