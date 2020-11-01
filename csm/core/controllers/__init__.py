@@ -22,6 +22,7 @@ from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
 from .health import HealthView, HealthResourceView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
+from .pre_flight import PreflightView
 # from .file_transfer import CsmFileView
 from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
                   DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,
