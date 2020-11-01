@@ -27,6 +27,23 @@ class GetPreFlightSchema(Schema):
     db_name = fields.Str(required=True, validate=[Enum([const.PREFLIGHT_CONSUL, const.PREFLIGHT_ELASTICSEARCH])])
 
 
+@CsmView._app_routes.view("/api/v1/pre_flight")
+@CsmAuth.public
+class PreflightAllView(CsmView):
+    def __init__(self, request):
+        super(PreflightAllView, self).__init__(request)
+        self._service = self.request.app[const.PREFLIGHT_SERVICE]
+
+    async def get(self):
+        """
+        Fetch All pre flight status.
+        """
+        Log.debug("Handling all pre flight request")
+        resp =  await self._service.check_status([const.PREFLIGHT_CONSUL, const.PREFLIGHT_ELASTICSEARCH])
+        if not resp['success']:
+            return CsmResponse(resp, status=503)
+        return resp
+
 @CsmView._app_routes.view("/api/v1/pre_flight/{db_name}")
 @CsmAuth.public
 class PreflightView(CsmView):
