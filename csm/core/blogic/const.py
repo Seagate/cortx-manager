@@ -391,6 +391,7 @@ MAX_RESULT_WINDOW = 10000
 
 # Syslog constants
 LOG_LEVEL = "INFO"
+USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
 NETWORK_CONFIG = 'NETWORK_CONFIG'

@@ -23,6 +23,7 @@ from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.errors import CSM_OPERATION_NOT_PERMITTED
 from csm.common.errors import CsmError, CSM_INVALID_REQUEST
+from csm.common.conf import Conf
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.data.models.node_replace import ReplaceNode, JobStatus
@@ -56,6 +57,7 @@ class PreflightService(ApplicationService):
                 ret = await self._action_map.get(each_resource)()
                 resp[each_resource] = ret
             except Exception as ex:
+                Log.error(f"Status check failed for {each_resource} exception : {ex}")
                 resp[each_resource] = "failed"
                 resp['success'] = False
         return resp
@@ -65,6 +67,13 @@ class PreflightService(ApplicationService):
         Return status of consul
         """
         Log.info("Get consul status")
+
+
+        # get host and port of consul database from conf
+        host = "192.168.28.237"
+        port = '8500'
+        # Validation throws exception on failure 
+        ConsulV().validate('service', [host, port])
         return "success"
 
     async def _get_elasticsearch_status(self) -> str:
@@ -72,5 +81,8 @@ class PreflightService(ApplicationService):
         Return status of consul
         """
         Log.info("Get consul status")
-        raise CsmError("Elasticsearch test failed")
+        # get host and port of consul database from conf
+        host = "192.168.12.247"
+        # Validation throws exception on failure 
+        NetworkV().validate('connectivity', [host])
         return "success"
