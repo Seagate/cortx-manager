@@ -22,16 +22,16 @@ from csm.common.services import ApplicationService
 from csm.core.blogic import const
 
 
-class PreflightService(ApplicationService):
+class SystemStatusService(ApplicationService):
     """
-    Provides pre flight status services
+    Provides system status services
     """
 
     def __init__(self, conf):
-        super(PreflightService, self).__init__()
+        super(SystemStatusService, self).__init__()
         self._conf = conf
-        self._action_map = {const.PREFLIGHT_CONSUL: self._get_consul_status,
-            const.PREFLIGHT_ELASTICSEARCH: self._get_elasticsearch_status}
+        self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status,
+            const.SYSTEM_STATUS_ELASTICSEARCH: self._get_elasticsearch_status}
 
     async def check_status(self, check_list):
         """
@@ -63,7 +63,7 @@ class PreflightService(ApplicationService):
 
 
         # get host and port of consul database from conf
-        host = "192.168.28.237"
+        host = "192.168.28.244"
         port = '8500'
         # Validation throws exception on failure 
         ConsulV().validate('service', [host, port])

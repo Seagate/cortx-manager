@@ -67,9 +67,9 @@ class CsmAgent:
         usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
         CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
 
-        # pre flight
-        preflight_service = PreflightService(conf)
-        CsmRestApi._app[const.PREFLIGHT_SERVICE] = preflight_service
+        # system status 
+        system_status_service = SystemStatusService(conf)
+        CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
 
         #Heath configuration
         health_repository = HealthRepository()
@@ -259,7 +259,7 @@ if __name__ == '__main__':
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
-    from csm.core.services.pre_flight import PreflightService
+    from csm.core.services.system_status import SystemStatusService
     try:
         # try:
         #     from salt import client
