@@ -35,6 +35,7 @@ from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.version import ProductVersionView
 from csm.core.controllers.health import HealthResourceView
 from csm.core.controllers.appliance_info import ApplianceInfoView
+from csm.core.controllers.pre_flight import PreflightView, PreflightAllView
 
 
 class CsmRoutes():
