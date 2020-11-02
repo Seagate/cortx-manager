@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Dict
 from csm.common.conf import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
@@ -41,7 +40,7 @@ class PreflightService(ApplicationService):
         :return:
         """
 
-        resp = Dict()
+        resp = dict()
         resp['success'] = True
         Log.debug(f" action_map: {self._action_map}")
         Log.debug(f" check_list: {check_list}")
