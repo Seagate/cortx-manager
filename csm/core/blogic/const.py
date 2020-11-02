@@ -423,12 +423,12 @@ S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
-PREFLIGHT_SERVICE = "preflight_service"
+SYSTEM_STATUS_SERVICE = "system_status_service"
 
 
-#pre flight
-PREFLIGHT_CONSUL = 'consul'
-PREFLIGHT_ELASTICSEARCH = 'es'
+# System Status flight
+SYSTEM_STATUS_CONSUL = 'consul'
+SYSTEM_STATUS_ELASTICSEARCH = 'es'
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"

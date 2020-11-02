@@ -20,41 +20,41 @@ from csm.core.blogic import const
 from csm.core.controllers.validators import Enum, ValidationErrorFormatter
 from marshmallow import (Schema, fields, ValidationError)
 
-class GetPreFlightSchema(Schema):
-    db_name = fields.Str(required=True, validate=[Enum([const.PREFLIGHT_CONSUL, const.PREFLIGHT_ELASTICSEARCH])])
+class GetSystemStatusSchema(Schema):
+    db_name = fields.Str(required=True, validate=[Enum([const.SYSTEM_STATUS_CONSUL, const.SYSTEM_STATUS_ELASTICSEARCH])])
 
-@CsmView._app_routes.view("/api/v1/pre_flight")
+@CsmView._app_routes.view("/api/v1/system/status")
 @CsmAuth.public
-class PreflightAllView(CsmView):
+class SystemStatusAllView(CsmView):
     def __init__(self, request):
-        super(PreflightAllView, self).__init__(request)
-        self._service = self.request.app[const.PREFLIGHT_SERVICE]
+        super(SystemStatusAllView, self).__init__(request)
+        self._service = self.request.app[const.SYSTEM_STATUS_SERVICE]
 
     async def get(self):
         """
-        Fetch All pre flight status.
+        Fetch All system status.
         """
-        Log.debug("Handling all pre flight request")
-        resp =  await self._service.check_status([const.PREFLIGHT_CONSUL, const.PREFLIGHT_ELASTICSEARCH])
+        Log.debug("Handling all system status request")
+        resp =  await self._service.check_status([const.SYSTEM_STATUS_CONSUL, const.SYSTEM_STATUS_ELASTICSEARCH])
         if not resp['success']:
             return CsmResponse(resp, status=503)
         return resp
 
-@CsmView._app_routes.view("/api/v1/pre_flight/{db_name}")
+@CsmView._app_routes.view("/api/v1/system/status/{db_name}")
 @CsmAuth.public
-class PreflightView(CsmView):
+class SystemStatusView(CsmView):
     def __init__(self, request):
-        super(PreflightView, self).__init__(request)
-        self._service = self.request.app[const.PREFLIGHT_SERVICE]
+        super(SystemStatusView, self).__init__(request)
+        self._service = self.request.app[const.SYSTEM_STATUS_SERVICE]
 
     async def get(self):
         """
-        Fetch All pre flight status.
+        Fetch  system status.
         """
-        Log.debug("Handling pre flight request")
+        Log.debug("Handling system status request")
         # action = self.request.match_info[const.PREFLIGHT_CONSUL]
         try:
-            db_name = GetPreFlightSchema().load(self.request.match_info,
+            db_name = GetSystemStatusSchema().load(self.request.match_info,
                                         unknown=const.MARSHMALLOW_EXCLUDE)
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
