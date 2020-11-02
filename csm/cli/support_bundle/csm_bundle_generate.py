@@ -85,12 +85,11 @@ class CSMBundle:
         """
         alerts =[]
         try:
-            #conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
             conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
             db = DataBaseProvider(conf)
             repo = AlertRepository(db)
             alerts = await repo.fetch_alert_for_support_bundle()
         except Exception as ex:
             Log.error(f"Error occured while fetching alerts: {ex}")
-            alerts = [{"Error": f"Internal error: Could not fetch alerts. {ex}"}]
+            alerts = [{"Error": "Internal error: Could not fetch alerts."}]
         return alerts
