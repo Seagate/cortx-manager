@@ -17,6 +17,7 @@ from csm.common.conf import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_network import NetworkV
+from cortx.utils.validator.error import VError
 from csm.common.conf import Conf
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
@@ -49,9 +50,9 @@ class SystemStatusService(ApplicationService):
             try:
                 ret = await self._action_map.get(each_resource)()
                 resp[each_resource] = ret
-            except Exception as ex:
+            except VError as ex:
                 Log.error(f"Status check failed for {each_resource} exception : {ex}")
-                resp[each_resource] = "failed"
+                resp[each_resource] = f"{ex}"
                 resp['success'] = False
         return resp
 
@@ -61,10 +62,12 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Get consul status")
 
+        host = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.host')
+        port = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.port')
 
         # get host and port of consul database from conf
-        host = "192.168.28.244"
-        port = '8500'
+        # host = "192.168.28.244"
+        # port = '8500'
         # Validation throws exception on failure 
         ConsulV().validate('service', [host, port])
         return "success"
@@ -75,7 +78,7 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Get consul status")
         # get host and port of consul database from conf
-        host = "192.168.12.247"
+        host = "192.10.10.10"
         # Validation throws exception on failure 
         NetworkV().validate('connectivity', [host])
         return "success"
