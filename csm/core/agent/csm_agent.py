@@ -48,6 +48,8 @@ class CsmAgent:
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
+
+        Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
