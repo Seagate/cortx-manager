@@ -403,7 +403,7 @@ LOG_LEVEL = "INFO"
 USL_POLLING_LOG = "usl_polling_log"
 
 # Set network config
-NETWORK_CONFIG = 'network_config'
+NETWORK_CONFIG = 'NETWORK_CONFIG'
 MANAGEMENT_NETWORK = 'management_network_settings'
 DATA_NETWORK = 'data_network_settings'
 DNS_NETWORK = 'dns_network_settings'
@@ -431,6 +431,7 @@ S3_ACCOUNT_SERVICE = "s3_account_service"
 S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
+APPLIANCE_INFO_SERVICE = "appliance_info_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
