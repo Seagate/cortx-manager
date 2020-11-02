@@ -16,16 +16,12 @@
 from .view import CsmView, CsmAuth, CsmResponse
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
-from csm.common.conf import Conf
 from csm.core.blogic import const
-from csm.core.controllers.validators import Enum, ValidationErrorFormatter, Server, PortValidator
+from csm.core.controllers.validators import Enum, ValidationErrorFormatter
 from marshmallow import (Schema, fields, ValidationError)
-from csm.common.permission_names import Resource, Action
-
 
 class GetPreFlightSchema(Schema):
     db_name = fields.Str(required=True, validate=[Enum([const.PREFLIGHT_CONSUL, const.PREFLIGHT_ELASTICSEARCH])])
-
 
 @CsmView._app_routes.view("/api/v1/pre_flight")
 @CsmAuth.public

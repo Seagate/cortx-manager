@@ -13,20 +13,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
 from csm.common.conf import Conf
-from cortx.utils.data.access import Query, SortBy, SortOrder
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_network import NetworkV
-from csm.common.errors import CSM_OPERATION_NOT_PERMITTED
-from csm.common.errors import CsmError, CSM_INVALID_REQUEST
 from csm.common.conf import Conf
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.core.data.models.node_replace import ReplaceNode, JobStatus
 
 
 class PreflightService(ApplicationService):
@@ -47,7 +41,7 @@ class PreflightService(ApplicationService):
         :return:
         """
 
-        resp = dict()
+        resp = Dict()
         resp['success'] = True
         Log.debug(f" action_map: {self._action_map}")
         Log.debug(f" check_list: {check_list}")
