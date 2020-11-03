@@ -258,7 +258,7 @@ class CsmUserService(ApplicationService):
                                     USERS_MSG_PERMISSION_DENIED, user_id)
         
         if not current_password:
-            raise InvalidRequest("value for current_password is required",
+            raise InvalidRequest("Value for current_password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
         if 'roles' in new_values:
