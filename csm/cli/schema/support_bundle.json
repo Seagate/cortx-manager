@@ -35,6 +35,7 @@
             "os",
             "health_map",
             "manifest",
+            "alerts",
             "uds",
             "elasticsearch",
             "ha"
