@@ -168,7 +168,7 @@ class SystemConfigAppService(ApplicationService):
         system_config = await self.system_config_mgr.get_system_config_by_id(
             config_id)
         if not system_config:
-            raise CsmNotFoundError("There is no such system config",
+            raise CsmNotFoundError("Invalid system config",
                                    SYSTEM_CONFIG_NOT_FOUND)
         return system_config.to_primitive()
 
@@ -182,7 +182,7 @@ class SystemConfigAppService(ApplicationService):
         system_config = await self.system_config_mgr.get_system_config_by_id(
             config_id)
         if not system_config:
-            raise CsmNotFoundError("There is no such system config",
+            raise CsmNotFoundError("Invalid system config",
                                    SYSTEM_CONFIG_NOT_FOUND)
 
         await system_config.update(new_values)
@@ -217,7 +217,7 @@ class SystemConfigAppService(ApplicationService):
         system_config = await self.system_config_mgr.get_system_config_by_id(
             config_id)
         if not system_config:
-            raise CsmNotFoundError("There is no such system config",
+            raise CsmNotFoundError("Invalid system config",
                                    SYSTEM_CONFIG_NOT_FOUND)
         await self.system_config_mgr.delete(config_id)
         return {}

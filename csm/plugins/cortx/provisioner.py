@@ -268,7 +268,7 @@ class ProvisionerPlugin:
                         )
                 except Exception as error:
                     Log.error(f"Provisioner api error : {error}")
-                    raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
+                    raise NetworkConfigFetchError(f"Failed to fetch Network Configuration: {error}")
             network_config = await self._await_nonasync(_command_handler)
             Conf.set(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG, network_config)
             Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {network_config}")
@@ -286,7 +286,7 @@ class ProvisionerPlugin:
                 return cluster_id
             except Exception as error:
                 Log.error(f"Provisioner api error : {error}")
-                raise ClusterIdFetchError(f"IDs fetching failed: {error}")
+                raise ClusterIdFetchError(f"Failed to fetch IDs: {error}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -422,7 +422,7 @@ class ProvisionerPlugin:
                 raise ProductVersionFetchError("Product version response missing or invalid json")
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Failed to get release version : {error}")
-                raise ProductVersionFetchError(f"Product version fetching failed: {error}")
+                raise ProductVersionFetchError(f"Failed to fetch product version: {error}")
 
         return await self._await_nonasync(_command_handler)
 

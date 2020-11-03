@@ -208,7 +208,7 @@ class CsmView(web.View):
             # TODO: Add support for attribute "multiple" (HTML5)
             if fieldname in parse_results:
                 raise InvalidRequest(
-                    'Repeated fieldname in multipart request. "multiple" attribute is not supported for now')
+                    'Repeated fieldname in multipart request. Multiple attribute are not supported for now')
 
             # If field has filename, write it to cache, else place the content in dict
             parse_result = None
@@ -224,7 +224,7 @@ class CsmView(web.View):
                     size += len(chunk)
                     if size > file_byte_size_limit:
                         raise InvalidRequest(
-                            f'File "{filename}" is too big. Max size = {file_byte_size_limit} bytes')
+                            f'File "{filename}" is bigger than permissible limit. Max size = {file_byte_size_limit} bytes')
                     file_cache.write_chunck(file_uuid, chunk)
                 parse_result = {
                     'content_type': ct,
@@ -236,7 +236,7 @@ class CsmView(web.View):
                 async for chunk in self.aiohttp_body_getter(field):
                     if size > content_byte_size_limit:
                         raise InvalidRequest(
-                            f'Field "{fieldname}" body is too big. Max size = {content_byte_size_limit} bytes')
+                            f'Field "{fieldname}" is bigger than permissible limit. Max size = {content_byte_size_limit} bytes')
                     size += len(chunk)
                     content += chunk
                 parse_result = {
@@ -274,7 +274,7 @@ class CsmView(web.View):
 
         # Content-Disposition fieldname parse
         if len(cd_values) < 2 or not cd_values[1]:
-            raise InvalidRequest('No filedname in one of multipart request parts')
+            raise InvalidRequest('Fieldname is absent in one of multipart request parts')
         fieldname_pair = cd_values[1].split('=')
         if (len(fieldname_pair) != 2 or
             fieldname_pair[0].strip() != 'name' or

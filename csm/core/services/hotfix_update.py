@@ -47,7 +47,7 @@ class HotfixApplicationService(UpdateService):
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
-            raise InvalidRequest("You can't upload a new package while there is an ongoing update")
+            raise InvalidRequest("You cannot upload a new package while there is an ongoing update")
 
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
@@ -85,7 +85,7 @@ class HotfixApplicationService(UpdateService):
             raise InvalidRequest("Software update is already in progress. Please wait until it is done.")
 
         if not software_update_model.is_uploaded() or not os.path.exists(software_update_model.file_path):
-            raise InvalidRequest("You must upload an image before starting the software update.")
+            raise InvalidRequest("You must upload a package before starting the software update.")
 
         software_update_model.provisioner_id = await self._provisioner.trigger_software_update(software_update_model.file_path)
         software_update_model.mark_started()
