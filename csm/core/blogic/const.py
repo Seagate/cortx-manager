@@ -434,7 +434,6 @@ S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 
-
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
 SYSTEM_STATUS_ELASTICSEARCH = 'es'
