@@ -71,6 +71,6 @@ class SystemStatusService(ApplicationService):
         # get host and port of consul database from conf
         host = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.host')
         port = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.port')
-        # Validation throws exception on failure 
+        # Validation throws exception on failure
         ElasticsearchV().validate('service', [host, port])
         return "success"
