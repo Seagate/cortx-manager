@@ -548,7 +548,7 @@ class AmqpComm(Comm):
             self._outChannel.disconnect()
             self._inChannel.disconnect()
             end = time.time()
-            Log.info("Inside AmqpComm stop method. Finished Stopping. Time taken: {end - start}")
+            Log.info(f"Inside AmqpComm stop method. Finished Stopping. Time taken: {end - start}")
         except Exception as e:
             Log.exception(e)
 
@@ -586,7 +586,7 @@ class AmqpActuatorComm(Comm):
         start = time.time()
         self.disconnect()
         end = time.time()
-        Log.info("Inside AmqpActuatorComm stop method. Finished Stopping. Time taken: {end - start}")
+        Log.info(f"Inside AmqpActuatorComm stop method. Finished Stopping. Time taken: {end - start}")
 
 
     def recv(self, callback_fn=None, message=None):
