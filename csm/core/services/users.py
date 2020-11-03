@@ -211,7 +211,7 @@ class CsmUserService(ApplicationService):
             sort_by = field_mapping[sort_by]
 
         if sort_by and sort_by not in const.CSM_USER_SORTABLE_FIELDS:
-            raise InvalidRequest("It is impossible to sort by this field", USERS_MSG_CANNOT_SORT)
+            raise InvalidRequest("Cannot sort by the selected field", USERS_MSG_CANNOT_SORT)
 
         return [self._user_to_dict(x) for x in user_list]
 
@@ -222,13 +222,13 @@ class CsmUserService(ApplicationService):
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
-            raise CsmPermissionDenied("Can't delete super user",
+            raise CsmPermissionDenied("Cannot delete admin user",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
         # Is Logged in user normal user
         if not self.is_super_user(loggedin_user):
             if user_id.lower() != loggedin_user_id.lower():
-                raise CsmPermissionDenied("Normal user Can't delete other user",
+                raise CsmPermissionDenied("Normal user cannot delete other user",
                                           USERS_MSG_PERMISSION_DENIED, user_id)
 
         await self.user_mgr.delete(user.user_id)
@@ -240,11 +240,11 @@ class CsmUserService(ApplicationService):
         """
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if self.is_super_user(user) and not current_password:
-            raise InvalidRequest("Super user current password is required",
+            raise InvalidRequest("Value for current_password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
         if self.is_super_user(user) and ('roles' in new_values):
-            raise CsmPermissionDenied("Cannot change roles for super user",
+            raise CsmPermissionDenied("Cannot change roles for admin user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
 
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
@@ -254,15 +254,15 @@ class CsmUserService(ApplicationService):
         """
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         if user_id.lower() != loggedin_user_id.lower():
-            raise CsmPermissionDenied("Non super user cannot change other user",
+            raise CsmPermissionDenied("Non admin user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
         
         if not current_password:
-            raise InvalidRequest("Current password is required",
+            raise InvalidRequest("value for current_password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
         if 'roles' in new_values:
-            raise CsmPermissionDenied("Non super user cannot change roles for self",
+            raise CsmPermissionDenied("Non admin user cannot change roles for self",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
        
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:

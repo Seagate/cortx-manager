@@ -131,7 +131,7 @@ class StatsAppService(ApplicationService):
                 else:
                     panels[li[0]]["unit"].append(li[2])
         except:
-            raise CsmInternalError("Stats: Invalid metric list %s" %metrics_list)
+            raise CsmInternalError("Invalid metric list for Stats %s" %metrics_list)
 
         if stats_id:
             output["id"]=stats_id
