@@ -69,8 +69,8 @@ class CsmAgent:
         usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
         CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
 
-        # system status 
-        system_status_service = SystemStatusService(conf)
+        # system status
+        system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
 
         #Heath configuration

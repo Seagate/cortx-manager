@@ -16,21 +16,18 @@
 from csm.common.conf import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
-from cortx.utils.validator.v_network import NetworkV
+from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from cortx.utils.validator.error import VError
-from csm.common.conf import Conf
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-
 
 class SystemStatusService(ApplicationService):
     """
     Provides system status services
     """
 
-    def __init__(self, conf):
+    def __init__(self):
         super(SystemStatusService, self).__init__()
-        self._conf = conf
         self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status,
             const.SYSTEM_STATUS_ELASTICSEARCH: self._get_elasticsearch_status}
 
@@ -43,8 +40,6 @@ class SystemStatusService(ApplicationService):
 
         resp = dict()
         resp['success'] = True
-        Log.debug(f" action_map: {self._action_map}")
-        Log.debug(f" check_list: {check_list}")
         for each_resource in check_list:
             Log.debug(f" each resource: {each_resource}")
             try:
@@ -61,24 +56,21 @@ class SystemStatusService(ApplicationService):
         Return status of consul
         """
         Log.info("Get consul status")
-
+        # get host and port of consul database from conf
         host = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.host')
         port = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.port')
-
-        # get host and port of consul database from conf
-        # host = "192.168.28.244"
-        # port = '8500'
-        # Validation throws exception on failure 
+        # Validation throws exception on failure
         ConsulV().validate('service', [host, port])
         return "success"
 
     async def _get_elasticsearch_status(self) -> str:
         """
-        Return status of consul
+        Return status of elasticsearch
         """
-        Log.info("Get consul status")
+        Log.info("Get elasticsearch status")
         # get host and port of consul database from conf
-        host = "192.10.10.10"
+        host = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.host')
+        port = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.port')
         # Validation throws exception on failure 
-        NetworkV().validate('connectivity', [host])
+        ElasticsearchV().validate('service', [host, port])
         return "success"
