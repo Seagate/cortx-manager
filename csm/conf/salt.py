@@ -30,6 +30,7 @@ class SaltWrappers:
         if on_salt_error not in ('raise', 'log'):
             raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
         try:
+            Log.debug(f"Executing 'salt-call {method} {key} --out=json'")
             process = SimpleProcess(f"salt-call {method} {key} --out=json")
             stdout, stderr, rc = process.run()
         except Exception as e:
@@ -44,6 +45,7 @@ class SaltWrappers:
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
+            Log.debug(f"Salt-call cmd returning: {result}")
             return result['local']
 
     @staticmethod
@@ -53,6 +55,7 @@ class SaltWrappers:
         try:
             minion_arg = '*' if minion_id is None else minion_id
             cmd = f'salt {minion_arg} {method} {key} --out=json --static'
+            Log.debug(f"Executing '{cmd}'")
             process = SimpleProcess(cmd)
             stdout, stderr, rc = process.run()
         except Exception as e:
@@ -67,4 +70,5 @@ class SaltWrappers:
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
+            Log.debug(f"Salt-call cmd returning: {result}")
             return result if minion_id is None else result[minion_id]
