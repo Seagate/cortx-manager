@@ -205,7 +205,7 @@ class SupportBundle:
                 " as required services are not running."
                 " Please wait and check the /tmp/support_bundle"
                 " folder for newly generated support bundle."),
-                            rc = str(errno.ECONNREFUSED))
+                            rc = CSM_OPERATION_SUCESSFUL)
         except Exception as e:
             Log.error(f"Failed to get bundle status: {e}")
             return Response(output = ("Support Bundle status is not available currently"
