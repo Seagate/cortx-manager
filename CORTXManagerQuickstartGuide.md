@@ -165,7 +165,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
 ## 1.2 Install Cortx-Manager
 
- The cortx-manager repository is available at https://github.com/Seagate/cortx-manager
+ Click [here](https://github.com/Seagate/cortx-manager) to navigate to the cortx-manager repository. 
  
  <details>
    <summary>Follow these steps to Install CORTX-Manager</summary>
