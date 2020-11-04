@@ -25,12 +25,11 @@ class Periodic:
     """
     Manager for periodic tasks.
 
-    Implements asycio "fire and forget" pattern, i.e. runs the provided
+    Implements asyncio "fire and forget" pattern, i.e. runs the provided
     coroutine every provided period of time.
     """
 
-    def __init__(self, period: float, coro: Awaitable,
-                 loop=asyncio.get_event_loop(), *args, **kwargs):
+    def __init__(self, period: float, coro: Awaitable, loop, *args, **kwargs):
         self.period = timedelta(seconds=period)
         self.coro = coro
         self.args = args
@@ -40,9 +39,7 @@ class Periodic:
         self.at = None
 
     async def _handler(self) -> None:
-        """
-        Infinite task executor
-        """
+        """Infinite task executor"""
         while True:
             # Check if it's time to run the task
             current = datetime.now(timezone.utc)

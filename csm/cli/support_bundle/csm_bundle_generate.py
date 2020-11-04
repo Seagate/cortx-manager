@@ -14,9 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-from csm.core.blogic import const
-from csm.common.payload import Yaml, Tar
+
 from csm.common.conf import Conf
+from csm.common.payload import Tar
+from csm.core.blogic import const
+
 
 class CSMBundle:
     """
@@ -32,9 +34,10 @@ class CSMBundle:
     async def init(command):
         """
         This method will generate bundle for CSM and include the logs in it.
+
         :param command: Csm_cli Command Object :type: command
-        :return:
         """
+
         # Read Config to Fetch Log File Path
         log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
         # Creates CSM Directory
@@ -45,5 +48,3 @@ class CSMBundle:
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(path, f"csm_{bundle_id}.tar.gz")
         Tar(tar_file_name).dump([log_directory_path])
-
-

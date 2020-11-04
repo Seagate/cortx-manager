@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -14,12 +15,14 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validate, validates
-from marshmallow.exceptions import ValidationError
+
 from cortx.utils.log import Log
+from marshmallow import Schema, fields
+from marshmallow.exceptions import ValidationError
+
 from csm.common.errors import InvalidRequest
-from csm.common.permission_names import Resource, Action
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from csm.common.permission_names import Action, Resource
+from .view import CsmAuth, CsmResponse, CsmView
 
 
 class OnboardingStateSchema(Schema):
@@ -35,8 +38,8 @@ class OnboardingStateView(CsmView):
 
     async def _validate_request(self, schema):
         try:
-            json = await self.request.json()
-            body = schema().load(json, unknown='EXCLUDE')
+            json_var = await self.request.json()
+            body = schema().load(json_var, unknown='EXCLUDE')
             return body
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Missing request body")
@@ -47,7 +50,7 @@ class OnboardingStateView(CsmView):
     async def get(self):
         Log.debug("Getting onboarding state")
         phase = await self._service.get_current_phase()
-        response = { 'phase': phase }
+        response = {'phase': phase}
         return CsmResponse(response)
 
     @CsmAuth.permissions({Resource.MAINTENANCE: {Action.UPDATE}})

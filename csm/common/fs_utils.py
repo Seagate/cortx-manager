@@ -13,16 +13,15 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-from shutil import make_archive, unpack_archive, rmtree
 import asyncio
 import multiprocessing
-from enum import Enum
+import os
 from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
+from shutil import make_archive, rmtree, unpack_archive
 
-
-from csm.common.errors import (CsmResourceNotAvailable, CsmTypeError,
-                               CsmInternalError, ResourceExist)
+from csm.common.errors import (CsmInternalError, CsmResourceNotAvailable, CsmTypeError,
+                               ResourceExist)
 
 
 class FSUtils:
@@ -43,8 +42,8 @@ class FSUtils:
         Create directory by a given path. All sub-directories are created recursively
 
         :param path: path to directory which need to create
-        :return:
         """
+
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
@@ -56,12 +55,7 @@ class FSUtils:
 
     @staticmethod
     def delete(path, force=False):
-        """
-        Delete file or directory by a given path
-
-        :param path:
-        :return:
-        """
+        """Delete file or directory by a given path"""
         if os.path.exists(path):
             if os.path.isdir(path):
                 try:
@@ -104,8 +98,8 @@ class FSUtils:
 
         :param src_path: source path
         :param dst_path: destination path
-        :return:
         """
+
         if os.path.exists(src_path):
             try:
                 os.rename(src_path, dst_path)
@@ -123,33 +117,33 @@ class ArchiveFormats(Enum):
     TAR = "tar"  # based on zlib module
     GZTAR = "gztar"  # based on zlib module
     BZTAR = "bztar"  # based on bz2 module
-    XZTAR = "xztar"  # bazed on lzma module
+    XZTAR = "xztar"  # based on lzma module
 
 
 class Archivator:
     """Base class to perform packing/unpacking operations"""
 
-    def __init__(self, thread_pool_exec: ThreadPoolExecutor=None,
-                 loop: asyncio.AbstractEventLoop=None):
+    def __init__(self, thread_pool_exec: ThreadPoolExecutor = None,
+                 loop: asyncio.AbstractEventLoop = None):
         self._pool = (ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
                       if thread_pool_exec is None else thread_pool_exec)
         self._loop = asyncio.get_event_loop() if loop is None else loop
 
-    async def make_archive(self, base_name, format=ArchiveFormats.GZTAR.value,
+    async def make_archive(self, base_name, format_arg=ArchiveFormats.GZTAR.value,
                            root_dir=None, base_dir=None):
 
         def _make_archive(_base_name, _format, _root_dir, _base_dir):
             # imported function validates correctness/existence of archive and directories itself
             make_archive(base_name=_base_name, format=_format,
                          root_dir=_root_dir, base_dir=_base_dir)
-        result = await self._loop.run_in_executor(self._pool, _make_archive,
-                                                  base_name, format, root_dir, base_dir)
+        await self._loop.run_in_executor(
+            self._pool, _make_archive, base_name, format_arg, root_dir, base_dir)
 
-    async def unpack_archive(self, filename, extract_dir=None, format=None):
+    async def unpack_archive(self, filename, extract_dir=None, format_arg=None):
 
         def _unpack_archive(_filename, _extract_dir, _format):
             # imported function validates correctness/existence of archive and directories itself
             unpack_archive(filename=_filename, extract_dir=_extract_dir, format=_format)
 
-        result = await self._loop.run_in_executor(self._pool, _unpack_archive,
-                                                  filename, extract_dir, format)
+        await self._loop.run_in_executor(
+            self._pool, _unpack_archive, filename, extract_dir, format_arg)

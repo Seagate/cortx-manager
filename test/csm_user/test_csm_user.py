@@ -13,19 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.common.errors import CsmPermissionDenied
-from csm.core.services.users import CsmUserService, UserManager
-from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
-from csm.core.blogic import const
-from csm.common.payload import Yaml
 import asyncio
-import sys
-import os
 import unittest
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+
+from csm.common.errors import CsmNotFoundError, InvalidRequest
+from csm.common.payload import Yaml
+from csm.core.blogic import const
+from csm.core.services.users import CsmUserService, UserManager
 
 t = unittest.TestCase()
+
 
 class MockProvisioner():
 
@@ -130,8 +129,7 @@ def test_csm_user_update_email(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'email': 'csmnew@test.com' ,
-            'current_password': 'Csmuser@123'}
+    data = {'email': 'csmnew@test.com', 'current_password': 'Csmuser@123'}
 
     # Initial email
     user = loop.run_until_complete(user_service.get_user(user_id))
@@ -150,19 +148,18 @@ def test_csm_user_update_alert_notification(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'alert_notification': False ,
-            'current_password': 'Csmuser@123'}
+    data = {'alert_notification': False, 'current_password': 'Csmuser@123'}
 
     # Initial alert_notification
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['alert_notification'] == True
+    assert user['alert_notification'] is True
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New alert_notification
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['alert_notification'] == False
+    assert user['alert_notification'] is False
 
 
 def test_csm_user_delete(args):

@@ -14,12 +14,12 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from marshmallow import Schema, fields
-from csm.core.controllers.validators import (FileRefValidator, IsoFilenameValidator, 
-                                             BinFilenameValidator)
+
+from .validators import BinFilenameValidator, FileRefValidator, IsoFilenameValidator
 
 
 class FileFieldSchema(Schema):
-    """ Validation schema for uploaded files"""
+    """Validation schema for uploaded files"""
     content_type = fields.Str(required=True)
     filename = fields.Str(required=True)
     file_ref = fields.Field(validate=FileRefValidator())
@@ -31,20 +31,17 @@ class IsoFileFieldSchema(Schema):
     filename = fields.Str(validate=IsoFilenameValidator(), required=True)
     file_ref = fields.Field(validate=FileRefValidator())
 
+
 class BinFileFieldSchema(Schema):
     """Base File Filed validator for 'bin'-uploaded files"""
     content_type = fields.Str(required=True)
     filename = fields.Str(validate=BinFilenameValidator(), required=True)
-    file_ref = fields.Field(validate=FileRefValidator())    
+    file_ref = fields.Field(validate=FileRefValidator())
 
 
 class HotFixFileFieldSchema(IsoFileFieldSchema):
-    """ Validation schema for uploaded files"""
-
-    pass
+    """Validation schema for uploaded files"""
 
 
 class FirmwareUpdateFileFieldSchema(BinFileFieldSchema):
     """Valdation schmea for firmware update"""
-
-    pass

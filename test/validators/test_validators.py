@@ -13,23 +13,20 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from marshmallow import (Schema, fields, ValidationError, validate,
-                         validates_schema)
-from csm.core.controllers import  validators
-from cortx.utils.log import Log
-import os
 import json
 import unittest
+
+from marshmallow import Schema, ValidationError, fields
+
+from csm.core.controllers import validators
 from csm.test.common import Const
 
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
-with open(file_path + "validator_data.json") as fp:
+with open(f"{file_path}validator_data.json") as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
-def init(args):
-    pass
 
 class TestSchema(Schema):
     username = fields.Str(validate=[validators.UserNameValidator()])
@@ -38,26 +35,26 @@ class TestSchema(Schema):
     comments = fields.Str(validate=[validators.CommentsValidator()])
     port = fields.Int(validate=[validators.PortValidator()])
     bucket_name = fields.Str(validate=[validators.BucketNameValidator()])
-    
+
+
 test_schema_obj = TestSchema()
 
-def test_1(args):
-    "user name test 1"
+
+def test_1():
+    """User name"""
     expected_output = EXPECTED_OUTPUT.get("test_1", {})
     actual_output = test_schema_obj.load(expected_output)
     t.assertDictEqual(actual_output, expected_output)
 
-def test_2(args):
-    "TEST 2"
+
+def test_2():
     data_list = EXPECTED_OUTPUT.get("test_2", [])
     for data in data_list:
         try:
             with t.assertRaises(ValidationError):
                 test_schema_obj.load(data)
         except Exception as e:
-            print(f"{e}")
+            print(str(e))
+
 
 test_list = [test_1, test_2]
-    
-    
-    

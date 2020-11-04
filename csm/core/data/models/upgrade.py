@@ -13,17 +13,16 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import uuid
 import datetime
 from enum import Enum
-from schematics.types import IntType, StringType, DateType, ListType, DateTimeType
+
+from schematics.types import DateTimeType, StringType
+
 from csm.core.blogic.models import CsmModel
 
 
 class PackageInformation:
-    """
-    Model that is used by Provisioner plugin to communiate the package information
-    """
+    """Model that is used by Provisioner plugin to communiate the package information"""
     # TODO: add more files when there is more information about it
     version: str
     description: str
@@ -38,9 +37,7 @@ class ProvisionerCommandStatus(Enum):
 
 
 class ProvisionerStatusResponse:
-    """
-    Model that is used by Provisioner plugin to communitate the result of status polling
-    """
+    """Model that is used by Provisioner plugin to communitate the result of status polling"""
     status: ProvisionerCommandStatus
     details: str
 
@@ -60,9 +57,7 @@ class UpdateStatus(Enum):
 
 
 class UpdateStatusEntry(CsmModel):
-    """
-    Model that is used to persist the current software upgrade status
-    """
+    """Model that is used to persist the current software upgrade status"""
     _id = "update_type"
     update_type = StringType()  # Will serve as a primary key
     provisioner_id = StringType()

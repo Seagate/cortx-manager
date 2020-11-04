@@ -15,25 +15,22 @@
 
 from typing import Union
 
-from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
-
+from botocore.exceptions import ClientError
 from cortx.utils.log import Log
-from csm.common.service_urls import ServiceUrls
 
-from csm.plugins.cortx.s3 import S3Plugin, S3Client
+from csm.common.service_urls import ServiceUrls
 from csm.core.providers.providers import Response
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3BaseService
 from csm.core.services.sessions import S3Credentials
-from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
+from csm.plugins.cortx.s3 import S3Client, S3Plugin
 
 
 # TODO: the access to this service must be restricted to CSM users only (?)
 class S3BucketService(S3BaseService):
-    """
-    Service for S3 account management
-    """
-
+    """Service for S3 account management"""
     def __init__(self, s3plugin: S3Plugin, provisioner):
+        super().__init__()
         self._s3plugin = s3plugin
         self._s3_connection_config = CsmS3ConfigurationFactory.get_s3_connection_config()
         self._provisioner = provisioner
@@ -43,9 +40,8 @@ class S3BucketService(S3BaseService):
         Create S3 Client object for S3 session user
 
         :param s3_session: S3 Account information
-        :type s3_session: S3Credentials
-        :return:
         """
+
         # TODO: it should be a common method for all services
         return self._s3plugin.get_s3_client(access_key=s3_session.access_key,
                                             secret_key=s3_session.secret_key,
@@ -59,15 +55,13 @@ class S3BucketService(S3BaseService):
         Create new bucket by given name
 
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
         :param bucket_name: name of bucket for creation
-        :type bucket_name: str
-        :return:
         """
+
         Log.debug(f"Requested to create bucket by name = {bucket_name}")
         try:
             s3_client = await self.get_s3_client(s3_session)  # type: S3Client
-            bucket = await s3_client.create_bucket(bucket_name)
+            await s3_client.create_bucket(bucket_name)
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
@@ -84,9 +78,8 @@ class S3BucketService(S3BaseService):
         Retrieve the full list of existing buckets
 
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
-        :return:
         """
+
         # TODO: pagination can be added later
         Log.debug("Retrieve the whole list of buckets for active user session")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
@@ -113,11 +106,9 @@ class S3BucketService(S3BaseService):
         Delete bucket by given name
 
         :param bucket_name: name of bucket for creation
-        :type bucket_name: str
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
-        :return:
         """
+
         Log.debug(f"Requested to delete bucket by name = {bucket_name}")
 
         s3_client = await self.get_s3_client(s3_session)  # TODO: s3_client can't be returned
@@ -127,6 +118,7 @@ class S3BucketService(S3BaseService):
         except ClientError as e:
             self._handle_error(e)
         return {"message": "Bucket Deleted Successfully."}
+
     @Log.trace_method(Log.INFO)
     async def get_bucket_policy(self, s3_session: S3Credentials,
                                 bucket_name: str) -> dict:
@@ -134,11 +126,10 @@ class S3BucketService(S3BaseService):
         Retrieve the policy of existing bucket
 
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
-        :returns: A dict of bucket policy
+        :return: A dict of bucket policy
         """
+
         Log.debug(f"Retrieve bucket bucket by name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
@@ -154,38 +145,34 @@ class S3BucketService(S3BaseService):
         Create or update the policy of existing bucket
 
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
-        :returns: Success message
+        :return: Success message
         """
+
         Log.debug(
             f"Requested to put bucket policy for bucket name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
-            bucket_policy = await s3_client.put_bucket_policy(bucket_name, policy)
+            await s3_client.put_bucket_policy(bucket_name, policy)
         except ClientError as e:
             self._handle_error(e)
         return {"message": "Bucket Policy Updated Successfully."}
 
     @Log.trace_method(Log.INFO)
-    async def delete_bucket_policy(self, s3_session: S3Credentials,
-                                bucket_name: str) -> dict:
+    async def delete_bucket_policy(self, s3_session: S3Credentials, bucket_name: str) -> dict:
         """
         Delete the policy of existing bucket
 
         :param s3_session: s3 user session
-        :type s3_session: S3Credentials
         :param bucket_name: s3 bucket name
-        :type bucket_name: str
-        :returns: Success message
+        :return: Success message
         """
+
         Log.debug(
             f"Requested to delete bucket policy for bucket name = {bucket_name}")
         s3_client = await self.get_s3_client(s3_session)  # type: S3Client
         try:
-            bucket_policy = await s3_client.delete_bucket_policy(bucket_name)
+            await s3_client.delete_bucket_policy(bucket_name)
         except ClientError as e:
             self._handle_error(e)
         return {"message": "Bucket Policy Deleted Successfully."}
-

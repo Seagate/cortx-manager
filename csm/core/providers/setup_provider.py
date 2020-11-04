@@ -13,31 +13,28 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-import sys
 import errno
+
 from csm.conf.setup import CsmSetup
 from csm.core.blogic import const
-from csm.core.providers.providers import Provider, Request, Response
+from csm.core.providers.providers import Provider, Response
+
 
 class SetupProvider(Provider):
-    """
-    Provider implementation for csm initialization
-    """
+    """Provider implementation for csm initialization"""
     def __init__(self):
-        super(SetupProvider, self).__init__(const.CSM_SETUP_CMD)
+        super().__init__(const.CSM_SETUP_CMD)
         self._csm_setup = CsmSetup()
         self.arg_list = {}
+        self._action = None
 
     def _validate_request(self, request):
-        """
-        Validate setup command request
-        """
+        """Validate setup command request"""
         self._action = request.options["sub_command_name"]
 
     def _process_request(self, request):
         try:
-            getattr(self._csm_setup, "%s" %(self._action))(request.options)
-            return Response(0, "CSM %s : PASS" %self._action)
+            getattr(self._csm_setup, str(self._action))(request.options)
+            return Response(0, f"CSM {self._action} : PASS")
         except Exception as e:
-            return Response(errno.EINVAL, "CSM %s : Fail %s" %(self._action,e))
+            return Response(errno.EINVAL, f"CSM {self._action} : Fail {e}")

@@ -51,15 +51,13 @@ class S3AccessKeysView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.LIST}})
     async def get(self):
-        """
-        GET REST implementation for S3 access keys.
-        """
+        """GET REST implementation for S3 access keys."""
         Log.debug(f'Handling S3 access keys GET request:'
                   f' user_id: {self.request.session.credentials.user_id}')
         try:
             request_url_data = ListAccessKeysRelUrlSchema().load(self.request.rel_url.query)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request URL: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request URL: {e}")
         with self._guard_service():
             # Gather all the access keys and filter out temporary keys created on each login
             login_service = self.request.app.login_service
@@ -72,15 +70,13 @@ class S3AccessKeysView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.CREATE}})
     async def post(self):
-        """
-        POST REST implementation for S3 access keys.
-        """
+        """POST REST implementation for S3 access keys."""
         Log.debug(f'Handling S3 access keys POST request:'
                   f' user_id: {self.request.session.credentials.user_id}')
         try:
             request_url_data = CreateDeleteAccessKeyRelUrlSchema().load(self.request.rel_url.query)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request URL: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request URL: {e}")
         with self._guard_service():
             return await self._service.create_access_key(self._s3_session, **request_url_data)
 
@@ -93,15 +89,13 @@ class S3AccessKeysListView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.UPDATE}})
     async def patch(self):
-        """
-        PATCH REST implementation for S3 access key.
-        """
+        """PATCH REST implementation for S3 access key."""
         Log.debug(f'Handling S3 access key PATCH request:'
                   f' user_id: {self.request.session.credentials.user_id}')
         try:
             request_url_data = PatchAccessKeySchema().load(self.request.rel_url.query)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request body: {e}")
         status = request_url_data.get('status')
         user_name = request_url_data.get('user_name', None)
         access_key_id = self.request.match_info['access_key_id']
@@ -111,15 +105,13 @@ class S3AccessKeysListView(S3AuthenticatedView):
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.DELETE}})
     async def delete(self):
-        """
-        DELETE REST implementation for S3 access key.
-        """
+        """DELETE REST implementation for S3 access key."""
         Log.debug(f'Handling S3 access key DELETE request:'
                   f' user_id: {self.request.session.credentials.user_id}')
         try:
             request_url_data = CreateDeleteAccessKeyRelUrlSchema().load(self.request.rel_url.query)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request URL: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request URL: {e}")
         access_key_id = self.request.match_info['access_key_id']
         with self._guard_service():
             return await self._service.delete_access_key(

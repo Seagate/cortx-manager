@@ -13,15 +13,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import os
 import asyncio
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.test.common import TestFailed
 from cortx.utils.log import Log
+
 from core.services.maintenance import MaintenanceAppService
 from csm.common.ha_framework import PcsHAFramework
+from csm.test.common import TestFailed
+
 
 class TestMaintenanceAppService:
     def __init__(self):
@@ -33,16 +32,13 @@ class TestMaintenanceAppService:
         _loop = asyncio.get_event_loop()
         return _maintenance, _loop
 
-def init(args):
-    pass
-
 #################
 # Tests
 #################
-def nodes_status(args):
-    """
-    Use timelion provider to initalize csm
-    """
+
+
+def nodes_status():
+    """Use timelion provider to initialize csm"""
     _maintenance, _loop = TestMaintenanceAppService.init()
     Log.console('Testing node status ...')
     try:
@@ -54,10 +50,9 @@ def nodes_status(args):
     except Exception as e:
         raise TestFailed(f"Node status test failed: {e}")
 
-def stop(args):
-    """
-    Stop all nodes from cluster
-    """
+
+def stop():
+    """Stop all nodes from cluster"""
     Log.console('Testing node stop ...')
     _maintenance, _loop = TestMaintenanceAppService.init()
     try:
@@ -69,10 +64,9 @@ def stop(args):
     except Exception as e:
         raise TestFailed(f"stop test failed: {e}")
 
-def start(args):
-    """
-    Start all nodes from cluster
-    """
+
+def start():
+    """Start all nodes from cluster"""
     Log.console('Testing node start ...')
     _maintenance, _loop = TestMaintenanceAppService.init()
     try:
@@ -84,10 +78,9 @@ def start(args):
     except Exception as e:
         raise TestFailed(f"start test failed: {e}")
 
+
 def shutdown(args):
-    """
-    Start all nodes from cluster
-    """
+    """Start all nodes from cluster"""
     Log.console('Testing node shutdown ...')
     _maintenance, _loop = TestMaintenanceAppService.init()
     try:
@@ -99,4 +92,5 @@ def shutdown(args):
     except Exception as e:
         raise TestFailed(f"shutdown test failed: {e}")
 
-test_list = [ nodes_status, stop, start, shutdown ]
+
+test_list = [nodes_status, stop, start, shutdown]

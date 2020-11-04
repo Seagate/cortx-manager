@@ -13,16 +13,17 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from cortx.utils.data.db.db_provider import DataBaseProvider
-from csm.core.blogic.models.support_bundle import SupportBundleModel
 from cortx.utils.data.access import Query
 from cortx.utils.data.access.filters import Compare
+from cortx.utils.data.db.db_provider import DataBaseProvider
+
+from csm.core.blogic.models.support_bundle import SupportBundleModel
+
 
 class SupportBundleRepository:
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
 
     async def retrieve_all(self, bundle_id) -> [SupportBundleModel]:
-        query = Query().filter_by(Compare(SupportBundleModel.bundle_id, '=',
-                                          bundle_id))
+        query = Query().filter_by(Compare(SupportBundleModel.bundle_id, '=', bundle_id))
         return await self.db(SupportBundleModel).get(query)

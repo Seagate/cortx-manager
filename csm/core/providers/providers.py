@@ -13,24 +13,23 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import yaml
 import errno
-from threading import Thread
-from csm.common.errors import CsmError
-from cortx.utils.log import Log
-from csm.core.blogic.email_conf import EmailConfig
-from csm.common.conf import Conf
-from csm.core.blogic import const
 import getpass
+from threading import Thread
+
+from cortx.utils.log import Log
+
+from csm.common.errors import CsmError
+from csm.core.blogic import const
+from csm.core.blogic.email_conf import EmailConfig
 
 
-class Request(object):
-    """ Represents a request to be processed by Provider """
-
+class Request:
+    """Represents a request to be processed by Provider"""
     def __init__(self, action, args, options=None):
         self._action = action
         self._args = args
-        self.options = options
+        self._options = options
 
     def action(self):
         return self._action
@@ -38,14 +37,15 @@ class Request(object):
     def args(self):
         return self._args
 
+    @property
     def options(self):
-        return self.options
+        return self._options
 
 
-class Response(object):
-    """ Represents a response after processing of a request """
-    # TODO:Wherever this class is used for raising the error; that will be
-    #  replaced with proper CsmError type
+class Response:
+    """Represents a response after processing of a request"""
+    # TODO: Wherever this class is used for raising the error; that will be
+    # replaced with proper CsmError type
 
     def __init__(self, rc=0, output=''):
         self._rc = int(rc)
@@ -61,9 +61,8 @@ class Response(object):
         return '%d: %s' % (self._rc, self._output)
 
 
-class Provider(object):
-    """ Base Provider class for a given RAS functionality """
-
+class Provider:
+    """Base Provider class for a given RAS functionality"""
     def __init__(self, name, cluster=None):
         self._name = name
         self._cluster = cluster
@@ -71,34 +70,32 @@ class Provider(object):
     def process_request(self, request, callback=None):
         """
         Primary interface for processing of queries/requests
-        Derived class will implement _process_request which will
-        perform the required processing.
+        Derived class will implement _process_request which will perform the required processing.
         """
 
-        self._validate_request(request)
+        self._validate_request(request)  # pylint: disable=no-member
         if callback is None:
             return self.__process_request(request)
-        else:
-            Thread(target=self.__process_request_bg(request, callback))
+        Thread(target=self.__process_request_bg(request, callback))
+        return None
 
     def __process_request(self, request):
         try:
-            response = self._process_request(request)
+            response = self._process_request(request)  # pylint: disable=no-member
         except CsmError as e:
             response = Response(e.rc(), e.error())
         return response
 
     def __process_request_bg(self, request, callback):
-        """ Process request in background and invoke callback once done """
+        """Process request in background and invoke callback once done"""
         response = self.__process_request(request)
         callback(response)
 
 
 class EmailProvider(Provider):
-    """ Provider implementation for Email Configuration """
-
+    """Provider implementation for Email Configuration"""
     def __init__(self, cluster):
-        super(EmailProvider, self).__init__(const.EMAIL_CONFIGURATION, cluster)
+        super().__init__(const.EMAIL_CONFIGURATION, cluster)
         self._actions = ['config', 'reset', 'show', 'subscribe', 'unsubscribe']
         self._email_conf = EmailConfig()
 
@@ -108,13 +105,13 @@ class EmailProvider(Provider):
             raise CsmError(errno.EINVAL, 'Invalid Action %s' % request.action)
 
         if action == 'config' and len(request.args()) < 3:
-            raise CsmError(errno.EINVAL, 'insufficent argument')
+            raise CsmError(errno.EINVAL, 'insufficient argument')
 
-        if (action == 'unsubscribe' or action == 'subscribe') and not request.args():
-            raise CsmError(errno.EINVAL, 'insufficent argument')
+        if (action in ('unsubscribe', 'subscribe')) and not request.args():
+            raise CsmError(errno.EINVAL, 'insufficient argument')
 
     def _process_request(self, request):
-        """ Processes request and returns response """
+        """Processes request and returns response"""
         _output = ''
         try:
             action = request.action()
@@ -137,15 +134,15 @@ class EmailProvider(Provider):
 
             response = Response(0, _output)
 
-        except CsmError as e:
+        except CsmError:
             raise
 
         except OSError as e:
             Log.exception(e)
-            raise CsmError(e.errno, '%s' % e)
+            raise CsmError(e.errno, str(e))
 
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' % e)
+            raise CsmError(-1, str(e))
 
         return response

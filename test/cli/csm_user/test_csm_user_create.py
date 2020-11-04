@@ -13,48 +13,40 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
-from argparse import ArgumentError
-import unittest
 import json
-import os
+import unittest
+
+from csm.cli.command_factory import CommandFactory
 from csm.test.common import Const
 
 file_path = Const.MOCK_PATH
 
-permissions = {
-            'users': { 'list': True, 'update': True, 'create': True }
-}
-            
+permissions = {'users': {'list': True, 'update': True, 'create': True}}
+
 create_command = CommandFactory.get_command(
-    ["users", 'create', "user123", "-p", "qwerty123", "-r", "monitor"], permissions )
+    ["users", 'create', "user123", "-p", "qwerty123", "-r", "monitor"], permissions)
 t = unittest.TestCase()
 
-with open(file_path + "csm_user_commands_output.json") as fp:
+with open(f"{file_path}csm_user_commands_output.json") as fp:
     EXPECTED_OUTPUT = json.loads(fp.read())
 
 
-def test_1(*args):
+def test_1():
     expected_output = 'users'
     actual_output = create_command.name
     t.assertEqual(actual_output, expected_output)
 
 
-def test_2(*args):
+def test_2():
     expected_output = EXPECTED_OUTPUT.get("expected_csm_user_create")
     actual_output = create_command.options
     t.assertDictEqual(actual_output, expected_output)
 
 
-def test_3(*args):
+def test_3():
     expected_output = 'post'
     actual_output = create_command.method
     t.assertEqual(actual_output, expected_output)
-
-
-def init(args):
-    pass
 
 
 test_list = [test_1, test_2, test_3]

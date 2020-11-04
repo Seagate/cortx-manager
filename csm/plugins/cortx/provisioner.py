@@ -18,59 +18,58 @@ import datetime
 import os
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
-from cortx.utils.log import Log
-from csm.core.blogic import const
-from csm.common.errors import InvalidRequest, CsmInternalError
-from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
-                                          ProvisionerCommandStatus)
-from csm.core.blogic.const import PILLAR_GET
 from json import JSONDecodeError
+
+from cortx.utils.log import Log
+
+from csm.common.errors import CsmInternalError, InvalidRequest
 from csm.common.payload import JsonMessage
-import provisioner
-import provisioner.freeze
+from csm.core.blogic import const
+from csm.core.data.models.upgrade import (PackageInformation, ProvisionerCommandStatus,
+                                          ProvisionerStatusResponse)
 
 
 class PackageValidationError(InvalidRequest):
     pass
 
+
 class NetworkConfigFetchError(InvalidRequest):
     pass
+
 
 class ClusterIdFetchError(InvalidRequest):
     pass
 
+
 class CreateCsmUserError(InvalidRequest):
     pass
+
 
 class ProductVersionFetchError(InvalidRequest):
     pass
 
+
 # TODO: create a separate module for provisioner-related models
-NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
+NetworkConfigurationResponse = namedtuple('NetworkConfigurationResponse', 'mgmt_vip cluster_ip')
 
 
 class ProvisionerPlugin:
-    """
-    Plugin that provides provisioner's api integration.
-    """
-
+    """Plugin that provides provisioner's api integration."""
     PRVSNR_NETWORK_PARAM_VIP = 'network/mgmt_vip'
     PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
 
     def __init__(self, username=None, password=None):
         try:
-            self.provisioner = provisioner
+            import provisioner as pm  # pylint: disable=import-outside-toplevel,import-self
+            import pm.freeze  # pylint: disable=import-outside-toplevel
+            self.provisioner = pm
             Log.info("Provisioner plugin is loaded")
 
             if username and password:
-                self.provisioner.auth_init(
-                    username=username,
-                    password=password,
-                    eauth="pam"
-                )
-        except Exception as error:
+                self.provisioner.auth_init(username=username, password=password, eauth="pam")
+        except Exception as e:
             self.provisioner = None
-            Log.error(f"Provisioner module not found : {error}")
+            Log.error(f"Provisioner module not found : {e}")
 
     async def _await_nonasync(self, func):
         pool = ThreadPoolExecutor(max_workers=1)
@@ -81,10 +80,12 @@ class ProvisionerPlugin:
     async def validate_hotfix_package(self, path, file_name) -> PackageInformation:
         """
         Validate an update image
+
         :param path: Path to the image file
-        :returns: a PackageInformation object
-        :raises: PackageValidationError in case of an invalid package
+        :return: a PackageInformation object
+        :raise: PackageValidationError in case of an invalid package
         """
+
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
@@ -108,8 +109,9 @@ class ProvisionerPlugin:
     async def trigger_software_update(self, path):
         """
         Starts the software update.
+
         :param path: Path to a file that contains the update image
-        :returns: Value which will later be used to poll for the status of the process
+        :return: Value which will later be used to poll for the status of the process
         """
 
         if not self.provisioner:
@@ -119,7 +121,8 @@ class ProvisionerPlugin:
             try:
                 # Generating the version here as at the moment we cannot infer it from the package
                 # version = self._generate_random_version()
-                self.provisioner.set_swupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
+                self.provisioner.set_swupdate_repo(
+                    os.path.splitext(os.path.basename(path))[0], path)
                 return self.provisioner.sw_update(nowait=True)
             except Exception as e:
                 Log.exception(e)
@@ -128,34 +131,32 @@ class ProvisionerPlugin:
 
     @Log.trace_method(Log.DEBUG)
     async def get_provisioner_job_status(self, query_id: str) -> ProvisionerStatusResponse:
-        """
-        Polls Provisioner for the status of a software and firmware update process
-        """
+        """Polls Provisioner for the status of a software and firmware update process"""
         def _command_handler():
-            # TODO: separately handle the case when the problem is related to the communication to the provisioner
+            # TODO: separately handle the case when the problem is related to
+            # the communication to the provisioner
             try:
                 self.provisioner.get_result(query_id)
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Success)
-            except self.provisioner.errors.PrvsnrCmdNotFinishedError as not_finished_err:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress, str(not_finished_err))
-            except self.provisioner.errors.PrvsnrCmdNotFoundError as not_found_err:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.NotFound, str(not_found_err))
-            except self.provisioner.errors.SaltCmdResultError as res_err:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(res_err))
-            except self.provisioner.errors.ProvisionerError as pe:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(pe))
+            except self.provisioner.errors.PrvsnrCmdNotFinishedError as e:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress, str(e))
+            except self.provisioner.errors.PrvsnrCmdNotFoundError as e:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.NotFound, str(e))
+            except self.provisioner.errors.SaltCmdResultError as e:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(e))
+            except self.provisioner.errors.ProvisionerError as e:
+                return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(e))
 
         return await self._await_nonasync(_command_handler)
 
-
-    def _generate_random_version(self):
+    @staticmethod
+    def _generate_random_version():
         return datetime.datetime.now().strftime("%Y.%m.%d.%H.%M")
 
     async def validate_package(self, file_path):
-        # TODO: Provisioner api to validate package tobe implented here
+        # TODO: Implement Provisioner API to validate package
         Log.debug(f"Validating package: f{file_path}")
-        return {"version": "1.2.3",
-                "file_path": file_path}
+        return {"version": "1.2.3", "file_path": file_path}
 
     async def trigger_firmware_update(self, fw_package_path):
         if not self.provisioner:
@@ -163,7 +164,7 @@ class ProvisionerPlugin:
 
         def _command_handler():
             try:
-                return self.provisioner.fw_update(source = fw_package_path, nowait = True)
+                return self.provisioner.fw_update(source=fw_package_path, nowait=True)
             except Exception as e:
                 Log.exception(e)
                 raise CsmInternalError('Failed to start the firmware update process.')
@@ -174,24 +175,26 @@ class ProvisionerPlugin:
     async def set_ntp(self, ntp_data: dict):
         """
         Set ntp configuration using provisioner api.
+
         :param ntp_data: Ntp config dict
-        :returns:
         """
+
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
-                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and
-                        ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
+                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None)
+                        and ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
                     if self.provisioner:
                         Log.debug("Handling provisioner's set ntp api request")
-                        self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS],
-                                    timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
-            except self.provisioner.errors.ProvisionerError as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise PackageValidationError(f"Provisioner package failed: {error}")
+                        self.provisioner.set_ntp(
+                            server=ntp_data[const.NTP_SERVER_ADDRESS],
+                            timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
+            except self.provisioner.errors.ProvisionerError as e:
+                Log.error(f"Provisioner api error : {e}")
+                raise PackageValidationError(f"Provisioner package failed: {e}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -199,29 +202,28 @@ class ProvisionerPlugin:
     async def create_system_user(self, username: str, password: str):
         """
         Create linux user using provisioner api.
+
         :param username: user name for system
         :param password: password for the system user
-        :returns:
         """
+
         # TODO: Exception handling as per provisioner's api response
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
-                if ( username and password ):
+                if username and password:
                     Log.debug("Handling provisioner's create user api request")
                     self.provisioner.create_user(uname=username, passwd=password)
-            except self.provisioner.errors.ProvisionerError as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise CreateCsmUserError(f"System user creation failed: {error}")
+            except self.provisioner.errors.ProvisionerError as e:
+                Log.error(f"Provisioner api error: {e}")
+                raise CreateCsmUserError(f"System user creation failed: {e}")
 
         return await self._await_nonasync(_command_handler)
 
     async def set_ssl_certs(self, source: str) -> str:
-        """ Install uploaded certificates and replicate them between nodes.
-        TODO:
-        """
+        """Install uploaded certificates and replicate them between nodes."""
         # TODO: validate path
         # TODO: make it async if possible
         def _command_handler():
@@ -237,7 +239,7 @@ class ProvisionerPlugin:
         return await self._await_nonasync(_command_handler)
 
     async def get_provisioner_status(self, status_type):
-        # TODO: Provisioner api to get status tobe implented here
+        # TODO: Implement Provisioner API to get status
         Log.debug(f"Getting provisioner status for : {status_type}")
         return {"status": "Successful"}
 
@@ -248,24 +250,26 @@ class ProvisionerPlugin:
         At the moment only queries VIP and CIP, later the method can be extended to fetch
         additional information
 
-        :returns: an instance of NetworkConfiguirationResponse
+        :return: an instance of NetworkConfigurationResponse
         :raises: a CsmInternalError in case of query failure
         """
+
         if not self.provisioner:
             raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
-                response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
+                response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP,
+                                                       self.PRVSNR_NETWORK_PARAM_CIP)
                 # The IPs are same for each node, so we can take any of them
-                for node, params in response.items():
-                    return NetworkConfiguirationResponse(
+                for _, params in response.items():
+                    return NetworkConfigurationResponse(
                         mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
                         cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
                     )
-            except Exception as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
+            except Exception as e:
+                Log.error(f"Provisioner api error : {e}")
+                raise NetworkConfigFetchError(f"Network configuration fetching failed: {e}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -278,19 +282,22 @@ class ProvisionerPlugin:
             try:
                 cluster_id = self.provisioner.get_cluster_id()
                 return cluster_id
-            except Exception as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise ClusterIdFetchError(f"IDs fetching failed: {error}")
+            except Exception as e:
+                Log.error(f"Provisioner api error : {e}")
+                raise ClusterIdFetchError(f"IDs fetching failed: {e}")
 
         return await self._await_nonasync(_command_handler)
 
-    def get_dict(self, dictionary, keys, default=None):
+    @staticmethod
+    def get_dict(dictionary, keys, default=None):
         """
         Retrive value from nested dict.
+
         :param dictionary: Input dictionary
         :param keys: Tuple having keys in ordered format to find its value
-        :returns: Value of given key otherwise return default value
+        :return: Value of given key otherwise return default value
         """
+
         for key in keys:
             if isinstance(dictionary, dict) and key in dictionary:
                 dictionary = dictionary.get(key)
@@ -302,9 +309,10 @@ class ProvisionerPlugin:
     async def set_network(self, network_data: dict, config_type):
         """
         Set network configuration using provisioner api.
-        :param network_data: Nerwork config dict
-        :returns:
+
+        :param network_data: Network config dict
         """
+
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
@@ -313,22 +321,23 @@ class ProvisionerPlugin:
                 mgmt_nodes = data_nodes = dns_nodes = []
                 data_network_config = {}
                 if network_data.get(const.MANAGEMENT_NETWORK):
-                    mgmt_nodes = self.get_dict(network_data, (
-                        const.MANAGEMENT_NETWORK, const.IPV4, const.NODES), default=[])
+                    mgmt_nodes = self.get_dict(
+                        network_data, (const.MANAGEMENT_NETWORK, const.IPV4, const.NODES),
+                        default=[])
                 if network_data.get(const.DATA_NETWORK):
-                    data_network_config = self.get_dict(network_data, (
-                        const.DATA_NETWORK, const.IPV4), default={})
+                    data_network_config = self.get_dict(
+                        network_data, (const.DATA_NETWORK, const.IPV4), default={})
                     data_nodes = data_network_config.get(const.NODES, [])
                 if network_data.get(const.DNS_NETWORK):
-                    dns_nodes = self.get_dict(network_data, (
-                        const.DNS_NETWORK, const.NODES), default=[])
-                
+                    dns_nodes = self.get_dict(
+                        network_data, (const.DNS_NETWORK, const.NODES), default=[])
+
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
                 primary_data_gateway_address = secondary_data_gateway_address = None
-                
+
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
                         mgmt_vip_address = node.get(const.IP_ADDRESS, None)
@@ -351,49 +360,53 @@ class ProvisionerPlugin:
                 Log.debug("Handling provisioner's set network api request")
                 if config_type == const.SYSTEM_CONFIG:
                     if data_nw_dhcp:
-                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
-                                cluster_ip=cluster_ip_address,
-                                primary_data_ip=self.provisioner.UNDEFINED,
-                                primary_data_netmask=self.provisioner.UNDEFINED,
-                                primary_data_gateway=self.provisioner.UNDEFINED,
-                                secondary_data_ip=self.provisioner.UNDEFINED,
-                                secondary_data_netmask=self.provisioner.UNDEFINED,
-                                secondary_data_gateway=self.provisioner.UNDEFINED,
-                                dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                        self.provisioner.set_network(
+                            mgmt_vip=mgmt_vip_address,
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=self.provisioner.UNDEFINED,
+                            primary_data_netmask=self.provisioner.UNDEFINED,
+                            primary_data_gateway=self.provisioner.UNDEFINED,
+                            secondary_data_ip=self.provisioner.UNDEFINED,
+                            secondary_data_netmask=self.provisioner.UNDEFINED,
+                            secondary_data_gateway=self.provisioner.UNDEFINED,
+                            dns_servers=dns_servers_list,
+                            search_domains=search_domains_list)
                     else:
-                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
-                                cluster_ip=cluster_ip_address,
-                                primary_data_ip=primary_data_ip_address,
-                                primary_data_netmask=primary_data_netmask_address,
-                                primary_data_gateway=primary_data_gateway_address,
-                                secondary_data_ip=secondary_data_ip_address,
-                                secondary_data_netmask=secondary_data_netmask_address,
-                                secondary_data_gateway=secondary_data_gateway_address,
-                                dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                        self.provisioner.set_network(
+                            mgmt_vip=mgmt_vip_address,
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=primary_data_ip_address,
+                            primary_data_netmask=primary_data_netmask_address,
+                            primary_data_gateway=primary_data_gateway_address,
+                            secondary_data_ip=secondary_data_ip_address,
+                            secondary_data_netmask=secondary_data_netmask_address,
+                            secondary_data_gateway=secondary_data_gateway_address,
+                            dns_servers=dns_servers_list,
+                            search_domains=search_domains_list)
                 if config_type == const.MANAGEMENT_NETWORK:
                     self.provisioner.set_network(mgmt_vip=mgmt_vip_address)
                 if config_type == const.DATA_NETWORK:
                     if data_nw_dhcp:
-                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
-                                primary_data_ip=self.provisioner.UNDEFINED,
-                                primary_data_netmask=self.provisioner.UNDEFINED,
-                                primary_data_gateway=self.provisioner.UNDEFINED,
-                                secondary_data_ip=self.provisioner.UNDEFINED,
-                                secondary_data_netmask=self.provisioner.UNDEFINED,
-                                secondary_data_gateway=self.provisioner.UNDEFINED)
+                        self.provisioner.set_network(
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=self.provisioner.UNDEFINED,
+                            primary_data_netmask=self.provisioner.UNDEFINED,
+                            primary_data_gateway=self.provisioner.UNDEFINED,
+                            secondary_data_ip=self.provisioner.UNDEFINED,
+                            secondary_data_netmask=self.provisioner.UNDEFINED,
+                            secondary_data_gateway=self.provisioner.UNDEFINED)
                     else:
-                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
-                                primary_data_ip=primary_data_ip_address,
-                                primary_data_netmask=primary_data_netmask_address,
-                                primary_data_gateway=primary_data_gateway_address,
-                                secondary_data_ip=secondary_data_ip_address,
-                                secondary_data_netmask=secondary_data_netmask_address,
-                                secondary_data_gateway=secondary_data_gateway_address)
+                        self.provisioner.set_network(
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=primary_data_ip_address,
+                            primary_data_netmask=primary_data_netmask_address,
+                            primary_data_gateway=primary_data_gateway_address,
+                            secondary_data_ip=secondary_data_ip_address,
+                            secondary_data_netmask=secondary_data_netmask_address,
+                            secondary_data_gateway=secondary_data_gateway_address)
                 if config_type == const.DNS_NETWORK:
                     self.provisioner.set_network(dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                                                 search_domains=search_domains_list)
             except self.provisioner.errors.ProvisionerError as e:
                 Log.error(f"Provisioner api error : {e}")
                 raise PackageValidationError(f"Provisioner package failed: {e}")
@@ -404,19 +417,21 @@ class ProvisionerPlugin:
     async def get_current_version(self):
         """
         Fetch product version information from provisioner
-        :returns: Dict having installed product version
+
+        :return: Dict having installed product version
         """
+
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
         def _command_handler():
             try:
                 return JsonMessage(self.provisioner.get_release_version()).load()
-            except JSONDecodeError as jde:
+            except JSONDecodeError:
                 raise ProductVersionFetchError("Product version response missing or invalid json")
-            except self.provisioner.errors.ProvisionerError as error:
-                Log.error(f"Failed to get release version : {error}")
-                raise ProductVersionFetchError(f"Product version fetching failed: {error}")
+            except self.provisioner.errors.ProvisionerError as e:
+                Log.error(f"Failed to get release version: {e}")
+                raise ProductVersionFetchError(f"Product version fetching failed: {e}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -424,11 +439,13 @@ class ProvisionerPlugin:
     async def start_node_replacement(self, node_id, hostname=None, ssh_port=None):
         """
         Begin Node Replacement Procedure.
+
         :param: node_id: Node Name :type: String
         :param: hostname: New Hostname/IP Provided by User. :type: String
         :param: ssh_port: Port to connect to SSH :type: Int
         :return: Job ID for Node Replacement
         """
+
         if not self.provisioner:
             raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
         try:
@@ -436,6 +453,6 @@ class ProvisionerPlugin:
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Replace node error : {e}")
             raise PackageValidationError(f"Replace node error: {e.reason.message}")
-        except AttributeError as error:
-            Log.critical(f"{error}")
+        except AttributeError as e:
+            Log.critical(str(e))
             raise PackageValidationError("Node replacement is not implemented by provisioner.")

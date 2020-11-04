@@ -13,13 +13,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
-from csm.common.permission_names import Resource, Action
+
+from csm.common.permission_names import Action, Resource
+from .view import CsmAuth, CsmView
 
 
-
-#@atomic
+# @atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
 class StatsView(CsmView):
     def __init__(self, request):
@@ -29,33 +29,31 @@ class StatsView(CsmView):
             "get": self._service.get
         }
 
-    """
-    GET REST implementation for Statistics request
-    """
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @CsmView.asyncio_shield
     async def get(self):
-        """Calling Stats Get Method"""
+        """GET REST implementation for Statistics request"""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
                   f"user_id: {self.request.session.credentials.user_id}")
         getopt = self.request.rel_url.query.get("get", None)
         panel = self.request.match_info["panel"]
         if getopt == "label":
             return await self._service.get_labels(panel)
-        elif getopt == "axis_unit":
+        if getopt == "axis_unit":
             return await self._service.get_axis(panel)
-        else:
-            stats_id = self.request.rel_url.query.get("id", None)
-            from_t = self.request.rel_url.query.get("from", None)
-            to_t = self.request.rel_url.query.get("to", None)
-            metric_list = self.request.rel_url.query.getall("metric", [])
-            interval = self.request.rel_url.query.get("interval", "")
-            total_sample = self.request.rel_url.query.get("total_sample", "")
-            output_format = self.request.rel_url.query.get("output_format", "gui")
-            query = self.request.rel_url.query.get("query", "")
-            unit = self.request.rel_url.query.get("unit", "")
-            return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
-                interval, total_sample, unit, output_format, query)
+        stats_id = self.request.rel_url.query.get("id", None)
+        from_t = self.request.rel_url.query.get("from", None)
+        to_t = self.request.rel_url.query.get("to", None)
+        metric_list = self.request.rel_url.query.getall("metric", [])
+        interval = self.request.rel_url.query.get("interval", "")
+        total_sample = self.request.rel_url.query.get("total_sample", "")
+        output_format = self.request.rel_url.query.get("output_format", "gui")
+        query = self.request.rel_url.query.get("query", "")
+        unit = self.request.rel_url.query.get("unit", "")
+        return await self._service.get(
+            stats_id, panel, from_t, to_t, metric_list, interval, total_sample, unit, output_format,
+            query)
+
 
 @CsmView._app_routes.view("/api/v1/stats")
 class StatsPanelListView(CsmView):
@@ -84,8 +82,9 @@ class StatsPanelListView(CsmView):
             * throughput metric read,
             * iops metric read_object and write_object,
             * latency metric delete_object,
-                reduced set of parameters used, same as aboove
+                reduced set of parameters used, same as above
         """
+
         Log.debug(f"Handling Stats Get Panel List request."
                   f" user_id: {self.request.session.credentials.user_id}")
         panelsopt = self.request.rel_url.query.getall("panel", None)
@@ -102,11 +101,9 @@ class StatsPanelListView(CsmView):
                           f"interval: {interval}, total_sample: {total_sample}")
                 return await self._service.get_panels(stats_id, panelsopt, from_t,
                                                       to_t, interval, total_sample, output_format)
-            else:
-                Log.debug(f"Stats controller: metric: {metricsopt}, total_sample: {total_sample}, "
-                          f"interval: {interval}, from: {from_t}, to: {to_t}")
-                return await self._service.get_metrics(stats_id, metricsopt, from_t, to_t,
-                                                       interval, total_sample, output_format)
-        else:
-            Log.debug("Handling Stats Get Panel List request")
-            return await self._service.get_panel_list()
+            Log.debug(f"Stats controller: metric: {metricsopt}, total_sample: {total_sample}, "
+                      f"interval: {interval}, from: {from_t}, to: {to_t}")
+            return await self._service.get_metrics(
+                stats_id, metricsopt, from_t, to_t, interval, total_sample, output_format)
+        Log.debug("Handling Stats Get Panel List request")
+        return await self._service.get_panel_list()

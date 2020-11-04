@@ -13,23 +13,23 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import unittest
-import yaml
 import os
 import sys
-import mock
+import unittest
+from unittest import mock
+
+import yaml
+from cortx.utils.log import Log
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from csm.common.file_collector import RemoteFileCollector  # noqa: E402
 
-from cortx.utils.log import Log
-from csm.common.file_collector import RemoteFileCollector
 
-class RemoteFileCollector(unittest.TestCase):
-    """ Unit tests for RemoteFileCollector class """
-
+class RemoteFileCollector2(unittest.TestCase):
+    """Unit tests for RemoteFileCollector class"""
     def setUp(self):
         Log.init("csm", log_path=".")
-        collection_rules_yaml = '''
+        collection_rules_yaml = """
             s3_server:
                 commands:
                     - ls -l /tmp
@@ -45,13 +45,14 @@ class RemoteFileCollector(unittest.TestCase):
 
                 files:
                     - /etc/hosts
-        '''
+        """
         self.target_path = "/tmp/bundle"
         self.components = ["s3_server"]
-        self.summary_file_path = [self.target_path,  self.components[0], "summary.txt"]
+        self.summary_file_path = [self.target_path, self.components[0], "summary.txt"]
         self.collection_rules = yaml.load(collection_rules_yaml)
-        self.remote_file_collector = RemoteFileCollector(self.collection_rules, self.target_path)
-        #'localhost', None, self.target_path)
+        self.remote_file_collector = RemoteFileCollector(
+            self.collection_rules, 'localhost', None, self.target_path)
+        # 'localhost', None, self.target_path)
 
         # Patch os
         self.patch_os = mock.patch("csm.utils.file_collector.os")
@@ -99,7 +100,6 @@ class RemoteFileCollector(unittest.TestCase):
         self.mock_open.assert_any_call(self.mock_os.path.join.return_value, "w")
         self.mock_open().__enter__().write.assert_any_call(
             self.mock_subprocess.check_output.return_value)
-
 
     def test_collect_target_path_not_exists(self):
         """
@@ -156,6 +156,3 @@ class RemoteFileCollector(unittest.TestCase):
         # Actual call
         with self.assertRaises(Exception):
             self.remote_file_collector.collect(["some"])
-
-
-unittest.main()

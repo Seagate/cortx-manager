@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,70 +14,70 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
-import pprint
-import sys
-import time
 import errno
-from typing import ClassVar, Dict, Any, Tuple
+import json
+import time
 from importlib import import_module
+from typing import Tuple
+
 import aiohttp
 
+from csm.common.errors import (CSM_PROVIDER_NOT_AVAILABLE, CsmError, CsmServiceNotAvailable,
+                               CsmUnauthorizedError)
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
-from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
-from csm.cli.command import Command
 
 
 class CsmClient:
-    """ Base class for invoking business logic functionality """
-
+    """Base class for invoking business logic functionality"""
     def __init__(self, url):
         self._url = url
 
-    def call(self, command):
+    def call(self, cmd):
         pass
 
     def process_request(self, session, cmd, action, options, args, method):
         pass
 
-class CsmApiClient(CsmClient):
-    """ Concrete class to communicate with RAS API, invokes CsmApi directly """
 
+class CsmApiClient(CsmClient):
+    """Concrete class to communicate with RAS API, invokes CsmApi directly"""
     def __init__(self):
-        super(CsmApiClient, self).__init__(None)
+        super().__init__(None)
         CsmApi.init()
+        self._response = None
 
     def call(self, cmd):
         """
         Method Invocation:
         Call remote API method asynchronously. Response is received over the
         callback channel. Here we wait until the response is received.
-        TODO: Add a timeout.
         """
+
+        # TODO: Add a timeout.
         self._response = None
-        self.process_request(cmd.name, cmd.action, cmd.options,
-                             cmd.options,
-                             cmd.args, cmd.get_method(cmd.action))
-        while self._response == None:
+        self.process_request(None, cmd.name, cmd.action, cmd.options, cmd.args,
+                             cmd.get_method(cmd.action))
+        while self._response is None:
             time.sleep(const.RESPONSE_CHECK_INTERVAL)
 
-        # TODO - Examine results
-        # TODO - Return (return_code, output)
+        # TODO: Examine results
+        # TODO: Return (return_code, output)
         return self._response
 
-    def process_request(self, session, cmd, options, action, args, method):
+    def process_request(self, session, cmd, action, options, args, method):
         request = Request(action, args)
         CsmApi.process_request(cmd, request, self.process_response)
 
     def process_response(self, response):
         self._response = response
 
+
 class CsmDirectClient(CsmClient):
     """Class Handles Direct Calls for CSM CLI"""
     def __init__(self):
-        super(CsmDirectClient, self).__init__(None)
+        super().__init__(None)
 
     async def call(self, command):
         module_obj = import_module(command.comm.get("target"))
@@ -89,22 +90,19 @@ class CsmDirectClient(CsmClient):
             target = module_obj
         return await getattr(target, command.comm.get("method"))(command)
 
-class CsmRestClient(CsmClient):
-    """ REST API client for CSM server """
 
+class CsmRestClient(CsmClient):
+    """REST API client for CSM server"""
     def __init__(self, url):
-        super(CsmRestClient, self).__init__(url)
+        super().__init__(url)
         self.not_authorized = "You are not authorized to run cli commands."
         self.could_not_parse = "Could not parse the response"
 
-    def _failed(self, response):
-        """
-        This check if response failed it will return true else false
-        """
-        if response.rc() not in  (200, 201):
-            return True
-        return False
-    
+    @staticmethod
+    def _failed(response):
+        """This check if response failed it will return true else false"""
+        return response.rc() not in (200, 201)
+
     async def login(self, username, password):
         url = "/v1/login"
         method = const.POST
@@ -122,8 +120,7 @@ class CsmRestClient(CsmClient):
         method = const.POST
         async with aiohttp.ClientSession(headers=headers) as session:
             try:
-                response, _ = await self.process_direct_request(url, session,
-                                                                  method, {}, {})
+                await self.process_direct_request(url, session, method, {}, {})
             except:
                 pass
         return True
@@ -135,8 +132,7 @@ class CsmRestClient(CsmClient):
             response, _ = await self.process_direct_request(url, session,
                                                             method, {}, {})
         if self._failed(response):
-            raise CsmError(errno.EACCES, 'Could not get permissions from server,'
-                                         ' check session')
+            raise CsmError(errno.EACCES, 'Could not get permissions from server, check session')
         return response.output()['permissions']
 
     async def call(self, cmd, headers={}):
@@ -168,14 +164,11 @@ class CsmRestClient(CsmClient):
             raise CsmError(errno.EINVAL, self.could_not_parse)
         return Response(rc=status, output=data), headers
 
-    def __cleanup__(self):
-        self._loop.close()
 
 class RestRequest(Request):
-    """Cli Rest Request Class """
-
+    """CLI Rest Request Class"""
     def __init__(self, url, session, command):
-        super(RestRequest, self).__init__(command.args, command.name)
+        super().__init__(command.args, command.name)
         self._method = command.method
         self._options = command.options
         self._session = session
@@ -199,16 +192,17 @@ class RestRequest(Request):
                                              json=body_json,
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
-        except aiohttp.ClientConnectionError as exception:
-            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
-                           'Cannot connect to csm agent\'s host {0}:{1}'
-                           .format(exception.host, exception.port))
+        except aiohttp.ClientConnectionError as e:
+            raise CsmServiceNotAvailable(
+                CSM_PROVIDER_NOT_AVAILABLE,
+                "Cannot connect to csm agent's host "  # pylint: disable=no-member
+                f"{e.host}:{e.port}")
+
 
 class DirectRestRequest(Request):
-    """Cli Rest Request Class """
-
+    """CLI Rest Request Class"""
     def __init__(self, url, session, method, params_json, body_json):
-        super(DirectRestRequest, self).__init__(None, None)
+        super().__init__(None, None)
         self._url = url
         self._session = session
         self._method = method
@@ -223,7 +217,8 @@ class DirectRestRequest(Request):
                                              json=self._body_json,
                                              timeout=const.TIMEOUT) as response:
                 return await response.text(), response.headers, response.status
-        except aiohttp.ClientConnectionError as exception:
-            raise CsmServiceNotAvailable(CSM_PROVIDER_NOT_AVAILABLE,
-                           'Cannot connect to csm agent\'s host {0}:{1}'
-                           .format(exception.host, exception.port))
+        except aiohttp.ClientConnectionError as e:
+            raise CsmServiceNotAvailable(
+                CSM_PROVIDER_NOT_AVAILABLE,
+                f"Cannot connect to csm agent's host {e.host}:{e.port}"  # pylint: disable=no-member
+            )

@@ -13,32 +13,30 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
 import asyncio
-import syslog
-from datetime import datetime
+import os
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from string import Template
 from typing import Union
-from datetime import datetime, timedelta, timezone
-from concurrent.futures import ThreadPoolExecutor
 
+from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.log import Log
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from csm.common.iem import Iem
-from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
-                               ResourceExist, CsmNotFoundError, CsmServiceConflict)
 from csm.common.conf import Conf
+from csm.common.errors import (CsmError, CsmInternalError, CsmNotFoundError, CsmServiceConflict,
+                               ResourceExist)
 from csm.common.fs_utils import FSUtils
+from csm.common.iem import Iem
 from csm.common.services import ApplicationService
-from cortx.utils.log import Log
-from cortx.utils.data.db.db_provider import DataBaseProvider
-from csm.core.data.models.system_config import (CertificateConfig, SecurityConfig,
-                                                CertificateInstallationStatus)
+from csm.core.blogic import const
+from csm.core.data.models.system_config import (CertificateConfig, CertificateInstallationStatus,
+                                                SecurityConfig)
+from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.services.file_transfer import FileRef
 from csm.plugins.cortx.provisioner import ProvisionerPlugin
-from csm.core.data.models.upgrade import ProvisionerCommandStatus
-from csm.core.blogic import const
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
@@ -53,7 +51,6 @@ class SecurityService(ApplicationService):
 
     1. Certificates management
     2. Validation responsibilities
-
     """
 
     CERT_DIR_BASE_NAME_TEMPLATE = "${USER}_${TIME_STAMP}"
@@ -78,13 +75,17 @@ class SecurityService(ApplicationService):
         self._executor = ThreadPoolExecutor(max_workers=1)
 
     def _provisioner_to_installation_status(self, prv_status: ProvisionerCommandStatus):
-        """ Convert provisioner job status into corresponding certificate installation status
+        """
+        Convert provisioner job status into corresponding certificate installation status
+
         :param str prv_status: provisioner status enum value
         :return: return one of the `CertificateInstallationStatus` values
         """
+
         return self._MAP.get(prv_status, CertificateInstallationStatus.UNKNOWN)
 
-    def _load_certificate(self, path: str):
+    @staticmethod
+    def _load_certificate(path: str):
         """
         Helper method for loading certificate from file in X.509 format
 
@@ -112,7 +113,6 @@ class SecurityService(ApplicationService):
                                  and corresponding certificate
         :param save_time: python's datetime object which represents certificate and private key
                           uploading time
-        :return:
         """
         cert = self._load_certificate(pemfile_path)
 
@@ -149,7 +149,6 @@ class SecurityService(ApplicationService):
         :param pemfile_name: archive with security bundle which contains private key and
                              certificate
         :param pemfile_ref: bundle archive reference
-        :return:
         """
 
         saving_time = datetime.now()
@@ -158,13 +157,7 @@ class SecurityService(ApplicationService):
                                                        TIME_STAMP=time_stamp)
         cert_dir = os.path.join(CERT_CORTX_TMP_DIR, cert_dir)
         if not os.path.exists(cert_dir):
-            try:
-                self._fs_utils.create_dir(cert_dir)
-            except CsmTypeError:
-                raise  # throw the exception to the controller
-            except CsmInternalError:
-                raise  # throw the exception to the controller
-
+            self._fs_utils.create_dir(cert_dir)
         try:
             pemfile_ref.save_file(cert_dir, pemfile_name)
         except CsmInternalError as e:
@@ -177,19 +170,10 @@ class SecurityService(ApplicationService):
             raise CsmInternalError(f"Error during saving certificates configuration onto db: {e}")
 
     async def delete_certificate(self, serial_number):
-        """
-        Delete certificate by serial number
-
-        :return:
-        """
-        pass
+        """Delete certificate by serial number"""
 
     async def install_certificate(self):
-        """
-        Install new private key and its corresponding certificate for the CORTX
-
-        :return:
-        """
+        """Install new private key and its corresponding certificate for the CORTX"""
         # await self.verify_security_bundle()  # TODO: add a certificate validation
 
         if self._last_configuration is None:
@@ -199,7 +183,7 @@ class SecurityService(ApplicationService):
         if self._last_configuration is not None:
             if self._last_configuration.is_not_installed:
                 # TODO: in future we can support different pemfiles for each services:
-                #  S3, CSM, NodeJS
+                # S3, CSM, NodeJS
                 source = self._last_configuration.csm_config.pemfile_path
                 _provisioner_id = await self._provisioner.set_ssl_certs(source=source)
 
@@ -237,25 +221,21 @@ class SecurityService(ApplicationService):
                 raise CsmInternalError(f"Can't save into db update security configuration: {e}")
 
     async def _update_certificate_installation_status(self):
-        """
-        Update Certificate installation status
-        """
+        """Update Certificate installation status"""
         if all(i is not None
                for i in (self._last_configuration, self._last_configuration.provisioner_id)):
 
             prv_response = await self._provisioner.get_provisioner_job_status(
-                                                            self._last_configuration.provisioner_id)
+                self._last_configuration.provisioner_id)
 
             prv_status = prv_response.status
             self._last_configuration.update_status(
-                                            self._provisioner_to_installation_status(prv_status))
+                self._provisioner_to_installation_status(prv_status))
 
             await self._update_configuration()
 
     async def get_certificate_installation_status(self) -> Union[None, SecurityConfig]:
-        """
-        Get last certificate installation status
-        """
+        """Get last certificate installation status"""
         if self._last_configuration is None:
             # try to obtain last stored information from db
             self._last_configuration = await self._security_storage.get_by_id(self.CONFIG_ID)
@@ -286,13 +266,11 @@ class SecurityService(ApplicationService):
         1. Verify domain name of certificate
         2. Verify that certificate corresponds to the uploaded private key
         3. Verify that certificate is valid and is not listed
-
-        :return:
         """
-        pass
 
     async def get_certificate_expiry_time(self):
         path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
+
         def load():
             return self._load_certificate(path)
         cert = await self._loop.run_in_executor(self._executor, load)
@@ -333,12 +311,9 @@ class SecurityService(ApplicationService):
         except Exception as e:
             Log.error(f'Failed to obtain certificate expiry time: {e}')
 
-
     async def check_certificate_expiry_time_task(self):
         today = datetime.now(timezone.utc).date()
         await self._timer_task(
             handler=self._check_certificate_expiry_time,
-            start=datetime(today.year, today.month, today.day,
-                           tzinfo=timezone.utc),
-            interval=timedelta(days=1)
-        )
+            start=datetime(today.year, today.month, today.day, tzinfo=timezone.utc),
+            interval=timedelta(days=1))

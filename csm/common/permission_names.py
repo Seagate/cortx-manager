@@ -14,8 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 class Resource:
-    ''' Resource Names '''
-
+    """Resource Names"""
     ALERTS = 'alerts'
     STATS = 'stats'
     USERS = 'users'
@@ -38,8 +37,7 @@ class Resource:
 
 
 class Action:
-    ''' Action Names '''
-
+    """Action Names"""
     LIST = 'list'
     READ = 'read'
     CREATE = 'create'

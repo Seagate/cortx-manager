@@ -13,22 +13,17 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import json
-import bcrypt
-from schematics.models import Model
-from schematics.types import (StringType, ListType,
-                              DateTimeType, BooleanType)
-from datetime import datetime, timedelta, timezone
-from csm.common.queries import SortBy, QueryLimits, DateTimeRange
-from typing import Optional, Iterable
+from datetime import datetime, timezone
 from enum import Enum
-from csm.common.errors import CsmError, CsmNotFoundError
-from cortx.utils.log import Log
-from csm.core.blogic import const
+
+import bcrypt
+from schematics.types import BooleanType, DateTimeType, ListType, StringType
+
 from csm.core.blogic.models import CsmModel
 
 # TODO: move to the appropriate location
+
+
 class Passwd:
 
     @staticmethod

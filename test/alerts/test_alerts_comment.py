@@ -13,49 +13,90 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
-from argparse import ArgumentError
 import unittest
 
-alerts_comment_show = CommandFactory.get_command(
-    [const.ALERTS_COMMAND, 'comment', 'show', ""])
-alerts_comment_show = CommandFactory.get_command(
-    [const.ALERTS_COMMAND, 'comment', 'show', ""])
+from csm.cli.command_factory import CommandFactory
+from csm.core.blogic import const
+
+alerts_comment_show = CommandFactory.get_command([const.ALERTS_COMMAND, 'comment', 'show', ""],
+                                                 {const.ALERTS_COMMAND: {'list': True}})
+
 t = unittest.TestCase()
 
-def init(args):
-    pass
 
-def test_show_action(args):
+def test_show_action():
     expected_output = 'show'
-    actual_output = alerts_comment_show.action()
+    actual_output = alerts_comment_show.sub_command_name
     t.assertEqual(actual_output, expected_output)
 
-def test_show_options(args):
-    expected_output = {'alert_id': '1', 'comment': 'comment_1'}
-    actual_output = alerts_comment_show.options()
+
+def test_show_options():
+    expected_output = {
+        'alert_uuid': '',
+        'comm': {
+            'json': {},
+            'method': 'get',
+            'params': {},
+            'target': '/{version}/alerts/{alert_uuid}/comments',
+            'type': 'rest',
+            'version': 'v1'},
+        'format': 'table',
+        'need_confirmation': False,
+        'output': {
+            'table': {
+                'filters': 'comments',
+                'headers': {
+                    'comment_id': 'Comment Id',
+                    'comment_text': 'Comment',
+                    'created_by': 'Created By',
+                    'created_time': 'Created Time'}}},
+        'sub_command_name': 'show'}
+    actual_output = alerts_comment_show.options
     t.assertDictEqual(actual_output, expected_output)
 
-def test_show_method(args):
+
+def test_show_method():
     expected_output = 'get'
-    actual_output = alerts_comment_show.method('comment')
+    actual_output = alerts_comment_show.method
     t.assertEqual(actual_output, expected_output)
 
-def test_add_action(args):
+
+def test_add_action():
     expected_output = 'show'
-    actual_output = alerts_comment_show.action()
+    actual_output = alerts_comment_show.sub_command_name
     t.assertEqual(actual_output, expected_output)
 
-def test_add_options(args):
-    expected_output = {'alert_id': '1', 'comment': 'comment_1'}
-    actual_output = alerts_comment_show.options()
+
+def test_add_options():
+    expected_output = {
+        'alert_uuid': '',
+        'comm': {
+            'json': {},
+            'method': 'get',
+            'params': {},
+            'target': '/{version}/alerts/{alert_uuid}/comments',
+            'type': 'rest',
+            'version': 'v1'},
+        'format': 'table',
+        'need_confirmation': False,
+        'output': {
+            'table': {
+                'filters': 'comments',
+                'headers': {
+                    'comment_id': 'Comment Id',
+                    'comment_text': 'Comment',
+                    'created_by': 'Created By',
+                    'created_time': 'Created Time'}}},
+        'sub_command_name': 'show'}
+    actual_output = alerts_comment_show.options
     t.assertDictEqual(actual_output, expected_output)
 
-def test_add_method(args):
+
+def test_add_method():
     expected_output = 'get'
-    actual_output = alerts_comment_show.method('comment')
+    actual_output = alerts_comment_show.method
     t.assertEqual(actual_output, expected_output)
+
 
 test_list = [test_show_action, test_show_options, test_show_method,
              test_add_action, test_add_options, test_add_method]

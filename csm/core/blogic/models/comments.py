@@ -13,9 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic.models import CsmModel
-from schematics.types import StringType, DateTimeType
 from datetime import timezone
+
+from schematics.types import DateTimeType, StringType
+
+from csm.core.blogic.models import CsmModel
 
 
 class CommentModel(CsmModel):
@@ -28,8 +30,8 @@ class CommentModel(CsmModel):
         obj = super().to_primitive()
 
         if self.created_time:
-            obj["created_time"] =\
-                    int(self.created_time.replace(tzinfo=timezone.utc).timestamp())
+            obj["created_time"] = int(self.created_time.replace(  # pylint: disable=no-member
+                tzinfo=timezone.utc).timestamp())
         return obj
 
     def __hash__(self):

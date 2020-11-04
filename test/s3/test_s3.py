@@ -13,14 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import os
 import asyncio
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from cortx.utils.log import Log
-from csm.plugins.cortx.s3 import S3ConnectionConfig, S3Plugin
-from csm.plugins.cortx.s3 import ExtendedIamAccount, IamAccountListResponse
+
+from csm.plugins.eos.s3 import (ExtendedIamAccount, IamAccountListResponse, S3ConnectionConfig,
+                                S3Plugin)
 from csm.test.common import TestFailed
 
 Log.init('test', '.')
@@ -29,10 +27,10 @@ Log.init('test', '.')
 async def _test_create_account(iam_client):
     account = await iam_client.create_account('csm_s3_test', 'csm_s3_test@test.com')
     if not isinstance(account, ExtendedIamAccount):
-        raise TestFailed("Account creation failed: " + repr(account))
+        raise TestFailed(f"Account creation failed: {repr(account)}")
     account_list = await iam_client.list_accounts()
     if not isinstance(account_list, IamAccountListResponse):
-        raise TestFailed("Account list fetching failed: " + repr(account))
+        raise TestFailed(f"Account list fetching failed: {repr(account)}")
     if not any(x.account_name == account.account_name for x in account_list.iam_accounts):
         raise TestFailed("There is no account in the account list")
     return account
@@ -41,10 +39,10 @@ async def _test_create_account(iam_client):
 async def _test_create_iam_user(iam_client):
     iam_user = await iam_client.create_user('csm_s3_iam_test')
     if hasattr(iam_user, "error_code"):
-        raise TestFailed("IAM user creation failed: " + repr(iam_user))
+        raise TestFailed(f"IAM user creation failed: {repr(iam_user)}")
     users_list = await iam_client.list_users()
     if hasattr(users_list, "error_code"):
-        raise TestFailed("IAM users list fetching failed: " + repr(users_list))
+        raise TestFailed(f"IAM users list fetching failed: {repr(users_list)}")
     if not any(x.user_name == iam_user.user_name for x in users_list.iam_users):
         raise TestFailed("There is no created user in the users list")
     return iam_user
@@ -53,7 +51,7 @@ async def _test_create_iam_user(iam_client):
 async def _test_create_list_delete_iam_access_keys(iam_client, iam_user):
     creds = await iam_client.create_user_access_key(user_name=iam_user.user_name)
     if hasattr(creds, "error_code"):
-        raise TestFailed("IAM user access key creation failed: " + repr(creds))
+        raise TestFailed(f"IAM user access key creation failed: {repr(creds)}")
     creds_list = await iam_client.list_user_access_keys(user_name=iam_user.user_name)
     if not any(x.access_key_id == creds.access_key_id for x in creds_list.access_keys):
         raise TestFailed("There is no created access key in the list")
@@ -75,7 +73,7 @@ async def _test_create_list_delete_bucket(s3_client):
 
     bucket = await s3_client.create_bucket(bucket_name)
     if bucket is None:
-        raise TestFailed("Cannot create bucket " + bucket_name)
+        raise TestFailed(f"Cannot create bucket {bucket_name}")
 
     bucket_list = await s3_client.get_all_buckets()
     if bucket_list is None:
@@ -94,13 +92,11 @@ async def _test_create_list_delete_bucket(s3_client):
         raise TestFailed("The bucket has not been deleted")
 
 
-
 async def _test_delete_account(iam_client, account: ExtendedIamAccount):
     result = await iam_client.delete_account(account.account_name)
 
     if not (isinstance(result, bool) and result):
         raise TestFailed("Cannot delete the account")
-
 
 
 async def is_lyve_pilot_bucket(s3_client, bucket):
@@ -124,7 +120,6 @@ async def _disallow_list_lyve_pilot_bucket(s3_client):
 
 
 async def _disallow_delete_lyve_pilot_bucket(s3_client, bucket_name):
-
     for bucket in await s3_client.get_all_buckets():
         if bucket.name == bucket_name:
             if is_lyve_pilot_bucket(s3_client, bucket):
@@ -147,7 +142,6 @@ def test_create_account(args):
     host = args['S3']['host']
     login = args['S3']['login']
     passwd = args['S3']['password']
-
 
     iam_conf = S3ConnectionConfig()
     iam_conf.host = host
@@ -220,10 +214,7 @@ def test_delete_iam_user(args):
 
 
 def test_disallow_list_lyve_pilot_bucket(args):
-    """
-    Testcase to verify disallowing listing of Lyve Pilot bucket.
-    """
-
+    """Testcase to verify disallowing listing of Lyve Pilot bucket."""
     loop = args['loop']
     s3_plugin = args['s3_plugin']
     account = args['s3_account']
@@ -235,10 +226,7 @@ def test_disallow_list_lyve_pilot_bucket(args):
 
 
 def test_disallow_delete_lyve_pilot_bucket(args):
-    """
-    Testcase to verify disallowing deleteing of Lyve Pilot bucket.
-    """
-
+    """Testcase to verify disallowing deleteing of Lyve Pilot bucket."""
     loop = args['loop']
     s3_plugin = args['s3_plugin']
     account = args['s3_account']

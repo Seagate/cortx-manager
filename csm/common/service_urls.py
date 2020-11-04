@@ -65,6 +65,5 @@ class ServiceUrls:
             url += f'/{bucket_name}'
         if scheme is not None:
             return f'{scheme}://{url}'
-        else:
-            schemes = ['http', 'https']
-            return [f'{sch}://{url}' for sch in schemes]
+        schemes = ['http', 'https']
+        return [f'{sch}://{url}' for sch in schemes]

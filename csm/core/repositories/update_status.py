@@ -14,17 +14,18 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import datetime
-from cortx.utils.data.db.db_provider import DataBaseProvider
-from cortx.utils.data.access.filters import Compare, And, Or
+
 from cortx.utils.data.access import Query, SortOrder
+from cortx.utils.data.access.filters import Compare
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.log import Log
+
+from csm.common.errors import CsmInternalError
 from csm.core.data.models.upgrade import UpdateStatusEntry
 
 
 class UpdateStatusRepository:
-    """
-    Repository that keeps a single instance of a UpdateStatusEntry model for each update type.
-    """
+    """Repository that keeps a single instance of a UpdateStatusEntry model for each update type."""
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
 
@@ -32,8 +33,11 @@ class UpdateStatusRepository:
     async def get_current_model(self, update_type: str) -> UpdateStatusEntry:
         """
         Fetch the model. Returns None if it has never been saved or is deleted.
-        :update_type: an identifier of the specific type of update (e.g. software, firmware, etc.)
+
+        :param update_type: an identifier of the specific type of update
+            (e.g. software, firmware, etc.)
         """
+
         query = Query().filter_by(Compare(UpdateStatusEntry.update_type, '=', update_type))
         query = query.order_by(UpdateStatusEntry.updated_at, SortOrder.DESC)
         model = next(iter(await self.db(UpdateStatusEntry).get(query)), None)
@@ -41,9 +45,7 @@ class UpdateStatusRepository:
 
     @Log.trace_method(Log.DEBUG)
     async def save_model(self, model: UpdateStatusEntry):
-        """
-        Saves the model. If something already exists in the DB, it will be replaced.
-        """
+        """Saves the model. If something already exists in the DB, it will be replaced."""
         if not isinstance(model, UpdateStatusEntry):
             raise CsmInternalError("It is only possible to save UpdateStatusEntry objects!")
 
@@ -57,9 +59,12 @@ class UpdateStatusRepository:
     async def drop_model(self, update_type: str) -> UpdateStatusEntry:
         """
         Drop the model instance from the DB (if it exists)
-        :update_type: an identifier of the specific type of update (e.g. software, firmware, etc.)
+
+        :param update_type: an identifier of the specific type of update
+            (e.g. software, firmware, etc.)
         """
+
         # This is a workaround to delete all records - that is currently not directly
         # supported by the generic db
-        filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
-        await self.db(UpdateStatusEntry).delete(filter)
+        filter_var = Compare(UpdateStatusEntry.update_type, '=', update_type)
+        await self.db(UpdateStatusEntry).delete(filter_var)

@@ -13,69 +13,65 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
-from csm.core.services.file_transfer import FileType
 from cortx.utils.log import Log
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from marshmallow import Schema, fields, validate, ValidationError, validates
+from marshmallow import Schema, ValidationError, fields
+
 from csm.common.errors import InvalidRequest
-from csm.common.permission_names import Resource, Action
+from csm.common.permission_names import Action, Resource
+from csm.core.services.file_transfer import FileType
+from .view import CsmAuth, CsmView
+
 
 class AuditLogRangeQuerySchema(Schema):
-    """ schema to validate date range """
+    """schema to validate date range"""
     start_date = fields.Int(required=True)
     end_date = fields.Int(required=True)
+
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
 class AuditLogShowView(CsmView):
     def __init__(self, request):
-        super(AuditLogShowView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["audit_log"]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for fetching audit logs
-    """
     @CsmAuth.permissions({Resource.AUDITLOG: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for fetching audit logs"""
         Log.debug("Handling audit log fetch request")
         component = self.request.match_info["component"]
         audit_log = AuditLogRangeQuerySchema()
         try:
             request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid Range query", str(val_err))
+        except ValidationError as e:
+            raise InvalidRequest("Invalid Range query", str(e))
 
         start_date = request_data["start_date"]
-        end_date = request_data["end_date"] 
+        end_date = request_data["end_date"]
         return await self._service.get_by_range(component, start_date, end_date)
+
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
 class AuditLogDownloadView(CsmView):
     def __init__(self, request):
-        super(AuditLogDownloadView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app["audit_log"]
         self._file_service = self.request.app["download_service"]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for fetching audit logs
-    """
-    #Action.READ permission is used for downloading audit logs
+    # Action.READ permission is used for downloading audit logs
     @CsmAuth.permissions({Resource.AUDITLOG: {Action.READ}})
     async def get(self):
+        """GET REST implementation for fetching audit logs"""
         Log.debug("Handling audit log fetch request")
         component = self.request.match_info["component"]
         audit_log = AuditLogRangeQuerySchema()
         try:
             request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid Range query", str(val_err))
+        except ValidationError as e:
+            raise InvalidRequest("Invalid Range query", str(e))
 
         start_date = request_data["start_date"]
         end_date = request_data["end_date"]
         zip_file = await self._service.get_audit_log_zip(component, start_date, end_date)
         return self._file_service.get_file_response(FileType.AUDIT_LOG, zip_file)
-

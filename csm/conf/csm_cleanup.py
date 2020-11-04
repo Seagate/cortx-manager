@@ -23,27 +23,32 @@
 #
 # Use -h option to show help
 
-from datetime import datetime, timedelta
-import requests
-import io
 import argparse
-import traceback
-import sys
+import io
 import os
 import pathlib
+import sys
+import traceback
+from datetime import datetime, timedelta
+
+import requests
+from cortx.utils.cleanup.es_data_cleanup import esCleanup
+from cortx.utils.log import Log
+
 
 # Search outdated indexes in es reply and generate list of outdated indexes
 def filter_out_old_indexes(date_before, indexes):
     index_start = indexes.find('index')
     uuid_start = indexes.find('uuid')
-    l = []
+    l_var = []
     for line in io.StringIO(indexes):
         if 'statsd' in line:
             l_index = line[index_start:uuid_start].rstrip()
-            l_date = l_index.split('-',1)[1]
-            if (l_date <= date_before):
-                l.append(l_index)
-    return l
+            l_date = l_index.split('-', 1)[1]
+            if l_date <= date_before:
+                l_var.append(l_index)
+    return l_var
+
 
 # Remove indexes of es db at address:port arg_n which are older than arg_d days
 # use arg_e option set to True to debug (don't delete but only show commands)
@@ -52,37 +57,39 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
         host = arg_n
     days = arg_d
     Log.debug(f'Will keep indexes for [{days}] days')
-    date_N_days_ago = datetime.now() - timedelta(days=days)
-    date_dago = str(datetime.strftime(date_N_days_ago, '%Y.%m.%d'))
+    date_n_days_ago = datetime.now() - timedelta(days=days)
+    date_dago = datetime.strftime(date_n_days_ago, '%Y.%m.%d')
     Log.debug(f'Will remove all indexes earlier than [{date_dago}]')
     try:
         response = requests.get(f'http://{host}/_cat/indices?v')
-    except Exception as e:
+    except Exception:
         Log.error(f'ERROR: can not connect to {host}, exiting')
         return
 
     if response.status_code == 200:
         Log.debug(f"Indexes list received from [{host}] successfully")
-        l = filter_out_old_indexes(date_dago, response.text)
-        i=0
-        r=0
-        if l:
-            for k in l:
-                i=i+1
+        l_var = filter_out_old_indexes(date_dago, response.text)
+        i = 0
+        r = 0
+        if l_var:
+            for k in l_var:
+                i = i + 1
                 if arg_e:
                     Log.debug(f'curl -XDELETE http://{host}/{k}')
                 else:
                     es.remove_by_index(host, k)
-                    r=r+1;
-            if i==r:
+                    r = r + 1
+            if i == r:
                 Log.info(f"Successfully removed {r} old indexes")
         else:
             Log.debug("Nothing to remove")
+
 
 def process_stats(args):
     # Pass arguments to worker function
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
     remove_old_indexes(es, args.d, args.n, args.e)
+
 
 def process_auditlogs(args):
     # Pass arguments to worker function
@@ -90,50 +97,47 @@ def process_auditlogs(args):
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
     es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
 
+
 def add_auditlog_subcommand(main_parser):
     subparsers = main_parser.add_parser("stats", help='cleanup of stats log')
     subparsers.set_defaults(func=process_stats)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
+    subparsers.add_argument("-d", type=int, default=90, help="days to keep data")
     subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
-    subparsers.add_argument("-e", action='store_true',
-            help="emulate, do not really delete indexes")
+                            help="address:port of elasticsearch service")
+    subparsers.add_argument("-e", action='store_true', help="emulate, do not really delete indexes")
+
 
 def add_stats_subcommand(main_parser):
     subparsers = main_parser.add_parser("auditlogs", help='cleanup of audit log')
     subparsers.set_defaults(func=process_auditlogs)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
+    subparsers.add_argument("-d", type=int, default=90, help="days to keep data")
     subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
+                            help="address:port of elasticsearch service")
     subparsers.add_argument("-f", type=str, default="timestamp",
-            help="field of index of elasticsearch service")
-    subparsers.add_argument("-i", nargs='+', default=[],
-            help="index of elasticsearch")
+                            help="field of index of elasticsearch service")
+    subparsers.add_argument("-i", nargs='+', default=[], help="index of elasticsearch")
+
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from cortx.utils.log import Log
-    from cortx.utils.cleanup.es_data_cleanup import esCleanup
-    from csm.common.conf import Conf, ConfSection, DebugConf
-    from csm.core.blogic import const
+    from csm.common.conf import Conf
     from csm.common.payload import Yaml
+    from csm.core.blogic import const
     Conf.init()
     Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
     Log.init(const.CSM_CLEANUP_LOG_FILE,
-            syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
-            syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
-            backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-            file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-            level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
-            log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"))
+             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
+             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),
+             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+             file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
+             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"),
+             log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"))
     try:
-        argParser = argparse.ArgumentParser()
-        subparsers = argParser.add_subparsers()
-        add_auditlog_subcommand(subparsers)
-        add_stats_subcommand(subparsers)
-        args = argParser.parse_args()
-        args.func(args)
+        arg_parser = argparse.ArgumentParser()
+        main_subparsers = arg_parser.add_subparsers()
+        add_auditlog_subcommand(main_subparsers)
+        add_stats_subcommand(main_subparsers)
+        parsed_args = arg_parser.parse_args()
+        parsed_args.func(parsed_args)
     except Exception as e:
         Log.error(e, traceback.format_exc())

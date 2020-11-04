@@ -14,31 +14,27 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from asyncio import Lock
-from csm.core.blogic import const
+from pathlib import PosixPath
+from typing import Optional
+
 from cortx.utils.log import Log
+from cortx.utils.security.key_manager import KeyMaterialStore
+from cortx.utils.security.secure_storage import SecureStorage
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import load_pem_x509_certificate
-from cortx.utils.security.key_manager import KeyMaterialStore
-from cortx.utils.security.secure_storage import SecureStorage
-from pathlib import PosixPath
-from typing import Optional
+
+from csm.core.blogic import const
 
 
 class CertificateError(Exception):
-    """
-    Represents errors on certificate handling operations.
-    """
-    pass
+    """Represents errors on certificate handling operations."""
 
 
 class CertificateManager:
-    """
-    Encapsulates USL key material management features.
-    """
-
+    """Encapsulates USL key material management features."""
     _key_material_store_path: str
     _private_key_filename: str
     _certificate_filename: str
@@ -149,10 +145,7 @@ class CertificateManager:
 
 
 class USLNativeCertificateManager(CertificateManager):
-    """
-    Implements additional logic to manipulate USL native key material.
-    """
-
+    """Implements additional logic to manipulate USL native key material."""
     __lock = Lock()
 
     def __init__(self) -> None:
@@ -173,10 +166,7 @@ class USLNativeCertificateManager(CertificateManager):
 
 
 class USLDomainCertificateManager(CertificateManager):
-    """
-    Implements additional logic to manipulate USL domain key material.
-    """
-
+    """Implements additional logic to manipulate USL domain key material."""
     __lock = Lock()
 
     def __init__(self, secure_storage: SecureStorage) -> None:

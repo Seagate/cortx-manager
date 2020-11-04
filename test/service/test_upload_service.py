@@ -13,23 +13,16 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import os
 import asyncio
+import os
 import shutil
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from aiohttp import ClientSession, FormData, web
+from marshmallow import Schema, fields
 
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.core.blogic import const
-from csm.core.services.file_transfer import FileCache
 from csm.core.controllers.file_transfer import FileFieldSchema
 from csm.core.controllers.view import CsmView
-from cortx.utils.log import Log
-
-from aiohttp import web, ClientSession, FormData
-from marshmallow import Schema, fields, validate, exceptions
-
+from csm.core.services.file_transfer import FileCache
 
 #################
 # Tests
@@ -44,9 +37,7 @@ class TestFileUploadSchema(Schema):
 
 
 async def upload_test(request: web.Request):
-    """
-    Handler function for upload request
-    """
+    """Handler function for upload request"""
     # Create cache dir
     os.system(f"mkdir -p {test_tmp_dir}")
 
@@ -63,7 +54,7 @@ async def upload_test(request: web.Request):
 
         # 1 file cached after parsing and it exists
         assert len(cache.files_uuids) == 1
-        assert os.path.exists(test_tmp_dir + '/' + str(cache.files_uuids[0]))
+        assert os.path.exists(f"{test_tmp_dir}/{cache.files_uuids[0]}")
 
         # Validate parse request
         multipart_data = TestFileUploadSchema().load(parsed_multipart)
@@ -77,10 +68,10 @@ async def upload_test(request: web.Request):
         file_ref.save_file(test_tmp_dir, 'test_file')
 
     # After we left FileCache context, temporary file doesn't exist anymore
-    assert not os.path.exists(test_tmp_dir + '/' + str(cache.files_uuids[0]))
+    assert not os.path.exists(f"{test_tmp_dir}/{cache.files_uuids[0]}")
 
     # Saved file exists and it's data written correctly
-    target_file_path = test_tmp_dir + '/' + 'test_file'
+    target_file_path = f"{test_tmp_dir}/test_file"
     assert os.path.exists(target_file_path)
     with open(target_file_path, 'r') as f:
         output = f.read()
@@ -92,9 +83,7 @@ async def upload_test(request: web.Request):
 
 
 async def send_multipart_request(url):
-    """
-    Client aiohttp code for sending request
-    """
+    """Client aiohttp code for sending request"""
     data = FormData()
     data.add_field('file',
                    test_file_data,
@@ -104,11 +93,8 @@ async def send_multipart_request(url):
         return await session.post(url, data=data)
 
 
-def test_file_uploading(args):
-    """
-    Test for checking correctness of upload process
-    """
-
+def test_file_uploading():
+    """Test for checking correctness of upload process"""
     loop = asyncio.get_event_loop()
 
     # Clearing test file_cache folder
@@ -136,12 +122,4 @@ def test_file_uploading(args):
     loop.close()
 
 
-def init(args):
-    pass
-
-
 test_list = [test_file_uploading]
-
-if __name__ == '__main__':
-    Log.init('test', '.')
-    test_file_uploading()

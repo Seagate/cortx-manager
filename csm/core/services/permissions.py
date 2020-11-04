@@ -13,29 +13,24 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-class PermissionSet:
-    ''' Permission Set stored in a compact way as a dictionary '''
 
+class PermissionSet:
+    """Permission Set stored in a compact way as a dictionary"""
     def __init__(self, items: dict = {}):
         self._items = {
-            resource: set(actions)
-                for resource, actions in items.items()
-                    if len(actions) > 0
+            resource: set(actions) for resource, actions in items.items() if len(actions) > 0
         }
 
     def __str__(self) -> str:
-        ''' String Representation Operator '''
-
+        """String Representation Operator"""
         return f'{self.__class__.__name__}{self._items.__str__()}'
 
     def __eq__(self, other: 'PermissionSet') -> bool:
-        ''' Equality Operator '''
-
+        """Equality Operator"""
         return self._items == other._items
 
     def __or__(self, other: 'PermissionSet') -> 'PermissionSet':
-        ''' Union Operator '''
-
+        """Union Operator"""
         result = PermissionSet()
         resources = set(self._items.keys()) | set(other._items.keys())
         for resource in resources:
@@ -47,8 +42,7 @@ class PermissionSet:
         return result
 
     def __and__(self, other: 'PermissionSet') -> 'PermissionSet':
-        ''' Intersection Operator '''
-
+        """Intersection Operator"""
         result = PermissionSet()
         resources = set(self._items.keys()) & set(other._items.keys())
         for resource in resources:
@@ -60,8 +54,7 @@ class PermissionSet:
         return result
 
     def __ior__(self, other: 'PermissionSet') -> 'PermissionSet':
-        ''' In-place Union Operator '''
-
+        """In-place Union Operator"""
         for resource in other._items.keys():
             lhs_actions = self._items.get(resource, set())
             rhs_actions = other._items.get(resource, set())
@@ -73,8 +66,7 @@ class PermissionSet:
         return self
 
     def __iand__(self, other: 'PermissionSet') -> 'PermissionSet':
-        ''' In-place Intersection Operator '''
-
+        """In-place Intersection Operator"""
         for resource in self._items.keys():
             lhs_actions = self._items.get(resource, set())
             rhs_actions = other._items.get(resource, set())

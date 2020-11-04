@@ -13,21 +13,21 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from enum import Enum
-from schematics.exceptions import BaseError
-from csm.common.errors import CsmInternalError, InvalidRequest
-from csm.common.services import ApplicationService
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataBaseProvider
+from schematics.exceptions import BaseError
+
+from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.common.services import ApplicationService
 from csm.core.data.models.onboarding import OnboardingConfig
 
 
 class OnboardingConfigService(ApplicationService):
-
     MSGID_DB_ERROR = 'onboarding_db_error'
     MSGID_INVALID_PHASE = 'onboarding_invalid_phase'
 
     def __init__(self, db: DataBaseProvider):
+        super().__init__()
         self._storage = db(OnboardingConfig)
 
     async def _load(self) -> OnboardingConfig:
@@ -50,17 +50,14 @@ class OnboardingConfigService(ApplicationService):
                                    self.MSGID_DB_ERROR)
 
     async def get_current_phase(self) -> str:
-        """
-        Fetch current onboarding phase
-        :return: :type:str
-        """
-
+        """Fetch current onboarding phase"""
         config = await self._load()
         return config.phase
 
     async def set_current_phase(self, phase: str):
         """
         Update current onboarding phase
+
         :param phase: Next onboarding phase
         """
 
@@ -68,8 +65,6 @@ class OnboardingConfigService(ApplicationService):
         config.phase = phase
         try:
             config.validate()
-        except BaseError as e:
-            raise InvalidRequest('Invalid onboarding phase',
-                                 self.MSGID_INVALID_PHASE,
-                                 phase)
+        except BaseError:
+            raise InvalidRequest('Invalid onboarding phase', self.MSGID_INVALID_PHASE, phase)
         await self._store(config)

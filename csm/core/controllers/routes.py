@@ -14,6 +14,8 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 # To add new route import from view file
+# pylint: disable=unused-import
+# pylint: disable=wrong-import-order
 from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
@@ -24,26 +26,23 @@ from .storage_capacity import StorageCapacityView
 from .permissions import CurrentPermissionsView
 from .hotfix_update import CsmHotfixUploadView
 from .firmware_update import (FirmwarePackageUploadView, FirmwareUpdateView,
-                              FirmwarePackageAvailibility)
+                              FirmwarePackageAvailability)
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-from csm.core.controllers.s3.access_keys import S3AccessKeysListView, S3AccessKeysView  # noqa: F401
-from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
+from csm.core.controllers.s3.access_keys import S3AccessKeysListView, S3AccessKeysView
+from csm.core.controllers.s3.iam_users import IamUserView, IamUserListView
 from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
 from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
                                            SecurityUploadView)
 from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.version import ProductVersionView
 from csm.core.controllers.health import HealthResourceView
+# pylint: enable=unused-import
+# pylint: enable=wrong-import-order
 
 
-class CsmRoutes():
-    """
-    Common class for adding routes
-    """
-
+class CsmRoutes:
+    """Common class for adding routes"""
     @staticmethod
     def add_routes(app):
-        """
-        Add routes to Web application
-        """
+        """Add routes to Web application"""
         app.add_routes(CsmView._app_routes)

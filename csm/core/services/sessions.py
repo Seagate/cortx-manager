@@ -15,27 +15,25 @@
 
 import uuid
 from abc import ABC, abstractmethod
-from enum import Enum
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+
 from cortx.utils.log import Log
+
 from csm.common.conf import Conf
+from csm.common.errors import CSM_ERR_INVALID_VALUE, CsmError
 from csm.core.blogic import const
-from csm.plugins.cortx.s3 import S3Plugin
-from csm.core.data.models.s3 import S3ConnectionConfig, IamError
+from csm.core.data.models.s3 import IamError, S3ConnectionConfig
 # TODO: from csm.common.passwd import Passwd
-from csm.core.data.models.users import UserType, User, Passwd
-from csm.core.services.users import UserManager
-from csm.core.services.roles import RoleManager
+from csm.core.data.models.users import Passwd, User, UserType
 from csm.core.services.permissions import PermissionSet
-from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
+from csm.core.services.roles import RoleManager
+from csm.core.services.users import UserManager
+from csm.plugins.cortx.s3 import S3Plugin
 
 
 class SessionCredentials:
-    """ Base class for a variying part of the session
-    depending on the user type (CSM, LDAP, S3).
-    """
-
+    """Base class for a varying part of the session depending on the user type (CSM, LDAP, S3)."""
     def __init__(self, user_id: str) -> None:
         self._user_id = user_id
 
@@ -45,29 +43,21 @@ class SessionCredentials:
 
 
 class LocalCredentials(SessionCredentials):
-    """ CSM local user specific session credentials - empty """
-
-    def __init__(self, user_id: str) -> None:
-        super().__init__(user_id)
+    """CSM local user specific session credentials - empty"""
 
 
 class LdapCredentials(SessionCredentials):
-    """ LDAP user specific session credentials - TBD """
-
-    def __init__(self, user_id: str) -> None:
-        super().__init__(user_id)
+    """LDAP user specific session credentials - TBD"""
 
 
 class S3Credentials(SessionCredentials):
-    """ S3 account specific session credentials """
-
+    """S3 account specific session credentials"""
     def __init__(self, user_id: str, access_key: str,
                  secret_key: str, session_token: str) -> None:
         super().__init__(user_id)
         self._access_key = access_key
         self._secret_key = secret_key
         self._session_token = session_token
-
 
     @property
     def access_key(self):
@@ -83,8 +73,7 @@ class S3Credentials(SessionCredentials):
 
 
 class Session:
-    """ Session data """
-
+    """Session data"""
     Id = str
 
     def __init__(self, session_id: Id,
@@ -97,7 +86,7 @@ class Session:
         self._permissions = permissions
 
     @property
-    def session_id(self) -> Id:
+    def session_id(self) -> Id:  # pylint: disable=undefined-variable
         return self._session_id
 
     @property
@@ -118,8 +107,7 @@ class Session:
 
 
 class SessionManager:
-    """ Session management class """
-
+    """Session management class"""
     def __init__(self):
         self._stg = {}
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
@@ -128,7 +116,8 @@ class SessionManager:
     def expiry_interval(self):
         return self._expiry_interval
 
-    def _generate_sid(self) -> Session.Id:
+    @staticmethod
+    def _generate_sid() -> Session.Id:
         return uuid.uuid4().hex
 
     def calc_expiry_time(self) -> datetime:
@@ -157,16 +146,14 @@ class SessionManager:
 
 
 class AuthPolicy(ABC):
-    """ Base abstract class for various authentication policies """
-
+    """Base abstract class for various authentication policies"""
     @abstractmethod
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         ...
 
 
 class LocalAuthPolicy(AuthPolicy):
-    """ Local CSM user authentication policy """
-
+    """Local CSM user authentication policy"""
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         if Passwd.verify(password, user.password_hash):
             return LocalCredentials(user.user_id)
@@ -174,8 +161,7 @@ class LocalAuthPolicy(AuthPolicy):
 
 
 class LdapAuthPolicy(AuthPolicy):
-    """ Customer LDAP user authentication policy """
-
+    """Customer LDAP user authentication policy"""
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         # ldap_session = LdapAuth(user.user_id, password)
         # if ldap_session:
@@ -184,8 +170,7 @@ class LdapAuthPolicy(AuthPolicy):
 
 
 class S3AuthPolicy(AuthPolicy):
-    """ S3 account authentication policy """
-
+    """S3 account authentication policy"""
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         cfg = S3ConnectionConfig()
         cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
@@ -200,17 +185,19 @@ class S3AuthPolicy(AuthPolicy):
         if type(response) is not IamError:
             # return temporary credentials
             return S3Credentials(user_id=user.user_id,
-                                access_key=response.access_key,
-                                secret_key=response.secret_key,
-                                session_token=response.session_token)
+                                 access_key=response.access_key,
+                                 secret_key=response.secret_key,
+                                 session_token=response.session_token)
 
         Log.error(f'Failed to authenticate S3 account {user.user_id}')
         return None
 
 
 class AuthService:
-    """ Generic authentication service. Allows to use different
-    authentication policies for different user types. """
+    """
+    Generic authentication service. Allows to use different
+    authentication policies for different user types.
+    """
 
     def __init__(self):
         self._policies = {
@@ -228,9 +215,11 @@ class AuthService:
 
 
 class LoginService:
-    """ Login service. Authenticates a user with authentication service
+    """
+    Login service. Authenticates a user with authentication service
     and creates a new session on login. Deletes existing session on logout.
-    Checks for existing valid session on every API call. """
+    Checks for existing valid session on every API call.
+    """
 
     def __init__(self, auth_service: AuthService,
                  user_manager: UserManager,
@@ -261,8 +250,7 @@ class LoginService:
             session = await self._session_manager.create(credentials, permissions)
             if session:
                 return session.session_id
-            else:
-                Log.critical(f'Failed to create a new session')
+            Log.critical('Failed to create a new session')
         else:
             Log.error(f'Failed to authenticate {user_id}')
         return None
@@ -304,9 +292,11 @@ class LoginService:
     async def delete_all_sessions(self, session_id: Session.Id) -> None:
         """
         This Function will delete all the current user's active sessions.
-        :param session_id: session_id for user. :type:Str
+
+        :param session_id: session_id for user.
         :return: None
         """
+
         session_data = await self._session_manager.get(session_id)
         if session_data:
             user_id = session_data.credentials.user_id
@@ -318,7 +308,7 @@ class LoginService:
     async def delete_all_sessions_for_user(self, user_id: str) -> None:
         """
         This Function will delete all the current user's active sessions.
-        :param user_id: user_id for user. :type:Str
+        :param user_id: user_id for user.
         :return: None
         """
         Log.debug(f"Delete all active sessions for Userid: {user_id}")

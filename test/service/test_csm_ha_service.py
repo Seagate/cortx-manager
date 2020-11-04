@@ -13,20 +13,20 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
 import os
+import sys
 import time
-import requests
-import provisioner
 import traceback
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.conf import Conf
-from csm.test.common import TestFailed, TestProvider, Const
-from csm.core.blogic import const
-from cortx.utils.log import Log
 
-def init(args):
-    pass
+import requests
+from cortx.utils.log import Log
+from provisioner import get_params
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from csm.common.conf import Conf  # noqa: E402
+from csm.core.blogic import const  # noqa: E402
+from csm.test.common import TestFailed  # noqa: E402
+
 
 def get_mgmt_vip():
     """
@@ -34,20 +34,20 @@ def get_mgmt_vip():
     self.mgmt_vip: {'srvnode-1': {'network/mgmt_vip': '10.230.255.16'},
                     'srvnode-2': {'network/mgmt_vip': '10.230.255.16'}}
     """
-    mgmt_vips = provisioner.get_params('network/mgmt_vip')
+    mgmt_vips = get_params('network/mgmt_vip')
     Log.console(f"Management network ip: {mgmt_vips}")
     return mgmt_vips
 
+
 def process_request(url):
     return requests.get(url, verify=False)
+
 
 #################
 # Tests         #
 #################
 def test_csm_agent(args):
-    """
-    Check status for csm agent service
-    """
+    """Check status for csm agent service"""
     try:
         Log.console('\n\n********************* Testing csm_agent ********************')
         time.sleep(5)
@@ -60,14 +60,14 @@ def test_csm_agent(args):
             resp = process_request(csm_url)
             Log.console(f"Request: {csm_url}, Responce: {resp}")
             if resp.status_code != 401:
-                raise
-    except Exception as e:
-        raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
+                raise TestFailed("csm_agent service is not running. "
+                                 f"Error: {traceback.format_exc()}")
+    except Exception:
+        raise TestFailed(f"csm_agent service is not running. Error: {traceback.format_exc()}")
 
-def test_csm_web(args):
-    """
-    Check status for csm web service
-    """
+
+def test_csm_web():
+    """Check status for csm web service"""
     try:
         Log.console('\n\n********************* Testing csm_web *****************************')
         time.sleep(5)
@@ -80,9 +80,10 @@ def test_csm_web(args):
             resp = process_request(csm_url)
             Log.console(f"Request: {csm_url}, Responce: {resp}")
             if resp.status_code != 200:
-                raise
-    except Exception as e:
-        raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
+                raise TestFailed(f"csm_web service is not running. "
+                                 f"Error: {traceback.format_exc()}")
+    except Exception:
+        raise TestFailed(f"csm_web service is not running. Error: {traceback.format_exc()}")
 
 
-test_list = [ test_csm_agent ]
+test_list = [test_csm_agent]

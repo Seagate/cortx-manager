@@ -13,25 +13,25 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
-import re
-from aiohttp import web
-from csm.core.controllers.view import CsmView
-from marshmallow import Schema, fields, validate, ValidationError, validates
-from csm.core.controllers.validators import ValidationErrorFormatter, Enum
-from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
-from csm.common.permission_names import Resource, Action
-from csm.core.controllers.view import CsmView, CsmAuth
+from marshmallow import Schema, ValidationError, fields
+
+from csm.common.errors import InvalidRequest
+from csm.common.permission_names import Action, Resource
 from csm.core.blogic import const
+from .validators import Enum, ValidationErrorFormatter
+from .view import CsmAuth, CsmView
+
 
 class HealthViewQueryParameter(Schema):
     node_id = fields.Str(default=None, missing=None)
+
 
 class HealthResourceViewQueryParameter(Schema):
     severity_values = [const.OK, const.CRITICAL, const.WARNING]
     component_id = fields.Str(default=None, missing=None)
     severity = fields.Str(default=const.OK, missing=const.OK, validate=[Enum(severity_values)])
+
 
 @CsmView._app_routes.view("/api/v1/system/health/summary")
 class HealthSummaryView(CsmView):
@@ -43,6 +43,7 @@ class HealthSummaryView(CsmView):
     async def get(self):
         return await self.health_service.fetch_health_summary()
 
+
 @CsmView._app_routes.view("/api/v1/system/health/view")
 class HealthView(CsmView):
     def __init__(self, request):
@@ -51,19 +52,16 @@ class HealthView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """
-        Calling Health Get Method
-        """
-        Log.debug(f"Fetch Health view. "
-                  f"user_id: {self.request.session.credentials.user_id}")
+        """Calling Health Get Method"""
+        Log.debug(f"Fetch Health view. user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
         try:
-            health_view_data = health_view_qp.load(self.request.rel_url.query,
-                                        unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+            health_view_data = health_view_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as e:
+            raise InvalidRequest(ValidationErrorFormatter.format(e))
         node_health_summary = await self.health_service.fetch_health_view(**health_view_data)
         return node_health_summary
+
 
 @CsmView._app_routes.view("/api/v1/system/health/components")
 class HealthComponentView(CsmView):
@@ -73,19 +71,17 @@ class HealthComponentView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """
-        Calling Health Get Method
-        """
-        Log.debug(f"Fetch Health view. "
-                  f"user_id: {self.request.session.credentials.user_id}")
+        """Calling Health Get Method"""
+        Log.debug(f"Fetch Health view. user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
         try:
-            health_view_data = health_view_qp.load(self.request.rel_url.query,
-                                        unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        component_health_summary = await self.health_service.fetch_component_health_view(**health_view_data)
+            health_view_data = health_view_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as e:
+            raise InvalidRequest(ValidationErrorFormatter.format(e))
+        component_health_summary = await self.health_service.fetch_component_health_view(
+            **health_view_data)
         return component_health_summary
+
 
 @CsmView._app_routes.view("/api/v1/system/health/node")
 class NodeHealthView(CsmView):
@@ -95,19 +91,16 @@ class NodeHealthView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """
-        Calling Health Get Method
-        """
-        Log.debug(f"Fetch Health view. "
-                  f"user_id: {self.request.session.credentials.user_id}")
+        """Calling Health Get Method"""
+        Log.debug(f"Fetch Health view. user_id: {self.request.session.credentials.user_id}")
         health_view_qp = HealthViewQueryParameter()
         try:
-            health_view_data = health_view_qp.load(self.request.rel_url.query,
-                                        unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        node_health_summary = await self.health_service.fetch_node_health(**health_view_data) 
+            health_view_data = health_view_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as e:
+            raise InvalidRequest(ValidationErrorFormatter.format(e))
+        node_health_summary = await self.health_service.fetch_node_health(**health_view_data)
         return node_health_summary
+
 
 @CsmView._app_routes.view("/api/v1/system/health/resources")
 class HealthResourceView(CsmView):
@@ -117,9 +110,7 @@ class HealthResourceView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """
-        Calling Get Method to show resources based on severity
-        """
+        """Calling Get Method to show resources based on severity"""
         Log.debug(f"Fetching health based on severity. "
                   f"user_id: {self.request.session.credentials.user_id}")
         try:
@@ -127,9 +118,8 @@ class HealthResourceView(CsmView):
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         try:
-            health_view_data = health_view_qp.load(self.request.rel_url.query,
-                                        unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+            health_view_data = health_view_qp.load(self.request.rel_url.query, unknown='EXCLUDE')
+        except ValidationError as e:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         resource_health = await self.health_service.get_resources(**health_view_data)
         return resource_health

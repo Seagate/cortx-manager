@@ -14,37 +14,33 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import argparse
-import sys
 import os
-from csm.core.blogic import const
-from cortx.utils.log import Log
-from csm.common.payload import Json
+import sys
+
 from csm.cli.command import CommandParser
+from csm.common.payload import Json
+from csm.core.blogic import const
 
 
 class ArgumentParser(argparse.ArgumentParser):
     """Overwritten ArgumentParser class for internal purposes"""
-
     def error(self, message):
-        # todo:  Need to Modify the changes for Fetching Error Messages from config file
+        # TODO:  Need to Modify the changes for Fetching Error Messages from config file
         self.print_usage(sys.stderr)
         self.exit(2, f'Error: {message.capitalize()}\n')
 
 
-class CommandFactory(object):
-    """
-    Factory for representing and creating command objects using
-    a generic skeleton.
-    """
-
+class CommandFactory:
+    """Factory for representing and creating command objects using a generic skeleton."""
     @staticmethod
     def get_command(argv, permissions):
         """
-        Parse the command line as per the syntax and retuns
-        returns command representing the command line.
+        Parse the command line as per the syntax and returns command representing the command line.
         """
-        # Todo: Fetch Messages from Message file for localization. & implement Marshmallow for Schema Validation.
-        # Todo: Add Changes to Exclude Some Commands From Help Section.
+
+        # TODO: Fetch Messages from Message file for localization.
+        # TODO: implement Marshmallow for Schema Validation.
+        # TODO: Add Changes to Exclude Some Commands From Help Section.
         if len(argv) <= 1:
             argv.append("-h")
         commands = os.listdir(const.COMMAND_DIRECTORY)
@@ -70,7 +66,7 @@ class CommandFactory(object):
         for attr in ['command', 'action', 'args']:
             setattr(sys_module, attr, getattr(namespace, attr))
             delattr(namespace, attr)
-        return command(action, vars(namespace), args)
+        return command(action, vars(namespace), args)  # pylint: disable=undefined-variable
 
     @staticmethod
     def edit_arguments(namespace):

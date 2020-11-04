@@ -14,15 +14,15 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .routes import CsmRoutes
-from .users import CsmUsersListView, CsmUsersView
-from .s3.iam_users import IamUserListView, IamUserView
-from .s3.accounts import S3AccountsListView, S3AccountsView
-from .alerts.alerts import AlertsView, AlertsListView
+from .alerts.alerts import AlertsListView, AlertsView
 from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
 from .health import HealthView, HealthResourceView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
+from .s3.accounts import S3AccountsListView, S3AccountsView
+from .s3.iam_users import IamUserListView, IamUserView
+from .users import CsmUsersListView, CsmUsersView
 # from .file_transfer import CsmFileView
-from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
-                  DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,
-                  SystemCertificatesView,  SystemCertificatesByTypeView, NetworkInterfacesView)
+from .usl import (DeviceRegistrationView, DeviceView, DeviceVolumeMountView, DeviceVolumesListView,
+                  DeviceVolumeUnmountView, NetworkInterfacesView, RegistrationTokenView,
+                  SystemCertificatesByTypeView, SystemCertificatesView, SystemView, UdsEventsView)

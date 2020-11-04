@@ -13,22 +13,21 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from enum import Enum
-from typing import Union
-import os
-
 import json
-from marshmallow import fields, Schema
+import os
+from typing import Union
+
+from cortx.utils.log import Log
+from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
 
+from csm.common.errors import CsmInternalError, CsmNotImplemented, CsmTypeError, InvalidRequest
+from csm.common.permission_names import Action, Resource
 from csm.core.blogic import const
-from csm.common.errors import CsmInternalError, CsmTypeError, InvalidRequest, CsmNotImplemented
-from csm.core.services.file_transfer import FileCache
-from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.controllers.file_transfer import FileFieldSchema
-from cortx.utils.log import Log
-from csm.common.permission_names import Resource, Action
 from csm.core.data.models.system_config import SecurityConfig
+from csm.core.services.file_transfer import FileCache
+from .file_transfer import FileFieldSchema
+from .view import CsmAuth, CsmView
 
 
 class TLSBundleSchema(Schema):
@@ -37,15 +36,14 @@ class TLSBundleSchema(Schema):
 
 class InstallSecurityBundleSchema(Schema):
     """
-    Scheme for verification of PATCH request body for installation of secuirity bundle (pem file)
-
+    Scheme for verification of PATCH request body for installation of security bundle (pem file)
     """
+
     install = fields.Boolean(required=True)
 
 
 class GetResponseBody:
     """Class represents GET REST API response body"""
-
     _STATUS = "status"
     _DATE = "date"
     _FILENAME = "filename"
@@ -56,7 +54,7 @@ class GetResponseBody:
 
     def to_response(self):
         if self._security_conf is None:
-            return dict()
+            return {}
 
         filename = os.path.basename(self._security_conf.csm_config.pemfile_path)
         return {self._STATUS: self._security_conf.installation_status,
@@ -67,11 +65,12 @@ class GetResponseBody:
     def __str__(self):
         return self.to_response()
 
+
 @CsmView._app_routes.view("/api/v1/tls/bundle/upload")
 class SecurityUploadView(CsmView):
-    """ Security View for POST REST API implementation:
-        1. Upload private key and corresponding certificate to the server
-
+    """
+    Security View for POST REST API implementation:
+    1. Upload private key and corresponding certificate to the server
     """
 
     def __init__(self, request):
@@ -81,12 +80,8 @@ class SecurityUploadView(CsmView):
 
     @CsmAuth.permissions({Resource.SECURITY: {Action.UPDATE}})
     async def post(self):
-        """
-        POST REST implementation for uploading private key and corresponding certificate
-
-        :return:
-        """
-        Log.debug(f"Handling uploading TLS credentials POST method")
+        """POST REST implementation for uploading private key and corresponding certificate"""
+        Log.debug("Handling uploading TLS credentials POST method")
         with FileCache() as cache:
             # parse_multipart_request parse multipart request and returns dict
             # which maps multipart fields names to TextFieldSchema or FileFieldSchema
@@ -97,8 +92,8 @@ class SecurityUploadView(CsmView):
                 multipart_data = TLSBundleSchema().load(parsed_multipart)
             except json.decoder.JSONDecodeError:
                 raise InvalidRequest("Request body missing")
-            except ValidationError as val_err:
-                raise InvalidRequest(f"Invalid request body: {val_err}")
+            except ValidationError as e:
+                raise InvalidRequest(f"Invalid request body: {e}")
 
             # TODO: is it always granted that user_id is available during call of this method?
             user = self.request.session.credentials.user_id
@@ -109,15 +104,13 @@ class SecurityUploadView(CsmView):
                 await self._service.store_security_bundle(user, pemfile_name, pemfile_ref)
             except CsmTypeError as e:
                 raise CsmInternalError("Wrong data") from e
-            except CsmInternalError:
-                raise  # throw the exception to the controller
 
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/install")
 class SecurityInstallView(CsmView):
-    """ Security View for POST REST API implementation:
-        1. Install lastly uploaded certificate
-
+    """
+    Security View for POST REST API implementation:
+    1. Install lastly uploaded certificate
     """
 
     def __init__(self, request):
@@ -129,7 +122,7 @@ class SecurityInstallView(CsmView):
     async def post(self):
         """
         POST REST API implementation for enabling last uploaded certificate and trigger
-        Provisioner API for certficate installation and services restarting
+        Provisioner API for certificate installation and services restarting
         """
 
         Log.debug(f"Handling certificate installation request. "
@@ -140,8 +133,8 @@ class SecurityInstallView(CsmView):
             patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
+        except ValidationError as e:
+            raise InvalidRequest(f"Invalid request body: {e}")
 
         install = patch_body["install"]
         if not install:
@@ -156,9 +149,9 @@ class SecurityInstallView(CsmView):
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/status")
 class SecurityStatusView(CsmView):
-    """ Security View for GET REST API implementation:
-        1. Get information about lastly uploaded certficate
-
+    """
+    Security View for GET REST API implementation:
+    1. Get information about lastly uploaded certificate
     """
 
     def __init__(self, request):
@@ -168,9 +161,7 @@ class SecurityStatusView(CsmView):
 
     @CsmAuth.permissions({Resource.SECURITY: {Action.READ}})
     async def get(self):
-        """
-        GET REST API implemenetation to return current certificate installation status
-        """
+        """GET REST API implemenetation to return current certificate installation status"""
         Log.debug(f"Handling get certificate installation status request. "
                   f"user_id: {self.request.session.credentials.user_id}")
         try:

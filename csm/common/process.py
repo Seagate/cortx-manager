@@ -16,68 +16,73 @@
 import subprocess
 import asyncio
 
+
 class Process:
     def __init__(self, cmd):
         self._cmd = cmd
-        pass
 
     def run(self):
         pass
 
+
 class SimpleProcess(Process):
-    ''' Execute process and provide output '''
+    """Execute process and provide output"""
     def __init__(self, cmd):
-        super(SimpleProcess, self).__init__(cmd)
-        self.shell=False
-        self.cwd=None
-        self.timeout=None
-        self.env=None
-        self.universal_newlines=None
+        super().__init__(cmd)
+        self.shell = False
+        self.cwd = None
+        self.timeout = None
+        self.env = None
+        self.universal_newlines = None
+        self._cp = None
+        self._output = None
+        self._err = None
+        self._returncode = None
 
     def run(self, **args):
-        ''' This will can run simple process '''
+        """This will can run simple process"""
         for key, value in args.items():
             setattr(self, key, value)
 
         try:
             cmd = self._cmd.split() if type(self._cmd) is str else self._cmd
-            self._cp = subprocess.run(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, shell=self.shell, cwd=self.cwd,
-                    timeout=self.timeout, env=self.env,
-                    universal_newlines=self.universal_newlines)
+            self._cp = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=self.shell, cwd=self.cwd,
+                timeout=self.timeout, check=False, env=self.env,
+                universal_newlines=self.universal_newlines)
 
             self._output = self._cp.stdout
             self._err = self._cp.stderr
             self._returncode = self._cp.returncode
             return self._output, self._err, self._returncode
-        except Exception as err:
-            self._err = "SubProcess Error: " + str(err)
+        except Exception as e:
+            self._err = f"SubProcess Error: {e}"
             self._output = ""
             self._returncode = -1
             return self._output, self._err, self._returncode
 
-class PipedProcess(Process):
-    ''' Execute process with pipe and provide output '''
-    def __init__(self, cmd):
-        super(PipedProcess, self).__init__(cmd)
 
+class PipedProcess(Process):
+    """Execute process with pipe and provide output"""
     def run(self, **args):
-        #TODO
+        # TODO:
         pass
+
 
 class AsyncioSubprocess(Process):
     def __init__(self, cmd):
-        super(AsyncioSubprocess, self).__init__(cmd)
-        
-    async def run(self, **agrs):
-        try:
-            self._process = await asyncio.create_subprocess_shell(self._cmd, 
-                                                            stdout=asyncio.subprocess.PIPE, 
-                                                            stderr=asyncio.subprocess.PIPE)
-            self._output, self._err = await self._process.communicate()
+        super().__init__(cmd)
+        self._process = None
+        self._output = None
+        self._err = None
 
+    async def run(self, **args):
+        try:
+            self._process = await asyncio.create_subprocess_shell(
+                self._cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            self._output, self._err = await self._process.communicate()
             return self._output, self._err
-        except Exception as err:
-            self._err = "AsyncioSubProcess Error: " + str(err)
+        except Exception as e:
+            self._err = f"AsyncioSubProcess Error: {e}"
             self._output = ""
             return self._output, self._err

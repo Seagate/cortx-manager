@@ -13,21 +13,21 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Union, Dict
+from typing import Dict, Union
+
 from cortx.utils.log import Log
+
 from csm.common.service_urls import ServiceUrls
-from csm.core.data.models.s3 import IamErrors, IamError
+from csm.core.data.models.s3 import IamError
 from csm.core.providers.providers import Response
-from csm.core.services.s3.utils import S3BaseService, CsmS3ConfigurationFactory
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory, S3BaseService
 from csm.plugins.cortx.s3 import IamClient
 
 
 class IamUsersService(S3BaseService):
-    """
-    Service for IAM user management
-    """
-
+    """Service for IAM user management"""
     def __init__(self, s3plugin, provisioner):
+        super().__init__()
         self._s3plugin = s3plugin
         # S3 Connection Object.
         self._iam_connection_config = CsmS3ConfigurationFactory.get_iam_connection_config()
@@ -37,9 +37,10 @@ class IamUsersService(S3BaseService):
     async def fetch_iam_client(self, s3_session: Dict) -> IamClient:
         """
         This Method will create S3 object for connection fetching request headers
-        :param s3_session:  S3 Account Logged in info. :type: Dict
-        :return:
+
+        :param s3_session:  S3 Account Logged in info.
         """
+
         # Create S3 Client Connection Object
         s3_client_object = self._s3plugin.get_iam_client(s3_session.access_key,
                                                          s3_session.secret_key,
@@ -53,9 +54,10 @@ class IamUsersService(S3BaseService):
                           require_reset=False) -> [Response, Dict]:
         """
         This Method will create an IAM User in S3 user Account.
-        :param s3_session: S3 session's details. :type: dict
-        :param user_name: User name for New user. :type: str
-        :param password: Password for new IAM user :type: str
+
+        :param s3_session: S3 session's details.
+        :param user_name: User name for New user.
+        :param password: Password for new IAM user
         :param require_reset: Required to reset Password :type: bool
         """
 
@@ -87,19 +89,19 @@ class IamUsersService(S3BaseService):
     async def list_users(self, s3_session: Dict) -> Union[Response, Dict]:
         """
         This Method Fetches Iam User's
-        :param s3_session: S3 session's details. :type: dict
-        :return:
+
+        :param s3_session: S3 session's details.
         """
-        s3_client = await  self.fetch_iam_client(s3_session)
+
+        s3_client = await self.fetch_iam_client(s3_session)
         # Fetch IAM Users
-        Log.debug(f"List IAM User service:")
+        Log.debug("List IAM User service:")
         users_list_response = await s3_client.list_users()
         if isinstance(users_list_response, IamError):
             self._handle_error(users_list_response)
         iam_users_list = vars(users_list_response)
-        iam_users_list["iam_users"] = [vars(each_user)
-                                       for each_user in iam_users_list["iam_users"]
-                                       if not vars(each_user)["user_name"] == "root" ]
+        iam_users_list["iam_users"] = [vars(each_user) for each_user in iam_users_list["iam_users"]
+                                       if not vars(each_user)["user_name"] == "root"]
         service_urls = ServiceUrls(self._provisioner)
         iam_users_list["s3_urls"] = await service_urls.get_s3_url()
         return iam_users_list
@@ -108,23 +110,25 @@ class IamUsersService(S3BaseService):
     async def delete_user(self, s3_session: Dict, user_name: str) -> Dict:
         """
         This method deletes the s3 Iam user.
-        :param s3_session: S3 session's details. :type: dict
-        :param user_name: S3 User Name :type: str
-        :return:
+
+        :param s3_session: S3 session's details.
+        :param user_name: S3 User Name
         """
         Log.debug(f"Delete IAM User service: Username:{user_name}")
-        s3_client = await  self.fetch_iam_client(s3_session)
+        s3_client = await self.fetch_iam_client(s3_session)
 
         list_access_keys_resp = await s3_client.list_user_access_keys(user_name=user_name)
         if isinstance(list_access_keys_resp, IamError):
-                self._handle_error(list_access_keys_resp)
+            self._handle_error(list_access_keys_resp)
 
         for access_key in list_access_keys_resp.access_keys:
-            del_accesskey_resp = await s3_client.delete_user_access_key(access_key.access_key_id, user_name=user_name)
-            if isinstance(del_accesskey_resp, IamError) and not del_accesskey_resp.http_status == 404:
+            del_accesskey_resp = await s3_client.delete_user_access_key(
+                access_key.access_key_id, user_name=user_name)
+            if (isinstance(del_accesskey_resp, IamError)
+                    and not del_accesskey_resp.http_status == 404):
                 self._handle_error(del_accesskey_resp)
 
-        user_delete_response = await  s3_client.delete_user(user_name)
+        user_delete_response = await s3_client.delete_user(user_name)
         if isinstance(user_delete_response, IamError):
             self._handle_error(user_delete_response)
         return {"message": "User Deleted Successfully."}

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -13,13 +14,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
 import asyncio
-from csm.common.errors import InvalidRequest
-from cortx.utils.log import Log
-from csm.core.services.file_transfer import FileRef, FileCache
+import json
 
 from aiohttp import web
+from cortx.utils.log import Log
+
+from csm.common.errors import InvalidRequest
+from csm.core.services.file_transfer import FileCache, FileRef
 from csm.core.services.permissions import PermissionSet
 
 
@@ -43,6 +45,7 @@ class CsmAuth:
     def permissions(cls, permissions):
         if not issubclass(type(permissions), PermissionSet):
             permissions = PermissionSet(permissions)
+
         def decorator(handler):
             setattr(handler, cls.ATTR_PERMISSIONS, permissions)
             return handler
@@ -54,23 +57,20 @@ class CsmAuth:
 
 
 class CsmResponse(web.Response):
-    def __init__(self, res={}, status=200, headers=None,
-                 content_type='application/json',
-                 **kwargs):
+    def __init__(self, res={}, status=200, headers=None, content_type='application/json', **kwargs):
         body = json.dumps(res)
         super().__init__(body=body, status=status, headers=headers,
                          content_type=content_type, **kwargs)
 
 
 class CsmHttpException(web.HTTPException):
-    ''' Temporary solution: Imitate common REST API error structure '''
-
+    """Temporary solution: Imitate common REST API error structure"""
     def __init__(self, status, error_code, message_id, message, args=None):
         self.status_code = status
         body = {
             "error_code": error_code,
             "message_id": message_id,
-            "message":  message,
+            "message": message,
         }
         if args is not None:
             body["error_format_args"] = args
@@ -79,16 +79,12 @@ class CsmHttpException(web.HTTPException):
 
 
 class CsmView(web.View):
-
-    # derived class will provide service amd service_disatch  details
+    """derived class will provide service and service_dispatch details"""
     _service = None
     _service_dispatch = {}
 
     # common routes to used by subclass
     _app_routes = web.RouteTableDef()
-
-    def __init__(self, request):
-        super(CsmView, self).__init__(request)
 
     @classmethod
     def is_subclass(cls, handler):
@@ -103,9 +99,10 @@ class CsmView(web.View):
 
     @classmethod
     def is_public(cls, handler, method):
-        ''' Check whether a particular method of the CsmView subclass has
-            the 'public' attribute. If not then check whether the handler
-            itself has the 'public' attribute '''
+        """
+        Check whether a particular method of the CsmView subclass has the 'public' attribute.
+        If not then check whether the handler itself has the 'public' attribute
+        """
 
         method_handler = cls._get_method_handler(handler, method)
         if method_handler is not None:
@@ -115,9 +112,10 @@ class CsmView(web.View):
 
     @classmethod
     def get_permissions(cls, handler, method):
-        ''' Obtain the list of required permissions associated with
-            the handler. Combine required pesmissions from the individual
-            method handler (like get/post/...) and from the whole view '''
+        """
+        Obtain the list of required permissions associated with the handler. Combine required
+        permissions from the individual method handler (like get/post/...) and from the whole view
+        """
 
         view_permissions = CsmAuth.get_permissions(handler)
         method_handler = cls._get_method_handler(handler, method)
@@ -136,14 +134,12 @@ class CsmView(web.View):
             res = asyncio.shield(func(*arg, **kw))
             return res
         return wrapper
-    
+
     def validate_get(self):
         pass
 
     async def get(self):
-        """"
-        Generic get call implementation
-        """
+        """Generic get call implementation"""
         self.validate_get()
         if self.request.match_info:
             match_info = {}
@@ -155,9 +151,7 @@ class CsmView(web.View):
             response_obj = await self._service_dispatch['get'](**query_parameter)
         return response_obj
 
-    async def parse_multipart_request(self,
-                                      request,
-                                      file_cache: FileCache,
+    async def parse_multipart_request(self, request, file_cache: FileCache,
                                       content_byte_size_limit=100 * (1024 ** 2),
                                       file_byte_size_limit=2 * (1024 ** 3)):
         """
@@ -165,6 +159,7 @@ class CsmView(web.View):
         Default limit for non-file content is 100 MB
         Default limit for file content is 2 GB
         """
+
         Log.debug("Handling file upload request")
 
         def get_extension(filename):
@@ -189,8 +184,8 @@ class CsmView(web.View):
 
             # TODO: Add support for attribute "multiple" (HTML5)
             if fieldname in parse_results:
-                raise InvalidRequest(
-                    'Repeated fieldname in multipart request. "multiple" attribute is not supported for now')
+                raise InvalidRequest('Repeated fieldname in multipart request. '
+                                     '"multiple" attribute is not supported for now')
 
             # If field has filename, write it to cache, else place the content in dict
             parse_result = None
@@ -205,9 +200,9 @@ class CsmView(web.View):
                 async for chunk in self.aiohttp_body_getter(field):
                     size += len(chunk)
                     if size > file_byte_size_limit:
-                        raise InvalidRequest(
-                            f'File "{filename}" is too big. Max size = {file_byte_size_limit} bytes')
-                    file_cache.write_chunck(file_uuid, chunk)
+                        raise InvalidRequest(f'File "{filename}" is too big. '
+                                             f'Max size = {file_byte_size_limit} bytes')
+                    file_cache.write_chunk(file_uuid, chunk)
                 parse_result = {
                     'content_type': ct,
                     'filename': filename,
@@ -217,8 +212,8 @@ class CsmView(web.View):
                 content = b''
                 async for chunk in self.aiohttp_body_getter(field):
                     if size > content_byte_size_limit:
-                        raise InvalidRequest(
-                            f'Field "{fieldname}" body is too big. Max size = {content_byte_size_limit} bytes')
+                        raise InvalidRequest(f'Field "{fieldname}" body is too big. '
+                                             f'Max size = {content_byte_size_limit} bytes')
                     size += len(chunk)
                     content += chunk
                 parse_result = {
@@ -230,9 +225,7 @@ class CsmView(web.View):
 
         return parse_results
 
-    async def aiohttp_body_getter(self,
-                                  body_reader,
-                                  chunk_byte_size_limit=10 * (1024 **2)):
+    async def aiohttp_body_getter(self, body_reader, chunk_byte_size_limit=10 * (1024 ** 2)):
         """
         chunk_byte_size_limit was figured out as an optimal value for fast upload
         """
@@ -243,12 +236,12 @@ class CsmView(web.View):
             if chunk == b'':
                 break
 
-    def __parse_multipart_part(self, field):
+    @staticmethod
+    def __parse_multipart_part(field):
         # Content-Disposition parse
         cd = field.headers.get('Content-Disposition')
         if not cd:
-            raise InvalidRequest(
-                'Content-Disposition is absent in one of multipart request parts')
+            raise InvalidRequest('Content-Disposition is absent in one of multipart request parts')
 
         cd_values = cd.split(';')
         if cd_values[0] != 'form-data':
@@ -258,9 +251,7 @@ class CsmView(web.View):
         if len(cd_values) < 2 or not cd_values[1]:
             raise InvalidRequest('No filedname in one of multipart request parts')
         fieldname_pair = cd_values[1].split('=')
-        if (len(fieldname_pair) != 2 or
-            fieldname_pair[0].strip() != 'name' or
-                not fieldname_pair[1]):
+        if len(fieldname_pair) != 2 or fieldname_pair[0].strip() != 'name' or not fieldname_pair[1]:
             raise InvalidRequest('Incorrect fieldname directive in Content-Disposition header')
         fieldname = fieldname_pair[1].strip('"')
 
@@ -268,11 +259,9 @@ class CsmView(web.View):
         filename = None
         if len(cd_values) > 2:
             filename_pair = cd_values[2].split('=')
-            if (len(filename_pair) != 2 or
-                filename_pair[0].strip() != 'filename' or
-                    not filename_pair[1]):
-                raise InvalidRequest(
-                    'Incorrect filename directive in Content-Disposition header')
+            if (len(filename_pair) != 2 or filename_pair[0].strip() != 'filename'
+                    or not filename_pair[1]):
+                raise InvalidRequest('Incorrect filename directive in Content-Disposition header')
             filename = filename_pair[1].strip('"')
 
         # Content-Type parse

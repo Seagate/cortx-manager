@@ -16,9 +16,10 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+
 class SyncKeyValueStorage(ABC):
     @abstractmethod
-    def get(self, key, defval = None):
+    def get(self, key, defval=None):
         ...
 
     @abstractmethod
@@ -28,6 +29,7 @@ class SyncKeyValueStorage(ABC):
     @abstractmethod
     def items(self):
         ...
+
 
 class SyncInMemoryKeyValueStorage(SyncKeyValueStorage):
     def __init__(self):
@@ -43,9 +45,10 @@ class SyncInMemoryKeyValueStorage(SyncKeyValueStorage):
     def items(self):
         return self.memdict.items()
 
+
 class AsyncKeyValueStorage(ABC):
     @abstractmethod
-    async def get(self, key, defval = None):
+    async def get(self, key, defval=None):
         ...
 
     @abstractmethod
@@ -56,12 +59,13 @@ class AsyncKeyValueStorage(ABC):
     async def items(self):
         ...
 
+
 class AsyncInMemoryKeyValueStorage(AsyncKeyValueStorage):
     def __init__(self):
         super().__init__()
         self.memdict = OrderedDict()
 
-    async def get(self, key, defval = None):
+    async def get(self, key, defval=None):
         return self.memdict.get(key, defval)
 
     async def put(self, key, val):

@@ -17,10 +17,7 @@ from typing import List
 
 
 class Options:
-    """
-    A quick-and-dirty implementation that stores CSM runtime options and properties.
-    """
-
+    """A quick-and-dirty implementation that stores CSM runtime options and properties."""
     debug = False
 
     @classmethod

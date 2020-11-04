@@ -14,31 +14,24 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
-import sys
-import os
-import json
-import unittest
 import datetime
-from unittest.mock import patch
+import unittest
 from contextlib import contextmanager
+from unittest.mock import patch
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.payload import Json, Payload
-from cortx.utils.log import Log
-from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
-from csm.core.data.models.upgrade import PackageInformation, UpdateStatusEntry
-from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
-                                          ProvisionerCommandStatus)
-from csm.core.repositories.update_status import UpdateStatusRepository
+from csm.common.errors import CsmError, InvalidRequest
+from csm.core.data.models.upgrade import (PackageInformation, ProvisionerCommandStatus,
+                                          ProvisionerStatusResponse, UpdateStatusEntry)
 from csm.core.services.hotfix_update import HotfixApplicationService
 
-
 t = unittest.TestCase()
+
 
 class CustomUpdateStatusRepo:
     """
     Repository that keeps a single instance of a UpdateStatusEntry model for each update type.
     """
+
     def __init__(self):
         self.models = {}
 
@@ -64,11 +57,11 @@ class ProvisionerMock:
     async def validate_hotfix_package(self, path, file_name) -> PackageInformation:
         if self.validation_response:
             return self.validation_response
-        raise CsmError(f"Package validation failed")
+        raise CsmError("Package validation failed")
 
-    async def trigger_software_upgrade(self, path):
+    async def trigger_software_update(self, path):
         if not self.trigger_result:
-            raise CsmError("Failed to start upgrade. Try again.")
+            raise CsmError('Failed to start the software update process')
 
     async def get_provisioner_job_status(self, query_id: str) -> ProvisionerStatusResponse:
         return self.provisioner_status
@@ -88,12 +81,13 @@ class FileRefMock():
 @contextmanager
 def patch_io(*args, **kwds):
     # Code to acquire resource, e.g.:
-    resource = acquire_resource(*args, **kwds)
+    resource = acquire_resource(*args, **kwds)  # pylint: disable=undefined-variable
     try:
         yield resource
     finally:
         # Code to release resource, e.g.:
-        release_resource(resource)
+        release_resource(resource)  # pylint: disable=undefined-variable
+
 
 validation_result = PackageInformation()
 validation_result.version = '1.2.3'
@@ -101,11 +95,8 @@ validation_result.description = 'Some description'
 
 mock_file = FileRefMock('/tmp/abcd.txt')  # File name doesn't matter
 
-def init(args):
-    """ test initialization """
-    pass
 
-async def test_validation(args=None):
+async def test_validation():
     """
     Preconditions: no UpdateStatusEntry
 
@@ -114,6 +105,7 @@ async def test_validation(args=None):
     3. "Upload" a valid package
     4. Check that a new model is created and no exceptions are raised
     """
+
     repo = CustomUpdateStatusRepo()
     plugin = ProvisionerMock()
     plugin.validation_response = None
@@ -126,7 +118,7 @@ async def test_validation(args=None):
     t.assertEqual(status, {})
 
     plugin.validation_response = validation_result
-    result = await service.upload_package(mock_file, 'abcd.iso')
+    await service.upload_package(mock_file, 'abcd.iso')
 
     status = await service.get_current_status()
     t.assertNotEqual(status, {})
@@ -135,12 +127,13 @@ async def test_validation(args=None):
     t.assertEqual(status["description"], validation_result.description)
 
 
-async def test_duplicate_upload(args=None):
+async def test_duplicate_upload():
     """
     1. Attempt upload while there is an UpdateStatusEntry with in_progres status
     2. Attempt upload while there is an UpdateStatusEntry with uploaded status
     3. It must not throw an exception
     """
+
     repo = CustomUpdateStatusRepo()
     plugin = ProvisionerMock()
     plugin.validation_response = validation_result
@@ -167,7 +160,7 @@ async def _setup_uploaded_file():
     return (service, plugin)
 
 
-async def test_hotfix_flow(args=None):
+async def test_hotfix_flow():
     """
     1. Upload a package.
     2. Call get_current_status, validate
@@ -177,11 +170,12 @@ async def test_hotfix_flow(args=None):
     6. Call get_current_status, validate
     7. Check that it is possible to upload a file again
     """
+
     service, plugin = await _setup_uploaded_file()
 
     with patch('os.path.exists') as patched:
         patched.return_value = True
-        await service.start_upgrade()
+        await service.start_update()
 
     status = await service.get_current_status()
     t.assertEqual(status["status"], "in_progress")
@@ -195,7 +189,7 @@ async def test_hotfix_flow(args=None):
     t.assertEqual(status["status"], "uploaded")
 
 
-async def test_hotfix_flow_fail(args=None):
+async def test_hotfix_flow_fail():
     """
     1. Upload a package.
     2. Call get_current_status, validate
@@ -205,11 +199,12 @@ async def test_hotfix_flow_fail(args=None):
     6. Call get_current_status, validate
     7. Test that it is possible to upload a package again
     """
+
     service, plugin = await _setup_uploaded_file()
 
     with patch('os.path.exists') as patched:
         patched.return_value = True
-        await service.start_upgrade()
+        await service.start_update()
 
     status = await service.get_current_status()
     t.assertEqual(status["status"], "in_progress")
@@ -223,34 +218,36 @@ async def test_hotfix_flow_fail(args=None):
     t.assertEqual(status["status"], "uploaded")
 
 
-async def test_duplicate_update(args=None):
+async def test_duplicate_update():
     """
     1. Upload a package
     2. Start upgrade.
     3. Call get_current_status, validate
     4. Start upgrade. Validate error.
     """
-    service, plugin = await _setup_uploaded_file()
+
+    service, _ = await _setup_uploaded_file()
 
     with patch('os.path.exists') as patched:
         patched.return_value = True
-        await service.start_upgrade()
+        await service.start_update()
 
         with t.assertRaises(InvalidRequest):
-            await service.start_upgrade()
+            await service.start_update()
 
 
-async def test_upload_after_start(args=None):
+async def test_upload_after_start():
     """
     1. Upload a package
     2. Start upgrade.
     3. Upload again
     """
-    service, plugin = await _setup_uploaded_file()
+
+    service, _ = await _setup_uploaded_file()
 
     with patch('os.path.exists') as patched:
         patched.return_value = True
-        await service.start_upgrade()
+        await service.start_update()
 
     status = await service.get_current_status()
     t.assertEqual(status["status"], "in_progress")
@@ -258,25 +255,26 @@ async def test_upload_after_start(args=None):
         await service.upload_package(mock_file, 'abcd.iso')
 
 
-async def test_failed_trigger_update(args=None):
+async def test_failed_trigger_update():
     """
     1. Upload a package
     2. Start upgrade. It fails to start.
     4. Validate the status
     """
+
     service, plugin = await _setup_uploaded_file()
     plugin.trigger_result = False
 
     with patch('os.path.exists') as patched:
         patched.return_value = True
         with t.assertRaises(CsmError):
-            await service.start_upgrade()
+            await service.start_update()
 
     status = await service.get_current_status()
     t.assertEqual(status["status"], "uploaded")
 
 
-def run_tests(args = {}):
+def run_tests():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_validation())
     loop.run_until_complete(test_duplicate_upload())
@@ -285,9 +283,7 @@ def run_tests(args = {}):
     loop.run_until_complete(test_duplicate_update())
     loop.run_until_complete(test_upload_after_start())
     loop.run_until_complete(test_failed_trigger_update())
+    loop.close()
+
 
 test_list = [run_tests]
-
-if __name__ == '__main__':
-    Log.init('test',  log_path=".")
-    run_tests()

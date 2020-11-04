@@ -13,50 +13,77 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
-from argparse import ArgumentError
 import unittest
 
-alerts_command = CommandFactory.get_command(
-    [const.ALERTS_COMMAND, 'show', '-f', 'json'])
+from csm.cli.command_factory import CommandFactory
+from csm.core.blogic import const
+
+alerts_command = CommandFactory.get_command([const.ALERTS_COMMAND, 'show', '-f', 'json'],
+                                            {const.ALERTS_COMMAND: {'list': True}})
+
 t = unittest.TestCase()
 
-def init(args):
-    pass
 
-def test_get_name(args):
-    expected_output = "csm.cli.commands"
+def test_get_name():
+    expected_output = "csm.cli.command"
     actual_output = alerts_command.__module__
     t.assertEqual(actual_output, expected_output)
 
-def test_get_action(args):
+
+def test_get_action():
     expected_output = 'show'
-    actual_output = alerts_command.action()
+    actual_output = alerts_command.sub_command_name
     t.assertEqual(actual_output, expected_output)
 
-def test_get_options(args):
-    expected_output = {'all': 'false', 'duration': '60s', 'format': 'json',
-                       'no_of_alerts': 1000}
-    actual_output = alerts_command.options()
+
+def test_get_options():
+    expected_output = {
+        'comm': {
+            'json': {},
+            'method': 'get',
+            'params': {'duration': '', 'limit': '', 'show_active': '', 'show_all': ''},
+            'target': '/{version}/alerts', 'type': 'rest', 'version': 'v1'},
+        'duration': '60s',
+        'format': 'json',
+        'limit': 1000,
+        'need_confirmation': False,
+        'output': {
+            'table': {
+                'filters': 'alerts',
+                'headers': {
+                    'acknowledged': 'Acknowledged',
+                    'alert_uuid': 'Alert Id',
+                    'description': 'Description',
+                    'health': 'Health',
+                    'resolved': 'Resolved',
+                    'severity': 'Severity',
+                    'state': 'State'}}},
+        'show_active': 'false',
+        'show_all': 'false',
+        'sub_command_name': 'show'}
+    actual_output = alerts_command.options
     t.assertDictEqual(actual_output, expected_output)
 
-def test_get_method(args):
+
+def test_get_method():
     expected_output = 'get'
-    actual_output = alerts_command.method('show')
+    actual_output = alerts_command.method
     t.assertEqual(actual_output, expected_output)
 
-def test_invalid_arg(args):
-    with t.assertRaises(ArgumentError) as context:
-        CommandFactory.get_command(
-            [const.ALERTS_COMMAND, 'show', '-b', 'json'])
 
-def test_incorrect_format(args):
-    with t.assertRaises(ArgumentError) as context:
-        CommandFactory.get_command(
-            [const.ALERTS_COMMAND, 'show', '-f', 'abc'])
+def test_invalid_arg():
+    with t.assertRaises(SystemExit) as cm:
+        CommandFactory.get_command([const.ALERTS_COMMAND, 'show', '-b', 'json'],
+                                   {const.ALERTS_COMMAND: {'list': True}})
+    t.assertEqual(cm.exception.code, 2)
 
-test_list = [test_get_name, test_get_action, test_get_options, test_get_method]
 
-if __name__ == '__main__':
-    test_incorrect_format()
+def test_incorrect_format():
+    with t.assertRaises(SystemExit) as cm:
+        CommandFactory.get_command([const.ALERTS_COMMAND, 'show', '-f', 'abc'],
+                                   {const.ALERTS_COMMAND: {'list': True}})
+    t.assertEqual(cm.exception.code, 2)
+
+
+test_list = [test_get_name, test_get_action, test_get_options, test_get_method, test_invalid_arg,
+             test_incorrect_format]

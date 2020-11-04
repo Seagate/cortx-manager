@@ -2,15 +2,18 @@
   "generate": {
     "test_1": {
       "comm": {
-        "type": "direct",
-        "target": "csm.cli.support_bundle",
-        "method": "bundle_generate",
         "class": "SupportBundle",
-        "is_static": true
+        "is_static": true,
+        "json": {},
+        "method": "bundle_generate",
+        "params": {},
+        "target": "csm.cli.support_bundle",
+        "type": "direct"
       },
+      "comment": "Test Comment",
       "need_confirmation": false,
-      "sub_command_name": "generate",
-      "comment": "Test Comment"
+      "output": {},
+      "sub_command_name": "generate"
     }
   }
 }

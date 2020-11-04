@@ -13,21 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.conf import Conf
 from csm.core.blogic import const
 
-def init(args):
-    pass
 
-def test1(args={}):
+def test1():
     val = Conf.get(const.CSM_GLOBAL_INDEX, 'dummy', 'default')
-    return True if val == 'default' else False
+    return val == 'default'
 
-def test2(args={}):
-    val = Conf.get(const.INVENTORY_FILE, const.DEFAULT_INVENTORY_FILE)
-    return True if val == '/etc/csm/cluster.yaml' else False
 
-test_list = [ test1, test2 ]
+def test2():
+    val = Conf.get(const.INVENTORY_INDEX, 'dummy', 'default')
+    return val == 'default' and const.INVENTORY_FILE == '/etc/csm/cluster.conf'
+
+
+test_list = [test1, test2]
