@@ -200,7 +200,7 @@ class SupportBundle:
                                all_nodes_status]}
             return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
         except DataAccessExternalError as e:
-            Log.warning(f"Failed to connect to elasticsearch: {e}")
+            Log.warn(f"Failed to connect to elasticsearch: {e}")
             return Response(output = ("Support Bundle status is not available currently"
                 " as required services are not running."
                 " Please wait and check the /tmp/support_bundle"
