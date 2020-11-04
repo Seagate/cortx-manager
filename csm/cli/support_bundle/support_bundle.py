@@ -200,12 +200,17 @@ class SupportBundle:
                                all_nodes_status]}
             return Response(output = response, rc = CSM_OPERATION_SUCESSFUL)
         except DataAccessExternalError as e:
-            Log.error(f"Failed to connect to elasticsearch: {e}")
-            return Response(output = "Bundle status failed to connect to elasticsearch.",
+            Log.warning(f"Failed to connect to elasticsearch: {e}")
+            return Response(output = ("Support Bundle status is not available currently"
+                " as required services are not running."
+                " Please wait and check the /tmp/support_bundle"
+                " folder for newly generated support bundle."),
                             rc = str(errno.ECONNREFUSED))
         except Exception as e:
             Log.error(f"Failed to get bundle status: {e}")
-            return Response(output = "Failed to get status of bundle.",
+            return Response(output = ("Support Bundle status is not available currently"
+                " as required services are not running."
+                " Failed to get status of bundle."),
                             rc = str(errno.ENOENT))
 
     @staticmethod
