@@ -34,6 +34,8 @@ COMMANDS:
     - '<CORTX_PATH>/provisioner/conf/setup.yaml'
   manifest:
     - '<CORTX_PATH>/sspl/conf/manifest.yaml'
+  alerts:
+    - '<CORTX_PATH>/cli/conf/alerts_setup.yaml'
   uds:
     - '<CORTX_PATH>/cli/conf/uds_setup.yaml'
   elasticsearch:
