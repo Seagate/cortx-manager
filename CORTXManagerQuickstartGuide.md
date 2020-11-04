@@ -136,7 +136,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
   1. Install GitHub.
      
-     Refer to the [Contributing to CORTX Manager](ContributingToCortxManager.md) document to install GitHub and clone cortx-manager and its dependent repos.
+     Refer to the [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/CONTRIBUTING.md) document to install GitHub and clone cortx-manager and its dependent repos.
 
   2. Install pyutils that is custom-built for CORTX project:
   
