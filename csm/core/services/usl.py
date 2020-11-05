@@ -36,10 +36,6 @@ from csm.common.runtime import Options
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.core.services.storage_capacity import StorageCapacityService
-from csm.core.services.sessions import S3Credentials
-from csm.core.services.s3.accounts import S3AccountService
-from csm.core.services.s3.iam_users import IamUsersService
-from csm.core.services.s3.buckets import S3BucketService
 from csm.core.data.models.system_config import ApplianceName
 from csm.core.data.models.usl import Device, Volume, ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory
@@ -124,111 +120,6 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return UUID(device_uuid)
 
-    def _format_lyve_pilot_register_device_params(
-        self, url: str, pin: str, token: str
-    ) -> Dict[str, str]:
-        register_device_params = {
-            'url': url,
-            'regPin': pin,
-            'regToken': token,
-        }
-        return register_device_params
-
-    async def _format_lyve_pilot_access_params(self, s3_account: Dict,
-                                               iam_user: Dict) -> Dict[str, Any]:
-        network = await self._provisioner.get_network_configuration()
-        access_params = {
-            'accountName': s3_account.get('account_name'),
-            # TODO find a better way to obtain S3 server host and port
-            'uri': 's3://{}:{}'.format(
-                network.cluster_ip,
-                Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port'),
-            ),
-            'credentials': {
-                'accessKey': iam_user.get('access_key_id'),
-                'secretKey': iam_user.get('secret_key'),
-            },
-        }
-        return access_params
-
-    async def _cleanup(self,
-                       s3_account_service: S3AccountService,
-                       s3_iam_users_service: IamUsersService,
-                       s3_bucket_service: S3BucketService,
-                       s3_credentials: Optional[S3Credentials],
-                       s3_account_name: Optional[str],
-                       iam_user_name: Optional[str],
-                       bucket_name: Optional[str]) -> None:
-        if s3_credentials is None:
-            Log.debug('No cleaning to be done')
-            return
-        try:
-            if bucket_name is not None:
-                Log.debug(f'Deleting bucket {bucket_name}')
-                await s3_bucket_service.delete_bucket(bucket_name, s3_credentials)
-            if iam_user_name is not None:
-                Log.debug(f'Deleting IAM user {iam_user_name}')
-                await s3_iam_users_service.delete_user(s3_credentials, iam_user_name)
-            if s3_account_name is not None:
-                Log.debug(f'Deleting S3 account {s3_account_name}')
-                await s3_account_service.delete_account(s3_credentials, s3_account_name)
-        except Exception as e:
-            # Supress any errors from the cleanup, don't bother the user
-            Log.error(f'Cleanup failed --- {str(e)}')
-
-    async def _initialize_lyve_pilot_s3_resources(
-        self,
-        s3_account_service: S3AccountService,
-        s3_iam_users_service: IamUsersService,
-        s3_bucket_service: S3BucketService,
-        s3_account_name: str,
-        s3_account_email: str,
-        s3_account_password: str,
-        iam_user_name: str,
-        iam_user_password: str,
-        bucket_name: str,
-    ) -> Tuple[S3Credentials, Dict, Dict, Dict]:
-        s3_credentials: Optional[S3Credentials] = None
-        lyve_pilot_acc_name: Optional[str] = None
-        lyve_pilot_user_name: Optional[str] = None
-        lyve_pilot_bucket_name: Optional[str] = None
-
-        try:
-            Log.debug('Create S3 account')
-            s3_account = await s3_account_service.create_account(
-                s3_account_name, s3_account_email, s3_account_password)
-            lyve_pilot_acc_name = s3_account.get('account_name')
-            s3_credentials = S3Credentials(
-                lyve_pilot_acc_name,
-                str(s3_account.get('access_key')),
-                str(s3_account.get('secret_key')),
-                '')
-            Log.debug('Create IAM user')
-            iam_user = await s3_iam_users_service.create_user(
-                s3_credentials, iam_user_name, iam_user_password)
-            lyve_pilot_user_name = str(iam_user.get('user_name'))
-            Log.debug('Create bucket')
-            bucket = await s3_bucket_service.create_bucket(s3_credentials, bucket_name)
-            lyve_pilot_bucket_name = str(bucket.get('bucket_name'))
-            Log.debug('Tag bucket')
-            await self._tag_lyve_pilot_bucket(s3_credentials, s3_bucket_service, bucket_name)
-            Log.debug('Put bucket policy')
-            iam_user_arn = str(iam_user.get('arn'))
-            await self._set_lyve_pilot_policy(s3_credentials, s3_bucket_service, iam_user_arn,
-                                              bucket_name)
-        except Exception as e:
-            await self._cleanup(s3_account_service,
-                                s3_iam_users_service,
-                                s3_bucket_service,
-                                s3_credentials,
-                                lyve_pilot_acc_name,
-                                lyve_pilot_user_name,
-                                lyve_pilot_bucket_name)
-            reason = 'S3 resources preparation failed'
-            Log.error(f'{reason}---{str(e)}')
-            raise e
-        return (s3_credentials, s3_account, iam_user, bucket)
-
     async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
         Checks if bucket is enabled for Lyve Pilot
@@ -238,41 +129,6 @@ class UslService(ApplicationService):
 
         tags = await s3_cli.get_bucket_tagging(bucket)
         return tags.get('udx', 'disabled') == 'enabled'
-
-    async def _tag_lyve_pilot_bucket(self, s3_credentials: S3Credentials,
-                                     s3_bucket_service: S3BucketService, bucket_name: str) -> None:
-        """
-        Puts the Lyve Pilot tag on a specified bucket
-        """
-        bucket_tags = {"udx": "enabled"}
-        await s3_bucket_service.put_bucket_tagging(s3_credentials, bucket_name, bucket_tags)
-        Log.info(f'Lyve Pilot bucket {bucket_name} is taggged with {bucket_tags}')
-
-    async def _set_lyve_pilot_policy(self, s3_credentials: S3Credentials,
-                                     s3_bucket_service: S3BucketService, iam_user_arn: str,
-                                     bucket_name: str) -> None:
-        """
-        Grants the specified IAM user full access to the specified bucket
-        """
-        policy = {
-            'Version': str(date.today()),
-            'Statement': [{
-                'Sid': 'UdxIamAccountPerm',
-                'Effect': 'Allow',
-                'Principal': {"AWS": iam_user_arn},
-                'Action': ['s3:GetObject', 's3:PutObject',
-                           's3:ListMultipartUploadParts', 's3:AbortMultipartUpload',
-                           's3:GetObjectAcl', 's3:PutObjectAcl',
-                           's3:PutObjectTagging',
-                           # TODO: now S3 server rejects the following policies
-                           # 's3:DeleteObject', 's3:RestoreObject', 's3:DeleteObjectTagging',
-                           ],
-                'Resource': f'arn:aws:s3:::{bucket_name}/*',
-            }]
-        }
-        await s3_bucket_service.put_bucket_policy(s3_credentials, bucket_name, policy)
-        Log.info(
-            f'Lyve Pilot policy is set for bucket {bucket_name} and IAM user (arn) {iam_user_arn}')
 
     async def _get_volume_name(self, bucket_name: str) -> str:
         return await self._get_system_friendly_name() + ": " + bucket_name
@@ -409,26 +265,12 @@ class UslService(ApplicationService):
         # TODO implement
         pass
 
-    async def post_register_device(
-        self,
-        s3_account_service: S3AccountService,
-        s3_iam_users_service: IamUsersService,
-        s3_bucket_service: S3BucketService,
-        url: str,
-        pin: str,
-        s3_account_name: str,
-        s3_account_email: str,
-        s3_account_password: str,
-        iam_user_name: str,
-        iam_user_password: str,
-        bucket_name: str,
-    ) -> Dict:
+    async def post_register_device(self, registration_info: Dict) -> None:
         """
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
 
-        :param url: Registration URL as provided by the Lyve Pilot portal
-        :param pin: Registration PIN as provided by the Lyve Pilot portal
+        :param registration_info: UDS registration info
         """
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
@@ -438,94 +280,36 @@ class UslService(ApplicationService):
             reason = 'UDS base URL is not valid'
             Log.error(reason)
             raise CsmInternalError(desc=reason)
-        # Let ``_initialize_lyve_pilot_s3_resources()`` propagate its exceptions
-        (lyve_pilot_s3_credentials, lyve_pilot_s3_account, lyve_pilot_iam_user,
-         lyve_pilot_bucket) = await self._initialize_lyve_pilot_s3_resources(
-            s3_account_service,
-            s3_iam_users_service,
-            s3_bucket_service,
-            s3_account_name,
-            s3_account_email,
-            s3_account_password,
-            iam_user_name,
-            iam_user_password,
-            bucket_name,
-        )
-        try:
-            register_device_params = self._format_lyve_pilot_register_device_params(
-                url, pin, self._token)
-            access_params = await self._format_lyve_pilot_access_params(
-                lyve_pilot_s3_account,
-                lyve_pilot_iam_user,
-            )
-            registration_body = {
-                'registerDeviceParams': register_device_params,
-                'accessParams': access_params,
-            }
-        except Exception as e:
-            await self._cleanup(
-                s3_account_service,
-                s3_iam_users_service,
-                s3_bucket_service,
-                lyve_pilot_s3_credentials,
-                lyve_pilot_s3_account.get('account_name'),
-                lyve_pilot_iam_user.get('user_name'),
-                lyve_pilot_bucket.get('bucket_name'),
-            )
-            reason = 'Error on registration body assembly'
-            Log.error(f'{reason}---{str(e)}')
-            raise CsmInternalError(desc=reason)
-        try:
-            endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
-            # FIXME add relevant certificates to SSL context instead of disabling validation
-            async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
-                Log.info(f'Start device registration at {uds_url}')
-                async with session.put(endpoint_url, json=registration_body) as response:
-                    if response.status != 201:
-                        reason = 'Could not start device registration'
-                        Log.error(f'{reason}---unexpected status code {response.status}')
-                        raise CsmInternalError(desc=reason)
-                Log.info('Device registration in process---waiting for confirmation')
-                timeout_limit = time.time() + 60
-                while time.time() < timeout_limit:
-                    try:
-                        async with session.get(endpoint_url) as response:
-                            if response.status == 200:
-                                Log.info('Device registration successful')
-                                break
-                            elif response.status != 201:
-                                reason = 'Lyve Pilot failed to register the device'
-                                Log.error(f'{reason}---unexpected status code {response.status}')
-                                raise CsmInternalError(desc=reason)
-                    except HttpClientError as e:
-                        reason = 'HTTP client error suppressed during registration confirmation'
-                        Log.warn(f'{reason}---{str(e)}')
-                    await asyncio.sleep(1)
-                else:
-                    reason = 'Could not confirm device registration status'
-                    Log.error(reason)
-                    raise CsmGatewayTimeout(desc=reason)
-                return {
-                    's3_account': {
-                        'access_key': lyve_pilot_s3_account['access_key'],
-                        'secret_key': lyve_pilot_s3_account['secret_key'],
-                    },
-                    'iam_user': {
-                        'access_key': access_params['credentials']['accessKey'],
-                        'secret_key': access_params['credentials']['secretKey'],
-                    },
-                }
-        except Exception as e:
-            await self._cleanup(
-                s3_account_service,
-                s3_iam_users_service,
-                s3_bucket_service,
-                lyve_pilot_s3_credentials,
-                lyve_pilot_s3_account.get('account_name'),
-                lyve_pilot_iam_user.get('user_name'),
-                lyve_pilot_bucket.get('bucket_name'),
-            )
-            raise e
+        # TODO validate registration body
+        endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
+        # FIXME add relevant certificates to SSL context instead of disabling validation
+        async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
+            Log.info(f'Start device registration at {uds_url}')
+            async with session.put(endpoint_url, json=registration_info) as response:
+                if response.status != 201:
+                    reason = 'Could not start device registration'
+                    Log.error(f'{reason}---unexpected status code {response.status}')
+                    raise CsmInternalError(desc=reason)
+            Log.info('Device registration in process---waiting for confirmation')
+            timeout_limit = time.time() + 60
+            while time.time() < timeout_limit:
+                try:
+                    async with session.get(endpoint_url) as response:
+                        if response.status == 200:
+                            Log.info('Device registration successful')
+                            break
+                        elif response.status != 201:
+                            reason = 'Lyve Pilot failed to register the device'
+                            Log.error(f'{reason}---unexpected status code {response.status}')
+                            raise CsmInternalError(desc=reason)
+                except HttpClientError as e:
+                    reason = 'HTTP client error suppressed during registration confirmation'
+                    Log.warn(f'{reason}---{str(e)}')
+                await asyncio.sleep(1)
+            else:
+                reason = 'Could not confirm device registration status'
+                Log.error(reason)
+                raise CsmGatewayTimeout(desc=reason)
 
     async def get_register_device(self) -> None:
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
