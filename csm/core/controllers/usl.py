@@ -28,6 +28,7 @@ from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
+from csm.core.services.usl import UslService
 
 
 # TODO replace this workaround with a proper firewall, or serve USL on a separate socket
@@ -55,6 +56,8 @@ class _View(CsmView):
     """
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
+    _service: UslService
+
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._service = self._request.app[const.USL_SERVICE]
@@ -90,31 +93,34 @@ class DeviceRegistrationView(_View):
     Device registration view.
     """
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.UPDATE}})
-    async def post(self) -> Dict:
+    async def post(self) -> None:
 
         class MethodSchema(Schema):
-            url = fields.URL(required=True)
-            pin = fields.Str(required=True)
-            s3_account_name = fields.Str(required=True)
-            s3_account_email = fields.Email(required=True)
-            s3_account_password = fields.Str(required=True)
-            iam_user_name = fields.Str(required=True)
-            iam_user_password = fields.Str(required=True)
-            bucket_name = fields.Str(required=True)
+            class RegisterDeviceParams(Schema):
+                url = fields.URL(required=True)
+                reg_pin = fields.Str(data_key='regPin', required=True)
+                reg_token = fields.Str(data_key='regToken', required=True)
 
-            @validates('pin')
-            def validate_pin(self, value: str) -> None:
-                if len(value) != 4 or not value.isdecimal():
-                    raise ValidationError('Invalid PIN format')
+            class AccessParams(Schema):
+                class Credentials(Schema):
+                    access_key = fields.Str(data_key='accessKey', required=True)
+                    secret_key = fields.Str(data_key='secretKey', required=True)
+
+                account_name = fields.Str(data_key='accountName', required=True)
+                # TODO validator
+                uri = fields.URL(schemes=['s3'], required=True)
+                credentials = fields.Nested(Credentials, required=True)
+
+            register_device_params = fields.Nested(
+                RegisterDeviceParams, data_key='registerDeviceParams', required=True)
+            access_params = fields.Nested(AccessParams, data_key='accessParams', required=True)
 
         try:
             body = await self.request.json()
-            params = MethodSchema().load(body)
-            return await self._service.post_register_device(
-                self._s3_account_service, self._s3_iam_user_service,
-                self._s3_buckets_service, **params)
+            registration_info = MethodSchema().load(body)
+            return await self._service.post_register_device(registration_info)
         except (JSONDecodeError, ValidationError) as e:
-            desc = 'Malformed input payload'
+            desc = 'Malformed UDS registration payload'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
 
