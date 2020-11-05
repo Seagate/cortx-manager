@@ -530,7 +530,7 @@ class Setup:
         """
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
-        Log.debug("Node ids obtained from salt-call:{nodes}")
+        Log.debug(f"Node ids obtained from salt-call:{nodes}")
         if node_id_data:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
@@ -538,7 +538,7 @@ class Setup:
                             f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
             Conf.save(const.CSM_GLOBAL_INDEX)
         else:
-            Log.error(f"Unable to fetch system node ids info.")
+            Log.error("Unable to fetch system node ids info.")
             raise CsmSetupError(f"Unable to fetch system node ids info.")
 
     def _set_rmq_cluster_nodes(self):
@@ -564,8 +564,8 @@ class Setup:
                 Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
                 Conf.save(const.CSM_GLOBAL_INDEX)
             else:
-                Log.error(f"Unable to fetch RMQ cluster nodes info.")
-                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+                Log.error("Unable to fetch RMQ cluster nodes info.")
+                raise CsmSetupError("Unable to fetch RMQ cluster nodes info.")
         except Exception as e:
             Log.error(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
@@ -603,7 +603,7 @@ class Setup:
         faulty_minion_id = ''
         faulty_node_uuid = ''
         try:
-            Log.info(f"Getting faulty node id")
+            Log.info("Getting faulty node id")
             faulty_minion_id_cmd = "cluster:replace_node:minion_id"
             faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
                 faulty_minion_id_cmd)
@@ -626,7 +626,7 @@ class Setup:
         This method resolves all the alerts for a fault replaced node.
         """
         try:
-            Log.info(f"Resolve faulty node alerts")
+            Log.info("Resolve faulty node alerts")
             conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
             db = DataBaseProvider(conf)
             alerts = []
@@ -669,7 +669,7 @@ class Setup:
             return list(set(component_list))
 
         try:
-            Log.info(f"Set unsupported feature list to ES")
+            Log.info("Set unsupported feature list to ES")
             self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             self._loop = asyncio.get_event_loop()
@@ -704,7 +704,7 @@ class Setup:
         Accordingly.
         :return: None
         """
-        Log.info(f"Configuring System Auto restart")
+        Log.info("Configuring System Auto restart")
         is_auto_restart_required = list()
         if self._setup_info:
             for each_key in self._setup_info:
@@ -819,7 +819,7 @@ class CsmSetup(Setup):
         no service are started
         """
         try:
-            Log.info(f"Triggering csm_setup post_install")
+            Log.info("Triggering csm_setup post_install")
             self._verify_args(args)
             self._config_user()
             self.set_unsupported_feature_info()
@@ -862,7 +862,7 @@ class CsmSetup(Setup):
                     self._set_rmq_node_id()
                 except Exception as e:
                     Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                self._set_consul_vip()    
+                self._set_consul_vip()
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
@@ -892,7 +892,7 @@ class CsmSetup(Setup):
             - Delete csm user
         """
         try:
-            Log.info(f"Triggering csm_setup reset")
+            Log.info("Triggering csm_setup reset")
             self._verify_args(args)
             if args["hard"]:
                 self.Config.load()
@@ -913,7 +913,7 @@ class CsmSetup(Setup):
         Refresh context for CSM
         """
         try:
-            Log.info(f"Triggering csm_setup refresh_config")
+            Log.info("Triggering csm_setup refresh_config")
             node_id = self._get_faulty_node_uuid()
             self._resolve_faulty_node_alerts(node_id)
             Log.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
