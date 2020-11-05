@@ -1,4 +1,4 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/07822cc6b19c466fba40bff281687baa)](https://www.codacy.com/gh/Seagate/cortx-manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-manager&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/07822cc6b19c466fba40bff281687baa)](https://www.codacy.com/gh/Seagate/cortx-manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-manager&amp;utm_campaign=Badge_Grade) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/Seagate/cortx-manager/blob/main/LICENSE)
 
 <!--
 CORTX-CSM: CORTX Management web and CLI interface.
@@ -23,13 +23,11 @@ CORTX Manager provides APIs which communicate with different CORTX components an
 
 ## Get CORTX-Manager Ready! 
 
-Jump to the [CORTX-Manager Quickstart Guide](Cortx-ManagerQuickstartGuide.md) to set up CORTX-Manager. 
+Jump to the [CORTX-Manager Quickstart Guide](https://github.com/Seagate/cortx-manager/blob/main/CORTXManagerQuickstartGuide.md) to set up CORTX-Manager. 
 
 ## Contribute to CORTX-Manager
 
-We welcome all Source Code and Documentation contributions to the [CORTX-Manager](https://github.com/Seagate/cortx/blob/main/doc/SuggestedContributions.md) repositories.  
-
-We are excited about your interest in CORTX and hope you will join us. Refer to the [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/doc/CORTXContributionGuide.md) that hosts all information about community values, code of conduct, how to contribute code and documentation, community and code style guide, and how to reach out to us. 
+We are excited about your interest in CORTX and hope you will join us. Refer to the [CORTX Contribution Guide](CONTRIBUTING.md) that hosts all information about community values, code of conduct, how to contribute code and documentation, community and code style guide, and how to reach out to us. 
 
 We take community very seriously and we are committed to creating a community built on respectful interactions and inclusivity as documented in our [Code of Conduct](https://github.com/Seagate/cortx/blob/main/CODE_OF_CONDUCT.md).
 

@@ -32,6 +32,13 @@ import sys
 import os
 import pathlib
 
+index_field_map = {
+    "alerts" : "created_time",
+    "alerts-history" : "created_time",
+    "csmauditlog" : "timestamp",
+    "s3-rsys-index" : "timestamp"
+}
+
 # Search outdated indexes in es reply and generate list of outdated indexes
 def filter_out_old_indexes(date_before, indexes):
     index_start = indexes.find('index')
@@ -79,38 +86,69 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
         else:
             Log.debug("Nothing to remove")
 
-def process_stats(args):
-    # Pass arguments to worker function
-    es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    remove_old_indexes(es, args.d, args.n, args.e)
+def clean_indexes(es, no_of_days, host_port):
+    for index, timestamp_field in index_field_map.items():
+        Log.debug(f"Removing data for old index:{index} for {no_of_days} days.")
+        es.remove_old_data_from_indexes(no_of_days, host_port, [index], timestamp_field)
+    remove_old_indexes(es, no_of_days, host_port, args.emulate)
 
-def process_auditlogs(args):
+def parse_dir_usage():
+    try:
+        res = StorageInfo.get_dir_usage(dir_path="/var/log/elasticsearch/", unit="M")
+        es_storage = int(res[0].decode("utf-8").split('\t')[0].split('M')[0])
+        Log.debug(f"ES storage:{es_storage}")
+        return es_storage
+    except Exception as e:
+        Log.error(f"Error in processing du cmd: {e}")
+        raise Exception(f"Error in processing du cmd: {e}")
+
+def parse_fs_usage():
+    try:
+        cmd_data = StorageInfo.get_fs_usage(fs="/var/log", unit="M")
+        storage_info = cmd_data[0].decode('utf-8').split('\n').pop(1).split(' ')
+        result = [ele for ele in storage_info if len(ele)>0]
+        var_log_storage = int(result[1].split('M')[0])
+        var_log_usage_percent = int(result[4].split('%')[0])
+        Log.debug(f"/var/log storage:{var_log_storage}, /var/log usage percent:{var_log_usage_percent}")
+        return var_log_storage, var_log_usage_percent
+    except Exception as e:
+        Log.error(f"Error in processing df cmd: {e}")
+        raise Exception(f"Error in processing df cmd: {e}")
+
+def process_es_cleanup(args):
     # Pass arguments to worker function
     # remove data older than given number of days
     es = esCleanup(const.CSM_CLEANUP_LOG_FILE, const.CSM_LOG_PATH)
-    es.remove_old_data_from_indexes(args.d, args.n, args.i, args.f)
+    days_to_keep_data = int(args.days_to_keep_data)
+    clean_indexes(es, days_to_keep_data, args.host_port)
+    var_log_storage, var_log_usage_percent = parse_fs_usage() #get current /var/log storage
 
-def add_stats_subcommand(main_parser):
-    subparsers = main_parser.add_parser("stats", help='cleanup of stats log')
-    subparsers.set_defaults(func=process_stats)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
-    subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
-    subparsers.add_argument("-e", action='store_true',
-            help="emulate, do not really delete indexes")
+    #calculate es_db_capp Eg. var_log_storage=8000MB es_storage_cap_percent=30%
+    es_db_capping = (var_log_storage * int(args.es_storage_cap_percent)) / 100
 
-def add_auditlog_subcommand(main_parser):
-    subparsers = main_parser.add_parser("auditlogs", help='cleanup of audit log')
-    subparsers.set_defaults(func=process_auditlogs)
-    subparsers.add_argument("-d", type=int, default=90,
-            help="days to keep data")
-    subparsers.add_argument("-n", type=str, default="localhost:9200",
-            help="address:port of elasticsearch service")
-    subparsers.add_argument("-f", type=str, default="timestamp",
-            help="field of index of elasticsearch service")
-    subparsers.add_argument("-i", nargs='+', default=[],
-            help="index of elasticsearch")
+    while var_log_usage_percent > int(args.var_log_cap_percent):
+        # Break if current ES storage is less than ES capping OR
+        # Break if no of days is less than or equal 5. Keep data for last 5days
+        if (parse_dir_usage()<=es_db_capping) or (days_to_keep_data<=5):
+            Log.debug("Breaking out.")
+            break
+        days_to_keep_data = days_to_keep_data-1
+        clean_indexes(es, days_to_keep_data, args.host_port)
+        var_log_storage, var_log_usage_percent = parse_fs_usage() #get current /var/log usage %
+
+def add_cleanup_subcommand(main_parser):
+    subparsers = main_parser.add_parser("es_cleanup", help='cleanup of audit log')
+    subparsers.set_defaults(func=process_es_cleanup)
+    subparsers.add_argument("-d","--days_to_keep_data", type=int, default=90,
+                                            help="days to keep data")
+    subparsers.add_argument("-c","--var_log_cap_percent", type=int, default=90,
+                                            help="Capping for /var/log in percentage")
+    subparsers.add_argument("-e","--es_storage_cap_percent", type=str, default=30,
+                                            help="ES size in '%' of /var/log storage")
+    subparsers.add_argument("-n","--host_port", type=str, default="localhost:9200",
+                                            help="address:port of elasticsearch service")
+    subparsers.add_argument("-m","--emulate", action='store_true',
+                                            help="emulate, do not really delete indexes")
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
@@ -119,6 +157,7 @@ if __name__ == '__main__':
     from csm.common.conf import Conf, ConfSection, DebugConf
     from csm.core.blogic import const
     from csm.common.payload import Yaml
+    from csm.common.storage_usage import StorageInfo
     Conf.init()
     Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
     Log.init(const.CSM_CLEANUP_LOG_FILE,
@@ -131,8 +170,7 @@ if __name__ == '__main__':
     try:
         argParser = argparse.ArgumentParser()
         subparsers = argParser.add_subparsers()
-        add_auditlog_subcommand(subparsers)
-        add_stats_subcommand(subparsers)
+        add_cleanup_subcommand(subparsers)
         args = argParser.parse_args()
         args.func(args)
     except Exception as e:

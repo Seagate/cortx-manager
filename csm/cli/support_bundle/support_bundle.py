@@ -17,6 +17,7 @@ import sys
 import os
 import string
 import random
+import getpass
 import errno
 from importlib import import_module
 from csm.common.payload import Yaml, JsonMessage
@@ -127,6 +128,11 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None.
         """
+        current_user = str(getpass.getuser())
+        # Check if User is Root User.
+        if current_user.lower() != const.SSH_USER_NAME:
+            response_msg = f"Support Bundle {const.ROOT_PRIVILEGES_MSG}"
+            return Response(output = response_msg, rc = str(errno.EACCES))
         bundle_id = SupportBundle.generate_bundle_id()
         provisioner = SupportBundle.import_provisioner_plugin()
         if not provisioner:
@@ -183,8 +189,8 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return: None
         """
-        bundle_id = command.options.get("bundle_id", "")
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        bundle_id = command.options.get("bundle_id")
+        conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
         db = DataBaseProvider(conf)
         repo = SupportBundleRepository(db)
         all_nodes_status = await repo.retrieve_all(bundle_id)
@@ -219,8 +225,8 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
-        csm_conf_file_name = os.path.join(const.CSM_CONF_PATH,
-                                          const.CSM_CONF_FILE_NAME)
+        csm_conf_file_name = os.path.join(const.CORTXCLI_CONF_PATH,
+                                          const.CORTXCLI_CONF_FILE_NAME)
         if not os.path.exists(csm_conf_file_name):
             raise CsmError(rc = errno.ENOENT,
                            desc = "Config file does not exist.")
@@ -251,3 +257,4 @@ class SupportBundle:
                                          const.SUPPORT_BUNDLE)
         return Response(output = support_bundle_config,
                         rc = CSM_OPERATION_SUCESSFUL)
+

@@ -1,7 +1,6 @@
 aiohttp==3.6.1
 paramiko==2.7.1
 toml==0.10.0
-PyYAML==5.1.2
 configparser==4.0.2
 argparse==1.4.0
 dict2xml==1.6.1
@@ -25,3 +24,4 @@ urllib3==1.25.7
 cryptography==2.8
 python-crontab==2.5.1
 confluent-kafka==1.5.0
+netifaces==0.10.9

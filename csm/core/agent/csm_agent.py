@@ -63,6 +63,9 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
 
+        # settting usl polling
+        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
+        CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
         #Heath configuration
         health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
@@ -155,6 +158,7 @@ class CsmAgent:
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
+        CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
@@ -249,6 +253,7 @@ if __name__ == '__main__':
     from csm.common.errors import CsmError
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
+    from csm.core.services.appliance_info import ApplianceInfoService
     try:
         # try:
         #     from salt import client
