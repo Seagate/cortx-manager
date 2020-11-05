@@ -19,11 +19,10 @@ import time
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
-from datetime import date
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 from uuid import UUID, uuid4, uuid5
 
 from csm.common.conf import Conf
@@ -198,31 +197,29 @@ class UslService(ApplicationService):
         if device_id != self._device_uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
         volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
-        return [v.to_primitive(role='public') for _,v in volumes.items()]
+        return [v.to_primitive(role='public') for _, v in volumes.items()]
 
-    async def _handle_lyve_pilot_volume_mount_umount(
-        self, device_id: UUID, volume_id: UUID, uri: str,
-        access_key_id: str, secret_access_key: str, mount=True,
+    async def _build_lyve_pilot_volume_mount_info(
+        self, device_id: UUID, volume_id: UUID, access_key_id: str, secret_access_key: str
     ) -> Dict[str, str]:
         """
-        Handles Lyve Pilot volume mount/umount
+        Compute Lyve Pilot mount info if device and volume with specified IDs exist.
 
-        Checks the device and the volume with the specified IDs exist and return
-        the required mount/umount information
+        :param device_id: Device UUID
+        :param volume_id: Volume UUID
+        :param access_key_id: Access key ID to storage service
+        :param secret_access_key: Secret access key to storage service
+        :return: A dictionary containing the mount handle and the mount path.
         """
         if device_id != self._device_uuid:
-            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+            raise CsmNotFoundError(desc=f'Device {device_id} not found')
         volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
-            raise CsmNotFoundError(desc=f'Volume with ID {volume_id} is not found '
-                                        f'on the device with ID {device_id}')
-        if mount:
-            return {
-                'mountPath': volumes[volume_id].bucketName,
-                'handle': volumes[volume_id].bucketName
-            }
-        else:
-            return volumes[volume_id].bucketName
+            raise CsmNotFoundError(desc=f'Volume {volume_id} not found on device {device_id}')
+        return {
+            'mountPath': volumes[volume_id].bucketName,
+            'handle': volumes[volume_id].bucketName
+        }
 
     async def post_device_volume_mount(
         self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
@@ -237,8 +234,8 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        return await self._handle_lyve_pilot_volume_mount_umount(
-            device_id, volume_id, uri, access_key_id, secret_access_key, mount=True)
+        return await self._build_lyve_pilot_volume_mount_info(
+            device_id, volume_id, access_key_id, secret_access_key)
 
     async def post_device_volume_unmount(
         self, device_id: UUID, volume_id: UUID, uri: str, access_key_id: str, secret_access_key: str
@@ -255,8 +252,9 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: The volume's mount handle
         """
-        return await self._handle_lyve_pilot_volume_mount_umount(
-            device_id, volume_id, uri, access_key_id, secret_access_key, mount=False)
+        mount_info = await self._build_lyve_pilot_volume_mount_info(
+            device_id, volume_id, access_key_id, secret_access_key)
+        return mount_info['handle']
 
     async def get_events(self) -> None:
         """
@@ -362,7 +360,7 @@ class UslService(ApplicationService):
         return service_urls
 
     # TODO replace stub
-    async def get_system(self) -> Dict[str, str]:
+    async def get_system(self) -> Dict[str, Any]:
         """
         Provides information about the system.
 
@@ -373,7 +371,7 @@ class UslService(ApplicationService):
         return {
             'model': 'CORTX',
             'type': 'ees',
-            'serialNumber': self._device_uuid,
+            'serialNumber': str(self._device_uuid),
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
             'serviceUrls': service_urls,
