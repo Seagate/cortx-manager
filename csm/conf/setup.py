@@ -447,9 +447,9 @@ class Setup:
 
     def _set_rmq_cluster_nodes(self):
         """
-        This method gets the nodes names of the the rabbitmq cluster and writes
-        in the config.
+        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
         """
+
         nodes = []
         nodes_found = False
         try:
@@ -460,6 +460,12 @@ class Setup:
                         nodes = re.findall(r"rabbit@([-\w]+)", line)
                         nodes_found = True
                 if nodes_found:
+                    break
+                result = re.search(
+                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
+                    cmd_output[0], re.DOTALL)
+                if result is not None:
+                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
                     break
                 time.sleep(2**count)
             if nodes:
