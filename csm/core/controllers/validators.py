@@ -29,6 +29,17 @@ class FileRefValidator(Validator):
             raise ValidationError('This field must be of instance of a FileRef class')
 
 
+class IamUserNameValidator(Validator):
+    """
+    Validator Class for Iam Username 
+    """
+
+    def __call__(self, value):
+        if not re.search(r"^[\w@+=.,-]{1,64}", value):
+            raise ValidationError(
+                "Iam username should be between 1-64 Characters"
+                "Should contain Alphanumeric, -,_,@,+,= and ','.")
+
 
 class UserNameValidator(Validator):
     """
@@ -39,7 +50,7 @@ class UserNameValidator(Validator):
         if not re.search(r"^[a-zA-Z0-9_-]{4,56}$", value):
             raise ValidationError(
                 "Username can only contain Alphanumeric, - and  _ .Length "
-                "Must be between 4-64 Characters")
+                "Must be between 4-56 Characters")
 
 
 class CommentsValidator(Validator):
@@ -109,9 +120,12 @@ class BucketNameValidator(Validator):
     def __call__(self, value):
         if not self.is_value_valid(value):
             raise ValidationError(
-                ("Bucket Name should be between 4-56 Characters long."
+                ("Bucket Name should be between 3-63 Characters long."
                  "Should contain either lowercase, numeric, '-' or '.' characters. "
                  "Not starting or ending with '-' or '.'"))
+
+        if value.startswith("xn--"):
+            raise ValidationError("Bucket Name cannot start with 'xn--'")
 
 
 class Ipv4(Validator):
