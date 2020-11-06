@@ -122,7 +122,7 @@ class BucketNameValidator(Validator):
             ipv4 = Ipv4()
             ipv4(value)
             res = True
-        except ValidationError as e:
+        except ValidationError:
             res = False
         if res:
             raise ValidationError("Bucket Name cannot be ip v4 format")
@@ -138,7 +138,7 @@ class BucketNameValidator(Validator):
             raise ValidationError("Bucket Name cannot start with 'xn--'")
 
         self._check_ipv4(value)
-       
+
 
 class Ipv4(Validator):
     """
