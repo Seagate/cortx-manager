@@ -115,7 +115,17 @@ class BucketNameValidator(Validator):
     """
 
     def is_value_valid(self, value):
-        return re.search(r"^[a-z0-9][a-z0-9-.]{3,54}[a-z0-9]$", value)
+        return re.search(r"^[a-z0-9][a-z0-9-.]{1,61}[a-z0-9]$", value)
+
+    def _check_ipv4(self, value):
+        try:
+            ipv4 = Ipv4()
+            ipv4(value)
+            res = True
+        except ValidationError as e:
+            res = False
+        if res:
+            raise ValidationError("Bucket Name cannot be ip v4 format")
 
     def __call__(self, value):
         if not self.is_value_valid(value):
@@ -127,6 +137,8 @@ class BucketNameValidator(Validator):
         if value.startswith("xn--"):
             raise ValidationError("Bucket Name cannot start with 'xn--'")
 
+        self._check_ipv4(value)
+       
 
 class Ipv4(Validator):
     """
