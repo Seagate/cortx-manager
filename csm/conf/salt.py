@@ -38,10 +38,11 @@ class SaltWrappers:
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(desc)
             Log.logger.warn(desc)
-        if stderr:
+        if rc !=0:
+            Log.warn(stderr)
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(stderr)
-            Log.logger.warn(stderr)
+            Log.warn(stderr)
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
@@ -63,10 +64,10 @@ class SaltWrappers:
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(desc)
             Log.logger.warn(desc)
-        if stderr:
+        if rc != 0:
+            Log.warn(stderr)
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(stderr)
-            Log.logger.warn(stderr)
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
