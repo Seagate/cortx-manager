@@ -126,7 +126,7 @@ class UslService(ApplicationService):
         Buckets enabled for Lyve Pilot contain tag {Key=udx,Value=enabled}
         """
 
-        tags = await s3_cli.get_bucket_tagging(bucket)
+        tags = await s3_cli.get_bucket_tagging(bucket.name)
         return tags.get('udx', 'disabled') == 'enabled'
 
     async def _get_volume_name(self, bucket_name: str) -> str:
