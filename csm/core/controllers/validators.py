@@ -35,10 +35,10 @@ class IamUserNameValidator(Validator):
     """
 
     def __call__(self, value):
-        if not re.search(r"^[\w@+=.,-]{1,64}", value):
+        if not re.search(r"^[\w@+=.,-]{1,64}$", value):
             raise ValidationError(
                 "Iam username should be between 1-64 Characters"
-                "Should contain Alphanumeric, -,_,@,+,= and ','.")
+                "Should contain Alphanumeric - _ @ + = or ,.")
 
 
 class UserNameValidator(Validator):
