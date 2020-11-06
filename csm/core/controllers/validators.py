@@ -38,7 +38,7 @@ class IamUserNameValidator(Validator):
         if not re.search(r"^[\w@+=.,-]{1,64}$", value):
             raise ValidationError(
                 "Iam username should be between 1-64 Characters."
-                "Should contain Alphanumeric - _ @ + = or ,.")
+                "Should contain Alphanumeric . - _ @ + = or ,.")
 
 
 class UserNameValidator(Validator):
