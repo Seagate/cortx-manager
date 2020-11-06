@@ -130,7 +130,7 @@ class Setup:
         except Exception as e:
             Log.error(f"Error in command execution : {e}")
             raise PillarDataFetchError(f"Error in command execution : {e}")
-        if stderr:
+        if rc !=0:
             Log.error(f"Error : {stderr}")
             raise PillarDataFetchError(stderr)
         res = stdout.decode('utf-8')
