@@ -42,6 +42,7 @@ from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
+from csm.core.services.usl_s3 import UslS3BucketsController
 from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from cortx.utils.security.secure_storage import SecureStorage
 from cortx.utils.security.cipher import Cipher
@@ -263,7 +264,7 @@ class UslService(ApplicationService):
         # TODO implement
         pass
 
-    async def post_register_device(self, registration_info: Dict) -> None:
+    async def _register_device(self, registration_info: Dict) -> None:
         """
         Executes device registration sequence. Communicates with the UDS server in order to start
         registration and verify its status.
@@ -308,6 +309,23 @@ class UslService(ApplicationService):
                 reason = 'Could not confirm device registration status'
                 Log.error(reason)
                 raise CsmGatewayTimeout(desc=reason)
+
+    async def post_register_device(self, s3_buckets_service, registration_info: Dict) -> None:
+        account_name = registration_info['accessParams']['accountName']
+        credentials = registration_info['accessParams']['credentials']
+        access_key = credentials['accessKey']
+        secret_access_key = credentials['secretKey']
+        buckets_controller = UslS3BucketsController(
+            s3_buckets_service, account_name, access_key, secret_access_key)
+        bucket_name = registration_info['internalCortxParams']['bucketName']
+        await buckets_controller.enable_lyve_pilot(bucket_name)
+        try:
+            uds_registration_info = registration_info.copy()
+            del uds_registration_info['internalCortxParams']
+            await self._register_device(uds_registration_info)
+        except Exception as e:
+            await buckets_controller.disable_lyve_pilot(bucket_name)
+            raise e
 
     async def get_register_device(self) -> None:
         uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
