@@ -31,7 +31,7 @@ class FileRefValidator(Validator):
 
 class IamUserNameValidator(Validator):
     """
-    Validator Class for Iam Username 
+    Validator Class for Iam Username
     """
 
     def __call__(self, value):
