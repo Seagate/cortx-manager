@@ -50,6 +50,7 @@ class UDSConfigGenerator:
         return f"""\
 frontend uds-frontend
     mode tcp
+    option tcplog
     bind 127.0.0.1:5000
     bind ::1:5000
     bind {cluster_ip}:5000
