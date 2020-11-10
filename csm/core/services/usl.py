@@ -75,7 +75,6 @@ class UslService(ApplicationService):
     Implements USL service operations.
     """
     # FIXME improve token management
-    _token: str
     _s3plugin: Any
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
@@ -85,7 +84,6 @@ class UslService(ApplicationService):
         """
         Constructor.
         """
-        self._token = ''
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
@@ -342,8 +340,8 @@ class UslService(ApplicationService):
 
         :return: A 12-digit token.
         """
-        self._token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
-        return {'registrationToken': self._token}
+        token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
+        return {'registrationToken': token}
 
     async def _get_mgmt_url(self) -> Dict[str, str]:
         """
