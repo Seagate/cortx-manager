@@ -510,12 +510,14 @@ class Setup:
         try:
             for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
                 cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
+                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
                 for line in cmd_output[0].split('\n'):
                     if const.RUNNING_NODES in line:
                         nodes = re.findall(r"rabbit@([-\w]+)", line)
                         nodes_found = True
                 if nodes_found:
                     break
+                # The code below is used to parse CLI output for RMQ 3.8.9 or above
                 result = re.search(
                     f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
                     cmd_output[0], re.DOTALL)
