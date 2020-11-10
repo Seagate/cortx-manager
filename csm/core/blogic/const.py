@@ -59,6 +59,8 @@ EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
+RUNNING_NODES_START_TEXT = 'Running Nodes'
+RUNNING_NODES_STOP_TEXT = 'Versions'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
