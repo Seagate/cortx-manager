@@ -72,10 +72,12 @@ class S3BucketService(S3BaseService):
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
         service_urls = ServiceUrls(self._provisioner)
-        bucket_url = await service_urls.get_s3_url(scheme='https', bucket_name=bucket_name)
+        bucket_url = await service_urls.get_bucket_url(bucket_name, 'https')
+        s3_uri = await service_urls.get_s3_uri(scheme='s3')
         return {
             "bucket_name": bucket_name,
-            "bucket_url": bucket_url
+            "bucket_url": bucket_url,
+            "s3_uri": s3_uri,
         }  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
@@ -101,8 +103,8 @@ class S3BucketService(S3BaseService):
         bucket_list = [
             {
                 "name": bucket.name,
-                "bucket_url": await service_urls.get_s3_url(scheme='https',
-                                                            bucket_name=bucket.name)
+                "bucket_url": await service_urls.get_bucket_url(bucket.name, 'https'),
+                "s3_uri": await service_urls.get_s3_uri(scheme='s3'),
             }
             for bucket in bucket_list]
         return {"buckets": bucket_list}
