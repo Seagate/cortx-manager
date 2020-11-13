@@ -59,6 +59,8 @@ EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
+RUNNING_NODES_START_TEXT = 'Running Nodes'
+RUNNING_NODES_STOP_TEXT = 'Versions'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -421,6 +423,7 @@ S3_ACCOUNT_SERVICE = "s3_account_service"
 S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
+APPLIANCE_INFO_SERVICE = "appliance_info_service"
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
