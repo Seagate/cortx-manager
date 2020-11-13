@@ -47,6 +47,7 @@ from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
 import re
+from elasticapm.contrib.aiohttp import ElasticAPM
 
 
 class CsmApi(ABC):
@@ -114,6 +115,15 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
         CsmRestApi.update_roles_permission()
+
+        try:
+            CsmRestApi._app['ELASTIC_APM'] = {
+                'SERVICE_NAME': 'csm_agent'
+            }
+            apm = ElasticAPM(CsmRestApi._app)
+            Log.debug(f"Elastic APM initialized: {apm}")
+        except Exception as e_:
+            Log.error(f"Exception occurred while initialized Elastic APM: {e_}")
 
     @staticmethod
     def update_roles_permission():
