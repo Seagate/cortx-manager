@@ -27,7 +27,7 @@ from uuid import UUID, uuid4, uuid5
 
 from csm.common.conf import Conf
 from csm.common.errors import (
-    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied)
+    CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied, InvalidRequest)
 from csm.common.periodic import Periodic
 from cortx.utils.data.access import Query
 from cortx.utils.log import Log
@@ -294,6 +294,10 @@ class UslService(ApplicationService):
                         if response.status == 200:
                             Log.info('Device registration successful')
                             break
+                        elif response.status == 203:
+                            reason = 'Registration PIN is required; please retry'
+                            Log.error(reason)
+                            raise InvalidRequest(reason)
                         elif response.status != 201:
                             reason = 'Lyve Pilot failed to register the device'
                             Log.error(f'{reason}---unexpected status code {response.status}')
