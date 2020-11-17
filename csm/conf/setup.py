@@ -239,7 +239,10 @@ class Setup:
         haproxy = Setup._get_haproxy_local_instance(minion_id)
         if haproxy is None:
             raise CsmSetupError(f'Unable to find haproxy local instance. Minion id: "{minion_id}"')
-        Setup._run_cmd(f'pcs resource restart {haproxy}')
+        try:
+            Setup._run_cmd(f'pcs resource restart {haproxy}')
+        except CsmSetupError as e:
+            Log.critical(f'Failed do restart {haproxy}: {e}')
 
     class Config:
         """
