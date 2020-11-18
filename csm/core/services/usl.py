@@ -261,6 +261,27 @@ class UslService(ApplicationService):
         # TODO implement
         pass
 
+    async def get_saas_url(self) -> Dict[str, str]:
+        """
+        Obtains Lyve Pilot SaaS URL from CSM global index and returns it to the user.
+        If it is not found, raise status code 404.
+
+        :return: Dictionary containing SaaS URL
+        """
+        saas_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.saas_url')
+        if saas_url is None:
+            reason = 'Lyve Pilot SaaS URL is not configured'
+            Log.debug(reason)
+            raise CsmNotFoundError(desc=reason)
+        try:
+            validate_url = URL(schemes=('https'))
+            validate_url(saas_url)
+        except ValidationError:
+            reason = f'Invalid Lyve Pilot SaaS URL: {saas_url}'
+            Log.error(reason)
+            raise CsmInternalError(desc=reason)
+        return {'saas_url': saas_url}
+
     async def _register_device(self, registration_info: Dict) -> None:
         """
         Executes device registration sequence. Communicates with the UDS server in order to start

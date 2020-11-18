@@ -85,6 +85,17 @@ class _SecuredView(_View):
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
+@CsmView._app_routes.view("/usl/v1/saas")
+class SaaSURLView(_View):
+    """
+    Lyve Pilot SaaS URL view.
+    """
+    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
+    async def get(self) -> Dict[str, str]:
+        return await self._service.get_saas_url()
+
+
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registerDevice")
 class DeviceRegistrationView(_View):
     """
