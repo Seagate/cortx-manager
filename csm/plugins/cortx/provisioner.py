@@ -466,3 +466,20 @@ class ProvisionerPlugin:
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Command Execution error: {e}")
             raise PackageValidationError(f"Command Execution error: {e}")
+
+    async def execute_cortxcli_commands(self, command_args, target_node="*", run_async=False):
+        """
+
+        :param command_args:
+        :param targe_node:
+        :param async:
+        :return:
+        """
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            return self.provisioner.cmd_run(cmd_name=const.CORTXCLI, cmd_args=str(command_args),
+                                            targets=target_node, nowait=run_async)
+        except Exception as e:
+            Log.error(f"Command Execution error: {e}")
+            raise PackageValidationError(f"Command Execution error: {e}")

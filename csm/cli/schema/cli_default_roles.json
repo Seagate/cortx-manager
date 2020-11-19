@@ -11,5 +11,8 @@
   },
   "system": {
     "startup": true
+  },
+  "update_csm_component": {
+    "update": true
   }
 }
