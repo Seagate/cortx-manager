@@ -447,37 +447,15 @@ class Setup:
 
     def _set_rmq_cluster_nodes(self):
         """
-        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
+        Obtains minion names and use them to configure RabbitMQ nodes on the config file.
         """
-
-        nodes = []
-        nodes_found = False
         try:
-            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
-                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
-                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
-                for line in cmd_output[0].split('\n'):
-                    if const.RUNNING_NODES in line:
-                        nodes = re.findall(r"rabbit@([-\w]+)", line)
-                        nodes_found = True
-                if nodes_found:
-                    break
-                # The code below is used to parse CLI output for RMQ 3.8.9 or above
-                result = re.search(
-                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
-                    cmd_output[0], re.DOTALL)
-                if result is not None:
-                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
-                    break
-                time.sleep(2**count)
-            if nodes:
-                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
-                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
-                Conf.save(const.CSM_GLOBAL_INDEX)
-            else:
-                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+            minions = list(SaltWrappers.get_salt(const.GRAINS_GET, const.ID).values())
+            minions.sort()
+            conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
+            Conf.set(const.CSM_GLOBAL_INDEX, conf_key, minions)
+            Conf.save(const.CSM_GLOBAL_INDEX)
         except Exception as e:
-
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     @staticmethod
