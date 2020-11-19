@@ -16,5 +16,5 @@
         "method": "begin_update",
         "class": "UpdateCSM",
         "is_static": true
-      },
+      }
 }
