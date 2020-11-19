@@ -95,10 +95,28 @@ class UpdateCSM:
 
     @staticmethod
     async def add_update_status(resource_id, non_running_node):
-        #Todo: Update status in Consul for Node and Resource ID.
+        # Todo: Update status in Consul for Node and Resource ID.
         pass
 
+    @staticmethod
+    async def rpm_update(command):
+        """
 
+        :param command:
+        :return:
+        """
+        resource_id = command.options.get("resource_id")
+        file_path = f"/opt/seagate/cortx/updates/cortx-{resource_id}*"
+        commands = ["csm_setup reset --hard",
+                    f"rpm -i -U --force {file_path}",
+                    "csm_setup post_install",
+                    "csm_setup config",
+                    "csm_setup init"]
+        for each_command in commands:
+            proc = SimpleProcess(each_command)
+            _output, _err, _returncode = proc.run()
+            if _returncode != 0:
+                raise Exception(f"Command Failed With Error {_err}")
 
     @staticmethod
     async def begin_update(command=None):
@@ -118,7 +136,7 @@ class UpdateCSM:
                 raise Exception("Invalid Node.")
             non_running_node = (set(node_list).difference({running_node})).pop()
             await UpdateCSM.ban_resource(resource_id, non_running_node)
-            await UpdateCSM.connect_and_update(resource_id, non_running_node)
+            await UpdateCSM.connect_and_update(resource_id.replace('-', '_'), non_running_node)
             await UpdateCSM.clear_resource()
             await UpdateCSM.move_resource(resource_id, non_running_node)
             await UpdateCSM.add_update_status(resource_id, non_running_node)

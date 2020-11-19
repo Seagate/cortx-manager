@@ -1,0 +1,24 @@
+{
+  "name": "update_csm",
+  "description": "Update Csm to a latest Version.",
+  "args": [
+    {
+          "flag": "resource_id",
+          "suppress_help": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+       "comm": {
+       "type": "direct",
+        "target": "csm.cli.scripts",
+        "method": "rpm_update",
+        "class": "UpdateCSM",
+        "is_static": true
+      }
+
+    }
