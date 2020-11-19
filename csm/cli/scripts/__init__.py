@@ -14,3 +14,4 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .system import System
+from .update_csm_component import UpdateCSM

@@ -11,5 +11,11 @@
   },
   "system": {
     "startup": true
+  },
+  "update_csm_component": {
+    "update": true
+  },
+  "update_csm": {
+    "update": true
   }
 }

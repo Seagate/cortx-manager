@@ -53,10 +53,10 @@ CSM_INSTALL_BASE_DIR = BASE_DIR + '/csm'
 CSM_SCHEMA_BASE_DIR = CSM_INSTALL_BASE_DIR + '/schema'
 COMMAND_DIRECTORY = "{}/cli/schema".format(CSM_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
-NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
+NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate", "update_csm", "update_csm_component"
                     "-h", "--help", "system"]
 EXCLUDED_COMMANDS = ['csm_setup']
-HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
+HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate", "update_csm", "update_csm_component"]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
 RUNNING_NODES_START_TEXT = 'Running Nodes'
