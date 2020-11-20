@@ -139,11 +139,10 @@ class PcsHAFramework(HAFramework):
                           user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
                                        "MAINTENANCE.shutdown_cron_time")
-        Log.info(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
+        Log.debug(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
         cron_job_obj = CronJob(self._user)
-        cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
-        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} current system time {time.asctime()}")
-        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT, cron_time)
+        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT,
+                                    cron_job_obj.create_run_time(seconds=shutdown_cron_time))
         return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
 class ResourceAgent:
