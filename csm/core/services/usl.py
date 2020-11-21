@@ -20,6 +20,7 @@ from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
 from datetime import date
+from ipaddress import ip_address
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -47,7 +48,6 @@ from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
-from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from cortx.utils.security.secure_storage import SecureStorage
 from cortx.utils.security.cipher import Cipher
 
@@ -669,10 +669,10 @@ class UslService(ApplicationService):
             network interface.
         """
         try:
-            conf = await self._provisioner.get_network_configuration()
-            ip = conf.cluster_ip
-        except NetworkConfigFetchError as e:
-            reason = 'Could not obtain network configuration from provisioner'
+            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.ip_address')
+            ip_address(ip)
+        except ValueError as e:
+            reason = 'Invalid IP address config'
             Log.error(f'{reason}: {e}')
             raise CsmInternalError(reason) from e
         try:
