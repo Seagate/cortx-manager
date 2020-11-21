@@ -17,6 +17,7 @@ from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.process import SimpleProcess
 
+import functools
 import json
 
 
@@ -26,6 +27,7 @@ class PillarDataFetchError(InvalidRequest):
 
 class SaltWrappers:
     @staticmethod
+    @functools.lru_cache()
     def get_salt_call(method, key, on_salt_error='raise'):
         if on_salt_error not in ('raise', 'log'):
             raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
@@ -47,6 +49,7 @@ class SaltWrappers:
             return result['local']
 
     @staticmethod
+    @functools.lru_cache()
     def get_salt(method, key, minion_id=None, on_salt_error='raise'):
         if on_salt_error not in ('raise', 'log'):
             raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
