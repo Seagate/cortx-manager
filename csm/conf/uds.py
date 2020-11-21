@@ -13,7 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from csm.common.conf import Conf
 from csm.conf.salt import SaltWrappers
+from csm.core.blogic import const
+
 from pathlib import Path
 from pwd import getpwnam
 from shutil import copyfile, rmtree
@@ -41,8 +44,40 @@ class UDSConfigGenerator:
     UDS_USERNAME = 'uds'
 
     @staticmethod
-    def generate_haproxy_config():
-        cluster_ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
+    def get_public_ip():
+        ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
+        return ip
+
+    @classmethod
+    def generate_csm_config(cls, mock=False):
+        if mock:
+            public_ip = None
+        else:
+            public_ip = cls.get_public_ip()
+        return {
+            'UDS.ip_address': f'{public_ip}',
+        }
+
+    @staticmethod
+    def write_csm_config(entries):
+        for k, v in entries.items():
+            Conf.set(const.CSM_GLOBAL_INDEX, k, v)
+        Conf.save(const.CSM_GLOBAL_INDEX)
+
+    @classmethod
+    def update_csm_config(cls):
+        entries = cls.generate_csm_config()
+        cls.write_csm_config(entries)
+
+    @classmethod
+    def remove_csm_config(cls):
+        keys = cls.generate_csm_config(mock=True).keys()
+        for key in keys:
+            Conf.delete(const.CSM_GLOBAL_INDEX, key)
+
+    @classmethod
+    def generate_haproxy_config(cls):
+        public_ip = cls.get_public_ip()
         minions = list(SaltWrappers.get_salt('grains.get', 'id').values())
         # Codacy was complaining about the use of `assert` below :(
         # assert len(minions) == 2
@@ -53,7 +88,7 @@ frontend uds-frontend
     option tcplog
     bind 127.0.0.1:5000
     bind ::1:5000
-    bind {cluster_ip}:5000
+    bind {public_ip}:5000
     acl udsbackendacl dst_port 5000
     use_backend uds-backend if udsbackendacl
 
@@ -157,10 +192,12 @@ backend uds-backend
 
     @classmethod
     def apply(cls):
+        cls.update_csm_config()
         cls.update_haproxy_config()
         cls.update_uds_config()
 
     @classmethod
     def delete(cls):
+        cls.remove_csm_config()
         cls.remove_haproxy_config()
         cls.remove_uds_config()
