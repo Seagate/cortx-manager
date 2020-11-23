@@ -586,7 +586,14 @@ class HealthAppService(ApplicationService):
         if not self._is_map_updated_with_db:
             Log.debug(f"Updating health schema_with db.")
             try:
-                alerts = await self.alerts_repo.retrieve_by_range(create_time_range=None)
+                """
+                For fetching new and active alerts we need to make show_all and 
+                show_active parameters as false.
+                This will get all the alerts except for those which completed
+                there life cycle(i.e ack and resolved = True)
+                """
+                alerts = await self.alerts_repo.retrieve_by_range(create_time_range=None, show_all=False, show_active=False)
+                Log.debug(f"Number of alerts fetched for updating health map : {len(alerts)}")
                 for alert in alerts:
                     self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                 self._is_map_updated_with_db = True
