@@ -298,7 +298,7 @@ class UslService(ApplicationService):
             reason = 'UDS base URL is not valid'
             Log.error(reason)
             raise CsmInternalError(desc=reason)
-        # TODO validate registration body
+        # XXX Registration body is currently validated by view and by UDS
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
         # FIXME add relevant certificates to SSL context instead of disabling validation
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
