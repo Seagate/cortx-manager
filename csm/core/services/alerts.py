@@ -224,12 +224,13 @@ class AlertRepository(IAlertStorage):
         1. Fetching New alerts (resolved and ack both false)
         """
         combined_alert_list = []
+        limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
         new_alerts_list = await self.retrieve_by_range(
             None, #time_range
             True, #show_all
             None, #severity
             None, #SortBy
-            None, #limits
+            limits, #limits
             False, #resolved,
             False, #acknowledged,
             False #show_active
@@ -243,7 +244,7 @@ class AlertRepository(IAlertStorage):
             True, #show_all
             None, #severity
             None, #SortBy
-            None, #limits
+            limits, #limits
             None, #resolved,
             None, #acknowledged,
             True  #show_active
@@ -260,7 +261,7 @@ class AlertRepository(IAlertStorage):
             True, #show_all
             None, #severity
             None, #SortBy
-            None, #limits
+            limits, #limits
             True, #resolved,
             True, #acknowledged,
             False  #show_active
