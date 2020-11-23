@@ -47,7 +47,7 @@ class SystemStatusService(ApplicationService):
                 resp[each_resource] = ret
             except VError as ex:
                 Log.error(f"Status check failed for {each_resource} exception : {ex}")
-                resp[each_resource] = f"{ex}"
+                resp[each_resource] = f"{ex.desc}"
                 resp[const.SYSTEM_STATUS_SUCCESS] = False
         return resp
 
