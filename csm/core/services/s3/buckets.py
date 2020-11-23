@@ -126,7 +126,7 @@ class S3BucketService(S3BaseService):
             await s3_client.delete_bucket(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        return {"message": "Bucket Deleted Successfully."}
+        return {"message": f"Bucket {bucket_name} Deleted Successfully."}
     @Log.trace_method(Log.INFO)
     async def get_bucket_policy(self, s3_session: S3Credentials,
                                 bucket_name: str) -> Dict:

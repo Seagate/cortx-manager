@@ -604,3 +604,4 @@ STORAGE_TYPE_VIRTUAL = "virtual"
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
 ES_RETRY = "ELASTICSEARCH.retry"
+ES_RECORD_LIMIT = 1000
