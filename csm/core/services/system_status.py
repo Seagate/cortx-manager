@@ -39,7 +39,7 @@ class SystemStatusService(ApplicationService):
         """
 
         resp = dict()
-        resp['success'] = True
+        resp[const.SYSTEM_STATUS_SUCCESS] = True
         for each_resource in check_list:
             Log.debug(f" each resource: {each_resource}")
             try:
@@ -48,29 +48,29 @@ class SystemStatusService(ApplicationService):
             except VError as ex:
                 Log.error(f"Status check failed for {each_resource} exception : {ex}")
                 resp[each_resource] = f"{ex}"
-                resp['success'] = False
+                resp[const.SYSTEM_STATUS_SUCCESS] = False
         return resp
 
     async def _get_consul_status(self) -> str:
         """
         Return status of consul
         """
-        Log.info("Get consul status")
+        Log.info("Getting consul status")
         # get host and port of consul database from conf
         host = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.host')
         port = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.port')
         # Validation throws exception on failure
         ConsulV().validate('service', [host, port])
-        return "success"
+        return const.SYSTEM_STATUS_SUCCESS
 
     async def _get_elasticsearch_status(self) -> str:
         """
         Return status of elasticsearch
         """
-        Log.info("Get elasticsearch status")
+        Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
         host = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.host')
         port = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.port')
         # Validation throws exception on failure
         ElasticsearchV().validate('service', [host, port])
-        return "success"
+        return const.SYSTEM_STATUS_SUCCESS

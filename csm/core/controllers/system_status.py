@@ -36,7 +36,7 @@ class SystemStatusAllView(CsmView):
         """
         Log.debug("Handling all system status request")
         resp =  await self._service.check_status([const.SYSTEM_STATUS_CONSUL, const.SYSTEM_STATUS_ELASTICSEARCH])
-        if not resp['success']:
+        if not resp[const.SYSTEM_STATUS_SUCCESS]:
             return CsmResponse(resp, status=503)
         return resp
 
@@ -52,13 +52,13 @@ class SystemStatusView(CsmView):
         Fetch  system status.
         """
         Log.debug("Handling system status request")
-        # action = self.request.match_info[const.PREFLIGHT_CONSUL]
         try:
             db_name = GetSystemStatusSchema().load(self.request.match_info,
                                         unknown=const.MARSHMALLOW_EXCLUDE)
+            Log.debug(f"Handling system status request for {db_name}")
         except ValidationError as e:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(e)}")
         resp =  await self._service.check_status([db_name['db_name']])
-        if not resp['success']:
+        if not resp[const.SYSTEM_STATUS_SUCCESS]:
             return CsmResponse(resp, status=503)
         return resp
