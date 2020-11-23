@@ -143,6 +143,9 @@ class AlertRepository(IAlertStorage):
                 resolved, acknowledged, show_active)
         query = Query().filter_by(query_filter)
 
+        if not limits:
+            limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+
         if limits and limits.offset:
             query = query.offset(limits.offset)
 
@@ -215,6 +218,9 @@ class AlertRepository(IAlertStorage):
             Or(Compare(AlertModel.acknowledged, '=', False), \
             Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(alert_filter)
+        limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+        query = query.offset(limits.offset)
+        query = query.limit(limits.limit)
         return await self.db(AlertModel).get(query)
 
     async def fetch_alert_for_support_bundle(self):
@@ -224,13 +230,12 @@ class AlertRepository(IAlertStorage):
         1. Fetching New alerts (resolved and ack both false)
         """
         combined_alert_list = []
-        limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
         new_alerts_list = await self.retrieve_by_range(
             None, #time_range
             True, #show_all
             None, #severity
             None, #SortBy
-            limits, #limits
+            None, #limits
             False, #resolved,
             False, #acknowledged,
             False #show_active
@@ -244,7 +249,7 @@ class AlertRepository(IAlertStorage):
             True, #show_all
             None, #severity
             None, #SortBy
-            limits, #limits
+            None, #limits
             None, #resolved,
             None, #acknowledged,
             True  #show_active
@@ -261,7 +266,7 @@ class AlertRepository(IAlertStorage):
             True, #show_all
             None, #severity
             None, #SortBy
-            limits, #limits
+            None, #limits
             True, #resolved,
             True, #acknowledged,
             False  #show_active
