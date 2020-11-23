@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import sys
 import crypt
 import pwd
 import grp
@@ -42,6 +41,7 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
+from csm.conf.uds import UDSConfigGenerator
 
 # try:
 #     from salt import client
@@ -447,29 +447,15 @@ class Setup:
 
     def _set_rmq_cluster_nodes(self):
         """
-        This method gets the nodes names of the the rabbitmq cluster and writes
-        in the config.
+        Obtains minion names and use them to configure RabbitMQ nodes on the config file.
         """
-        nodes = []
-        nodes_found = False
         try:
-            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
-                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
-                for line in cmd_output[0].split('\n'):
-                    if const.RUNNING_NODES in line:
-                        nodes = re.findall(r"rabbit@([-\w]+)", line)
-                        nodes_found = True
-                if nodes_found:
-                    break
-                time.sleep(2**count)
-            if nodes:
-                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
-                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
-                Conf.save(const.CSM_GLOBAL_INDEX)
-            else:
-                raise CsmSetupError(f"Unable to fetch RMQ cluster nodes info.")
+            minions = list(SaltWrappers.get_salt(const.GRAINS_GET, const.ID).values())
+            minions.sort()
+            conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
+            Conf.set(const.CSM_GLOBAL_INDEX, conf_key, minions)
+            Conf.save(const.CSM_GLOBAL_INDEX)
         except Exception as e:
-
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
     @staticmethod
@@ -747,6 +733,7 @@ class CsmSetup(Setup):
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
+            UDSConfigGenerator.apply()
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -809,6 +796,7 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
+                UDSConfigGenerator.delete()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()
