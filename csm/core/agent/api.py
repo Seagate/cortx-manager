@@ -145,19 +145,19 @@ class CsmRestApi(CsmApi, ABC):
         return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} User-Agent:{user_agent}")
     
     @staticmethod
-    def process_audit_log(resp, request, status):
+    def process_audit_log(resp, request):
         url = request.path
-        if (not request.app[const.USL_POLLING_LOG]
-                and url.startswith('/usl/')
-                and url != "/usl/v1/registerDevice"):
+        if (not request.app["usl_polling_log"]) \
+                and ("/usl/" in url) \
+                and (url not in ["/usl/v1/registerDevice"]):
             return
         audit = CsmRestApi.http_request_to_log_string(request)
         if (getattr(request, "session", None) is not None
                 and getattr(request.session, "credentials", None) is not None):
             Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'{audit} RC: {status}')
+                      f'{audit} RC: {resp["error_code"]}')
         else:
-            Log.audit(f'{audit} RC: {status}')
+            Log.audit(f'{audit} RC: {resp["error_code"]}')
 
     @staticmethod
     def error_response(err: Exception, request) -> dict:
@@ -183,8 +183,8 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
-        
-        CsmRestApi.process_audit_log(resp, request, resp['error_code'])
+     
+        CsmRestApi.process_audit_log(resp, request)
         return resp
 
     @staticmethod
@@ -318,7 +318,12 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            CsmRestApi.process_audit_log(resp, request, status)
+            audit = CsmRestApi.http_request_to_log_string(request)
+            if request.session is not None:
+                Log.audit(f'User: {request.session.credentials.user_id} '
+                          f'{audit} RC: {status}')
+            else:
+                Log.audit(f'{audit} RC: {status}')
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
