@@ -752,11 +752,8 @@ class S3Client(BaseClient):
     async def delete_bucket(self, bucket_name: str):
         Log.debug(f"delete bucket: {bucket_name}")
         bucket = await self._loop.run_in_executor(self._executor, self.connection.Bucket, bucket_name)
-        # NOTE: according to boto3 documentation all of the keys should be deleted before
-        #  bucket deletion itself
-        for key in bucket.objects.all():
-            await self._loop.run_in_executor(self._executor, key.delete)
-
+        # Assume that the bucket is empty, if not, the error will be returned.
+        # It is user's responsibility to empty the bucket before the deletion.
         await self._loop.run_in_executor(self._executor, bucket.delete)
 
     @Log.trace_method(Log.DEBUG)
