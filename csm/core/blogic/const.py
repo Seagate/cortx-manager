@@ -437,6 +437,7 @@ SYSTEM_STATUS_SERVICE = "system_status_service"
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
 SYSTEM_STATUS_ELASTICSEARCH = 'es'
+SYSTEM_STATUS_SUCCESS = 'success'
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
