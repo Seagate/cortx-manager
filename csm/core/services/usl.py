@@ -42,7 +42,7 @@ from csm.core.services.usl_net_ifaces import get_interface_details
 from csm.core.services.usl_certificate_manager import (
     USLDomainCertificateManager, USLNativeCertificateManager, CertificateError
 )
-from csm.core.services.usl_s3 import UslS3BucketsController
+from csm.core.services.usl_s3 import UslS3BucketsManager
 from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from cortx.utils.security.secure_storage import SecureStorage
 from cortx.utils.security.cipher import Cipher
@@ -337,7 +337,7 @@ class UslService(ApplicationService):
         credentials = registration_info['accessParams']['credentials']
         access_key = credentials['accessKey']
         secret_access_key = credentials['secretKey']
-        buckets_controller = UslS3BucketsController(
+        buckets_controller = UslS3BucketsManager(
             s3_buckets_service, account_name, access_key, secret_access_key)
         bucket_name = registration_info['internalCortxParams']['bucketName']
         await buckets_controller.enable_lyve_pilot(bucket_name)
