@@ -143,7 +143,7 @@ class S3AccountService(S3BaseService):
         service_urls = ServiceUrls(self._provisioner)
         resp = {
             "s3_accounts": accounts_list,
-            "s3_urls": await service_urls.get_s3_url()
+            "s3_urls": await service_urls.get_s3_uris()
         }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
