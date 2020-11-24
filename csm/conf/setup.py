@@ -41,7 +41,6 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
-from csm.conf.uds import UDSConfigGenerator
 
 # try:
 #     from salt import client
@@ -733,7 +732,6 @@ class CsmSetup(Setup):
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
-            UDSConfigGenerator.apply()
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -796,7 +794,6 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
-                UDSConfigGenerator.delete()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()
