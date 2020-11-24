@@ -31,17 +31,17 @@ class SystemStatusService(ApplicationService):
         self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status,
             const.SYSTEM_STATUS_ELASTICSEARCH: self._get_elasticsearch_status}
 
-    async def check_status(self, check_list):
+    async def check_status(self, resources):
         """
         Validate status of resource
-        :param check_list: list of resources.
+        :param resources: list of resources.
         :return:
         """
 
         resp = dict()
         resp[const.SYSTEM_STATUS_SUCCESS] = True
-        for each_resource in check_list:
-            Log.debug(f" each resource: {each_resource}")
+        for each_resource in resources:
+            Log.debug(f"Checking access for resource: {each_resource}")
             try:
                 ret = await self._action_map.get(each_resource)()
                 resp[each_resource] = ret
