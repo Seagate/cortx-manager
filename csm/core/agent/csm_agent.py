@@ -48,6 +48,8 @@ class CsmAgent:
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
+
+        Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -66,6 +68,11 @@ class CsmAgent:
         # settting usl polling 
         usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
         CsmRestApi._app["usl_polling_log"] = usl_polling_log
+
+        # system status
+        system_status_service = SystemStatusService()
+        CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
+
         #Heath configuration
         health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
@@ -255,6 +262,7 @@ if __name__ == '__main__':
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
+    from csm.core.services.system_status import SystemStatusService
     try:
         # try:
         #     from salt import client
