@@ -153,7 +153,7 @@ backend uds-backend
 
     @classmethod
     def remove_uds_config(cls):
-        rmtree(cls.UDS_CONFIG_DIR)
+        rmtree(cls.UDS_CONFIG_DIR, ignore_errors=True)
 
     @classmethod
     def apply(cls):

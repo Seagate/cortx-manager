@@ -79,6 +79,7 @@ class ComponentsBundle:
             output, err, return_code = cmd_proc.run()
             Log.debug(f"Command Output -> {output} {err}, {return_code}")
             if return_code != 0:
+                Log.error(f"Command Output -> {output} {err}, {return_code}")
                 ComponentsBundle.publish_log(
                     f"Bundle generation failed for {component}", ERROR,
                     bundle_id, node_name, comment)
