@@ -684,7 +684,7 @@ class AlertMonitorService(Service, Observable):
         prev_alert = None
         for count in range(0, self._es_retry):
             try:
-                Log.info("Fetching previous alert to check the state and severity."
+                Log.info("Fetching previous alert to check the state and severity.")
                 prev_alert = self._run_coroutine\
                     (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
                 return prev_alert
