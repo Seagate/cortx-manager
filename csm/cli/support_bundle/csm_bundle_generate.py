@@ -16,7 +16,6 @@
 import os
 import glob
 import errno
-from copy import deepcopy
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar, Json
 from csm.common.conf import Conf
@@ -73,7 +72,7 @@ class CSMBundle:
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(temp_path, f"{component_name}_{bundle_id}.tar.gz")
         files_to_compress = list()
-        for index, file_path_pattern in enumerate(component_data[component_name]):
+        for file_path_pattern in component_data[component_name]:
             # Check all the files matching naming pattern and returns list of them.
             matching_files = glob.glob(file_path_pattern)
             if matching_files:
