@@ -14,7 +14,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import glob
 import errno
+from copy import deepcopy
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar, Json
 from csm.common.conf import Conf
@@ -70,8 +72,19 @@ class CSMBundle:
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
         tar_file_name = os.path.join(temp_path, f"{component_name}_{bundle_id}.tar.gz")
-        if all(map(os.path.exists, component_data[component_name])):
-            Tar(tar_file_name).dump(component_data[component_name])
+        files_to_compress = list()
+        for index, file_path_pattern in enumerate(component_data[component_name]):
+            # Check all the files matching naming pattern and returns list of them.
+            matching_files = glob.glob(file_path_pattern)
+            if matching_files:
+                files_to_compress.extend(matching_files)
+            elif os.path.exists(file_path_pattern):
+                # Check if the File exists if not a pattern in the string.
+                files_to_compress.extend(file_path_pattern)
+            else:
+                Log.warn(f"Log File Matching {file_path_pattern} skipped.")
+        if files_to_compress:
+            Tar(tar_file_name).dump(files_to_compress)
         else:
             raise CsmError(rc = errno.ENOENT,
                            desc = f"Component log missing: {component_data[component_name]}")
