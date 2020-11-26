@@ -14,6 +14,13 @@
           "help": "Specify the Reason for Generating Support Bundle."
         },
         {
+          "flag": "--os",
+          "action": "store_const",
+          "help": "Generate Only OS Logs",
+          "default": "false",
+          "const": "true"
+        },
+        {
           "flag": "-c",
           "dest": "components",
           "type": "str",
@@ -25,6 +32,7 @@
             "motr",
             "hare",
             "provisioner",
+            "os",
             "health_map",
             "manifest",
             "uds",
