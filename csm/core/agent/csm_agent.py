@@ -204,6 +204,7 @@ class CsmAgent:
 
     @staticmethod
     def run():
+        Log.info("Test message")
         https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
