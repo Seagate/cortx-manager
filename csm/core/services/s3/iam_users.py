@@ -101,7 +101,7 @@ class IamUsersService(S3BaseService):
                                        for each_user in iam_users_list["iam_users"]
                                        if not vars(each_user)["user_name"] == "root" ]
         service_urls = ServiceUrls(self._provisioner)
-        iam_users_list["s3_urls"] = await service_urls.get_s3_url()
+        iam_users_list["s3_urls"] = await service_urls.get_s3_uris()
         return iam_users_list
 
     @Log.trace_method(Log.DEBUG)

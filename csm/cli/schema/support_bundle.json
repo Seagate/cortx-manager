@@ -29,7 +29,7 @@
             "csm",
             "sspl",
             "s3server",
-            "core",
+            "motr",
             "hare",
             "provisioner",
             "os",
