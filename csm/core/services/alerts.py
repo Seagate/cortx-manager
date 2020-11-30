@@ -663,7 +663,7 @@ class AlertMonitorService(Service, Observable):
             Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
             Log.info("Joining Alert monitor thread")
-            self._monitor_thread.join()
+            self._monitor_thread.join(timeout=2.0)
             self._thread_started = False
             self._thread_running = False
             Log.info("Stopped Alert monitor thread")
