@@ -272,3 +272,4 @@ class SupportBundle:
                                          const.SUPPORT_BUNDLE)
         return Response(output = support_bundle_config,
                         rc = CSM_OPERATION_SUCESSFUL)
+

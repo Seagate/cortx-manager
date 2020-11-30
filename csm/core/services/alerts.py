@@ -217,6 +217,57 @@ class AlertRepository(IAlertStorage):
         query = Query().filter_by(alert_filter)
         return await self.db(AlertModel).get(query)
 
+    async def fetch_alert_for_support_bundle(self):
+        """
+        Fetches New and Active alerts except for IEM alerts.
+        Fetches alerts whose life cycle is completed(resovled + ack) for 7 days.
+        1. Fetching New alerts (resolved and ack both false)
+        """
+        combined_alert_list = []
+        new_alerts_list = await self.retrieve_by_range(
+            None, #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            False, #resolved,
+            False, #acknowledged,
+            False #show_active
+        )
+        combined_alert_list.extend(new_alerts_list)
+        """
+        2. Fetching active alerts (either resolved or ack) is true.
+        """
+        active_alerts_list = await self.retrieve_by_range(
+            None, #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            None, #resolved,
+            None, #acknowledged,
+            True  #show_active
+        )
+        combined_alert_list.extend(active_alerts_list)
+        """
+        3. Fetching alerts that have been resolved and ack both.
+        This means that the alert has completed the life cycle.
+        For these alerts we will only fetch the data for last 7 days.
+        """
+        start_time = datetime.utcnow() - timedelta(**{"days": 7})
+        resolved_alerts_list = await self.retrieve_by_range(
+            DateTimeRange(start_time, None), #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            True, #resolved,
+            True, #acknowledged,
+            False  #show_active
+        )
+        combined_alert_list.extend(resolved_alerts_list)
+        return [alert.to_primitive_filter_empty() for alert in combined_alert_list if not alert.module_type == const.IEM]
+
 class AlertsAppService(ApplicationService):
     """
         Provides operations on alerts without involving the domain specifics
