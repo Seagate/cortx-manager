@@ -296,6 +296,7 @@ class AmqpChannel(Channel):
         """
         try:
             if self._connection:
+                Log.info("Start: AmqpChannel's disconnect method")
                 consumer_tag = const.CONSUMER_TAG
                 self._channel.basic_cancel(consumer_tag=consumer_tag)
                 self._channel.stop_consuming()
@@ -303,7 +304,7 @@ class AmqpChannel(Channel):
                 self._connection.close()
                 self._channel = None
                 self._connection = None
-                Log.debug(f"RabbitMQ connection closed.")
+                Log.info("End: AmqpChannel's disconnect method. RabbitMQ connection closed.")
         except Exception as e:
             Log.error(f"Error closing RabbitMQ connection. {e}")
 
@@ -537,10 +538,11 @@ class AmqpComm(Comm):
 
     def disconnect(self):
         try:
-            Log.debug(f"Disconnecting AMQPSensor RMQ communication")
+            Log.info("Start : Calling AMQP's disconnect method")
             self._is_disconnect = True
             self._outChannel.disconnect()
             self._inChannel.disconnect()
+            Log.info("End : Calling AMQP's disconnect method")
         except Exception as e:
             Log.exception(e)
 
@@ -574,16 +576,19 @@ class AmqpActuatorComm(Comm):
         raise Exception('acknowledge not implemented for AMQPActuator Comm')
 
     def stop(self):
+        Log.info("Start: AmqpActuator stop initiated.")
         self.disconnect()
+        Log.info("End: AmqpActuator stop finished.")
 
     def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented for AMQPActuator Comm')
 
     def disconnect(self):
         try:
-            Log.debug(f"Disconnecting AMQPActuator RMQ communication")
+            Log.info("Start: Disconnecting AMQPActuator RMQ communication")
             self._outChannel_node1.disconnect()
             self._outChannel_node2.disconnect()
+            Log.info("Start: Disconnecting AMQPActuator RMQ communication")
         except Exception as e:
             Log.exception(e)
 

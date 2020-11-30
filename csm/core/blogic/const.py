@@ -57,8 +57,6 @@ NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
 EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
-RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
-RUNNING_NODES = 'running_nodes'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -422,6 +420,12 @@ S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
+SYSTEM_STATUS_SERVICE = "system_status_service"
+
+# System Status flight
+SYSTEM_STATUS_CONSUL = 'consul'
+SYSTEM_STATUS_ELASTICSEARCH = 'es'
+SYSTEM_STATUS_SUCCESS = 'success'
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
@@ -555,7 +559,6 @@ COMMON = "common"
 MAINTENANCE = "MAINTENANCE"
 SUPPORT_BUNDLE_SHELL_COMMAND = "sh {csm_path}/cli/schema/create_support_bundle.sh {args}"
 CORTXCLI = "cortxcli"
-RMQ_CLUSTER_STATUS_RETRY_COUNT = 3
 SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
@@ -601,3 +604,4 @@ STORAGE_TYPE_VIRTUAL = "virtual"
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
 ES_RETRY = "ELASTICSEARCH.retry"
+ES_RECORD_LIMIT = 1000
