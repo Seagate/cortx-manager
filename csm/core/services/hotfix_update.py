@@ -88,6 +88,7 @@ class HotfixApplicationService(UpdateService):
             raise InvalidRequest("You must upload an image before starting the software update.")
 
         software_update_model.provisioner_id = await self._provisioner.trigger_software_update(software_update_model.file_path)
+        Log.debug(f"Job id for software update: {software_update_model.provisioner_id}.")
         software_update_model.mark_started()
         Log.debug(software_update_model.to_printable())
         await self._update_repo.save_model(software_update_model)
