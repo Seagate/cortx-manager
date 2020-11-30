@@ -13,32 +13,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-#Component Commands file Path.
-COMMANDS:
-  health_map:
-    - '/opt/seagate/health_view/conf/setup.yaml'
-  os:
-    - '/opt/seagate/os/conf/setup.yaml'
-  csm:
-    - '<CORTX_PATH>/cli/conf/setup.yaml'
-  sspl:
-    - '<CORTX_PATH>/sspl/conf/setup.yaml'
-  s3server:
-    - '<CORTX_PATH>/s3/conf/setup.yaml'
-  core:
-    - '<CORTX_PATH>/core/conf/setup.yaml'
-  hare:
-    - '<CORTX_PATH>/hare/conf/setup.yaml'
-    - '<CORTX_PATH>/hare/conf/setup-ha.yaml'
-  provisioner:
-    - '<CORTX_PATH>/provisioner/conf/setup.yaml'
-  manifest:
-    - '<CORTX_PATH>/sspl/conf/manifest.yaml'
-  alerts:
-    - '<CORTX_PATH>/cli/conf/alerts_setup.yaml'
-  uds:
-    - '<CORTX_PATH>/cli/conf/uds_setup.yaml'
-  elasticsearch:
-    - '<CORTX_PATH>/cli/conf/elasticsearch_setup.yaml'
-  ha:
-    - '/opt/seagate/cortx/ha/conf/setup.yaml'
+from csm.core.controllers.view import CsmView, CsmAuth
+from cortx.utils.log import Log
+from csm.core.blogic import const
+
+@CsmView._app_routes.view("/api/v1/appliance_info")
+@CsmAuth.public
+class ApplianceInfoView(CsmView):
+    def __init__(self, request):
+        super(ApplianceInfoView, self).__init__(request)
+        self._service = self.request.app[const.APPLIANCE_INFO_SERVICE]
+        self._service_dispatch = {}
+
+    ''' GET REST implementation for fetching appliance information '''
+    async def get(self):
+        Log.debug("Handling appliance information fetch request")
+        return await self._service.get_appliance_info()
