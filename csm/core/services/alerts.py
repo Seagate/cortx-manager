@@ -656,7 +656,7 @@ class AlertMonitorService(Service, Observable):
         try:
             Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
-            self._monitor_thread.join()
+            self._monitor_thread.join(timeout=2.0)
             self._thread_started = False
             self._thread_running = False
         except Exception as e:
