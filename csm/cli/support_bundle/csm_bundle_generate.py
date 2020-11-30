@@ -16,9 +16,12 @@
 import os
 import errno
 from csm.core.blogic import const
-from csm.common.payload import Yaml, Tar
+from csm.common.payload import Yaml, Tar, Json
 from csm.common.conf import Conf
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import CsmError
+from cortx.utils.log import Log
+from csm.core.services.alerts import AlertRepository
 
 class CSMBundle:
     """
@@ -54,6 +57,15 @@ class CSMBundle:
                                             es_gc_log_path,
                                             es_indexing_log_path,
                                             es_search_log_path]}
+        if component_name == "alerts":
+            alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_filename")
+            # Fetch alerts for support bundle.
+            alerts_data = await CSMBundle.fetch_and_save_alerts()
+            alerts_file_path = os.path.join(path, alerts_filename)
+            obj_alert_json = Json(alerts_file_path)
+            obj_alert_json.dump(alerts_data)
+            component_data["alerts"] = [alerts_file_path]
+
         temp_path = os.path.join(path, component_name)
         os.makedirs(temp_path, exist_ok = True)
         # Generate Tar file for Logs Folder.
@@ -64,3 +76,20 @@ class CSMBundle:
             raise CsmError(rc = errno.ENOENT,
                            desc = f"Component log missing: {component_data[component_name]}")
 
+    @staticmethod
+    async def fetch_and_save_alerts():
+        """
+        Fetches the alerts from es db and creates a json file
+        :param command: Csm_cli Command Object :type: command
+        :return: None
+        """
+        alerts =[]
+        try:
+            conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
+            db = DataBaseProvider(conf)
+            repo = AlertRepository(db)
+            alerts = await repo.fetch_alert_for_support_bundle()
+        except Exception as ex:
+            Log.error(f"Error occured while fetching alerts: {ex}")
+            alerts = [{"Error": "Internal error: Could not fetch alerts."}]
+        return alerts

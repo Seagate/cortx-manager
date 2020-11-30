@@ -28,4 +28,9 @@ models:
     config:
         es_db:
             collection: "supportbundle"
+-   import_path: "csm.core.blogic.models.alerts.AlertModel"
+    database: "es_db"
+    config:
+        es_db:
+            collection: "alerts"
 
