@@ -80,7 +80,7 @@ class S3AccountsListView(S3BaseView):
             with self._guard_service():
                 return await self._service.create_account(**account_body)
         else:
-            raise InvalidRequest("CSM user with same username as passed S3 account name already exists")
+            raise InvalidRequest("CSM user with same username already exists. S3 account name cannot be similar to an existing CSM user name")
 
 
 @CsmView._app_routes.view("/api/v1/s3_accounts/{account_id}")
@@ -89,7 +89,7 @@ class S3AccountsView(S3AuthenticatedView):
         super().__init__(request, 's3_account_service')
         self.account_id = self.request.match_info["account_id"]
         if not self._s3_session.user_id == self.account_id:
-            raise CsmPermissionDenied("Access denied. Verify account name.")
+            raise CsmPermissionDenied("Access denied. Cannot modify another S3 account.")
 
     """
     GET REST implementation for S3 account delete request
