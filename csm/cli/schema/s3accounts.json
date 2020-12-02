@@ -103,6 +103,8 @@
             "headers":{
               "account_name":"Account Name",
               "account_email":"Account Email",
+              "account_id":"Account Id",
+              "canonical_id":"Canonical Id",
               "access_key":"Permanent Access Key",
               "secret_key":"Permanent Secret Key"
             }
