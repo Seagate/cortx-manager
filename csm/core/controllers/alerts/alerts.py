@@ -59,7 +59,7 @@ class AlertsQueryParameter(Schema):
             dur = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
             if time_format not in dur.keys():
                 raise InvalidRequest(
-                    "Invalid Parameter for Duration", ALERTS_MSG_INVALID_DURATION)
+                    "Invalid value for duration", ALERTS_MSG_INVALID_DURATION)
 
     class Meta:
         strict = False
@@ -97,7 +97,7 @@ class AlertsListView(CsmView):
         try:
             body = await self.request.json()
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Request body missing or invlaid json")
+            raise InvalidRequest("Request body missing or invalid json")
         return await self.alerts_service.update_all_alerts(body)
 
 
@@ -123,7 +123,7 @@ class AlertsView(CsmView):
         try:
             body = alerts_body.load(body_json, partial=True, unknown='EXCLUDE')
         except ValidationError as val_err:
-            raise InvalidRequest("Invalid Parameter for alerts", str(val_err))
+            raise InvalidRequest("Invalid parameter for alerts", str(val_err))
         
         if not body:
             raise InvalidRequest("Invalid Parameter for alerts", message_args=body_json)

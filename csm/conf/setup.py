@@ -453,6 +453,12 @@ class Setup:
         """
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f'\
+                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
+                Setup._run_cmd(sed_cmd)
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
@@ -466,6 +472,11 @@ class Setup:
             Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
+                Setup._run_cmd(sed_cmd)
             Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
             raise CsmSetupError("logrotate failed. %s dir missing." %const.LOGROTATE_DIR_DEST)
@@ -502,19 +513,27 @@ class Setup:
 
     def _set_rmq_cluster_nodes(self):
         """
-        This method gets the nodes names of the the rabbitmq cluster and writes
-        in the config.
+        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
         """
+
         nodes = []
         nodes_found = False
         try:
             for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
                 cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
+                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
                 for line in cmd_output[0].split('\n'):
                     if const.RUNNING_NODES in line:
                         nodes = re.findall(r"rabbit@([-\w]+)", line)
                         nodes_found = True
                 if nodes_found:
+                    break
+                # The code below is used to parse CLI output for RMQ 3.8.9 or above
+                result = re.search(
+                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
+                    cmd_output[0], re.DOTALL)
+                if result is not None:
+                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
                     break
                 time.sleep(2**count)
             if nodes:

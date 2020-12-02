@@ -34,7 +34,7 @@ class S3BaseView(CsmView):
 
         self._service = request.app.get(service_name, None)
         if self._service is None:
-            raise CsmInternalError(desc=f"No such service '{service_name}'")
+            raise CsmInternalError(desc=f"Invalid service '{service_name}'")
 
     @contextmanager
     def _guard_service(self):

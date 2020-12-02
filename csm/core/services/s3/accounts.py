@@ -78,6 +78,8 @@ class S3AccountService(S3BaseService):
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,
+            "account_id": account.account_id,
+            "canonical_id": account.canonical_id,
             "access_key": account.access_key_id,
             "secret_key": account.secret_key_id
         }
