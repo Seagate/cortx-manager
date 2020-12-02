@@ -380,14 +380,14 @@ class AlertsAppService(ApplicationService):
         """
         Log.debug(f"Update all alerts service. fields:{fields}")
         if not isinstance(fields, list):
-            raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
+            raise InvalidRequest("Acknowledged value must be of type boolean.")
 
         alerts = []
 
         for alert_id in fields:
             alert = await self.repo.retrieve(alert_id)
             if not alert:
-                raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
+                raise CsmNotFoundError("Alert not found for id" + alert_id, ALERTS_MSG_NOT_FOUND)
 
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
             alert.updated_time = int(time.time())

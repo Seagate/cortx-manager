@@ -35,7 +35,7 @@ class StorageCapacityView(CsmView):
         unit = self.request.query.get(const.UNIT,const.DEFAULT_CAPACITY_UNIT)
         round_off_value = int(self.request.query.get(const.ROUNDOFF_VALUE,const.DEFAULT_ROUNDOFF_VALUE))
         if round_off_value <= 0:
-            raise InvalidRequest(f"Round off value should be greater that 0. Default value:{const.DEFAULT_ROUNDOFF_VALUE}")
+            raise InvalidRequest(f"Round off value should be greater than 0. Default value:{const.DEFAULT_ROUNDOFF_VALUE}")
         if (not unit.upper() in const.UNIT_LIST) and (not unit.upper()==const.DEFAULT_CAPACITY_UNIT):
             raise InvalidRequest(f"Invalid unit. Please enter units from {','.join(const.UNIT_LIST)}. Default unit is:{const.DEFAULT_CAPACITY_UNIT}")
         return await self._service.get_capacity_details(unit=unit, round_off_value=round_off_value)

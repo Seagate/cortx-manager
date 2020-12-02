@@ -613,9 +613,13 @@ FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+STORAGE_TYPE_VIRTUAL = "virtual"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
 ES_RETRY = "ELASTICSEARCH.retry"
+
+ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
+LOGROTATE_AMOUNT_VIRTUAL = 3
