@@ -490,6 +490,12 @@ class Setup:
         """
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f'\
+                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
+                Setup._run_cmd(sed_cmd)
         else:
             raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
 
@@ -504,6 +510,11 @@ class Setup:
             Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
+                Setup._run_cmd(sed_cmd)
             Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
         else:
             Log.error(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
