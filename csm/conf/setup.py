@@ -42,6 +42,8 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
+import ipaddress
+
 
 # try:
 #     from salt import client
@@ -530,18 +532,22 @@ class Setup:
         return data_nw
 
     @staticmethod
-    def _set_db_host_addr(backend, addr):
+    def _set_db_host_addr_list(backend, addr_list):
         """
-        Sets database backend host address in CSM config.
+        Sets database backend host addresses in CSM config.
 
         :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
-        :param addr: Host address.
+        :param addr_list: Host addresses list.
         """
+
         if backend not in ('es', 'consul'):
-            raise CsmSetupError(f'Invalid database backend "{addr}"')
-        key = f'databases.{backend}_db.config.host'
+            raise CsmSetupError(f'Invalid database backend "{addr_list}"')
+        key = f'databases.{backend}_db.config.hosts'
         try:
-            Conf.set(const.DATABASE_INDEX, key, addr)
+            # checking whether a string represents a valid IP address or network definition
+            for ip_var in addr_list:
+                ipaddress.ip_address(ip_var)
+            Conf.set(const.DATABASE_INDEX, key, addr_list)
             Conf.save(const.DATABASE_INDEX)
         except Exception as e:
             raise CsmSetupError(f'Unable to set {backend} host address: {e}')
@@ -802,8 +808,8 @@ class CsmSetup(Setup):
                     Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
                 minion_id = cls._get_minion_id()
                 data_nw = cls._get_data_nw_info(minion_id)
-                cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
-                cls._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+                cls._set_db_host_addr_list('consul', [data_nw.get('roaming_ip', '127.0.0.1')])
+                cls._set_db_host_addr_list('es', [data_nw.get('pvt_ip_addr', '127.0.0.1')])
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()
