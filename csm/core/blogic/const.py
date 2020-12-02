@@ -62,6 +62,8 @@ EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
+RUNNING_NODES_START_TEXT = 'Running Nodes'
+RUNNING_NODES_STOP_TEXT = 'Versions'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -527,7 +529,6 @@ LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER='PROVISIONER'
-LOCAL='local'
 RET='ret'
 DEBUG='debug'
 NA='NA'
@@ -577,10 +578,6 @@ SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
-NETWROK = "network"
-DATA_NW = "data_nw"
-ROAMING_IP = "roaming_ip"
-CONSUL_HOST_KEY = "databases.consul_db.config.host"
 HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"

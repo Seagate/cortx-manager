@@ -41,16 +41,17 @@ from cortx.utils.schema.payload import Json
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
+from csm.conf.salt import SaltWrappers
 
 # try:
 #     from salt import client
 # except ModuleNotFoundError:
 client = None
 
+
 class InvalidPillarDataError(InvalidRequest):
     pass
-class PillarDataFetchError(InvalidRequest):
-    pass
+
 
 class ProvisionerCliError(InvalidRequest):
     pass
@@ -104,56 +105,6 @@ class Setup:
             return True
         except KeyError as err:
             return False
-
-    @staticmethod
-    def get_salt_data(method, key):
-        try:
-            Log.debug(f"Executing 'salt-call {method} {key} --out=json'")
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.logger.warn(f"Error in command execution : {e}")
-        if stderr:
-            Log.logger.warn(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            Log.debug(f"Salt-call cmd returning: {result}")
-            return result[const.LOCAL]
-
-    @staticmethod
-    def get_salt_data_with_exception(method, key):
-        try:
-            Log.debug(f"Executing 'salt-call {method} {key} --out=json'")
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.error(f"Error in command execution : {e}")
-            raise PillarDataFetchError(f"Error in command execution : {e}")
-        if rc !=0:
-            Log.error(f"Error : {stderr}")
-            raise PillarDataFetchError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            Log.debug(f"Salt-call cmd returning: {result}")
-            return result[const.LOCAL]
-
-    @staticmethod
-    def get_salt_data_using_minion_id(minion_id, method, key):
-        try:
-            Log.debug(f"Executing 'salt {minion_id} {method} {key} --out=json'")
-            process = SimpleProcess(f"salt {minion_id} {method} {key} --out=json")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            raise PillarDataFetchError(f"Error in command execution : {e}")
-        if stderr:
-            raise PillarDataFetchError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            Log.debug(f"Salt-call cmd returning: {result}")
-            return result[minion_id]
 
     @staticmethod
     def get_data_from_provisioner_cli(method, output_format="json"):
@@ -225,11 +176,11 @@ class Setup:
                 Setup._run_cmd("usermod -aG wheel " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
-                node_name = Setup.get_salt_data(const.GRAINS_GET, "id")
-                primary = Setup.get_salt_data(const.GRAINS_GET, "roles")
+                node_name = SaltWrappers.get_salt_call(const.GRAINS_GET, 'id', 'log')
+                primary = SaltWrappers.get_salt_call(const.GRAINS_GET, 'roles', 'log')
                 if ( node_name is None or const.PRIMARY_ROLE in primary):
                     self._passwordless_ssh(const.CSM_USER_HOME)
-                nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+                nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
                 if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
                     nodes.remove(node_name)
                     for node in nodes:
@@ -301,8 +252,7 @@ class Setup:
         @staticmethod
         def store_encrypted_password(conf_data):
             # read username's and password's for S3 and RMQ
-            Log.info(f"Storing Encrypted Password. conf_data:{conf_data}")
-            open_ldap_credentials = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.OPENLDAP)
+            open_ldap_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.OPENLDAP)
             # Edit Current Config File.
             if open_ldap_credentials and type(open_ldap_credentials) is dict:
                 conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
@@ -312,14 +262,14 @@ class Setup:
             else:
                 Log.error(f"failed to get pillar data for {const.OPENLDAP}")
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
-            sspl_config = Setup.get_salt_data_with_exception(const.PILLAR_GET, const.SSPL)
+            sspl_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.SSPL)
             if sspl_config and type(sspl_config) is dict:
                 conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 Log.error(f"failed to get pillar data for {const.SSPL}")
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            cluster_id =  Setup.get_salt_data_with_exception(const.GRAINS_GET, const.CLUSTER_ID)
+            cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
             conf_data[const.PROVISIONER] = provisioner_data
@@ -522,11 +472,12 @@ class Setup:
 
     @staticmethod
     def _set_fqdn_for_nodeid():
-        nodes = Setup.get_salt_data(const.PILLAR_GET, const.NODE_LIST_KEY)
+        nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
         Log.debug("Node ids obtained from salt-call:{nodes}")
         if nodes:
             for each_node in nodes:
-                hostname = Setup.get_salt_data(const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                hostname = SaltWrappers.get_salt_call(
+                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}", 'log')
                 Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
                 if hostname:
                     Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
@@ -554,8 +505,7 @@ class Setup:
 
     def _set_rmq_cluster_nodes(self):
         """
-        This method gets the nodes names of the the rabbitmq cluster and writes
-        in the config.
+        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
         """
         Log.info("Setting RMQ cluster nodes in config")
         nodes = []
@@ -563,15 +513,24 @@ class Setup:
         try:
             for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
                 cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
+                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
                 for line in cmd_output[0].split('\n'):
                     if const.RUNNING_NODES in line:
                         nodes = re.findall(r"rabbit@([-\w]+)", line)
                         nodes_found = True
                 if nodes_found:
                     break
+                # The code below is used to parse CLI output for RMQ 3.8.9 or above
+                result = re.search(
+                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
+                    cmd_output[0], re.DOTALL)
+                if result is not None:
+                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
+                    break
                 time.sleep(2**count)
             if nodes:
                 conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
+                Log.debug(f"Saving nodes:{nodes} to conf_key:{conf_key} in Config")
                 Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
                 Conf.save(const.CSM_GLOBAL_INDEX)
             else:
@@ -581,29 +540,45 @@ class Setup:
             Log.error(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
-    def _set_consul_vip(self):
+    @staticmethod
+    def _get_minion_id():
         """
-        This method gets the consul VIP for the current node and sets the
-        value in database.yaml config.
-        Seting the default values in case of command failure.
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
         """
-        minion_id = None
-        consul_host = None
+        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
+        if not minion_id:
+            raise CsmSetupError('Unable to obtain current minion id')
+        return minion_id
+
+    @staticmethod
+    def _get_data_nw_info(minion_id):
+        """
+        Obtains minion data network info.
+
+        :param minion_id: Minion id.
+        """
+        data_nw = SaltWrappers.get_salt_call(
+            const.PILLAR_GET, f'cluster:{minion_id}:network:data_nw')
+        if not data_nw:
+            raise CsmSetupError(f'Unable to obtain data nw info for {minion_id}')
+        return data_nw
+
+    @staticmethod
+    def _set_db_host_addr(backend, addr):
+        """
+        Sets database backend host address in CSM config.
+
+        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
+        :param addr: Host address.
+        """
+        if backend not in ('es', 'consul'):
+            raise CsmSetupError(f'Invalid database backend "{addr}"')
+        key = f'databases.{backend}_db.config.host'
         try:
-            minion_id = Setup.get_salt_data_with_exception(const.GRAINS_GET, const.ID)
-            if not minion_id:
-                Log.logger.warn(f"Unable to fetch minion id for the node." \
-                    f"Using {const.MINION_NODE1_ID}.")
-                minion_id = const.MINION_NODE1_ID
-            consul_vip_cmd = f"{const.CLUSTER}:{minion_id}:{const.NETWROK}:"\
-                f"{const.DATA_NW}:{const.ROAMING_IP}"
-            consul_host = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                consul_vip_cmd)
-            if consul_host:
-                Conf.set(const.DATABASE_INDEX, const.CONSUL_HOST_KEY, consul_host)
-                Conf.save(const.DATABASE_INDEX)
+            Conf.set(const.DATABASE_INDEX, key, addr)
+            Conf.save(const.DATABASE_INDEX)
         except Exception as e:
-            raise CsmSetupError(f"Setting consul host with VIP failed. {e}")
+            raise CsmSetupError(f'Unable to set {backend} host address: {e}')
 
     @classmethod
     def _get_faulty_node_uuid(self):
@@ -616,13 +591,11 @@ class Setup:
         try:
             Log.info("Getting faulty node id")
             faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = Setup.get_salt_data_with_exception(const.PILLAR_GET, \
-                faulty_minion_id_cmd)
+            faulty_minion_id = SaltWrappers.get_salt_call(const.PILLAR_GET, faulty_minion_id_cmd)
             if not faulty_minion_id:
                 Log.warn("Fetching faulty node minion id failed.")
                 raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = Setup.get_salt_data_using_minion_id\
-                (faulty_minion_id, const.GRAINS_GET, 'node_id')
+            faulty_node_uuid = SaltWrappers.get_salt(const.GRAINS_GET, 'node_id', faulty_minion_id)
             if not faulty_node_uuid:
                 Log.warn("Fetching faulty node uuid failed.")
                 raise CsmSetupError("Fetching faulty node uuid failed.")
@@ -772,19 +745,19 @@ class Setup:
         This minion id will be required to fetch the healthmap path.
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
-        minion_id = Setup.get_salt_data(const.GRAINS_GET, const.ID)
+        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID, 'log')
         if not minion_id:
             Log.logger.warn(f"Unable to fetch minion id for the node." \
                 f"Using {const.MINION_NODE1_ID}.")
             minion_id = const.MINION_NODE1_ID
         try:
-            healthmap_folder_path = Setup.get_salt_data_using_minion_id\
-                (minion_id, const.PILLAR_GET, 'sspl:health_map_path')
+            healthmap_folder_path = SaltWrappers.get_salt(
+                const.PILLAR_GET, 'sspl:health_map_path', minion_id)
             if not healthmap_folder_path:
                 Log.logger.error("Fetching health map folder path failed.")
                 raise CsmSetupError("Fetching health map folder path failed.")
-            healthmap_filename = Setup.get_salt_data_using_minion_id\
-                (minion_id, const.PILLAR_GET, 'sspl:health_map_file')
+            healthmap_filename = SaltWrappers.get_salt(
+                const.PILLAR_GET, 'sspl:health_map_file', minion_id)
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")
@@ -861,6 +834,7 @@ class CsmSetup(Setup):
         Init is used after all dependency service started
         """
         Log.info("Triggering csm_setup post_install init")
+        cls = self.__class__
         try:
             self._verify_args(args)
             self.Config.load()
@@ -873,7 +847,10 @@ class CsmSetup(Setup):
                     self._set_rmq_node_id()
                 except Exception as e:
                     Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                self._set_consul_vip()
+                minion_id = cls._get_minion_id()
+                data_nw = cls._get_data_nw_info(minion_id)
+                cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
+                cls._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()

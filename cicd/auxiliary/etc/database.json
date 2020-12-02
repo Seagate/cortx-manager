@@ -3,7 +3,7 @@
         "consul_db": {
             "import_path": "ConsulDB",
             "config": {
-                "host": "localhost",
+                "hosts": ["localhost"],
                 "port": 8500,
                 "login": "",
                 "password": ""
