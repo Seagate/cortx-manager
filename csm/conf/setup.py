@@ -541,7 +541,7 @@ class Setup:
         """
 
         if backend not in ('es', 'consul'):
-            raise CsmSetupError(f'Invalid database backend "{addr_list}"')
+            raise CsmSetupError(f'Invalid database backend "{backend}"')
         key = f'databases.{backend}_db.config.hosts'
         try:
             # checking whether a string represents a valid IP address or network definition
