@@ -541,8 +541,8 @@ class Setup:
         """
         # Get get node id from provisioner cli and set to config
         node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
-        Log.debug(f"Node ids obtained from salt-call:{nodes}")
         if node_id_data:
+            Log.info(f"Node ids obtained from salt-call:{node_id_data}")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
                             f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
@@ -847,7 +847,7 @@ class CsmSetup(Setup):
         Config is used to move update conf files one time configuration
         """
         try:
-            Log.info(f"Triggering csm_setup config")
+            Log.info("Triggering csm_setup config")
             self._verify_args(args)
             if not self._replacement_node_flag:
                 self.Config.create(args)
@@ -860,7 +860,7 @@ class CsmSetup(Setup):
         Check and move required configuration file
         Init is used after all dependency service started
         """
-        Log.info(f"Triggering csm_setup post_install init")
+        Log.info("Triggering csm_setup post_install init")
         try:
             self._verify_args(args)
             self.Config.load()
