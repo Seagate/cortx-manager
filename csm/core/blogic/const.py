@@ -19,6 +19,7 @@ CORTXCLI_PATH = "/opt/seagate/cortx/cli"
 CSM_PIDFILE_PATH = "/var/run/csm"
 CSM_LOG_PATH = "/var/log/seagate/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
+CSM_S3_SANITY_LOG_FILE = "csm_s3_sanity"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
@@ -61,6 +62,8 @@ EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
+RUNNING_NODES_START_TEXT = 'Running Nodes'
+RUNNING_NODES_STOP_TEXT = 'Versions'
 
 # CSM Agent Port
 CSM_AGENT_HOST = "localhost"
@@ -612,9 +615,13 @@ FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+STORAGE_TYPE_VIRTUAL = "virtual"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
 ES_RETRY = "ELASTICSEARCH.retry"
+
+ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
+LOGROTATE_AMOUNT_VIRTUAL = 3
