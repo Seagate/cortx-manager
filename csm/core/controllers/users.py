@@ -84,11 +84,11 @@ class CsmUserPatchSchema(Schema):
     def post_load(self, data, **kwargs):
         # empty body is invalid request
         if not data:
-            raise InvalidRequest("Request effective body is empty", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest("Insufficient information in request body", INVALID_REQUEST_PARAMETERS)
 
         # just current_password in body is invalid
         if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
-            raise InvalidRequest(f"Request effective body has no impact {data}", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest(f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
         return data
 
 class GetUsersSortBy(fields.Str):
@@ -133,7 +133,7 @@ class CsmUsersListView(CsmView):
             request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
-                "Invalid Parameter for user", str(val_err))
+                "Invalid parameter for user", str(val_err))
         users = await self._service.get_user_list(**request_data)
         return {'users': users}
 

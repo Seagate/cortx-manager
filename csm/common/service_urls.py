@@ -49,22 +49,36 @@ class ServiceUrls:
         url = f'{scheme}://{network_configuration.mgmt_vip}:{port}'
         return url
 
-    async def get_s3_url(self, scheme: str = None,
-                         bucket_name: str = None) -> Union[List[str], str]:
+    async def get_s3_uri(self, scheme: str = 's3') -> str:
         """
-        Return an S3 server's URL.
+        Obtains the S3 server URI.
 
-        :param scheme: (optional) scheme of the required URL, if not set (default) - the list of
-                        all possible URLs will be returned
-        :param bucket_name: (optional) bucket's name to be included into the URL.
-        :returns: S3 server's URL as a string.
+        :param scheme: URI scheme
+        :returns: S3 server URI based on the provided scheme
         """
         network_configuration = await self._provisioner.get_network_configuration()
-        url = f'{network_configuration.cluster_ip}'
-        if bucket_name is not None:
-            url += f'/{bucket_name}'
-        if scheme is not None:
-            return f'{scheme}://{url}'
+        ip = f'{network_configuration.cluster_ip}'
+        if scheme == 's3':
+            port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
+            uri = f'{scheme}://{ip}:{port}'
         else:
-            schemes = ['http', 'https']
-            return [f'{sch}://{url}' for sch in schemes]
+            uri = f'{scheme}://{ip}'
+        return uri
+
+    async def get_s3_uris(self) -> List[str]:
+        """
+        Obtains a list of S3 server URIs.
+
+        :returns: List of S3 server URIs.
+        """
+        return [await self.get_s3_uri(s) for s in ('http', 'https')]
+
+    async def get_bucket_url(self, bucket_name: str, scheme: str) -> str:
+        """
+        Obtains a bucket URL.
+
+        :param scheme: URL scheme
+        :param bucket_name: Bucket name to be appended to the URL as its path
+        :returns: Bucket URL
+        """
+        return '{}/{}'.format(await self.get_s3_uri(scheme), bucket_name)

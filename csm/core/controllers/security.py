@@ -145,7 +145,7 @@ class SecurityInstallView(CsmView):
 
         install = patch_body["install"]
         if not install:
-            raise CsmNotImplemented(f"Not implemented action for install={install}")
+            raise CsmNotImplemented(f"Invalid action for install={install}")
 
         if install:
             try:
