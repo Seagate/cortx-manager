@@ -30,17 +30,19 @@ class SaltWrappers:
         if on_salt_error not in ('raise', 'log'):
             raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
         try:
+            Log.info(f"Executing salt call: salt-call {method} {key} --out=json")
             process = SimpleProcess(f"salt-call {method} {key} --out=json")
             stdout, stderr, rc = process.run()
+            Log.info(f"stdout: {stdout}, stderr:{stderr}, rc:{rc}")
         except Exception as e:
             desc = f'Error in command execution : {e}'
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(desc)
-            Log.logger.warn(desc)
+            Log.warn(desc)
         if stderr:
             if on_salt_error == 'raise':
                 raise PillarDataFetchError(stderr)
-            Log.logger.warn(stderr)
+            Log.warn(stderr)
         res = stdout.decode('utf-8')
         if rc == 0 and res != "":
             result = json.loads(res)
