@@ -100,7 +100,7 @@ class SecurityService(ApplicationService):
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
-            raise IndentationError(f"Can't load certificate from .pem file: {e}")
+            raise IndentationError(f"Cannot load certificate from .pem file: {e}")
 
     async def _store_to_db(self, user: str, pemfile_path: str, save_time: datetime):
         """
@@ -125,7 +125,7 @@ class SecurityService(ApplicationService):
         try:
             await self._certificate_storage.store(certificate_conf)
         except Exception as e:
-            raise CsmInternalError(f"Unable to store certificate information into db: {e}")
+            raise CsmInternalError(f"Unable to store certificate information into database: {e}")
 
         security_conf = SecurityConfig()
         security_conf.config_id = self.CONFIG_ID
@@ -137,7 +137,7 @@ class SecurityService(ApplicationService):
         try:
             await self._security_storage.store(security_conf)
         except Exception as e:
-            raise CsmInternalError(f"Unable to store certificate information into db: {e}")
+            raise CsmInternalError(f"Unable to store certificate information into database: {e}")
 
         self._last_configuration = security_conf
 
@@ -174,7 +174,7 @@ class SecurityService(ApplicationService):
         try:
             await self._store_to_db(user, os.path.join(cert_dir, pemfile_name), saving_time)
         except CsmError as e:
-            raise CsmInternalError(f"Error during saving certificates configuration onto db: {e}")
+            raise CsmInternalError(f"Error during saving certificates configuration onto database: {e}")
 
     async def delete_certificate(self, serial_number):
         """
@@ -326,9 +326,9 @@ class SecurityService(ApplicationService):
             expiry_time_ltz = await self._local_timezone(expiry_time)
             days_left = (expiry_time.date() - current_time.date()).days
             if expiry_time < current_time:
-                message = f'SSL certificate expired at {expiry_time_ltz}'
+                message = f'SSL certificate expired on {expiry_time_ltz}'
             elif days_left in warning_days:
-                message = f'SSL certificate expires at {expiry_time_ltz} - {days_left} day(s) left'
+                message = f'SSL certificate will expire on {expiry_time_ltz} - {days_left} day(s) left'
             else:
                 message = None
 

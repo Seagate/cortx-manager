@@ -78,6 +78,8 @@ class S3AccountService(S3BaseService):
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,
+            "account_id": account.account_id,
+            "canonical_id": account.canonical_id,
             "access_key": account.access_key_id,
             "secret_key": account.secret_key_id
         }
@@ -141,7 +143,7 @@ class S3AccountService(S3BaseService):
         service_urls = ServiceUrls(self._provisioner)
         resp = {
             "s3_accounts": accounts_list,
-            "s3_urls": await service_urls.get_s3_url()
+            "s3_urls": await service_urls.get_s3_uris()
         }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
