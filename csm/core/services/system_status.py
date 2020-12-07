@@ -57,10 +57,12 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting consul status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.host')
+        hosts_list = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.hosts')
         port = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.port')
         # Validation throws exception on failure
-        ConsulV().validate('service', [host, port])
+        if hosts_list:
+            for host in hosts_list:
+                ConsulV().validate('service', [host, port])
         return const.SYSTEM_STATUS_SUCCESS
 
     async def _get_elasticsearch_status(self) -> str:
@@ -69,8 +71,10 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.host')
+        hosts_list = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.hosts')
         port = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.port')
         # Validation throws exception on failure
-        ElasticsearchV().validate('service', [host, port])
+        if hosts_list:
+            for host in hosts_list:
+                ElasticsearchV().validate('service', [host, port])
         return const.SYSTEM_STATUS_SUCCESS
