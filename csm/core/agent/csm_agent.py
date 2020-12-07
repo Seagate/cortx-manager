@@ -46,6 +46,10 @@ class CsmAgent:
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             Conf.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        print("--------------- REMOVE_TEMP -----------")
+        with open(const.DATABASE_CONF, 'r') as fin:
+            print(fin.read())
+        print("---------------------------------------")
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
 
