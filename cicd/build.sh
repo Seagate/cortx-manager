@@ -216,6 +216,9 @@ else
 
 fi
 ENV_END_TIME=$(date +%s)
+pip uninstall -y numpy
+pip install numpy --no-binary :all:
+
 ################### Backend ##############################
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
