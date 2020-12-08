@@ -200,8 +200,8 @@ if [ "$DEV" == true ]; then
     install_py_req req_dev.txt
 
     # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
+    #pip uninstall -y numpy
+    #pip install numpy --no-binary :all:
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
@@ -215,6 +215,10 @@ else
     install_py_req requirment.txt
 
 fi
+
+pip uninstall -y numpy
+pip install numpy --no-binary :all:
+
 ENV_END_TIME=$(date +%s)
 
 ################### Backend ##############################
@@ -335,8 +339,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 
-pip uninstall -y numpy
-pip install numpy --no-binary :all:
+#pip uninstall -y numpy
+#pip install numpy --no-binary :all:
 
 ################### RPM BUILD ##############################
 
