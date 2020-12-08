@@ -217,9 +217,6 @@ else
 fi
 ENV_END_TIME=$(date +%s)
 
-pip uninstall -y numpy
-pip install numpy --no-binary :all:
-
 ################### Backend ##############################
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
@@ -337,6 +334,9 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     rm -rf "${TMPDIR}/cli/"*
     CLI_BUILD_END_TIME=$(date +%s)
 fi
+
+pip uninstall -y numpy
+pip install numpy --no-binary :all:
 
 ################### RPM BUILD ##############################
 
