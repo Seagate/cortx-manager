@@ -175,8 +175,8 @@ else
         echo "Unable to install package from $req_file"; exit 1;
     };
 fi
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
+pip uninstall -y numpy
+pip install numpy --no-binary :all:
 
 ################### Backend ##############################
 
