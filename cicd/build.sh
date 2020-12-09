@@ -339,9 +339,6 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     CLI_BUILD_END_TIME=$(date +%s)
 fi
 
-#pip uninstall -y numpy
-#pip install numpy --no-binary :all:
-
 ################### RPM BUILD ##############################
 
 # Generate RPMs
