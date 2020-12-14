@@ -41,12 +41,9 @@ class UDSConfigGenerator:
     UDS_USERNAME = 'uds'
 
     @staticmethod
-    def generate_haproxy_config():
+    def generate_haproxy_frontend_config():
         cluster_ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
-        minions = list(SaltWrappers.get_salt('grains.get', 'id').values())
-        # Codacy was complaining about the use of `assert` below :(
-        # assert len(minions) == 2
-        minions.sort()
+        mgmt_vip = SaltWrappers.get_salt_call('pillar.get', 'cluster:mgmt_vip')
         return f"""\
 frontend uds-frontend
     mode tcp
@@ -54,14 +51,35 @@ frontend uds-frontend
     bind 127.0.0.1:5000
     bind ::1:5000
     bind {cluster_ip}:5000
+    bind {mgmt_vip}:5000
     acl udsbackendacl dst_port 5000
-    use_backend uds-backend if udsbackendacl
+    use_backend uds-backend if udsbackendacl\
+"""
 
+    @staticmethod
+    def generate_haproxy_backend_config():
+        minions = list(SaltWrappers.get_salt('grains.get', 'id').values())
+        if len(minions) < 1:
+            raise RuntimeError('No minions were found')
+        minions.sort()
+        backend_server_scheme = '    server uds-{} {}:5000 check'
+        backend_servers = '\n'.join(
+            backend_server_scheme.format(i, minion) for (i, minion) in enumerate(minions, start=1))
+        return f"""\
 backend uds-backend
     mode tcp
     balance static-rr
-    server uds-1 {minions[0]}:5000 check
-    server uds-2 {minions[1]}:5000 check\
+{backend_servers}\
+"""
+
+    @classmethod
+    def generate_haproxy_config(cls):
+        frontend_rules = cls.generate_haproxy_frontend_config()
+        backend_rules = cls.generate_haproxy_backend_config()
+        return f"""\
+{frontend_rules}
+
+{backend_rules}\
 """
 
     @staticmethod
