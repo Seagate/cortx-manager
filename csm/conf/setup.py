@@ -162,6 +162,7 @@ class Setup:
             if not self._is_user_exist():
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
                 Setup._run_cmd("usermod -aG wheel " + self._user)
+                Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = SaltWrappers.get_salt_call(const.GRAINS_GET, 'id', 'log')
