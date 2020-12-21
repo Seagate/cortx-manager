@@ -128,6 +128,8 @@ class CsmCli(Cmd):
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         Log.init("csm_cli",
              syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
              syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),

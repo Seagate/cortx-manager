@@ -41,6 +41,7 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
+from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
 # try:
 #     from salt import client
@@ -78,6 +79,24 @@ class Setup:
         except Exception as e:
             raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
 
+    def _init_user():
+        cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+        """
+        csm_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.CSM)
+        if csm_config and type(csm_config) is dict:
+            conf_data[const.CSM][const.USERNAME] = csm_config.get(const.USERNAME)
+            conf_data[const.CSM][const.PASSWORD] = csm_config.get(const.PASSWORD)
+        else:
+            raise InvalidPillarDataError(f"Failed to get pillar data for {const.CSM}")
+        """
+        cipher_key = Cipher.generate_key(cluster_id, const.CSM)
+        print(cluster_id)
+        encrypted = Cipher.encrypt(key, b'csm')
+        print(encrypted)
+        decrypted_value = Cipher.decrypt(cipher_key, encrypted.encode("utf-8"))
+        print(decrypted)
+
+        # decrypt password 
     def _is_user_exist(self):
         """
         Check if user exists
@@ -158,6 +177,7 @@ class Setup:
         Check user already exist and create if not exist
         If reset true then delete user
         """
+        self._init_user()
         if not reset:
             if not self._is_user_exist():
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
@@ -256,6 +276,7 @@ class Setup:
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
             conf_data[const.PROVISIONER] = provisioner_data
+            # NKP get csm user/password using salt command and set to conf 
 
         @staticmethod
         def create(args):
@@ -717,6 +738,7 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
+            # NKP Get csm user credential from salt and decrypt password and set to variables 
             self._config_user()
             self.set_unsupported_feature_info()
             self._configure_system_auto_restart()

@@ -490,8 +490,13 @@ USED = 'used'
 AVAILABLE = 'avail'
 USAGE_PERCENTAGE = 'usage_percentage'
 
+# CSM conf entry
+CSM='CSM'
+
 # Keys for  Description
 DECRYPTION_KEYS = {
+    # TODO Add new csm password here
+    # CSM.password: "csm"
     "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }
