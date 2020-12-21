@@ -13,7 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from csm.common.conf import Conf
 from csm.conf.salt import SaltWrappers
+from csm.core.blogic import const
+
 from pathlib import Path
 from pwd import getpwnam
 from shutil import copyfile, rmtree
@@ -39,6 +42,32 @@ class UDSConfigGenerator:
     UDS_CONFIG_DIR = f'{UDS_HOME_DIR}/.uds'
     UDS_CONFIG_PATH = f'{UDS_CONFIG_DIR}/uds-config.json'
     UDS_USERNAME = 'uds'
+
+    @classmethod
+    def generate_csm_config(cls, uds_public_ip=None):
+        return {
+            'UDS.public_ip': f'{uds_public_ip}',
+        }
+
+    @staticmethod
+    def write_csm_config(entries):
+        for k, v in entries.items():
+            Conf.set(const.CSM_GLOBAL_INDEX, k, v)
+        Conf.save(const.CSM_GLOBAL_INDEX)
+
+    @classmethod
+    def update_csm_config(cls, uds_public_ip):
+        cls.remove_csm_config()
+        if uds_public_ip is not None:
+            entries = cls.generate_csm_config(uds_public_ip)
+            cls.write_csm_config(entries)
+
+    @classmethod
+    def remove_csm_config(cls):
+        keys = cls.generate_csm_config().keys()
+        for key in keys:
+            Conf.delete(const.CSM_GLOBAL_INDEX, key)
+        Conf.save(const.CSM_GLOBAL_INDEX)
 
     @staticmethod
     def generate_haproxy_frontend_config():
@@ -174,11 +203,13 @@ backend uds-backend
         rmtree(cls.UDS_CONFIG_DIR)
 
     @classmethod
-    def apply(cls):
+    def apply(cls, uds_public_ip):
+        cls.update_csm_config(uds_public_ip)
         cls.update_haproxy_config()
         cls.update_uds_config()
 
     @classmethod
     def delete(cls):
+        cls.remove_csm_config()
         cls.remove_haproxy_config()
         cls.remove_uds_config()
