@@ -21,6 +21,7 @@ import grp
 import errno
 import shlex
 import json
+from ipaddress import ip_address
 from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
@@ -875,6 +876,9 @@ class CsmSetup(Setup):
         try:
             Log.info("Triggering csm_setup config")
             self._verify_args(args)
+            uds_public_ip = args.get('uds_public_ip')
+            if uds_public_ip is not None:
+                ip_address(uds_public_ip)
             if not self._replacement_node_flag:
                 self.Config.create(args)
             UDSConfigGenerator.apply()
