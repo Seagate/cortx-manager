@@ -881,10 +881,8 @@ class CsmSetup(Setup):
                 ip_address(uds_public_ip)
             if not self._replacement_node_flag:
                 self.Config.create(args)
-            UDSConfigGenerator.apply()
-            cls = self.__class__
-            cls._restart_uds()
-            cls._restart_haproxy()
+            self.Config.load()
+            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
         except Exception as e:
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
