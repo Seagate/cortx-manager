@@ -85,17 +85,19 @@ class Setup:
         :param decrypt:
         :return:
         """
+        Log.info("Fetch CSM User Password from provisioner.")
         csm_user_pass = None
-        # TODO: Waiting for @yash to provide Key for CSM Credentials and File Name.
-        csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.CSM)
+        csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, "csm")
         if csm_credentials and type(csm_credentials) is dict:
-            csm_user_pass = csm_credentials.get(const.CSM, {}).get(const.SECRET)
+            csm_user_pass = csm_credentials.get(const.SECRET)
+        else:
+            Log.error("No Credentials Fetched from Provisioner.")
         if decrypt and csm_user_pass:
+            Log.info("Decrypting CSM Password.")
             cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
             cipher_key = Cipher.generate_key(cluster_id, "csm")
             try:
-                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass .encode("utf-8"))
-                Conf.set(const.CSM_GLOBAL_INDEX, 'csm', decrypted_value.decode("utf-8"))
+                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
                 return decrypted_value
             except CipherInvalidToken as error:
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
@@ -181,10 +183,12 @@ class Setup:
         Check user already exist and create if not exist
         If reset true then delete user
         """
-
         if not reset:
             if not self._is_user_exist():
                 _password = self._fetch_csm_user_password(decrypt=True)
+                if not _password:
+                    Log.error("CSM Password Not Recieved from provisioner.")
+                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
                 Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+_password+" "+ self._user)
                 Setup._run_cmd("usermod -aG wheel " + self._user)
                 Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
@@ -262,9 +266,11 @@ class Setup:
         @staticmethod
         def store_encrypted_password(conf_data):
             # read username's and password's for S3 and RMQ
+            Log.info("Store Encrypted Password")
             open_ldap_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.OPENLDAP)
             # Edit Current Config File.
             if open_ldap_credentials and type(open_ldap_credentials) is dict:
+                Log.info("Openldap Credentials Copied to CSM Configuration.")
                 conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
                                                     const.IAM_ADMIN, {}).get(const.USER)
                 conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
@@ -273,11 +279,16 @@ class Setup:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
             sspl_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.SSPL)
             if sspl_config and type(sspl_config) is dict:
+                Log.info("SSPL Credentials Copied to CSM Configuration.")
                 conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            conf_data[const.CSM][const.PASSWORD] = Setup._fetch_csm_user_password()
+            _paswd = Setup._fetch_csm_user_password()
+            if not _paswd:
+                raise CsmSetupError("CSM Password Not Set by Provisioner.")
+            Log.info("CSM Credentials Copied to CSM Configuration.")
+            conf_data[const.CSM][const.PASSWORD] = _paswd
             cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
