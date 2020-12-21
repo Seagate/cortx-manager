@@ -60,7 +60,6 @@ class ProvisionerCliError(InvalidRequest):
 class Setup:
     def __init__(self):
         self._user = const.NON_ROOT_USER
-        self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
         self._setup_info = dict()
 
@@ -79,24 +78,29 @@ class Setup:
         except Exception as e:
             raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
 
-    def _init_user():
-        cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+    @staticmethod
+    def _fetch_csm_user_password(decrypt=False):
         """
-        csm_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.CSM)
-        if csm_config and type(csm_config) is dict:
-            conf_data[const.CSM][const.USERNAME] = csm_config.get(const.USERNAME)
-            conf_data[const.CSM][const.PASSWORD] = csm_config.get(const.PASSWORD)
-        else:
-            raise InvalidPillarDataError(f"Failed to get pillar data for {const.CSM}")
+        This Method Fetches the Password for CSM User from Provisioner.
+        :param decrypt:
+        :return:
         """
-        cipher_key = Cipher.generate_key(cluster_id, const.CSM)
-        print(cluster_id)
-        encrypted = Cipher.encrypt(key, b'csm')
-        print(encrypted)
-        decrypted_value = Cipher.decrypt(cipher_key, encrypted.encode("utf-8"))
-        print(decrypted)
+        csm_user_pass = None
+        # TODO: Waiting for @yash to provide Key for CSM Credentials and File Name.
+        csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.CSM)
+        if csm_credentials and type(csm_credentials) is dict:
+            csm_user_pass = csm_credentials.get(const.CSM, {}).get(const.SECRET)
+        if decrypt and csm_user_pass:
+            cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+            cipher_key = Cipher.generate_key(cluster_id, "csm")
+            try:
+                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass .encode("utf-8"))
+                Conf.set(const.CSM_GLOBAL_INDEX, 'csm', decrypted_value.decode("utf-8"))
+                return decrypted_value
+            except CipherInvalidToken as error:
+                raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
+        return csm_user_pass
 
-        # decrypt password 
     def _is_user_exist(self):
         """
         Check if user exists
@@ -177,10 +181,11 @@ class Setup:
         Check user already exist and create if not exist
         If reset true then delete user
         """
-        self._init_user()
+
         if not reset:
             if not self._is_user_exist():
-                Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
+                _password = self._fetch_csm_user_password(decrypt=True)
+                Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+_password+" "+ self._user)
                 Setup._run_cmd("usermod -aG wheel " + self._user)
                 Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
@@ -272,6 +277,7 @@ class Setup:
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
+            conf_data[const.CSM][const.PASSWORD] = Setup._fetch_csm_user_password()
             cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id

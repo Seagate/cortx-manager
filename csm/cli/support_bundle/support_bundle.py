@@ -43,7 +43,7 @@ class SupportBundle:
         """Import Plugin for Provisioner."""
         try:
             params = {"username": const.NON_ROOT_USER,
-                      "password": const.NON_ROOT_USER_PASS}
+                      "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")}
             provisioner = import_module(
                 f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
                 **params)
