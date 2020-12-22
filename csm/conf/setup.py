@@ -20,6 +20,7 @@ import grp
 import errno
 import shlex
 import json
+from ipaddress import ip_address
 from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
@@ -41,6 +42,7 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers
+from csm.conf.uds import UDSConfigGenerator
 
 # try:
 #     from salt import client
@@ -730,8 +732,13 @@ class CsmSetup(Setup):
         """
         try:
             self._verify_args(args)
+            uds_public_ip = args.get('uds_public_ip')
+            if uds_public_ip is not None:
+                ip_address(uds_public_ip)
             if not self._replacement_node_flag:
                 self.Config.create(args)
+            self.Config.load()
+            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
         except Exception as e:
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
@@ -794,6 +801,7 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
+                UDSConfigGenerator.delete()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()

@@ -19,6 +19,7 @@ import time
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
 from boto.s3.bucket import Bucket
+from ipaddress import ip_address
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -484,21 +485,39 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(reason)
         return material
 
+    async def _get_public_ip(self) -> str:
+        """
+        Reads UDS public IP from global index in an attempt to override UDS default behavior.
+        If it is not found, uses cluster IP as UDS public IP.
+
+        :return: A string representing UDS public IP address.
+        """
+        try:
+            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.public_ip')
+            ip_address(ip)
+            return ip
+        except ValueError as e:
+            reason = 'UDS public IP override failed---following usual code path'
+            Log.debug(f'{reason}. Error: {e}')
+        try:
+            conf = await self._provisioner.get_network_configuration()
+            ip = conf.cluster_ip
+            ip_address(ip)
+            return ip
+        except (ValueError, NetworkConfigFetchError) as e:
+            reason = 'Could not obtain network configuration from provisioner'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
         """
-        Provides a list of all network interfaces in a system.
+        Provides a list of network interfaces to be advertised by UDS.
 
         :return: A list containing dictionaries, each containing information about a specific
             network interface.
         """
         try:
-            conf = await self._provisioner.get_network_configuration()
-            ip = conf.mgmt_vip
-        except NetworkConfigFetchError as e:
-            reason = 'Could not obtain network configuration from provisioner'
-            Log.error(f'{reason}: {e}')
-            raise CsmInternalError(reason) from e
-        try:
+            ip = await self._get_public_ip()
             iface_data = get_interface_details(ip)
         except (ValueError, RuntimeError) as e:
             reason = f'Could not obtain interface details from address {ip}'
