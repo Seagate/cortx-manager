@@ -108,7 +108,7 @@ class Setup:
                 return None
             try:
                 decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
-                return decrypted_value
+                return decrypted_value.decode("utf-8")
             except CipherInvalidToken as error:
                 Log.error(f"Decryption for CSM Failed. {error}")
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
@@ -201,7 +201,7 @@ class Setup:
                 if not _password:
                     Log.error("CSM Password Not Recieved from provisioner.")
                     raise CsmSetupError("CSM Password Not Set by Provisioner.")
-                Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+_password+" "+ self._user)
+                Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
                 Setup._run_cmd("usermod -aG wheel " + self._user)
                 Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
