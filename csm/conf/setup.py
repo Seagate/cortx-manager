@@ -205,7 +205,7 @@ class Setup:
                 Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
                 Log.info("Adding CSM User to Wheel Group.")
                 Setup._run_cmd("usermod -aG wheel " + self._user)
-                Log.info("Adding CSM User to nologin Group.")
+                Log.info("Enabling nologin for CSM user.")
                 Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
