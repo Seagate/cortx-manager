@@ -201,8 +201,11 @@ class Setup:
                 if not _password:
                     Log.error("CSM Password Not Recieved from provisioner.")
                     raise CsmSetupError("CSM Password Not Set by Provisioner.")
+                Log.info("Creating CSM User.")
                 Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
+                Log.info("Adding CSM User to Wheel Group.")
                 Setup._run_cmd("usermod -aG wheel " + self._user)
+                Log.info("Adding CSM User to nologin Group.")
                 Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
