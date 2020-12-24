@@ -128,8 +128,6 @@ class CsmCli(Cmd):
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
-        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
-            Conf.decrypt_conf()
         Log.init("csm_cli",
              syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
              syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -137,9 +135,11 @@ class CsmCli(Cmd):
              file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
              log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
              level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         #Set Rest API for CLI
-        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
-        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
+        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_port')
+        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_host')
         csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_base_url')
         csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
         self.rest_client = CsmRestClient(csm_agent_url)
