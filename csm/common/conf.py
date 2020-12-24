@@ -18,6 +18,7 @@ from csm.common.payload import *
 from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
+from cortx.utils.log import Log
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
 class ClusterIdFetchError(InvalidRequest):
@@ -84,6 +85,8 @@ class Conf:
             try:
                 decrypted_value = Cipher.decrypt(cipher_key,
                                                  encrypted_value.encode("utf-8"))
+                #TODO: Adding Below Lines Just to Debug the COde and Check whether the Password is Correclty Decrypted.
+                Log.debug(f"Decrypted Value {decrypted_value} for Key {each_key} cluster_id {cluster_id}")
                 Conf.set(const.CSM_GLOBAL_INDEX, each_key,
                         decrypted_value.decode("utf-8"))
             except CipherInvalidToken as error:
