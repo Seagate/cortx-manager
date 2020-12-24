@@ -202,6 +202,7 @@ class Setup:
                     Log.error("CSM Password Not Recieved from provisioner.")
                     raise CsmSetupError("CSM Password Not Set by Provisioner.")
                 Log.info("Creating CSM User.")
+                _password = crypt.crypt(_password, "22")
                 Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
                 Log.info("Adding CSM User to Wheel Group.")
                 Setup._run_cmd("usermod -aG wheel " + self._user)
