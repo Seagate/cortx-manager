@@ -56,7 +56,7 @@ class PcsHAFramework(HAFramework):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
         self._user = const.NON_ROOT_USER
-        self._password = const.NON_ROOT_USER_PASS
+        self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
 
     def get_nodes(self):
         """

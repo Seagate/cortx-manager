@@ -137,7 +137,6 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 
 # Non root user
 NON_ROOT_USER = 'csm'
-NON_ROOT_USER_PASS = 'csm'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 SSH_DIR='.ssh'
@@ -490,8 +489,12 @@ USED = 'used'
 AVAILABLE = 'avail'
 USAGE_PERCENTAGE = 'usage_percentage'
 
+# CSM conf entry
+CSM='CSM'
+
 # Keys for  Description
 DECRYPTION_KEYS = {
+    "CSM.password": "csm",
     "CHANNEL.password": "sspl",
     "S3.ldap_password": "openldap"
 }

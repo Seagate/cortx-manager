@@ -41,7 +41,8 @@ from cortx.utils.schema.payload import Json
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
 from cortx.utils.product_features import unsupported_features
-from csm.conf.salt import SaltWrappers
+from csm.conf.salt import SaltWrappers, PillarDataFetchError
+from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 
 # try:
@@ -61,7 +62,6 @@ class ProvisionerCliError(InvalidRequest):
 class Setup:
     def __init__(self):
         self._user = const.NON_ROOT_USER
-        self._password = crypt.crypt(const.NON_ROOT_USER_PASS, "22")
         self._uid = self._gid = -1
         self._setup_info = dict()
 
@@ -79,6 +79,41 @@ class Setup:
             return _output, _err, _rc
         except Exception as e:
             raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
+
+    @staticmethod
+    def _fetch_csm_user_password(decrypt=False):
+        """
+        This Method Fetches the Password for CSM User from Provisioner.
+        :param decrypt:
+        :return:
+        """
+        Log.info("Fetching CSM User Password from provisioner.")
+        try:
+            csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, "csm")
+        except PillarDataFetchError as e:
+            Log.error(f"Salt Command Failed {e}")
+            return None
+        if csm_credentials and isinstance(csm_credentials, dict):
+            csm_user_pass = csm_credentials.get(const.SECRET)
+        else:
+            Log.error("No Credentials Fetched from Provisioner.")
+            return None
+        if decrypt and csm_user_pass:
+            Log.info("Decrypting CSM Password.")
+            try:
+                cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+                cipher_key = Cipher.generate_key(cluster_id, "csm")
+            except PillarDataFetchError as error:
+                Log.error(f"Salt Command Failed {error}")
+                return None
+            try:
+                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
+                return decrypted_value.decode("utf-8")
+            except CipherInvalidToken as error:
+                Log.error(f"Decryption for CSM Failed. {error}")
+                raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
+
+        return csm_user_pass
 
     def _is_user_exist(self):
         """
@@ -162,8 +197,17 @@ class Setup:
         """
         if not reset:
             if not self._is_user_exist():
-                Setup._run_cmd("useradd -d "+const.CSM_USER_HOME+" -p "+self._password+" "+ self._user)
+                _password = self._fetch_csm_user_password(decrypt=True)
+                if not _password:
+                    Log.error("CSM Password Not Recieved from provisioner.")
+                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
+                Log.info("Creating CSM User.")
+                _password = crypt.crypt(_password, "22")
+                Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
+                Log.info("Adding CSM User to Wheel Group.")
                 Setup._run_cmd("usermod -aG wheel " + self._user)
+                Log.info("Enabling nologin for CSM user.")
+                Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
                 if not self._is_user_exist():
                     raise CsmSetupError("Unable to create %s user" % self._user)
                 node_name = SaltWrappers.get_salt_call(const.GRAINS_GET, 'id', 'log')
@@ -238,9 +282,11 @@ class Setup:
         @staticmethod
         def store_encrypted_password(conf_data):
             # read username's and password's for S3 and RMQ
+            Log.info("Storing Encrypted Password")
             open_ldap_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.OPENLDAP)
             # Edit Current Config File.
             if open_ldap_credentials and type(open_ldap_credentials) is dict:
+                Log.info("Openldap Credentials Copied to CSM Configuration.")
                 conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
                                                     const.IAM_ADMIN, {}).get(const.USER)
                 conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
@@ -249,10 +295,16 @@ class Setup:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
             sspl_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.SSPL)
             if sspl_config and type(sspl_config) is dict:
+                Log.info("SSPL Credentials Copied to CSM Configuration.")
                 conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
                 conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
             else:
                 raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
+            _paswd = Setup._fetch_csm_user_password()
+            if not _paswd:
+                raise CsmSetupError("CSM Password Not Set by Provisioner.")
+            Log.info("CSM Credentials Copied to CSM Configuration.")
+            conf_data[const.CSM][const.PASSWORD] = _paswd
             cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
             provisioner_data = conf_data[const.PROVISIONER]
             provisioner_data[const.CLUSTER_ID] = cluster_id
