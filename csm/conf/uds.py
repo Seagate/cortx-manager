@@ -80,7 +80,7 @@ frontend uds-frontend
     bind 127.0.0.1:5000
     bind ::1:5000
     bind {cluster_ip}:5000
-    bind {mgmt_vip}:5000
+    bind {mgmt_vip}:5000 transparent
     acl udsbackendacl dst_port 5000
     use_backend uds-backend if udsbackendacl\
 """
