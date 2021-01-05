@@ -135,7 +135,8 @@ class CortxCli(Cmd):
              file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
              log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
              level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+            Conf.decrypt_conf()
         #Set Rest API for CLI
         csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CORTXCLI.csm_agent_port')
         csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CORTXCLI.csm_agent_host')
