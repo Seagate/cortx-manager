@@ -17,6 +17,7 @@ from csm.common.conf import Conf
 from csm.conf.salt import SaltWrappers
 from csm.core.blogic import const
 
+from ipaddress import ip_address
 from pathlib import Path
 from pwd import getpwnam
 from shutil import copyfile, rmtree
@@ -72,6 +73,7 @@ class UDSConfigGenerator:
     @staticmethod
     def generate_haproxy_frontend_config():
         cluster_ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
+        ip_address(cluster_ip)
         return f"""\
 frontend uds-frontend
     mode tcp
