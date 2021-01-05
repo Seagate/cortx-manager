@@ -29,6 +29,7 @@ from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
 from csm.core.services.usl import UslService
+from csm.core.services.usl_extensions import UslExtensionsService
 
 
 # TODO replace this workaround with a proper firewall, or serve USL on a separate socket
@@ -57,9 +58,11 @@ class _View(CsmView):
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
     _service: UslService
+    _extension_service: UslExtensionsService
 
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
+        self._extension_service = UslExtensionsService()
         self._service = self._request.app[const.USL_SERVICE]
         self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
 
@@ -92,7 +95,7 @@ class SaaSURLView(_View):
     """
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> Dict[str, str]:
-        return await self._service.get_saas_url()
+        return await self._extension_service.get_saas_url()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -150,11 +153,12 @@ class DeviceRegistrationView(_View):
             desc = 'Malformed UDS registration payload'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._service.post_register_device(self._s3_buckets_service, registration_info)
+        return await self._extension_service.post_register_device(
+            self._s3_buckets_service, registration_info)
 
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> None:
-        await self._service.get_register_device()
+        await self._extension_service.get_register_device()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -165,7 +169,7 @@ class RegistrationTokenView(_View):
     """
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> Dict[str, str]:
-        return await self._service.get_registration_token()
+        return await self._extension_service.get_registration_token()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
