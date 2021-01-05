@@ -59,6 +59,11 @@
             "permissions_tag": "update",
             "args": [
                 {
+                  "flag": "config_url",
+                  "type": "str",
+                  "help": " Url for File or Config Store."
+                },
+                {
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",
@@ -96,10 +101,11 @@
                 }
             ],
             "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
+              "type": "direct",
+              "target": "csm.conf.post_install",
+              "method": "execute",
+              "class": "PostInstall",
+              "is_static": false
             }
         },
         {
