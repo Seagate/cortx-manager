@@ -53,6 +53,7 @@ class UserNameValidator(Validator):
                 "Must be between 4-56 Characters")
 
 
+
 class CommentsValidator(Validator):
     """
     Validation Class for Comments and Strings in CSM
@@ -61,7 +62,7 @@ class CommentsValidator(Validator):
     def __call__(self, value):
         if len(value) > const.STRING_MAX_VALUE:
             raise ValidationError(
-                "Length should not be more than that of 250 characters.")
+                "Length should not be more than 250 characters.")
 
 
 class PortValidator(Validator):
@@ -71,7 +72,7 @@ class PortValidator(Validator):
 
     def __call__(self, value):
         if not const.PORT_MIN_VALUE < int(value) or not const.PORT_MAX_VALUE > int(value):
-            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} than {const.PORT_MAX_VALUE}")
+            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} and {const.PORT_MAX_VALUE}")
 
 
 class PathPrefixValidator(Validator):
@@ -198,7 +199,7 @@ class Enum(Validator):
     def __call__(self, value):
         if value not in self._validator_values:
             raise ValidationError(
-                f"Incorrect Value: Should be from {' '.join(self._validator_values)}"
+                f"Incorrect Value: must be from {' '.join(self._validator_values)}"
             )
 
 class ValidationErrorFormatter:
@@ -222,7 +223,7 @@ class IsoFilenameValidator(Validator):
 
     def __call__(self, file_name):
         if not file_name.endswith(".iso"):
-            raise ValidationError("Package should be a '.iso' file.")
+            raise ValidationError("Package must be an '.iso' file.")
 
 
 class BinFilenameValidator(Validator):
@@ -232,4 +233,4 @@ class BinFilenameValidator(Validator):
 
     def __call__(self, file_name):
         if not file_name.endswith(".bin"):
-            raise ValidationError("Package should be a '.bin' file.")
+            raise ValidationError("Package must be a '.bin' file.")

@@ -143,6 +143,9 @@ class AlertRepository(IAlertStorage):
                 resolved, acknowledged, show_active)
         query = Query().filter_by(query_filter)
 
+        if not limits:
+            limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+
         if limits and limits.offset:
             query = query.offset(limits.offset)
 
@@ -215,6 +218,9 @@ class AlertRepository(IAlertStorage):
             Or(Compare(AlertModel.acknowledged, '=', False), \
             Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(alert_filter)
+        limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+        query = query.offset(limits.offset)
+        query = query.limit(limits.limit)
         return await self.db(AlertModel).get(query)
 
     async def fetch_alert_for_support_bundle(self):
@@ -380,14 +386,14 @@ class AlertsAppService(ApplicationService):
         """
         Log.debug(f"Update all alerts service. fields:{fields}")
         if not isinstance(fields, list):
-            raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
+            raise InvalidRequest("Acknowledged value must be of type boolean.")
 
         alerts = []
 
         for alert_id in fields:
             alert = await self.repo.retrieve(alert_id)
             if not alert:
-                raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
+                raise CsmNotFoundError("Alert not found for id" + alert_id, ALERTS_MSG_NOT_FOUND)
 
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
             alert.updated_time = int(time.time())
@@ -656,7 +662,7 @@ class AlertMonitorService(Service, Observable):
         try:
             Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
-            self._monitor_thread.join()
+            self._monitor_thread.join(timeout=2.0)
             self._thread_started = False
             self._thread_running = False
         except Exception as e:

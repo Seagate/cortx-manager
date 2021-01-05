@@ -215,6 +215,19 @@ class Payload:
         self._set(key, val, self._data)
         self._dirty = True
 
+    def pop(self, key, *defaultvalue):
+        k = key.split('.', 1)
+        if len(k) == 1:
+            dirty = k[0] in self._data
+            value = self._data.pop(k[0], *defaultvalue)
+        else:
+            dirty = k[1] in self._data[k[0]]
+            value = self._data[k[0]].pop(k[1], *defaultvalue)
+            if dirty and not bool(self._data[k[0]]):
+                self._data.pop(k, None)
+        self._dirty = dirty
+        return value
+
     def convert(self, map, payload):
         """
         Converts 1 Schema to 2nd Schema depending on mapping dictionary.
