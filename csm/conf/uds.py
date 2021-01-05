@@ -17,6 +17,7 @@ from csm.common.conf import Conf
 from csm.conf.salt import SaltWrappers
 from csm.core.blogic import const
 
+from ipaddress import ip_address
 from pathlib import Path
 from pwd import getpwnam
 from shutil import copyfile, rmtree
@@ -72,7 +73,7 @@ class UDSConfigGenerator:
     @staticmethod
     def generate_haproxy_frontend_config():
         cluster_ip = SaltWrappers.get_salt_call('pillar.get', 'cluster:cluster_ip')
-        mgmt_vip = SaltWrappers.get_salt_call('pillar.get', 'cluster:mgmt_vip')
+        ip_address(cluster_ip)
         return f"""\
 frontend uds-frontend
     mode tcp
@@ -80,7 +81,6 @@ frontend uds-frontend
     bind 127.0.0.1:5000
     bind ::1:5000
     bind {cluster_ip}:5000
-    bind {mgmt_vip}:5000
     acl udsbackendacl dst_port 5000
     use_backend uds-backend if udsbackendacl\
 """
@@ -205,8 +205,12 @@ backend uds-backend
     @classmethod
     def apply(cls, uds_public_ip):
         cls.update_csm_config(uds_public_ip)
-        cls.update_haproxy_config()
-        cls.update_uds_config()
+        if uds_public_ip is None:
+            cls.update_haproxy_config()
+            cls.update_uds_config()
+        else:
+            cls.remove_haproxy_config()
+            cls.remove_uds_config()
 
     @classmethod
     def delete(cls):
