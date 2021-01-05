@@ -137,7 +137,7 @@ class CsmAgent:
             # TODO: consider a more safe storage
             params = {
                 "username": const.NON_ROOT_USER,
-                "password": const.NON_ROOT_USER_PASS
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
@@ -212,8 +212,11 @@ class CsmAgent:
         CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
+        Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
+        Log.info("Finished stopping alert monitor service")
         CsmAgent.health_monitor.stop()
+        Log.info("Finished stopping csm agent")
 
 
 if __name__ == '__main__':
