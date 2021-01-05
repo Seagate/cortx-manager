@@ -682,9 +682,12 @@ class HealthMonitorService(Service, Observable):
         try:
             Log.info("Stopping Health monitor thread")
             self._health_plugin.stop()
+            Log.info("Joining Health monitor thread")
             self._monitor_thread.join(timeout=2.0)
+
             self._thread_started = False
             self._thread_running = False
+            Log.info("Stopped Health monitor thread")
         except Exception as e:
             Log.warn(f"Error in stopping health monitor thread: {e}")
 

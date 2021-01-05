@@ -662,9 +662,12 @@ class AlertMonitorService(Service, Observable):
         try:
             Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
+            Log.info("Joining Alert monitor thread")
             self._monitor_thread.join(timeout=2.0)
+
             self._thread_started = False
             self._thread_running = False
+            Log.info("Stopped Alert monitor thread")
         except Exception as e:
             Log.warn(f"Error in stopping alert monitor thread: {e}")
 
@@ -682,6 +685,7 @@ class AlertMonitorService(Service, Observable):
         prev_alert = None
         for count in range(0, self._es_retry):
             try:
+                Log.info("Fetching previous alert to check the state and severity.")
                 prev_alert = self._run_coroutine\
                     (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
                 return prev_alert
