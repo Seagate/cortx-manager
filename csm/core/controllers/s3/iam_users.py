@@ -20,7 +20,7 @@ from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.controllers.validators import (PathPrefixValidator,
                                              PasswordValidator,
-                                             UserNameValidator)
+                                             IamUserNameValidator)
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.s3.base import S3AuthenticatedView
 
@@ -46,7 +46,7 @@ class IamUserCreateSchema(BaseSchema):
     IAM user Create schema validation class
     """
     user_name = fields.Str(required=True,
-                           validate=[UserNameValidator()])
+                           validate=[IamUserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
     require_reset = fields.Boolean(default=False)
 
@@ -61,7 +61,7 @@ class IamUserDeleteSchema(BaseSchema):
     """
     IAM user delete schema validation class
     """
-    user_name = fields.Str(required=True, validate=[UserNameValidator()])
+    user_name = fields.Str(required=True, validate=[IamUserNameValidator()])
 
 
 @CsmView._app_routes.view("/api/v1/iam_users")
