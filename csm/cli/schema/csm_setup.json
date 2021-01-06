@@ -145,6 +145,11 @@
                   "nargs": "?"
                 },
                 {
+                    "flag": "--uds-public-ip",
+                    "default": null,
+                    "help": "UDS public IP"
+                },
+                {
                     "flag": "args",
                     "default": [],
                     "suppress_help": true,
