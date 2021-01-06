@@ -199,9 +199,6 @@ if [ "$DEV" == true ]; then
     install_py_req requirment.txt
     install_py_req req_dev.txt
 
-    # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
-    pip uninstall -y numpy
-    pip install numpy --no-binary :all:
 else
     pip3 install --upgrade pip
     pip3 install pyinstaller==3.5
@@ -215,7 +212,13 @@ else
     install_py_req requirment.txt
 
 fi
+
+# Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
+pip uninstall -y numpy
+pip install numpy --no-binary :all:
+
 ENV_END_TIME=$(date +%s)
+
 ################### Backend ##############################
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
