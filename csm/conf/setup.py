@@ -973,7 +973,7 @@ class CsmSetup(Setup):
         # Execute 'csm_setup post_update' mannually once system is updated using SW update. 
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
-            if Setup._is_user_exist():
+            if self._is_user_exist():
                 Log.debug(f"Deleting user {self._user}")
                 Setup._run_cmd("userdel -r " +self._user)
                 
