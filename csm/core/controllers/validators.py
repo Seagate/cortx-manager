@@ -29,6 +29,17 @@ class FileRefValidator(Validator):
             raise ValidationError('This field must be of instance of a FileRef class')
 
 
+class IamUserNameValidator(Validator):
+    """
+    Validator Class for Iam Username
+    """
+
+    def __call__(self, value):
+        if not re.search(r"^[\w@+=.,-]{1,64}$", value):
+            raise ValidationError(
+                "Iam username should be between 1-64 Characters."
+                "Should contain Alphanumeric . - _ @ + = or ,.")
+
 
 class UserNameValidator(Validator):
     """
@@ -38,8 +49,9 @@ class UserNameValidator(Validator):
     def __call__(self, value):
         if not re.search(r"^[a-zA-Z0-9_-]{4,56}$", value):
             raise ValidationError(
-                "Username must be between 4-64 characters and"
-                " it can only contain alphanumeric, - and  _ .")
+                "Username can only contain Alphanumeric, - and  _ .Length "
+                "Must be between 4-56 Characters")
+
 
 
 class CommentsValidator(Validator):
@@ -104,14 +116,29 @@ class BucketNameValidator(Validator):
     """
 
     def is_value_valid(self, value):
-        return re.search(r"^[a-z0-9][a-z0-9-]{3,54}[a-z0-9]$", value)
+        return re.search(r"^[a-z0-9][a-z0-9-.]{1,61}[a-z0-9]$", value)
+
+    def _check_ipv4(self, value):
+        try:
+            ipv4 = Ipv4()
+            ipv4(value)
+            res = True
+        except ValidationError:
+            res = False
+        if res:
+            raise ValidationError("Bucket Name cannot be ip v4 format")
 
     def __call__(self, value):
         if not self.is_value_valid(value):
             raise ValidationError(
-                ("Bucket Name should be between 4-56 Characters long."
-                 "Should contain either lowercase, numeric or '-' characters. "
-                 "Not starting or ending with '-'"))
+                ("Bucket Name should be between 3-63 Characters long."
+                 "Should contain either lowercase, numeric, '-' or '.' characters. "
+                 "Not starting or ending with '-' or '.'"))
+
+        if value.startswith("xn--"):
+            raise ValidationError("Bucket Name cannot start with 'xn--'")
+
+        self._check_ipv4(value)
 
 
 class Ipv4(Validator):
