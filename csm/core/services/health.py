@@ -213,7 +213,7 @@ class HealthAppService(ApplicationService):
             parent_health_schema = self._get_schema(const.KEY_NODES)
             keys = self._get_child_node_keys(parent_health_schema)
         for key in keys:
-            if "node" in key:
+            if "node" in key and node_id:
                 minion_id = self.get_minion_id(key.split(':')[1])
                 key = f"node:{minion_id}"
             node_details = await self._get_component_details(key)
