@@ -848,7 +848,7 @@ class CsmSetup(Setup):
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
 
-    def post_install(self, args):
+    def post_install(self, args={}):
         """
         Perform post-install for csm
             : Configure csm user
@@ -867,7 +867,7 @@ class CsmSetup(Setup):
             Log.error(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
-    def config(self, args):
+    def config(self, args={}):
         """
         Perform configuration for csm
             : Move conf file to etc
@@ -887,7 +887,7 @@ class CsmSetup(Setup):
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
 
-    def init(self, args):
+    def init(self, args={}):
         """
         Check and move required configuration file
         Init is used after all dependency service started
@@ -923,7 +923,7 @@ class CsmSetup(Setup):
             Log.error(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
 
-    def reset(self, args):
+    def reset(self, args={}):
         """
         Reset csm configuraion
         Soft: Soft Reset is used to restrat service with log cleanup
@@ -956,7 +956,7 @@ class CsmSetup(Setup):
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
 
-    def refresh_config(self, args):
+    def refresh_config(self, args={}):
         """
         Refresh context for CSM
         """
@@ -968,3 +968,36 @@ class CsmSetup(Setup):
         except Exception as e:
             Log.error(f"csm_setup refresh_config failed. Error: {e}")
             raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")
+
+    def post_update(self, args={}):
+        # Execute 'csm_setup post_update' mannually once system is updated using SW update. 
+        try:
+            Log.info(f"Triggering csm_setup post_update: {args}")
+            if Setup._is_user_exist():
+                Log.debug(f"Deleting user {self._user}")
+                Setup._run_cmd("userdel -r " +self._user)
+                
+                Setup.Config.delete()
+
+                Log.debug("Applying salt state post update")
+                SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
+
+                Log.debug("Execute csm_setup cmds")
+                self.post_install(args={})
+                self.config(args={})
+                self.init(args={})
+
+                if not Setup._is_group_exist(const.PROVISIONER_USERS_GROUP):
+                    raise CsmSetupError(f"{const.PROVISIONER_USERS_GROUP} not found.")
+                Log.debug(f"Add {self._user} to {const.PROVISIONER_USERS_GROUP} group")
+                Setup._run_cmd(f"usermod -a -G {const.PROVISIONER_USERS_GROUP}  {self._user}")
+                
+                if not Setup._is_group_exist(const.CERTS_GROUP):
+                    raise CsmSetupError(f"{const.CERTS_GROUP} not found.")
+                Log.debug(f"Add {self._user} to {const.CERTS_GROUP} group")
+                Setup._run_cmd(f"usermod -a -G {const.CERTS_GROUP}  {self._user}")
+            else:
+                raise CsmSetupError(f"csm user not found.")
+        except Exception as e:
+            Log.error(f"csm_setup post_update failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup post_update failed. Error: {e}")

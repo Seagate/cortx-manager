@@ -36,6 +36,7 @@ class ArgumentError(argparse.ArgumentError):
 class Terminal:
 
     EMPTY_PASS_FIELD = "Password field can't be empty."
+    EMPTY_UNAME_FIELD = "Username field can't be empty."
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
@@ -98,6 +99,27 @@ class Terminal:
                                     f"Confirm {Terminal.EMPTY_PASS_FIELD}")
             if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
+        return value
+
+    @staticmethod
+    def get_username(value, confirm_username_flag=True):
+        """
+        Fetches the Username from Terminal.
+        :return:
+        """
+
+        value = value or input("Username: ")
+        Log.debug(f"Username: : {value}")
+        if not value:
+            raise ArgumentError(errno.EINVAL, Terminal.EMPTY_UNAME_FIELD)
+        if confirm_username_flag:
+            confirm_password = input("Confirm Username: ")
+            Log.debug(f"confirm_password: {confirm_password}")
+            if not confirm_password:
+                raise ArgumentError(errno.EINVAL,
+                                    f"Confirm {Terminal.EMPTY_UNAME_FIELD}")
+            if not confirm_password == value:
+                raise ArgumentError(errno.EINVAL, "Username do not match.")
         return value
 
 class CortxCli(Cmd):
