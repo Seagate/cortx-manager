@@ -252,7 +252,7 @@
                     "nargs": "?"
                 },
                 {
-                  "flag": "username",
+                  "flag": "-u",
                   "dest": "username",
                   "type": "Terminal.get_username",
                   "help": "Cortx Manager Admin Username",

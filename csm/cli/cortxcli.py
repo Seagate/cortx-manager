@@ -113,12 +113,12 @@ class Terminal:
         if not value:
             raise ArgumentError(errno.EINVAL, Terminal.EMPTY_UNAME_FIELD)
         if confirm_username_flag:
-            confirm_password = input("Confirm Username: ")
-            Log.debug(f"confirm_password: {confirm_password}")
-            if not confirm_password:
+            confirm_username = input("Confirm Username: ")
+            Log.debug(f"confirm_username: {confirm_username}")
+            if not confirm_username:
                 raise ArgumentError(errno.EINVAL,
                                     f"Confirm {Terminal.EMPTY_UNAME_FIELD}")
-            if not confirm_password == value:
+            if not confirm_username == value:
                 raise ArgumentError(errno.EINVAL, "Username do not match.")
         return value
 
