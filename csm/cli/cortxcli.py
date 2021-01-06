@@ -23,6 +23,7 @@ from getpass import getpass
 from cmd import Cmd
 import pathlib
 import argparse
+from cortx.utils.log import Log
 
 class ArgumentError(argparse.ArgumentError):
     def __init__(self, rc, message, argument=None):
