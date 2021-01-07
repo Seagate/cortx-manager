@@ -872,23 +872,19 @@ class CsmSetup(Setup):
             raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)
 
     def post_update(self, args):
-        # Execute 'csm_setup post_update' mannually once system is updated using SW update. 
+        # Execute 'csm_setup post_update' mannually once system is updated using SW update.
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
                 Log.debug(f"Deleting user {self._user}")
-                Setup._run_cmd("userdel -r " +self._user)
-                
+                Setup._run_cmd(f"userdel -r {self._user}")                
                 Setup.Config.delete()
-
                 Log.debug("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
-
                 Log.debug("Execute csm_setup cmds")
-                Setup._run_cmd(f"csm_setup post_install")
-                Setup._run_cmd(f"csm_setup config")
-                Setup._run_cmd(f"csm_setup init")
-
+                Setup._run_cmd("csm_setup post_install")
+                Setup._run_cmd("csm_setup config")
+                Setup._run_cmd("csm_setup init")
                 if not Setup._is_group_exist(const.PROVISIONER_USERS_GROUP):
                     raise CsmSetupError(f"{const.PROVISIONER_USERS_GROUP} not found.")
                 Log.debug(f"Add {self._user} to {const.PROVISIONER_USERS_GROUP} group")
@@ -899,9 +895,10 @@ class CsmSetup(Setup):
                 Log.debug(f"Add {self._user} to {const.CERTS_GROUP} group")
                 Setup._run_cmd(f"usermod -a -G {const.CERTS_GROUP}  {self._user}")
                 # Add CSM Admin User Created while onboarding in csm user group on both nodes.
+                Log.debug(f"Add {args['username']} to {self._user} user group")
                 Setup._run_cmd(f"usermod -a -G {self._user} {args['username']}")
             else:
-                raise CsmSetupError(f"csm user not found.")
+                raise CsmSetupError("csm user not found.")
         except Exception as e:
             Log.error(f"csm_setup post_update failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup post_update failed. Error: {e}")
