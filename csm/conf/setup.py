@@ -877,7 +877,7 @@ class CsmSetup(Setup):
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
                 Log.debug(f"Deleting user {self._user}")
-                Setup._run_cmd(f"userdel -r {self._user}")                
+                Setup._run_cmd(f"userdel -r {self._user}")
                 Setup.Config.delete()
                 Log.debug("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
@@ -888,8 +888,7 @@ class CsmSetup(Setup):
                 if not Setup._is_group_exist(const.PROVISIONER_USERS_GROUP):
                     raise CsmSetupError(f"{const.PROVISIONER_USERS_GROUP} not found.")
                 Log.debug(f"Add {self._user} to {const.PROVISIONER_USERS_GROUP} group")
-                Setup._run_cmd(f"usermod -a -G {const.PROVISIONER_USERS_GROUP}  {self._user}")
-                
+                Setup._run_cmd(f"usermod -a -G {const.PROVISIONER_USERS_GROUP}  {self._user}")                
                 if not Setup._is_group_exist(const.CERTS_GROUP):
                     raise CsmSetupError(f"{const.CERTS_GROUP} not found.")
                 Log.debug(f"Add {self._user} to {const.CERTS_GROUP} group")
