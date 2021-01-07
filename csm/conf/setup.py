@@ -23,7 +23,6 @@ import shlex
 import json
 from ipaddress import ip_address
 from cortx.utils.log import Log
-from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
@@ -45,6 +44,8 @@ from cortx.utils.product_features import unsupported_features
 from csm.conf.salt import SaltWrappers, PillarDataFetchError
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.kvstore.error import KvError
 
 # try:
 #     from salt import client
@@ -91,12 +92,14 @@ class Setup:
         :param decrypt:
         :return:
         """
-        Log.info("Fetching CSM User Password from provisioner.")
+        if Conf.get(const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
+            Log.info("Setting Up CSM in Dev Mode.")
+            decrypt = False
+        Log.info("Fetching CSM User Password from Config Store.")
         try:
-            csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, "csm")
-        except PillarDataFetchError as e:
-            Log.error(f"Salt Command Failed {e}")
-            return None
+            csm_credentials = Conf.get(const.CONSUMER_INDEX, "csm_user_secret")
+        except KvError as e:
+            Log.error(f"Faild to Fetch Csm Credentials {e}")
         if csm_credentials and isinstance(csm_credentials, dict):
             csm_user_pass = csm_credentials.get(const.SECRET)
         else:

@@ -17,6 +17,8 @@
 import crypt
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
+from cortx.utils.conf_store import Conf
+from cortx.utils.kvstore.error import KvError
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
@@ -42,6 +44,13 @@ class PostInstall(Setup):
         :param command: Command Class Object :type: class
         :return:
         """
+        try:
+            Log.info("Loading Url into conf store.")
+            Conf.load(const.CONSUMER_INDEX, command.options.get("config_url"))
+        except KvError as e:
+            Log.error(f"Configuration Loading Failed {e}")
+            raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+
         await self._config_user()
         await self._set_unsupported_feature_info()
         await self._configure_system_auto_restart()
