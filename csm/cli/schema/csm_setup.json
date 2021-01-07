@@ -109,6 +109,12 @@
             "permissions_tag": "update",
             "args": [
                 {
+                  "flag": "--config",
+                  "dest": "config_url",
+                  "type": "str",
+                  "help": "Config Store URL e.g <type>://<path>."
+                },
+                {
                   "flag": "-p",
                   "dest": "Product",
                   "help": "Product name",

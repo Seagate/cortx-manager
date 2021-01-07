@@ -21,7 +21,6 @@ import grp
 import errno
 import shlex
 import json
-from ipaddress import ip_address
 from cortx.utils.log import Log
 from csm.common.conf import Conf
 from csm.common.payload import Yaml
@@ -296,100 +295,13 @@ class Setup:
         """
 
         @staticmethod
-        def store_encrypted_password(conf_data):
-            # read username's and password's for S3 and RMQ
-            Log.info("Storing Encrypted Password")
-            open_ldap_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.OPENLDAP)
-            # Edit Current Config File.
-            if open_ldap_credentials and type(open_ldap_credentials) is dict:
-                Log.info("Openldap Credentials Copied to CSM Configuration.")
-                conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.USER)
-                conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.SECRET)
-            else:
-                Log.error(f"failed to get pillar data for {const.OPENLDAP}")
-                raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
-            sspl_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.SSPL)
-            if sspl_config and type(sspl_config) is dict:
-                Log.info("SSPL Credentials Copied to CSM Configuration.")
-                conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
-                conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
-            else:
-                Log.error(f"failed to get pillar data for {const.SSPL}")
-                raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            _paswd = Setup._fetch_csm_user_password()
-            if not _paswd:
-                raise CsmSetupError("CSM Password Not Set by Provisioner.")
-            Log.info("CSM Credentials Copied to CSM Configuration.")
-            conf_data[const.CSM][const.PASSWORD] = _paswd
-            cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
-            provisioner_data = conf_data[const.PROVISIONER]
-            provisioner_data[const.CLUSTER_ID] = cluster_id
-            conf_data[const.PROVISIONER] = provisioner_data
-
-        @staticmethod
-        def create(args):
-            """
-            This Function Creates the CSM Conf File on Required Location.
-            :return:
-            """
-            Log.error(f"Create the CSM Conf File on Required Location. args:{args}")
-            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            csm_conf_path = os.path.join(const.CSM_SOURCE_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            # Read Current CSM Config FIle.
-            conf_file_data = Yaml(csm_conf_path).load()
-            if conf_file_data:
-                if args[const.DEBUG]:
-                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
-                else:
-                    Setup.Config.store_encrypted_password(conf_file_data)
-                    # Update the Current Config File.
-                    Yaml(csm_conf_path).dump(conf_file_data)
-                Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
-                if args[const.DEBUG]:
-                    Yaml(csm_conf_target_path).dump(conf_file_data)
-            else:
-                Log.error(f"Unable to load CSM config. Path:{csm_conf_path}")
-                raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
-
-        @staticmethod
-        def cli_create(args):
-            """
-            This Function Creates the CortxCli Conf File on Required Location.
-            :return:
-            """
-            os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
-            os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
-            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_PATH)
-            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_CONF_PATH)
-            cli_conf_target_path = os.path.join(const.CORTXCLI_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
-            cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
-            # Read Current CortxCli Config FIle.
-            conf_file_data = Yaml(cli_conf_path).load()
-            if conf_file_data:
-                if const.ADDRESS_PARAM in args.keys():
-                    conf_file_data[const.CORTXCLI_SECTION][const.CSM_AGENT_HOST_PARAM_NAME] =\
-                        args[const.ADDRESS_PARAM]
-                if args[const.DEBUG]:
-                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
-                else:
-                    Setup.Config.store_encrypted_password(conf_file_data)
-                    # Update the Current Config File.
-                    Yaml(cli_conf_path).dump(conf_file_data)
-                Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
-                if args["f"] or args[const.DEBUG]:
-                    Yaml(cli_conf_target_path).dump(conf_file_data)
-            else:
-                raise CsmSetupError(f"Unable to load Cortx Cli config. Path:{cli_conf_path}")
-
-        @staticmethod
         def load():
             Log.info("Loading config")
-            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH,
+                                                const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):
-                Log.error("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
-                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
+                Log.error(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
+                raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
             Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
             """
             Loading databse config
@@ -868,11 +780,7 @@ class CsmSetup(Setup):
             raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
 
     def config(self, args):
-        """
-        Perform configuration for csm
-            : Move conf file to etc
-        Config is used to move update conf files one time configuration
-        """
+
         try:
             Log.info("Triggering csm_setup config")
             self._verify_args(args)
