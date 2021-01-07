@@ -92,26 +92,33 @@ class Setup:
         :param decrypt:
         :return:
         """
+        csm_credentials = None
         if Conf.get(const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
             Log.info("Setting Up CSM in Dev Mode.")
             decrypt = False
         Log.info("Fetching CSM User Password from Config Store.")
         try:
+            # TODO: Add Proper Key from Config Store
             csm_credentials = Conf.get(const.CONSUMER_INDEX, "csm_user_secret")
         except KvError as e:
             Log.error(f"Faild to Fetch Csm Credentials {e}")
         if csm_credentials and isinstance(csm_credentials, dict):
             csm_user_pass = csm_credentials.get(const.SECRET)
         else:
-            Log.error("No Credentials Fetched from Provisioner.")
+            Log.error("No Credentials Fetched from Config Store.")
             return None
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
-                cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+                # TODO: Add Proper Key from Config Store
+                cluster_id = Conf.get(const.CONSUMER_INDEX,
+                                      f"{const.GRAINS_GET}>{const.CLUSTER_ID}")
                 cipher_key = Cipher.generate_key(cluster_id, "csm")
-            except PillarDataFetchError as error:
-                Log.error(f"Salt Command Failed {error}")
+            except KvError as error:
+                Log.error(f"Failed to Fetch Cluster Id. {error}")
+                return None
+            except Exception as e:
+                Log.error(f"{e}")
                 return None
             try:
                 decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
@@ -119,7 +126,6 @@ class Setup:
             except CipherInvalidToken as error:
                 Log.error(f"Decryption for CSM Failed. {error}")
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
-
         return csm_user_pass
 
     def _is_user_exist(self):

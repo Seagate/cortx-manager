@@ -37,6 +37,7 @@ class PostInstall(Setup):
         """Instiatiate Post Install Class."""
         Log.info("Executing Post Installation for CSM.")
         super(PostInstall, self).__init__()
+        self._setup_info = None
 
     async def execute(self, command):
         """
@@ -50,7 +51,6 @@ class PostInstall(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
-
         await self._config_user()
         await self._set_unsupported_feature_info()
         await self._configure_system_auto_restart()
@@ -71,12 +71,12 @@ class PostInstall(Setup):
             Setup._run_cmd((f"useradd -d {const.CSM_USER_HOME} -p {_password} "
                             f"{self._user}"))
             Log.info("Adding CSM User to Wheel Group.")
-            Setup._run_cmd("usermod -aG wheel " + self._user)
+            Setup._run_cmd(f"usermod -aG wheel {self._user}")
             Log.info("Enabling nologin for CSM user.")
-            Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
+            Setup._run_cmd(f"usermod -s /sbin/nologin {self._user}")
             if not self._is_user_exist():
                 Log.error("Csm User Creation Failed.")
-                raise CsmSetupError("Unable to create %s user" % self._user)
+                raise CsmSetupError(f"Unable to create {self._user} user" )
         if self._is_user_exist() and Setup._is_group_exist(
                 const.HA_CLIENT_GROUP):
             Log.info("Add Csm User to HA-Client Group.")
@@ -106,8 +106,8 @@ class PostInstall(Setup):
             return list(set(component_list))
         try:
             Log.info("Set unsupported feature list to ES.")
-            self._setup_info = self.get_data_from_provisioner_cli(
-                const.GET_SETUP_INFO)
+            # TODO: Add Proper Key as per Config Store
+            self._setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []

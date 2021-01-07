@@ -59,9 +59,10 @@
             "permissions_tag": "update",
             "args": [
                 {
-                  "flag": "config_url",
+                  "flag": "--config",
+                  "dest": "config_url",
                   "type": "str",
-                  "help": " Url for File or Config Store."
+                  "help": "Config Store URL e.g <type>://<path>."
                 },
                 {
                   "flag": "-p",
