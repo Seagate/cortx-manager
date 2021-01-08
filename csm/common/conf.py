@@ -79,19 +79,19 @@ class Conf:
         if not cluster_id:
             raise ClusterIdFetchError("failed to get cluster id.")
         for each_key in const.DECRYPTION_KEYS:
-            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
-            if not encrypted_value and each_key == "CSM.password":
+            decrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
+            if not decrypted_value and each_key == "CSM.password":
                 Log.info("Setting default password for csm user.")
-                decrypted_value = const.NON_ROOT_USER.encode("utf-8")
+                encrypted_value = const.NON_ROOT_USER.encode("utf-8")
             else:
                 try:
                     cipher_key = Cipher.generate_key(cluster_id,
                                                 const.DECRYPTION_KEYS[each_key])
-                    decrypted_value = Cipher.decrypt(cipher_key,
-                                             encrypted_value.encode("utf-8"))
+                    encrypted_value = Cipher.decrypt(cipher_key,
+                                             decrypted_value.encode("utf-8"))
                 except CipherInvalidToken as error:
                     raise CipherInvalidToken(f"Decryption for {each_key} Failed. {error}")
-            Conf.set(const.CSM_GLOBAL_INDEX, each_key,decrypted_value.decode("utf-8"))
+            Conf.set(const.CSM_GLOBAL_INDEX, each_key,encrypted_value.decode("utf-8"))
 
 class ConfSection:
     """Represents sub-section of config file"""
