@@ -103,9 +103,9 @@ class Terminal:
         return value
 
     @staticmethod
-    def get_username(value, confirm_username_flag=True):
+    def get_username_from_cli(value, confirm_username_flag=True):
         """
-        Fetches the Username from Terminal.
+        Fetches the Username from CLI.
         :return:
         """
         value = value or input("Username: ")
