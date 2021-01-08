@@ -51,7 +51,7 @@ class Configure(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         if command.options.get(const.DEBUG) == 'true':
-            Log.info(f"Running Csm Setup for Development Mode.")
+            Log.info("Running Csm Setup for Development Mode.")
             self._debug_flag = True
         try:
             uds_public_ip = command.options.get('uds_public_ip')
@@ -71,7 +71,7 @@ class Configure(Setup):
         This Function Creates the CSM Conf File on Required Location.
         :return:
         """
-        Log.error(f"Create the CSM Conf File on Required Location.")
+        Log.error("Create the CSM Conf File on Required Location.")
         if self._debug_flag:
             Log.info("Setting Dev Mode Key in Csm Conf")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
