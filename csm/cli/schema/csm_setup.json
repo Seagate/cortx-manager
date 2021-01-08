@@ -254,7 +254,7 @@
               {
                 "flag": "-u",
                 "dest": "username",
-                "type": "Terminal.get_username",
+                "type": "Terminal.get_username_from_cli",
                 "help": "Cortx Manager Admin Username",
                 "default": "",
                 "json": true
