@@ -875,7 +875,9 @@ class CsmSetup(Setup):
             raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)
 
     def post_update(self, args):
-        # Execute 'csm_setup post_update' mannually once system is updated using SW update.
+        """
+        Execute 'csm_setup post_update' mannually once system is updated using SW update.
+        """
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
@@ -896,7 +898,6 @@ class CsmSetup(Setup):
                     raise CsmSetupError(f"{const.CERTS_GROUP} not found.")
                 Log.debug(f"Add {self._user} to {const.CERTS_GROUP} group")
                 Setup._run_cmd(f"usermod -a -G {const.CERTS_GROUP}  {self._user}")
-                # Add CSM Admin User Created while onboarding in csm user group on both nodes.
                 Log.debug(f"Add {args['username']} to {self._user} user group")
                 Setup._run_cmd(f"usermod -a -G {self._user} {args['username']}")
             else:
