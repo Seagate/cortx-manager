@@ -774,7 +774,8 @@ class CsmSetup(Setup):
             self.set_unsupported_feature_info()
             self._configure_system_auto_restart()
         except Exception as e:
-            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
+            Log.error(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup post_install failed. Error: {e}")
 
     def config(self, args):
         """
@@ -792,7 +793,8 @@ class CsmSetup(Setup):
             self.Config.load()
             UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
         except Exception as e:
-            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
+            Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup config failed. Error: {e}")
 
     def init(self, args):
         """
@@ -827,7 +829,8 @@ class CsmSetup(Setup):
             if ha_check:
                 self._config_cluster(args)
         except Exception as e:
-            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
+            Log.error(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup init failed. Error: {e}")
 
     def reset(self, args):
         """
@@ -870,3 +873,35 @@ class CsmSetup(Setup):
             Log.logger.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
         except Exception as e:
             raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)
+
+    def post_update(self, args):
+        """
+        Execute 'csm_setup post_update' mannually once system is updated using SW update.
+        """
+        try:
+            Log.info(f"Triggering csm_setup post_update: {args}")
+            if self._is_user_exist():
+                Log.debug(f"Deleting user {self._user}")
+                Setup._run_cmd(f"userdel -r {self._user}")
+                Setup.Config.delete()
+                Log.debug("Applying salt state post update")
+                SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
+                Log.debug("Executing csm_setup commands")
+                Setup._run_cmd("csm_setup post_install")
+                Setup._run_cmd("csm_setup config")
+                Setup._run_cmd("csm_setup init")
+                if not Setup._is_group_exist(const.PROVISIONER_USERS_GROUP):
+                    raise CsmSetupError(f"{const.PROVISIONER_USERS_GROUP} not found.")
+                Log.debug(f"Add {self._user} to {const.PROVISIONER_USERS_GROUP} group")
+                Setup._run_cmd(f"usermod -a -G {const.PROVISIONER_USERS_GROUP}  {self._user}")
+                if not Setup._is_group_exist(const.CERTS_GROUP):
+                    raise CsmSetupError(f"{const.CERTS_GROUP} not found.")
+                Log.debug(f"Add {self._user} to {const.CERTS_GROUP} group")
+                Setup._run_cmd(f"usermod -a -G {const.CERTS_GROUP}  {self._user}")
+                Log.debug(f"Add {args['username']} to {self._user} user group")
+                Setup._run_cmd(f"usermod -a -G {self._user} {args['username']}")
+            else:
+                Log.warn("csm user not found.")
+        except Exception as e:
+            Log.error(f"csm_setup post_update failed. Error: {e} - {str(traceback.print_exc())}")
+            raise CsmSetupError(f"csm_setup post_update failed. Error: {e}")

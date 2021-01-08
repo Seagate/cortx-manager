@@ -238,6 +238,34 @@
             "target": "",
             "version": "v1"
             }
+        },
+        {
+          "name": "post_update",
+          "description": "Performing post update steps",
+          "need_confirmation": false,
+          "permissions_tag": "update",
+          "args": [
+              {
+                  "flag": "args",
+                  "default": [],
+                  "suppress_help": true,
+                  "nargs": "?"
+              },
+              {
+                "flag": "-u",
+                "dest": "username",
+                "type": "Terminal.get_username_from_cli",
+                "help": "Cortx Manager Admin Username",
+                "default": "",
+                "json": true
+              }
+          ],
+          "comm": {
+          "type":"CLI",
+          "method": "cmd",
+          "target": "",
+          "version": "v1"
+          }
         }
     ]
 }

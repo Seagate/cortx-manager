@@ -36,6 +36,8 @@ class ArgumentError(argparse.ArgumentError):
 class Terminal:
 
     EMPTY_PASS_FIELD = "Password field can't be empty."
+    EMPTY_UNAME_FIELD = "Username field can't be empty."
+
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
@@ -99,6 +101,25 @@ class Terminal:
             if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
+
+    @staticmethod
+    def get_username_from_cli(value, confirm_username_flag=True):
+        """
+        Fetches the Username from CLI.
+        :return:
+        """
+        value = value or input("Username: ")
+        if not value:
+            raise ArgumentError(errno.EINVAL, Terminal.EMPTY_UNAME_FIELD)
+        if confirm_username_flag:
+            confirm_username = input("Confirm Username: ")
+            if not confirm_username:
+                raise ArgumentError(errno.EINVAL,
+                                    f"Confirm {Terminal.EMPTY_UNAME_FIELD}")
+            if not confirm_username == value:
+                raise ArgumentError(errno.EINVAL, "Username do not match.")
+        return value
+
 
 class CsmCli(Cmd):
     def __init__(self, args):
