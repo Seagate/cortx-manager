@@ -79,8 +79,6 @@ class Conf:
         if not cluster_id:
             raise ClusterIdFetchError("failed to get cluster id.")
         for each_key in const.DECRYPTION_KEYS:
-            # This Change is Specifically for SMS1 -> SMS2 where CSM Password
-            # was Hardcoded.
             encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
             if not encrypted_value and each_key == "CSM.password":
                 Log.info("Setting default password for csm user.")
