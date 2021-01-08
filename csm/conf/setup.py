@@ -451,24 +451,6 @@ class Setup:
                     Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
             Conf.save(const.CSM_GLOBAL_INDEX)
 
-    def _set_rmq_node_id(self):
-        """
-        This method gets the nodes id from provisioner cli and updates
-        in the config.
-        """
-        # Get get node id from provisioner cli and set to config
-        node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
-        if node_id_data:
-            Log.info(f"Node ids obtained from salt-call:{node_id_data}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
-            Conf.save(const.CSM_GLOBAL_INDEX)
-        else:
-            Log.error("Unable to fetch system node ids info.")
-            raise CsmSetupError(f"Unable to fetch system node ids info.")
-
     def _set_rmq_cluster_nodes(self):
         """
         This method gets the nodes names of the the rabbitmq cluster and writes in the config.
@@ -506,45 +488,6 @@ class Setup:
             Log.error(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
 
-    @staticmethod
-    def _get_minion_id():
-        """
-        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
-        """
-        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
-        if not minion_id:
-            raise CsmSetupError('Unable to obtain current minion id')
-        return minion_id
-
-    @staticmethod
-    def _get_data_nw_info(minion_id):
-        """
-        Obtains minion data network info.
-
-        :param minion_id: Minion id.
-        """
-        data_nw = SaltWrappers.get_salt_call(
-            const.PILLAR_GET, f'cluster:{minion_id}:network:data_nw')
-        if not data_nw:
-            raise CsmSetupError(f'Unable to obtain data nw info for {minion_id}')
-        return data_nw
-
-    @staticmethod
-    def _set_db_host_addr(backend, addr):
-        """
-        Sets database backend host address in CSM config.
-
-        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
-        :param addr: Host address.
-        """
-        if backend not in ('es', 'consul'):
-            raise CsmSetupError(f'Invalid database backend "{addr}"')
-        key = f'databases.{backend}_db.config.host'
-        try:
-            Conf.set(const.DATABASE_INDEX, key, addr)
-            Conf.save(const.DATABASE_INDEX)
-        except Exception as e:
-            raise CsmSetupError(f'Unable to set {backend} host address: {e}')
 
     @classmethod
     def _get_faulty_node_uuid(self):
@@ -810,14 +753,7 @@ class CsmSetup(Setup):
                 self._set_rmq_cluster_nodes()
                 #TODO: Adding this implementation in try..except block to avoid build failure
                 # This workaround will be fixed once JIRA ticket #10551 is resolved
-                try:
-                    self._set_rmq_node_id()
-                except Exception as e:
-                    Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                minion_id = cls._get_minion_id()
-                data_nw = cls._get_data_nw_info(minion_id)
-                cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
-                cls._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+
             self.ConfigServer.reload()
             self._rsyslog()
             self._logrotate()

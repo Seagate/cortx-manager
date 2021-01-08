@@ -47,6 +47,7 @@ class Configure(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get("config_url"))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -59,8 +60,13 @@ class Configure(Setup):
                 ip_address(uds_public_ip)
             if not self._replacement_node_flag:
                 self.create()
-            self.Config.load()
             UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
+            Configure._set_node_id()
+            minion_id = Configure._get_minion_id()
+            data_nw = Configure._get_data_nw_info(minion_id)
+            Configure._set_db_host_addr('consul',
+                                  data_nw.get('roaming_ip', 'localhost'))
+            Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
         except Exception as e:
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
@@ -135,3 +141,62 @@ class Configure(Setup):
                      f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
         Setup._run_cmd(
             f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+
+    @staticmethod
+    def _set_node_id():
+        """
+        This method gets the nodes id from provisioner cli and updates
+        in the config.
+        """
+        # Get get node id and set to config
+        node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
+        if node_id_data:
+            Log.info(f"Node ids obtained from Conf Store:{node_id_data}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
+                     f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE2}",
+                     f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+        else:
+            Log.error("Unable to fetch system node ids info.")
+            raise CsmSetupError(f"Unable to fetch system node ids info.")
+
+    @staticmethod
+    def _get_minion_id():
+        """
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
+        """
+        Log.info("Fetch Minion Id.")
+        minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
+        if not minion_id:
+            raise CsmSetupError('Unable to obtain current minion id')
+        return minion_id
+
+    @staticmethod
+    def _get_data_nw_info(minion_id):
+        """
+        Obtains minion data network info.
+
+        :param minion_id: Minion id.
+        """
+        Log.info("Fetch data N/W info.")
+        data_nw = Conf.get(const.CONSUMER_INDEX, f'cluster>{minion_id}>network>data_nw')
+        if not data_nw:
+            raise CsmSetupError(
+                f'Unable to obtain data nw info for {minion_id}')
+        return data_nw
+
+    @staticmethod
+    def _set_db_host_addr(backend, addr):
+        """
+        Sets database backend host address in CSM config.
+
+        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
+        :param addr: Host address.
+        """
+        if backend not in ('es', 'consul'):
+            raise CsmSetupError(f'Invalid database backend "{addr}"')
+        key = f'databases.{backend}_db.config.host'
+        try:
+            Conf.set(const.DATABASE_INDEX, key, addr)
+        except Exception as e:
+            raise CsmSetupError(f'Unable to set {backend} host address: {e}')
