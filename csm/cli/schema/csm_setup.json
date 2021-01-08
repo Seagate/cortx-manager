@@ -241,7 +241,7 @@
         },
         {
           "name": "post_update",
-          "description": "Perform post update setup",
+          "description": "Performing post update steps",
           "need_confirmation": false,
           "permissions_tag": "update",
           "args": [
