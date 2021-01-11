@@ -460,44 +460,6 @@ class Setup:
                     Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
             Conf.save(const.CSM_GLOBAL_INDEX)
 
-    def _set_rmq_cluster_nodes(self):
-        """
-        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
-        """
-        Log.info("Setting RMQ cluster nodes in config")
-        nodes = []
-        nodes_found = False
-        try:
-            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
-                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
-                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
-                for line in cmd_output[0].split('\n'):
-                    if const.RUNNING_NODES in line:
-                        nodes = re.findall(r"rabbit@([-\w]+)", line)
-                        nodes_found = True
-                if nodes_found:
-                    break
-                # The code below is used to parse CLI output for RMQ 3.8.9 or above
-                result = re.search(
-                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
-                    cmd_output[0], re.DOTALL)
-                if result is not None:
-                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
-                    break
-                time.sleep(2**count)
-            if nodes:
-                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
-                Log.debug(f"Saving nodes:{nodes} to conf_key:{conf_key} in Config")
-                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
-                Conf.save(const.CSM_GLOBAL_INDEX)
-            else:
-                Log.error("Unable to fetch RMQ cluster nodes info.")
-                raise CsmSetupError("Unable to fetch RMQ cluster nodes info.")
-        except Exception as e:
-            Log.error(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
-
-
     @classmethod
     def _get_faulty_node_uuid(self):
         """
@@ -663,70 +625,6 @@ class CsmSetup(Setup):
             raise Exception("Not implemented for Component %s" %args["Component"])
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
-
-    def post_install(self, args):
-        """
-        Perform post-install for csm
-            : Configure csm user
-            : Add Permission for csm user
-        Post install is used after just all rpms are install but
-        no service are started
-        """
-        try:
-            Log.info("Triggering csm_setup post_install")
-            self._verify_args(args)
-            self._config_user()
-            self.set_unsupported_feature_info()
-            self._configure_system_auto_restart()
-
-        except Exception as e:
-            Log.error(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def config(self, args):
-
-        try:
-            Log.info("Triggering csm_setup config")
-            self._verify_args(args)
-            uds_public_ip = args.get('uds_public_ip')
-            if uds_public_ip is not None:
-                ip_address(uds_public_ip)
-            if not self._replacement_node_flag:
-                self.Config.create(args)
-            self.Config.load()
-            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
-        except Exception as e:
-            Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def init(self, args):
-        """
-        Check and move required configuration file
-        Init is used after all dependency service started
-        """
-        Log.info("Triggering csm_setup post_install init")
-        cls = self.__class__
-        try:
-            self._verify_args(args)
-            self.Config.load()
-            self._config_user_permission()
-            if not self._replacement_node_flag:
-                self._set_rmq_cluster_nodes()
-                #TODO: Adding this implementation in try..except block to avoid build failure
-                # This workaround will be fixed once JIRA ticket #10551 is resolved
-
-            self.ConfigServer.reload()
-            self._rsyslog()
-            self._logrotate()
-            self._rsyslog_common()
-            Setup._set_fqdn_for_nodeid()
-            Setup._set_healthmap_path()
-            ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
-            if ha_check:
-                self._config_cluster(args)
-        except Exception as e:
-            Log.error(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
 
     def reset(self, args):
         """
