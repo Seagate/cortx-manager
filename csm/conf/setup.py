@@ -634,60 +634,6 @@ class Setup:
         except Exception as e:
             raise CsmSetupError(f'Unable to set {backend} host address: {e}')
 
-    @classmethod
-    def _get_faulty_node_uuid(self):
-        """
-        This method will get the faulty node uuid from provisioner.
-        This uuid will be used to resolve the faulty alerts for replaced node.
-        """
-        faulty_minion_id = ''
-        faulty_node_uuid = ''
-        try:
-            Log.info("Getting faulty node id")
-            faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = SaltWrappers.get_salt_call(const.PILLAR_GET, faulty_minion_id_cmd)
-            if not faulty_minion_id:
-                Log.warn("Fetching faulty node minion id failed.")
-                raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = SaltWrappers.get_salt(const.GRAINS_GET, 'node_id', faulty_minion_id)
-            if not faulty_node_uuid:
-                Log.warn("Fetching faulty node uuid failed.")
-                raise CsmSetupError("Fetching faulty node uuid failed.")
-            return faulty_node_uuid
-        except Exception as e:
-            Log.warn(f"Fetching faulty node uuid failed. {e}")
-            raise CsmSetupError(f"Fetching faulty node uuid failed. {e}")
-
-
-    def _resolve_faulty_node_alerts(self, node_id):
-        """
-        This method resolves all the alerts for a fault replaced node.
-        """
-        try:
-            Log.info("Resolve faulty node alerts")
-            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
-            db = DataBaseProvider(conf)
-            alerts = []
-            if db:
-                loop = asyncio.get_event_loop()
-                alerts_repository = AlertRepository(db)
-                alerts = loop.run_until_complete\
-                    (alerts_repository.retrieve_unresolved_by_node_id(node_id))
-                if alerts:
-                    for alert in alerts:
-                        if not const.ENCLOSURE in alert.module_name:
-                            alert.acknowledged = AlertModel.acknowledged.to_native(True)
-                            alert.resolved = AlertModel.resolved.to_native(True)
-                            loop.run_until_complete(alerts_repository.update(alert))
-                else:
-                    Log.warn(f"No alerts found for node id: {node_id}")
-            else:
-                Log.error("csm_setup refresh_config failed. Unbale to load db.")
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
-        except Exception as ex:
-            Log.error(f"Refresh Context: Resolving of alerts failed. {ex}")
-            raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
-
     def set_unsupported_feature_info(self):
         """
         This method stores CSM unsupported features in two ways:
@@ -924,47 +870,15 @@ class CsmSetup(Setup):
             raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
 
     def reset(self, args):
-        """
-        Reset csm configuraion
-        Soft: Soft Reset is used to restrat service with log cleanup
-            - Cleanup all log
-            - Reset conf
-            - Restart service
-        Hard: Hard reset is used to remove all configuration used by csm
-            - Stop service
-            - Cleanup all log
-            - Delete all Dir created by csm
-            - Cleanup Job
-            - Disable csm service
-            - Delete csm user
-        """
         try:
-            Log.info("Triggering csm_setup reset")
             self._verify_args(args)
-            if args["hard"]:
-                self.Config.load()
-                self.ConfigServer.stop()
-                self._log_cleanup()
-                self._config_user_permission(reset=True)
-                self.Config.delete()
-                self._config_user(reset=True)
-                UDSConfigGenerator.delete()
-            else:
-                self.Config.reset()
-                self.ConfigServer.restart()
+            self.Config.load()
+            self.ConfigServer.stop()
+            self._log_cleanup()
+            self._config_user_permission(reset=True)
+            self.Config.delete()
+            self._config_user(reset=True)
+            UDSConfigGenerator.delete()
         except Exception as e:
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def refresh_config(self, args):
-        """
-        Refresh context for CSM
-        """
-        try:
-            Log.info("Triggering csm_setup refresh_config")
-            node_id = self._get_faulty_node_uuid()
-            self._resolve_faulty_node_alerts(node_id)
-            Log.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
-        except Exception as e:
-            Log.error(f"csm_setup refresh_config failed. Error: {e}")
-            raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")
