@@ -74,7 +74,7 @@ if __name__ == '__main__':
     from csm.cli.csm_client import CsmDirectClient
     try:
         csm_setup = CsmSetupCommand(sys.argv)
-        sys.stdout.write('%s\n' % csm_setup.process())
+        csm_setup.process()
         sys.exit(0)
     except Exception as e:
         sys.stderr.write('csm_setup command failed: %s\n' %traceback.format_exc())

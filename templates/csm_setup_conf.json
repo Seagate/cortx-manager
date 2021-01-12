@@ -3,6 +3,6 @@
     "secret": "csm"
   },
   "DEPLOYMENT": {
-    "mode": "Dev"
+    "mode": "DEV"
   }
 }

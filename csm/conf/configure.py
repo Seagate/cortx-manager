@@ -21,6 +21,8 @@ from cortx.utils.kvstore.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.conf.uds import UDSConfigGenerator
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 class Configure(Setup):
     """
@@ -71,6 +73,7 @@ class Configure(Setup):
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
+        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
 
     def create(self):
         """

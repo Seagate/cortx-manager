@@ -21,6 +21,8 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kvstore.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 class Init(Setup):
     """
@@ -53,6 +55,7 @@ class Init(Setup):
         if not self._dev_mode:
             self._set_rmq_cluster_nodes()
         self.ConfigServer.reload()
+        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
 
     def _config_user_permission(self, reset=False):
         """

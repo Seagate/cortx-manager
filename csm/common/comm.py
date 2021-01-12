@@ -192,8 +192,8 @@ class AmqpChannel(Channel):
                 f"{const.CHANNEL}.{const.NODE2}")
         self.hosts = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.RMQ_HOSTS}")
-        self.port = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.PORT}")
+        self.port = int(Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}.{const.PORT}"))
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}.{const.VHOST}")
         self.username = Conf.get(const.CSM_GLOBAL_INDEX, \

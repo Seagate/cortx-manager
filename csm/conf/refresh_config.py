@@ -18,6 +18,8 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kvstore.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 class RefreshConfig(Setup):
     """
@@ -52,6 +54,7 @@ class RefreshConfig(Setup):
         except Exception as e:
             Log.error(f"csm_setup refresh_config failed. Error: {e}")
             raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")
+        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
 
     @classmethod
     def _get_faulty_node_uuid(self):

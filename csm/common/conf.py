@@ -128,4 +128,4 @@ class DebugConf:
         """
         Validates if debug mode is enabled and HTTP is chosen
         """
-        return self._debug_settings.enabled and self._debug_settings.http_enabled
+        return self._debug_settings.enabled == 'true' and self._debug_settings.http_enabled == 'true'

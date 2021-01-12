@@ -22,6 +22,8 @@ from cortx.utils.kvstore.error import KvError
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
 class PostInstall(Setup):
@@ -54,6 +56,7 @@ class PostInstall(Setup):
         await self._config_user()
         await self._set_unsupported_feature_info()
         await self._configure_system_auto_restart()
+        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
 
     async def _config_user(self, reset=False):
         """
@@ -64,11 +67,11 @@ class PostInstall(Setup):
         if not self._is_user_exist():
             _password = self._fetch_csm_user_password(decrypt=True)
             if not _password:
-                Log.error("CSM Password Not Recieved from provisioner.")
-                raise CsmSetupError("CSM Password Not Set by Provisioner.")
+                Log.error("CSM Password Not Available.")
+                raise CsmSetupError("CSM Password Not Available.")
             Log.info("Creating CSM User.")
             _password = crypt.crypt(_password, "22")
-            Setup._run_cmd((f"useradd -d {const.CSM_USER_HOME} -p {_password} "
+            Setup._run_cmd((f"useradd -M -p {_password} "
                             f"{self._user}"))
             Log.info("Adding CSM User to Wheel Group.")
             Setup._run_cmd(f"usermod -aG wheel {self._user}")

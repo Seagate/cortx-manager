@@ -18,7 +18,7 @@ databases:
         import_path: "ElasticSearchDB"
         config:
             host: "localhost"
-            port: 9200
+            port: "9200"
             login: ""
             password: ""
             replication: 1

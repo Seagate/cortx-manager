@@ -21,7 +21,7 @@ class StatsProducer:
     SC_GAUGE = "g"
 
     def __init__(self, host, port):
-        self.addr = (host, port)
+        self.addr = (host, int(port))
 
     def send_time_stats(self, stats, value):
         self.send_stats(stats, value, self.SC_TIMING)
