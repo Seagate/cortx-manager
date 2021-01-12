@@ -13,7 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from abc import ABC
 from boto.s3.bucket import Bucket
+from functools import lru_cache
 from ipaddress import ip_address
 from typing import Any, Dict, List
 from uuid import UUID, uuid4, uuid5
@@ -61,7 +63,21 @@ class UslApiKeyDispatcher:
         return self._key == request_key
 
 
-class UslService(ApplicationService):
+class USLDriver(ABC):
+    def get_secure_storage(self) -> SecureStorage: ...
+
+    async def get_friendly_name(self) -> str: ...
+
+    def get_device_uuid(self) -> UUID: ...
+
+    async def get_volume_list(self, _2: str, _3: str) -> Dict[UUID, Volume]: ...
+
+    async def get_mgmt_url(self) -> Dict[str, str]: ...
+
+    async def get_public_ip(self) -> str: ...
+
+
+class UslService(ApplicationService, USLDriver):
     """
     Implements USL service operations.
     """
@@ -77,11 +93,15 @@ class UslService(ApplicationService):
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
-        key = Cipher.generate_key(str(self._device_uuid), 'USL')
+        key = Cipher.generate_key(str(self.get_device_uuid()), 'USL')
         self._secure_storage = SecureStorage(self._storage, key)
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
 
-    def _get_device_uuid(self) -> UUID:
+    def get_secure_storage(self) -> SecureStorage:
+        return self._secure_storage
+
+    @lru_cache(maxsize=1)
+    def get_device_uuid(self) -> UUID:
         """
 
         Returns the CORTX cluster ID as in CSM configuration file.
@@ -96,7 +116,7 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return UUID(device_uuid)
 
-    async def _get_system_friendly_name(self) -> str:
+    async def get_friendly_name(self) -> str:
         entries = await self._storage(ApplianceName).get(Query())
         appliance_name = next(iter(entries), None)
         if appliance_name is None:
@@ -105,7 +125,7 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return str(appliance_name)
 
-    async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
+    async def _is_bucket_supported(self, s3_cli, bucket):
         """
         Checks if bucket is enabled for Lyve Pilot
 
@@ -116,16 +136,16 @@ class UslService(ApplicationService):
         return tags.get('udx', 'disabled') == 'enabled'
 
     async def _get_volume_name(self, bucket_name: str) -> str:
-        return await self._get_system_friendly_name() + ": " + bucket_name
+        return await self.get_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
-        return uuid5(self._device_uuid, bucket_name)
+        return uuid5(self.get_device_uuid(), bucket_name)
 
     async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
         bucket_name = bucket.name
         volume_name = await self._get_volume_name(bucket_name)
-        device_uuid = self._device_uuid
+        device_uuid = self.get_device_uuid()
         volume_uuid = self._get_volume_uuid(bucket_name)
         capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
@@ -133,7 +153,7 @@ class UslService(ApplicationService):
         return Volume.instantiate(
             volume_name, bucket_name, device_uuid, volume_uuid, capacity_size, capacity_used)
 
-    async def _get_lyve_pilot_volume_list(
+    async def get_volume_list(
         self, access_key_id: str, secret_access_key: str
     ) -> Dict[UUID, Volume]:
         s3_client = self._s3plugin.get_s3_client(
@@ -141,7 +161,7 @@ class UslService(ApplicationService):
         )
         volumes = {}
         for bucket in await s3_client.get_all_buckets():
-            if not await self._is_bucket_lyve_pilot_enabled(s3_client, bucket):
+            if not await self._is_bucket_supported(s3_client, bucket):
                 continue
             volume = await self._format_bucket_as_volume(bucket)
             volumes[volume.uuid] = volume
@@ -192,21 +212,21 @@ class UslService(ApplicationService):
 
 
 class USL:
-    _service: UslService
+    _driver: USLDriver
     _domain_certificate_manager: USLDomainCertificateManager
     _native_certificate_manager: USLNativeCertificateManager
 
-    def __init__(self, service: UslService) -> None:
-        self._service = service
+    def __init__(self, driver: USLDriver) -> None:
+        self._driver = driver
         self._domain_certificate_manager = USLDomainCertificateManager(
-            self._service._secure_storage)
+            self._driver.get_secure_storage())
         self._native_certificate_manager = USLNativeCertificateManager()
 
     # TODO replace stub
     async def _format_device_info(self) -> Device:
-        device_uuid = self._service._device_uuid
+        device_uuid = self._driver.get_device_uuid()
         return Device.instantiate(
-            await self._service._get_system_friendly_name(),
+            await self._driver.get_friendly_name(),
             '0000',
             str(device_uuid),
             'S3',
@@ -235,9 +255,9 @@ class USL:
         :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-        if device_id != self._service._device_uuid:
+        if device_id != self._driver.get_device_uuid():
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._service._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
+        volumes = await self._driver.get_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _, v in volumes.items()]
 
     async def _build_lyve_pilot_volume_mount_info(
@@ -252,9 +272,9 @@ class USL:
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        if device_id != self._service._device_uuid:
+        if device_id != self._driver.get_device_uuid():
             raise CsmNotFoundError(desc=f'Device {device_id} not found')
-        volumes = await self._service._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
+        volumes = await self._driver.get_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
             raise CsmNotFoundError(desc=f'Volume {volume_id} not found on device {device_id}')
         return {
@@ -312,7 +332,7 @@ class USL:
         """
 
         service_urls = []
-        mgmt_url = await self._service.get_mgmt_url()
+        mgmt_url = await self._driver.get_mgmt_url()
         service_urls.append(mgmt_url)
         return service_urls
 
@@ -323,12 +343,12 @@ class USL:
 
         :return: A dictionary containing system information.
         """
-        friendly_name = await self._service._get_system_friendly_name()
+        friendly_name = await self._driver.get_friendly_name()
         service_urls = await self._get_service_urls()
         return {
             'model': 'CORTX',
             'type': 'ees',
-            'serialNumber': str(self._service._device_uuid),
+            'serialNumber': str(self._driver.get_device_uuid()),
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
             'serviceUrls': service_urls,
@@ -408,7 +428,7 @@ class USL:
             network interface.
         """
         try:
-            ip = await self._service.get_public_ip()
+            ip = await self._driver.get_public_ip()
             iface_data = get_interface_details(ip)
         except (ValueError, RuntimeError) as e:
             reason = f'Could not obtain interface details from address {ip}'
