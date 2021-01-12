@@ -28,7 +28,7 @@ from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
-from csm.core.services.usl import UslService
+from csm.core.services.usl import USL, UslService
 from csm.core.services.usl_extensions import UslExtensionsService
 
 
@@ -58,12 +58,14 @@ class _View(CsmView):
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
     _service: UslService
+    _usl: USL
     _extension_service: UslExtensionsService
 
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._extension_service = UslExtensionsService()
         self._service = self._request.app[const.USL_SERVICE]
+        self._usl = USL(self._service)
         self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
 
 
@@ -180,7 +182,7 @@ class DeviceView(_SecuredView):
     Devices list view.
     """
     async def get(self) -> List[Dict[str, str]]:
-        return await self._service.get_device_list()
+        return await self._usl.get_device_list()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -208,7 +210,7 @@ class DeviceVolumesListView(_SecuredView):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._service.get_device_volumes_list(
+        return await self._usl.get_device_volumes_list(
             params['device_id'], *AccessParamsSchema.flatten(access_params)
         )
 
@@ -239,7 +241,7 @@ class DeviceVolumeMountView(_SecuredView):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._service.post_device_volume_mount(
+        return await self._usl.post_device_volume_mount(
             params['device_id'],
             params['volume_id'],
             *AccessParamsSchema.flatten(access_params),
@@ -277,7 +279,7 @@ class DeviceVolumeUnmountView(_SecuredView):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        return await self._service.post_device_volume_unmount(
+        return await self._usl.post_device_volume_unmount(
             params['device_id'],
             params['volume_id'],
             *AccessParamsSchema.flatten(access_params),
@@ -292,7 +294,7 @@ class UdsEventsView(_SecuredView):
     UDS Events view.
     """
     async def get(self) -> str:
-        return await self._service.get_events()
+        return await self._usl.get_events()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -303,7 +305,7 @@ class SystemView(_SecuredView):
     System information view.
     """
     async def get(self) -> Dict[str, str]:
-        return await self._service.get_system()
+        return await self._usl.get_system()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
@@ -315,7 +317,7 @@ class SystemCertificatesView(_SecuredView):
     """
     async def post(self) -> web.Response:
         try:
-            public_key = await self._service.post_system_certificates()
+            public_key = await self._usl.post_system_certificates()
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         return web.Response(body=public_key)
@@ -323,14 +325,14 @@ class SystemCertificatesView(_SecuredView):
     async def put(self) -> None:
         certificate = await self.request.read()
         try:
-            await self._service.put_system_certificates(certificate)
+            await self._usl.put_system_certificates(certificate)
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         raise web.HTTPNoContent()
 
     async def delete(self) -> None:
         try:
-            await self._service.delete_system_certificates()
+            await self._usl.delete_system_certificates()
         except CsmPermissionDenied:
             raise web.HTTPForbidden()
         # Don't return 200 on success, but 204 as USL API specification requires
@@ -362,7 +364,7 @@ class SystemCertificatesByTypeView(_SecuredView):
 
         try:
             params = MethodSchema().load(self.request.match_info)
-            certificate = await self._service.get_system_certificates_by_type(params['type'])
+            certificate = await self._usl.get_system_certificates_by_type(params['type'])
             return web.Response(body=certificate)
         except ValidationError as e:
             desc = 'Malformed path'
@@ -380,4 +382,4 @@ class NetworkInterfacesView(_SecuredView):
     Network interfaces list view.
     """
     async def get(self) -> List[Dict[str, Any]]:
-        return await self._service.get_network_interfaces()
+        return await self._usl.get_network_interfaces()

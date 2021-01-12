@@ -67,9 +67,8 @@ class UslService(ApplicationService):
     """
     # FIXME improve token management
     _s3plugin: Any
-    _domain_certificate_manager: USLDomainCertificateManager
-    _native_certificate_manager: USLNativeCertificateManager
     _api_key_dispatch: UslApiKeyDispatcher
+    _secure_storage: SecureStorage
 
     def __init__(self, s3_plugin, storage, provisioner) -> None:
         """
@@ -78,21 +77,9 @@ class UslService(ApplicationService):
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
-        self._device_uuid = self._get_device_uuid()
         key = Cipher.generate_key(str(self._device_uuid), 'USL')
-        secure_storage = SecureStorage(self._storage, key)
-        self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
-        self._native_certificate_manager = USLNativeCertificateManager()
+        self._secure_storage = SecureStorage(self._storage, key)
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
-
-    async def _get_system_friendly_name(self) -> str:
-        entries = await self._storage(ApplianceName).get(Query())
-        appliance_name = next(iter(entries), None)
-        if appliance_name is None:
-            reason = 'Could not retrieve friendly name from storage'
-            Log.error(f'{reason}')
-            raise CsmInternalError(desc=reason)
-        return str(appliance_name)
 
     def _get_device_uuid(self) -> UUID:
         """
@@ -108,6 +95,15 @@ class UslService(ApplicationService):
             Log.error(f'{reason}')
             raise CsmInternalError(desc=reason)
         return UUID(device_uuid)
+
+    async def _get_system_friendly_name(self) -> str:
+        entries = await self._storage(ApplianceName).get(Query())
+        appliance_name = next(iter(entries), None)
+        if appliance_name is None:
+            reason = 'Could not retrieve friendly name from storage'
+            Log.error(f'{reason}')
+            raise CsmInternalError(desc=reason)
+        return str(appliance_name)
 
     async def _is_bucket_lyve_pilot_enabled(self, s3_cli, bucket):
         """
@@ -151,11 +147,66 @@ class UslService(ApplicationService):
             volumes[volume.uuid] = volume
         return volumes
 
+    async def get_mgmt_url(self) -> Dict[str, str]:
+        """
+        Returns a management link to be provided to the UDS.
+
+        :return: a dictionary with a management link's name and value.
+        """
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
+        network_configuration = await self._provisioner.get_network_configuration()
+        port = \
+            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
+        scheme = 'https' if ssl_check else 'http'
+        host = f'{network_configuration.mgmt_vip}'
+        url = scheme + '://' + host + ':' + str(port)
+        mgmt_url = {
+            'name': 'mgmtUrl',
+            'url': url,
+        }
+        return mgmt_url
+
+    async def get_public_ip(self) -> str:
+        """
+        Reads UDS public IP from global index in an attempt to override UDS default behavior.
+        If it is not found, uses cluster IP as UDS public IP.
+
+        :return: A string representing UDS public IP address.
+        """
+        try:
+            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.public_ip')
+            ip_address(ip)
+            return ip
+        except ValueError as e:
+            reason = 'UDS public IP override failed---following usual code path'
+            Log.debug(f'{reason}. Error: {e}')
+        try:
+            conf = await self._provisioner.get_network_configuration()
+            ip = conf.cluster_ip
+            ip_address(ip)
+            return ip
+        except (ValueError, NetworkConfigFetchError) as e:
+            reason = 'Could not obtain network configuration from provisioner'
+            Log.error(f'{reason}: {e}')
+            raise CsmInternalError(reason) from e
+
+
+class USL:
+    _service: UslService
+    _domain_certificate_manager: USLDomainCertificateManager
+    _native_certificate_manager: USLNativeCertificateManager
+
+    def __init__(self, service: UslService) -> None:
+        self._service = service
+        self._domain_certificate_manager = USLDomainCertificateManager(
+            self._service._secure_storage)
+        self._native_certificate_manager = USLNativeCertificateManager()
+
     # TODO replace stub
     async def _format_device_info(self) -> Device:
-        device_uuid = self._device_uuid
+        device_uuid = self._service._device_uuid
         return Device.instantiate(
-            await self._get_system_friendly_name(),
+            await self._service._get_system_friendly_name(),
             '0000',
             str(device_uuid),
             'S3',
@@ -184,9 +235,9 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A list with dictionaries, each containing information about a specific volume.
         """
-        if device_id != self._device_uuid:
+        if device_id != self._service._device_uuid:
             raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
-        volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
+        volumes = await self._service._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _, v in volumes.items()]
 
     async def _build_lyve_pilot_volume_mount_info(
@@ -201,9 +252,9 @@ class UslService(ApplicationService):
         :param secret_access_key: Secret access key to storage service
         :return: A dictionary containing the mount handle and the mount path.
         """
-        if device_id != self._device_uuid:
+        if device_id != self._service._device_uuid:
             raise CsmNotFoundError(desc=f'Device {device_id} not found')
-        volumes = await self._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
+        volumes = await self._service._get_lyve_pilot_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
             raise CsmNotFoundError(desc=f'Volume {volume_id} not found on device {device_id}')
         return {
@@ -253,25 +304,6 @@ class UslService(ApplicationService):
         # TODO implement
         pass
 
-    async def _get_mgmt_url(self) -> Dict[str, str]:
-        """
-        Returns a management link to be provided to the UDS.
-
-        :return: a dictionary with a management link's name and value.
-        """
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
-        network_configuration = await self._provisioner.get_network_configuration()
-        port = \
-            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
-        scheme = 'https' if ssl_check else 'http'
-        host = f'{network_configuration.mgmt_vip}'
-        url = scheme + '://' + host + ':' + str(port)
-        mgmt_url = {
-            'name': 'mgmtUrl',
-            'url': url,
-        }
-        return mgmt_url
-
     async def _get_service_urls(self) -> List[Dict[str, str]]:
         """
         Gathers all service URLs to be provided to the UDS.
@@ -280,7 +312,7 @@ class UslService(ApplicationService):
         """
 
         service_urls = []
-        mgmt_url = await self._get_mgmt_url()
+        mgmt_url = await self._service.get_mgmt_url()
         service_urls.append(mgmt_url)
         return service_urls
 
@@ -291,12 +323,12 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
-        friendly_name = await self._get_system_friendly_name()
+        friendly_name = await self._service._get_system_friendly_name()
         service_urls = await self._get_service_urls()
         return {
             'model': 'CORTX',
             'type': 'ees',
-            'serialNumber': str(self._device_uuid),
+            'serialNumber': str(self._service._device_uuid),
             'friendlyName': friendly_name,
             'firmwareVersion': '0.00',
             'serviceUrls': service_urls,
@@ -368,30 +400,6 @@ class UslService(ApplicationService):
             raise CsmNotFoundError(reason)
         return material
 
-    async def _get_public_ip(self) -> str:
-        """
-        Reads UDS public IP from global index in an attempt to override UDS default behavior.
-        If it is not found, uses cluster IP as UDS public IP.
-
-        :return: A string representing UDS public IP address.
-        """
-        try:
-            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.public_ip')
-            ip_address(ip)
-            return ip
-        except ValueError as e:
-            reason = 'UDS public IP override failed---following usual code path'
-            Log.debug(f'{reason}. Error: {e}')
-        try:
-            conf = await self._provisioner.get_network_configuration()
-            ip = conf.cluster_ip
-            ip_address(ip)
-            return ip
-        except (ValueError, NetworkConfigFetchError) as e:
-            reason = 'Could not obtain network configuration from provisioner'
-            Log.error(f'{reason}: {e}')
-            raise CsmInternalError(reason) from e
-
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
         """
         Provides a list of network interfaces to be advertised by UDS.
@@ -400,7 +408,7 @@ class UslService(ApplicationService):
             network interface.
         """
         try:
-            ip = await self._get_public_ip()
+            ip = await self._service.get_public_ip()
             iface_data = get_interface_details(ip)
         except (ValueError, RuntimeError) as e:
             reason = f'Could not obtain interface details from address {ip}'
