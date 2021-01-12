@@ -450,7 +450,7 @@ class ProvisionerStatus(CsmView):
                                                    unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
-                "Invalid parameter for provisioner status", str(val_err))
+                "Invalid value for provisioner status", str(val_err))
 
         status_type = request_data["status_type"]
         return await self._service.get_provisioner_status(status_type)

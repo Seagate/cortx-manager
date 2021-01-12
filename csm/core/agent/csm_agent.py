@@ -48,6 +48,8 @@ class CsmAgent:
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
+
+        Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -62,6 +64,14 @@ class CsmAgent:
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
+
+        # settting usl polling
+        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
+        CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+
+        # system status
+        system_status_service = SystemStatusService()
+        CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
 
         #Heath configuration
         health_repository = HealthRepository()
@@ -127,7 +137,7 @@ class CsmAgent:
             # TODO: consider a more safe storage
             params = {
                 "username": const.NON_ROOT_USER,
-                "password": const.NON_ROOT_USER_PASS
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
@@ -155,6 +165,7 @@ class CsmAgent:
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
+        CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         # USL Service
         CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
 
@@ -201,8 +212,11 @@ class CsmAgent:
         CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
+        Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
+        Log.info("Finished stopping alert monitor service")
         CsmAgent.health_monitor.stop()
+        Log.info("Finished stopping csm agent")
 
 
 if __name__ == '__main__':
@@ -249,6 +263,8 @@ if __name__ == '__main__':
     from csm.common.errors import CsmError
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
+    from csm.core.services.appliance_info import ApplianceInfoService
+    from csm.core.services.system_status import SystemStatusService
     try:
         # try:
         #     from salt import client

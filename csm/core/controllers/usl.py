@@ -28,6 +28,7 @@ from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
+from csm.core.services.usl import UslService
 
 
 # TODO replace this workaround with a proper firewall, or serve USL on a separate socket
@@ -55,9 +56,12 @@ class _View(CsmView):
     """
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
+    _service: UslService
+
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
         self._service = self._request.app[const.USL_SERVICE]
+        self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
 
 
 class _SecuredView(_View):
@@ -81,37 +85,72 @@ class _SecuredView(_View):
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
+@CsmView._app_routes.view("/usl/v1/saas")
+class SaaSURLView(_View):
+    """
+    Lyve Pilot SaaS URL view.
+    """
+    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
+    async def get(self) -> Dict[str, str]:
+        return await self._service.get_saas_url()
+
+
+@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registerDevice")
 class DeviceRegistrationView(_View):
     """
     Device registration view.
     """
+
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.UPDATE}})
-    async def post(self) -> Dict:
+    async def post(self) -> None:
 
         class MethodSchema(Schema):
-            url = fields.URL(required=True)
-            pin = fields.Str(required=True)
-            s3_account_name = fields.Str(required=True)
-            s3_account_email = fields.Email(required=True)
-            s3_account_password = fields.Str(required=True)
-            iam_user_name = fields.Str(required=True)
-            iam_user_password = fields.Str(required=True)
-            bucket_name = fields.Str(required=True)
+            class RegisterDeviceParams(Schema):
+                url = fields.URL(required=True)
+                reg_pin = fields.Str(attribute='regPin', data_key='regPin', required=True)
+                reg_token = fields.Str(attribute='regToken', data_key='regToken', required=True)
 
-            @validates('pin')
-            def validate_pin(self, value: str) -> None:
-                if len(value) != 4 or not value.isdecimal():
-                    raise ValidationError('Invalid PIN format')
+            class AccessParams(Schema):
+                class Credentials(Schema):
+                    access_key = fields.Str(
+                        attribute='accessKey', data_key='accessKey', required=True)
+                    secret_key = fields.Str(
+                        attribute='secretKey', data_key='secretKey', required=True)
+
+                account_name = fields.Str(
+                    attribute='accountName', data_key='accountName', required=True)
+                # TODO validator
+                uri = fields.URL(schemes=['s3'], required=True)
+                credentials = fields.Nested(Credentials, required=True)
+
+            class InternalCortxParams(Schema):
+                bucket_name = fields.Str(
+                    attribute='bucketName', data_key='bucketName', required=True)
+
+            register_device_params = fields.Nested(
+                RegisterDeviceParams,
+                attribute='registerDeviceParams',
+                data_key='registerDeviceParams',
+                required=True,
+            )
+            access_params = fields.Nested(
+                AccessParams, attribute='accessParams', data_key='accessParams', required=True)
+            internal_cortx_params = fields.Nested(
+                InternalCortxParams,
+                attribute='internalCortxParams',
+                data_key='internalCortxParams',
+                required=True,
+            )
 
         try:
             body = await self.request.json()
-            params = MethodSchema().load(body)
-            return await self._service.post_register_device(**params)
+            registration_info = MethodSchema().load(body)
         except (JSONDecodeError, ValidationError) as e:
-            desc = 'Malformed input payload'
+            desc = 'Malformed UDS registration payload'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
+        return await self._service.post_register_device(self._s3_buckets_service, registration_info)
 
     @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
     async def get(self) -> None:

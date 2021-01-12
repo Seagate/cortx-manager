@@ -29,6 +29,17 @@ class FileRefValidator(Validator):
             raise ValidationError('This field must be of instance of a FileRef class')
 
 
+class IamUserNameValidator(Validator):
+    """
+    Validator Class for Iam Username
+    """
+
+    def __call__(self, value):
+        if not re.search(r"^[\w@+=.,-]{1,64}$", value):
+            raise ValidationError(
+                "Iam username should be between 1-64 Characters."
+                "Should contain Alphanumeric . - _ @ + = or ,.")
+
 
 class UserNameValidator(Validator):
     """
@@ -39,7 +50,8 @@ class UserNameValidator(Validator):
         if not re.search(r"^[a-zA-Z0-9_-]{4,56}$", value):
             raise ValidationError(
                 "Username can only contain Alphanumeric, - and  _ .Length "
-                "Must be between 4-64 Characters")
+                "Must be between 4-56 Characters")
+
 
 
 class CommentsValidator(Validator):
@@ -50,7 +62,7 @@ class CommentsValidator(Validator):
     def __call__(self, value):
         if len(value) > const.STRING_MAX_VALUE:
             raise ValidationError(
-                "Length should not be more than that of 250 characters.")
+                "Length should not be more than 250 characters.")
 
 
 class PortValidator(Validator):
@@ -60,7 +72,7 @@ class PortValidator(Validator):
 
     def __call__(self, value):
         if not const.PORT_MIN_VALUE < int(value) or not const.PORT_MAX_VALUE > int(value):
-            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} than {const.PORT_MAX_VALUE}")
+            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} and {const.PORT_MAX_VALUE}")
 
 
 class PathPrefixValidator(Validator):
@@ -104,14 +116,29 @@ class BucketNameValidator(Validator):
     """
 
     def is_value_valid(self, value):
-        return re.search(r"^[a-z0-9][a-z0-9-]{3,54}[a-z0-9]$", value)
+        return re.search(r"^[a-z0-9][a-z0-9-.]{1,61}[a-z0-9]$", value)
+
+    def _check_ipv4(self, value):
+        try:
+            ipv4 = Ipv4()
+            ipv4(value)
+            res = True
+        except ValidationError:
+            res = False
+        if res:
+            raise ValidationError("Bucket Name cannot be ip v4 format")
 
     def __call__(self, value):
         if not self.is_value_valid(value):
             raise ValidationError(
-                ("Bucket Name should be between 4-56 Characters long."
-                 "Should contain either lowercase, numeric or '-' characters. "
-                 "Not starting or ending with '-'"))
+                ("Bucket Name should be between 3-63 Characters long."
+                 "Should contain either lowercase, numeric, '-' or '.' characters. "
+                 "Not starting or ending with '-' or '.'"))
+
+        if value.startswith("xn--"):
+            raise ValidationError("Bucket Name cannot start with 'xn--'")
+
+        self._check_ipv4(value)
 
 
 class Ipv4(Validator):
@@ -172,7 +199,7 @@ class Enum(Validator):
     def __call__(self, value):
         if value not in self._validator_values:
             raise ValidationError(
-                f"Incorrect Value: Should be from {' '.join(self._validator_values)}"
+                f"Incorrect Value: must be from {' '.join(self._validator_values)}"
             )
 
 class ValidationErrorFormatter:
@@ -196,7 +223,7 @@ class IsoFilenameValidator(Validator):
 
     def __call__(self, file_name):
         if not file_name.endswith(".iso"):
-            raise ValidationError("Package should be a '.iso' file.")
+            raise ValidationError("Package must be an '.iso' file.")
 
 
 class BinFilenameValidator(Validator):
@@ -206,4 +233,4 @@ class BinFilenameValidator(Validator):
 
     def __call__(self, file_name):
         if not file_name.endswith(".bin"):
-            raise ValidationError("Package should be a '.bin' file.")
+            raise ValidationError("Package must be a '.bin' file.")

@@ -62,9 +62,9 @@ class StorageCapacityService(ApplicationService):
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
-            stdout, stderr = await process.run()
+            stdout, stderr, rc = await process.run()
         except Exception as e:
-            raise CsmInternalError(f"Error in command execution command : {e}")
+            raise CsmInternalError(f"Error in command execution, command : {e}")
         if not stdout:
             raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
                                    f"-{stdout.decode('utf-8')}")
@@ -75,7 +75,7 @@ class StorageCapacityService(ApplicationService):
         if not capacity_info:
             raise CsmInternalError("System storage details not available.")
         if int(capacity_info[const.TOTAL_SPACE]) <= 0:
-            raise CsmInternalError("Total space cannot be zero", message_args=capacity_info)
+            raise CsmInternalError("Total storage space cannot be zero", message_args=capacity_info)
         formatted_output = {}
         formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
         formatted_output[const.USED] = convert_to_format(

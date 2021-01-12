@@ -34,6 +34,8 @@ class ArgumentError(argparse.ArgumentError):
         return f"{self.rc}: {self.message}"
 
 class Terminal:
+
+    EMPTY_PASS_FIELD = "Password field can't be empty."
     @staticmethod
     def get_quest_answer(name: str) -> bool:
         """
@@ -73,7 +75,8 @@ class Terminal:
         """
         value = value or getpass(prompt="Current Password: ")
         if not value:
-            raise ArgumentError(errno.EINVAL, f"Current {const.EMPTY_PASS_FIELD}")
+            raise ArgumentError(errno.EINVAL,
+                                f"Current {Terminal.EMPTY_PASS_FIELD}")
         return value
 
     @staticmethod
@@ -87,19 +90,19 @@ class Terminal:
                           "characters.\n"))
         value = value or getpass(prompt="Password: ")
         if not value:
-            raise ArgumentError(errno.EINVAL, const.EMPTY_PASS_FIELD)
+            raise ArgumentError(errno.EINVAL, Terminal.EMPTY_PASS_FIELD)
         if confirm_pass_flag:
             confirm_password = getpass(prompt="Confirm Password: ")
             if not confirm_password:
                 raise ArgumentError(errno.EINVAL,
-                                    f"Confirm {const.EMPTY_PASS_FIELD}")
+                                    f"Confirm {Terminal.EMPTY_PASS_FIELD}")
             if not confirm_password == value:
                 raise ArgumentError(errno.EINVAL, "Password do not match.")
         return value
 
-class CsmCli(Cmd):
+class CortxCli(Cmd):
     def __init__(self, args):
-        super(CsmCli, self).__init__()
+        super(CortxCli, self).__init__()
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
         if len(args) > 1:
@@ -124,7 +127,7 @@ class CsmCli(Cmd):
         """
         #Set Logger
         Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CORTXCLI_CONF))
         Log.init("csm_cli",
              syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
              syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -135,9 +138,9 @@ class CsmCli(Cmd):
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             Conf.decrypt_conf()
         #Set Rest API for CLI
-        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_port')
-        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CSMCLI.csm_agent_host')
-        csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CSMCLI.csm_agent_base_url')
+        csm_agent_port = Conf.get(const.CSM_GLOBAL_INDEX,'CORTXCLI.csm_agent_port')
+        csm_agent_host = Conf.get(const.CSM_GLOBAL_INDEX,'CORTXCLI.csm_agent_host')
+        csm_agent_base_url = Conf.get(const.CSM_GLOBAL_INDEX, 'CORTXCLI.csm_agent_base_url')
         csm_agent_url = f"{csm_agent_base_url}{csm_agent_host}:{csm_agent_port}/api"
         self.rest_client = CsmRestClient(csm_agent_url)
         self.check_auth_required()
@@ -265,16 +268,17 @@ class CsmCli(Cmd):
 if __name__ == '__main__':
     cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from csm.cli.command_factory import CommandFactory, ArgumentParser
+    from csm.cli.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from cortx.utils.log import Log
     from csm.common.conf import Conf
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
+    from csm.common.payload import Yaml
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     try:
-        CsmCli(sys.argv).cmdloop()
+        CortxCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
         Log.debug(f"Stopped via keyboard interrupt.")
         sys.stdout.write("\n")

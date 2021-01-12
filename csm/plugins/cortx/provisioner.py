@@ -28,6 +28,7 @@ from json import JSONDecodeError
 from csm.common.payload import JsonMessage
 import provisioner
 import provisioner.freeze
+from csm.common.conf import Conf
 
 
 class PackageValidationError(InvalidRequest):
@@ -251,23 +252,28 @@ class ProvisionerPlugin:
         :returns: an instance of NetworkConfiguirationResponse
         :raises: a CsmInternalError in case of query failure
         """
-        if not self.provisioner:
-            raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        if not Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG):
+            Log.debug("Network config is not present in in-memory.")
+            if not self.provisioner:
+                raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
 
-        def _command_handler():
-            try:
-                response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
-                # The IPs are same for each node, so we can take any of them
-                for node, params in response.items():
-                    return NetworkConfiguirationResponse(
-                        mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
-                        cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
-                    )
-            except Exception as error:
-                Log.error(f"Provisioner api error : {error}")
-                raise NetworkConfigFetchError(f"Network configuration fetching failed: {error}")
+            def _command_handler():
+                try:
+                    response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
+                    # The IPs are same for each node, so we can take any of them
+                    for node, params in response.items():
+                        return NetworkConfiguirationResponse(
+                            mgmt_vip=params[self.PRVSNR_NETWORK_PARAM_VIP],
+                            cluster_ip=params[self.PRVSNR_NETWORK_PARAM_CIP]
+                        )
+                except Exception as error:
+                    Log.error(f"Provisioner api error : {error}")
+                    raise NetworkConfigFetchError(f"Failed to fetch Network Configuration: {error}")
+            network_config = await self._await_nonasync(_command_handler)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG, network_config)
+            Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {network_config}")
 
-        return await self._await_nonasync(_command_handler)
+        return Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG)
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
@@ -280,7 +286,7 @@ class ProvisionerPlugin:
                 return cluster_id
             except Exception as error:
                 Log.error(f"Provisioner api error : {error}")
-                raise ClusterIdFetchError(f"IDs fetching failed: {error}")
+                raise ClusterIdFetchError(f"Failed to fetch IDs: {error}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -322,13 +328,13 @@ class ProvisionerPlugin:
                 if network_data.get(const.DNS_NETWORK):
                     dns_nodes = self.get_dict(network_data, (
                         const.DNS_NETWORK, const.NODES), default=[])
-                
+
                 mgmt_vip_address = cluster_ip_address = primary_data_ip_address = None
                 primary_data_netmask_address = secondary_data_netmask_address = None
                 secondary_data_ip_address = dns_servers_list = search_domains_list = None
                 data_nw_dhcp = data_network_config.get(const.IS_DHCP, None)
                 primary_data_gateway_address = secondary_data_gateway_address = None
-                
+
                 for node in mgmt_nodes:
                     if node[const.NAME] == const.VIP_NODE:
                         mgmt_vip_address = node.get(const.IP_ADDRESS, None)
@@ -416,7 +422,7 @@ class ProvisionerPlugin:
                 raise ProductVersionFetchError("Product version response missing or invalid json")
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Failed to get release version : {error}")
-                raise ProductVersionFetchError(f"Product version fetching failed: {error}")
+                raise ProductVersionFetchError(f"Failed to fetch product version: {error}")
 
         return await self._await_nonasync(_command_handler)
 
@@ -439,3 +445,24 @@ class ProvisionerPlugin:
         except AttributeError as error:
             Log.critical(f"{error}")
             raise PackageValidationError("Node replacement is not implemented by provisioner.")
+
+    async def begin_bundle_generation(self, command_args, target_node_id):
+        """
+        Execute Bundle Generation via Salt Script.
+        :param command_args: Arguments to be parsed to Bundle Generate Command. :type: String
+        :param target_node_id: Node_id for target node intended. :type: String
+        :return:
+        """
+        if not self.provisioner:
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        try:
+            Log.debug(f"Invoking Provisioner command run with "
+                      f"arguments --> cmd_name={const.CORTXCLI} "
+                      f"cmd_args={repr(command_args)} "
+                      f"targets={target_node_id}")
+            return self.provisioner.cmd_run(cmd_name=const.CORTXCLI,
+                cmd_args=str(command_args), targets=target_node_id,
+                                            nowait=True)
+        except self.provisioner.errors.ProvisionerError as e:
+            Log.error(f"Command Execution error: {e}")
+            raise PackageValidationError(f"Command Execution error: {e}")

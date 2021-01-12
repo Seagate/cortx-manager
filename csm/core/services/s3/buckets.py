@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Union
+from typing import Dict
 
 from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
@@ -54,7 +54,7 @@ class S3BucketService(S3BaseService):
 
     @Log.trace_method(Log.INFO)
     async def create_bucket(self, s3_session: S3Credentials,
-                            bucket_name: str) -> Union[Response, Bucket]:
+                            bucket_name: str) -> Dict:
         """
         Create new bucket by given name
 
@@ -72,14 +72,16 @@ class S3BucketService(S3BaseService):
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
         service_urls = ServiceUrls(self._provisioner)
-        bucket_url = await service_urls.get_s3_url(scheme='https', bucket_name=bucket_name)
+        bucket_url = await service_urls.get_bucket_url(bucket_name, 'https')
+        s3_uri = await service_urls.get_s3_uri(scheme='s3')
         return {
             "bucket_name": bucket_name,
-            "bucket_url": bucket_url
+            "bucket_url": bucket_url,
+            "s3_uri": s3_uri,
         }  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
-    async def list_buckets(self, s3_session: S3Credentials) -> dict:
+    async def list_buckets(self, s3_session: S3Credentials) -> Dict:
         """
         Retrieve the full list of existing buckets
 
@@ -101,8 +103,8 @@ class S3BucketService(S3BaseService):
         bucket_list = [
             {
                 "name": bucket.name,
-                "bucket_url": await service_urls.get_s3_url(scheme='https',
-                                                            bucket_name=bucket.name)
+                "bucket_url": await service_urls.get_bucket_url(bucket.name, 'https'),
+                "s3_uri": await service_urls.get_s3_uri(scheme='s3'),
             }
             for bucket in bucket_list]
         return {"buckets": bucket_list}
@@ -126,10 +128,10 @@ class S3BucketService(S3BaseService):
             await s3_client.delete_bucket(bucket_name)
         except ClientError as e:
             self._handle_error(e)
-        return {"message": "Bucket Deleted Successfully."}
+        return {"message": f"Bucket {bucket_name} Deleted Successfully."}
     @Log.trace_method(Log.INFO)
     async def get_bucket_policy(self, s3_session: S3Credentials,
-                                bucket_name: str) -> dict:
+                                bucket_name: str) -> Dict:
         """
         Retrieve the policy of existing bucket
 
@@ -149,7 +151,7 @@ class S3BucketService(S3BaseService):
 
     @Log.trace_method(Log.INFO)
     async def put_bucket_policy(self, s3_session: S3Credentials, bucket_name: str,
-                                policy: dict) -> dict:
+                                policy: Dict) -> Dict:
         """
         Create or update the policy of existing bucket
 
@@ -170,7 +172,7 @@ class S3BucketService(S3BaseService):
 
     @Log.trace_method(Log.INFO)
     async def delete_bucket_policy(self, s3_session: S3Credentials,
-                                bucket_name: str) -> dict:
+                                bucket_name: str) -> Dict:
         """
         Delete the policy of existing bucket
 
@@ -189,3 +191,43 @@ class S3BucketService(S3BaseService):
             self._handle_error(e)
         return {"message": "Bucket Policy Deleted Successfully."}
 
+    @Log.trace_method(Log.INFO)
+    async def get_bucket_tagging(self, s3_session: S3Credentials, bucket_name: str) -> Dict:
+        """
+        Get tags of the provided bucket
+
+        :param s3_session: s3 user session
+        :type s3_session: S3Credentials
+        :param bucket_name: s3 bucket name
+        :type bucket_name: str
+        :returns: tagset of the provided bucket
+        """
+        Log.debug(f"Put tags to the bucket {bucket_name}")
+        s3_client = await self.get_s3_client(s3_session)  # type: S3Client
+        try:
+            tags = await s3_client.get_bucket_tagging(bucket_name)
+        except ClientError as e:
+            self._handle_error(e)
+        return {"tagset": tags}
+
+    @Log.trace_method(Log.INFO)
+    async def put_bucket_tagging(self, s3_session: S3Credentials,
+                                 bucket_name: str, bucket_tags: Dict) -> Dict:
+        """
+        Put provided tags onto the bucket
+
+        :param s3_session: s3 user session
+        :type s3_session: S3Credentials
+        :param bucket_name: s3 bucket name
+        :type bucket_name: str
+        :param bucket_tags: tags to be put onto the bucket
+        :type bucket_tags: dict
+        :returns: Success message
+        """
+        Log.debug(f"Put tags to the bucket {bucket_name}")
+        s3_client = await self.get_s3_client(s3_session)  # type: S3Client
+        try:
+            await s3_client.put_bucket_tagging(bucket_name, bucket_tags)
+        except ClientError as e:
+            self._handle_error(e)
+        return {"message": "Tagged the bucket successfully"}

@@ -178,17 +178,10 @@ class HealthPlugin(CsmPlugin):
                     self._prepare_resource_key(resource_schema)
             health_value = self._derive_health(message, resource_schema\
                 [const.HEALTH_ALERT_TYPE])
-            """
-            This a special case so handling seperatly.
-            """
-            if resource_type == const.SAS_RESOURCE_TYPE:
-                self._handle_sas_alert(resource_schema, health_value, extended_info)
-            else:
-                resources[const.DURABLE_ID] = info.get(const.ALERT_RESOURCE_ID, "")
-                resources[const.KEY] = resource_type + "-" + \
-                    info.get(const.ALERT_RESOURCE_ID, "")
-                resources[const.ALERT_HEALTH] = health_value
-                resource_schema[const.RESOURCE_LIST].append(resources)
+            resources[const.DURABLE_ID] = info.get(const.ALERT_RESOURCE_ID, "")
+            resources[const.KEY] = f"{resource_type}-{resources[const.DURABLE_ID]}"
+            resources[const.ALERT_HEALTH] = health_value
+            resource_schema[const.RESOURCE_LIST].append(resources)
         except Exception as ex:
             Log.warn(f"Parsing of health map by alert failed. {ex}")
         return resource_schema
@@ -309,24 +302,6 @@ class HealthPlugin(CsmPlugin):
         """
         This method will call comm's stop to stop consuming from the queue.
         """
+        Log.info("Start: HealthPlugin's stop")
         self.comm_client.stop()
-
-    def _handle_sas_alert(self, resource_schema, health_value, extended_info):
-        """
-        This method handles the sas alert. Since, the sas alert only comes when
-        16 phy's are at fault so we need to update 16 resources at a time in
-        the health map.
-        """
-        info = extended_info.get(const.ALERT_INFO)
-        specific_info = extended_info.get(const.SPECIFIC_INFO)
-        resource_schema[const.RESOURCE_LIST] = []
-        try:
-            for items in specific_info:
-                resources = {}
-                resources[const.DURABLE_ID] = items.get(const.ALERT_RESOURCE_ID)
-                resources[const.KEY] = info.get(const.ALERT_RESOURCE_TYPE) + "-" + \
-                    items.get(const.ALERT_RESOURCE_ID)
-                resources[const.ALERT_HEALTH] = health_value
-                resource_schema[const.RESOURCE_LIST].append(resources)
-        except Exception as ex:
-            Log.warn(f"Handling SAS alert for health updation failed. {ex}")
+        Log.info("End: HealthPlugin's stop")

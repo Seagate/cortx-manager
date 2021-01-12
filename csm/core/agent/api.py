@@ -33,6 +33,7 @@ from csm.common.payload import *
 from csm.common.conf import Conf, ConfSection, DebugConf
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
+from csm.common.payload import Json
 from csm.common.services import Service
 from csm.core.blogic import const
 from csm.common.cluster import Cluster
@@ -112,6 +113,25 @@ class CsmRestApi(CsmApi, ABC):
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
+        CsmRestApi.update_roles_permission()
+
+    @staticmethod
+    def update_roles_permission():
+        # Remove lyve_pilot permission if it is not supported
+        try:
+            roles = Json(const.ROLES_MANAGEMENT).load()
+            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+            feature_supported = CsmRestApi._app._loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
+
+            if not feature_supported:
+                Log.debug(f"{const.LYVE_PILOT} is not supported.")
+                for permissions in roles.values():
+                    if permissions.get(const.PERMISSIONS).get(const.LYVE_PILOT):
+                        del permissions.get(const.PERMISSIONS)[const.LYVE_PILOT]
+                        Log.debug(f"{const.LYVE_PILOT} permissions removed.")
+                Json(const.ROLES_MANAGEMENT).dump(roles)
+        except Exception as e_:
+            Log.error(f"Error occurred while updating permissions: {e_}")
 
     @staticmethod
     def is_debug(request) -> bool:
@@ -124,6 +144,21 @@ class CsmRestApi(CsmApi, ABC):
         method = request.method
         user_agent = request.headers.get('User-Agent')
         return (f"Remote_IP:{remote_ip} Url:{url} Method:{method} User-Agent:{user_agent}")
+
+    @staticmethod
+    def process_audit_log(resp, request, status):
+        url = request.path
+        if (not request.app[const.USL_POLLING_LOG]
+                and url.startswith('/usl/')
+                and url != "/usl/v1/registerDevice"):
+            return
+        audit = CsmRestApi.http_request_to_log_string(request)
+        if (getattr(request, "session", None) is not None
+                and getattr(request.session, "credentials", None) is not None):
+            Log.audit(f'User: {request.session.credentials.user_id} '
+                      f'{audit} RC: {status}')
+        else:
+            Log.audit(f'{audit} RC: {status}')
 
     @staticmethod
     def error_response(err: Exception, request) -> dict:
@@ -150,12 +185,7 @@ class CsmRestApi(CsmApi, ABC):
         else:
             resp["message"] = f'{str(err)}'
 
-        audit = CsmRestApi.http_request_to_log_string(request)
-        if hasattr(request,"session"):
-            Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'{audit} RC: {resp["error_code"]}')
-        else:
-            Log.audit(f'{audit} RC: {resp["error_code"]}')
+        CsmRestApi.process_audit_log(resp, request, resp['error_code'])
         return resp
 
     @staticmethod
@@ -289,12 +319,7 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            audit = CsmRestApi.http_request_to_log_string(request)
-            if request.session is not None:
-                Log.audit(f'User: {request.session.credentials.user_id} '
-                          f'{audit} RC: {status}')
-            else:
-                Log.audit(f'{audit} RC: {status}')
+            CsmRestApi.process_audit_log(resp, request, status)
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
@@ -347,8 +372,7 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context,
-                    access_log=Log.logger, access_log_format=const.REST_ACCESS_FORMAT)
+        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
     @staticmethod
     async def process_request(request):

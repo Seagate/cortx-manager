@@ -13,6 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from typing import Dict
+
 from csm.core.blogic import const
 from csm.common.conf import Conf
 from csm.common.service_urls import ServiceUrls
@@ -45,7 +47,7 @@ class S3AccountService(S3BaseService):
         self._s3_root_client = IamRootClient()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
-    async def create_account(self, account_name: str, account_email: str, password: str):
+    async def create_account(self, account_name: str, account_email: str, password: str) -> Dict:
         """
         S3 account creation
         :param account_name:
@@ -76,6 +78,8 @@ class S3AccountService(S3BaseService):
         return {
             "account_name": account.account_name,
             "account_email": account.account_email,
+            "account_id": account.account_id,
+            "canonical_id": account.canonical_id,
             "access_key": account.access_key_id,
             "secret_key": account.secret_key_id
         }
@@ -139,7 +143,7 @@ class S3AccountService(S3BaseService):
         service_urls = ServiceUrls(self._provisioner)
         resp = {
             "s3_accounts": accounts_list,
-            "s3_urls": await service_urls.get_s3_url()
+            "s3_urls": await service_urls.get_s3_uris()
         }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker

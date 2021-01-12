@@ -40,6 +40,7 @@ from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
 from csm.common.payload import Payload, Json, JsonMessage
 import asyncio
+from csm.common.conf import Conf
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"
@@ -142,6 +143,9 @@ class AlertRepository(IAlertStorage):
                 resolved, acknowledged, show_active)
         query = Query().filter_by(query_filter)
 
+        if not limits:
+            limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+
         if limits and limits.offset:
             query = query.offset(limits.offset)
 
@@ -214,7 +218,61 @@ class AlertRepository(IAlertStorage):
             Or(Compare(AlertModel.acknowledged, '=', False), \
             Compare(AlertModel.resolved, '=', False)))
         query = Query().filter_by(alert_filter)
+        limits = QueryLimits(const.ES_RECORD_LIMIT, 0)
+        query = query.offset(limits.offset)
+        query = query.limit(limits.limit)
         return await self.db(AlertModel).get(query)
+
+    async def fetch_alert_for_support_bundle(self):
+        """
+        Fetches New and Active alerts except for IEM alerts.
+        Fetches alerts whose life cycle is completed(resovled + ack) for 7 days.
+        1. Fetching New alerts (resolved and ack both false)
+        """
+        combined_alert_list = []
+        new_alerts_list = await self.retrieve_by_range(
+            None, #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            False, #resolved,
+            False, #acknowledged,
+            False #show_active
+        )
+        combined_alert_list.extend(new_alerts_list)
+        """
+        2. Fetching active alerts (either resolved or ack) is true.
+        """
+        active_alerts_list = await self.retrieve_by_range(
+            None, #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            None, #resolved,
+            None, #acknowledged,
+            True  #show_active
+        )
+        combined_alert_list.extend(active_alerts_list)
+        """
+        3. Fetching alerts that have been resolved and ack both.
+        This means that the alert has completed the life cycle.
+        For these alerts we will only fetch the data for last 7 days.
+        """
+        start_time = datetime.utcnow() - timedelta(**{"days": 7})
+        resolved_alerts_list = await self.retrieve_by_range(
+            DateTimeRange(start_time, None), #time_range
+            True, #show_all
+            None, #severity
+            None, #SortBy
+            None, #limits
+            True, #resolved,
+            True, #acknowledged,
+            False  #show_active
+        )
+        combined_alert_list.extend(resolved_alerts_list)
+        return [alert.to_primitive_filter_empty() for alert in combined_alert_list if not alert.module_type == const.IEM]
 
 class AlertsAppService(ApplicationService):
     """
@@ -328,14 +386,14 @@ class AlertsAppService(ApplicationService):
         """
         Log.debug(f"Update all alerts service. fields:{fields}")
         if not isinstance(fields, list):
-            raise InvalidRequest("Acknowledged Value Must Be of Type Boolean.")
+            raise InvalidRequest("Acknowledged value must be of type boolean.")
 
         alerts = []
 
         for alert_id in fields:
             alert = await self.repo.retrieve(alert_id)
             if not alert:
-                raise CsmNotFoundError("Alert was not found with id" + alert_id, ALERTS_MSG_NOT_FOUND)
+                raise CsmNotFoundError("Alert not found for id" + alert_id, ALERTS_MSG_NOT_FOUND)
 
             alert.acknowledged = AlertModel.acknowledged.to_native(True)
             alert.updated_time = int(time.time())
@@ -572,6 +630,7 @@ class AlertMonitorService(Service, Observable):
         self.repo = repo
         self._health_plugin = health_plugin
         self._http_notfications = http_notifications
+        self._es_retry = Conf.get(const.CSM_GLOBAL_INDEX, const.ES_RETRY, 5)
         super().__init__()
 
     def _monitor(self):
@@ -603,11 +662,37 @@ class AlertMonitorService(Service, Observable):
         try:
             Log.info("Stopping Alert monitor thread")
             self._alert_plugin.stop()
-            self._monitor_thread.join()
+            Log.info("Joining Alert monitor thread")
+            self._monitor_thread.join(timeout=2.0)
+
             self._thread_started = False
             self._thread_running = False
+            Log.info("Stopped Alert monitor thread")
         except Exception as e:
             Log.warn(f"Error in stopping alert monitor thread: {e}")
+
+    def _get_previous_alert(self, sensor_info, module_type):
+        """
+        This method fetches the prev alert. Before saving the alert into
+        ES DB we get the previous state of the alert.
+        During fault on the private network ES might take some time to clone
+        the data. During this duration if an alert comes CSM wont be able to
+        save it in ES and alert will be lost.
+        So, to handle this corner case when an exception comes we will sleep for
+        5 seconds and then will retry the ES connection.
+        Even if more then one alert piles up on RMQ queue this fix will handle it.
+        """
+        prev_alert = None
+        for count in range(0, self._es_retry):
+            try:
+                Log.info("Fetching previous alert to check the state and severity.")
+                prev_alert = self._run_coroutine\
+                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+                return prev_alert
+            except Exception as ex:
+                Log.warn(f"Unable to fetch previous alert. Retrying : {count+1}.{ex}")
+                time.sleep(2**count)
+                continue
 
     def _consume(self, message):
         """
@@ -656,8 +741,7 @@ class AlertMonitorService(Service, Observable):
             """
             if is_node_alert and is_high_risk_severity:
                 self._add_support_message(message)
-            prev_alert = self._run_coroutine\
-                    (self.repo.retrieve_by_sensor_info(sensor_info, module_type))
+            prev_alert = self._get_previous_alert(sensor_info, module_type)
             alert = AlertModel(message)
             if not prev_alert:
                 self._run_coroutine(self.repo.store(alert))
@@ -686,6 +770,7 @@ class AlertMonitorService(Service, Observable):
             self._run_coroutine(self.repo.store_alerts_history(alert_history))
         except Exception as e:
             Log.warn(f"Error in consuming alert: {e}")
+            return False
 
         return True
 
@@ -845,7 +930,8 @@ class AlertMonitorService(Service, Observable):
             Adding support message if alert is bad.
             """
             if self._is_bad_alert(AlertModel(alert)):
-                alert[const.SUPPORT_MESSAGE] = const.SUPPORT_MSG
+                texts = Json(const.L18N_SCHEMA).load()
+                alert[const.SUPPORT_MESSAGE] = texts.get(const.SUPPORT_MSG, const.SUPPORT_DEFAULT_MSG)
         except Exception as ex:
             Log.error(f"Addition of support message failed. {ex}")
 
