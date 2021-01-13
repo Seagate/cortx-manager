@@ -25,12 +25,14 @@ from cortx.utils.security.secure_storage import SecureStorage
 from pathlib import PosixPath
 from typing import Optional
 
+
 class _Const:
     UDS_CERTIFICATES_PATH = '/var/csm/tls'
     UDS_NATIVE_PRIVATE_KEY_FILENAME = 'native.key'
     UDS_NATIVE_CERTIFICATE_FILENAME = 'native.crt'
     UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
     UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
+
 
 class CertificateError(Exception):
     """

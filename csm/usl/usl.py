@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from abc import ABC 
+from abc import ABC
 from aiohttp.web import HTTPNotFound, HTTPForbidden, HTTPInternalServerError
 from typing import Any, Dict, List
 from uuid import UUID

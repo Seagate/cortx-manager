@@ -116,7 +116,6 @@ class Volume(BaseModel):
         # TODO: Replace with non-offensive term when possible. An issue was sent on 08/24/2020
         # to https://github.com/schematics/schematics/issues/613 requesting this.
 
-
     @staticmethod
     def instantiate(
         name: str,

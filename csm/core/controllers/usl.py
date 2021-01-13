@@ -262,10 +262,8 @@ class DeviceVolumeUnmountView(_SecuredView):
             device_id = fields.UUID(required=True)
             volume_id = fields.UUID(required=True)
 
-
         class UmountAccessParamsSchema(AccessParamsSchema):
             handle = fields.Str(required=True)
-
 
         try:
             params = MethodSchema().load(self.request.match_info)
