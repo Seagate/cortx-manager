@@ -47,6 +47,8 @@ cli_module_list = import_models(db_file_path)
 product_module_list.extend(cli_module_list)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("csm.cli.scripts")
+product_module_list.append("csm.cli.scripts")
+product_module_list.append("csm.conf")
 product_module_list.append("cortx.utils.security.secure_storage")
 
 block_cipher = None
