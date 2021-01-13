@@ -19,7 +19,7 @@ from csm.core.services.s3.buckets import S3BucketService
 from csm.core.services.sessions import S3Credentials
 
 
-class UslS3BucketsManager:
+class LyvePilotS3BucketsManager:
     def __init__(
         self,
         s3_bucket_service: S3BucketService,

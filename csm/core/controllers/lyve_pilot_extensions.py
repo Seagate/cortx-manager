@@ -23,18 +23,18 @@ from csm.common.errors import CsmError
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
-from csm.core.services.usl_extensions import UslExtensionsService
+from csm.core.services.lyve_pilot_extensions import LyvePilotExtensionsService
 
 
 class _View(CsmView):
     """
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
     """
-    _extensions_service: UslExtensionsService
+    _extensions_service: LyvePilotExtensionsService
 
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
-        self._extensions_service = UslExtensionsService()
+        self._extensions_service = LyvePilotExtensionsService()
         self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
 
 

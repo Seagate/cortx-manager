@@ -28,10 +28,10 @@ from csm.common.conf import Conf
 from csm.common.errors import (
     CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, InvalidRequest)
 from csm.core.blogic import const
-from csm.core.services.usl_s3 import UslS3BucketsManager
+from csm.core.services.lyve_pilot_s3 import LyvePilotS3BucketsManager
 
 
-class UslExtensionsService:
+class LyvePilotExtensionsService:
     async def get_saas_url(self) -> Dict[str, str]:
         """
         Obtains Lyve Pilot SaaS URL from CSM global index and returns it to the user.
@@ -108,7 +108,7 @@ class UslExtensionsService:
         credentials = registration_info['accessParams']['credentials']
         access_key = credentials['accessKey']
         secret_access_key = credentials['secretKey']
-        buckets_controller = UslS3BucketsManager(
+        buckets_controller = LyvePilotS3BucketsManager(
             s3_buckets_service, account_name, access_key, secret_access_key)
         bucket_name = registration_info['internalCortxParams']['bucketName']
         await buckets_controller.enable_lyve_pilot(bucket_name)
