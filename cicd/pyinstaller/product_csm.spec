@@ -65,7 +65,12 @@ csm_agent = Analysis([csm_path + '/core/agent/csm_agent.py'],
              cipher=block_cipher,
              noarchive=False)
 
-csm_setup = Analysis([csm_path + '/conf/csm_setup.py'],
+csm_setup = Analysis([csm_path + '/conf/csm_setup.py',
+csm_path + '/conf/post_install.py',
+csm_path + '/conf/configure.py',
+csm_path + '/conf/init.py',
+csm_path + '/conf/reset.py',
+csm_path + '/conf/refresh_config.py'],
              pathex=['/usr/lib/python3.6/site-packages/'],
              binaries=[],
              datas=[],
