@@ -1,4 +1,3 @@
-# CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -23,13 +22,11 @@ from csm.common.decorators import Decorators
 from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
 from cortx.utils.log import Log
 from csm.common.conf import Conf
-from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
 from csm.core.services.usl import UslService
-from csm.core.services.usl_extensions import UslExtensionsService
 from csm.usl.usl import USL
 
 
@@ -60,14 +57,11 @@ class _View(CsmView):
     """
     _service: UslService
     _usl: USL
-    _extension_service: UslExtensionsService
 
     def __init__(self, request: web.Request) -> None:
         CsmView.__init__(self, request)
-        self._extension_service = UslExtensionsService()
         self._service = self._request.app[const.USL_SERVICE]
         self._usl = USL(self._service)
-        self._s3_buckets_service = self._request.app[const.S3_BUCKET_SERVICE]
 
 
 class _SecuredView(_View):
@@ -88,91 +82,6 @@ class _SecuredView(_View):
         key_correct = self._service._api_key_dispatch.validate_key(req_key)
         if not key_correct:
             raise web.HTTPUnauthorized()
-
-
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
-@CsmView._app_routes.view("/usl/v1/saas")
-class SaaSURLView(_View):
-    """
-    Lyve Pilot SaaS URL view.
-    """
-    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
-    async def get(self) -> Dict[str, str]:
-        return await self._extension_service.get_saas_url()
-
-
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
-@CsmView._app_routes.view("/usl/v1/registerDevice")
-class DeviceRegistrationView(_View):
-    """
-    Device registration view.
-    """
-
-    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.UPDATE}})
-    async def post(self) -> None:
-
-        class MethodSchema(Schema):
-            class RegisterDeviceParams(Schema):
-                url = fields.URL(required=True)
-                reg_pin = fields.Str(attribute='regPin', data_key='regPin', required=True)
-                reg_token = fields.Str(attribute='regToken', data_key='regToken', required=True)
-
-            class AccessParams(Schema):
-                class Credentials(Schema):
-                    access_key = fields.Str(
-                        attribute='accessKey', data_key='accessKey', required=True)
-                    secret_key = fields.Str(
-                        attribute='secretKey', data_key='secretKey', required=True)
-
-                account_name = fields.Str(
-                    attribute='accountName', data_key='accountName', required=True)
-                # TODO validator
-                uri = fields.URL(schemes=['s3'], required=True)
-                credentials = fields.Nested(Credentials, required=True)
-
-            class InternalCortxParams(Schema):
-                bucket_name = fields.Str(
-                    attribute='bucketName', data_key='bucketName', required=True)
-
-            register_device_params = fields.Nested(
-                RegisterDeviceParams,
-                attribute='registerDeviceParams',
-                data_key='registerDeviceParams',
-                required=True,
-            )
-            access_params = fields.Nested(
-                AccessParams, attribute='accessParams', data_key='accessParams', required=True)
-            internal_cortx_params = fields.Nested(
-                InternalCortxParams,
-                attribute='internalCortxParams',
-                data_key='internalCortxParams',
-                required=True,
-            )
-
-        try:
-            body = await self.request.json()
-            registration_info = MethodSchema().load(body)
-        except (JSONDecodeError, ValidationError) as e:
-            desc = 'Malformed UDS registration payload'
-            Log.error(f'{desc}: {e}')
-            raise CsmError(desc=desc)
-        return await self._extension_service.post_register_device(
-            self._s3_buckets_service, registration_info)
-
-    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
-    async def get(self) -> None:
-        await self._extension_service.get_register_device()
-
-
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
-@CsmView._app_routes.view("/usl/v1/registrationToken")
-class RegistrationTokenView(_View):
-    """
-    Registration token generation view.
-    """
-    @CsmAuth.permissions({Resource.LYVE_PILOT: {Action.LIST}})
-    async def get(self) -> Dict[str, str]:
-        return await self._extension_service.get_registration_token()
 
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)

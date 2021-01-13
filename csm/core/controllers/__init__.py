@@ -23,6 +23,7 @@ from .health import HealthView, HealthResourceView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView
-from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
-                  DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,
-                  SystemCertificatesView,  SystemCertificatesByTypeView, NetworkInterfacesView)
+from .usl import (DeviceView, DeviceVolumesListView, DeviceVolumeMountView, DeviceVolumeUnmountView,
+    UdsEventsView, SystemView, SystemCertificatesView,  SystemCertificatesByTypeView,
+    NetworkInterfacesView)
+from .lyve_pilot_extensions import DeviceRegistrationView, RegistrationTokenView, SaaSURLView
