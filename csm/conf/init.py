@@ -44,7 +44,7 @@ class Init(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get("config_url"))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -62,9 +62,10 @@ class Init(Setup):
         Create user and allow permission for csm resources
         """
         Log.info("Create user and allow permission for csm resources")
-        bundle_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "SUPPORT_BUNDLE.bundle_path")
-        crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
-        key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.private_key_path")
+        bundle_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
+                               "SUPPORT_BUNDLE>bundle_path")
+        crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
+        key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>private_key_path")
         self._config_user_permission_set(bundle_path, crt, key)
 
     def _config_user_permission_set(self, bundle_path, crt, key):
@@ -72,7 +73,7 @@ class Init(Setup):
         Set User Permission
         """
         Log.info("Set User Permission")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
