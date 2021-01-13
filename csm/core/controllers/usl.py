@@ -28,8 +28,9 @@ from csm.common.runtime import Options
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.usl_access_parameters_schema import AccessParamsSchema
-from csm.core.services.usl import USL, UslService
+from csm.core.services.usl import UslService
 from csm.core.services.usl_extensions import UslExtensionsService
+from csm.usl.usl import USL
 
 
 # TODO replace this workaround with a proper firewall, or serve USL on a separate socket

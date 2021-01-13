@@ -12,27 +12,3 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-
-from schematics.types import UUIDType
-
-from csm.core.blogic.models import CsmModel
-
-
-class ApiKey(CsmModel):
-    """
-    Represents the USL API key
-    """
-
-    _id = "key"
-
-    key = UUIDType()
-
-    @staticmethod
-    def instantiate(key):
-        """
-        Creates an ApiKey instance
-        """
-
-        k = ApiKey()
-        k.key = key
-        return k

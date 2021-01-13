@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from asyncio import Lock
-from csm.core.blogic import const
 from cortx.utils.log import Log
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
@@ -26,6 +25,12 @@ from cortx.utils.security.secure_storage import SecureStorage
 from pathlib import PosixPath
 from typing import Optional
 
+class _Const:
+    UDS_CERTIFICATES_PATH = '/var/csm/tls'
+    UDS_NATIVE_PRIVATE_KEY_FILENAME = 'native.key'
+    UDS_NATIVE_CERTIFICATE_FILENAME = 'native.crt'
+    UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
+    UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
 
 class CertificateError(Exception):
     """
@@ -157,9 +162,9 @@ class USLNativeCertificateManager(CertificateManager):
 
     def __init__(self) -> None:
         super().__init__(
-            const.UDS_CERTIFICATES_PATH,
-            const.UDS_NATIVE_PRIVATE_KEY_FILENAME,
-            const.UDS_NATIVE_CERTIFICATE_FILENAME,
+            _Const.UDS_CERTIFICATES_PATH,
+            _Const.UDS_NATIVE_PRIVATE_KEY_FILENAME,
+            _Const.UDS_NATIVE_CERTIFICATE_FILENAME,
         )
 
     # FIXME private key should not be exposed
@@ -181,9 +186,9 @@ class USLDomainCertificateManager(CertificateManager):
 
     def __init__(self, secure_storage: SecureStorage) -> None:
         super().__init__(
-            const.UDS_CERTIFICATES_PATH,
-            const.UDS_DOMAIN_PRIVATE_KEY_FILENAME,
-            const.UDS_DOMAIN_CERTIFICATE_FILENAME,
+            _Const.UDS_CERTIFICATES_PATH,
+            _Const.UDS_DOMAIN_PRIVATE_KEY_FILENAME,
+            _Const.UDS_DOMAIN_CERTIFICATE_FILENAME,
             secure_storage
         )
 
