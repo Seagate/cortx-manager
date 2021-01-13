@@ -14,12 +14,12 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from abc import ABC 
+from aiohttp.web import HTTPNotFound, HTTPForbidden, HTTPInternalServerError
 from typing import Any, Dict, List
 from uuid import UUID
 
 from cortx.utils.log import Log
 from cortx.utils.security.secure_storage import SecureStorage
-from csm.common.errors import (CsmInternalError, CsmNotFoundError, CsmPermissionDenied)
 from csm.usl.models import Device, Volume
 from csm.usl.net_ifaces import get_interface_details
 from csm.usl.certificate_manager import (
@@ -86,7 +86,7 @@ class USL:
         :return: A list with dictionaries, each containing information about a specific volume.
         """
         if device_id != self._driver.get_device_uuid():
-            raise CsmNotFoundError(desc=f'Device with ID {device_id} is not found')
+            raise HTTPNotFound(text=f'Device with ID {device_id} is not found')
         volumes = await self._driver.get_volume_list(access_key_id, secret_access_key)
         return [v.to_primitive(role='public') for _, v in volumes.items()]
 
@@ -103,10 +103,10 @@ class USL:
         :return: A dictionary containing the mount handle and the mount path.
         """
         if device_id != self._driver.get_device_uuid():
-            raise CsmNotFoundError(desc=f'Device {device_id} not found')
+            raise HTTPNotFound(text=f'Device {device_id} not found')
         volumes = await self._driver.get_volume_list(access_key_id, secret_access_key)
         if volume_id not in volumes:
-            raise CsmNotFoundError(desc=f'Volume {volume_id} not found on device {device_id}')
+            raise HTTPNotFound(text=f'Volume {volume_id} not found on device {device_id}')
         return {
             'mountPath': volumes[volume_id].bucketName,
             'handle': volumes[volume_id].bucketName
@@ -192,30 +192,30 @@ class USL:
         """
         if await self._domain_certificate_manager.get_private_key_bytes() is not None:
             reason = 'Domain certificate already exists'
-            raise CsmPermissionDenied(reason)
+            raise HTTPForbidden(text=reason)
         await self._domain_certificate_manager.create_private_key_file(overwrite=False)
         private_key_bytes = await self._domain_certificate_manager.get_private_key_bytes()
         if private_key_bytes is None:
             reason = 'Could not read USL private key'
             Log.error(reason)
-            raise CsmInternalError(reason)
+            raise HTTPInternalServerError(text=reason)
         public_key = await self._domain_certificate_manager.get_public_key_bytes()
         if public_key is None:
             reason = 'Could not read USL public key'
             Log.error(f'{reason}')
-            raise CsmInternalError(reason)
+            raise HTTPInternalServerError(text=reason)
         return public_key
 
     async def put_system_certificates(self, certificate: bytes) -> None:
         if await self._domain_certificate_manager.get_certificate_bytes() is not None:
             reason = 'Domain certificate already exists'
-            raise CsmPermissionDenied(reason)
+            raise HTTPForbidden(text=reason)
         try:
             await self._domain_certificate_manager.create_certificate_file(certificate)
         except CertificateError as e:
             reason = 'Could not update USL certificate'
             Log.error(f'{reason}: {e}')
-            raise CsmInternalError(reason)
+            raise HTTPInternalServerError(text=reason)
 
     async def delete_system_certificates(self) -> None:
         """
@@ -225,7 +225,7 @@ class USL:
         deleted = await self._domain_certificate_manager.delete_key_material()
         if not deleted:
             reason = 'Failed to delete the domain certificate'
-            raise CsmPermissionDenied(reason)
+            raise HTTPForbidden(text=reason)
 
     async def get_system_certificates_by_type(self, material_type: str) -> bytes:
         """
@@ -243,11 +243,11 @@ class USL:
         if get_material_bytes is None:
             reason = f'Unexpected key material type "{material_type}"'
             Log.error(reason)
-            raise CsmInternalError(reason)
+            raise HTTPInternalServerError(text=reason)
         material = await get_material_bytes()
         if material is None:
             reason = f'Key material type "{material_type}" is not found'
-            raise CsmNotFoundError(reason)
+            raise HTTPNotFound(text=reason)
         return material
 
     async def get_network_interfaces(self) -> List[Dict[str, Any]]:
@@ -263,5 +263,5 @@ class USL:
         except (ValueError, RuntimeError) as e:
             reason = f'Could not obtain interface details from address {ip}'
             Log.error(f'{reason}: {e}')
-            raise CsmInternalError(reason) from e
+            raise HTTPInternalServerError(text=reason) from e
         return [iface_data.to_native()]
