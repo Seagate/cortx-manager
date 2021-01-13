@@ -55,7 +55,7 @@ class Init(Setup):
         if not self._dev_mode:
             self._set_rmq_cluster_nodes()
         self.ConfigServer.reload()
-        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _config_user_permission(self, reset=False):
         """

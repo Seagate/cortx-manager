@@ -40,6 +40,8 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
+PASS = ":PASS"
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CORTXCLI_SETUP_CMD = 'cortxcli_setup'

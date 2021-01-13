@@ -56,7 +56,7 @@ class PostInstall(Setup):
         await self._config_user()
         await self._set_unsupported_feature_info()
         await self._configure_system_auto_restart()
-        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     async def _config_user(self, reset=False):
         """

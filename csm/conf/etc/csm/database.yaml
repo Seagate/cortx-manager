@@ -18,7 +18,7 @@ databases:
         import_path: "ElasticSearchDB"
         config:
             host: "localhost"
-            port: 9200
+            port: "9200"
             login: ""
             password: ""
             replication: 1
@@ -26,7 +26,7 @@ databases:
         import_path: "ConsulDB"
         config:
             host: "127.0.0.1"
-            port: 8500
+            port: "8500"
             login: ""
             password: ""
 models:

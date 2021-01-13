@@ -54,7 +54,7 @@ class RefreshConfig(Setup):
         except Exception as e:
             Log.error(f"csm_setup refresh_config failed. Error: {e}")
             raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")
-        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     @classmethod
     def _get_faulty_node_uuid(self):

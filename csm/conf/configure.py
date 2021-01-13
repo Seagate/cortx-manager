@@ -53,27 +53,31 @@ class Configure(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if command.options.get(const.DEBUG) == 'true':
+        if command.options.get(const.DEBUG) == 'true' or Conf.get(
+            const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
             Log.info("Running Csm Setup for Development Mode.")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.DEV)
             self._debug_flag = True
         try:
-            uds_public_ip = command.options.get('uds_public_ip')
-            if uds_public_ip is not None:
-                ip_address(uds_public_ip)
             if not self._replacement_node_flag:
                 self.create()
-            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
-            Configure._set_node_id()
-            minion_id = Configure._get_minion_id()
-            data_nw = Configure._get_data_nw_info(minion_id)
-            Configure._set_db_host_addr('consul',
-                                  data_nw.get('roaming_ip', 'localhost'))
-            Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+            if not self._debug_flag:
+                uds_public_ip = command.options.get('uds_public_ip')
+                if uds_public_ip is not None:
+                    ip_address(uds_public_ip)
+                UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
+                Configure._set_node_id()
+                minion_id = Configure._get_minion_id()
+                data_nw = Configure._get_data_nw_info(minion_id)
+                Configure._set_db_host_addr('consul',
+                                            data_nw.get('roaming_ip', 'localhost'))
+                Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
         except Exception as e:
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-        return Response(output=":PASS", rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def create(self):
         """
@@ -81,11 +85,9 @@ class Configure(Setup):
         :return:
         """
         Log.error("Create the CSM Conf File on Required Location.")
-        if self._debug_flag:
-            Log.info("Setting Dev Mode Key in Csm Conf")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
-        else:
+        if not self._debug_flag:
             Configure.store_encrypted_password()
+        Conf.save(const.CSM_GLOBAL_INDEX)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     @staticmethod
