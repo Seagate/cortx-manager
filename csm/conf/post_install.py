@@ -79,7 +79,7 @@ class PostInstall(Setup):
             Setup._run_cmd(f"usermod -s /sbin/nologin {self._user}")
             if not self._is_user_exist():
                 Log.error("Csm User Creation Failed.")
-                raise CsmSetupError(f"Unable to create {self._user} user" )
+                raise CsmSetupError(f"Unable to create {self._user} user")
         if self._is_user_exist() and Setup._is_group_exist(
                 const.HA_CLIENT_GROUP):
             Log.info("Add Csm User to HA-Client Group.")
