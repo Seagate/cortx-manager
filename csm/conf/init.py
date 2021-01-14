@@ -87,8 +87,10 @@ class Init(Setup):
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
         # Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
-        Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
-        Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {key}")
+        if os.path.exists(crt):
+            Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
+        if os.path.exists(key):
+            Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {key}")
         Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
     def _set_rmq_cluster_nodes(self):
