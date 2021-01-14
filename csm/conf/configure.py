@@ -77,7 +77,7 @@ class Configure(Setup):
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def create(self):
         """

@@ -55,7 +55,7 @@ class Init(Setup):
         if not self._dev_mode:
             self._set_rmq_cluster_nodes()
         self.ConfigServer.reload()
-        return Response(output=const.PASS, rc=CSM_OPERATION_SUCESSFUL)
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _config_user_permission(self, reset=False):
         """
@@ -86,7 +86,7 @@ class Init(Setup):
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
-        Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
+        # Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
         Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
         Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {key}")
         Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")

@@ -186,82 +186,6 @@ class Setup:
             Log.error(f"Error in writing ssh config: {err}")
             if err.errno != errno.EEXIST: raise
 
-    def _passwordless_ssh(self, home_dir):
-        """
-        make passwordless ssh to nodes
-        """
-        Log.info("Make passwordless ssh to nodes")
-        Log.debug(f"home_dir path:{home_dir}")
-        Setup._run_cmd("mkdir "+os.path.join(home_dir, const.SSH_DIR))
-        cmd = shlex.split("ssh-keygen -N '' -f "+os.path.join(home_dir, const.SSH_PRIVATE_KEY))
-        Setup._run_cmd(cmd)
-        self._create_ssh_config(os.path.join(home_dir, const.SSH_CONFIG), os.path.join(home_dir, const.SSH_PRIVATE_KEY))
-        Setup._run_cmd("cp "+os.path.join(home_dir, const.SSH_PUBLIC_KEY)+" " +
-                                                     os.path.join(home_dir, const.SSH_AUTHORIZED_KEY))
-        Setup._run_cmd("chown -R "+self._user+":"+self._user+" "+os.path.join(home_dir, const.SSH_DIR))
-        Setup._run_cmd("chmod 400 "+os.path.join(const.CSM_USER_HOME, const.SSH_PRIVATE_KEY))
-
-    def _config_user(self, reset=False):
-        """
-        Check user already exist and create if not exist
-        If reset true then delete user
-        """
-        Log.info("Check user already exist and create if not exist. reset flag: {reset}")
-        if not reset:
-            if not self._is_user_exist():
-                _password = self._fetch_csm_user_password(decrypt=True)
-                if not _password:
-                    Log.error("CSM Password Not Recieved from provisioner.")
-                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
-                Log.info("Creating CSM User.")
-                _password = crypt.crypt(_password, "22")
-                Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
-                Log.info("Adding CSM User to Wheel Group.")
-                Setup._run_cmd("usermod -aG wheel " + self._user)
-                Log.info("Enabling nologin for CSM user.")
-                Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
-                if not self._is_user_exist():
-                    raise CsmSetupError("Unable to create %s user" % self._user)
-                node_name = SaltWrappers.get_salt_call(const.GRAINS_GET, 'id', 'log')
-                primary = SaltWrappers.get_salt_call(const.GRAINS_GET, 'roles', 'log')
-                if ( node_name is None or const.PRIMARY_ROLE in primary):
-                    self._passwordless_ssh(const.CSM_USER_HOME)
-                nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
-                if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
-                    nodes.remove(node_name)
-                    for node in nodes:
-                        if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
-                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+
-                                      node+":"+const.CSM_USER_HOME)
-                            Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
-                                                 os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
-        else:
-            if self._is_user_exist():
-                Setup._run_cmd("userdel -r " +self._user)
-        if self._is_user_exist() and Setup._is_group_exist(const.HA_CLIENT_GROUP):
-            Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
-
-    def _config_user_permission_set(self, bundle_path, crt, key):
-        """
-        Set User Permission
-        """
-        Log.info("Set User Permission")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-        os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
-        os.makedirs(log_path, exist_ok=True)
-        os.makedirs(bundle_path, exist_ok=True)
-        os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_TMP_FILE_CACHE_DIR)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + bundle_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_CONF_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PIDFILE_PATH)
-        Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
-        Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
     def _config_user_permission_unset(self, bundle_path):
         """
@@ -272,19 +196,6 @@ class Setup:
         Setup._run_cmd("rm -rf " + bundle_path)
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
-
-    def _config_user_permission(self, reset=False):
-        """
-        Create user and allow permission for csm resources
-        """
-        Log.info("Create user and allow permission for csm resources")
-        bundle_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.bundle_path")
-        crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
-        key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.private_key_path")
-        if not reset:
-            self._config_user_permission_set(bundle_path, crt, key)
-        else:
-            self._config_user_permission_unset(bundle_path)
 
     class Config:
         """
