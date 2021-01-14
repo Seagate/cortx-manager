@@ -151,8 +151,8 @@ class S3AccountService(S3BaseService):
         return resp
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
-    async def patch_account(self, s3_session: S3Credentials, account_name: str,
-                            password: str = None, reset_access_key: bool = False) -> dict:
+    async def patch_account(self, account_name: str, password: str = None,
+                            reset_access_key: bool = False) -> dict:
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
@@ -181,10 +181,6 @@ class S3AccountService(S3BaseService):
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
                 new_creds.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
-        else:
-            client = self._s3plugin.get_iam_client(s3_session.access_key,
-                s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
-                s3_session.session_token)
 
         if password:
             # We will try to create login profile in case it doesn't exist

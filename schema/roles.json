@@ -18,7 +18,7 @@
             "capacity": ["list"],
             "sysconfig": ["list", "update", "delete"],
             "users": ["list", "update", "delete", "create"],
-            "s3accounts": ["list", "create"],
+            "s3accounts": ["list", "create", "update"],
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
             "health": ["list"]
