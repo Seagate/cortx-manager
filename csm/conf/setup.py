@@ -30,17 +30,9 @@ from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
-import re
-import time
 import traceback
-import asyncio
-from csm.core.blogic.models.alerts import AlertModel
-from csm.core.services.alerts import AlertRepository
-from cortx.utils.schema.payload import Json
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
-from cortx.utils.product_features import unsupported_features
-from csm.conf.salt import SaltWrappers, PillarDataFetchError
+from csm.conf.salt import SaltWrappers
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.conf_store.conf_store import Conf

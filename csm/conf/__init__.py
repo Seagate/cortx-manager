@@ -13,9 +13,5 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from .post_install import PostInstall
-from .configure import Configure
-from .init import Init
-from .reset import Reset
-from .refresh_config import RefreshConfig
+
 
