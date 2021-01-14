@@ -33,7 +33,6 @@ from csm.core.data.models.usl import ApiKey
 from csm.core.services.s3.utils import CsmS3ConfigurationFactory
 from csm.plugins.cortx.provisioner import NetworkConfigFetchError
 from csm.usl.models import Volume
-from csm.usl.usl import USLDriver
 from cortx.utils.security.secure_storage import SecureStorage
 from cortx.utils.security.cipher import Cipher
 
@@ -59,7 +58,7 @@ class UslApiKeyDispatcher:
         return self._key == request_key
 
 
-class UslService(ApplicationService, USLDriver):
+class UslService(ApplicationService):
     """
     Implements USL service operations.
     """

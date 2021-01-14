@@ -13,9 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from abc import ABC
 from aiohttp.web import HTTPNotFound, HTTPForbidden, HTTPInternalServerError
 from typing import Any, Dict, List
+from typing_extensions import Protocol
 from uuid import UUID
 
 from cortx.utils.log import Log
@@ -27,7 +27,7 @@ from csm.usl.certificate_manager import (
 )
 
 
-class USLDriver(ABC):
+class USLDriver(Protocol):
     def get_secure_storage(self) -> SecureStorage: ...
 
     async def get_friendly_name(self) -> str: ...
