@@ -13,6 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from csm.core.blogic import const
+from csm.common.conf import Conf
+
 from .routes import CsmRoutes
 from .users import CsmUsersListView, CsmUsersView
 from .s3.iam_users import IamUserListView, IamUserView
@@ -23,7 +26,11 @@ from .health import HealthView, HealthResourceView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView
-from .usl import (DeviceView, DeviceVolumesListView, DeviceVolumeMountView, DeviceVolumeUnmountView,
-    UdsEventsView, SystemView, SystemCertificatesView,  SystemCertificatesByTypeView,
-    NetworkInterfacesView)
-from .lyve_pilot_extensions import DeviceRegistrationView, RegistrationTokenView, SaaSURLView
+if Conf.get(const.CSM_GLOBAL_INDEX, "LYVE_PILOT.enabled"):
+    from .usl import (DeviceView, DeviceVolumesListView, DeviceVolumeMountView,
+        DeviceVolumeUnmountView, UdsEventsView, SystemView, SystemCertificatesView,
+        SystemCertificatesByTypeView, NetworkInterfacesView)
+    from .lyve_pilot_extensions import DeviceRegistrationView, RegistrationTokenView, SaaSURLView
+
+del const
+del Conf

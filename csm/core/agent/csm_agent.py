@@ -34,8 +34,6 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -64,10 +62,6 @@ class CsmAgent:
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
-
-        # settting usl polling 
-        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
-        CsmRestApi._app["usl_polling_log"] = usl_polling_log
 
         # system status
         system_status_service = SystemStatusService()
@@ -168,11 +162,24 @@ class CsmAgent:
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
 
         # USL Service
-        CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+        if Conf.get(const.CSM_GLOBAL_INDEX, "LYVE_PILOT.enabled"):
+            CsmAgent._initialize_usl_service(s3, db, provisioner)
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(PcsHAFramework(),  provisioner, db)
+
+    @staticmethod
+    def _initialize_usl_service(s3, db, provisioner):
+        try:
+            usl_service_class = getattr(import_module('csm.core.services.usl'), 'UslService')
+        except Exception as e:
+            print(f'Could not load USL service: {e}')
+            sys.exit(1)
+        else:
+            CsmRestApi._app[const.USL_SERVICE] = usl_service_class(s3, db, provisioner)
+            usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
+            CsmRestApi._app["usl_polling_log"] = usl_polling_log
 
     @staticmethod
     def _daemonize():
@@ -222,14 +229,17 @@ class CsmAgent:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
+    from csm.core.blogic import const
+    from csm.common.conf import Conf
+    from csm.common.payload import Yaml
+    Conf.init()
+    Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    from csm.common.conf import Conf, ConfSection, DebugConf
-    from csm.common.payload import Yaml
+    from csm.common.conf import ConfSection, DebugConf
     from csm.common.payload import Payload, Json, JsonMessage, Dict
     from csm.common.template import Template
-    from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
     from csm.core.services.health import HealthAppService, HealthRepository \
@@ -239,7 +249,6 @@ if __name__ == '__main__':
     from csm.core.services.s3.accounts import S3AccountService
     from csm.core.services.s3.buckets import S3BucketService
     from csm.core.services.s3.access_keys import S3AccessKeysService
-    from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
