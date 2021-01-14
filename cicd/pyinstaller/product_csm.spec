@@ -44,7 +44,11 @@ product_path = '<CSM_PATH>' + '/plugins/' + plugin_product_dir
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
 product_module_list.append("csm.cli.scripts")
-product_module_list.append("csm.conf")
+product_module_list.append(["csm.conf.post_install",
+                            "csm.conf.configure",
+                             "csm.conf.init",
+                             "csm.conf.reset",
+                             "csm.conf.refresh_config"])
 product_module_list.append("cortx.utils.security.secure_storage")
 db_file_path = '<CSM_PATH>' + '/conf/etc/csm/database.yaml'
 models_list = import_models(db_file_path)
