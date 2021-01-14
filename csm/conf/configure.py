@@ -39,7 +39,7 @@ class Configure(Setup):
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
 
-    def execute(self, command):
+    async def execute(self, command):
         """
 
         :param command:

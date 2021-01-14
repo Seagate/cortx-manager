@@ -38,7 +38,7 @@ class Reset(Setup):
         super(Reset, self).__init__()
         Log.info("Triggering csm_setup reset")
 
-    def execute(self, command):
+    async def execute(self, command):
         """
         :param command:
         :return:

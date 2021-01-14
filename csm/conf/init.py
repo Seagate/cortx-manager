@@ -35,7 +35,7 @@ class Init(Setup):
         super(Init, self).__init__()
         self._dev_mode = False
 
-    def execute(self, command):
+    async def execute(self, command):
         """
 
         :param command:

@@ -36,7 +36,7 @@ class RefreshConfig(Setup):
         Log.info("Triggering csm_setup refresh_config")
         self._debug_flag = False
 
-    def execute(self, command):
+    async def execute(self, command):
         """
         :param command:
         :return:
