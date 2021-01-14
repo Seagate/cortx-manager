@@ -39,7 +39,7 @@ def import_models(file_name):
 
 product = '<PRODUCT>'
 cc_path = '<CORTXCLI_PATH>'
-plugin_product_dir = 'eos'
+plugin_product_dir = 'cortx'
 product_path = '<CORTXCLI_PATH>' + '/plugins/' + plugin_product_dir
 db_file_path = '<CORTXCLI_PATH>' + '/cli/conf/etc/cli/database_cli.yaml'
 product_module_list = import_list(cc_path, product_path)

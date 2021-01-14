@@ -39,7 +39,7 @@ def import_models(file_name):
 
 product = '<PRODUCT>'
 csm_path = '<CSM_PATH>'
-plugin_product_dir = 'eos'
+plugin_product_dir = 'cortx'
 product_path = '<CSM_PATH>' + '/plugins/' + plugin_product_dir
 product_module_list = import_list(csm_path, product_path)
 product_module_list.append("csm.cli.support_bundle")
