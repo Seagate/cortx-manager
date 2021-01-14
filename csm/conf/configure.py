@@ -163,7 +163,7 @@ class Configure(Setup):
                      f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
         else:
             Log.error("Unable to fetch system node ids info.")
-            raise CsmSetupError(f"Unable to fetch system node ids info.")
+            raise CsmSetupError("Unable to fetch system node ids info.")
 
     @staticmethod
     def _get_minion_id():

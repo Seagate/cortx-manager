@@ -13,13 +13,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import asyncio
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kvstore.error import KvError
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
+from csm.common.payload import Yaml
 from csm.core.providers.providers import Response
+from csm.core.services.alerts import AlertRepository
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.core.blogic.models.alerts import AlertModel
+
 
 class RefreshConfig(Setup):
     """
@@ -67,11 +73,12 @@ class RefreshConfig(Setup):
         try:
             Log.info("Getting faulty node id")
             faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = SaltWrappers.get_salt_call(const.PILLAR_GET, faulty_minion_id_cmd)
+            faulty_minion_id = Conf.get(const.CONSUMER_INDEX,
+                                        faulty_minion_id_cmd)
             if not faulty_minion_id:
                 Log.warn("Fetching faulty node minion id failed.")
                 raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = SaltWrappers.get_salt(const.GRAINS_GET, 'node_id', faulty_minion_id)
+            faulty_node_uuid = Conf.get(const.CONSUMER_INDEX, faulty_minion_id)
             if not faulty_node_uuid:
                 Log.warn("Fetching faulty node uuid failed.")
                 raise CsmSetupError("Fetching faulty node uuid failed.")
