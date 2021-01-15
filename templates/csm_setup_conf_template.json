@@ -1,0 +1,10 @@
+{
+  "cluster": {
+    "csm_user": {
+      "secret": "csm"
+    },
+    "DEPLOYMENT": {
+      "mode": "DEV"
+    }
+  }
+}

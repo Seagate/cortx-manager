@@ -48,7 +48,8 @@ class Init(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if Conf.get(const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
+        if Conf.get(const.CONSUMER_INDEX,
+                    f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
             Log.info("Setting Up CSM in Dev Mode.")
             self._dev_mode = True
         self._config_user_permission()

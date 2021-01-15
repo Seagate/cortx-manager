@@ -84,7 +84,8 @@ class Setup:
         :return:
         """
         csm_credentials = None
-        if Conf.get(const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
+        if Conf.get(const.CONSUMER_INDEX,
+                    f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
             Log.info("Setting Up CSM in Dev Mode.")
             decrypt = False
         Log.info("Fetching CSM User Password from Config Store.")
@@ -299,70 +300,6 @@ class Setup:
             if _rc_web == 0:
                 Setup._run_cmd("systemctl restart csm_web")
 
-    def _rsyslog(self):
-        """
-        Configure rsyslog
-        """
-        Log.info("Configure rsyslog")
-        if os.path.exists(const.RSYSLOG_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("systemctl restart rsyslog")
-        else:
-            Log.error(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
-            raise CsmSetupError(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
-
-    def _rsyslog_common(self):
-        """
-        Configure common rsyslog and logrotate
-        Also cleanup statsd
-        """
-        if os.path.exists(const.CRON_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
-                sed_script = f'\
-                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
-                Setup._run_cmd(sed_cmd)
-        else:
-            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
-
-    def _logrotate(self):
-        """
-        Configure logrotate
-        """
-        Log.info("Configure logrotate")
-        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
-
-        if not os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
-        if os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
-                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
-                Setup._run_cmd(sed_cmd)
-            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
-        else:
-            Log.error(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
-            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
-
-    @staticmethod
-    def _set_fqdn_for_nodeid():
-        nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
-        Log.debug("Node ids obtained from salt-call:{nodes}")
-        if nodes:
-            for each_node in nodes:
-                hostname = SaltWrappers.get_salt_call(
-                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}", 'log')
-                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
-                if hostname:
-                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
-                else:
-                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
-            Conf.save(const.CSM_GLOBAL_INDEX)
-
     def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
@@ -411,48 +348,6 @@ class Setup:
                 continue
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
-
-    @staticmethod
-    def _set_healthmap_path():
-        """
-        This method gets the healthmap path fron salt command and saves the
-        value in csm.conf config.
-        """
-        minion_id = None
-        healthmap_folder_path = None
-        healthmap_filename = None
-        """
-        Fetching the minion id of the node where this cli command is fired.
-        This minion id will be required to fetch the healthmap path.
-        Will use 'srvnode-1' in case the salt command fails to fetch the id.
-        """
-        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID, 'log')
-        if not minion_id:
-            Log.logger.warn(f"Unable to fetch minion id for the node." \
-                f"Using {const.MINION_NODE1_ID}.")
-            minion_id = const.MINION_NODE1_ID
-        try:
-            healthmap_folder_path = SaltWrappers.get_salt(
-                const.PILLAR_GET, 'sspl:health_map_path', minion_id)
-            if not healthmap_folder_path:
-                Log.logger.error("Fetching health map folder path failed.")
-                raise CsmSetupError("Fetching health map folder path failed.")
-            healthmap_filename = SaltWrappers.get_salt(
-                const.PILLAR_GET, 'sspl:health_map_file', minion_id)
-            if not healthmap_filename:
-                Log.logger.error("Fetching health map filename failed.")
-                raise CsmSetupError("Fetching health map filename failed.")
-            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
-            if not os.path.exists(healthmap_path):
-                Log.logger.error("Health map not available at {healthmap_path}")
-                raise CsmSetupError("Health map not available at {healthmap_path}")
-            """
-            Setting the health map path to csm.conf configuration file.
-            """
-            Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
-            Conf.save(const.CSM_GLOBAL_INDEX)
-        except Exception as e:
-            raise CsmSetupError(f"Setting Health map path failed. {e}")
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component

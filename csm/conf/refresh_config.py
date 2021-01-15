@@ -49,7 +49,8 @@ class RefreshConfig(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if command.options.get(const.DEBUG) == 'true':
+        if command.options.get(const.DEBUG) == 'true' or Conf.get(const.CONSUMER_INDEX,
+                f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV"::
             Log.info("Running Csm Setup for Development Mode.")
             self._debug_flag = True
         try:

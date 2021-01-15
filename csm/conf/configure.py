@@ -53,8 +53,8 @@ class Configure(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if command.options.get(const.DEBUG) == 'true' or Conf.get(
-            const.CONSUMER_INDEX, "DEPLOYMENT>mode") == "DEV":
+        if command.options.get(const.DEBUG) == 'true' or Conf.get(const.CONSUMER_INDEX,
+                f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
             Log.info("Running Csm Setup for Development Mode.")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
@@ -73,6 +73,11 @@ class Configure(Setup):
                 Configure._set_db_host_addr('consul',
                                             data_nw.get('roaming_ip', 'localhost'))
                 Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+                Configure._set_fqdn_for_nodeid()
+                Setup._set_healthmap_path()
+            self._rsyslog()
+            self._logrotate()
+            self._rsyslog_common()
         except Exception as e:
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
@@ -97,17 +102,17 @@ class Configure(Setup):
         """
         # read username's and password's for S3 and RMQ
         Log.info("Storing Encrypted Password")
-        # TODO:  Change Keys Here.
-        open_ldap_credentials = Conf.get(const.CONSUMER_INDEX, const.OPENLDAP)
+        open_ldap_user = Conf.get(const.CONSUMER_INDEX,
+                                  f"{const.OPENLDAP}>sgiam>user")
+        open_ldap_secret = Conf.get(const.CONSUMER_INDEX,
+                                    f"{const.OPENLDAP}>sgiam>secret")
         # Edit Current Config File.
-        if open_ldap_credentials and isinstance(open_ldap_credentials, dict):
-            Log.info("Openldap Credentials Copied to CSM Configuration.")
+        if open_ldap_user and open_ldap_secret:
+            Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_LOGIN}",
-                    open_ldap_credentials.get(const.IAM_ADMIN, {}).get(
-                        const.USER))
+                     open_ldap_user)
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
-                     open_ldap_credentials.get(const.IAM_ADMIN, {}).get(
-                         const.SECRET))
+                     open_ldap_secret)
         # TODO:  Change Keys Here.
         sspl_config = Conf.get(const.CONSUMER_INDEX, const.SSPL)
         if sspl_config and isinstance(sspl_config, dict):
@@ -119,8 +124,8 @@ class Configure(Setup):
         _paswd = Setup._fetch_csm_user_password()
         if not _paswd:
             raise CsmSetupError("CSM Password Not Found.")
-        # TODO:  Change Keys Here.
-        cluster_id = Conf.get(const.CONSUMER_INDEX, const.CLUSTER_ID)
+        cluster_id = Conf.get(const.CONSUMER_INDEX,
+                              f"{const.CLUSTER}>{const.CLUSTER_ID}")
         Log.info("Cluster Id Copied to CSM Configuration.")
         Conf.set(const.CSM_GLOBAL_INDEX,
                  f"{const.PROVISIONER}>{const.CLUSTER_ID}", cluster_id)
@@ -205,3 +210,117 @@ class Configure(Setup):
             Conf.set(const.DATABASE_INDEX, key, addr)
         except Exception as e:
             raise CsmSetupError(f'Unable to set {backend} host address: {e}')
+
+    def _rsyslog(self):
+        """
+        Configure rsyslog
+        """
+        Log.info("Configure rsyslog")
+        if os.path.exists(const.RSYSLOG_DIR):
+            Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
+            Setup._run_cmd("systemctl restart rsyslog")
+        else:
+            Log.error(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
+            raise CsmSetupError(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
+
+    def _rsyslog_common(self):
+        """
+        Configure common rsyslog and logrotate
+        Also cleanup statsd
+        """
+        if os.path.exists(const.CRON_DIR):
+            Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f'\
+                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
+                Setup._run_cmd(sed_cmd)
+        else:
+            raise CsmSetupError(f"cron failed. {const.CRON_DIR} dir missing.")
+
+
+    def _logrotate(self):
+        """
+        Configure logrotate
+        """
+        Log.info("Configure logrotate")
+        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
+
+        if not os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
+        if os.path.exists(const.LOGROTATE_DIR_DEST):
+            Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
+            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
+                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
+                Setup._run_cmd(sed_cmd)
+            Setup._run_cmd(f"chmod 644 {const.CSM_LOGROTATE_DEST}")
+        else:
+            Log.error(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
+            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
+
+    @staticmethod
+    def _set_fqdn_for_nodeid():
+        # TODO: Change Below Keys.
+        nodes = Conf.get(const.CONSUMER_INDEX, const.NODE_LIST_KEY)
+        Log.debug("Node ids obtained from salt-call:{nodes}")
+        if nodes:
+            for each_node in nodes:
+                # TODO: Change Below Keys.
+                hostname = Conf.get(
+                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
+                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
+                if hostname:
+                    Conf.set(const.CSM_GLOBAL_INDEX,
+                             f"{const.MAINTENANCE}.{each_node}", f"{hostname}")
+                else:
+                    Conf.set(const.CSM_GLOBAL_INDEX,
+                             f"{const.MAINTENANCE}.{each_node}", f"{each_node}")
+            Conf.save(const.CSM_GLOBAL_INDEX)
+
+    @staticmethod
+    def _set_healthmap_path():
+        """
+        This method gets the healthmap path fron salt command and saves the
+        value in csm.conf config.
+        """
+        minion_id = None
+        healthmap_folder_path = None
+        healthmap_filename = None
+        """
+        Fetching the minion id of the node where this cli command is fired.
+        This minion id will be required to fetch the healthmap path.
+        Will use 'srvnode-1' in case the salt command fails to fetch the id.
+        """
+        # TODO: Change Below Keys.
+        minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
+        if not minion_id:
+            Log.logger.warn(f"Unable to fetch minion id for the node." \
+                f"Using {const.MINION_NODE1_ID}.")
+            minion_id = const.MINION_NODE1_ID
+        try:
+            # TODO: Change Below Keys.
+            healthmap_folder_path = Conf.get(
+                const.CONSUMER_INDEX, 'sspl:health_map_path')
+            if not healthmap_folder_path:
+                Log.logger.error("Fetching health map folder path failed.")
+                raise CsmSetupError("Fetching health map folder path failed.")
+            # TODO: Change Below Keys.
+            healthmap_filename = Conf.get(
+                const.CONSUMER_INDEX, 'sspl:health_map_file')
+            if not healthmap_filename:
+                Log.logger.error("Fetching health map filename failed.")
+                raise CsmSetupError("Fetching health map filename failed.")
+            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
+            if not os.path.exists(healthmap_path):
+                Log.logger.error("Health map not available at {healthmap_path}")
+                raise CsmSetupError("Health map not available at {healthmap_path}")
+            """
+            Setting the health map path to csm.conf configuration file.
+            """
+            Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
+            Conf.save(const.CSM_GLOBAL_INDEX)
+        except Exception as e:
+            raise CsmSetupError(f"Setting Health map path failed. {e}")

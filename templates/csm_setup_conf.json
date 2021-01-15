@@ -1,8 +1,0 @@
-{
-  "csm_user_secret": {
-    "secret": "csm"
-  },
-  "DEPLOYMENT": {
-    "mode": "DEV"
-  }
-}
