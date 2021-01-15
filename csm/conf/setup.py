@@ -32,7 +32,6 @@ from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 import traceback
 from csm.common.payload import Text
-from csm.conf.salt import SaltWrappers
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.conf_store.conf_store import Conf

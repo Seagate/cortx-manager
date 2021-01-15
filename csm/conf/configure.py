@@ -286,15 +286,13 @@ class Configure(Setup):
         """
         This method gets the healthmap path fron salt command and saves the
         value in csm.conf config.
-        """
-        minion_id = None
-        healthmap_folder_path = None
-        healthmap_filename = None
-        """
         Fetching the minion id of the node where this cli command is fired.
         This minion id will be required to fetch the healthmap path.
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
+        minion_id = None
+        healthmap_folder_path = None
+        healthmap_filename = None
         # TODO: Change Below Keys.
         minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
         if not minion_id:
