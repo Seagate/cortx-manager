@@ -60,8 +60,6 @@ class Configure(Setup):
                      const.DEV)
             self._debug_flag = True
         try:
-            if not self._replacement_node_flag:
-                self.create()
             if not self._debug_flag:
                 uds_public_ip = command.options.get('uds_public_ip')
                 if uds_public_ip is not None:
@@ -78,6 +76,8 @@ class Configure(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
+            if not self._replacement_node_flag:
+                self.create()
         except Exception as e:
             import traceback
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
@@ -278,7 +278,6 @@ class Configure(Setup):
                 else:
                     Conf.set(const.CSM_GLOBAL_INDEX,
                              f"{const.MAINTENANCE}.{each_node}", f"{each_node}")
-            Conf.save(const.CSM_GLOBAL_INDEX)
 
     @staticmethod
     def _set_healthmap_path():
@@ -319,6 +318,5 @@ class Configure(Setup):
             Setting the health map path to csm.conf configuration file.
             """
             Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
-            Conf.save(const.CSM_GLOBAL_INDEX)
         except Exception as e:
             raise CsmSetupError(f"Setting Health map path failed. {e}")
