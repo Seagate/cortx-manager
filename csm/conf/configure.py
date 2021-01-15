@@ -74,7 +74,7 @@ class Configure(Setup):
                                             data_nw.get('roaming_ip', 'localhost'))
                 Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
                 Configure._set_fqdn_for_nodeid()
-                Setup._set_healthmap_path()
+                Configure._set_healthmap_path()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
@@ -230,8 +230,9 @@ class Configure(Setup):
         """
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+            setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL or \
+                    self._debug_flag:
                 sed_script = f'\
                     s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
@@ -244,15 +245,15 @@ class Configure(Setup):
         """
         Configure logrotate
         """
-        Log.info("Configure logrotate")
+        Log.info("Configure logrotate.")
         source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
-
         if not os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
+            setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
+            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL or \
+                    self._debug_flag:
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
                 Setup._run_cmd(sed_cmd)
