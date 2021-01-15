@@ -296,8 +296,8 @@ class Configure(Setup):
         # TODO: Change Below Keys.
         minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
         if not minion_id:
-            Log.logger.warn(f"Unable to fetch minion id for the node." \
-                f"Using {const.MINION_NODE1_ID}.")
+            Log.logger.warn((f"Unable to fetch minion id for the node."
+                f"Using {const.MINION_NODE1_ID}."))
             minion_id = const.MINION_NODE1_ID
         try:
             # TODO: Change Below Keys.
