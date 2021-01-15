@@ -92,15 +92,14 @@ class Setup:
         try:
             # TODO: Add Proper Key from Config Store
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                       f"{const.CLUSTER}>csm_user>secret")
+                                     f"{const.CLUSTER}>csm_user>secret")
         except KvError as e:
-            Log.error(f"Faild to Fetch Csm Credentials {e}")
+            Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
-                # TODO: Add Proper Key from Config Store
                 cluster_id = Conf.get(const.CONSUMER_INDEX,
-                                      f"{const.GRAINS_GET}>{const.CLUSTER_ID}")
+                                      f"{const.CLUSTER}>{const.CLUSTER_ID}")
                 cipher_key = Cipher.generate_key(cluster_id, "csm")
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
@@ -109,7 +108,8 @@ class Setup:
                 Log.error(f"{e}")
                 return None
             try:
-                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
+                decrypted_value = Cipher.decrypt(cipher_key,
+                                                 csm_user_pass.encode("utf-8"))
                 return decrypted_value.decode("utf-8")
             except CipherInvalidToken as error:
                 Log.error(f"Decryption for CSM Failed. {error}")
