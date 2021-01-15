@@ -83,7 +83,7 @@ class Setup:
         :param decrypt:
         :return:
         """
-        csm_credentials = None
+        csm_user_pass = None
         if Conf.get(const.CONSUMER_INDEX,
                     f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
             Log.info("Setting Up CSM in Dev Mode.")
@@ -91,14 +91,10 @@ class Setup:
         Log.info("Fetching CSM User Password from Config Store.")
         try:
             # TODO: Add Proper Key from Config Store
-            csm_credentials = Conf.get(const.CONSUMER_INDEX, "csm_user_secret")
+            csm_user_pass = Conf.get(const.CONSUMER_INDEX,
+                                       f"{const.CLUSTER}>csm_user>secret")
         except KvError as e:
             Log.error(f"Faild to Fetch Csm Credentials {e}")
-        if csm_credentials and isinstance(csm_credentials, dict):
-            csm_user_pass = csm_credentials.get(const.SECRET)
-        else:
-            Log.error("No Credentials Fetched from Config Store.")
-            return None
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
