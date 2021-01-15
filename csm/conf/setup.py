@@ -90,7 +90,7 @@ class Setup:
             decrypt = False
         Log.info("Fetching CSM User Password from Config Store.")
         try:
-            # TODO: Add Proper Key from Config Store
+            # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
                                      f"{const.CLUSTER}>csm_user>secret")
         except KvError as e:
