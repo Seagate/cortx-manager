@@ -890,14 +890,16 @@ class CsmSetup(Setup):
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
-                Log.debug(f"Deleting user {self._user}")
                 csm_passwd = self._fetch_csm_user_password(decrypt=True)
                 cmd = (f"bash -c \"echo -e "
                    f"'{csm_passwd}\\n{csm_passwd}' | passwd {self._user}\"")
+                Log.info(f"Executing command: {cmd}")
+                sp = SimpleProcess(cmd)
+                sp.run(shell=True)
                 Setup.Config.delete()
-                Log.debug("Applying salt state post update")
+                Log.info("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
-                Log.debug("Executing csm_setup commands")
+                Log.info("Executing csm_setup commands")
                 Setup._run_cmd("csm_setup post_install")
                 Setup._run_cmd("csm_setup config")
                 Setup._run_cmd("csm_setup init")
