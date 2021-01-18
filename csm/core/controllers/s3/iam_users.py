@@ -57,6 +57,7 @@ class IamUserCreateSchema(BaseSchema):
                 "Password should not be your username or email.",
                 field_name="password")
 
+
 class IamUserDeleteSchema(BaseSchema):
     """
     IAM user delete schema validation class
@@ -109,6 +110,21 @@ class IamUserView(S3AuthenticatedView):
         Instantiation Method for Iam user view class
         """
         super().__init__(request, 's3_iam_users_service')
+
+    @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.UPDATE}})
+    async def patch(self):
+        """
+        Patch IAM user
+        """
+        Log.debug(f"Handling  IAM USER patch request."
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = IamUserCreateSchema()
+            patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request body: {val_err}")
+        with self._guard_service():
+            return await self._service.patch_user(self._s3_session, **patch_body)
 
     @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.DELETE}})
     async def delete(self):
