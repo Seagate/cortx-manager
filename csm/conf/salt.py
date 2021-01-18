@@ -30,7 +30,9 @@ class SaltWrappers:
         if on_salt_error not in ('raise', 'log'):
             raise ValueError(f'Invalid argument: on_salt_error={on_salt_error}')
         try:
-            process = SimpleProcess(f"salt-call {method} {key} --out=json")
+            salt_cmd = f"salt-call {method} {key} --out=json"
+            Log.info(f"Executing salt-call: {salt_cmd}")
+            process = SimpleProcess(salt_cmd)
             stdout, stderr, rc = process.run()
         except Exception as e:
             desc = f'Error in command execution : {e}'
@@ -53,6 +55,7 @@ class SaltWrappers:
         try:
             minion_arg = '*' if minion_id is None else minion_id
             cmd = f'salt {minion_arg} {method} {key} --out=json --static'
+            Log.info(f"Executing salt command: {cmd}")
             process = SimpleProcess(cmd)
             stdout, stderr, rc = process.run()
         except Exception as e:
