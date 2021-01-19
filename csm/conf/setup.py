@@ -891,6 +891,8 @@ class CsmSetup(Setup):
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
+                Log.info("Applying salt state post update")
+                SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
                 csm_passwd = self._fetch_csm_user_password(decrypt=True)
                 if not csm_passwd:
                     Log.error("CSM Password Not Recieved from provisioner.")
@@ -900,8 +902,6 @@ class CsmSetup(Setup):
                 subprocess.check_call(cmd,shell=True)
                 Log.info("Deleting csm config directory")
                 Setup.Config.delete()
-                Log.info("Applying salt state post update")
-                SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
                 Log.info("Executing csm_setup commands")
                 Setup._run_cmd("csm_setup post_install")
                 Setup._run_cmd("csm_setup config")
