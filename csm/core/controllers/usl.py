@@ -30,27 +30,6 @@ from csm.core.services.usl import UslService
 from csm.usl import USL
 
 
-# TODO replace this workaround with a proper firewall, or serve USL on a separate socket
-class _Proxy:
-    @staticmethod
-    def on_loopback_only(cls: Type['_View']) -> Type['_View']:
-
-        old_init = cls.__init__
-
-        def new_init(obj, request: web.Request) -> None:
-            if request.transport is not None:
-                peername = request.transport.get_extra_info('peername')
-                if (peername is None or
-                    peername[0] is None or
-                    not ip_address(peername[0]).is_loopback
-                ):
-                    raise web.HTTPNotFound()
-            old_init(obj, request)
-
-        setattr(cls, '__init__', new_init)
-        return cls
-
-
 class _View(CsmView):
     """
     Generic view class for USL API views. Binds a :class:`CsmView` instance to an USL service.
@@ -84,7 +63,6 @@ class _SecuredView(_View):
             raise web.HTTPUnauthorized()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices")
 class DeviceView(_SecuredView):
@@ -95,7 +73,6 @@ class DeviceView(_SecuredView):
         return await self._usl.get_device_list()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes")
 class DeviceVolumesListView(_SecuredView):
@@ -125,7 +102,6 @@ class DeviceVolumesListView(_SecuredView):
         )
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/mount")
 class DeviceVolumeMountView(_SecuredView):
@@ -158,7 +134,6 @@ class DeviceVolumeMountView(_SecuredView):
         )
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/umount")
 class DeviceVolumeUnmountView(_SecuredView):
@@ -194,7 +169,6 @@ class DeviceVolumeUnmountView(_SecuredView):
         )
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/events")
 class UdsEventsView(_SecuredView):
@@ -205,7 +179,6 @@ class UdsEventsView(_SecuredView):
         return await self._usl.get_events()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system")
 class SystemView(_SecuredView):
@@ -216,7 +189,6 @@ class SystemView(_SecuredView):
         return await self._usl.get_system()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates")
 class SystemCertificatesView(_SecuredView):
@@ -247,7 +219,6 @@ class SystemCertificatesView(_SecuredView):
         raise web.HTTPNoContent()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates/{type}")
 class SystemCertificatesByTypeView(_SecuredView):
@@ -282,7 +253,6 @@ class SystemCertificatesByTypeView(_SecuredView):
             raise web.HTTPNotFound()
 
 
-@Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/network/interfaces")
 class NetworkInterfacesView(_SecuredView):
