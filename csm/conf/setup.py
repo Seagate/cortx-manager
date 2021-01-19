@@ -80,8 +80,8 @@ class Setup:
                 raise
             return _output, _err, _rc
         except Exception as e:
-            Log.error(f"Csm setup is failed Error while executing {cmd}: {e} {_err}")
-            raise CsmSetupError(f"Csm setup is failed Error: : {e} {_err}")
+            Log.error(f"CSM setup failed. Error while executing {cmd}: {e} {_err}")
+            raise CsmSetupError(f"CSM setup failed. Error: {e} {_err}")
 
     @staticmethod
     def _fetch_csm_user_password(decrypt=False):
@@ -892,10 +892,13 @@ class CsmSetup(Setup):
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
                 csm_passwd = self._fetch_csm_user_password(decrypt=True)
+                if not csm_passwd:
+                    Log.error("CSM Password Not Recieved from provisioner.")
+                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
                 cmd = (f"bash -c \"echo -e '{csm_passwd}\\n{csm_passwd}' | passwd {self._user}\"")
                 Log.info(f"Executing command: {cmd}")
                 subprocess.check_call(cmd,shell=True)
-                Log.info("Ended with cmd execution!!!")
+                Log.info("Deleting csm config directory")
                 Setup.Config.delete()
                 Log.info("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
