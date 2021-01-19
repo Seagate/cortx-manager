@@ -888,14 +888,15 @@ class CsmSetup(Setup):
         Execute 'csm_setup post_update' mannually once system is updated using SW update.
         """
         try:
+            import subprocess
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
                 csm_passwd = self._fetch_csm_user_password(decrypt=True)
-                cmd = (f"bash -c \"echo -e "
-                   f"'{csm_passwd}\\n{csm_passwd}' | passwd {self._user}\"")
+                cmd = (f"bash -c \"echo -e '{csm_passwd}\\n{csm_passwd}' | passwd {self._user}\"")
                 Log.info(f"Executing command: {cmd}")
-                sp = SimpleProcess(cmd)
-                sp.run(shell=True)
+                # sp = SimpleProcess(cmd)
+                subprocess.check_call(cmd,shell=True)
+                Log.info("Ended with cmd execution!!!")
                 Setup.Config.delete()
                 Log.info("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
