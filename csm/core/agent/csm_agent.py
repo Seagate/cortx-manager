@@ -47,10 +47,13 @@ class CsmAgent:
             Conf.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = Yaml(const.DATABASE_CONF).load()
-        db_config["es_db"][const.PORT] = int(db_config["es_db"][const.PORT])
-        db_config["es_db"]["replication"] = int(db_config["es_db"]["replication"])
-        db_config["consul_db"][const.PORT] = int(db_config["consul_db"][const.PORT])
-        conf = GeneralConfig()
+        db_config['databases']["es_db"][const.PORT] = int(
+            db_config['databases']["es_db"][const.PORT])
+        db_config['databases']["es_db"]["replication"] = int(
+            db_config['databases']["es_db"]["replication"])
+        db_config['databases']["consul_db"][const.PORT] = int(
+            db_config['databases']["consul_db"][const.PORT])
+        conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
         Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
