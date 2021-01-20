@@ -364,7 +364,7 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
-        if debug_conf.http_enable:
+        if debug_conf.http_enabled:
             port = https_conf.port
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             if not all(map(os.path.exists,
