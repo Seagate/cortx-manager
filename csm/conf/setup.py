@@ -35,6 +35,7 @@ import re
 import time
 import traceback
 import asyncio
+import subprocess
 from csm.core.blogic.models.alerts import AlertModel
 from csm.core.services.alerts import AlertRepository
 from cortx.utils.schema.payload import Json
@@ -71,6 +72,7 @@ class Setup:
         Run command and throw error if cmd failed
         """
         try:
+            Log.info(f"Executing command: {cmd}")
             _err = ""
             _proc = SimpleProcess(cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
@@ -78,7 +80,8 @@ class Setup:
                 raise
             return _output, _err, _rc
         except Exception as e:
-            raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
+            Log.error(f"CSM setup failed. Error while executing {cmd}: {e} {_err}")
+            raise CsmSetupError(f"CSM setup failed. Error: {e} {_err}")
 
     @staticmethod
     def _fetch_csm_user_password(decrypt=False):
@@ -768,6 +771,7 @@ class CsmSetup(Setup):
         Post install is used after just all rpms are install but
         no service are started
         """
+        Log.info(f"Triggering csm_setup post_install: {args}")
         try:
             self._verify_args(args)
             self._config_user()
@@ -783,6 +787,7 @@ class CsmSetup(Setup):
             : Move conf file to etc
         Config is used to move update conf files one time configuration
         """
+        Log.info(f"Triggering csm_setup config: {args}")
         try:
             self._verify_args(args)
             uds_public_ip = args.get('uds_public_ip')
@@ -803,6 +808,7 @@ class CsmSetup(Setup):
         """
         cls = self.__class__
         try:
+            Log.info(f"Triggering csm_setup init: {args}")
             self._verify_args(args)
             self.Config.load()
             self._config_user_permission()
@@ -847,6 +853,7 @@ class CsmSetup(Setup):
             - Disable csm service
             - Delete csm user
         """
+        Log.info(f"Triggering csm_setup reset: {args}")
         try:
             self._verify_args(args)
             if args["hard"]:
@@ -861,6 +868,7 @@ class CsmSetup(Setup):
                 self.Config.reset()
                 self.ConfigServer.restart()
         except Exception as e:
+            Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError("csm_setup reset failed. Error: %s" %e)
 
     def refresh_config(self, args):
@@ -868,10 +876,12 @@ class CsmSetup(Setup):
         Refresh context for CSM
         """
         try:
+            Log.info(f"Triggering csm_setup refresh_config: {args}")
             node_id = self._get_faulty_node_uuid()
             self._resolve_faulty_node_alerts(node_id)
             Log.logger.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
         except Exception as e:
+            Log.error(f"csm_setup refresh_config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError("csm_setup refresh_config failed. Error: %s" %e)
 
     def post_update(self, args):
@@ -881,12 +891,18 @@ class CsmSetup(Setup):
         try:
             Log.info(f"Triggering csm_setup post_update: {args}")
             if self._is_user_exist():
-                Log.debug(f"Deleting user {self._user}")
-                Setup._run_cmd(f"userdel -r {self._user}")
-                Setup.Config.delete()
-                Log.debug("Applying salt state post update")
+                Log.info("Applying salt state post update")
                 SaltWrappers.get_salt_call("state.apply", "components.system.config.pillar_encrypt")
-                Log.debug("Executing csm_setup commands")
+                csm_passwd = self._fetch_csm_user_password(decrypt=True)
+                if not csm_passwd:
+                    Log.error("CSM Password Not Recieved from provisioner.")
+                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
+                cmd = (f"bash -c \"echo -e '{csm_passwd}\\n{csm_passwd}' | passwd {self._user}\"")
+                Log.info(f"Executing command: {cmd}")
+                subprocess.check_call(cmd,shell=True)
+                Log.info("Deleting csm config directory")
+                Setup.Config.delete()
+                Log.info("Executing csm_setup commands")
                 Setup._run_cmd("csm_setup post_install")
                 Setup._run_cmd("csm_setup config")
                 Setup._run_cmd("csm_setup init")
