@@ -34,8 +34,7 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        Conf.init()
-        Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
                syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
@@ -231,7 +230,8 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    from csm.common.conf import Conf, ConfSection, DebugConf
+    from csm.common.conf import ConfSection, DebugConf
+    from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import Yaml
     from csm.common.payload import Payload, Json, JsonMessage, Dict
     from csm.common.template import Template
