@@ -33,7 +33,7 @@ from csm.core.blogic import const
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 class UserManager:
     """

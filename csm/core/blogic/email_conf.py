@@ -24,7 +24,7 @@ from threading import Thread
 from csm.common.cluster import Node, Cluster
 from csm.common.file_collector import RemoteFileCollector
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError
 

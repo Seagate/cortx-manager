@@ -17,7 +17,7 @@ import datetime
 import os
 from marshmallow import Schema, fields
 from csm.core.blogic import const
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.common.services import Service, ApplicationService

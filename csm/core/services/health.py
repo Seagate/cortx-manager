@@ -18,7 +18,7 @@ from typing import Optional, Iterable, Dict
 from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.observer import Observable
 from threading import Event, Thread

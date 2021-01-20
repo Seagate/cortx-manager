@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV

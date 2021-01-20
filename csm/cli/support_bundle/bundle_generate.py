@@ -22,7 +22,7 @@ from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
 from datetime import datetime
 from csm.common.process import SimpleProcess
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 
 ERROR = "error"

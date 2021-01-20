@@ -26,7 +26,7 @@ from marshmallow.validate import URL
 from typing import Any, Dict, List
 from uuid import UUID, uuid4, uuid5
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import (
     CsmGatewayTimeout, CsmInternalError, CsmNotFoundError, CsmPermissionDenied, InvalidRequest)
 from csm.common.periodic import Periodic

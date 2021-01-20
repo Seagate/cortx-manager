@@ -210,7 +210,7 @@ class Setup:
             if not os.path.exists(csm_conf_target_path):
                 Log.error(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
                 raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
-            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
+            Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_conf_target_path}")
             """
             Loading databse config
             """
@@ -223,7 +223,7 @@ class Setup:
             if not os.path.exists(db_conf_target_path):
                 Log.error("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
                 raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
-            Conf.load(const.DATABASE_INDEX, Yaml(db_conf_target_path))
+            Conf.load(const.DATABASE_INDEX, f"yaml://{db_conf_target_path}")
 
         @staticmethod
         def delete():

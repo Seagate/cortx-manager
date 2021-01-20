@@ -154,12 +154,11 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     from cortx.utils.log import Log
     from cortx.utils.cleanup.es_data_cleanup import esCleanup
-    from csm.common.conf import Conf, ConfSection, DebugConf
+    from cortx.utils.conf_store.conf_store import Conf, ConfSection, DebugConf
     from csm.core.blogic import const
     from csm.common.payload import Yaml
     from csm.common.storage_usage import StorageInfo
-    Conf.init()
-    Conf.load(const.CSM_GLOBAL_INDEX, Yaml(const.CSM_CONF))
+    Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
     Log.init(const.CSM_CLEANUP_LOG_FILE,
             syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_server"),
             syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_port"),

@@ -16,7 +16,7 @@
 from csm.common.services import ApplicationService
 from cortx.utils.log import Log
 from csm.core.blogic import const
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.core.data.models.upgrade import UpdateStatusEntry
 from csm.core.services.update_service import UpdateService

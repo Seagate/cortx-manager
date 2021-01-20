@@ -271,7 +271,7 @@ if __name__ == '__main__':
     from csm.cli.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from cortx.utils.log import Log
-    from csm.common.conf import Conf
+    from cortx.utils.conf_store.conf_store import Conf
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
     from csm.common.payload import Yaml

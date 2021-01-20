@@ -16,7 +16,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.access import Query, SortBy, SortOrder
 from cortx.utils.log import Log
 from csm.common.errors import CSM_OPERATION_NOT_PERMITTED

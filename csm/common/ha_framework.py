@@ -22,7 +22,7 @@ from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
 from csm.core.blogic import const
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 
 

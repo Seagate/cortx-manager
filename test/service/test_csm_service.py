@@ -19,7 +19,7 @@ import asyncio
 import requests
 import traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
 from cortx.utils.log import Log
@@ -41,9 +41,9 @@ def test1(args):
     try:
         Log.console('Testing csm_agent service ...')
         time.sleep(5)
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.ssl_check")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.host")
-        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_AGENT.port")
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>ssl_check")
+        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>host")
+        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>port")
         url = "http://" if not ssl_check else "https://"
         url = url + host + ":" + str(port)
         resp = process_request(url)
@@ -59,9 +59,9 @@ def test2(args):
     try:
         Log.console('Testing csm_web service ...')
         time.sleep(5)
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.ssl_check")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.host")
-        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE.CSM_WEB.port")
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>ssl_check")
+        host = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>host")
+        port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>port")
         url = "http://" if not ssl_check else "https://"
         url = url + host + ":" + str(port)
         resp = process_request(url)

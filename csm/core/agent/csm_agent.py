@@ -35,27 +35,31 @@ class CsmAgent:
     @staticmethod
     def init():
         Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
+        syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
+        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
+        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         Log.init("csm_agent",
-               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
-               syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-               backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
+               syslog_port= int(syslog_port) if syslog_port else syslog_port,
+               backup_count= int(backup_count) if backup_count else backup_count,
+               file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else file_size_in_mb,
+               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
+        if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Conf.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = Yaml(const.DATABASE_CONF).load()
-        db_config['databases']["es_db"][const.PORT] = int(
-            db_config['databases']["es_db"][const.PORT])
-        db_config['databases']["es_db"]["replication"] = int(
-            db_config['databases']["es_db"]["replication"])
-        db_config['databases']["consul_db"][const.PORT] = int(
-            db_config['databases']["consul_db"][const.PORT])
+        db_config['databases']["es_db"]["config"][const.PORT] = int(
+            db_config['databases']["es_db"]["config"][const.PORT])
+        db_config['databases']["es_db"]["config"]["replication"] = int(
+            db_config['databases']["es_db"]["config"]["replication"])
+        db_config['databases']["consul_db"]["config"][const.PORT] = int(
+            db_config['databases']["consul_db"]["config"][const.PORT])
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
+        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
+
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -72,7 +76,7 @@ class CsmAgent:
         CsmRestApi.init(alerts_service)
 
         # settting usl polling
-        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
+        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log>usl_polling_log")
         CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
 
         # system status
@@ -230,7 +234,7 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    from csm.common.conf import ConfSection, DebugConf
+    from cortx.utils.conf_store.conf_store import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import Yaml
     from csm.common.payload import Payload, Json, JsonMessage, Dict

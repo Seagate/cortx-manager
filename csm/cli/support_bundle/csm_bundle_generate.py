@@ -17,7 +17,7 @@ import os
 import errno
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar, Json
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import CsmError
 from cortx.utils.log import Log

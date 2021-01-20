@@ -19,7 +19,7 @@ import asyncio
 from string import Template
 from datetime import datetime, timedelta
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from csm.common.errors import CsmError, CsmInternalError
@@ -101,9 +101,9 @@ class TimelionProvider(TimeSeriesProvider):
         Initializes data from conf file
         """
         super(TimelionProvider, self).__init__(agg_rule)
-        host = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.host')
-        port = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.port'))
-        ssl_check = (Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.ssl_check') == 'true')
+        host = Conf.get(const.CSM_GLOBAL_INDEX, 'STATS>PROVIDER>host')
+        port = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS>PROVIDER>port'))
+        ssl_check = (Conf.get(const.CSM_GLOBAL_INDEX, 'STATS>PROVIDER>ssl_check') == 'true')
         protocol = "https://" if ssl_check else "http://"
         self._url = protocol + host + ":" + str(port) + "/api/timelion/run"
         self._header = { 'Content-Type': 'application/json',
@@ -123,8 +123,10 @@ class TimelionProvider(TimeSeriesProvider):
     def init(self):
         try:
             super(TimelionProvider, self).init()
-            self._storage_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.interval'))
-            self._offset_interval = int(Conf.get(const.CSM_GLOBAL_INDEX, 'STATS.PROVIDER.offset'))
+            self._storage_interval = int(Conf.get(const.CSM_GLOBAL_INDEX,
+                                                  'STATS>PROVIDER>interval'))
+            self._offset_interval = int(Conf.get(const.CSM_GLOBAL_INDEX,
+                                                 'STATS>PROVIDER>offset'))
             self._metric_set = {
                 "+": "sum()",
                 "/": "divide()"

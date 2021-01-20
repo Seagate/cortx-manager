@@ -23,7 +23,7 @@ from csm.core.controllers.schemas import FirmwareUpdateFileFieldSchema
 from csm.core.controllers.validators import FileRefValidator
 from csm.core.services.file_transfer import FileType, FileCache, FileRef
 from csm.common.errors import CsmNotFoundError
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 import os
 
 

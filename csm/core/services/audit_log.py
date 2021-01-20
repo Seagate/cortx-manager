@@ -31,7 +31,7 @@ from csm.common import queries
 from schematics import Model
 from csm.common.errors import CsmNotFoundError
 from typing import Optional, Iterable
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess
 
 # mapping of component with model, field for

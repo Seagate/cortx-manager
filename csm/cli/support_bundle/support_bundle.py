@@ -28,7 +28,7 @@ from csm.common.errors import (CSM_OPERATION_SUCESSFUL, CsmError,
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from cortx.utils.errors import DataAccessExternalError
 from csm.core.providers.providers import Response
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 import time
 from csm.common.process import SimpleProcess

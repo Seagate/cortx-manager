@@ -19,7 +19,7 @@ from enum import Enum
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.plugins.cortx.s3 import S3Plugin
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError

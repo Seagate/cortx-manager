@@ -28,7 +28,7 @@ from cryptography.hazmat.backends import default_backend
 from csm.common.iem import Iem
 from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
                                ResourceExist, CsmNotFoundError, CsmServiceConflict)
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
 from cortx.utils.log import Log
