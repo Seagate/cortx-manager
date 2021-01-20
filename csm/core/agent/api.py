@@ -122,7 +122,9 @@ class CsmRestApi(CsmApi, ABC):
         try:
             roles = Json(const.ROLES_MANAGEMENT).load()
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            feature_supported = CsmRestApi._app._loop.run_until_complete(unsupported_feature_instance.is_feature_supported(const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
+            feature_supported = CsmRestApi._app._loop.run_until_complete(
+                unsupported_feature_instance.is_feature_supported(
+                    const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
 
             if not feature_supported:
                 Log.debug(f"{const.LYVE_PILOT} is not supported.")
@@ -362,7 +364,7 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
-        if debug_conf.http_enabled != "true":
+        if (debug_conf.http_enabled != "true"):
             port = https_conf.port
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             if not all(map(os.path.exists,

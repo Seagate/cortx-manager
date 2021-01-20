@@ -41,7 +41,6 @@ class Configure(Setup):
 
     async def execute(self, command):
         """
-
         :param command:
         :return:
         """
@@ -69,8 +68,10 @@ class Configure(Setup):
                 minion_id = Configure._get_minion_id()
                 data_nw = Configure._get_data_nw_info(minion_id)
                 Configure._set_db_host_addr('consul',
-                                            data_nw.get('roaming_ip', 'localhost'))
-                Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+                                            data_nw.get('roaming_ip',
+                                                        'localhost'))
+                Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr',
+                                                              'localhost'))
                 Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
             self._rsyslog()
@@ -90,8 +91,7 @@ class Configure(Setup):
         :return:
         """
         Log.error("Create the CSM Conf File on Required Location.")
-        if not self._debug_flag:
-            Configure.store_encrypted_password()
+        Configure.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
