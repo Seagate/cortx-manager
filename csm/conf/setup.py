@@ -242,7 +242,7 @@ class Setup:
         Create csm user
         """
         Log.info("Instantiation of csm cluster with resources")
-        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
+        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
         self._csm_ra = {
             "csm_resource_agent": CsmResourceAgent(self._csm_resources)
         }
@@ -256,7 +256,7 @@ class Setup:
         Delete all logs
         """
         Log.info("Delete all logs")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         Setup._run_cmd("rm -rf " +log_path)
 
     class ConfigServer:

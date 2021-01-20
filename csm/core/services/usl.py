@@ -269,7 +269,7 @@ class UslService(ApplicationService):
 
         :return: Dictionary containing SaaS URL
         """
-        saas_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.saas_url')
+        saas_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>saas_url')
         if saas_url is None:
             reason = 'Lyve Pilot SaaS URL is not configured'
             Log.debug(reason)
@@ -290,7 +290,7 @@ class UslService(ApplicationService):
 
         :param registration_info: UDS registration info
         """
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
             validate_url = URL(schemes=('http', 'https'))
             validate_url(uds_url)
@@ -351,7 +351,7 @@ class UslService(ApplicationService):
             raise e
 
     async def get_register_device(self) -> None:
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
         # FIXME add relevant certificates to SSL context instead of disabling validation
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
@@ -375,10 +375,10 @@ class UslService(ApplicationService):
 
         :return: a dictionary with a management link's name and value.
         """
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_WEB>ssl_check')
         network_configuration = await self._provisioner.get_network_configuration()
         port = \
-            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
+            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_WEB>port') or const.WEB_DEFAULT_PORT
         scheme = 'https' if ssl_check else 'http'
         host = f'{network_configuration.mgmt_vip}'
         url = scheme + '://' + host + ':' + str(port)
@@ -492,7 +492,7 @@ class UslService(ApplicationService):
         :return: A string representing UDS public IP address.
         """
         try:
-            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.public_ip')
+            ip = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>public_ip')
             ip_address(ip)
             return ip
         except ValueError as e:

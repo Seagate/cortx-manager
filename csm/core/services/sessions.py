@@ -188,9 +188,9 @@ class S3AuthPolicy(AuthPolicy):
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         cfg = S3ConnectionConfig()
-        cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
-        cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.iam_port')
-        cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.max_retries_num')
+        cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>host')
+        cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>iam_port')
+        cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
 
         Log.debug(f'Authenticating {user.user_id}'
                   f' with S3 IAM server {cfg.host}:{cfg.port}')

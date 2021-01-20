@@ -514,10 +514,10 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "sspl",
-    "S3.ldap_password": "openldap"
+    "CHANNEL>password": "sspl",
+    "S3>ldap_password": "openldap"
 }
-CLUSTER_ID_KEY = "PROVISIONER.cluster_id"
+CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -624,7 +624,7 @@ OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
-ES_RETRY = "ELASTICSEARCH.retry"
+ES_RETRY = "ELASTICSEARCH>retry"
 ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3

@@ -140,7 +140,7 @@ class AuditService(ApplicationService):
 
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
         query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                   "Log.max_result_window"), 0)
+                                                   "Log>max_result_window"), 0)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
         return [COMPONENT_MODEL_MAPPING[component]["format"].

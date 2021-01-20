@@ -31,7 +31,7 @@ class System:
         :return:
         """
         _user = const.NON_ROOT_USER
-        _password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
+        _password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
         _command = "start"
 
         Log.debug(f"executing command :-  "

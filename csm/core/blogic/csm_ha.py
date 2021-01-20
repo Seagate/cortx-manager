@@ -30,8 +30,8 @@ class CsmResourceAgent(PcsResourceAgent):
         super(CsmResourceAgent, self).__init__(resources)
         self._resources = resources
         self._csm_index = const.CSM_GLOBAL_INDEX
-        self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.primary")
-        self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.secondary")
+        self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>primary")
+        self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>secondary")
 
     def init(self, force_flag):
         ''' Perform initalization for CSM resources '''

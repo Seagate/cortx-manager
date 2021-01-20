@@ -292,7 +292,7 @@ class SecurityService(ApplicationService):
         pass
 
     async def get_certificate_expiry_time(self):
-        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
+        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
         def load():
             return self._load_certificate(path)
         cert = await self._loop.run_in_executor(self._executor, load)
@@ -319,7 +319,7 @@ class SecurityService(ApplicationService):
         return converted_time_ltz.strftime(const.CERT_TIME_FORMAT)
 
     async def _check_certificate_expiry_time(self, current_time):
-        warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY.ssl_cert_expiry_warning_days")
+        warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY>ssl_cert_expiry_warning_days")
         try:
             expiry_time = await self.get_certificate_expiry_time()
             expiry_time = expiry_time.replace(tzinfo=timezone.utc)
