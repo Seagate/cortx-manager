@@ -108,9 +108,9 @@ class UslService(ApplicationService):
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
-        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER.cluster_id')
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
         if Options.debug and cluster_id is None:
-            cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG.default_cluster_id')
+            cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG>default_cluster_id')
         device_uuid = cluster_id
         if device_uuid is None:
             reason = 'Could not obtain cluster ID from CSM configuration file'

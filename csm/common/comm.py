@@ -204,10 +204,10 @@ class AmqpChannel(Channel):
                 f"{const.CHANNEL}>{const.EXCH_TYPE}")
         self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, \
                 f"{const.CHANNEL}>{const.RETRY_COUNT}")
-        self.durable = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.DURABLE}")
-        self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.EXCLUSIVE}")
+        self.durable = (Conf.get(const.CSM_GLOBAL_INDEX,
+                f"{const.CHANNEL}>{const.DURABLE}") == 'true')
+        self.exclusive = (Conf.get(const.CSM_GLOBAL_INDEX,
+                f"{const.CHANNEL}>{const.EXCLUSIVE}") == 'true')
         self._setExchangeandQueue()
 
     def _setExchangeandQueue(self):

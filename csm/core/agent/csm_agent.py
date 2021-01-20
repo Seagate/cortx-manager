@@ -147,7 +147,7 @@ class CsmAgent:
             # TODO: consider a more safe storage
             params = {
                 "username": const.NON_ROOT_USER,
-                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
@@ -165,9 +165,9 @@ class CsmAgent:
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner, update_repo)
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
-                Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'), update_repo)
+                Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'), update_repo)
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(db, provisioner,
             security_service, system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
@@ -234,7 +234,7 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    from cortx.utils.conf_store.conf_store import ConfSection, DebugConf
+    from csm.common.conf import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import Yaml
     from csm.common.payload import Payload, Json, JsonMessage, Dict

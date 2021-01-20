@@ -75,7 +75,7 @@ class BaseClient:
         conn = self._create_boto_connection_object(aws_access_key_id=access_key,
                                                    aws_secret_access_key=secret_key,
                                                    host=config.host,
-                                                   port=int(config.port),
+                                                   port=int(config.port) if config.port else config.port,
                                                    is_secure=config.use_ssl,
                                                    debug=(2 if config.debug == 'true' else 0),
                                                    validate_certs=config.verify_ssl_cert,

@@ -322,12 +322,12 @@ PERMISSIONS = "permissions"
 LYVE_PILOT = "lyve_pilot"
 
 # S3
-S3_HOST = 'S3.host'
-S3_IAM_PORT = 'S3.iam_port'
-S3_PORT = 'S3.s3_port'
-S3_MAX_RETRIES_NUM = 'S3.max_retries_num'
-S3_LDAP_LOGIN = 'S3.ldap_login'
-S3_LDAP_PASSWORD = 'S3.ldap_password'
+S3_HOST = 'S3>host'
+S3_IAM_PORT = 'S3>iam_port'
+S3_PORT = 'S3>s3_port'
+S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
+S3_LDAP_LOGIN = 'S3>ldap_login'
+S3_LDAP_PASSWORD = 'S3>ldap_password'
 
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
 S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
