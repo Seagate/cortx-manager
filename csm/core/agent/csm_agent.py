@@ -46,7 +46,11 @@ class CsmAgent:
         if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
             Conf.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        db_config = Yaml(const.DATABASE_CONF).load()
+        db_config["es_db"][const.PORT] = int(db_config["es_db"][const.PORT])
+        db_config["es_db"]["replication"] = int(db_config["es_db"]["replication"])
+        db_config["consul_db"][const.PORT] = int(db_config["consul_db"][const.PORT])
+        conf = GeneralConfig()
         db = DataBaseProvider(conf)
 
         Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
