@@ -380,6 +380,6 @@ class SecurityService(ApplicationService):
         cert_details[const.NOT_VALID_BEFORE] = cert.not_valid_before
         cert_details[const.SERIAL_NUMBER] = cert.serial_number
         cert_details[const.VERSION] = cert.version
-        
+
         Log.debug(f"SSL certificate details: {cert_details}")
         return  { const.CERT_DETAILS: cert_details }
