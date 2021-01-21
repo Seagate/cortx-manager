@@ -33,6 +33,8 @@ from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroke
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
+from cortx.utils.message_bus import MessageBus
+from typing import Optional
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -594,3 +596,27 @@ class AmqpActuatorComm(Comm):
 
     def connect(self):
         raise Exception('connect not implemented for AMQPActuator Comm')
+
+class MessageBusComm(Comm):
+    def __init__(self):
+        Comm.__init__(self)
+        self.message_callback = None
+        self.message_bus = None
+
+    def init(self):
+        self.message_bus = MessageBus()
+
+    def connect(self):
+        raise Exception('connect not implemented for MessageBusComm')
+
+    def disconnect(self):
+        raise Exception('Disconnect not implemented for MessageBusComm')
+
+    def send(self):
+        raise Exception('send not implemented for MessageBusComm')
+
+    def recv(self):
+        raise Exception('recv not implemented for MessageBusComm')
+
+    def acknowledge(self):
+        raise Exception('acknowledge not implemented for MessageBusComm')
