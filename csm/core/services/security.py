@@ -356,11 +356,11 @@ class SecurityService(ApplicationService):
         Get x509 Name object details (i.e Subject and Issuer)
         """
         name_details = {}
-        for k,v in x509.oid._OID_NAMES.items():
+        for oid_key, oid_value in x509.oid._OID_NAMES.items():
             try:
-                name_details[v] = name.get_attributes_for_oid(k)[0].value
-            except Exception as e:
-                Log.error(f"No value for {v}:{e}")
+                name_details[oid_value] = name.get_attributes_for_oid(oid_key)[0].value
+            except IndexError as e:
+                Log.error(f"No value for {oid_value}:{e}")
         return name_details
 
     async def get_certificate_details(self):
@@ -368,19 +368,18 @@ class SecurityService(ApplicationService):
         Get current certificate details
         """
         path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
-        def load():
-            return self._load_certificate(path)
-        cert = await self._loop.run_in_executor(self._executor, load)
+        Log.debug(f"Getting SSL certificate details from {path}")
+        cert = self._load_certificate(path)
         cert_details = {}
         subject_details = await self._get_name_details(cert.subject)
         issuer_details = await self._get_name_details(cert.issuer)
 
-        cert_details["subject"] = subject_details
-        cert_details["issuer"] = issuer_details
-        cert_details["not_valid_after"] = cert.not_valid_after
-        cert_details["not_valid_before"] = cert.not_valid_before
-        cert_details["serial_number"] = cert.serial_number
-        cert_details["version"] = cert.version
-        cert_details["signature_algorithm_oid"] = cert.signature_algorithm_oid.dotted_string
-
-        return  { "cert_details": cert_details }
+        cert_details[const.SUBJECT] = subject_details
+        cert_details[const.ISSUER] = issuer_details
+        cert_details[const.NOT_VALID_AFTER] = cert.not_valid_after
+        cert_details[const.NOT_VALID_BEFORE] = cert.not_valid_before
+        cert_details[const.SERIAL_NUMBER] = cert.serial_number
+        cert_details[const.VERSION] = cert.version
+        
+        Log.debug(f"SSL certificate details: {cert_details}")
+        return  { const.CERT_DETAILS: cert_details }

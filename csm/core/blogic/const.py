@@ -621,3 +621,12 @@ ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3
 
+#SSL
+SUBJECT = "subject"
+ISSUER = "issuer"
+NOT_VALID_AFTER = "not_valid_after"
+NOT_VALID_BEFORE = "not_valid_before"
+SERIAL_NUMBER = "serial_number"
+VERSION = "version"
+SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
+CERT_DETAILS = "cert_details"
