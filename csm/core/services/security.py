@@ -351,10 +351,11 @@ class SecurityService(ApplicationService):
             interval=timedelta(days=1)
         )
 
-    async def _get_name_details(self, name, name_details):
+    async def _get_name_details(self, name):
         """
         Get x509 Name object details (i.e Subject and Issuer)
         """
+        name_details = {}
         if name.get_attributes_for_oid(x509.oid.NameOID.BUSINESS_CATEGORY):
             name_details["business_category"] = name.get_attributes_for_oid(x509.oid.NameOID.BUSINESS_CATEGORY)[0].value
         if name.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME):
@@ -403,6 +404,7 @@ class SecurityService(ApplicationService):
             name_details["user_id"] = name.get_attributes_for_oid(x509.oid.NameOID.USER_ID)[0].value
         if name.get_attributes_for_oid(x509.oid.NameOID.X500_UNIQUE_IDENTIFIER):
             name_details["x500_unique_identifier"] = name.get_attributes_for_oid(x509.oid.NameOID.X500_UNIQUE_IDENTIFIER)[0].value
+        return name_details
 
     async def get_certificate_details(self):
         """
@@ -413,10 +415,8 @@ class SecurityService(ApplicationService):
             return self._load_certificate(path)
         cert = await self._loop.run_in_executor(self._executor, load)
         cert_details = {}
-        subject_details = {}
-        issuer_details = {}
-        await self._get_name_details(cert.subject, subject_details)
-        await self._get_name_details(cert.issuer, issuer_details)
+        subject_details = await self._get_name_details(cert.subject)
+        issuer_details = await self._get_name_details(cert.issuer)
 
         cert_details["subject"] = subject_details
         cert_details["issuer"] = issuer_details
@@ -424,6 +424,6 @@ class SecurityService(ApplicationService):
         cert_details["not_valid_before"] = cert.not_valid_before
         cert_details["serial_number"] = cert.serial_number
         cert_details["version"] = cert.version
-        cert_details["signature_algorithm_oid"] = cert.signature_algorithm_oid.dotted_string        
-        
+        cert_details["signature_algorithm_oid"] = cert.signature_algorithm_oid.dotted_string
+
         return  { "cert_details": cert_details }
