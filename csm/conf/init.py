@@ -43,7 +43,7 @@ class Init(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
-            Conf.load(const.CONSUMER_INDEX, command.options.get("config_url"))
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
