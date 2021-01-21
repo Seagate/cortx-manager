@@ -356,54 +356,11 @@ class SecurityService(ApplicationService):
         Get x509 Name object details (i.e Subject and Issuer)
         """
         name_details = {}
-        if name.get_attributes_for_oid(x509.oid.NameOID.BUSINESS_CATEGORY):
-            name_details["business_category"] = name.get_attributes_for_oid(x509.oid.NameOID.BUSINESS_CATEGORY)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME):
-            name_details["common_name"] = name.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.COUNTRY_NAME):
-            name_details["country_name"] = name.get_attributes_for_oid(x509.oid.NameOID.COUNTRY_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.DN_QUALIFIER):
-            name_details["dn_qualifier"] = name.get_attributes_for_oid(x509.oid.NameOID.DN_QUALIFIER)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.DOMAIN_COMPONENT):
-            name_details["domain_component"] = name.get_attributes_for_oid(x509.oid.NameOID.DOMAIN_COMPONENT)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.EMAIL_ADDRESS):
-            name_details["email_address"] = name.get_attributes_for_oid(x509.oid.NameOID.EMAIL_ADDRESS)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.GENERATION_QUALIFIER):
-            name_details["generation_qualifier"] = name.get_attributes_for_oid(x509.oid.NameOID.GENERATION_QUALIFIER)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.GIVEN_NAME):
-            name_details["given_name"] = name.get_attributes_for_oid(x509.oid.NameOID.GIVEN_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_COUNTRY_NAME):
-            name_details["jurisdiction_country_name"] = name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_COUNTRY_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_LOCALITY_NAME):
-            name_details["jurisdiction_locality_name"] = name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_LOCALITY_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_STATE_OR_PROVINCE_NAME):
-            name_details["jurisdiction_state_or_province_name"] = name.get_attributes_for_oid(x509.oid.NameOID.JURISDICTION_STATE_OR_PROVINCE_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.LOCALITY_NAME):
-            name_details["locality_name"] = name.get_attributes_for_oid(x509.oid.NameOID.LOCALITY_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME):
-            name_details["organizational_unit_name"] = name.get_attributes_for_oid(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.ORGANIZATION_NAME):
-            name_details["organization_name"] = name.get_attributes_for_oid(x509.oid.NameOID.ORGANIZATION_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.POSTAL_ADDRESS):
-            name_details["postal_address"] = name.get_attributes_for_oid(x509.oid.NameOID.POSTAL_ADDRESS)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.POSTAL_CODE):
-            name_details["postal_code"] = name.get_attributes_for_oid(x509.oid.NameOID.POSTAL_CODE)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.PSEUDONYM):
-            name_details["pseudonym"] = name.get_attributes_for_oid(x509.oid.NameOID.PSEUDONYM)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.SERIAL_NUMBER):
-            name_details["serial_number"] = name.get_attributes_for_oid(x509.oid.NameOID.SERIAL_NUMBER)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.STATE_OR_PROVINCE_NAME):
-            name_details["state_or_province_name"] = name.get_attributes_for_oid(x509.oid.NameOID.STATE_OR_PROVINCE_NAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.STREET_ADDRESS):
-            name_details["street_address"] = name.get_attributes_for_oid(x509.oid.NameOID.STREET_ADDRESS)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.SURNAME):
-            name_details["surname"] = name.get_attributes_for_oid(x509.oid.NameOID.SURNAME)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.TITLE):
-            name_details["title"] = name.get_attributes_for_oid(x509.oid.NameOID.TITLE)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.USER_ID):
-            name_details["user_id"] = name.get_attributes_for_oid(x509.oid.NameOID.USER_ID)[0].value
-        if name.get_attributes_for_oid(x509.oid.NameOID.X500_UNIQUE_IDENTIFIER):
-            name_details["x500_unique_identifier"] = name.get_attributes_for_oid(x509.oid.NameOID.X500_UNIQUE_IDENTIFIER)[0].value
+        for k,v in x509.oid._OID_NAMES.items():
+            try:
+                name_details[v] = name.get_attributes_for_oid(k)[0].value
+            except:
+                pass
         return name_details
 
     async def get_certificate_details(self):
