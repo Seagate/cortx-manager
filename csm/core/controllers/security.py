@@ -180,3 +180,23 @@ class SecurityStatusView(CsmView):
             raise CsmInternalError(f"Internal error during certificate installation: {e}")
 
         return GetResponseBody(security_config).to_response()
+
+@CsmView._app_routes.view("/api/v1/tls/bundle/details")
+class SecurityDetailsView(CsmView):
+    """ Security details for GET REST API implementation:
+        1. Get certificate details
+    """
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.SECURITY_SERVICE]
+        self._service_dispatch = {}
+
+    @CsmAuth.permissions({Resource.SECURITY: {Action.READ}})
+    async def get(self):
+        """
+        GET REST API implemenetation to return current certificate details
+        """
+        Log.debug(f"Handling get certificate details request. "
+                  f"user_id: {self.request.session.credentials.user_id}")
+
+        return await self._service.get_certificate_details()
