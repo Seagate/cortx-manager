@@ -359,8 +359,8 @@ class SecurityService(ApplicationService):
         for k,v in x509.oid._OID_NAMES.items():
             try:
                 name_details[v] = name.get_attributes_for_oid(k)[0].value
-            except:
-                pass
+            except Exception as e:
+                Log.error(f"No value for {v}:{e}")
         return name_details
 
     async def get_certificate_details(self):

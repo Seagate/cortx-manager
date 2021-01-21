@@ -200,3 +200,4 @@ class SecurityDetailsView(CsmView):
                   f"user_id: {self.request.session.credentials.user_id}")
 
         return await self._service.get_certificate_details()
+        
