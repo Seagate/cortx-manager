@@ -33,7 +33,7 @@ from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroke
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
-from cortx.utils.message_bus import MessageBus
+from cortx.utils.message_bus import MessageBus, MessageProducer
 from typing import Optional
 
 class Channel(metaclass=ABCMeta):
@@ -603,8 +603,16 @@ class MessageBusComm(Comm):
         self.message_callback = None
         self.message_bus = None
 
-    def init(self):
+    def init(self, **kwargs):
         self.message_bus = MessageBus()
+        self.producer_id = kwargs.get(const.PRODUCER_ID)
+        self.message_type = kwargs.get(const.MESSAGE_TYPE)
+        if self.producer_id and self.message_type:
+            self._initialize_producer()
+
+    def _initialize_producer(self):
+        self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
+                message_type=self.message_type)
 
     def connect(self):
         raise Exception('connect not implemented for MessageBusComm')
@@ -612,8 +620,12 @@ class MessageBusComm(Comm):
     def disconnect(self):
         raise Exception('Disconnect not implemented for MessageBusComm')
 
-    def send(self):
-        raise Exception('send not implemented for MessageBusComm')
+    def send(self, messages: list):
+        if self.producer:
+            self.producer.send(messages)
+            #Log.debug(f"Messages: {messages} sent over {self.message_type} channel.")
+        else:
+            Log.error("Message Bus Producer not initialized.")
 
     def recv(self):
         raise Exception('recv not implemented for MessageBusComm')
