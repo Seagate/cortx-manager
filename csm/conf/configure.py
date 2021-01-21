@@ -73,6 +73,7 @@ class Configure(Setup):
                 Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
                 Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
+                Configure._set_rmq_cluster_nodes()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
@@ -239,7 +240,6 @@ class Configure(Setup):
         else:
             raise CsmSetupError(f"cron failed. {const.CRON_DIR} dir missing.")
 
-
     def _logrotate(self):
         """
         Configure logrotate
@@ -320,3 +320,20 @@ class Configure(Setup):
             Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
         except Exception as e:
             raise CsmSetupError(f"Setting Health map path failed. {e}")
+
+    @staticmethod
+    def _set_rmq_node_id():
+        """
+        This method gets the nodes id from provisioner cli and updates
+        in the config.
+        """
+        # Get get node id from  conf store and set to config
+        #TODO: Need to Change the Keys Below.
+        node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
+        if node_id_data:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
+                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE2}",
+                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+        else:
+            raise CsmSetupError(f"Node Id Info Not Available.")
