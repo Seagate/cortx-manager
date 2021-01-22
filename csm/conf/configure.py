@@ -322,18 +322,15 @@ class Configure(Setup):
             raise CsmSetupError(f"Setting Health map path failed. {e}")
 
     @staticmethod
-    def _set_rmq_node_id():
+    def _set_rmq_cluster_nodes():
         """
-        This method gets the nodes id from provisioner cli and updates
-        in the config.
+        Obtains minion names and use them to configure RabbitMQ nodes on the config file.
         """
-        # Get get node id from  conf store and set to config
-        #TODO: Need to Change the Keys Below.
-        node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
-        if node_id_data:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE2}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
-        else:
-            raise CsmSetupError(f"Node Id Info Not Available.")
+        try:
+            # TODO: Change the Keys Below.
+            minions = Conf.get(const.CONSUMER_INDEX, const.ID)
+            minions.sort()
+            conf_key = f"{const.CHANNEL}>{const.RMQ_HOSTS}"
+            Conf.set(const.CSM_GLOBAL_INDEX, conf_key, minions)
+        except KvError as e:
+            raise CsmSetupError(f"Setting RMQ cluster nodes failed {e}.")
