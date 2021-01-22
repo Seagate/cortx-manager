@@ -46,7 +46,7 @@ class Configure(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
-            Conf.load(const.CONSUMER_INDEX, command.options.get("config_url"))
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.DATABASE_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
@@ -74,6 +74,7 @@ class Configure(Setup):
                                                               'localhost'))
                 Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
+                Configure._set_rmq_cluster_nodes()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
@@ -81,8 +82,8 @@ class Configure(Setup):
                 self.create()
         except Exception as e:
             import traceback
-            Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
+            Log.error(f"csm_setup config command failed. Error: {e} - {str(traceback.format_exc())}")
+            raise CsmSetupError(f"csm_setup config command failed. Error: {e} - {str(traceback.format_exc())}")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def create(self):
@@ -90,7 +91,7 @@ class Configure(Setup):
         This Function Creates the CSM Conf File on Required Location.
         :return:
         """
-        Log.error("Create the CSM Conf File on Required Location.")
+        Log.error("Creating CSM Conf File on Required Location.")
         Configure.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
@@ -175,7 +176,7 @@ class Configure(Setup):
         """
         Obtains current minion id. If it cannot be obtained, returns default node #1 id.
         """
-        Log.info("Fetch Minion Id.")
+        Log.info("Fetching Minion Id.")
         minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
         if not minion_id:
             raise CsmSetupError('Unable to obtain current minion id')
@@ -188,7 +189,7 @@ class Configure(Setup):
 
         :param minion_id: Minion id.
         """
-        Log.info("Fetch data N/W info.")
+        Log.info("Fetching data N/W info.")
         data_nw = Conf.get(const.CONSUMER_INDEX, f'cluster>{minion_id}>network>data_nw')
         if not data_nw:
             raise CsmSetupError(
@@ -215,7 +216,7 @@ class Configure(Setup):
         """
         Configure rsyslog
         """
-        Log.info("Configure rsyslog")
+        Log.info("Configuring rsyslog")
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
             Setup._run_cmd("systemctl restart rsyslog")
@@ -239,12 +240,11 @@ class Configure(Setup):
         else:
             raise CsmSetupError(f"cron failed. {const.CRON_DIR} dir missing.")
 
-
     def _logrotate(self):
         """
         Configure logrotate
         """
-        Log.info("Configure logrotate.")
+        Log.info("Configuring logrotate.")
         source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
         if not os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
@@ -320,3 +320,20 @@ class Configure(Setup):
             Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
         except Exception as e:
             raise CsmSetupError(f"Setting Health map path failed. {e}")
+
+    @staticmethod
+    def _set_rmq_node_id():
+        """
+        This method gets the nodes id from provisioner cli and updates
+        in the config.
+        """
+        # Get get node id from  conf store and set to config
+        #TODO: Need to Change the Keys Below.
+        node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
+        if node_id_data:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
+                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE2}",
+                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+        else:
+            raise CsmSetupError(f"Node Id Info Not Available.")

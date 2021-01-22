@@ -48,7 +48,7 @@ class Reset(Setup):
             self.ConfigServer.restart()
         except Exception as e:
             import traceback
-            Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
+            Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.format_exc())}")
+            raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.format_exc())}")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
