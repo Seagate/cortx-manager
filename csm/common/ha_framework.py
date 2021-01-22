@@ -92,12 +92,12 @@ class CortxHAFramework(HAFramework):
         _cluster_shutdown_cmd = _command.format(CSM_PATH = const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
                                       "MAINTENANCE.shutdown_cron_time")
-        Log.debug(f"Setting Cron Command with args ->  user : {self._user}")
+        Log.info(f"Setting Cron Command with args ->  user : {self._user}")
         cron_job_obj = CronJob(self._user)
+        cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
+        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} current system time {time.asctime()}")
         cron_job_obj.create_new_job(_cluster_shutdown_cmd,
-                                    const.SHUTDOWN_COMMENT,
-                                    cron_job_obj.create_run_time(
-                                        seconds = shutdown_cron_time))
+                                    const.SHUTDOWN_COMMENT, cron_time)
         return {
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
@@ -107,7 +107,7 @@ class PcsHAFramework(HAFramework):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
         self._user = const.NON_ROOT_USER
-        self._password = const.NON_ROOT_USER_PASS
+        self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
 
     def get_nodes(self):
         """
@@ -169,7 +169,7 @@ class PcsHAFramework(HAFramework):
             node = "all nodes" if node == "all" else node
             return { "message": const.STATE_CHANGE.format(node=node, state='passive')}
         except Exception as e:
-            raise Exception("Failed to remove %s from passive state. Error: %s" %(node,e))
+            raise Exception("Failed to remove %s from passive state. Error: %s" %(node, e))
 
     def get_status(self):
         """
@@ -190,10 +190,11 @@ class PcsHAFramework(HAFramework):
                           user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
                                        "MAINTENANCE.shutdown_cron_time")
-        Log.debug(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
+        Log.info(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
         cron_job_obj = CronJob(self._user)
-        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT,
-                                    cron_job_obj.create_run_time(seconds=shutdown_cron_time))
+        cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
+        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} current system time {time.asctime()}")
+        cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT, cron_time)
         return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
 class ResourceAgent:

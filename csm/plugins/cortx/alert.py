@@ -167,6 +167,7 @@ class AlertPlugin(CsmPlugin):
         elif "sensor" in title.lower():
             try:
                 if self.monitor_callback:
+                    Log.info("Coverting and validating alert.")
                     alert = self._convert_to_csm_schema(message)
                     """Validating Schema using marshmallow"""
                     alert_validator = AlertSchemaValidator()
@@ -206,7 +207,9 @@ class AlertPlugin(CsmPlugin):
         """
         This method will call comm's stop to stop consuming from the queue.
         """
+        Log.info("Start: AlertPlugin's stop")
         self.comm_client.stop()
+        Log.info("End: AlertPlugin's stop")
 
     def _convert_to_csm_schema(self, message):
         """

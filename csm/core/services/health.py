@@ -620,7 +620,14 @@ class HealthAppService(ApplicationService):
         if not self._is_map_updated_with_db:
             Log.debug(f"Updating health schema_with db.")
             try:
-                alerts = await self.alerts_repo.retrieve_by_range(create_time_range=None)
+                """
+                For fetching new and active alerts we need to make show_all and 
+                show_active parameters as false.
+                This will get all the alerts except for those which completed
+                there life cycle(i.e ack and resolved = True)
+                """
+                alerts = await self.alerts_repo.retrieve_by_range(create_time_range=None, show_all=False, show_active=False)
+                Log.debug(f"Number of alerts fetched for updating health map : {len(alerts)}")
                 for alert in alerts:
                     self._health_plugin.update_health_map_with_alert(alert.to_primitive())
                 self._is_map_updated_with_db = True
@@ -675,9 +682,12 @@ class HealthMonitorService(Service, Observable):
         try:
             Log.info("Stopping Health monitor thread")
             self._health_plugin.stop()
-            self._monitor_thread.join()
+            Log.info("Joining Health monitor thread")
+            self._monitor_thread.join(timeout=2.0)
+
             self._thread_started = False
             self._thread_running = False
+            Log.info("Stopped Health monitor thread")
         except Exception as e:
             Log.warn(f"Error in stopping health monitor thread: {e}")
 

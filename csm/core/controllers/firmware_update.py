@@ -50,7 +50,7 @@ class FirmwarePackageUploadView(CsmView):
             try:
                 multipart_data = FirmwareUploadSchema().load(parsed_multipart, unknown='EXCLUDE')
             except ValidationError as val_err:
-                raise InvalidRequest(f"Invalid Package. {val_err}")
+                raise InvalidRequest(f"Invalid package. {val_err}")
             package_ref = multipart_data['package']['file_ref']
             file_name = multipart_data['package']['filename']
             return await self._service.upload_package(package_ref, file_name)

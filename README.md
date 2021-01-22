@@ -23,7 +23,7 @@ CORTX Manager provides APIs which communicate with different CORTX components an
 
 ## Get CORTX-Manager Ready! 
 
-Jump to the [CORTX-Manager Quickstart Guide](https://github.com/Seagate/cortx-manager/blob/main/CORTXManagerQuickstartGuide.md) to set up CORTX-Manager. 
+Jump to the [CORTX-Manager Quickstart Guide](CORTXManagerQuickstartGuide.md) to set up CORTX-Manager. 
 
 ## Contribute to CORTX-Manager
 

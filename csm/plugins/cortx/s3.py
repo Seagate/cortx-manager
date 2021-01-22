@@ -752,11 +752,8 @@ class S3Client(BaseClient):
     async def delete_bucket(self, bucket_name: str):
         Log.debug(f"delete bucket: {bucket_name}")
         bucket = await self._loop.run_in_executor(self._executor, self.connection.Bucket, bucket_name)
-        # NOTE: according to boto3 documentation all of the keys should be deleted before
-        #  bucket deletion itself
-        for key in bucket.objects.all():
-            await self._loop.run_in_executor(self._executor, key.delete)
-
+        # Assume that the bucket is empty, if not, the error will be returned.
+        # It is user's responsibility to empty the bucket before the deletion.
         await self._loop.run_in_executor(self._executor, bucket.delete)
 
     @Log.trace_method(Log.DEBUG)
@@ -765,19 +762,18 @@ class S3Client(BaseClient):
         return await self._loop.run_in_executor(self._executor, self.connection.buckets.all)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_bucket_tagging(self, bucket):
+    async def get_bucket_tagging(self, bucket_name: str):
         # When the tag_set is not available ClientError is raised
         # Need to avoid that in order to iterate over tags for all available buckets
-        Log.debug(f"Get bucket tagging: {bucket}")
-        try:
-            tagging = await self._loop.run_in_executor(self._executor, bucket.Tagging)
-            tags = tagging.tag_set
-        except ClientError:
-            tags = []
-        # Tags are stored in form [{'Key': <key value>, 'Value' : <actual value>}, ...]
-        # Convert to ordinary Python dict
-        res = {tag['Key'] : tag['Value'] for tag in tags}
-        return res
+        Log.debug(f"Get bucket tagging: {bucket_name}")
+        def _run():
+            try:
+                tagging = self.connection.BucketTagging(bucket_name)
+                tag_set = {tag['Key'] : tag['Value'] for tag in tagging.tag_set}
+            except ClientError:
+                tag_set = {}
+            return tag_set
+        return await self._loop.run_in_executor(self._executor, _run)
 
     @Log.trace_method(Log.DEBUG)
     async def put_bucket_tagging(self, bucket_name, tags: dict):

@@ -54,6 +54,15 @@ class Conf:
         Conf._payloads[index].set(key, val)
 
     @staticmethod
+    def delete(index, key):
+        '''Deletes an entry from the configuration according to its key.
+
+        :param key: Key to be deleted
+        :return: Deleted value
+        '''
+        return Conf._payloads[index].pop(key, None)
+
+    @staticmethod
     def save(index=None):
         indexes = [x for x in Conf._payloads.keys()] if index is None else [index]
         for index in indexes:
