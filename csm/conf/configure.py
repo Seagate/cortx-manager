@@ -289,10 +289,6 @@ class Configure(Setup):
         This minion id will be required to fetch the healthmap path.
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
-        minion_id = None
-        healthmap_folder_path = None
-        healthmap_filename = None
-        machine_id = Configure._get_machine_id()
         try:
             # TODO: Change Below Keys.
             healthmap_folder_path = Conf.get(
