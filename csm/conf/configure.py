@@ -290,15 +290,13 @@ class Configure(Setup):
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
         try:
-            # TODO: Change Below Keys.
             healthmap_folder_path = Conf.get(
-                const.CONSUMER_INDEX, 'sspl>health_map_path')
+                const.CONSUMER_INDEX, 'commons>health-map>path')
             if not healthmap_folder_path:
                 Log.logger.error("Fetching health map folder path failed.")
                 raise CsmSetupError("Fetching health map folder path failed.")
-            # TODO: Change Below Keys.
             healthmap_filename = Conf.get(
-                const.CONSUMER_INDEX, 'sspl>health_map_file')
+                const.CONSUMER_INDEX, 'commons>health-map>file')
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")
