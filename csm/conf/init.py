@@ -33,7 +33,6 @@ class Init(Setup):
 
         """
         super(Init, self).__init__()
-        self._dev_mode = False
 
     async def execute(self, command):
         """
@@ -48,10 +47,7 @@ class Init(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if Conf.get(const.CONSUMER_INDEX,
-                    f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
-            Log.info("Setting Up CSM in Dev Mode.")
-            self._dev_mode = True
+        self._set_deployment_mode()
         self._config_user_permission()
         self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

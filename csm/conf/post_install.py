@@ -49,16 +49,18 @@ class PostInstall(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CONSUMER_INDEX, command.options.get(
+                const.CONFIG_URL))
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
-        await self._config_user()
+        self._set_deployment_mode()
+        self._config_user()
         await self._set_unsupported_feature_info()
-        await self._configure_system_auto_restart()
+        self._configure_system_auto_restart()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    async def _config_user(self, reset=False):
+    def _config_user(self, reset=False):
         """
         Check user already exist and create if not exist
         If reset true then delete user
@@ -140,7 +142,7 @@ class PostInstall(Setup):
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
 
-    async def _configure_system_auto_restart(self):
+    def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
         Accordingly.

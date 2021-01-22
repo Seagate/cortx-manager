@@ -23,6 +23,7 @@ from csm.core.blogic import const
 from csm.conf.uds import UDSConfigGenerator
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.common.process import SimpleProcess
 
 class Configure(Setup):
     """
@@ -33,7 +34,6 @@ class Configure(Setup):
     def __init__(self):
         super(Configure, self).__init__()
         Log.info("Triggering csm_setup config")
-        self._debug_flag = None
         self._replacement_node_flag = os.environ.get(
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
@@ -53,24 +53,20 @@ class Configure(Setup):
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if command.options.get(const.DEBUG) == 'true' or Conf.get(const.CONSUMER_INDEX,
-                f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
-            Log.info("Running Csm Setup for Development Mode.")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
-                     const.DEV)
-            self._debug_flag = True
+        self._set_deployment_mode()
         try:
-            if not self._debug_flag:
+            if not self._is_env_vm:
                 uds_public_ip = command.options.get('uds_public_ip')
                 if uds_public_ip is not None:
                     ip_address(uds_public_ip)
                 UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
                 Configure._set_node_id()
-                minion_id = Configure._get_minion_id()
-                data_nw = Configure._get_data_nw_info(minion_id)
+                machine_id = Configure._get_machine_id()
+                data_nw = Configure._get_data_nw_info(machine_id)
                 Configure._set_db_host_addr('consul',
-                                            data_nw.get('roaming_ip', 'localhost'))
-                Configure._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
+                                        data_nw.get('public_ip', 'localhost'))
+                Configure._set_db_host_addr('es',
+                                        data_nw.get('private_ip', 'localhost'))
                 Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
                 Configure._set_rmq_cluster_nodes()
@@ -91,13 +87,14 @@ class Configure(Setup):
         :return:
         """
         Log.error("Creating CSM Conf File on Required Location.")
-        if not self._debug_flag:
-            Configure.store_encrypted_password()
+        if not self._is_env_vm:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.VM)
+        self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
-    @staticmethod
-    def store_encrypted_password():
+    def store_encrypted_password(self):
         """
         :return:
         """
@@ -114,15 +111,15 @@ class Configure(Setup):
                      open_ldap_user)
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
                      open_ldap_secret)
-        # TODO:  Change Keys Here.
-        sspl_config = Conf.get(const.CONSUMER_INDEX, const.SSPL)
+        sspl_config = Conf.get(const.CONSUMER_INDEX,
+                               "rabbitmq>sspl>RABBITMQINGRESSPROCESSOR")
         if sspl_config and isinstance(sspl_config, dict):
             Log.info("SSPL Credentials Copied to CSM Configuration.")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.USERNAME}",
                      sspl_config.get(const.USERNAME))
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.PASSWORD}",
                      sspl_config.get(const.PASSWORD))
-        _paswd = Setup._fetch_csm_user_password()
+        _paswd = self._fetch_csm_user_password()
         if not _paswd:
             raise CsmSetupError("CSM Password Not Found.")
         cluster_id = Conf.get(const.CONSUMER_INDEX,
@@ -131,7 +128,11 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX,
                  f"{const.PROVISIONER}>{const.CLUSTER_ID}", cluster_id)
         Log.info("CSM Credentials Copied to CSM Configuration.")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}", _paswd)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}",
+                 _paswd)
+        service_user = Conf.get(const.CONSUMER_INDEX, f"service>cortx>user")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}",
+                 service_user)
 
     def cli_create(self, command):
         """
@@ -147,9 +148,9 @@ class Configure(Setup):
         Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                  f"{const.CORTXCLI_SECTION}>{const.CSM_AGENT_HOST_PARAM_NAME}" ,
                  command.options.get(const.ADDRESS_PARAM, "127.0.0.1"))
-        if self._debug_flag:
+        if self._is_env_vm:
             Conf.set(const.CORTXCLI_GLOBAL_INDEX,
-                     f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
+                     f"{const.DEPLOYMENT}>{const.MODE}", const.VM)
         Setup._run_cmd(
             f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
@@ -160,6 +161,7 @@ class Configure(Setup):
         in the config.
         """
         # Get get node id and set to config
+        # TODO: Change Keys Below.
         node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
         if node_id_data:
             Log.info(f"Node ids obtained from Conf Store:{node_id_data}")
@@ -172,28 +174,31 @@ class Configure(Setup):
             raise CsmSetupError("Unable to fetch system node ids info.")
 
     @staticmethod
-    def _get_minion_id():
+    def _get_machine_id():
         """
         Obtains current minion id. If it cannot be obtained, returns default node #1 id.
         """
-        Log.info("Fetching Minion Id.")
-        minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
-        if not minion_id:
-            raise CsmSetupError('Unable to obtain current minion id')
-        return minion_id
+        Log.info("Fetching Machine Id.")
+        cmd = "cat /etc/machine-id"
+        proc_obj = SimpleProcess(cmd)
+        machine_id, _err, _returncode = proc_obj.run()
+        if _returncode != 0:
+            raise CsmSetupError('Unable to obtain current machine id.')
+        return machine_id
 
     @staticmethod
-    def _get_data_nw_info(minion_id):
+    def _get_data_nw_info(machine_id):
         """
         Obtains minion data network info.
 
-        :param minion_id: Minion id.
+        :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
-        data_nw = Conf.get(const.CONSUMER_INDEX, f'cluster>{minion_id}>network>data_nw')
+        data_nw = Conf.get(const.CONSUMER_INDEX,
+                           f'cluster>{machine_id}>network>data')
         if not data_nw:
             raise CsmSetupError(
-                f'Unable to obtain data nw info for {minion_id}')
+                f'Unable to obtain data nw info for {machine_id}')
         return data_nw
 
     @staticmethod
@@ -221,8 +226,9 @@ class Configure(Setup):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
             Setup._run_cmd("systemctl restart rsyslog")
         else:
-            Log.error(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
-            raise CsmSetupError(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
+            msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
+            Log.error(msg)
+            raise CsmSetupError(msg)
 
     def _rsyslog_common(self):
         """
@@ -232,7 +238,7 @@ class Configure(Setup):
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
             setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
-            if self._debug_flag or (setup_info and setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
+            if self._is_env_vm or (setup_info and setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f'\
                     s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
@@ -251,33 +257,30 @@ class Configure(Setup):
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
             setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
-            if self._debug_flag or (setup_info and setup_info[
+            if self._is_env_vm or (setup_info and setup_info[
                 const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
                 Setup._run_cmd(sed_cmd)
             Setup._run_cmd(f"chmod 644 {const.CSM_LOGROTATE_DEST}")
         else:
-            Log.error(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
-            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
+            err_msg = f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing."
+            Log.error(err_msg)
+            raise CsmSetupError(err_msg)
 
     @staticmethod
     def _set_fqdn_for_nodeid():
-        # TODO: Change Below Keys.
-        nodes = Conf.get(const.CONSUMER_INDEX, const.NODE_LIST_KEY)
-        Log.debug("Node ids obtained from salt-call:{nodes}")
+        nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        Log.debug("Node Name and Machine ID Fetched from Consumer.")
         if nodes:
-            for each_node in nodes:
-                # TODO: Change Below Keys.
-                hostname = Conf.get(
-                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}")
-                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
-                if hostname:
-                    Conf.set(const.CSM_GLOBAL_INDEX,
-                             f"{const.MAINTENANCE}.{each_node}", f"{hostname}")
-                else:
-                    Conf.set(const.CSM_GLOBAL_INDEX,
-                             f"{const.MAINTENANCE}.{each_node}", f"{each_node}")
+            for each_node in nodes.values():
+                hostname = Conf.get(const.CONSUMER_INDEX,
+                    f"{const.CLUSTER}>{each_node}>{const.HOSTNAME}")
+                Log.debug((f"Setting hostname for {each_node}:{hostname}."
+                           f" Default: {each_node}"))
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                         f"{const.MAINTENANCE}>{each_node}",
+                         f"{hostname}" or f"{each_node}")
 
     @staticmethod
     def _set_healthmap_path():
@@ -291,12 +294,7 @@ class Configure(Setup):
         minion_id = None
         healthmap_folder_path = None
         healthmap_filename = None
-        # TODO: Change Below Keys.
-        minion_id = Conf.get(const.CONSUMER_INDEX, const.ID)
-        if not minion_id:
-            Log.logger.warn((f"Unable to fetch minion id for the node."
-                             f"Using {const.MINION_NODE1_ID}."))
-            minion_id = const.MINION_NODE1_ID
+        machine_id = Configure._get_machine_id()
         try:
             # TODO: Change Below Keys.
             healthmap_folder_path = Conf.get(
@@ -306,7 +304,7 @@ class Configure(Setup):
                 raise CsmSetupError("Fetching health map folder path failed.")
             # TODO: Change Below Keys.
             healthmap_filename = Conf.get(
-                const.CONSUMER_INDEX, 'sspl:health_map_file')
+                const.CONSUMER_INDEX, 'sspl>health_map_file')
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")

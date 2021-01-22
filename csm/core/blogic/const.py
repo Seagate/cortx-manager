@@ -548,6 +548,8 @@ GET_SETUP_INFO='get_setup_info'
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
 DEV = 'dev'
+VM = 'VM'
+ENV_TYPE = 'env_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -587,7 +589,7 @@ SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
-HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
+HEALTH_SCHEMA_KEY = "HEALTH>health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
