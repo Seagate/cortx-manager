@@ -112,7 +112,7 @@ class Configure(Setup):
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
                      open_ldap_secret)
         sspl_config = Conf.get(const.CONSUMER_INDEX,
-                               "rabbitmq>sspl>RABBITMQINGRESSPROCESSOR")
+                               "rabbitmq>sspl>RABBITMQEGRESSPROCESSOR")
         if sspl_config and isinstance(sspl_config, dict):
             Log.info("SSPL Credentials Copied to CSM Configuration.")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.USERNAME}",
@@ -160,15 +160,13 @@ class Configure(Setup):
         This method gets the nodes id from provisioner cli and updates
         in the config.
         """
-        # Get get node id and set to config
-        # TODO: Change Keys Below.
-        node_id_data = Conf.get(const.CONSUMER_INDEX, const.GET_NODE_ID)
-        if node_id_data:
-            Log.info(f"Node ids obtained from Conf Store:{node_id_data}")
+
+        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        for each_node in server_nodes.values():
+            node_id = Conf.get(const.CONSUMER_INDEX,
+                               f"cluster>{each_node}>node_id")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
-                     f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE2}",
-                     f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
+                     f"{const.NODE}{node_id}")
         else:
             Log.error("Unable to fetch system node ids info.")
             raise CsmSetupError("Unable to fetch system node ids info.")
@@ -298,7 +296,7 @@ class Configure(Setup):
         try:
             # TODO: Change Below Keys.
             healthmap_folder_path = Conf.get(
-                const.CONSUMER_INDEX, 'sspl:health_map_path')
+                const.CONSUMER_INDEX, 'sspl>health_map_path')
             if not healthmap_folder_path:
                 Log.logger.error("Fetching health map folder path failed.")
                 raise CsmSetupError("Fetching health map folder path failed.")
@@ -325,10 +323,9 @@ class Configure(Setup):
         Obtains minion names and use them to configure RabbitMQ nodes on the config file.
         """
         try:
-            # TODO: Change the Keys Below.
-            minions = Conf.get(const.CONSUMER_INDEX, const.ID)
-            minions.sort()
+            server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+            node_id_list = list(server_nodes.values())
             conf_key = f"{const.CHANNEL}>{const.RMQ_HOSTS}"
-            Conf.set(const.CSM_GLOBAL_INDEX, conf_key, minions)
+            Conf.set(const.CSM_GLOBAL_INDEX, conf_key, node_id_list.sort())
         except KvError as e:
             raise CsmSetupError(f"Setting RMQ cluster nodes failed {e}.")
