@@ -632,18 +632,18 @@ class MessageBusComm(Comm):
                 Group of consumers can process messages
             message_type : This is essentially equivalent to the queue/topic
                 name, e.g. "delete"
-            auto_ack[Optional] : True or False. Message should be automatically 
+            auto_ack[Optional] : True or False. Message should be automatically
                 acknowledged (default is False)
             offset[Optional] : Can be set to "earliest" (default) or "latest".
                 ("earliest" will cause messages to be read from the beginning)
         """
         self.message_bus = MessageBus()
         self.type = kwargs.get(const.TYPE, const.BOTH)
-        """ Producer related configuration """
+        #Producer related configuration
         self.producer_id = kwargs.get(const.PRODUCER_ID)
         self.message_type = kwargs.get(const.MESSAGE_TYPE)
         self.method = kwargs.get(const.METHOD, const.ASYNC)
-        """ Consumer related configuration """
+        #Consumer related configuration
         self.consumer_id = kwargs.get(const.CONSUMER_ID)
         self.consumer_group = kwargs.get(const.CONSUMER_GROUP)
         self.consumer_message_types = kwargs.get(const.CONSUMER_MSG_TYPES)
@@ -680,7 +680,7 @@ class MessageBusComm(Comm):
     def disconnect(self):
         raise Exception('Disconnect not implemented for MessageBusComm')
 
-    def send(self, messages: list):
+    def send(self, messages, **kwargs):
         """
         Sends list of messages to a specifed message type.
         :param messages: List of messages.
@@ -691,7 +691,7 @@ class MessageBusComm(Comm):
         else:
             Log.error("Message Bus Producer not initialized.")
 
-    def recv(self, callback_fn):
+    def recv(self, callback_fn, message=None):
         """
         Receives messages from message bus
         :param callback_fn: This is the callback method on which we will
@@ -707,7 +707,7 @@ class MessageBusComm(Comm):
                 else:
                     Log.error("Message Bus Consumer not initialized.")
             except AttributeError as ex:
-                Log.error("Message Bus receive error: {ex}")
+                Log.error(f"Message Bus receive error: {ex}")
 
     def acknowledge(self):
         """ Acknowledge the read messages. """
