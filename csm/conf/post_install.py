@@ -39,7 +39,6 @@ class PostInstall(Setup):
         """Instiatiate Post Install Class."""
         Log.info("Executing Post Installation for CSM.")
         super(PostInstall, self).__init__()
-        self._setup_info = None
 
     async def execute(self, command):
         """
@@ -111,8 +110,6 @@ class PostInstall(Setup):
             return list(set(component_list))
         try:
             Log.info("Set unsupported feature list to ES.")
-            # TODO: Add Proper Key as per Config Store
-            self._setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []

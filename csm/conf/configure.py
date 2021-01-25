@@ -61,7 +61,7 @@ class Configure(Setup):
                     ip_address(uds_public_ip)
                 UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
                 Configure._set_node_id()
-                machine_id = Configure._get_machine_id()
+                machine_id = Setup._get_machine_id()
                 data_nw = Configure._get_data_nw_info(machine_id)
                 Configure._set_db_host_addr('consul',
                                         data_nw.get('public_ip', 'localhost'))
@@ -89,7 +89,7 @@ class Configure(Setup):
         Log.error("Creating CSM Conf File on Required Location.")
         if not self._is_env_vm:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
-                     const.VM)
+                     const.DEV)
         self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
@@ -150,7 +150,7 @@ class Configure(Setup):
                  command.options.get(const.ADDRESS_PARAM, "127.0.0.1"))
         if self._is_env_vm:
             Conf.set(const.CORTXCLI_GLOBAL_INDEX,
-                     f"{const.DEPLOYMENT}>{const.MODE}", const.VM)
+                     f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
         Setup._run_cmd(
             f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
@@ -170,19 +170,6 @@ class Configure(Setup):
         else:
             Log.error("Unable to fetch system node ids info.")
             raise CsmSetupError("Unable to fetch system node ids info.")
-
-    @staticmethod
-    def _get_machine_id():
-        """
-        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
-        """
-        Log.info("Fetching Machine Id.")
-        cmd = "cat /etc/machine-id"
-        proc_obj = SimpleProcess(cmd)
-        machine_id, _err, _returncode = proc_obj.run()
-        if _returncode != 0:
-            raise CsmSetupError('Unable to obtain current machine id.')
-        return machine_id
 
     @staticmethod
     def _get_data_nw_info(machine_id):
@@ -235,8 +222,8 @@ class Configure(Setup):
         """
         if os.path.exists(const.CRON_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
-            setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
-            if self._is_env_vm or (setup_info and setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
+            if self._setup_info and self._setup_info[
+                const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
                 sed_script = f'\
                     s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
@@ -254,8 +241,7 @@ class Configure(Setup):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
-            setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
-            if self._is_env_vm or (setup_info and setup_info[
+            if (self._setup_info and self._setup_info[
                 const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
                 sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"

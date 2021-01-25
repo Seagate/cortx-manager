@@ -63,7 +63,8 @@ class Setup:
         This Method will set a deployment Mode according to env_type.
         :return:
         """
-        if Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE) == const.VM:
+        self._get_setup_info()
+        if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
 
@@ -133,6 +134,39 @@ class Setup:
             return True
         except KeyError as err:
             return False
+
+    def _get_setup_info(self):
+        """
+        Return Setup Info from Conf Store
+        :return:
+        """
+        self._setup_info = {"node_type": "",
+                            "storage_type": ""}
+        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        machine_id = Setup._get_machine_id()
+        node_type_key = (f"{const.CLUSTER}>{server_nodes.get(machine_id, '')}"
+                         f">{const.NODE_TYPE}")
+        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                               node_type_key)
+        storage_type_key = (f"{const.STORAGE}>{server_nodes.get(machine_id, '')}"
+                         f">{const.TYPE}")
+        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                                  storage_type_key)
+
+
+
+    @staticmethod
+    def _get_machine_id():
+        """
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
+        """
+        Log.info("Fetching Machine Id.")
+        cmd = "cat /etc/machine-id"
+        proc_obj = SimpleProcess(cmd)
+        machine_id, _err, _returncode = proc_obj.run()
+        if _returncode != 0:
+            raise CsmSetupError('Unable to obtain current machine id.')
+        return machine_id
 
     @staticmethod
     def _is_group_exist(user_group):

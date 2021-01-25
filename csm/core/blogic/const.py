@@ -542,7 +542,8 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='get_setup_info'
+GET_SETUP_INFO='cluster>{server-node}>node_type'
+NODE_TYPE="node_type"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -619,8 +620,10 @@ DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
+TYPE = 'type'
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+STORAGE = "storage"
 STORAGE_TYPE_VIRTUAL = "virtual"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'

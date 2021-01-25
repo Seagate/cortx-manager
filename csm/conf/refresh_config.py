@@ -50,7 +50,7 @@ class RefreshConfig(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         if command.options.get(const.DEBUG) == 'true' or Conf.get(const.CONSUMER_INDEX,
-                f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
+                f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == const.DEV:
             Log.info("Running Csm Setup for Development Mode.")
             self._debug_flag = True
         try:

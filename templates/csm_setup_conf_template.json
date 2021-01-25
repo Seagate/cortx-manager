@@ -1,7 +1,13 @@
 {
   "cluster": {
     "DEPLOYMENT": {
-      "mode": "VM"
+      "mode": "DEV"
+    },
+    "server_nodes": {
+      "machine_id": "srvnode-1"
+    },
+    "srvnode-1": {
+      "node_type": "VM"
     }
   },
   "service": {
@@ -9,5 +15,8 @@
       "user": "csm",
       "secret": "csm"
     }
+  },
+  "storage": {
+    "type": "virtual"
   }
 }
