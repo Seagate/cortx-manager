@@ -34,7 +34,6 @@ from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
 from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
-from typing import Optional
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -620,7 +619,7 @@ class MessageBusComm(Comm):
         """
         Initializes the producer and consumer communication.
         :param kwargs:
-            type: produce|consumer|both(default)
+            type: producer|consumer|both(default)
             message_bus: Instance of MessageBus class
             producer_id: String representing ID that uniquely identifies a producer
             messge_type : This is essentially equivalent to the queue/topic
