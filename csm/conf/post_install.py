@@ -39,7 +39,6 @@ class PostInstall(Setup):
         """Instiatiate Post Install Class."""
         Log.info("Executing Post Installation for CSM.")
         super(PostInstall, self).__init__()
-        self._setup_info = None
 
     async def execute(self, command):
         """
@@ -49,16 +48,18 @@ class PostInstall(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CONSUMER_INDEX, command.options.get(
+                const.CONFIG_URL))
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
-        await self._config_user()
+        self._set_deployment_mode()
+        self._config_user()
         await self._set_unsupported_feature_info()
-        await self._configure_system_auto_restart()
+        self._configure_system_auto_restart()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    async def _config_user(self, reset=False):
+    def _config_user(self, reset=False):
         """
         Check user already exist and create if not exist
         If reset true then delete user
@@ -109,8 +110,6 @@ class PostInstall(Setup):
             return list(set(component_list))
         try:
             Log.info("Set unsupported feature list to ES.")
-            # TODO: Add Proper Key as per Config Store
-            self._setup_info = Conf.get(const.CONSUMER_INDEX, const.GET_SETUP_INFO)
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []
@@ -139,8 +138,9 @@ class PostInstall(Setup):
                 Log.info("Unsupported features list is empty.")
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
+            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
-    async def _configure_system_auto_restart(self):
+    def _configure_system_auto_restart(self):
         """
         Check's System Installation Type an dUpdate the Service File
         Accordingly.
