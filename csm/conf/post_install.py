@@ -139,6 +139,7 @@ class PostInstall(Setup):
                 Log.info("Unsupported features list is empty.")
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
+            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     async def _configure_system_auto_restart(self):
         """
