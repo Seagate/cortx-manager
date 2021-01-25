@@ -23,7 +23,7 @@ def init(args):
 def callback_fn(message):
     print(f"Message received: {message}")
 
-def test_recv(args={}):
+def test_recv(args):
     ret = False
     try:
         message_bus = MessageBusComm()
@@ -38,7 +38,7 @@ def test_recv(args={}):
                     break
         else:
             ret = False
-    except Exception as ex:
+    except:
         ret = False
     return ret
 

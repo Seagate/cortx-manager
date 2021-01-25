@@ -20,7 +20,7 @@ from csm.common.comm import MessageBusComm
 def init(args):
     pass
 
-def test_send(args={}):
+def test_send(args):
     ret = False
     try:
         message_bus = MessageBusComm()
@@ -33,7 +33,7 @@ def test_send(args={}):
             ret = True
         else:
             ret = False
-    except Exception as ex:
+    except:
         ret = False
     return ret
 
