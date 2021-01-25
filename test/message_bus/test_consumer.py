@@ -25,20 +25,18 @@ def callback_fn(message):
 
 def test_recv(args):
     ret = False
-    try:
-        message_bus = MessageBusComm()
-        if message_bus:
-            message_bus.init(type='consumer', consumer_id='csm',
-                    consumer_group='test_group', consumer_message_types=["test-1"],
-                    auto_ack=False, offset="earliest")
-            while True:
-                try:
-                    message_bus.recv(callback_fn)
-                except AttributeError as ex:
-                    break
-        else:
-            ret = False
-    except:
+    message_bus = MessageBusComm()
+    if message_bus:
+        message_bus.init(type='consumer', consumer_id='csm',
+                consumer_group='test_group', consumer_message_types=["test-1"],
+                auto_ack=False, offset="earliest")
+        while True:
+            try:
+                message_bus.recv(callback_fn)
+                ret = True
+            except AttributeError:
+                break
+    else:
         ret = False
     return ret
 

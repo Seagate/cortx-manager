@@ -669,7 +669,7 @@ class MessageBusComm(Comm):
         self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
                 consumer_group=self.consumer_group, message_type=self.consumer_message_types,
                 auto_ack=self.auto_ack, offset=self.offset)
-        Log.info(f"Consumer Initialized - Consumer ID : {self.self.consumer_id},"\
+        Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\
                 f"Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
                 f"Message Types: {self.consumer_message_types}, Offset: {self.offset}")
 
@@ -687,7 +687,7 @@ class MessageBusComm(Comm):
         """
         if self.producer:
             self.producer.send(message)
-            Log.debug(f"Messages: {messages} sent over {self.message_type} channel.")
+            Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
         else:
             Log.error("Message Bus Producer not initialized.")
 

@@ -22,18 +22,15 @@ def init(args):
 
 def test_send(args):
     ret = False
-    try:
-        message_bus = MessageBusComm()
-        if message_bus:
-            message_bus.init(type='producer', producer_id='test_1', message_type='test-1')
-            messages = []
-            for i in range(0, 10):
-                messages.append("This is test message number : " + str(i))
-            message_bus.send(messages)
-            ret = True
-        else:
-            ret = False
-    except:
+    message_bus = MessageBusComm()
+    if message_bus:
+        message_bus.init(type='producer', producer_id='test_1', message_type='test-1')
+        messages = []
+        for i in range(0, 10):
+            messages.append("This is test message number : " + str(i))
+        message_bus.send(messages)
+        ret = True
+    else:
         ret = False
     return ret
 
