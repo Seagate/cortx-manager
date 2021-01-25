@@ -1,10 +1,22 @@
 {
   "cluster": {
-    "csm_user": {
-      "secret": "csm"
-    },
     "DEPLOYMENT": {
       "mode": "DEV"
+    },
+    "server_nodes": {
+      "machine_id": "srvnode-1"
+    },
+    "srvnode-1": {
+      "node_type": "VM"
     }
+  },
+  "service": {
+    "cortx": {
+      "user": "csm",
+      "secret": "csm"
+    }
+  },
+  "storage": {
+    "type": "virtual"
   }
 }

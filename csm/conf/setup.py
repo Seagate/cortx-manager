@@ -56,6 +56,17 @@ class Setup:
         self._user = const.NON_ROOT_USER
         self._uid = self._gid = -1
         self._setup_info = dict()
+        self._is_env_vm = False
+
+    def _set_deployment_mode(self):
+        """
+        This Method will set a deployment Mode according to env_type.
+        :return:
+        """
+        self._get_setup_info()
+        if self._setup_info[const.NODE_TYPE] == const.VM:
+            Log.info("Running Csm Setup for VM Environment Mode.")
+            self._is_env_vm = True
 
     @staticmethod
     def _run_cmd(cmd):
@@ -75,23 +86,20 @@ class Setup:
             Log.error(f"Csm setup is failed Error: {e}, {_err}")
             raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
 
-    @staticmethod
-    def _fetch_csm_user_password(decrypt=False):
+    def _fetch_csm_user_password(self, decrypt=False):
         """
         This Method Fetches the Password for CSM User from Provisioner.
         :param decrypt:
         :return:
         """
         csm_user_pass = None
-        if Conf.get(const.CONSUMER_INDEX,
-                    f"{const.CLUSTER}>{const.DEPLOYMENT}>{const.MODE}") == "DEV":
-            Log.info("Setting Up CSM in Dev Mode.")
+        if self._is_env_vm:
             decrypt = False
         Log.info("Fetching CSM User Password from Config Store.")
         try:
             # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     f"{const.CLUSTER}>csm_user>secret")
+                                     f"service>cortx>secret")
         except KvError as e:
             Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
@@ -126,6 +134,39 @@ class Setup:
             return True
         except KeyError as err:
             return False
+
+    def _get_setup_info(self):
+        """
+        Return Setup Info from Conf Store
+        :return:
+        """
+        self._setup_info = {"node_type": "",
+                            "storage_type": ""}
+        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        machine_id = Setup._get_machine_id()
+        node_type_key = (f"{const.CLUSTER}>{server_nodes.get(machine_id, '')}"
+                         f">{const.NODE_TYPE}")
+        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                               node_type_key)
+        storage_type_key = (f"{const.STORAGE}>{server_nodes.get(machine_id, '')}"
+                         f">{const.TYPE}")
+        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                                  storage_type_key)
+
+
+
+    @staticmethod
+    def _get_machine_id():
+        """
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
+        """
+        Log.info("Fetching Machine Id.")
+        cmd = "cat /etc/machine-id"
+        proc_obj = SimpleProcess(cmd)
+        machine_id, _err, _returncode = proc_obj.run()
+        if _returncode != 0:
+            raise CsmSetupError('Unable to obtain current machine id.')
+        return machine_id
 
     @staticmethod
     def _is_group_exist(user_group):
@@ -210,10 +251,8 @@ class Setup:
             if not os.path.exists(csm_conf_target_path):
                 Log.error(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
                 raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
-            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
-            """
-            Loading databse config
-            """
+            Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_conf_target_path}")
+            Log.info("Loading database config")
             Setup.Config.load_db()
 
         @staticmethod
@@ -223,7 +262,7 @@ class Setup:
             if not os.path.exists(db_conf_target_path):
                 Log.error("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
                 raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
-            Conf.load(const.DATABASE_INDEX, Yaml(db_conf_target_path))
+            Conf.load(const.DATABASE_INDEX, f"yaml://{db_conf_target_path}")
 
         @staticmethod
         def delete():
