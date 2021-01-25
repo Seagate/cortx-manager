@@ -33,6 +33,7 @@ from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroke
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
+from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -594,3 +595,117 @@ class AmqpActuatorComm(Comm):
 
     def connect(self):
         raise Exception('connect not implemented for AMQPActuator Comm')
+
+class MessageBusComm(Comm):
+    """
+    MessageBusComm Classprovides an easy-to-use interface which can be used to
+    send or receive messages across any component on a node to any other
+    component on the other nodes
+    """
+    def __init__(self):
+        Comm.__init__(self)
+        self.message_callback = None
+        self.message_bus = None
+        self.producer_id = None
+        self.message_type = None
+        self.consumer_id = None
+        self.consumer_group = None
+        self.consumer_message_types = None
+        self.producer = None
+        self.consumer = None
+
+
+    def init(self, **kwargs):
+        """
+        Initializes the producer and consumer communication.
+        :param kwargs:
+            type: producer|consumer|both(default)
+            message_bus: Instance of MessageBus class
+            producer_id: String representing ID that uniquely identifies a producer
+            messge_type : This is essentially equivalent to the queue/topic
+            name, e.g. "sensor-key"
+            method[Optional] : Signifies if message needs to be sent in "sync"
+            (default) or in "async" manner.
+            consumer_id : String representing ID that uniquely identifies a consumer
+            consumer_group : String representing Consumer Group ID.
+                Group of consumers can process messages
+            message_type : This is essentially equivalent to the queue/topic
+                name, e.g. "delete"
+            auto_ack[Optional] : True or False. Message should be automatically
+                acknowledged (default is False)
+            offset[Optional] : Can be set to "earliest" (default) or "latest".
+                ("earliest" will cause messages to be read from the beginning)
+        """
+        self.message_bus = MessageBus()
+        self.type = kwargs.get(const.TYPE, const.BOTH)
+        #Producer related configuration
+        self.producer_id = kwargs.get(const.PRODUCER_ID)
+        self.message_type = kwargs.get(const.MESSAGE_TYPE)
+        self.method = kwargs.get(const.METHOD, const.ASYNC)
+        #Consumer related configuration
+        self.consumer_id = kwargs.get(const.CONSUMER_ID)
+        self.consumer_group = kwargs.get(const.CONSUMER_GROUP)
+        self.consumer_message_types = kwargs.get(const.CONSUMER_MSG_TYPES)
+        self.auto_ack = kwargs.get(const.AUTO_ACK, False)
+        self.offset = kwargs.get(const.OFFSET, const.EARLIEST)
+        self.callback = kwargs.get(const.CONSUMER_CALLBACK)
+        if self.type == const.PRODUCER:
+            self._initialize_producer()
+        elif self.type == const.CONSUMER:
+            self._initialize_consumer()
+        else:
+            self._initialize_producer()
+            self._initialize_consumer()
+
+    def _initialize_producer(self):
+        """ Initializing Producer """
+        self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
+                message_type=self.message_type, method=self.method)
+        Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
+                f"Message Type: {self.message_type}, method: {self.method}")
+
+    def _initialize_consumer(self):
+        """ Initializing Consumer """
+        self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
+                consumer_group=self.consumer_group, message_type=self.consumer_message_types,
+                auto_ack=self.auto_ack, offset=self.offset)
+        Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\
+                f"Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
+                f"Message Types: {self.consumer_message_types}, Offset: {self.offset}")
+
+    def connect(self):
+        raise Exception('connect not implemented for MessageBusComm')
+
+    def disconnect(self):
+        raise Exception('Disconnect not implemented for MessageBusComm')
+
+    def send(self, message, **kwargs):
+        """
+        Sends list of messages to a specifed message type.
+        :param message: List of messages.
+        :param kwargs: For future use. If we need some more config.
+        """
+        if self.producer:
+            self.producer.send(message)
+            Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+        else:
+            Log.error("Message Bus Producer not initialized.")
+
+    def recv(self, callback_fn=None, message=None):
+        """
+        Receives messages from message bus
+        :param callback_fn: This is the callback method on which we will
+        receive messages from message bus.
+        """
+        if self.consumer:
+            message = self.consumer.receive()
+            decoded_message = message.decode('utf-8')
+            Log.debug(f"Received Message: {decoded_message}")
+            callback_fn(decoded_message)
+        else:
+            Log.error("Message Bus Consumer not initialized.")
+
+    def acknowledge(self):
+        """ Acknowledge the read messages. """
+        if self.consumer:
+            self.consumer.ack()
