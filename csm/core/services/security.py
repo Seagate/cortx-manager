@@ -351,16 +351,15 @@ class SecurityService(ApplicationService):
             interval=timedelta(days=1)
         )
 
-    async def _get_name_details(self, name):
+    async def _get_name_details(self, rdns):
         """
         Get x509 Name object details (i.e Subject and Issuer)
+        rdns: Relatively Distinguished Names
         """
         name_details = {}
-        for oid_key, oid_value in x509.oid._OID_NAMES.items():
-            try:
-                name_details[oid_value] = name.get_attributes_for_oid(oid_key)[0].value
-            except IndexError as e:
-                Log.error(f"No value for {oid_value}:{e}")
+        for name in rdns:
+            if name._attributes:
+                name_details[name._attributes[0].oid._name] = name._attributes[0].value        
         return name_details
 
     async def get_certificate_details(self):
@@ -371,8 +370,8 @@ class SecurityService(ApplicationService):
         Log.debug(f"Getting SSL certificate details from {path}")
         cert = self._load_certificate(path)
         cert_details = {}
-        subject_details = await self._get_name_details(cert.subject)
-        issuer_details = await self._get_name_details(cert.issuer)
+        subject_details = await self._get_name_details(cert.subject.rdns)
+        issuer_details = await self._get_name_details(cert.issuer.rdns)
 
         cert_details[const.SUBJECT] = subject_details
         cert_details[const.ISSUER] = issuer_details

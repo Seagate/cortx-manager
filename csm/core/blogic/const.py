@@ -630,3 +630,20 @@ SERIAL_NUMBER = "serial_number"
 VERSION = "version"
 SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
 CERT_DETAILS = "cert_details"
+
+# MEssage Bus
+PRODUCER_ID = 'producer_id'
+MESSAGE_TYPE = 'message_type'
+METHOD = 'method'
+ASYNC = 'async'
+CONSUMER_ID = 'consumer_id'
+CONSUMER_GROUP = 'consumer_group'
+CONSUMER_MSG_TYPES = 'consumer_message_types'
+AUTO_ACK = 'auto_ack'
+OFFSET = 'offset'
+EARLIEST = 'earliest'
+TYPE = 'type'
+BOTH = 'both'
+PRODUCER = 'producer'
+CONSUMER = 'consumer'
+CONSUMER_CALLBACK = 'consumer_callback'
