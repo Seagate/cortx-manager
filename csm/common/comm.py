@@ -662,17 +662,17 @@ class MessageBusComm(Comm):
         """ Initializing Producer """
         self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
                 message_type=self.message_type, method=self.method)
-        Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
-                f"Message Type: {self.message_type}, method: {self.method}")
+        #Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
+        #        f"Message Type: {self.message_type}, method: {self.method}")
 
     def _initialize_consumer(self):
         """ Initializing Consumer """
         self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
                 consumer_group=self.consumer_group, message_type=self.consumer_message_types,
                 auto_ack=self.auto_ack, offset=self.offset)
-        Log.info(f"Consumer Initialized - Consumer ID : {self.self.consumer_id},"\
-                f"Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
-                f"Message Types: {self.consumer_message_types}, Offset: {self.offset}")
+        #Log.info(f"Consumer Initialized - Consumer ID : {self.self.consumer_id},"\
+        #        f"Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
+        #        f"Message Types: {self.consumer_message_types}, Offset: {self.offset}")
 
     def connect(self):
         raise Exception('connect not implemented for MessageBusComm')
@@ -680,18 +680,20 @@ class MessageBusComm(Comm):
     def disconnect(self):
         raise Exception('Disconnect not implemented for MessageBusComm')
 
-    def send(self, messages, **kwargs):
+    def send(self, message, **kwargs):
         """
         Sends list of messages to a specifed message type.
-        :param messages: List of messages.
+        :param message: List of messages.
+        :param kwargs: For future use. If we need some more config.
         """
         if self.producer:
-            self.producer.send(messages)
-            Log.debug(f"Messages: {messages} sent over {self.message_type} channel.")
+            self.producer.send(message)
+            #Log.debug(f"Messages: {messages} sent over {self.message_type} channel.")
         else:
-            Log.error("Message Bus Producer not initialized.")
+            pass
+            #Log.error("Message Bus Producer not initialized.")
 
-    def recv(self, callback_fn, message=None):
+    def recv(self, callback_fn=None, message=None):
         """
         Receives messages from message bus
         :param callback_fn: This is the callback method on which we will
@@ -702,12 +704,14 @@ class MessageBusComm(Comm):
                 if self.consumer:
                     message = self.consumer.receive()
                     decoded_message = message.decode('utf-8')
-                    Log.debug(f"Received Message: {decoded_message}")
+                    #Log.debug(f"Received Message: {decoded_message}")
                     callback_fn(decoded_message)
                 else:
-                    Log.error("Message Bus Consumer not initialized.")
+                    pass
+                    #Log.error("Message Bus Consumer not initialized.")
             except AttributeError as ex:
-                Log.error(f"Message Bus receive error: {ex}")
+                pass
+                #Log.error(f"Message Bus receive error: {ex}")
 
     def acknowledge(self):
         """ Acknowledge the read messages. """
