@@ -620,4 +620,19 @@ ES_RETRY = "ELASTICSEARCH.retry"
 ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3
-
+# MEssage Bus
+PRODUCER_ID = 'producer_id'
+MESSAGE_TYPE = 'message_type'
+METHOD = 'method'
+ASYNC = 'async'
+CONSUMER_ID = 'consumer_id'
+CONSUMER_GROUP = 'consumer_group'
+CONSUMER_MSG_TYPES = 'consumer_message_types'
+AUTO_ACK = 'auto_ack'
+OFFSET = 'offset'
+EARLIEST = 'earliest'
+TYPE = 'type'
+BOTH = 'both'
+PRODUCER = 'producer'
+CONSUMER = 'consumer'
+CONSUMER_CALLBACK = 'consumer_callback'
