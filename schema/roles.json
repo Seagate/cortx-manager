@@ -18,7 +18,7 @@
             "capacity": ["list"],
             "sysconfig": ["list", "update", "delete"],
             "users": ["list", "update", "delete", "create"],
-            "s3accounts": ["list", "create"],
+            "s3accounts": ["list", "create", "update"],
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
             "health": ["list"]
@@ -43,7 +43,7 @@
         "permissions": {
             "permissions": ["list"],
             "s3accounts": ["list", "update", "delete"],
-            "s3iamusers": ["list", "delete", "create"],
+            "s3iamusers": ["list", "update", "delete", "create"],
             "s3buckets": ["list", "update", "delete", "create"],
             "s3bucketpolicy": ["list", "delete", "create"],
             "s3accesskeys": ["list", "update", "delete", "create"]

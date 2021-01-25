@@ -104,6 +104,38 @@ class IamUsersService(S3BaseService):
         iam_users_list["s3_urls"] = await service_urls.get_s3_uris()
         return iam_users_list
 
+    @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
+    async def patch_user(self, s3_session: Dict, user_name: str, password: str,
+                         require_reset: bool = False) -> Dict:
+        """
+        Patch existing IAM user's loging profile.
+        :param user_name: the user name
+        :param password: the password to be updated.
+        :param require_reset: if set, the password will be reset
+        :returns: a dictionary describing the updated account.
+                  In case of an error, an exception is raised.
+        """
+        Log.debug(f"Patch IAM user user_name:{user_name}")
+        client = await self.fetch_iam_client(s3_session)
+        response = {
+            "user_name": user_name
+        }
+        # Try to create login profile in case it doesn't exist
+        new_profile = await client.create_user_login_profile(user_name, password)
+        if isinstance(new_profile, IamError) and \
+            new_profile.error_code != IamErrors.EntityAlreadyExists:
+            self._handle_error(new_profile)
+
+        if isinstance(new_profile, IamError):
+            # Profile already exists, set new password
+            Log.debug(f"Update Login Profile for user {user_name}")
+            new_profile = await client.update_user_login_profile(user_name, password)
+
+        if isinstance(new_profile, IamError):
+            # Update failed
+            self._handle_error(new_profile)
+        return response
+
     @Log.trace_method(Log.DEBUG)
     async def delete_user(self, s3_session: Dict, user_name: str) -> Dict:
         """
