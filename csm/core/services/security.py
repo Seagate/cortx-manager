@@ -359,7 +359,7 @@ class SecurityService(ApplicationService):
         name_details = {}
         for name in rdns:
             if name._attributes:
-                name_details[name._attributes[0].oid._name] = name._attributes[0].value        
+                name_details[name._attributes[0].oid._name] = name._attributes[0].value
         return name_details
 
     async def get_certificate_details(self):
