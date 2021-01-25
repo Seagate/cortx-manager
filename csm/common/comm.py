@@ -698,17 +698,13 @@ class MessageBusComm(Comm):
         :param callback_fn: This is the callback method on which we will
         receive messages from message bus.
         """
-        while True:
-            try:
-                if self.consumer:
-                    message = self.consumer.receive()
-                    decoded_message = message.decode('utf-8')
-                    Log.debug(f"Received Message: {decoded_message}")
-                    callback_fn(decoded_message)
-                else:
-                    Log.error("Message Bus Consumer not initialized.")
-            except AttributeError as ex:
-                Log.error(f"Message Bus receive error: {ex}")
+        if self.consumer:
+            message = self.consumer.receive()
+            decoded_message = message.decode('utf-8')
+            Log.debug(f"Received Message: {decoded_message}")
+            callback_fn(decoded_message)
+        else:
+            Log.error("Message Bus Consumer not initialized.")
 
     def acknowledge(self):
         """ Acknowledge the read messages. """
