@@ -40,14 +40,14 @@ def tmain(argp, argv):
         Conf.load(Const.INVENTORY_INDEX, Yaml(is_file_exists(Const.INVENTORY_FILE)))
         Conf.load(Const.COMPONENTS_INDEX, Yaml(is_file_exists(Const.COMPONENTS_CONF)))
         Conf.load(Const.DATABASE_INDEX, Yaml(is_file_exists(Const.DATABASE_CONF)))
-        if ( Conf.get(Const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != Const.DEV ):
+        if ( Conf.get(Const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != Const.DEV ):
             Conf.decrypt_conf()
         if argp.l:
             Log.init("csm_test", log_path=argp.l)
         else:
             Log.init("csm_test",
-             log_path=Conf.get(Const.CSM_GLOBAL_INDEX, "Log.log_path"),
-             level=Conf.get(Const.CSM_GLOBAL_INDEX, "Log.log_level"))
+             log_path=Conf.get(Const.CSM_GLOBAL_INDEX, "Log>log_path"),
+             level=Conf.get(Const.CSM_GLOBAL_INDEX, "Log>log_level"))
         test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())
         if args is None: args = {}
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.errors import CsmError
     from csm.common.payload import *
-    from csm.common.conf import Conf
+    from cortx.utils.conf_store.conf_store import Conf
     from csm.test.common import TestFailed, Const
 
     try:

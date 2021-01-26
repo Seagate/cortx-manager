@@ -16,7 +16,7 @@
 import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 
 def init(args):

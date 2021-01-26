@@ -66,7 +66,7 @@ class CsmSetupCommand:
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    from csm.common.conf import Conf
+    from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
     from csm.cli.command import CommandParser
     from csm.core.blogic import const

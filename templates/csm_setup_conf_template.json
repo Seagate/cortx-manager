@@ -1,5 +1,6 @@
 {
   "cluster": {
+    "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
     "DEPLOYMENT": {
       "mode": "DEV"
     },

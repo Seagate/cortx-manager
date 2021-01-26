@@ -23,7 +23,6 @@ from csm.core.blogic import const
 from csm.conf.uds import UDSConfigGenerator
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.process import SimpleProcess
 
 class Configure(Setup):
     """
@@ -41,7 +40,6 @@ class Configure(Setup):
 
     async def execute(self, command):
         """
-
         :param command:
         :return:
         """
@@ -64,9 +62,11 @@ class Configure(Setup):
                 machine_id = Setup._get_machine_id()
                 data_nw = Configure._get_data_nw_info(machine_id)
                 Configure._set_db_host_addr('consul',
-                                        data_nw.get('public_ip', 'localhost'))
+                                            data_nw.get('roaming_ip',
+                                                        'localhost'))
                 Configure._set_db_host_addr('es',
-                                        data_nw.get('private_ip', 'localhost'))
+                                            data_nw.get('private_ip',
+                                                        'localhost'))
                 Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
                 Configure._set_rmq_cluster_nodes()

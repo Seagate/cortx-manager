@@ -23,7 +23,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.test.common import TestFailed, TestProvider, Const
 from csm.core.blogic import const
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 def init(args):
     pass
@@ -57,8 +57,8 @@ def test_kibana(args):
     try:
         time.sleep(5)
         Log.console("Testing Kibana service")
-        host = Conf.get(const.CSM_GLOBAL_INDEX, "STATS.PROVIDER.host")
-        port = Conf.get(const.CSM_GLOBAL_INDEX, "STATS.PROVIDER.port")
+        host = Conf.get(const.CSM_GLOBAL_INDEX, "STATS>PROVIDER>host")
+        port = Conf.get(const.CSM_GLOBAL_INDEX, "STATS>PROVIDER>port")
         url = "http://" + host + ":" + str(port)
         resp = process_request(url)
         if resp.status_code != 200:
@@ -100,10 +100,10 @@ def test_rabbitmq(args):
     """
     try:
         Log.console("Testing rabbitmq service")
-        hosts = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.hosts")
-        username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.username")
-        password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.password")
-        virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL.virtual_host")
+        hosts = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>hosts")
+        username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>username")
+        password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>password")
+        virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>virtual_host")
         ampq_hosts = [f'amqp://{username}:{password}@{host}/{virtual_host}' \
                       for host in hosts]
         ampq_hosts = [pika.URLParameters(host) for host in ampq_hosts]

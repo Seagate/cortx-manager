@@ -35,27 +35,31 @@ class CsmAgent:
     @staticmethod
     def init():
         Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
+        syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
+        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
+        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         Log.init("csm_agent",
-               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
-               syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-               backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
-               file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log.file_size"),
-               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
-        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
+               syslog_port= int(syslog_port) if syslog_port else None,
+               backup_count= int(backup_count) if backup_count else None,
+               file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
+               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
+        if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Conf.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = Yaml(const.DATABASE_CONF).load()
-        db_config['databases']["es_db"][const.PORT] = int(
-            db_config['databases']["es_db"][const.PORT])
-        db_config['databases']["es_db"]["replication"] = int(
-            db_config['databases']["es_db"]["replication"])
-        db_config['databases']["consul_db"][const.PORT] = int(
-            db_config['databases']["consul_db"][const.PORT])
+        db_config['databases']["es_db"]["config"][const.PORT] = int(
+            db_config['databases']["es_db"]["config"][const.PORT])
+        db_config['databases']["es_db"]["config"]["replication"] = int(
+            db_config['databases']["es_db"]["config"]["replication"])
+        db_config['databases']["consul_db"]["config"][const.PORT] = int(
+            db_config['databases']["consul_db"]["config"][const.PORT])
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        Conf.load(const.DATABASE_INDEX, Yaml(const.DATABASE_CONF))
+        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
+
         #Remove all Old Shutdown Cron Jobs
         CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
@@ -72,7 +76,7 @@ class CsmAgent:
         CsmRestApi.init(alerts_service)
 
         # settting usl polling
-        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log.usl_polling_log")
+        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log>usl_polling_log")
         CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
 
         # system status
@@ -143,7 +147,7 @@ class CsmAgent:
             # TODO: consider a more safe storage
             params = {
                 "username": const.NON_ROOT_USER,
-                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
+                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
@@ -161,9 +165,9 @@ class CsmAgent:
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.hotfix_store_path'), provisioner, update_repo)
+            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
-                Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE.firmware_store_path'), update_repo)
+                Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'), update_repo)
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(db, provisioner,
             security_service, system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
@@ -211,7 +215,7 @@ class CsmAgent:
     def run():
         https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
-        port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_AGENT.port')
+        port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_AGENT>port')
 
         if not Options.debug:
             CsmAgent._daemonize()

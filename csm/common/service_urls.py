@@ -16,7 +16,7 @@
 
 from typing import Union, List
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 
 
@@ -42,9 +42,9 @@ class ServiceUrls:
         :returns: management URL as a string.
         """
         network_configuration = await self._provisioner.get_network_configuration()
-        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.ssl_check')
+        ssl_check = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_WEB>ssl_check')
         port = \
-            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE.CSM_WEB.port') or const.WEB_DEFAULT_PORT
+            Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_WEB>port') or const.WEB_DEFAULT_PORT
         scheme = 'https' if ssl_check else 'http'
         url = f'{scheme}://{network_configuration.mgmt_vip}:{port}'
         return url
@@ -59,7 +59,7 @@ class ServiceUrls:
         network_configuration = await self._provisioner.get_network_configuration()
         ip = f'{network_configuration.cluster_ip}'
         if scheme == 's3':
-            port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.s3_port')
+            port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>s3_port')
             uri = f'{scheme}://{ip}:{port}'
         else:
             uri = f'{scheme}://{ip}'

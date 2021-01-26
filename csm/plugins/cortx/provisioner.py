@@ -28,7 +28,7 @@ from json import JSONDecodeError
 from csm.common.payload import JsonMessage
 import provisioner
 import provisioner.freeze
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 
 class PackageValidationError(InvalidRequest):
