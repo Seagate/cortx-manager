@@ -350,3 +350,35 @@ class SecurityService(ApplicationService):
                            tzinfo=timezone.utc),
             interval=timedelta(days=1)
         )
+
+    async def _get_name_details(self, rdns):
+        """
+        Get x509 Name object details (i.e Subject and Issuer)
+        rdns: Relatively Distinguished Names
+        """
+        name_details = {}
+        for name in rdns:
+            if name._attributes:
+                name_details[name._attributes[0].oid._name] = name._attributes[0].value
+        return name_details
+
+    async def get_certificate_details(self):
+        """
+        Get current certificate details
+        """
+        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
+        Log.debug(f"Getting SSL certificate details from {path}")
+        cert = self._load_certificate(path)
+        cert_details = {}
+        subject_details = await self._get_name_details(cert.subject.rdns)
+        issuer_details = await self._get_name_details(cert.issuer.rdns)
+
+        cert_details[const.SUBJECT] = subject_details
+        cert_details[const.ISSUER] = issuer_details
+        cert_details[const.NOT_VALID_AFTER] = cert.not_valid_after
+        cert_details[const.NOT_VALID_BEFORE] = cert.not_valid_before
+        cert_details[const.SERIAL_NUMBER] = cert.serial_number
+        cert_details[const.VERSION] = cert.version
+
+        Log.debug(f"SSL certificate details: {cert_details}")
+        return  { const.CERT_DETAILS: cert_details }

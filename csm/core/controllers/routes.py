@@ -30,7 +30,7 @@ from csm.core.controllers.s3.access_keys import S3AccessKeysListView, S3AccessKe
 from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
 from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
 from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
-                                           SecurityUploadView)
+                                           SecurityUploadView, SecurityDetailsView)
 from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.version import ProductVersionView
 from csm.core.controllers.health import HealthResourceView
