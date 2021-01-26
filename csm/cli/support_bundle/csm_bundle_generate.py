@@ -17,7 +17,7 @@ import os
 import errno
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar, Json
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
@@ -41,12 +41,12 @@ class CSMBundle:
         :return:
         """
         # Read Config to Fetch Log File Path
-        csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
-        uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.uds_log_path")
-        es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_cluster_log_path")
-        es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_gc_log_path")
-        es_indexing_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_indexing_log_path")
-        es_search_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.es_search_log_path")
+        csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
+        uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>uds_log_path")
+        es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_cluster_log_path")
+        es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_gc_log_path")
+        es_indexing_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_indexing_log_path")
+        es_search_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_search_log_path")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
@@ -58,7 +58,8 @@ class CSMBundle:
                                             es_indexing_log_path,
                                             es_search_log_path]}
         if component_name == "alerts":
-            alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.alerts_filename")
+            alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX,
+                                       "SUPPORT_BUNDLE>alerts_filename")
             # Fetch alerts for support bundle.
             alerts_data = await CSMBundle.fetch_and_save_alerts()
             alerts_file_path = os.path.join(path, alerts_filename)

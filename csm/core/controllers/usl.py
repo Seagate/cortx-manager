@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Type
 from csm.common.decorators import Decorators
 from csm.common.errors import CsmError, CsmPermissionDenied, CsmNotFoundError
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.permission_names import Resource, Action
 from csm.common.runtime import Options
 from csm.core.blogic import const
@@ -76,7 +76,7 @@ class _SecuredView(_View):
         self._validate_api_key()
 
     def _validate_api_key(self) -> None:
-        if not Conf.get(const.CSM_GLOBAL_INDEX, 'UDS.api_key_security'):
+        if not Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>api_key_security'):
             return
         req_key = self.request.headers.get(_SecuredView.USL_API_KEY_HTTP_HEAD)
         key_correct = self._service._api_key_dispatch.validate_key(req_key)

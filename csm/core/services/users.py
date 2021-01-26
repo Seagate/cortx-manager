@@ -33,7 +33,7 @@ from csm.core.blogic import const
 from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 class UserManager:
     """
@@ -179,7 +179,7 @@ class CsmUserService(ApplicationService):
         # implement user role management. Replace this hardcoded values
         # with proper constants.
         roles = [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]
-        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT.mode") != const.DEV ):
+        if ( Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV ):
             await self._provisioner.create_system_user(user_id, password)
         user = User.instantiate_csm_user(user_id, password, email=email, roles=roles,
                                          alert_notification=True)

@@ -75,9 +75,9 @@ class BaseClient:
         conn = self._create_boto_connection_object(aws_access_key_id=access_key,
                                                    aws_secret_access_key=secret_key,
                                                    host=config.host,
-                                                   port=config.port,
+                                                   port=int(config.port) if config.port else config.port,
                                                    is_secure=config.use_ssl,
-                                                   debug=(2 if config.debug else 0),
+                                                   debug=(2 if config.debug == 'true' else 0),
                                                    validate_certs=config.verify_ssl_cert,
                                                    security_token=session_token
                                                    )
@@ -440,6 +440,31 @@ class IamClient(BaseClient):
             return self._create_error(code, body)
         else:
             return None
+
+    @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
+    async def update_user_login_profile(self, user_name, user_password,
+                                        require_reset=False) -> Union[bool, IamError]:
+        """
+        User's login profile update.
+        Note that it is required to provide S3 account credentials.
+
+        :returns: True in case of success, IamError otherwise
+        """
+        Log.debug(f"Update user login profile: user_name:{user_name}, "
+                  f"require_reset:{require_reset}")
+
+        params = {
+            'UserName': user_name,
+            'Password': user_password,
+            'PasswordResetRequired': require_reset
+        }
+
+        (code, body) = await self._query_conn('UpdateLoginProfile', params, '/', 'POST')
+        Log.debug(f"Update user profile status: {code}")
+        if code != 200:
+            return self._create_error(code, body)
+        else:
+            return True
 
     @Log.trace_method(Log.DEBUG)
     async def list_users(self, marker=None,

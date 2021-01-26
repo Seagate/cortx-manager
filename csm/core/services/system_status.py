@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV
@@ -57,8 +57,8 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting consul status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.host')
-        port = Conf.get(const.DATABASE_INDEX, 'databases.consul_db.config.port')
+        host = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>host')
+        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         # Validation throws exception on failure
         ConsulV().validate('service', [host, port])
         return const.SYSTEM_STATUS_SUCCESS
@@ -69,8 +69,8 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.host')
-        port = Conf.get(const.DATABASE_INDEX, 'databases.es_db.config.port')
+        host = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>host')
+        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         # Validation throws exception on failure
         ElasticsearchV().validate('service', [host, port])
         return const.SYSTEM_STATUS_SUCCESS

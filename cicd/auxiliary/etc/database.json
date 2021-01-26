@@ -4,7 +4,7 @@
             "import_path": "ConsulDB",
             "config": {
                 "hosts": ["127.0.0.1"],
-                "port": 8500,
+                "port": "8500",
                 "login": "",
                 "password": ""
             }
