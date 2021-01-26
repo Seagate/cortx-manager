@@ -167,9 +167,6 @@ class Configure(Setup):
                                f"cluster>{each_node}>node_id")
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}>{const.NODE1}",
                      f"{const.NODE}{node_id}")
-        else:
-            Log.error("Unable to fetch system node ids info.")
-            raise CsmSetupError("Unable to fetch system node ids info.")
 
     @staticmethod
     def _get_data_nw_info(machine_id):
