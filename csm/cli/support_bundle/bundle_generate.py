@@ -22,7 +22,7 @@ from csm.common.payload import Yaml, Tar
 from csm.core.blogic import const
 from datetime import datetime
 from csm.common.process import SimpleProcess
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 
 ERROR = "error"
@@ -45,13 +45,13 @@ class ComponentsBundle:
         """
         #Initilize Logger for Uploading the Final Comment to ElasticSearch.
         Log.init("support_bundle",
-                 syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_server"),
-                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log.syslog_port"),
-                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log.total_files"),
+                 syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
+                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port"),
+                 backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files"),
                  file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX,
-                                          "Log.file_size"),
-                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path"),
-                 level=Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_level"))
+                                          "Log>file_size"),
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+                 level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
         result = "Success"
         if level == ERROR:
             result = ERROR.capitalize()
@@ -144,7 +144,7 @@ class ComponentsBundle:
             return None
         # Path Location for creating Support Bundle.
         path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
-                                     f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}"))
+                                     f"{const.SUPPORT_BUNDLE}>{const.SB_BUNDLE_PATH}"))
         if os.path.isdir(path):
             try:
                 shutil.rmtree(path)
@@ -181,7 +181,7 @@ class ComponentsBundle:
                     Log.debug(f"Started thread -> {thread_obj.ident}  Component -> {each_component}")
                     threads.append(thread_obj)
         directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                  f"{const.SUPPORT_BUNDLE}.{const.SB_BUNDLE_PATH}")
+                                  f"{const.SUPPORT_BUNDLE}>{const.SB_BUNDLE_PATH}")
         tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
         # Create Summary File for Tar.
@@ -206,7 +206,7 @@ class ComponentsBundle:
 
         Log.debug(f'Summary file created')
         symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
-            f"{const.SUPPORT_BUNDLE}.{const.SB_SYMLINK_PATH}")
+            f"{const.SUPPORT_BUNDLE}>{const.SB_SYMLINK_PATH}")
         if os.path.exists(symlink_path):
             try:
                 shutil.rmtree(symlink_path)

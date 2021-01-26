@@ -17,18 +17,16 @@ databases:
     es_db:
         import_path: "ElasticSearchDB"
         config:
-            hosts:
-            - 127.0.0.1
-            port: 9200
+            host: 127.0.0.1
+            port: "9200"
             login: ""
             password: ""
             replication: 1
     consul_db:
         import_path: "ConsulDB"
         config:
-            hosts:
-            - 127.0.0.1
-            port: 8500
+            host: 127.0.0.1
+            port: "8500"
             login: ""
             password: ""
 models:

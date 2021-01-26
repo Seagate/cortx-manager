@@ -40,7 +40,7 @@ from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable, Dict
 from csm.common.payload import Payload, Json, JsonMessage
 import asyncio
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 
 ALERTS_MSG_INVALID_DURATION = "alert_invalid_duration"

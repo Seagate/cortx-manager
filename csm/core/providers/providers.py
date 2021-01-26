@@ -19,7 +19,7 @@ from threading import Thread
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.core.blogic.email_conf import EmailConfig
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 import getpass
 

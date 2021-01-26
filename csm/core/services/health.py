@@ -18,7 +18,7 @@ from typing import Optional, Iterable, Dict
 from csm.common.services import Service, ApplicationService
 from csm.common.payload import Payload, Json
 from csm.core.blogic.models.alerts import AlertModel
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.observer import Observable
 from threading import Event, Thread
@@ -113,7 +113,7 @@ class HealthAppService(ApplicationService):
 
     def _init_health_schema(self):
         health_schema_path = Conf.get(const.CSM_GLOBAL_INDEX,
-                                      'HEALTH.health_schema')
+                                      'HEALTH>health_schema')
         try:
             self._health_schema = Payload(Json(health_schema_path))
             self.repo.health_schema = self._health_schema
