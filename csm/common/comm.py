@@ -23,7 +23,7 @@ import errno
 from paramiko.ssh_exception import SSHException
 from csm.common.payload import *
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError
 import pika
@@ -188,48 +188,48 @@ class AmqpChannel(Channel):
         self.is_actuator = kwargs.get(const.IS_ACTUATOR, False)
         self.is_node1 = kwargs.get(const.IS_NODE1, False)
         self.node1 = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.NODE1}")
+                f"{const.CHANNEL}>{const.NODE1}")
         self.node2 = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.NODE2}")
+                f"{const.CHANNEL}>{const.NODE2}")
         self.hosts = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.RMQ_HOSTS}")
-        self.port = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.PORT}")
+                f"{const.CHANNEL}>{const.RMQ_HOSTS}")
+        self.port = int(Conf.get(const.CSM_GLOBAL_INDEX, \
+                f"{const.CHANNEL}>{const.PORT}"))
         self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.VHOST}")
+                f"{const.CHANNEL}>{const.VHOST}")
         self.username = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.UNAME}")
+                f"{const.CHANNEL}>{const.UNAME}")
         self.password = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.PASS}")
+                f"{const.CHANNEL}>{const.PASS}")
         self.exchange_type = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.EXCH_TYPE}")
+                f"{const.CHANNEL}>{const.EXCH_TYPE}")
         self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.RETRY_COUNT}")
-        self.durable = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.DURABLE}")
-        self.exclusive = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}.{const.EXCLUSIVE}")
+                f"{const.CHANNEL}>{const.RETRY_COUNT}")
+        self.durable = (Conf.get(const.CSM_GLOBAL_INDEX,
+                f"{const.CHANNEL}>{const.DURABLE}") == 'true')
+        self.exclusive = (Conf.get(const.CSM_GLOBAL_INDEX,
+                f"{const.CHANNEL}>{const.EXCLUSIVE}") == 'true')
         self._setExchangeandQueue()
 
     def _setExchangeandQueue(self):
         if not self.is_actuator:
             self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}.{const.EXCH}")
+                    f"{const.CHANNEL}>{const.EXCH}")
             self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}.{const.EXCH_QUEUE}")
+                    f"{const.CHANNEL}>{const.EXCH_QUEUE}")
             self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}.{const.ROUTING_KEY}")
+                    f"{const.CHANNEL}>{const.ROUTING_KEY}")
         elif self.is_actuator:
             self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}.{const.ACT_REQ_EXCH}")
+                    f"{const.CHANNEL}>{const.ACT_REQ_EXCH}")
             self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}.{const.ACT_REQ_EXCH_QUEUE}") 
+                    f"{const.CHANNEL}>{const.ACT_REQ_EXCH_QUEUE}")
             if self.is_node1:
                 self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                        f"{const.CHANNEL}.{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node1
+                        f"{const.CHANNEL}>{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node1
             else:
                 self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                        f"{const.CHANNEL}.{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node2
+                        f"{const.CHANNEL}>{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node2
 
     def init(self):
         """

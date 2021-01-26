@@ -16,7 +16,7 @@
 from typing import Any, Optional
 
 from csm.core.blogic import const
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.data.models.s3 import S3ConnectionConfig, IamErrors, IamError

@@ -19,7 +19,7 @@ from enum import Enum
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from cortx.utils.log import Log
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.plugins.cortx.s3 import S3Plugin
 from csm.core.data.models.s3 import S3ConnectionConfig, IamError
@@ -188,9 +188,9 @@ class S3AuthPolicy(AuthPolicy):
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         cfg = S3ConnectionConfig()
-        cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.host')
-        cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.iam_port')
-        cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3.max_retries_num')
+        cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>host')
+        cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>iam_port')
+        cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
 
         Log.debug(f'Authenticating {user.user_id}'
                   f' with S3 IAM server {cfg.host}:{cfg.port}')

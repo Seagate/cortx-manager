@@ -18,7 +18,7 @@ import subprocess
 
 from cortx.utils.log import Log
 from csm.common.payload import *
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import CsmError
 from csm.core.blogic import const
 from csm.common.ha_framework import PcsHAFramework, PcsResourceAgent
@@ -30,8 +30,8 @@ class CsmResourceAgent(PcsResourceAgent):
         super(CsmResourceAgent, self).__init__(resources)
         self._resources = resources
         self._csm_index = const.CSM_GLOBAL_INDEX
-        self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.primary")
-        self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA.secondary")
+        self._primary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>primary")
+        self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>secondary")
 
     def init(self, force_flag):
         ''' Perform initalization for CSM resources '''
@@ -54,10 +54,10 @@ class CsmResourceAgent(PcsResourceAgent):
             self._ra_init()
 
             for resource in self._resources:
-                service = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".service")
-                provider = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".provider")
-                interval = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".interval")
-                timeout = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES." + resource + ".timeout")
+                service = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES>" + resource + ">service")
+                provider = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES>" + resource + ">provider")
+                interval = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES>" + resource + ">interval")
+                timeout = Conf.get(const.CSM_GLOBAL_INDEX, "RESOURCES>" + resource + ">timeout")
                 self._init_resource(resource, service, provider, interval, timeout)
 
             # TODO- check score for failback

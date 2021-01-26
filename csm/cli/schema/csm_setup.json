@@ -1,243 +1,274 @@
 {
-    "name": "csm_setup",
-    "description": "CSM Setup Command",
-    "sub_commands": [
+  "name": "csm_setup",
+  "description": "CSM Setup Command",
+  "sub_commands": [
+    {
+      "name": "init",
+      "description": "Initialize CSM",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
         {
-            "name": "init",
-            "description": "Initialize CSM",
-            "need_confirmation": false,
-            "permissions_tag": "update",
-            "args": [
-                {
-                  "flag": "-p",
-                  "dest": "Product",
-                  "help": "Product name",
-                  "default": "cortx",
-                  "type": "str",
-                  "choices": [
-                    "cortx"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "-f",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "force"
-                },
-                {
-                  "flag": "-c",
-                  "dest": "Component",
-                  "help": "Component name",
-                  "default": "all",
-                  "type": "str",
-                  "choices": [
-                    "backend",
-                    "frontend",
-                    "all"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "args",
-                    "default": [],
-                    "suppress_help": true,
-                    "nargs": "?"
-                }
-            ],
-            "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
-            }
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "name": "post_install",
-            "description": "Perform post_install for csm",
-            "need_confirmation": false,
-            "permissions_tag": "update",
-            "args": [
-                {
-                  "flag": "-p",
-                  "dest": "Product",
-                  "help": "Product name",
-                  "default": "cortx",
-                  "type": "str",
-                  "choices": [
-                    "cortx"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                  "flag": "-c",
-                  "dest": "Component",
-                  "help": "Component name",
-                  "default": "all",
-                  "type": "str",
-                  "choices": [
-                    "backend",
-                    "frontend",
-                    "all"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "-f",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "force"
-                },
-                {
-                    "flag": "args",
-                    "default": [],
-                    "suppress_help": true,
-                    "nargs": "?"
-                }
-            ],
-            "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
-            }
+          "flag": "-p",
+          "dest": "Product",
+          "help": "Product name",
+          "default": "cortx",
+          "type": "str",
+          "choices": [
+            "cortx"
+          ],
+          "nargs": "?"
         },
         {
-            "name": "config",
-            "description": "Config CSM",
-            "need_confirmation": false,
-            "permissions_tag": "update",
-            "args": [
-                {
-                  "flag": "-p",
-                  "dest": "Product",
-                  "help": "Product name",
-                  "default": "cortx",
-                  "type": "str",
-                  "choices": [
-                    "cortx"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "-f",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "force"
-                },
-                {
-                    "flag": "--debug",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "config for dev mode"
-                },
-                {
-                  "flag": "-c",
-                  "dest": "Component",
-                  "help": "Component name",
-                  "default": "all",
-                  "type": "str",
-                  "choices": [
-                    "backend",
-                    "frontend",
-                    "all"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "--uds-public-ip",
-                    "default": null,
-                    "help": "UDS public IP"
-                },
-                {
-                    "flag": "args",
-                    "default": [],
-                    "suppress_help": true,
-                    "nargs": "?"
-                }
-            ],
-            "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
-            }
+          "flag": "-f",
+          "action": "store_true",
+          "default": false,
+          "help": "force"
         },
         {
-            "name": "reset",
-            "description": "Perform reset for csm",
-            "need_confirmation": false,
-            "permissions_tag": "update",
-            "args": [
-                {
-                  "flag": "-p",
-                  "dest": "Product",
-                  "help": "Product name",
-                  "default": "cortx",
-                  "type": "str",
-                  "choices": [
-                    "cortx"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                  "flag": "-c",
-                  "dest": "Component",
-                  "help": "Component name",
-                  "default": "all",
-                  "type": "str",
-                  "choices": [
-                    "backend",
-                    "frontend",
-                    "all"
-                  ],
-                  "nargs": "?"
-                },
-                {
-                    "flag": "--hard",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "Hard Reset"
-                },
-                {
-                    "flag": "--soft",
-                    "action": "store_true",
-                    "default": false,
-                    "help": "Soft reset"
-                },
-                {
-                    "flag": "args",
-                    "default": [],
-                    "suppress_help": true,
-                    "nargs": "?"
-                }
-            ],
-            "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
-            }
+          "flag": "-c",
+          "dest": "Component",
+          "help": "Component name",
+          "default": "all",
+          "type": "str",
+          "choices": [
+            "backend",
+            "frontend",
+            "all"
+          ],
+          "nargs": "?"
         },
         {
-            "name": "refresh_config",
-            "description": "Refresh Context for CSM after Node Replacement.",
-            "need_confirmation": false,
-            "permissions_tag": "update",
-            "args": [
-                {
-                    "flag": "args",
-                    "default": [],
-                    "suppress_help": true,
-                    "nargs": "?"
-                }
-            ],
-            "comm": {
-            "type":"CLI",
-            "method": "cmd",
-            "target": "",
-            "version": "v1"
-            }
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
         }
-    ]
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.init",
+        "method": "execute",
+        "class": "Init",
+        "is_static": false
+      }
+    },
+    {
+      "name": "post_install",
+      "description": "Perform post_install for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "-p",
+          "dest": "Product",
+          "help": "Product name",
+          "default": "cortx",
+          "type": "str",
+          "choices": [
+            "cortx"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "-c",
+          "dest": "Component",
+          "help": "Component name",
+          "default": "all",
+          "type": "str",
+          "choices": [
+            "backend",
+            "frontend",
+            "all"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "-f",
+          "action": "store_true",
+          "default": false,
+          "help": "force"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.post_install",
+        "method": "execute",
+        "class": "PostInstall",
+        "is_static": false
+      }
+    },
+    {
+      "name": "config",
+      "description": "Config CSM",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "-p",
+          "dest": "Product",
+          "help": "Product name",
+          "default": "cortx",
+          "type": "str",
+          "choices": [
+            "cortx"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "-f",
+          "action": "store_true",
+          "default": false,
+          "help": "force"
+        },
+        {
+          "flag": "--debug",
+          "action": "store_true",
+          "default": false,
+          "help": "config for dev mode"
+        },
+        {
+          "flag": "-c",
+          "dest": "Component",
+          "help": "Component name",
+          "default": "all",
+          "type": "str",
+          "choices": [
+            "backend",
+            "frontend",
+            "all"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "--uds-public-ip",
+          "default": null,
+          "help": "UDS public IP"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.configure",
+        "method": "execute",
+        "class": "Configure",
+        "is_static": false
+      }
+    },
+    {
+      "name": "reset",
+      "description": "Perform reset for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "-p",
+          "dest": "Product",
+          "help": "Product name",
+          "default": "cortx",
+          "type": "str",
+          "choices": [
+            "cortx"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "-c",
+          "dest": "Component",
+          "help": "Component name",
+          "default": "all",
+          "type": "str",
+          "choices": [
+            "backend",
+            "frontend",
+            "all"
+          ],
+          "nargs": "?"
+        },
+        {
+          "flag": "--hard",
+          "action": "store_true",
+          "default": false,
+          "help": "Hard Reset"
+        },
+        {
+          "flag": "--soft",
+          "action": "store_true",
+          "default": false,
+          "help": "Soft reset"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.reset",
+        "method": "execute",
+        "class": "Reset",
+        "is_static": false
+      }
+    },
+    {
+      "name": "refresh_config",
+      "description": "Refresh Context for CSM after Node Replacement.",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.refresh_config",
+        "method": "execute",
+        "class": "RefreshConfig",
+        "is_static": false
+      }
+    }
+  ]
 }

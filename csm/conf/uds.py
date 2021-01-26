@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.conf.salt import SaltWrappers
 from csm.core.blogic import const
 

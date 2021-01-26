@@ -26,10 +26,13 @@ ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
 CSM_SETUP_LOG_DIR = "/tmp"
 CORTXCLI_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
+CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
+                          f'{CORTXCLI_CONF_FILE_NAME}')
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
@@ -37,6 +40,8 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
+CSM_SETUP_PASS = ":PASS"
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
 CORTXCLI_SETUP_CMD = 'cortxcli_setup'
@@ -109,6 +114,8 @@ CSM_GLOBAL_INDEX = 'CSM'
 INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
+CONSUMER_INDEX = 'CONSUMER'
+CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 
 # AMQP Consumer Tag
 CONSUMER_TAG = 'AMQP_CONSUMER'
@@ -147,6 +154,7 @@ CSM_MANAGE_ROLE = 'manage'
 CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
+CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
@@ -159,6 +167,7 @@ SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
 SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
 SSH_CONFIG='{}/config'.format(SSH_DIR)
 PRIMARY_ROLE='primary'
+CONFIG_URL = 'config_url'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -314,12 +323,12 @@ PERMISSIONS = "permissions"
 LYVE_PILOT = "lyve_pilot"
 
 # S3
-S3_HOST = 'S3.host'
-S3_IAM_PORT = 'S3.iam_port'
-S3_PORT = 'S3.s3_port'
-S3_MAX_RETRIES_NUM = 'S3.max_retries_num'
-S3_LDAP_LOGIN = 'S3.ldap_login'
-S3_LDAP_PASSWORD = 'S3.ldap_password'
+S3_HOST = 'S3>host'
+S3_IAM_PORT = 'S3>iam_port'
+S3_PORT = 'S3>s3_port'
+S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
+S3_LDAP_LOGIN = 'S3>ldap_login'
+S3_LDAP_PASSWORD = 'S3>ldap_password'
 
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
 S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
@@ -506,10 +515,10 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "sspl",
-    "S3.ldap_password": "openldap"
+    "CHANNEL>password": "sspl",
+    "S3>ldap_password": "openldap"
 }
-CLUSTER_ID_KEY = "PROVISIONER.cluster_id"
+CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -533,12 +542,15 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='get_setup_info'
+GET_SETUP_INFO='cluster>{server-node}>node_type'
+NODE_TYPE="node_type"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
 DEV = 'dev'
+VM = 'VM'
+ENV_TYPE = 'env_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -578,7 +590,7 @@ SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
-HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
+HEALTH_SCHEMA_KEY = "HEALTH>health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -608,15 +620,17 @@ DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
+TYPE = 'type'
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+STORAGE = "storage"
 STORAGE_TYPE_VIRTUAL = "virtual"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
-ES_RETRY = "ELASTICSEARCH.retry"
+ES_RETRY = "ELASTICSEARCH>retry"
 ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3

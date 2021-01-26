@@ -16,7 +16,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.access import Query, SortBy, SortOrder
 from cortx.utils.log import Log
 from csm.common.errors import CSM_OPERATION_NOT_PERMITTED
@@ -72,7 +72,7 @@ class MaintenanceAppService(ApplicationService):
             node_info = await self._loop.run_in_executor(self._executor,
                                                 self._ha.get_nodes)
             for each_resource in node_info.get(const.NODE_STATUS):
-                each_resource[const.HOSTNAME] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_resource[const.NAME]}")
+                each_resource[const.HOSTNAME] = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}>{each_resource[const.NAME]}")
             return node_info
         except Exception as e:
             Log.critical(f"{e}")

@@ -16,7 +16,7 @@
 from typing import Dict
 
 from csm.core.blogic import const
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
