@@ -87,7 +87,7 @@ class Configure(Setup):
         :return:
         """
         Log.error("Creating CSM Conf File on Required Location.")
-        if not self._is_env_vm:
+        if self._is_env_vm:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
         self.store_encrypted_password()
