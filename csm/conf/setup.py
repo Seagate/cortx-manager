@@ -166,7 +166,7 @@ class Setup:
         machine_id, _err, _returncode = proc_obj.run()
         if _returncode != 0:
             raise CsmSetupError('Unable to obtain current machine id.')
-        return machine_id
+        return (machine_id.decode("utf-8")).replace("\n", "")
 
     @staticmethod
     def _is_group_exist(user_group):
