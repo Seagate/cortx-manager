@@ -64,9 +64,17 @@ class Setup:
         :return:
         """
         self._get_setup_info()
+        self._set_service_user()
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
+
+    def _set_service_user(self):
+        """
+        This Method will set the username for service user to Self._user
+        :return:
+        """
+        self._user = Conf.get(const.CONSUMER_INDEX, "system.service-user>name")
 
     @staticmethod
     def _run_cmd(cmd):

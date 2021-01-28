@@ -146,7 +146,7 @@ class CsmAgent:
         try:
             # TODO: consider a more safe storage
             params = {
-                "username": const.NON_ROOT_USER,
+                "username": Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY),
                 "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
