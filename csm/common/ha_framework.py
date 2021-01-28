@@ -54,8 +54,7 @@ class HAFramework:
 class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
-        self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
-
+        self._user = const.NON_ROOT_USER
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
         online = False
@@ -106,7 +105,7 @@ class PcsHAFramework(HAFramework):
     def __init__(self, resource_agents=None):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
-        self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
+        self._user = const.NON_ROOT_USER
         self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
 
     def get_nodes(self):

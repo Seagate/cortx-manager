@@ -64,17 +64,9 @@ class Setup:
         :return:
         """
         self._get_setup_info()
-        self._set_service_user()
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
-
-    def _set_service_user(self):
-        """
-        This Method will set the username for service user to Self._user
-        :return:
-        """
-        self._user = Conf.get(const.CONSUMER_INDEX, "system.service-user>name")
 
     @staticmethod
     def _run_cmd(cmd):
@@ -107,7 +99,7 @@ class Setup:
         try:
             # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     "system.service-user>secret")
+                                     f"service>cortx>secret")
         except KvError as e:
             Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
