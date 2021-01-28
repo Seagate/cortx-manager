@@ -15,16 +15,16 @@
 
 csm:
     post_install:
-        script: /usr/bin/csm_setup
-        args: post_install
+        script: /usr/bin/csm_setup post_install
+        args: --config <URL>
 
     init:
-        script: /usr/bin/csm_setup
-        args: init
+        script: /usr/bin/csm_setup init
+        args: --config <URL>
 
     config:
-        script: /usr/bin/csm_setup
-        args: config
+        script: /usr/bin/csm_setup config
+        args: --config <URL>
 
     test:
         script: /usr/bin/csm_test
@@ -39,9 +39,8 @@ csm:
             - -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
-        script: /usr/bin/csm_setup
-        args:
-            - reset --hard
+        script: /usr/bin/csm_setup reset
+        args: --config <URL>
 
     ha:
         script: /opt/seagate/cortx/ha/conf/script/build-ha-csm
@@ -61,6 +60,6 @@ csm:
             - /etc/ssl/stx/stx.pem
 
     refresh_config:
-        script: /usr/bin/csm_setup
-        args: refresh_config
+        script: /usr/bin/csm_setup refresh_config
+        args: --config <URL>
 
