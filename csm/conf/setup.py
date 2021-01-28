@@ -53,7 +53,7 @@ class ProvisionerCliError(InvalidRequest):
 
 class Setup:
     def __init__(self):
-        self._user = const.NON_ROOT_USER
+        self._user = None
         self._uid = self._gid = -1
         self._setup_info = dict()
         self._is_env_vm = False
@@ -64,9 +64,17 @@ class Setup:
         :return:
         """
         self._get_setup_info()
+        self._set_service_user()
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
+
+    def _set_service_user(self):
+        """
+        This Method will set the username for service user to Self._user
+        :return:
+        """
+        self._user = Conf.get(const.CONSUMER_INDEX, const.NON_ROOT_USER_KEY)
 
     @staticmethod
     def _run_cmd(cmd):

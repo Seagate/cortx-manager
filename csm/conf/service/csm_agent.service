@@ -33,7 +33,7 @@ ExecStart=/usr/bin/csm_agent
 #ExecStopPost=/sbin/fuser -k 28101/tcp
 ExecStopPost=/usr/bin/rm -rf /var/run/csm/csm_agent.pid
 PIDFile=/var/run/csm/csm_agent.pid
-User=csm
+User=<USER>
 # Auto restart option is enabled depending on the system installation type.
 #< RESTART_OPTION >
 TimeoutStartSec=300

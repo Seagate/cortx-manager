@@ -175,3 +175,9 @@ class PostInstall(Setup):
                                        "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
+    def _configure_service_user(self):
+        """
+        Configures the Service user in CSM service files.
+        :return:
+        """
+        Setup._update_service_file("<USER>", self._user)
