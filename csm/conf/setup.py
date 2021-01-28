@@ -107,7 +107,7 @@ class Setup:
         try:
             # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     f"service>cortx>secret")
+                                     f"system.service-user>secret")
         except KvError as e:
             Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
@@ -160,8 +160,6 @@ class Setup:
                          f">{const.TYPE}")
         self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
                                                   storage_type_key)
-
-
 
     @staticmethod
     def _get_machine_id():
