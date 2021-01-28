@@ -11,11 +11,9 @@
       "node_type": "VM"
     }
   },
-  "service": {
-    "cortx": {
-      "user": "csm",
-      "secret": "csm"
-    }
+  "system.service-user": {
+    "name": "csm",
+    "secret": "csm"
   },
   "storage": {
     "type": "virtual"
