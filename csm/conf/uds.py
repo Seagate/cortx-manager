@@ -47,7 +47,7 @@ class UDSConfigGenerator:
     @classmethod
     def generate_csm_config(cls, uds_public_ip=None):
         return {
-            'UDS.public_ip': f'{uds_public_ip}',
+            'UDS>public_ip': f'{uds_public_ip}',
         }
 
     @staticmethod

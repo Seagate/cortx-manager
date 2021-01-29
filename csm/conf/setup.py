@@ -290,13 +290,6 @@ class Setup:
         self._cluster.init(args['f'])
         CsmApi.set_cluster(self._cluster)
 
-    def _log_cleanup(self):
-        """
-        Delete all logs
-        """
-        Log.info("Delete all logs")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
-        Setup._run_cmd("rm -rf " +log_path)
 
     class ConfigServer:
         """
@@ -308,14 +301,17 @@ class Setup:
 
         @staticmethod
         def stop():
+            Log.info("Checking for running CSM Services.")
             _proc = SimpleProcess("systemctl is-active csm_agent")
             _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
             _proc = SimpleProcess("systemctl is-active csm_web")
             _output_web, _err_web, _rc_web = _proc.run(universal_newlines=True)
             if _rc_agent == 0:
+                Log.info("Stopping CSM Agent Service.")
                 _proc = SimpleProcess("systemctl stop csm_agent")
                 _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
             if _rc_web == 0:
+                Log.info("Stopping CSM Web Service.")
                 _proc = SimpleProcess("systemctl stop csm_web")
                 _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
 
@@ -407,13 +403,7 @@ class CsmSetup(Setup):
     def reset(self, args):
         try:
             self._verify_args(args)
-            self.Config.load()
-            self.ConfigServer.stop()
-            self._log_cleanup()
-            self._config_user_permission(reset=True)
-            self.Config.delete()
-            self._config_user(reset=True)
-            UDSConfigGenerator.delete()
+
         except Exception as e:
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
