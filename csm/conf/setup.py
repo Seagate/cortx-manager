@@ -35,7 +35,7 @@ from csm.common.payload import Text
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 
 # try:
 #     from salt import client

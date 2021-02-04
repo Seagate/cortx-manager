@@ -17,7 +17,7 @@ import os
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.conf.uds import UDSConfigGenerator

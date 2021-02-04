@@ -16,7 +16,7 @@
 import asyncio
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const

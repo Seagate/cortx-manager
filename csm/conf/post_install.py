@@ -18,7 +18,7 @@ import crypt
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const

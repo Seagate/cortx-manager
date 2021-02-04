@@ -36,7 +36,7 @@ CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
-
+PROVISIONER_LOG_FILE_PATH = "/var/log/seagate/provisioner"
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
