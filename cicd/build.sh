@@ -148,7 +148,7 @@ cd $BASE_DIR
 [ -z "$DEV" ] && DEV=false
 [ -z "$QA" ] && QA=false
 
-echo "Using VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
+echo "Using COMPONENT=${COMPONENT} VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
 
 ################### COPY FRESH DIR ##############################
 

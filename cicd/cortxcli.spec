@@ -42,9 +42,6 @@ PRODUCT=<PRODUCT>
 
 # Move binary file
 [ -d "${CLI_DIR}/lib" ] && {
-    ln -sf $CLI_DIR/lib/cortxcli_setup /usr/bin/cortxcli_setup
-    ln -sf $CLI_DIR/lib/cortxcli_setup $CLI_DIR/bin/cortxcli_setup
-
     ln -sf $CLI_DIR/lib/cortxcli /usr/bin/cortxcli
     ln -sf $CLI_DIR/lib/cortxcli $CLI_DIR/bin/cortxcli
 }
@@ -55,7 +52,6 @@ exit 0
 %preun
 
 %postun
-rm -f /usr/bin/cortxcli_setup 2> /dev/null;
 rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -rf <CORTXCLI_PATH>/bin/ 2> /dev/null;
 exit 0
