@@ -81,6 +81,7 @@ class Init(Setup):
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx /var/log/seagate/provisioner")
         # Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
         if os.path.exists(crt):
             Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
