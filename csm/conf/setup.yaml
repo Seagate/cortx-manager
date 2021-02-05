@@ -19,21 +19,21 @@ csm:
         args: --config $URL
 
     config:
-        script: /usr/bin/csm_setup config
+        cmd: /usr/bin/csm_setup config
         args: --config $URL
 
     init:
-        script: /usr/bin/csm_setup init
+        cmd: /usr/bin/csm_setup init
         args: --config $URL
 
     test:
-        script: /usr/bin/csm_setup test
+        cmd: /usr/bin/csm_setup test
         args:
             - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
-        script: /usr/bin/csm_setup reset
+        cmd: /usr/bin/csm_setup reset
         args: --config $URL
 
 
