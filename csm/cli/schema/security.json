@@ -1,0 +1,38 @@
+{
+    "name": "security",
+    "description": "SSL",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Displays SSL Certificate Information.",
+        "need_confirmation": false,
+        "permissions_tag": "read",
+        "args": [
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?",
+            "help": ""
+          },
+          {
+            "flag": "-f",
+            "dest": "format",
+            "help": "Format of Output",
+            "default": "json",
+            "type": "str",
+            "choices": [
+              "xml",
+              "json"
+            ]
+          }
+        ],
+        "comm": {
+          "type": "rest",
+          "method": "get",
+          "target": "/{version}/tls/bundle/details",
+          "version": "v1"
+        }
+      }
+    ]
+  }
