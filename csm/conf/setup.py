@@ -107,7 +107,7 @@ class Setup:
         try:
             # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     const.CONF_STORE_USER_KEY)
+                                     const.CONF_STORE_PASS_KEY)
         except KvError as e:
             Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:

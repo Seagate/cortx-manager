@@ -159,6 +159,7 @@ CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 # Non root user
 NON_ROOT_USER = 'csm'
 CONF_STORE_USER_KEY = 'system>service-user>name'
+CONF_STORE_PASS_KEY = 'system>service-user>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'csm'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
