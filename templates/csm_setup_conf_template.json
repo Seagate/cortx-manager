@@ -11,9 +11,11 @@
       "node_type": "VM"
     }
   },
-  "system.service-user": {
+  "system": {
+    "service-user": {
       "name": "csm",
       "secret": "csm"
+    }
   },
   "storage": {
     "type": "virtual"
