@@ -61,7 +61,7 @@ class CsmAgent:
         Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
 
         #Remove all Old Shutdown Cron Jobs
-        CronJob(const.NON_ROOT_USER).remove_job(const.SHUTDOWN_COMMENT)
+        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
@@ -146,7 +146,7 @@ class CsmAgent:
         try:
             # TODO: consider a more safe storage
             params = {
-                "username": const.NON_ROOT_USER,
+                "username": Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY),
                 "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
             }
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
