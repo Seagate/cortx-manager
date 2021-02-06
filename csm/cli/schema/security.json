@@ -3,7 +3,7 @@
     "description": "SSL",
     "sub_commands": [
       {
-        "name": "show",
+        "name": "details",
         "description": "Displays SSL Certificate Information.",
         "need_confirmation": false,
         "permissions_tag": "read",
