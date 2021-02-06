@@ -20,6 +20,8 @@ Summary: Cortx CLI
 License: Seagate Proprietary
 URL: http://github.com/Seagate/cortx-manager
 Source0: <PRODUCT>-cli-%{version}.tar.gz
+Requires: <CSM_AGENT_RPM_NAME>
+
 %define debug_package %{nil}
 
 %description

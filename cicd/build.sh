@@ -320,6 +320,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
+        -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
 
