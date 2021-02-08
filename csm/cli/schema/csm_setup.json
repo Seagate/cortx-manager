@@ -299,39 +299,44 @@
           "default": "",
           "type": "str",
           "help": "Print final result in file return fail if any one of test failed."
-          "target": "csm.conf.test",
-          "method": "execute",
-          "class": "Test",
-          "is_static": false
         }
-      },
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.test",
+        "method": "execute",
+        "class": "Test",
+        "is_static": false
+      }
+    },
+    {
+      "name": "cleanup",
+      "description": "Perform a cleanup of all the CSM generated Files and Folders.",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
         {
-          "name": "cleanup",
-          "description": "Perform a cleanup of all the CSM generated Files and Folders.",
-          "need_confirmation": false,
-          "permissions_tag": "update",
-          "args": [
-            {
-              "flag": "--database_cleanup",
-              "action": "store_const",
-              "help": "Cleanup all Consul and ES Data.",
-              "default": "false",
-              "const": "true",
-              "params": true
-            },
-            {
-              "flag": "args",
-              "default": [],
-              "suppress_help": true,
-              "nargs": "?"
-            }
-          ],
-          "comm": {
-            "type": "direct",
-            "target": "csm.conf.cleanup",
-            "method": "execute",
-            "class": "Cleanup",
-            "is_static": false
-          }
-          ]
+          "flag": "--database_cleanup",
+          "action": "store_const",
+          "help": "Cleanup all Consul and ES Data.",
+          "default": "false",
+          "const": "true",
+          "params": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
         }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.cleanup",
+        "method": "execute",
+        "class": "Cleanup",
+        "is_static": false
+      }
+    }
+  ]
+}
