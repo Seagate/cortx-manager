@@ -272,7 +272,7 @@ class Setup:
 
         @staticmethod
         def delete():
-            Log.info("Delete config")
+            Log.info("Deleting CSM Config Directory.")
             Setup._run_cmd("rm -rf " + const.CSM_CONF_PATH)
 
         @staticmethod

@@ -35,7 +35,7 @@ CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
                           f'{CORTXCLI_CONF_FILE_NAME}')
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
-WEB_DEFAULT_PORT = 28100 # currently being used by USL only
+WEB_DEFAULT_PORT = 28100  # currently being used by USL only
 PROVISIONER_LOG_FILE_PATH = "/var/log/seagate/provisioner"
 # Access log of aiohttp
 # format
@@ -63,8 +63,8 @@ COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
-EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
-HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
+EXCLUDED_COMMANDS = ['csm_setup', 'cortxcli_setup']
+HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate", ]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
 RUNNING_NODES_START_TEXT = 'Running Nodes'
@@ -81,7 +81,7 @@ TIMEOUT = 60
 # Initalization
 HA_INIT = '/var/csm/ha_initialized'
 
-#HA Command
+# HA Command
 HCTL_NODE = 'hctl node --username {user} --password {pwd} {command}'
 CORTXHA_CLUSTER = 'cortxha cluster {command}'
 HCTL_ERR_MSG = "Failed to execute command.\nPlease check logs for detailed error."
@@ -162,20 +162,22 @@ CONF_STORE_USER_KEY = 'system>service-user>name'
 CONF_STORE_PASS_KEY = 'system>service-user>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'csm'
-CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
+CSM_USER_HOME = '/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
-SSH_DIR='.ssh'
-SSH_PRIVATE_KEY='{}/id_rsa'.format(SSH_DIR)
-SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
-SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
-SSH_CONFIG='{}/config'.format(SSH_DIR)
-PRIMARY_ROLE='primary'
+SSH_DIR = '.ssh'
+SSH_PRIVATE_KEY = '{}/id_rsa'.format(SSH_DIR)
+SSH_PUBLIC_KEY = '{}/id_rsa.pub'.format(SSH_DIR)
+SSH_AUTHORIZED_KEY = '{}/authorized_keys'.format(SSH_DIR)
+SSH_CONFIG = '{}/config'.format(SSH_DIR)
+PRIMARY_ROLE = 'primary'
 CONFIG_URL = 'config_url'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
-GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved', 'threshold_breached:up']
-BAD_ALERT = ['missing', 'fault', 'threshold_breached:low', 'threshold_breached:high']
+GOOD_ALERT = ['insertion', 'fault_resolved', 'resolved',
+              'threshold_breached:up']
+BAD_ALERT = ['missing', 'fault', 'threshold_breached:low',
+             'threshold_breached:high']
 SW = 'SW'
 HW = 'HW'
 ALERT_TYPE = 'type'
@@ -239,9 +241,9 @@ EVENT_ID = 'event'
 IEM = 'iem'
 SPECIFIC_INFO = 'specific_info'
 SUPPORT_MESSAGE = 'support_message'
-CRITICAL='critical'
-ERROR='error'
-WARNING='warning'
+CRITICAL = 'critical'
+ERROR = 'error'
+WARNING = 'warning'
 
 # Health
 OK_HEALTH = 'OK'
@@ -284,7 +286,7 @@ NODE_CONTROLLER = 'node_controller'
 NODE_REQ = 'node_request'
 NODE_HW = 'NDHW:'
 KEY = 'key'
-HEALTH_FIELD ='health_field'
+HEALTH_FIELD = 'health_field'
 RES_ID_FIELD = 'res_id_field'
 MAPPING_KEY = 'mapping_key'
 RESOURCE_LIST = 'resource_list'
@@ -321,7 +323,8 @@ AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)
 
 # CSM Roles Related
 ROLES_MANAGEMENT = '{}/schema/roles.json'.format(CSM_PATH)
-CLI_DEFAULTS_ROLES = '{}/cli/schema/cli_default_roles.json'.format(CORTXCLI_PATH)
+CLI_DEFAULTS_ROLES = '{}/cli/schema/cli_default_roles.json'.format(
+    CORTXCLI_PATH)
 PERMISSIONS = "permissions"
 LYVE_PILOT = "lyve_pilot"
 
@@ -456,19 +459,22 @@ SYSTEM_STATUS_SUCCESS = 'success'
 
 # Rsyslog
 RSYSLOG_DIR = "/etc/rsyslog.d"
-SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
-CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
+SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH,
+                                                           RSYSLOG_DIR)
+CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(
+    CORTXCLI_PATH, RSYSLOG_DIR)
 RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
 CLI_RSYSLOG_PATH = "{}/0-cortxcli_logs.conf".format(RSYSLOG_DIR)
-CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
+CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(
+    CORTXCLI_PATH, RSYSLOG_DIR)
 SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
 
-#cron dir
-CRON_DIR="/etc/cron.daily"
-SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
-DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
+# cron dir
+CRON_DIR = "/etc/cron.daily"
+SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
+DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
 
-#logrotate
+# logrotate
 LOGROTATE_DIR = "/etc/logrotate.d"
 LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
@@ -476,7 +482,8 @@ LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 STATUS_CREATED = 201
 STATUS_CONFLICT = 409
 
-SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
+SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH,
+                                                                    LOGROTATE_DIR)
 LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
 CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
 
@@ -526,7 +533,7 @@ CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
 # Provisioner Plugin constant
-NODE_LIST_KEY='cluster:node_list'
+NODE_LIST_KEY = 'cluster:node_list'
 GRAINS_GET = 'grains.get'
 PILLAR_GET = 'pillar.get'
 S3 = 'S3'
@@ -540,15 +547,15 @@ SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
-PROVISIONER='PROVISIONER'
-RET='ret'
-DEBUG='debug'
-NA='NA'
-GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='cluster>{server-node}>node_type'
-NODE_TYPE="node_type"
+PROVISIONER = 'PROVISIONER'
+RET = 'ret'
+DEBUG = 'debug'
+NA = 'NA'
+GET_NODE_ID = 'get_node_id'
+GET_SETUP_INFO = 'cluster>{server-node}>node_type'
+NODE_TYPE = "node_type"
 
-#Deployment Mode
+# Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
 DEV = 'dev'
@@ -558,7 +565,7 @@ ENV_TYPE = 'env_type'
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
                   'dns_network_settings', 'date_time_settings', 'notifications']
-#Maintenance
+# Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
 ACTION = "action"
 NODE_STATUS = "node_status"
@@ -574,12 +581,12 @@ NODE_STATUS = "node_status"
 INVALID_PASSWORD = f"Invalid {PASSWORD}"
 STATUS_CHECK_FALED = "Node status can't be checked. HCTL command failed"
 SERVICE_STATUS_CHECK_FAILED = "Service status can not be checked as services are restarting. Please check after sometime."
-SHUTDOWN_NODE_FIRST =  "Please shutdown the resource first before replacing."
+SHUTDOWN_NODE_FIRST = "Please shutdown the resource first before replacing."
 NODE_REPLACEMENT_ALREADY_RUNNING = "Node replacement is already in progress."
 NODE_REPLACEMENT_STARTED = "Node replacement for {resource_name} started."
 RESOURCE_ALREADY_SAME_STATE = "Resource is already in same state"
 SHUTDOWN_COMMENT = "node_shutdown_cron"
-#Services
+# Services
 HEALTH_SERVICE = "health_service"
 ALERTS_SERVICE = "alerts_service"
 
@@ -598,26 +605,33 @@ MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
 ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
-    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
-    "enclosure:cortx:logical_volume", "enclosure:interface:sas",
-    "enclosure:sensor:current", "enclosure:sensor:temperature",
-    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk",
-    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
-    "node:interface:sas", "node:interface:nw:cable"]
+                         "enclosure:fru:psu", "enclosure:fru:controller",
+                         "enclosure:fru:fan",
+                         "enclosure:cortx:logical_volume",
+                         "enclosure:interface:sas",
+                         "enclosure:sensor:current",
+                         "enclosure:sensor:temperature",
+                         "enclosure:sensor:voltage", "node:sensor:temperature",
+                         "node:fru:disk",
+                         "node:fru:psu", "node:fru:fan", "node:sensor:current",
+                         "node:sensor:voltage",
+                         "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
-
 
 HIGH_RISK_SEVERITY = ['critical', 'CRITICAL', 'error', 'ERROR']
 GOOD_HEALTH_VAL = ['OK', 'NA', 'ok', 'na']
-LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational', 'INFORMATIONAL']
-EDGE_INSTALL_TYPE ={ "nodes": 1,
-                    "servers_per_node": 2,
-                    "storage_type": ["5u84", "PODS", "RBOD"],
-                    "server_type": "physical"}
+LOW_RISK_SEVERITY = ['warning', 'WARNING', 'NA', 'na', '', 'informational',
+                     'INFORMATIONAL']
+EDGE_INSTALL_TYPE = {"nodes": 1,
+                     "servers_per_node": 2,
+                     "storage_type": ["5u84", "PODS", "RBOD"],
+                     "server_type": "physical"}
 
-#unsupported feature
-UNSUPPORTED_FEATURE_SCHEMA='{}/schema/unsupported_features.json'.format(CSM_PATH)
-FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(CSM_PATH)
+# unsupported feature
+UNSUPPORTED_FEATURE_SCHEMA = '{}/schema/unsupported_features.json'.format(
+    CSM_PATH)
+FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.format(
+    CSM_PATH)
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
@@ -638,7 +652,7 @@ ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3
 
-#SSL
+# SSL
 SUBJECT = "subject"
 ISSUER = "issuer"
 NOT_VALID_AFTER = "not_valid_after"
@@ -664,3 +678,12 @@ BOTH = 'both'
 PRODUCER = 'producer'
 CONSUMER = 'consumer'
 CONSUMER_CALLBACK = 'consumer_callback'
+
+# CLEANUP
+# Adding any directories in this would be deleted while CSM Cleanup.
+CLEANUP_DIRECTORIES = [
+    "/var/log/seagate/csm",
+    "/var/log/seagate/support_bundle",
+    "/tmp/csm",
+    "/tmp/hotfix"
+]

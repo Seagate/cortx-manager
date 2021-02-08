@@ -35,8 +35,6 @@ class Cleanup(Setup):
         self._db = None
 
     async def execute(self, command):
-        database_cleanup = (command.options.get("database_cleanup",
-                                                False) == 'true')
         try:
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
@@ -45,10 +43,10 @@ class Cleanup(Setup):
             raise CsmSetupError("Failed to Load CSM Configuration File.")
         self._log_cleanup()
         UDSConfigGenerator.delete()
-        if database_cleanup:
-            self.load_db()
-            self.es_cleanup()
-            self.consul_cleanup()
+        self.load_db()
+        self.directory_cleanup()
+        self.es_cleanup()
+        self.consul_cleanup()
         self.Config.delete()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -88,7 +86,6 @@ class Cleanup(Setup):
         :return:
         """
         Log.info(f"Cleaning up Collection {es_collection_name}")
-        pass
 
     def consul_cleanup(self, consul_collection_name):
         """
@@ -97,5 +94,20 @@ class Cleanup(Setup):
         :return:
         """
         Log.info(f"Cleaning up Collection {consul_collection_name}")
-        pass
+
+    def directory_cleanup(self):
+        """
+        Delete local Directories as Follows:
+        /etc/csm
+        /var/log/seagate/csm
+        /var/log/seagate/support_bundle
+        /tmp/csm
+        /tmp/hotfix
+        :return:
+        """
+        self.Config.delete()
+        for each_directory in const.CLEANUP_DIRECTORIES:
+            Log.info(f"Deleting Directory {each_directory}")
+            Setup._run_cmd(f"rm -rf {each_directory}")
+
 

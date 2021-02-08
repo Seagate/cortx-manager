@@ -316,14 +316,6 @@
       "permissions_tag": "update",
       "args": [
         {
-          "flag": "--database_cleanup",
-          "action": "store_const",
-          "help": "Cleanup all Consul and ES Data.",
-          "default": "false",
-          "const": "true",
-          "params": true
-        },
-        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
