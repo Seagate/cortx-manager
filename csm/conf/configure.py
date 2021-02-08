@@ -17,7 +17,7 @@ import os
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.conf.uds import UDSConfigGenerator
@@ -142,9 +142,9 @@ class Configure(Setup):
         os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
         os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
         Setup._run_cmd(
-            f"setfacl -R -m u:{const.NON_ROOT_USER}:rwx {const.CORTXCLI_PATH}")
+            f"setfacl -R -m u:{self._user}:rwx {const.CORTXCLI_PATH}")
         Setup._run_cmd(
-            f"setfacl -R -m u:{const.NON_ROOT_USER}:rwx {const.CORTXCLI_CONF_PATH}")
+            f"setfacl -R -m u:{self._user}:rwx {const.CORTXCLI_CONF_PATH}")
         Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                  f"{const.CORTXCLI_SECTION}>{const.CSM_AGENT_HOST_PARAM_NAME}" ,
                  command.options.get(const.ADDRESS_PARAM, "127.0.0.1"))

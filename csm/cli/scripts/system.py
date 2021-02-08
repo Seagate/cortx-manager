@@ -30,7 +30,7 @@ class System:
         :param command: Command object from argparser.
         :return:
         """
-        _user = const.NON_ROOT_USER
+        _user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
         _password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
         _command = "start"
 

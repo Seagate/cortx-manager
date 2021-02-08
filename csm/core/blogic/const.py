@@ -36,7 +36,7 @@ CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
-
+PROVISIONER_LOG_FILE_PATH = "/var/log/seagate/provisioner"
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
@@ -158,6 +158,9 @@ CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
+CONF_STORE_USER_KEY = 'system>service-user>name'
+CONF_STORE_PASS_KEY = 'system>service-user>secret'
+NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'csm'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
