@@ -13,6 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import importlib
+from pydoc import locate
 from csm.conf.setup import Setup, CsmSetupError
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.log import Log
@@ -45,9 +47,6 @@ class Cleanup(Setup):
         UDSConfigGenerator.delete()
         self.load_db()
         self.directory_cleanup()
-        self.es_cleanup()
-        self.consul_cleanup()
-        self.Config.delete()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _log_cleanup(self):
@@ -71,29 +70,29 @@ class Cleanup(Setup):
         """
         :return:
         """
-        self._es_host = Conf.get(const.DATABASE_INDEX,
-                                 "databases>es_db>config>host")
         for each_model in Conf.get(const.DATABASE_INDEX, "models"):
-            if each_model.get("database") == "es_db":
-                self._es_cleanup(each_model.get("collection"))
-            if each_model.get("database") == "consul_db":
-                self._es_cleanup(each_model.get("collection"))
+                self.erase_collection(each_model.get("collection"))
 
-    def _es_cleanup(self, es_collection_name):
+    def erase_collection(self, collection_details):
         """
         Clean up all the CSM Elasticsearch Data.
-        :param es_collection_name: Elasticsearch Collection Name to be Deleted.
+        :param collection_details: Elasticsearch Collection Name to be Deleted.
         :return:
         """
-        Log.info(f"Cleaning up Collection {es_collection_name}")
+        Log.info(f"Cleaning up Elasticsearch Collection {collection_details}")
+        model_path, model_name = collection_details[
+            "import_path"].rsplit(".", 1)
+        module = importlib.import_module(model_path)
+        db_model = getattr(module, model_name)(self._db)
+        db_model.delete()
 
-    def consul_cleanup(self, consul_collection_name):
+    def selective_cleanup(self, collection_details):
         """
         Cleanup all the CSM Consul Data.
-        :param consul_collection_name: Consul Collection Name to be Deleted.
+        :param collection_details: Consul Collection Name to be Deleted.
         :return:
         """
-        Log.info(f"Cleaning up Collection {consul_collection_name}")
+        Log.info(f"Cleaning up Collection {collection_details}")
 
     def directory_cleanup(self):
         """
