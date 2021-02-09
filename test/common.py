@@ -16,6 +16,7 @@
 import asyncio
 import inspect
 import traceback
+import time
 from functools import wraps
 from contextlib import contextmanager
 from csm.core.providers.provider_factory import ProviderFactory
@@ -29,9 +30,11 @@ class Const:
     COMPONENTS_INDEX = 'COMPONENTS'
     DATABASE_INDEX = 'DATABASE'
     CSM_CONF = '/etc/csm/csm.conf'
+    CSM_CONF_URL = 'yaml:///etc/csm/csm.conf'
     INVENTORY_FILE = '/etc/csm/cluster.conf'
     COMPONENTS_CONF = '/etc/csm/components.yaml'
     DATABASE_CONF = '/etc/csm/database.yaml'
+    DATABASE_CONF_URL = 'yaml:///etc/csm/database.yaml'
     CSM_PATH = '/opt/seagate/cortx/csm'
     HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
     MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)

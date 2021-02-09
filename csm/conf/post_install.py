@@ -18,7 +18,7 @@ import crypt
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
@@ -57,6 +57,7 @@ class PostInstall(Setup):
         self._config_user()
         await self._set_unsupported_feature_info()
         self._configure_system_auto_restart()
+        self._configure_service_user()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _config_user(self, reset=False):
@@ -175,3 +176,9 @@ class PostInstall(Setup):
                                        "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
+    def _configure_service_user(self):
+        """
+        Configures the Service user in CSM service files.
+        :return:
+        """
+        Setup._update_service_file("<USER>", self._user)
