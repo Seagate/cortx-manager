@@ -95,8 +95,8 @@ class SecurityService(ApplicationService):
             with open(path, "br") as f:
                 # read certificate data as binary
                 data = f.read()
-                cert = x509.load_pem_x509_certificate(data, default_backend())
-                return cert
+            cert = x509.load_pem_x509_certificate(data, default_backend())
+            return cert
         except FileNotFoundError as e:
             Log.error(f"Security Certificate not available.{e}")
             raise CsmInternalError("Security Certificate not available.")
