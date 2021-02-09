@@ -77,7 +77,6 @@ if __name__ == '__main__':
     from csm.conf.init import Init
     from csm.conf.cleanup import Cleanup
     from csm.conf.reset import Reset
-    from csm.conf.refresh_config import RefreshConfig
     from csm.conf.test import Test
     try:
         csm_setup = CsmSetupCommand(sys.argv)
