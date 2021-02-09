@@ -98,8 +98,8 @@ class SecurityService(ApplicationService):
             cert = x509.load_pem_x509_certificate(data, default_backend())
             return cert
         except FileNotFoundError as e:
-            Log.error(f"Security Certificate not available.{e}")
-            raise CsmNotFoundError("Security Certificate not available.")
+            Log.error(f"Security certificate not available.{e}")
+            raise CsmNotFoundError("Security certificate not available.")
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
