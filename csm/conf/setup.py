@@ -35,7 +35,7 @@ from csm.common.payload import Text
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 
 # try:
 #     from salt import client
@@ -53,7 +53,7 @@ class ProvisionerCliError(InvalidRequest):
 
 class Setup:
     def __init__(self):
-        self._user = const.NON_ROOT_USER
+        self._user = None
         self._uid = self._gid = -1
         self._setup_info = dict()
         self._is_env_vm = False
@@ -64,9 +64,17 @@ class Setup:
         :return:
         """
         self._get_setup_info()
+        self._set_service_user()
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
+
+    def _set_service_user(self):
+        """
+        This Method will set the username for service user to Self._user
+        :return:
+        """
+        self._user = Conf.get(const.CONSUMER_INDEX, const.CONF_STORE_USER_KEY)
 
     @staticmethod
     def _run_cmd(cmd):
@@ -99,7 +107,7 @@ class Setup:
         try:
             # TODO: Need to Change Method for Fetching Csm Credentials.
             csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     f"service>cortx>secret")
+                                     const.CONF_STORE_PASS_KEY)
         except KvError as e:
             Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
@@ -152,8 +160,6 @@ class Setup:
                          f">{const.TYPE}")
         self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
                                                   storage_type_key)
-
-
 
     @staticmethod
     def _get_machine_id():
