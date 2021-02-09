@@ -66,23 +66,6 @@ cortxcli = Analysis([cc_path + '/cli/cortxcli.py'],
              cipher=block_cipher,
              noarchive=False)
 
-cortxcli_setup = Analysis([cc_path + '/cli/conf/cortxcli_setup.py'],
-             pathex=['/usr/lib/python3.6/site-packages/'],
-             binaries=[],
-             datas=[],
-             hiddenimports=product_module_list,
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=[],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
-
-
-MERGE( (cortxcli, 'cortxcli', 'cortxcli'),
-       (cortxcli_setup, 'cortxcli_setup', 'cortxcli_setup') )
-
 # cortxcli
 cortxcli_pyz = PYZ(cortxcli.pure, cortxcli.zipped_data,
              cipher=block_cipher)
@@ -98,33 +81,12 @@ cortxcli_exe = EXE(cortxcli_pyz,
           upx=True,
           console=True )
 
-# cortxcli_setup
-cortxcli_setup_pyz = PYZ(cortxcli_setup.pure, cortxcli_setup.zipped_data,
-             cipher=block_cipher)
-
-cortxcli_setup_exe = EXE(cortxcli_setup_pyz,
-          cortxcli_setup.scripts,
-          [],
-          exclude_binaries=True,
-          name='cortxcli_setup',
-          debug=False,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=True,
-          console=True )
-
 coll = COLLECT(
                # cortxcli
                cortxcli_exe,
                cortxcli.binaries,
                cortxcli.zipfiles,
                cortxcli.datas,
-
-               # cortxcli_setup
-               cortxcli_setup_exe,
-               cortxcli_setup.binaries,
-               cortxcli_setup.zipfiles,
-               cortxcli_setup.datas,
 
                strip=False,
                upx=True,
