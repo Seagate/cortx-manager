@@ -91,16 +91,20 @@ class SecurityService(ApplicationService):
         :param path: path to certificate file
         :return: certificate object
         """
-        with open(path, "br") as f:
-            # read certificate data as binary
-            data = f.read()
         try:
-            cert = x509.load_pem_x509_certificate(data, default_backend())
-            return cert
+            with open(path, "br") as f:
+                # read certificate data as binary
+                data = f.read()
+                cert = x509.load_pem_x509_certificate(data, default_backend())
+                return cert
+        except FileNotFoundError as e:
+            Log.error(f"Security Certificate not available.{e}")
+            raise CsmInternalError("Security Certificate not available.")
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
-            raise IndentationError(f"Cannot load certificate from .pem file: {e}")
+            Log.error(f"Cannot load certificate from .pem file: {e}")
+            raise CsmInternalError(f"Cannot load certificate from .pem file: {e}")
 
     async def _store_to_db(self, user: str, pemfile_path: str, save_time: datetime):
         """
