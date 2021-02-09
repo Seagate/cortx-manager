@@ -19,26 +19,26 @@ import unittest
 import json
 import os
 from csm.test.common import Const
- 
+
 permissions = {
             'security': { 'read': True }
 }
- 
+
 show_command = CommandFactory.get_command(
     ["security","details"], permissions)
 t = unittest.TestCase()
- 
+
 def test_1(*args):
     expected_output = 'security'
     actual_output = show_command.name
     t.assertEqual(actual_output, expected_output)
- 
+
 def test_2(*args):
     expected_output = 'get'
     actual_output = show_command.method
     t.assertEqual(actual_output, expected_output)
- 
+
 def init(args):
     pass
- 
+
 test_list = [test_1, test_2]
