@@ -269,6 +269,51 @@
         "class": "RefreshConfig",
         "is_static": false
       }
+    },
+    {
+      "name": "test",
+      "description": "Run Self Test Command For CSM.",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "-t",
+          "default": "",
+          "type": "str",
+          "help": "Plan File Name that needs to be Executed."
+        },
+        {
+          "flag": "-f",
+          "default": "",
+          "type": "str",
+          "help": "Path of args.yaml."
+        },
+       {
+          "flag": "-l",
+          "default": "",
+          "type": "str",
+          "help": "Path for log file."
+        },
+        {
+          "flag": "-o",
+          "default": "",
+          "type": "str",
+          "help": "Print final result in file return fail if any one of test failed."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.test",
+        "method": "execute",
+        "class": "Test",
+        "is_static": false
+      }
     }
   ]
 }
