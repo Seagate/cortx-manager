@@ -45,7 +45,7 @@ class Cleanup(Setup):
             raise CsmSetupError("Failed to Load CSM Configuration File.")
         self._log_cleanup()
         UDSConfigGenerator.delete()
-        self.load_db()
+        await self._db_cleanup()
         self.directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -72,6 +72,7 @@ class Cleanup(Setup):
         """
         :return:
         """
+        self.load_db()
         for each_model in Conf.get(const.DATABASE_INDEX, "models"):
             if each_model.get("database", "") == "es_db":
                 await self.erase_index(
