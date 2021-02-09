@@ -104,6 +104,62 @@
       }
     },
     {
+      "name": "reset_password",
+      "description": "Reset password for IAM user.",
+      "need_confirmation": true,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "user_name",
+          "type": "str",
+          "help": "Name of IAM user whose password needs to be reset.",
+          "json": true
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?",
+          "help": ""
+        },
+        {
+          "flag": "-p",
+          "dest": "password",
+          "type": "Terminal.get_password",
+          "help": "",
+          "default": "",
+          "suppress_help": true,
+          "json": true
+        },
+        {
+          "flag": "-f",
+          "dest": "format",
+          "help": "Format of Output",
+          "default": "table",
+          "type": "str",
+          "choices": [
+            "table",
+            "xml",
+            "json"
+          ],
+          "suppress_help": true
+        }
+      ],
+      "comm": {
+        "type": "rest",
+        "method": "patch",
+        "target": "/{version}/iam_users/{user_name}",
+        "version": "v1"
+      },
+      "output": {
+        "table":{
+          "headers":{
+            "user_name": "User Name"
+          }
+        }
+      }
+    },
+    {
       "name": "delete",
       "description": "Deletes the given IAM User in logged in  S3 account",
       "need_confirmation": true,
