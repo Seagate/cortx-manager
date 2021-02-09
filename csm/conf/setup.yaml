@@ -15,52 +15,40 @@
 
 csm:
     post_install:
-        script: /usr/bin/csm_setup
-        args: post_install
-
-    init:
-        script: /usr/bin/csm_setup
-        args: init
+        cmd: /usr/bin/csm_setup post_install
+        args: --config $URL
 
     config:
-        script: /usr/bin/csm_setup
-        args: config
+        cmd: /usr/bin/csm_setup config
+        args: --config $URL
+
+    init:
+        cmd: /usr/bin/csm_setup init
+        args: --config $URL
 
     test:
-        script: /usr/bin/csm_test
+        cmd: /usr/bin/csm_setup test
         args:
             - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
+    reset:
+        cmd: /usr/bin/csm_setup reset
+        args: --config $URL
+
+
     ha_sanity:
-        script: /usr/bin/csm_test
+        cmd: /usr/bin/csm_test
         args:
             - -t <CSM_PATH>/test/plans/self_ha_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
-    reset:
-        script: /usr/bin/csm_setup
-        args:
-            - reset --hard
-
     ha:
-        script: /opt/seagate/cortx/ha/conf/script/build-ha-csm
+        cmd: /opt/seagate/cortx/ha/conf/script/build-ha-csm
         args:
             - /opt/seagate/cortx/ha/conf/build-ha-csm-args.yaml
 
     ha-cleanup:
-        script: /opt/seagate/cortx/ha/conf/script/prov-ha-csm-reset
+        cmd: /opt/seagate/cortx/ha/conf/script/prov-ha-csm-reset
         args: null
-
-    backup:
-        files:
-            - /etc/csm/csm.conf 
-            - /etc/csm/database.yaml 
-            - /etc/csm/components.yaml
-            - /etc/csm/cluster.conf
-            - /etc/ssl/stx/stx.pem
-
-    refresh_config:
-        script: /usr/bin/csm_setup
-        args: refresh_config
 
