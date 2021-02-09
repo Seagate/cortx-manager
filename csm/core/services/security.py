@@ -99,7 +99,7 @@ class SecurityService(ApplicationService):
             return cert
         except FileNotFoundError as e:
             Log.error(f"Security Certificate not available.{e}")
-            raise CsmInternalError("Security Certificate not available.")
+            raise CsmNotFoundError("Security Certificate not available.")
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
