@@ -21,6 +21,7 @@ import grp
 import errno
 import shlex
 import json
+import aiohttp
 from cortx.utils.log import Log
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -384,6 +385,19 @@ class Setup:
                 continue
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
+
+    @staticmethod
+    async def delete_request(url, method):
+        """
+        Call DB for Executing the Given API.
+        :param url: URI for Connection.
+        :param method: API Method.
+        :return: Response Object.
+        """
+        async with aiohttp.ClientSession(headers={}) as session:
+            async with session.request(method=method, url=url) as response:
+                pass
+        return response
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component

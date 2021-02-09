@@ -13,10 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import aiohttp
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.log import Log
+from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
 
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.payload import Yaml
@@ -34,7 +34,8 @@ class Cleanup(Setup):
         super(Cleanup, self).__init__()
         Log.info("Running Cleanup for CSM.")
         self._db = ""
-        self._es_url = ""
+        self._es_db_url = ""
+        self._consul_db_url = ""
 
     async def execute(self, command):
         try:
@@ -43,9 +44,8 @@ class Cleanup(Setup):
         except KvError as e:
             Log.error(f"Loading csm.conf to conf store failed {e}")
             raise CsmSetupError("Failed to Load CSM Configuration File.")
-        self._log_cleanup()
-        UDSConfigGenerator.delete()
         await self._db_cleanup()
+        self._log_cleanup()
         self.directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -65,35 +65,44 @@ class Cleanup(Setup):
         Log.info("Loading Database Provider.")
         conf = Yaml(const.DATABASE_CONF).load()
         es_db_details = conf.get("databases", {}).get("es_db")
-        self._es_url = (f"http://{es_db_details['config']['host']}:"
-                        f"{es_db_details['config']['port']}/")
+        consul_details = conf.get("databases", {}).get("consul_db")
+        self._es_db_url = (f"http://{es_db_details['config']['host']}:"
+                           f"{es_db_details['config']['port']}/")
+        self._consul_db_url = (f"http://{consul_details['config']['host']}:"
+                    f"{consul_details['config']['port']}/v1/kv/{CONSUL_ROOT}")
 
     async def _db_cleanup(self):
         """
+        Clean Data Base Collection As per Logic.
         :return:
         """
         self.load_db()
         for each_model in Conf.get(const.DATABASE_INDEX, "models"):
-            if each_model.get("database", "") == "es_db":
-                await self.erase_index(
-                    each_model.get("config", {}).get("collection", ""))
+            await self.erase_index(each_model.get("config", {}))
 
-    async def erase_index(self, index_name):
+    async def erase_index(self, collection_details):
         """
-        Clean up all the CSM Elasticsearch Data.
-        :param index_name: Elasticsearch Index Name to be Deleted.
-        :return:
+        Clean up all the CSM Elasticsearch Data for provided Index.
+        :param collection_details: Collection Details to be Deleted.
+        :return: None
         """
-        Log.info(f"Attempting Deletion of Index {index_name}")
-        async with aiohttp.ClientSession(headers={}) as session:
-            async with session.request(method="delete",
-                                       url=f"{self._es_url}{index_name}",
-                                       ) as response:
-                pass
+        url = None
+        collection = ""
+        if collection_details.get("es_db"):
+            collection = collection_details.get('consul_db', {}).get(
+                'collection')
+            url = f"{self._es_db_url}{collection}"
+        else:
+            collection = collection_details.get('consul_db', {}).get(
+                'collection')
+            url = f"{self._es_db_url}{collection}"
+
+        Log.info(f"Attempting Deletion of Collection {collection}")
+        response = await self.delete_request(url, "delete")
         if response.status != 200:
-            Log.error(f"Index {index_name} Could Not Be Deleted.")
+            Log.error(f"Index {collection} Could Not Be Deleted.")
             return
-        Log.info(f"Index {index_name} Deleted.")
+        Log.info(f"Index {collection} Deleted.")
 
     def selective_cleanup(self, collection_details):
         """
@@ -102,6 +111,7 @@ class Cleanup(Setup):
         :return:
         """
         Log.info(f"Cleaning up Collection {collection_details}")
+        # TODO: Implement Selective Deletion.
 
     def directory_cleanup(self):
         """
