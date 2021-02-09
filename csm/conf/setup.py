@@ -397,7 +397,7 @@ class Setup:
         async with aiohttp.ClientSession(headers={}) as session:
             async with session.request(method=method, url=url) as response:
                 pass
-        return response
+        return await response.text(), response.headers, response.status
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
