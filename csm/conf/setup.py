@@ -398,8 +398,7 @@ class Setup:
         try:
             async with aiohttp.ClientSession(headers={}) as session:
                 async with session.request(method=method, url=url) as response:
-                    pass
-            return await response.text(), response.headers, response.status
+                    return await response.text(), response.headers, response.status
         except ClientConnectionError as e:
             Log.error(f"Connection to URI {url} Failed")
         except Exception as e:
