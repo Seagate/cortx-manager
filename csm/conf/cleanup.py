@@ -95,7 +95,9 @@ class Cleanup(Setup):
         else:
             collection = collection_details.get('consul_db', {}).get(
                 'collection')
-            url = f"{self._es_db_url}{collection}"
+            url = f"{self._consul_db_url}{collection}"
+            # TODO: Adding return to Fix consul Collection deletion in next PR.
+            return
 
         Log.info(f"Attempting Deletion of Collection {collection}")
         text, headers, status = await self.request(url, "delete")
