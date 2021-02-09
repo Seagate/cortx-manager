@@ -148,7 +148,7 @@ cd $BASE_DIR
 [ -z "$DEV" ] && DEV=false
 [ -z "$QA" ] && QA=false
 
-echo "Using VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
+echo "Using COMPONENT=${COMPONENT} VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODUCT} TEST=${TEST}..."
 
 ################### COPY FRESH DIR ##############################
 
@@ -320,6 +320,7 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
+        -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
 
