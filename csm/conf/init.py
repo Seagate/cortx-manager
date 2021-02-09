@@ -18,7 +18,7 @@ import re
 import time
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kvstore.error import KvError
+from cortx.utils.kv_store.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
@@ -73,6 +73,7 @@ class Init(Setup):
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
         os.makedirs(bundle_path, exist_ok=True)
+        os.makedirs(const.PROVISIONER_LOG_FILE_PATH, exist_ok=True)
         os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PATH}")
         Setup._run_cmd((f"setfacl -R -m u:{self._user}:rwx "
@@ -81,6 +82,7 @@ class Init(Setup):
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.PROVISIONER_LOG_FILE_PATH}")
         # Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")
         if os.path.exists(crt):
             Setup._run_cmd(f"setfacl -m u:{self._user}:rwx {crt}")
