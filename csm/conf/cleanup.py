@@ -98,7 +98,7 @@ class Cleanup(Setup):
             url = f"{self._es_db_url}{collection}"
 
         Log.info(f"Attempting Deletion of Collection {collection}")
-        text, headers, status = await self.delete_request(url, "delete")
+        text, headers, status = await self.request(url, "delete")
         if status != 200:
             Log.error(f"Index {collection} Could Not Be Deleted.")
             Log.error(f"Response --> {text}")

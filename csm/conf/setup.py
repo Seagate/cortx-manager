@@ -22,6 +22,7 @@ import errno
 import shlex
 import json
 import aiohttp
+from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -387,17 +388,24 @@ class Setup:
             Text(each_service_file).dump(data)
 
     @staticmethod
-    async def delete_request(url, method):
+    async def request(url, method):
         """
         Call DB for Executing the Given API.
         :param url: URI for Connection.
         :param method: API Method.
         :return: Response Object.
         """
-        async with aiohttp.ClientSession(headers={}) as session:
-            async with session.request(method=method, url=url) as response:
-                pass
-        return await response.text(), response.headers, response.status
+        try:
+            async with aiohttp.ClientSession(headers={}) as session:
+                async with session.request(method=method, url=url) as response:
+                    pass
+            return await response.text(), response.headers, response.status
+        except ClientConnectionError as e:
+            Log.error(f"Connection to URI {url} Failed")
+        except Exception as e:
+            import traceback
+            Log.error(f"Connection to Db Failed. {traceback.format_exc()}")
+            raise CsmSetupError(f"Connection to Db Failed. {e}")
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
