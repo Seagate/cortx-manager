@@ -57,6 +57,7 @@ class Setup:
         self._uid = self._gid = -1
         self._setup_info = dict()
         self._is_env_vm = False
+        self._is_env_dev = False
 
     def _set_deployment_mode(self):
         """
@@ -68,6 +69,8 @@ class Setup:
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
+        if Conf.get(const.CONSUMER_INDEX, const.DEPLOYMENT_MODE) == "DEV":
+            self._is_env_dev = True
 
     def _set_service_user(self):
         """
@@ -101,7 +104,7 @@ class Setup:
         :return:
         """
         csm_user_pass = None
-        if self._is_env_vm:
+        if self._is_env_dev:
             decrypt = False
         Log.info("Fetching CSM User Password from Config Store.")
         try:

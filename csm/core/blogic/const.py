@@ -537,7 +537,7 @@ SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
-PROVISIONER='PROVISIONER'
+PROVISIONER = 'PROVISIONER'
 RET='ret'
 DEBUG='debug'
 NA='NA'
@@ -548,6 +548,7 @@ NODE_TYPE="node_type"
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
+DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
 VM = 'VM'
 ENV_TYPE = 'env_type'
