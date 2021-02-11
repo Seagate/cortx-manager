@@ -181,11 +181,13 @@ class Configure(Setup):
         :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
+        current_node = Conf.get(const.CONSUMER_INDEX,
+                                f"cluster>server_nodes>{machine_id}")
         data_nw = Conf.get(const.CONSUMER_INDEX,
-                           f'cluster>{machine_id}>network>data')
+                           f'cluster>{current_node}>network>data')
         if not data_nw:
             raise CsmSetupError(
-                f'Unable to obtain data nw info for {machine_id}')
+                f'Unable to obtain data nw info for {current_node}')
         return data_nw
 
     @staticmethod
