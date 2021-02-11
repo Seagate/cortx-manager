@@ -516,7 +516,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 DECRYPTION_KEYS = {
     "CHANNEL>password": "sspl",
-    "S3>ldap_password": "openldap"
+    "S3>ldap_password": "openldap",
+    "CSM>password": "csm"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status
