@@ -58,6 +58,7 @@ class Configure(Setup):
                 if uds_public_ip is not None:
                     ip_address(uds_public_ip)
                 UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
+                Configure._set_healthmap_path()
             Configure._set_node_id()
             machine_id = Setup._get_machine_id()
             data_nw = Configure._get_data_nw_info(machine_id)
@@ -68,7 +69,6 @@ class Configure(Setup):
                                         data_nw.get('private_ip',
                                                     'localhost'))
             Configure._set_fqdn_for_nodeid()
-            Configure._set_healthmap_path()
             Configure._set_rmq_cluster_nodes()
             self._rsyslog()
             self._logrotate()
@@ -290,7 +290,8 @@ class Configure(Setup):
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")
-            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
+            healthmap_path = os.path.join(healthmap_folder_path,
+                                          healthmap_filename)
             if not os.path.exists(healthmap_path):
                 Log.logger.error("Health map not available at {healthmap_path}")
                 raise CsmSetupError("Health map not available at {healthmap_path}")
