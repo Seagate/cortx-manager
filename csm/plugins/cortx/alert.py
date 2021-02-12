@@ -234,6 +234,7 @@ class AlertPlugin(CsmPlugin):
                 Hence splitting the above by colon(:) and assingning the last element from the split
                 to module_type
                 """
+                node_type = res_split[0]
                 module_type = res_split[len(res_split) - 1]
                 """ Convert  the SSPL Schema to CSM Schema. """
                 input_alert_payload = Payload(JsonMessage(message))
@@ -299,8 +300,14 @@ class AlertPlugin(CsmPlugin):
                 5. This string uniquely identifies the resource for which an
                 alert has come.
                 """
-                csm_schema[const.ALERT_SENSOR_INFO] = \
-                    '_'.join(str(x) for x in csm_schema[const.ALERT_SENSOR_INFO].values())
+                if node_type == const.ENCLOSURE:
+                    csm_schema[const.ALERT_SENSOR_INFO] = \
+                        '_'.join(str(value) for key, value in \
+                            csm_schema[const.ALERT_SENSOR_INFO].items() \
+                                if key != const.ALERT_NODE_ID)
+                else:
+                    csm_schema[const.ALERT_SENSOR_INFO] = \
+                        '_'.join(str(x) for x in csm_schema[const.ALERT_SENSOR_INFO].values())
                 csm_schema[const.ALERT_SENSOR_INFO] = \
                     csm_schema[const.ALERT_SENSOR_INFO].replace(" ", "_")
                 if const.ALERT_EVENTS in csm_schema and \
@@ -312,7 +319,7 @@ class AlertPlugin(CsmPlugin):
                     csm_schema[const.ALERT_EVENT_DETAILS]= \
                         obj_event_details.dump(csm_schema[const.ALERT_EVENT_DETAILS])
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
-                    obj_extended_info.dump(csm_schema[const.ALERT_EXTENDED_INFO])
+                    obj_extended_info.dump(csm_schema[const.ALERT_EXTENDED_INFO])                
         except Exception as e:
             Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")
@@ -354,9 +361,7 @@ class AlertPlugin(CsmPlugin):
         try:
             if not isinstance(specific_info, list):
                 csm_schema[const.ALERT_HEALTH] = \
-                    specific_info.get(const.ALERT_HEALTH, "")
-                csm_schema[const.DESCRIPTION] = \
-                    specific_info.get(const.ALERT_HEALTH_REASON, "")
+                    specific_info.get(const.ALERT_HEALTH, "")                
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
             else:
