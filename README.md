@@ -1,4 +1,4 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/07822cc6b19c466fba40bff281687baa)](https://www.codacy.com/gh/Seagate/cortx-manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-manager&amp;utm_campaign=Badge_Grade) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/Seagate/cortx-manager/blob/main/LICENSE)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/07822cc6b19c466fba40bff281687baa)](https://www.codacy.com/gh/Seagate/cortx-manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-manager&amp;utm_campaign=Badge_Grade) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/Seagate/cortx-manager/blob/main/LICENSE) [![Slack](https://img.shields.io/badge/chat-on%20Slack-blue")](https://cortx.link/join-slack) [![YouTube](https://img.shields.io/badge/Video-YouTube-red)](https://cortx.link/videos)
 
 <!--
 CORTX-CSM: CORTX Management web and CLI interface.
