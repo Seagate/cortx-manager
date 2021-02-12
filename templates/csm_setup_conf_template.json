@@ -8,7 +8,25 @@
       "machine_id": "srvnode-1"
     },
     "srvnode-1": {
-      "node_type": "VM"
+      "node_type": "VM",
+        "data": {
+          "public_interfaces": [
+            "eth1",
+            "eth2"
+          ],
+          "private_interfaces": [
+            "eth3",
+            "eth4"
+          ],
+          "interface_type": "tcp",
+          "transport_type": "lnet",
+          "public_ip": "localhost",
+          "private_ip": "localhost",
+          "netmask": "None",
+          "gateway": "None",
+          "mtu": "1500",
+          "roaming_ip": "localhost"
+        }
     }
   },
   "system": {
