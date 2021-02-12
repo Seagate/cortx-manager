@@ -319,7 +319,7 @@ class AlertPlugin(CsmPlugin):
                     csm_schema[const.ALERT_EVENT_DETAILS]= \
                         obj_event_details.dump(csm_schema[const.ALERT_EVENT_DETAILS])
                 csm_schema[const.ALERT_EXTENDED_INFO] = \
-                    obj_extended_info.dump(csm_schema[const.ALERT_EXTENDED_INFO])                
+                    obj_extended_info.dump(csm_schema[const.ALERT_EXTENDED_INFO])
         except Exception as e:
             Log.error(f"Error occured in coverting alert to csm schema. {e}")
         Log.debug(f"Converted schema:{csm_schema}")
@@ -361,7 +361,7 @@ class AlertPlugin(CsmPlugin):
         try:
             if not isinstance(specific_info, list):
                 csm_schema[const.ALERT_HEALTH] = \
-                    specific_info.get(const.ALERT_HEALTH, "")                
+                    specific_info.get(const.ALERT_HEALTH, "")
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
             else:
