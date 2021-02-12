@@ -299,9 +299,9 @@ class AlertPlugin(CsmPlugin):
                 5. This string uniquely identifies the resource for which an
                 alert has come.
                 6. Enclosure alerts can be generated from any node. So one alert
-                is generated from one node and another alert for the same enclosure 
-                componenet is generated from another node, the status should get 
-                updated accordingly. That is why node_id is ignored in case of 
+                is generated from one node and another alert for the same enclosure
+                componenet is generated from another node, the status should get
+                updated accordingly. That is why node_id is ignored in case of
                 enclosure while creating sensor_info.
                 """
                 if res_split[0] == const.ENCLOSURE:
