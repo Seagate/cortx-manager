@@ -326,13 +326,14 @@ class SecurityService(ApplicationService):
             expiry_time_ltz = await self._local_timezone(expiry_time)
             days_left = (expiry_time.date() - current_time.date()).days
             if expiry_time < current_time:
-                message = f'SSL certificate expired at {expiry_time_ltz}'
+                message = f'SSL certificate expired at {expiry_time_ltz}.'
             elif days_left in warning_days:
-                message = f'SSL certificate expires at {expiry_time_ltz} - {days_left} day(s) left'
+                message = f'SSL certificate expires at {expiry_time_ltz} - {days_left} day(s) left.'
             else:
                 message = None
 
             if message:
+                message += ' Please refer user guide on how to update the certificate.'
                 Log.warn(f'{message}')
                 Iem.generate(Iem.SEVERITY_WARN,
                              Iem.IEC_CSM_SECURITY_SSL_CERT_EXPIRING,
