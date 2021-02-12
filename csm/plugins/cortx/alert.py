@@ -234,7 +234,6 @@ class AlertPlugin(CsmPlugin):
                 Hence splitting the above by colon(:) and assingning the last element from the split
                 to module_type
                 """
-                node_type = res_split[0]
                 module_type = res_split[len(res_split) - 1]
                 """ Convert  the SSPL Schema to CSM Schema. """
                 input_alert_payload = Payload(JsonMessage(message))
@@ -299,8 +298,13 @@ class AlertPlugin(CsmPlugin):
                 from SSPL's info section of the alert message.
                 5. This string uniquely identifies the resource for which an
                 alert has come.
+                6. Enclosure alerts can be generated from any node. So one alert
+                is generated from one node and another alert for the same enclosure 
+                componenet is generated from another node, the status should get 
+                updated accordingly. That is why node_id is ignored in case of 
+                enclosure while creating sensor_info.
                 """
-                if node_type == const.ENCLOSURE:
+                if res_split[0] == const.ENCLOSURE:
                     csm_schema[const.ALERT_SENSOR_INFO] = \
                         '_'.join(str(value) for key, value in \
                             csm_schema[const.ALERT_SENSOR_INFO].items() \
