@@ -14,7 +14,7 @@
   "system": {
     "service-user": {
       "name": "csm",
-      "secret": "csm"
+      "secret": "gAAAAABgJikGIfq1UNsrC-q2sUxWCAOX4_oo8bpr3ftIr6lesx_7_Q1ccF43fEt-c1O2f2QbyizbF7Losil8AuLeVfWOOSffsA=="
     }
   },
   "storage": {
