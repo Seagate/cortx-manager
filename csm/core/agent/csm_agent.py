@@ -155,9 +155,9 @@ class CsmAgent:
 
         # S3 Plugin creation
         s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3, provisioner)
-        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3, provisioner)
-        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3, provisioner)
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3)
+        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3)
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
 
         user_service = CsmUserService(provisioner, user_manager)

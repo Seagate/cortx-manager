@@ -19,7 +19,6 @@ from botocore.exceptions import ClientError
 from boto.s3.bucket import Bucket
 
 from cortx.utils.log import Log
-from csm.common.service_urls import ServiceUrls
 
 from csm.plugins.cortx.s3 import S3Plugin, S3Client
 from csm.core.providers.providers import Response
@@ -33,10 +32,9 @@ class S3BucketService(S3BaseService):
     Service for S3 account management
     """
 
-    def __init__(self, s3plugin: S3Plugin, provisioner):
+    def __init__(self, s3plugin: S3Plugin):
         self._s3plugin = s3plugin
         self._s3_connection_config = CsmS3ConfigurationFactory.get_s3_connection_config()
-        self._provisioner = provisioner
 
     async def get_s3_client(self, s3_session: S3Credentials) -> S3Client:
         """
@@ -71,13 +69,8 @@ class S3BucketService(S3BaseService):
         except ClientError as e:
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
-        service_urls = ServiceUrls(self._provisioner)
-        bucket_url = await service_urls.get_bucket_url(bucket_name, 'https')
-        s3_uri = await service_urls.get_s3_uri(scheme='s3')
         return {
             "bucket_name": bucket_name,
-            "bucket_url": bucket_url,
-            "s3_uri": s3_uri,
         }  # bucket Can be None
 
     @Log.trace_method(Log.INFO)
@@ -98,13 +91,10 @@ class S3BucketService(S3BaseService):
             # TODO: distinguish errors when user is not allowed to get/delete/create buckets
             self._handle_error(e)
 
-        service_urls = ServiceUrls(self._provisioner)
         # TODO: create model for response
         bucket_list = [
             {
                 "name": bucket.name,
-                "bucket_url": await service_urls.get_bucket_url(bucket.name, 'https'),
-                "s3_uri": await service_urls.get_s3_uri(scheme='s3'),
             }
             for bucket in bucket_list]
         return {"buckets": bucket_list}

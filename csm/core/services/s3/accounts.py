@@ -17,7 +17,6 @@ from typing import Dict
 
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
@@ -31,15 +30,13 @@ class S3AccountService(S3BaseService):
     """
     Service for S3 account management
     """
-    def __init__(self, s3plugin, provisioner):
+    def __init__(self, s3plugin):
         """
         Initialize S3AccountService.
 
         :param s3plugin: S3 plugin object.
-        :param provisioner: provisioner object.
         """
         self._s3plugin = s3plugin
-        self._provisioner = provisioner
         #TODO
         """
         Password should be taken as input and not read from conf file directly.
@@ -140,10 +137,8 @@ class S3AccountService(S3BaseService):
                         }
                     )
                     break
-        service_urls = ServiceUrls(self._provisioner)
         resp = {
             "s3_accounts": accounts_list,
-            "s3_urls": await service_urls.get_s3_uris()
         }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
