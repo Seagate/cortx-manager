@@ -45,11 +45,12 @@ class Cleanup(Setup):
             Log.error(f"Loading csm.conf to conf store failed {e}")
             raise CsmSetupError("Failed to Load CSM Configuration File.")
         await self._db_cleanup()
-        self._log_cleanup()
+        Cleanup._log_cleanup()
         self.directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def _log_cleanup(self):
+    @staticmethod
+    def _log_cleanup():
         """
         Delete all logs
         """

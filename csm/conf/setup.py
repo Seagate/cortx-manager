@@ -402,35 +402,5 @@ class Setup:
         except ClientConnectionError as e:
             Log.error(f"Connection to URI {url} Failed")
         except Exception as e:
-            import traceback
             Log.error(f"Connection to Db Failed. {traceback.format_exc()}")
             raise CsmSetupError(f"Connection to Db Failed. {e}")
-
-# TODO: Devide changes in backend and frontend
-# TODO: Optimise use of args for like product, force, component
-class CsmSetup(Setup):
-    def __init__(self):
-        super(CsmSetup, self).__init__()
-        self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
-        if self._replacement_node_flag:
-            Log.info("REPLACEMENT_NODE flag is set")
-
-    def _verify_args(self, args):
-        """
-        Verify args for actions
-        """
-        Log.info(f"Verifying arguments... {args}")
-        if "Product" in args.keys() and args["Product"] != "cortx":
-            raise Exception("Not implemented for Product %s" %args["Product"])
-        if "Component" in args.keys() and args["Component"] != "all":
-            raise Exception("Not implemented for Component %s" %args["Component"])
-        if "f" in args.keys() and args["f"] is True:
-            raise Exception("Not implemented for force action")
-
-    def reset(self, args):
-        try:
-            self._verify_args(args)
-
-        except Exception as e:
-            Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
