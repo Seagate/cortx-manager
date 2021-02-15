@@ -9,7 +9,7 @@
     },
     "srvnode-1": {
       "node_type": "VM",
-        "data": {
+      "data": {
           "public_interfaces": [
             "eth1",
             "eth2"
