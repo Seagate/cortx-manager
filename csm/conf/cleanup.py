@@ -138,13 +138,14 @@ class Cleanup(Setup):
         """
         Log.info(f"Cleaning up Collection {collection_details}")
         json = dict()
-        if collection_details.get("es_db"):
-            collection = collection_details.get('es_db', {}).get(
+        config = collection_details.get("config", {})
+        if config.get("es_db"):
+            collection = config.get('es_db', {}).get(
                 'collection')
             url = f"{self._es_db_url}{collection}/_delete_by_query"
             method = "post"
         else:
-            collection = collection_details.get('consul_db', {}).get(
+            collection = config.get('consul_db', {}).get(
                 'collection')
             url = f"{self._consul_db_url}/{collection}"
             method = "delete"
@@ -153,9 +154,9 @@ class Cleanup(Setup):
             query_keys = cleanup_data.get("keys")
             conf_data = self.fetch_conf_store_values(query_keys)
             query = cleanup_data.get("query", "")
-            json = eval(query.format(**conf_data))
+            json = query.format(**conf_data).replace("<", "{").replace(">", "}")
         Log.info(f"Attempting Deletion of Collection {collection}")
-        text, headers, status = await self.request(url, method, json=json)
+        text, headers, status = await self.request(url, method, json=eval(json))
         if status != 200:
             Log.error(f"Index {collection} Could Not Be Deleted.")
             Log.error(f"Response --> {text}")
