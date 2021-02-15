@@ -135,3 +135,4 @@ class Security:
             except CipherInvalidToken as error:
                 import traceback
                 Log.exception(f"Decryption for {each_key} Failed. {error}")
+                Log.exception(f"{traceback.format_exc()}")
