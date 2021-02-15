@@ -41,7 +41,7 @@ def tmain(argp, argv):
         # Conf.load(Const.COMPONENTS_INDEX, Yaml(is_file_exists(Const.COMPONENTS_CONF)))
         Conf.load(Const.DATABASE_INDEX, Const.DATABASE_CONF_URL)
         if ( Conf.get(Const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != Const.DEV ):
-            Conf.decrypt_conf()
+            Security.decrypt_conf()
         if argp.l:
             Log.init("csm_test", log_path=argp.l)
         else:
@@ -124,6 +124,7 @@ if __name__ == '__main__':
     from csm.common.errors import CsmError
     from csm.common.payload import *
     from cortx.utils.conf_store.conf_store import Conf
+    from csm.common.conf import Security
     from csm.test.common import TestFailed, Const
 
     try:
