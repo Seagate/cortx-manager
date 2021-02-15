@@ -184,7 +184,7 @@ class Configure(Setup):
         current_node = Conf.get(const.CONSUMER_INDEX,
                                 f"cluster>server_nodes>{machine_id}")
         data_nw = Conf.get(const.CONSUMER_INDEX,
-                           f'cluster>{current_node}>data')
+                           f'cluster>{current_node}>network>data')
         if not data_nw:
             raise CsmSetupError(
                 f'Unable to obtain data nw info for {current_node}')

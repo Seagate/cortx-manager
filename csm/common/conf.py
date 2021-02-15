@@ -134,5 +134,4 @@ class Security:
                         decrypted_value.decode("utf-8"))
             except CipherInvalidToken as error:
                 import traceback
-                traceback.print_exc()
                 Log.exception(f"Decryption for {each_key} Failed. {error}")

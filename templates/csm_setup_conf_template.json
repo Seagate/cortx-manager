@@ -9,7 +9,8 @@
     },
     "srvnode-1": {
       "node_type": "VM",
-      "data": {
+      "network": {
+        "data": {
           "public_interfaces": [
             "eth1",
             "eth2"
@@ -27,6 +28,7 @@
           "mtu": "1500",
           "roaming_ip": "localhost"
         }
+      }
     }
   },
   "system": {
