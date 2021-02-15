@@ -12,7 +12,8 @@
     "message.sensor_response_type.info.cluster_id": "sensor_info.cluster_id",
     "message.sensor_response_type.info.resource_id": "sensor_info.resource_id",
     "message.sensor_response_type.info.resource_type": "sensor_info.resource_type",
-    "message.sensor_response_type.host_id": "host_id"
+    "message.sensor_response_type.host_id": "host_id",
+    "message.sensor_response_type.info.description": "description"
   },
   "enclosure:fru:fan": {
     "message.sensor_response_type.specific_info.location": "location",
@@ -64,7 +65,6 @@
     "message.sensor_response_type.specific_info.source": "source",
     "message.sensor_response_type.specific_info.component": "component",
     "message.sensor_response_type.specific_info.module": "module",
-    "message.sensor_response_type.specific_info.IEC": "sensor_info.IEC",
-    "message.sensor_response_type.specific_info.description": "description"
+    "message.sensor_response_type.specific_info.IEC": "sensor_info.IEC"    
   }
 }

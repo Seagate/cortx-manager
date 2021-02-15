@@ -298,9 +298,20 @@ class AlertPlugin(CsmPlugin):
                 from SSPL's info section of the alert message.
                 5. This string uniquely identifies the resource for which an
                 alert has come.
+                6. Enclosure alerts can be generated from any node. So one alert
+                is generated from one node and another alert for the same enclosure
+                componenet is generated from another node, the status should get
+                updated accordingly. That is why node_id is ignored in case of
+                enclosure while creating sensor_info.
                 """
-                csm_schema[const.ALERT_SENSOR_INFO] = \
-                    '_'.join(str(x) for x in csm_schema[const.ALERT_SENSOR_INFO].values())
+                if res_split[0] == const.ENCLOSURE:
+                    csm_schema[const.ALERT_SENSOR_INFO] = \
+                        '_'.join(str(value) for key, value in \
+                            csm_schema[const.ALERT_SENSOR_INFO].items() \
+                                if key != const.ALERT_NODE_ID)
+                else:
+                    csm_schema[const.ALERT_SENSOR_INFO] = \
+                        '_'.join(str(x) for x in csm_schema[const.ALERT_SENSOR_INFO].values())
                 csm_schema[const.ALERT_SENSOR_INFO] = \
                     csm_schema[const.ALERT_SENSOR_INFO].replace(" ", "_")
                 if const.ALERT_EVENTS in csm_schema and \
@@ -355,8 +366,6 @@ class AlertPlugin(CsmPlugin):
             if not isinstance(specific_info, list):
                 csm_schema[const.ALERT_HEALTH] = \
                     specific_info.get(const.ALERT_HEALTH, "")
-                csm_schema[const.DESCRIPTION] = \
-                    specific_info.get(const.ALERT_HEALTH_REASON, "")
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
             else:
