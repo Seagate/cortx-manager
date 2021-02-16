@@ -39,6 +39,7 @@ class Cleanup(Setup):
 
     async def execute(self, command):
         try:
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
         except KvError as e:

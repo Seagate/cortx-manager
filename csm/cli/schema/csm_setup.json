@@ -192,6 +192,12 @@
       "need_confirmation": false,
       "permissions_tag": "update",
       "args": [
+         {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "help": "Config Store URL e.g <type>://<path>."
+        },
         {
           "flag": "-p",
           "dest": "Product",
@@ -315,6 +321,12 @@
       "need_confirmation": false,
       "permissions_tag": "update",
       "args": [
+         {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "help": "Config Store URL e.g <type>://<path>."
+        },
         {
           "flag": "args",
           "default": [],
