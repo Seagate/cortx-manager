@@ -285,8 +285,8 @@ class Configure(Setup):
                 raise CsmSetupError("Fetching health map filename failed.")
             healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
             if not os.path.exists(healthmap_path):
-                Log.logger.error("Health map not available at {healthmap_path}")
-                raise CsmSetupError("Health map not available at {healthmap_path}")
+                Log.logger.error(f"Health map not available at {healthmap_path}")
+                raise CsmSetupError(f"Health map not available at {healthmap_path}")
             """
             Setting the health map path to csm.conf configuration file.
             """

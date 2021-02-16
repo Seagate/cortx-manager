@@ -14,14 +14,13 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.log import Log
-from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
 
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.payload import Yaml
 from csm.conf.setup import CsmSetupError, Setup
-from csm.conf.uds import UDSConfigGenerator
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 
@@ -39,7 +38,8 @@ class Cleanup(Setup):
 
     async def execute(self, command):
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CONSUMER_INDEX,
+                      command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
             Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
         except KvError as e:
@@ -71,7 +71,7 @@ class Cleanup(Setup):
         self._es_db_url = (f"http://{es_db_details['config']['host']}:"
                            f"{es_db_details['config']['port']}/")
         self._consul_db_url = (f"http://{consul_details['config']['host']}:"
-                    f"{consul_details['config']['port']}/v1/kv/{CONSUL_ROOT}")
+                               f"{consul_details['config']['port']}/v1/kv/{CONSUL_ROOT}")
 
     async def _db_cleanup(self):
         """
@@ -80,7 +80,10 @@ class Cleanup(Setup):
         """
         self.load_db()
         for each_model in Conf.get(const.DATABASE_INDEX, "models"):
-            await self.erase_index(each_model.get("config", {}))
+            if each_model.get("is_selective", False) != "true":
+                await self.erase_index(each_model.get("config", {}))
+            else:
+                await self.selective_cleanup(each_model)
 
     async def erase_index(self, collection_details):
         """
@@ -91,7 +94,7 @@ class Cleanup(Setup):
         url = None
         collection = ""
         if collection_details.get("es_db"):
-            collection = collection_details.get('consul_db', {}).get(
+            collection = collection_details.get('es_db', {}).get(
                 'collection')
             url = f"{self._es_db_url}{collection}"
         else:
@@ -108,14 +111,59 @@ class Cleanup(Setup):
             return
         Log.info(f"Index {collection} Deleted.")
 
-    def selective_cleanup(self, collection_details):
+    def fetch_conf_store_values(self, query_keys):
+        """
+
+        :param query_keys:
+        :return:
+        """
+        query_data = dict()
+        machine_id = self._get_machine_id()
+        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        minion_id = server_nodes.get(machine_id)
+        substitutes = {
+            "machine_id": machine_id,
+            "minion_id": minion_id
+        }
+        for each_key in query_keys.keys():
+            query_data[each_key] = Conf.get(const.CONSUMER_INDEX,
+                                            query_keys[each_key].format(
+                                                **substitutes), None)
+        return query_data
+
+    async def selective_cleanup(self, collection_details):
         """
         Cleanup all the CSM Consul Data.
         :param collection_details: Consul Collection Name to be Deleted.
         :return:
         """
         Log.info(f"Cleaning up Collection {collection_details}")
-        # TODO: Implement Selective Deletion.
+        json = dict()
+        config = collection_details.get("config", {})
+        if config.get("es_db"):
+            collection = config.get('es_db', {}).get(
+                'collection')
+            url = f"{self._es_db_url}{collection}/_delete_by_query"
+            method = "post"
+        else:
+            collection = config.get('consul_db', {}).get(
+                'collection')
+            url = f"{self._consul_db_url}/{collection}"
+            method = "delete"
+        if collection_details.get("cleanup", {}):
+            cleanup_data = collection_details.get("cleanup", {})
+            query_keys = cleanup_data.get("keys")
+            conf_data = self.fetch_conf_store_values(query_keys)
+            query = cleanup_data.get("query", "")
+            json = query.format(**conf_data).replace("<", "{").replace(">", "}")
+        Log.info(f"Attempting Deletion of Collection {collection}")
+        text, headers, status = await self.request(url, method, json=eval(json))
+        if status != 200:
+            Log.error(f"Index {collection} Could Not Be Deleted.")
+            Log.error(f"Response --> {text}")
+            Log.error(f"Status Code--> {status}")
+            return
+        Log.info(f"Index {collection} Deleted.")
 
     def directory_cleanup(self):
         """

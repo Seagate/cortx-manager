@@ -388,16 +388,18 @@ class Setup:
             Text(each_service_file).dump(data)
 
     @staticmethod
-    async def request(url, method):
+    async def request(url, method, json=None):
         """
         Call DB for Executing the Given API.
         :param url: URI for Connection.
         :param method: API Method.
         :return: Response Object.
         """
+        if not json:
+            json = dict()
         try:
             async with aiohttp.ClientSession(headers={}) as session:
-                async with session.request(method=method, url=url) as response:
+                async with session.request(method=method, url=url, json=json) as response:
                     return await response.text(), response.headers, response.status
         except ClientConnectionError as e:
             Log.error(f"Connection to URI {url} Failed")
