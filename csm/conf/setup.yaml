@@ -36,6 +36,10 @@ csm:
         cmd: /usr/bin/csm_setup reset
         args: --config $URL
 
+    cleanup:
+        cmd: /usr/bin/csm_setup reset
+        args: --config $URL
+
 
     ha_sanity:
         cmd: /usr/bin/csm_test
