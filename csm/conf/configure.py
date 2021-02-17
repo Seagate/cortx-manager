@@ -63,11 +63,11 @@ class Configure(Setup):
             machine_id = Setup._get_machine_id()
             data_nw = Configure._get_data_nw_info(machine_id)
             Configure._set_db_host_addr('consul',
-                                        data_nw.get('roaming_ip',
-                                                    'localhost'))
+                                        data_nw.get(const.ROAMING_IP,
+                                                    const.LOCALHOST))
             Configure._set_db_host_addr('es',
-                                        data_nw.get('private_ip',
-                                                    'localhost'))
+                                        data_nw.get(const.PRIVATE_IP,
+                                                    const.LOCALHOST))
             Configure._set_fqdn_for_nodeid()
             Configure._set_rmq_cluster_nodes()
             self._rsyslog()

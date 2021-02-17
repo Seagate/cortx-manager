@@ -434,6 +434,9 @@ PRIMARY_NODE = 'Node 0'
 SECONDARY_NODE = 'Node 1'
 SYSTEM_CONFIG = 'system_config'
 IS_DHCP = 'is_dhcp'
+ROAMING_IP = "roaming_ip"
+PRIVATE_IP = "private_ip"
+LOCALHOST = "localhost"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
