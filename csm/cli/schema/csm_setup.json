@@ -305,6 +305,12 @@
           "default": "",
           "type": "str",
           "help": "Print final result in file return fail if any one of test failed."
+        },
+         {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
         }
       ],
       "comm": {
