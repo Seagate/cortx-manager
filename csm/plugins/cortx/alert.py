@@ -355,8 +355,6 @@ class AlertPlugin(CsmPlugin):
             if not isinstance(specific_info, list):
                 csm_schema[const.ALERT_HEALTH] = \
                     specific_info.get(const.ALERT_HEALTH, "")
-                csm_schema[const.DESCRIPTION] = \
-                    specific_info.get(const.ALERT_HEALTH_REASON, "")
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
             else:
