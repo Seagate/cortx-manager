@@ -35,21 +35,12 @@ models:
     config:
         es_db:
             collection: "alerts"
-    is_selective: "true"
-    cleanup:
-        query:  "<\"query\": <\"match\": <\"node_id\": {node_id}>>>"
-        keys:
-            node_id: "cluster>{minion_id}>node_id"
 -   import_path: "csm.core.blogic.models.alerts.AlertsHistoryModel"
     database: "es_db"
     config:
         es_db:
             collection: "alerts-history"
-    is_selective: "true"
-    cleanup:
-        query:  "<\"query\": <\"match\": <\"node_id\": {node_id}>>>"
-        keys:
-            node_id: "cluster>{minion_id}>node_id"
+
 -   import_path: "csm.core.data.models.users.User"
     database: "consul_db"
     config:

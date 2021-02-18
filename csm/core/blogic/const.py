@@ -154,7 +154,7 @@ CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
-
+SELECTIVE_CLEANUP = f"{CSM_SCHEMA_BASE_DIR}/selective_cleanup.yaml"
 # Non root user
 NON_ROOT_USER = 'csm'
 CONF_STORE_USER_KEY = 'system>service-user>name'

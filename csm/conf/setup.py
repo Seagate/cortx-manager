@@ -402,7 +402,8 @@ class Setup:
             json = dict()
         try:
             async with aiohttp.ClientSession(headers={}) as session:
-                async with session.request(method=method, url=url, json=json) as response:
+                async with session.request(method=method.lower(), url=url,
+                                           json=json) as response:
                     return await response.text(), response.headers, response.status
         except ClientConnectionError as e:
             Log.error(f"Connection to URI {url} Failed")
