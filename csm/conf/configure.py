@@ -58,18 +58,18 @@ class Configure(Setup):
                 if uds_public_ip is not None:
                     ip_address(uds_public_ip)
                 UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
-                Configure._set_node_id()
-                machine_id = Setup._get_machine_id()
-                data_nw = Configure._get_data_nw_info(machine_id)
-                Configure._set_db_host_addr('consul',
-                                            data_nw.get('roaming_ip',
-                                                        'localhost'))
-                Configure._set_db_host_addr('es',
-                                            data_nw.get('private_ip',
-                                                        'localhost'))
-                Configure._set_fqdn_for_nodeid()
                 Configure._set_healthmap_path()
-                Configure._set_rmq_cluster_nodes()
+            Configure._set_node_id()
+            machine_id = Setup._get_machine_id()
+            data_nw = Configure._get_data_nw_info(machine_id)
+            Configure._set_db_host_addr('consul',
+                                        data_nw.get(const.ROAMING_IP,
+                                                    const.LOCALHOST))
+            Configure._set_db_host_addr('es',
+                                        data_nw.get(const.PRIVATE_IP,
+                                                    const.LOCALHOST))
+            Configure._set_fqdn_for_nodeid()
+            Configure._set_rmq_cluster_nodes()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
@@ -77,8 +77,10 @@ class Configure(Setup):
                 self.create()
         except Exception as e:
             import traceback
-            Log.error(f"csm_setup config command failed. Error: {e} - {str(traceback.format_exc())}")
-            raise CsmSetupError(f"csm_setup config command failed. Error: {e} - {str(traceback.format_exc())}")
+            err_msg = (f"csm_setup config command failed. Error: "
+                       f"{e} - {str(traceback.format_exc())}")
+            Log.error(err_msg)
+            raise CsmSetupError(err_msg)
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def create(self):
@@ -87,7 +89,7 @@ class Configure(Setup):
         :return:
         """
         Log.error("Creating CSM Conf File on Required Location.")
-        if self._is_env_vm:
+        if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
         self.store_encrypted_password()
@@ -130,9 +132,12 @@ class Configure(Setup):
         Log.info("CSM Credentials Copied to CSM Configuration.")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}",
                  _paswd)
-        service_user = Conf.get(const.CONSUMER_INDEX, f"service>cortx>user")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PASSWORD}",
+                 _paswd)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}",
-                 service_user)
+                 self._user)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
+                 self._user)
 
     def cli_create(self, command):
         """
@@ -148,7 +153,7 @@ class Configure(Setup):
         Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                  f"{const.CORTXCLI_SECTION}>{const.CSM_AGENT_HOST_PARAM_NAME}" ,
                  command.options.get(const.ADDRESS_PARAM, "127.0.0.1"))
-        if self._is_env_vm:
+        if self._is_env_dev:
             Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                      f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
         Setup._run_cmd(
@@ -176,11 +181,13 @@ class Configure(Setup):
         :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
+        current_node = Conf.get(const.CONSUMER_INDEX,
+                                f"cluster>server_nodes>{machine_id}")
         data_nw = Conf.get(const.CONSUMER_INDEX,
-                           f'cluster>{machine_id}>network>data')
+                           f'cluster>{current_node}>network>data')
         if not data_nw:
             raise CsmSetupError(
-                f'Unable to obtain data nw info for {machine_id}')
+                f'Unable to obtain data nw info for {current_node}')
         return data_nw
 
     @staticmethod
@@ -283,7 +290,8 @@ class Configure(Setup):
             if not healthmap_filename:
                 Log.logger.error("Fetching health map filename failed.")
                 raise CsmSetupError("Fetching health map filename failed.")
-            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
+            healthmap_path = os.path.join(healthmap_folder_path,
+                                          healthmap_filename)
             if not os.path.exists(healthmap_path):
                 Log.logger.error("Health map not available at {healthmap_path}")
                 raise CsmSetupError("Health map not available at {healthmap_path}")
