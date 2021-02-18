@@ -17,7 +17,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.log import Log
-
+from ast import literal_eval
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.payload import Yaml
 from csm.conf.setup import CsmSetupError, Setup
@@ -175,7 +175,8 @@ class Cleanup(Setup):
         query = query_data.get("query", "")
         json = query.format(**conf_data).replace("<", "{").replace(">", "}")
         Log.info(f"Attempting Deletion of Collection {collection}")
-        text, headers, status = await self.request(url, method, json=eval(json))
+        text, headers, status = await self.request(url, method,
+                                                   json=literal_eval(json))
         if status != 200:
             Log.error(f"Index {collection} Could Not Be Deleted.")
             Log.error(f"Response --> {text}")
