@@ -35,7 +35,7 @@ CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
-PROVISIONER_LOG_FILE_PATH = "/var/log/seagate/provisioner"
+PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
@@ -434,6 +434,9 @@ PRIMARY_NODE = 'Node 0'
 SECONDARY_NODE = 'Node 1'
 SYSTEM_CONFIG = 'system_config'
 IS_DHCP = 'is_dhcp'
+ROAMING_IP = "roaming_ip"
+PRIVATE_IP = "private_ip"
+LOCALHOST = "localhost"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -516,7 +519,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 DECRYPTION_KEYS = {
     "CHANNEL>password": "sspl",
-    "S3>ldap_password": "openldap"
+    "S3>ldap_password": "openldap",
+    "CSM>password": "csm"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status
@@ -537,7 +541,7 @@ SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
-PROVISIONER='PROVISIONER'
+PROVISIONER = 'PROVISIONER'
 RET='ret'
 DEBUG='debug'
 NA='NA'
@@ -548,6 +552,7 @@ NODE_TYPE="node_type"
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
+DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
 VM = 'VM'
 ENV_TYPE = 'env_type'
