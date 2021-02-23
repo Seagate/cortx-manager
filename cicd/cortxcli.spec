@@ -17,7 +17,7 @@ Name: <RPM_NAME>
 Version: %{version}
 Release: %{dist}
 Summary: Cortx CLI
-License: Seagate Proprietary
+License: Seagate
 URL: http://github.com/Seagate/cortx-manager
 Source0: <PRODUCT>-cli-%{version}.tar.gz
 Requires: <CSM_AGENT_RPM_NAME>
