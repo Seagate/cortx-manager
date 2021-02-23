@@ -155,10 +155,11 @@ class CsmAgent:
 
         # S3 Plugin creation
         s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3, provisioner)
-        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3, provisioner)
-        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3, provisioner)
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3)
+        CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3)
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
+        CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService(provisioner)
 
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
@@ -249,6 +250,7 @@ if __name__ == '__main__':
     from csm.core.services.s3.accounts import S3AccountService
     from csm.core.services.s3.buckets import S3BucketService
     from csm.core.services.s3.access_keys import S3AccessKeysService
+    from csm.core.services.s3.server_info import S3ServerInfoService
     from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
