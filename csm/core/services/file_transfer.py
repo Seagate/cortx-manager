@@ -92,7 +92,18 @@ class FileRef():
     def save_file(self, dir_to_save, filename, overwrite=False):
         if not os.path.exists(dir_to_save):
             Log.warn(f"{dir_to_save} not found. Recreating storage directory." )
-            os.makedirs(dir_to_save, exist_ok=True)
+            try:
+                original_mask = os.umask(0o007)
+                Log.debug(f"original mask: {original_mask}")
+                os.makedirs(dir_to_save)
+            except Exception as e:
+                Log.debug(f"Can not create directory {e}")
+                raise CsmInternalError(f"System error during directory creation for "
+                                       f"path='{file_cache.cache_dir}': {e}")
+            finally:
+                new_mask = os.umask(original_mask)
+                Log.debug(f"new mask: {new_mask}")
+
         Log.info(f"Saving {filename} at {dir_to_save}")
         path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
@@ -105,10 +116,9 @@ class FileRef():
         try:
             copyfile(path_to_cached_file, path_to_file_to_save)
         except PermissionError as pe:
-            Log.warn(f"Incorrect permissions for {path_to_file_to_save}. Changing permissions for USER to RWX: {pe}")
-            os.chmod(dir_to_save, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-            copyfile(path_to_cached_file, path_to_file_to_save)
-
+            Log.warn(f"Incorrect permissions for {path_to_file_to_save}: {pe}.")
+            raise CsmInternalError(f"Incorrect permissions for {path_to_file_to_save}")
+        
         return path_to_file_to_save
 
 
