@@ -89,7 +89,10 @@ class FileRef():
         return path_to_cached_file
 
     def save_file(self, dir_to_save, filename, overwrite=False):
-        Log.debug(f"Saving f{filename} at f{dir_to_save}")
+        if not os.path.exists(dir_to_save):
+            Log.warn(f"{dir_to_save} not found. Recreating storage directory." )
+            os.makedirs(dir_to_save, exist_ok=True)
+        Log.info(f"Saving {filename} at {dir_to_save}")
         path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
 
