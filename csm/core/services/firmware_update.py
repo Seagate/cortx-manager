@@ -40,7 +40,11 @@ class FirmwareUpdateService(UpdateService):
         :param filename: str
         :return: dict
         """
-        firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
+        try: 
+            firmware_package_path = package_ref.save_file(self._fw_storage_path, filename, True)
+        except Exception as e:
+            Log.error(f'Failed to save the package: {e}')
+            raise CsmInternalError(f'Failed to save the package: {e}')
         model = await self._update_repo.get_current_model(const.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
             Log.error("You cannot upload a new package while there is an ongoing update")
