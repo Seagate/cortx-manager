@@ -99,7 +99,7 @@ class FileRef():
             except Exception as e:
                 Log.debug(f"Can not create directory {e}")
                 raise CsmInternalError(f"System error during directory creation for "
-                                       f"path='{file_cache.cache_dir}': {e}")
+                                       f"path='{dir_to_save}': {e}")
             finally:
                 new_mask = os.umask(original_mask)
                 Log.debug(f"new mask: {new_mask}")
