@@ -105,7 +105,7 @@ class FileRef():
         try:
             copyfile(path_to_cached_file, path_to_file_to_save)
         except PermissionError as pe:
-            Log.warn(f"Incorrect permissions for {path_to_file_to_save}. Changing permissions for USER to RWX")
+            Log.warn(f"Incorrect permissions for {path_to_file_to_save}. Changing permissions for USER to RWX: {pe}")
             os.chmod(path_to_file_to_save, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             copyfile(path_to_cached_file, path_to_file_to_save)
 
