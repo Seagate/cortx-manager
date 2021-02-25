@@ -51,18 +51,17 @@ class HotfixApplicationService(UpdateService):
             raise InvalidRequest("You can't upload a new package while there is an ongoing update")
 
         try:
-            file_ref.save_file(self.storage_path,file_name, True)
+            file_ref.save_file(self.storage_path, file_name, True)
         except Exception as e:
             Log.error(f'Failed to save the package: {e}')
             raise CsmInternalError(f'Failed to save the package: {e}')
 
-        Log.debug("Saving model for software update")
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
         model.file_path = os.path.join(self.storage_path, file_name)
         model.description = info.description
         model.mark_uploaded()
-        Log.debug(model.to_printable())
+        Log.debug(f"Saving model for software update {model.to_printable()}")
         await self._update_repo.save_model(model)
 
         return {

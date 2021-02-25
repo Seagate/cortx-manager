@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import stat
 import uuid
 from abc import ABC
 from enum import Enum
@@ -101,7 +102,12 @@ class FileRef():
                 f'File "{path_to_file_to_save}" already exists. Change ' +
                 '"overwrite" argument if you want to overwrite file')
 
-        copyfile(path_to_cached_file, path_to_file_to_save)
+        try:
+            copyfile(path_to_cached_file, path_to_file_to_save)
+        except PermissionError as pe:
+            Log.warn(f"Incorrect permissions for {path_to_file_to_save}. Changing permissions for USER to RWX: {pe}")
+            os.chmod(dir_to_save, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+            copyfile(path_to_cached_file, path_to_file_to_save)
         
         return path_to_file_to_save
 
