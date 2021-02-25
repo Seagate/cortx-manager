@@ -30,38 +30,41 @@ class HotfixApplicationService(UpdateService):
 
     def __init__(self, storage_path, provisioner, update_repo):
         super().__init__(provisioner, update_repo)
-        self._sw_file = os.path.join(storage_path, 'hotfix_fw_candidate.iso')
-        os.makedirs(storage_path, exist_ok=True)
+        self.storage_path = storage_path
+        os.makedirs(self.storage_path, exist_ok=True)
 
     @Log.trace_method(Log.INFO)
     async def upload_package(self, file_ref, file_name):
         """
-        Upload and validate a hotfix update firmware package
+        Upload and validate a hotfix update 
         :param file_ref: An instance of FileRef class that represents a new update package
         :returns: An instance of PackageInformation
         """
         try:
             info = await self._provisioner.validate_hotfix_package(file_ref.get_file_path(), file_name)
         except CsmError:
+            Log.error('You have uploaded an invalid software update package')
             raise InvalidRequest('You have uploaded an invalid software update package')
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
+            Log.error("You cannot upload a new package while there is an ongoing update")
             raise InvalidRequest("You cannot upload a new package while there is an ongoing update")
 
+        try:
+            file_ref.save_file(self.storage_path, file_name, True)
+        except Exception as e:
+            Log.error(f'Failed to save the package: {e}')
+            raise CsmInternalError(f'Failed to save the package: {e}')
+
+        Log.debug("Saving model for software update")
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
-        model.file_path = os.path.join(os.path.dirname(self._sw_file), file_name)
+        model.file_path = os.path.join(self.storage_path, file_name)
         model.description = info.description
         model.mark_uploaded()
         Log.debug(model.to_printable())
         await self._update_repo.save_model(model)
-
-        try:
-            file_ref.save_file(os.path.dirname(self._sw_file),
-                file_name, True)
-        except Exception as e:
-            raise CsmInternalError(f'Failed to save the package: {e}')
 
         return {
             "version": info.version,
