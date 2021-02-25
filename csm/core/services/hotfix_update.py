@@ -36,7 +36,7 @@ class HotfixApplicationService(UpdateService):
     @Log.trace_method(Log.INFO)
     async def upload_package(self, file_ref, file_name):
         """
-        Upload and validate a hotfix update 
+        Upload and validate a hotfix update
         :param file_ref: An instance of FileRef class that represents a new update package
         :returns: An instance of PackageInformation
         """
