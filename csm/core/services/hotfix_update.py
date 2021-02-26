@@ -48,7 +48,7 @@ class HotfixApplicationService(UpdateService):
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
-            Log.error("You cannot upload a new package while there is an ongoing update")
+            Log.error(f"You cannot upload a new package while there is an ongoing update: {model.to_printable()}")
             raise InvalidRequest("You can't upload a new package while there is an ongoing update")
 
         try:

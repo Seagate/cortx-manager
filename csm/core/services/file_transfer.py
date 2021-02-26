@@ -96,7 +96,7 @@ class FileRef():
                 Log.debug(f"original mask: {original_mask}")
                 os.makedirs(dir_to_save)
             except Exception as e:
-                Log.debug(f"Can not create directory {e}")
+                Log.error(f"Unable to create directory {dir_to_save}: {e}")
                 raise CsmInternalError(f"System error during directory creation for "
                                        f"path='{dir_to_save}': {e}")
             finally:
