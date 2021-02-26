@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import stat
 import uuid
 from abc import ABC
 from enum import Enum
