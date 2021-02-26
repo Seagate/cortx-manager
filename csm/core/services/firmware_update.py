@@ -47,7 +47,7 @@ class FirmwareUpdateService(UpdateService):
             raise CsmInternalError(f'Failed to save the package: {e}')
         model = await self._update_repo.get_current_model(const.FIRMWARE_UPDATE_ID)
         if model and model.is_in_progress():
-            Log.error("You cannot upload a new package while there is an ongoing update")
+            Log.error(f"You cannot upload a new package while there is an ongoing update:{model.to_printable()}")
             raise InvalidRequest("You cannot upload a new package while there is an ongoing update")
 
         model = UpdateStatusEntry.generate_new(const.FIRMWARE_UPDATE_ID)
