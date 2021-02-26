@@ -116,8 +116,8 @@ class FileRef():
         try:
             copyfile(path_to_cached_file, path_to_file_to_save)
         except PermissionError as pe:
-            Log.warn(f"Incorrect permissions for {path_to_file_to_save}: {pe}.")
-            raise CsmInternalError(f"Incorrect permissions for {path_to_file_to_save}")
+            Log.warn(f"Incorrect permissions for {dir_to_save}: {pe}.")
+            raise CsmInternalError(f"Incorrect permissions for {dir_to_save}")
         
         return path_to_file_to_save
 

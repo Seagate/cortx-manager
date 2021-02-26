@@ -42,8 +42,8 @@ class HotfixApplicationService(UpdateService):
         """
         try:
             info = await self._provisioner.validate_hotfix_package(file_ref.get_file_path(), file_name)
-        except CsmError:
-            Log.error('You have uploaded an invalid software update package')
+        except CsmError as ce:
+            Log.error(f'You have uploaded an invalid software update package: {ce}')
             raise InvalidRequest('You have uploaded an invalid software update package')
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
