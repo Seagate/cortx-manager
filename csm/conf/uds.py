@@ -112,7 +112,7 @@ backend uds-backend
 """
 
     @staticmethod
-    def generate_uds_config():
+    def generate_uds_config(use_data_ip):
         minion_id = SaltWrappers.get_salt_call('grains.get', 'id')
         d = {
             "version": "2.0",
@@ -120,8 +120,13 @@ backend uds-backend
                 "RESTServer": {
                     "host": f'{minion_id}',
                 },
+                "DataMover": {
+                    "num_sub_workers": 4,
+                },
             },
         }
+        if not use_data_ip:
+            del d["service_config"]["RESTServer"]
         body = json.dumps(d, indent=4)
         return body
 
@@ -194,8 +199,9 @@ backend uds-backend
             os.umask(old_umask)
 
     @classmethod
-    def update_uds_config(cls):
-        config = cls.generate_uds_config()
+    def update_uds_config(cls, uds_public_ip):
+        use_data_ip = uds_public_ip is None
+        config = cls.generate_uds_config(use_data_ip)
         cls.write_uds_config(f'{config}\n')
 
     @classmethod
@@ -205,12 +211,11 @@ backend uds-backend
     @classmethod
     def apply(cls, uds_public_ip):
         cls.update_csm_config(uds_public_ip)
+        cls.update_uds_config(uds_public_ip)
         if uds_public_ip is None:
             cls.update_haproxy_config()
-            cls.update_uds_config()
         else:
             cls.remove_haproxy_config()
-            cls.remove_uds_config()
 
     @classmethod
     def delete(cls):
