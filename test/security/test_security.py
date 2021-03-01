@@ -12,30 +12,33 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-
-import errno
-from csm.cli.conf.setup import CortxCliSetup
 from csm.core.blogic import const
-from csm.core.providers.providers import Provider, Response
+from csm.cli.command_factory import CommandFactory
+from argparse import ArgumentError
+import unittest
+import json
+import os
+from csm.test.common import Const
 
+permissions = {
+            'security': { 'read': True }
+}
 
-class SetupProvider(Provider):
+show_command = CommandFactory.get_command(
+    ["security","details"], permissions)
+t = unittest.TestCase()
 
-    """Provider implementation for csm initialization."""
+def test_1(*args):
+    expected_output = 'security'
+    actual_output = show_command.name
+    t.assertEqual(actual_output, expected_output)
 
-    def __init__(self):
-        """Init SetupProvider."""
-        super(SetupProvider, self).__init__(const.CORTXCLI_SETUP_CMD)
-        self._cortxcli_setup = CortxCliSetup()
-        self.arg_list = {}
+def test_2(*args):
+    expected_output = 'get'
+    actual_output = show_command.method
+    t.assertEqual(actual_output, expected_output)
 
-    def _validate_request(self, request):
-        """Validate setup command request."""
-        self._action = request.options["sub_command_name"]
+def init(args):
+    pass
 
-    def _process_request(self, request):
-        try:
-            getattr(self._cortxcli_setup, "%s" %(self._action))(request.options)
-            return Response(0, "CLI %s : PASS" %self._action)
-        except Exception as e:
-            return Response(errno.EINVAL, "CLI %s : Fail %s" %(self._action,e))
+test_list = [test_1, test_2]

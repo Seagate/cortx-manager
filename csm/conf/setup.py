@@ -21,9 +21,7 @@ import grp
 import errno
 import shlex
 import json
-from ipaddress import ip_address
 from cortx.utils.log import Log
-from csm.common.conf import Conf
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
@@ -32,19 +30,12 @@ from csm.core.blogic.csm_ha import CsmResourceAgent
 from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
-import re
-import time
 import traceback
-import asyncio
-from csm.core.blogic.models.alerts import AlertModel
-from csm.core.services.alerts import AlertRepository
-from cortx.utils.schema.payload import Json
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.payload import Text
-from cortx.utils.product_features import unsupported_features
-from csm.conf.salt import SaltWrappers, PillarDataFetchError
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.kv_store.error import KvError
 
 # try:
 #     from salt import client
@@ -62,9 +53,31 @@ class ProvisionerCliError(InvalidRequest):
 
 class Setup:
     def __init__(self):
-        self._user = const.NON_ROOT_USER
+        self._user = None
         self._uid = self._gid = -1
         self._setup_info = dict()
+        self._is_env_vm = False
+        self._is_env_dev = False
+
+    def _set_deployment_mode(self):
+        """
+        This Method will set a deployment Mode according to env_type.
+        :return:
+        """
+        self._get_setup_info()
+        self._set_service_user()
+        if self._setup_info[const.NODE_TYPE] == const.VM:
+            Log.info("Running Csm Setup for VM Environment Mode.")
+            self._is_env_vm = True
+        if Conf.get(const.CONSUMER_INDEX, const.DEPLOYMENT_MODE) == const.DEV:
+            self._is_env_dev = True
+
+    def _set_service_user(self):
+        """
+        This Method will set the username for service user to Self._user
+        :return:
+        """
+        self._user = Conf.get(const.CONSUMER_INDEX, const.CONF_STORE_USER_KEY)
 
     @staticmethod
     def _run_cmd(cmd):
@@ -84,39 +97,41 @@ class Setup:
             Log.error(f"Csm setup is failed Error: {e}, {_err}")
             raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
 
-    @staticmethod
-    def _fetch_csm_user_password(decrypt=False):
+    def _fetch_csm_user_password(self, decrypt=False):
         """
         This Method Fetches the Password for CSM User from Provisioner.
         :param decrypt:
         :return:
         """
-        Log.info("Fetching CSM User Password from provisioner.")
+        csm_user_pass = None
+        if self._is_env_dev:
+            decrypt = False
+        Log.info("Fetching CSM User Password from Config Store.")
         try:
-            csm_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, "csm")
-        except PillarDataFetchError as e:
-            Log.error(f"Salt Command Failed {e}")
-            return None
-        if csm_credentials and isinstance(csm_credentials, dict):
-            csm_user_pass = csm_credentials.get(const.SECRET)
-        else:
-            Log.error("No Credentials Fetched from Provisioner.")
-            return None
+            # TODO: Need to Change Method for Fetching Csm Credentials.
+            csm_user_pass = Conf.get(const.CONSUMER_INDEX,
+                                     const.CONF_STORE_PASS_KEY)
+        except KvError as e:
+            Log.error(f"Failed to Fetch Csm Secret {e}")
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
-                cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
+                cluster_id = Conf.get(const.CONSUMER_INDEX,
+                                      f"{const.CLUSTER}>{const.CLUSTER_ID}")
                 cipher_key = Cipher.generate_key(cluster_id, "csm")
-            except PillarDataFetchError as error:
-                Log.error(f"Salt Command Failed {error}")
+            except KvError as error:
+                Log.error(f"Failed to Fetch Cluster Id. {error}")
+                return None
+            except Exception as e:
+                Log.error(f"{e}")
                 return None
             try:
-                decrypted_value = Cipher.decrypt(cipher_key, csm_user_pass.encode("utf-8"))
+                decrypted_value = Cipher.decrypt(cipher_key,
+                                                 csm_user_pass.encode("utf-8"))
                 return decrypted_value.decode("utf-8")
             except CipherInvalidToken as error:
                 Log.error(f"Decryption for CSM Failed. {error}")
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
-
         return csm_user_pass
 
     def _is_user_exist(self):
@@ -130,6 +145,37 @@ class Setup:
             return True
         except KeyError as err:
             return False
+
+    def _get_setup_info(self):
+        """
+        Return Setup Info from Conf Store
+        :return:
+        """
+        self._setup_info = {"node_type": "",
+                            "storage_type": ""}
+        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        machine_id = Setup._get_machine_id()
+        node_type_key = (f"{const.CLUSTER}>{server_nodes.get(machine_id, '')}"
+                         f">{const.NODE_TYPE}")
+        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                               node_type_key)
+        storage_type_key = (f"{const.STORAGE}>{server_nodes.get(machine_id, '')}"
+                         f">{const.TYPE}")
+        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
+                                                  storage_type_key)
+
+    @staticmethod
+    def _get_machine_id():
+        """
+        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
+        """
+        Log.info("Fetching Machine Id.")
+        cmd = "cat /etc/machine-id"
+        proc_obj = SimpleProcess(cmd)
+        machine_id, _err, _returncode = proc_obj.run()
+        if _returncode != 0:
+            raise CsmSetupError('Unable to obtain current machine id.')
+        return (machine_id.decode("utf-8")).replace("\n", "")
 
     @staticmethod
     def _is_group_exist(user_group):
@@ -186,82 +232,6 @@ class Setup:
             Log.error(f"Error in writing ssh config: {err}")
             if err.errno != errno.EEXIST: raise
 
-    def _passwordless_ssh(self, home_dir):
-        """
-        make passwordless ssh to nodes
-        """
-        Log.info("Make passwordless ssh to nodes")
-        Log.debug(f"home_dir path:{home_dir}")
-        Setup._run_cmd("mkdir "+os.path.join(home_dir, const.SSH_DIR))
-        cmd = shlex.split("ssh-keygen -N '' -f "+os.path.join(home_dir, const.SSH_PRIVATE_KEY))
-        Setup._run_cmd(cmd)
-        self._create_ssh_config(os.path.join(home_dir, const.SSH_CONFIG), os.path.join(home_dir, const.SSH_PRIVATE_KEY))
-        Setup._run_cmd("cp "+os.path.join(home_dir, const.SSH_PUBLIC_KEY)+" " +
-                                                     os.path.join(home_dir, const.SSH_AUTHORIZED_KEY))
-        Setup._run_cmd("chown -R "+self._user+":"+self._user+" "+os.path.join(home_dir, const.SSH_DIR))
-        Setup._run_cmd("chmod 400 "+os.path.join(const.CSM_USER_HOME, const.SSH_PRIVATE_KEY))
-
-    def _config_user(self, reset=False):
-        """
-        Check user already exist and create if not exist
-        If reset true then delete user
-        """
-        Log.info("Check user already exist and create if not exist. reset flag: {reset}")
-        if not reset:
-            if not self._is_user_exist():
-                _password = self._fetch_csm_user_password(decrypt=True)
-                if not _password:
-                    Log.error("CSM Password Not Recieved from provisioner.")
-                    raise CsmSetupError("CSM Password Not Set by Provisioner.")
-                Log.info("Creating CSM User.")
-                _password = crypt.crypt(_password, "22")
-                Setup._run_cmd(f"useradd -d {const.CSM_USER_HOME} -p {_password} {self._user}")
-                Log.info("Adding CSM User to Wheel Group.")
-                Setup._run_cmd("usermod -aG wheel " + self._user)
-                Log.info("Enabling nologin for CSM user.")
-                Setup._run_cmd("usermod -s /sbin/nologin " + self._user)
-                if not self._is_user_exist():
-                    raise CsmSetupError("Unable to create %s user" % self._user)
-                node_name = SaltWrappers.get_salt_call(const.GRAINS_GET, 'id', 'log')
-                primary = SaltWrappers.get_salt_call(const.GRAINS_GET, 'roles', 'log')
-                if ( node_name is None or const.PRIMARY_ROLE in primary):
-                    self._passwordless_ssh(const.CSM_USER_HOME)
-                nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
-                if ( primary and const.PRIMARY_ROLE in primary and nodes is not None and len(nodes) > 1 ):
-                    nodes.remove(node_name)
-                    for node in nodes:
-                        if (self._check_if_dir_exist_remote_host(const.CSM_USER_HOME, node)):
-                            Setup._run_cmd("scp -pr "+os.path.join(const.CSM_USER_HOME, const.SSH_DIR)+" "+
-                                      node+":"+const.CSM_USER_HOME)
-                            Setup._run_cmd(" ssh "+node+" chown -R "+self._user+":"+self._user+" "+
-                                                 os.path.join(const.CSM_USER_HOME, const.SSH_DIR) )
-        else:
-            if self._is_user_exist():
-                Setup._run_cmd("userdel -r " +self._user)
-        if self._is_user_exist() and Setup._is_group_exist(const.HA_CLIENT_GROUP):
-            Setup._run_cmd(f"usermod -a -G {const.HA_CLIENT_GROUP}  {self._user}")
-
-    def _config_user_permission_set(self, bundle_path, crt, key):
-        """
-        Set User Permission
-        """
-        Log.info("Set User Permission")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-        os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
-        os.makedirs(log_path, exist_ok=True)
-        os.makedirs(bundle_path, exist_ok=True)
-        os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_TMP_FILE_CACHE_DIR)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + bundle_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + log_path)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_CONF_PATH)
-        Setup._run_cmd("setfacl -R -m u:" + self._user + ":rwx " + const.CSM_PIDFILE_PATH)
-        Setup._run_cmd("setfacl -R -b " + const.CSM_USER_HOME)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + crt)
-        Setup._run_cmd("setfacl -m u:" + self._user + ":rwx " + key)
-        Setup._run_cmd("chmod +x /opt/seagate/cortx/csm/scripts/cortxha_shutdown_cron.sh")
 
     def _config_user_permission_unset(self, bundle_path):
         """
@@ -273,19 +243,6 @@ class Setup:
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
 
-    def _config_user_permission(self, reset=False):
-        """
-        Create user and allow permission for csm resources
-        """
-        Log.info("Create user and allow permission for csm resources")
-        bundle_path = Conf.get(const.CSM_GLOBAL_INDEX, "SUPPORT_BUNDLE.bundle_path")
-        crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
-        key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.private_key_path")
-        if not reset:
-            self._config_user_permission_set(bundle_path, crt, key)
-        else:
-            self._config_user_permission_unset(bundle_path)
-
     class Config:
         """
         Action for csm config
@@ -296,104 +253,15 @@ class Setup:
         """
 
         @staticmethod
-        def store_encrypted_password(conf_data):
-            # read username's and password's for S3 and RMQ
-            Log.info("Storing Encrypted Password")
-            open_ldap_credentials = SaltWrappers.get_salt_call(const.PILLAR_GET, const.OPENLDAP)
-            # Edit Current Config File.
-            if open_ldap_credentials and type(open_ldap_credentials) is dict:
-                Log.info("Openldap Credentials Copied to CSM Configuration.")
-                conf_data[const.S3][const.LDAP_LOGIN] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.USER)
-                conf_data[const.S3][const.LDAP_PASSWORD] = open_ldap_credentials.get(
-                                                    const.IAM_ADMIN, {}).get(const.SECRET)
-            else:
-                Log.error(f"failed to get pillar data for {const.OPENLDAP}")
-                raise InvalidPillarDataError(f"failed to get pillar data for {const.OPENLDAP}")
-            sspl_config = SaltWrappers.get_salt_call(const.PILLAR_GET, const.SSPL)
-            if sspl_config and type(sspl_config) is dict:
-                Log.info("SSPL Credentials Copied to CSM Configuration.")
-                conf_data[const.CHANNEL][const.USERNAME] = sspl_config.get(const.USERNAME)
-                conf_data[const.CHANNEL][const.PASSWORD] = sspl_config.get(const.PASSWORD)
-            else:
-                Log.error(f"failed to get pillar data for {const.SSPL}")
-                raise InvalidPillarDataError(f"failed to get pillar data for {const.SSPL}")
-            _paswd = Setup._fetch_csm_user_password()
-            if not _paswd:
-                raise CsmSetupError("CSM Password Not Set by Provisioner.")
-            Log.info("CSM Credentials Copied to CSM Configuration.")
-            conf_data[const.CSM][const.PASSWORD] = _paswd
-            cluster_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.CLUSTER_ID)
-            provisioner_data = conf_data[const.PROVISIONER]
-            provisioner_data[const.CLUSTER_ID] = cluster_id
-            conf_data[const.PROVISIONER] = provisioner_data
-
-        @staticmethod
-        def create(args):
-            """
-            This Function Creates the CSM Conf File on Required Location.
-            :return:
-            """
-            Log.error(f"Create the CSM Conf File on Required Location. args:{args}")
-            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            csm_conf_path = os.path.join(const.CSM_SOURCE_CONF_PATH, const.CSM_CONF_FILE_NAME)
-            # Read Current CSM Config FIle.
-            conf_file_data = Yaml(csm_conf_path).load()
-            if conf_file_data:
-                if args[const.DEBUG]:
-                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
-                else:
-                    Setup.Config.store_encrypted_password(conf_file_data)
-                    # Update the Current Config File.
-                    Yaml(csm_conf_path).dump(conf_file_data)
-                Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
-                if args[const.DEBUG]:
-                    Yaml(csm_conf_target_path).dump(conf_file_data)
-            else:
-                Log.error(f"Unable to load CSM config. Path:{csm_conf_path}")
-                raise CsmSetupError(f"Unable to load CSM config. Path:{csm_conf_path}")
-
-        @staticmethod
-        def cli_create(args):
-            """
-            This Function Creates the CortxCli Conf File on Required Location.
-            :return:
-            """
-            os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
-            os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
-            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_PATH)
-            Setup._run_cmd("setfacl -R -m u:" + const.NON_ROOT_USER + ":rwx " + const.CORTXCLI_CONF_PATH)
-            cli_conf_target_path = os.path.join(const.CORTXCLI_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
-            cli_conf_path = os.path.join(const.CORTXCLI_SOURCE_CONF_PATH, const.CORTXCLI_CONF_FILE_NAME)
-            # Read Current CortxCli Config FIle.
-            conf_file_data = Yaml(cli_conf_path).load()
-            if conf_file_data:
-                if const.ADDRESS_PARAM in args.keys():
-                    conf_file_data[const.CORTXCLI_SECTION][const.CSM_AGENT_HOST_PARAM_NAME] =\
-                        args[const.ADDRESS_PARAM]
-                if args[const.DEBUG]:
-                    conf_file_data[const.DEPLOYMENT] = {const.MODE : const.DEV}
-                else:
-                    Setup.Config.store_encrypted_password(conf_file_data)
-                    # Update the Current Config File.
-                    Yaml(cli_conf_path).dump(conf_file_data)
-                Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
-                if args["f"] or args[const.DEBUG]:
-                    Yaml(cli_conf_target_path).dump(conf_file_data)
-            else:
-                raise CsmSetupError(f"Unable to load Cortx Cli config. Path:{cli_conf_path}")
-
-        @staticmethod
         def load():
             Log.info("Loading config")
-            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.CSM_CONF_FILE_NAME)
+            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH,
+                                                const.CSM_CONF_FILE_NAME)
             if not os.path.exists(csm_conf_target_path):
-                Log.error("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
-                raise CsmSetupError("%s file is missing for csm setup" %const.CSM_CONF_FILE_NAME)
-            Conf.load(const.CSM_GLOBAL_INDEX, Yaml(csm_conf_target_path))
-            """
-            Loading databse config
-            """
+                Log.error(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
+                raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
+            Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_conf_target_path}")
+            Log.info("Loading database config")
             Setup.Config.load_db()
 
         @staticmethod
@@ -403,7 +271,7 @@ class Setup:
             if not os.path.exists(db_conf_target_path):
                 Log.error("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
                 raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
-            Conf.load(const.DATABASE_INDEX, Yaml(db_conf_target_path))
+            Conf.load(const.DATABASE_INDEX, f"yaml://{db_conf_target_path}")
 
         @staticmethod
         def delete():
@@ -422,7 +290,7 @@ class Setup:
         Create csm user
         """
         Log.info("Instantiation of csm cluster with resources")
-        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA.resources")
+        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
         self._csm_ra = {
             "csm_resource_agent": CsmResourceAgent(self._csm_resources)
         }
@@ -436,7 +304,7 @@ class Setup:
         Delete all logs
         """
         Log.info("Delete all logs")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log.log_path")
+        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         Setup._run_cmd("rm -rf " +log_path)
 
     class ConfigServer:
@@ -474,267 +342,6 @@ class Setup:
                 Setup._run_cmd("systemctl restart csm_agent")
             if _rc_web == 0:
                 Setup._run_cmd("systemctl restart csm_web")
-
-    def _rsyslog(self):
-        """
-        Configure rsyslog
-        """
-        Log.info("Configure rsyslog")
-        if os.path.exists(const.RSYSLOG_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_RSYSLOG_PATH+ " " +const.RSYSLOG_PATH)
-            Setup._run_cmd("systemctl restart rsyslog")
-        else:
-            Log.error(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
-            raise CsmSetupError(f"rsyslog failed. {const.RSYSLOG_DIR} directory missing.")
-
-    def _rsyslog_common(self):
-        """
-        Configure common rsyslog and logrotate
-        Also cleanup statsd
-        """
-        if os.path.exists(const.CRON_DIR):
-            Setup._run_cmd("cp -f " +const.SOURCE_CRON_PATH+ " " +const.DEST_CRON_PATH)
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
-                sed_script = f'\
-                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
-                Setup._run_cmd(sed_cmd)
-        else:
-            raise CsmSetupError("cron failed. %s dir missing." %const.CRON_DIR)
-
-    def _logrotate(self):
-        """
-        Configure logrotate
-        """
-        Log.info("Configure logrotate")
-        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
-
-        if not os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd("mkdir -p " + const.LOGROTATE_DIR_DEST)
-        if os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd("cp -f " + source_logrotate_conf + " " + const.CSM_LOGROTATE_DEST)
-            setup_info = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            if setup_info[const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
-                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
-                Setup._run_cmd(sed_cmd)
-            Setup._run_cmd("chmod 644 " + const.CSM_LOGROTATE_DEST)
-        else:
-            Log.error(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
-            raise CsmSetupError(f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing.")
-
-    @staticmethod
-    def _set_fqdn_for_nodeid():
-        nodes = SaltWrappers.get_salt_call(const.PILLAR_GET, const.NODE_LIST_KEY, 'log')
-        Log.debug("Node ids obtained from salt-call:{nodes}")
-        if nodes:
-            for each_node in nodes:
-                hostname = SaltWrappers.get_salt_call(
-                    const.PILLAR_GET, f"{const.CLUSTER}:{each_node}:{const.HOSTNAME}", 'log')
-                Log.debug(f"Setting hostname for {each_node}:{hostname}. Default: {each_node}")
-                if hostname:
-                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{hostname}")
-                else:
-                    Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}.{each_node}",f"{each_node}")
-            Conf.save(const.CSM_GLOBAL_INDEX)
-
-    def _set_rmq_node_id(self):
-        """
-        This method gets the nodes id from provisioner cli and updates
-        in the config.
-        """
-        # Get get node id from provisioner cli and set to config
-        node_id_data = Setup.get_data_from_provisioner_cli(const.GET_NODE_ID)
-        if node_id_data:
-            Log.info(f"Node ids obtained from salt-call:{node_id_data}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE1}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE1_ID]}")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CHANNEL}.{const.NODE2}",
-                            f"{const.NODE}{node_id_data[const.MINION_NODE2_ID]}")
-            Conf.save(const.CSM_GLOBAL_INDEX)
-        else:
-            Log.error("Unable to fetch system node ids info.")
-            raise CsmSetupError(f"Unable to fetch system node ids info.")
-
-    def _set_rmq_cluster_nodes(self):
-        """
-        This method gets the nodes names of the the rabbitmq cluster and writes in the config.
-        """
-        Log.info("Setting RMQ cluster nodes in config")
-        nodes = []
-        nodes_found = False
-        try:
-            for count in range(0, const.RMQ_CLUSTER_STATUS_RETRY_COUNT):
-                cmd_output = Setup._run_cmd(const.RMQ_CLUSTER_STATUS_CMD)
-                # The code below is used to parse RMQ 3.3.5 "cluster_status" command output
-                for line in cmd_output[0].split('\n'):
-                    if const.RUNNING_NODES in line:
-                        nodes = re.findall(r"rabbit@([-\w]+)", line)
-                        nodes_found = True
-                if nodes_found:
-                    break
-                # The code below is used to parse CLI output for RMQ 3.8.9 or above
-                result = re.search(
-                    f"{const.RUNNING_NODES_START_TEXT}.*?{const.RUNNING_NODES_STOP_TEXT}",
-                    cmd_output[0], re.DOTALL)
-                if result is not None:
-                    nodes = re.findall(r"rabbit@([-\w]+)", result.group(0))
-                    break
-                time.sleep(2**count)
-            if nodes:
-                conf_key = f"{const.CHANNEL}.{const.RMQ_HOSTS}"
-                Log.debug(f"Saving nodes:{nodes} to conf_key:{conf_key} in Config")
-                Conf.set(const.CSM_GLOBAL_INDEX, conf_key, nodes)
-                Conf.save(const.CSM_GLOBAL_INDEX)
-            else:
-                Log.error("Unable to fetch RMQ cluster nodes info.")
-                raise CsmSetupError("Unable to fetch RMQ cluster nodes info.")
-        except Exception as e:
-            Log.error(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"Setting RMQ cluster nodes failed. {e} - {str(traceback.print_exc())}")
-
-    @staticmethod
-    def _get_minion_id():
-        """
-        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
-        """
-        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID)
-        if not minion_id:
-            raise CsmSetupError('Unable to obtain current minion id')
-        return minion_id
-
-    @staticmethod
-    def _get_data_nw_info(minion_id):
-        """
-        Obtains minion data network info.
-
-        :param minion_id: Minion id.
-        """
-        data_nw = SaltWrappers.get_salt_call(
-            const.PILLAR_GET, f'cluster:{minion_id}:network:data_nw')
-        if not data_nw:
-            raise CsmSetupError(f'Unable to obtain data nw info for {minion_id}')
-        return data_nw
-
-    @staticmethod
-    def _set_db_host_addr(backend, addr):
-        """
-        Sets database backend host address in CSM config.
-
-        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
-        :param addr: Host address.
-        """
-        if backend not in ('es', 'consul'):
-            raise CsmSetupError(f'Invalid database backend "{addr}"')
-        key = f'databases.{backend}_db.config.host'
-        try:
-            Conf.set(const.DATABASE_INDEX, key, addr)
-            Conf.save(const.DATABASE_INDEX)
-        except Exception as e:
-            raise CsmSetupError(f'Unable to set {backend} host address: {e}')
-
-    @classmethod
-    def _get_faulty_node_uuid(self):
-        """
-        This method will get the faulty node uuid from provisioner.
-        This uuid will be used to resolve the faulty alerts for replaced node.
-        """
-        faulty_minion_id = ''
-        faulty_node_uuid = ''
-        try:
-            Log.info("Getting faulty node id")
-            faulty_minion_id_cmd = "cluster:replace_node:minion_id"
-            faulty_minion_id = SaltWrappers.get_salt_call(const.PILLAR_GET, faulty_minion_id_cmd)
-            if not faulty_minion_id:
-                Log.warn("Fetching faulty node minion id failed.")
-                raise CsmSetupError("Fetching faulty node minion failed.")
-            faulty_node_uuid = SaltWrappers.get_salt(const.GRAINS_GET, 'node_id', faulty_minion_id)
-            if not faulty_node_uuid:
-                Log.warn("Fetching faulty node uuid failed.")
-                raise CsmSetupError("Fetching faulty node uuid failed.")
-            return faulty_node_uuid
-        except Exception as e:
-            Log.warn(f"Fetching faulty node uuid failed. {e}")
-            raise CsmSetupError(f"Fetching faulty node uuid failed. {e}")
-
-
-    def _resolve_faulty_node_alerts(self, node_id):
-        """
-        This method resolves all the alerts for a fault replaced node.
-        """
-        try:
-            Log.info("Resolve faulty node alerts")
-            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
-            db = DataBaseProvider(conf)
-            alerts = []
-            if db:
-                loop = asyncio.get_event_loop()
-                alerts_repository = AlertRepository(db)
-                alerts = loop.run_until_complete\
-                    (alerts_repository.retrieve_unresolved_by_node_id(node_id))
-                if alerts:
-                    for alert in alerts:
-                        if not const.ENCLOSURE in alert.module_name:
-                            alert.acknowledged = AlertModel.acknowledged.to_native(True)
-                            alert.resolved = AlertModel.resolved.to_native(True)
-                            loop.run_until_complete(alerts_repository.update(alert))
-                else:
-                    Log.warn(f"No alerts found for node id: {node_id}")
-            else:
-                Log.error("csm_setup refresh_config failed. Unbale to load db.")
-                raise CsmSetupError("csm_setup refresh_config failed. Unbale to load db.")
-        except Exception as ex:
-            Log.error(f"Refresh Context: Resolving of alerts failed. {ex}")
-            raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
-
-    def set_unsupported_feature_info(self):
-        """
-        This method stores CSM unsupported features in two ways:
-        1. It first gets all the unsupported features lists of the components,
-        which CSM interacts with. Add all these features as CSM unsupported
-        features. The list of components, CSM interacts with, is
-        stored in csm.conf file. So if there is change in name of any
-        component, csm.conf file must be updated accordingly.
-        2. Installation/envioronment type and its mapping with CSM unsupported
-        features are maintained in unsupported_feature_schema. Based on the
-        installation/environment type received as argument, CSM unsupported
-        features can be stored.
-        """
-        def get_component_list_from_features_endpoints():
-            feature_endpoints = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-            component_list = [feature for v in feature_endpoints.values() for feature in v.get(const.DEPENDENT_ON)]
-            return list(set(component_list))
-
-        try:
-            Log.info("Set unsupported feature list to ES")
-            self._setup_info  = self.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
-            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            self._loop = asyncio.get_event_loop()
-            components_list = get_component_list_from_features_endpoints()
-            unsupported_features_list = []
-            for component in components_list:
-                unsupported = self._loop.run_until_complete(
-                    unsupported_feature_instance.get_unsupported_features(component_name=component))
-                for feature in unsupported:
-                    unsupported_features_list.append(feature.get(const.FEATURE_NAME))
-
-            csm_unsupported_feature = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
-
-            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
-                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
-                    unsupported_features_list.extend(setup[const.UNSUPPORTED_FEATURES])
-            unsupported_features_list = list(set(unsupported_features_list))
-            unique_unsupported_features_list = list(filter(None, unsupported_features_list))
-            if unique_unsupported_features_list:
-                self._loop.run_until_complete(unsupported_feature_instance.store_unsupported_features(
-                    component_name=str(const.CSM_COMPONENT_NAME), features=unique_unsupported_features_list))
-            else:
-                Log.info("Unsupported features list is empty.")
-        except Exception as e_:
-            Log.error(f"Error in storing unsupported features: {e_}")
-            # TODO: Suppressing the error for now.
-            # raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     def _configure_system_auto_restart(self):
         """
@@ -785,48 +392,6 @@ class Setup:
             data = service_file_data.replace(key, value)
             Text(each_service_file).dump(data)
 
-    @staticmethod
-    def _set_healthmap_path():
-        """
-        This method gets the healthmap path fron salt command and saves the
-        value in csm.conf config.
-        """
-        minion_id = None
-        healthmap_folder_path = None
-        healthmap_filename = None
-        """
-        Fetching the minion id of the node where this cli command is fired.
-        This minion id will be required to fetch the healthmap path.
-        Will use 'srvnode-1' in case the salt command fails to fetch the id.
-        """
-        minion_id = SaltWrappers.get_salt_call(const.GRAINS_GET, const.ID, 'log')
-        if not minion_id:
-            Log.logger.warn(f"Unable to fetch minion id for the node." \
-                f"Using {const.MINION_NODE1_ID}.")
-            minion_id = const.MINION_NODE1_ID
-        try:
-            healthmap_folder_path = SaltWrappers.get_salt(
-                const.PILLAR_GET, 'sspl:health_map_path', minion_id)
-            if not healthmap_folder_path:
-                Log.logger.error("Fetching health map folder path failed.")
-                raise CsmSetupError("Fetching health map folder path failed.")
-            healthmap_filename = SaltWrappers.get_salt(
-                const.PILLAR_GET, 'sspl:health_map_file', minion_id)
-            if not healthmap_filename:
-                Log.logger.error("Fetching health map filename failed.")
-                raise CsmSetupError("Fetching health map filename failed.")
-            healthmap_path = os.path.join(healthmap_folder_path, healthmap_filename)
-            if not os.path.exists(healthmap_path):
-                Log.logger.error("Health map not available at {healthmap_path}")
-                raise CsmSetupError("Health map not available at {healthmap_path}")
-            """
-            Setting the health map path to csm.conf configuration file.
-            """
-            Conf.set(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY, healthmap_path)
-            Conf.save(const.CSM_GLOBAL_INDEX)
-        except Exception as e:
-            raise CsmSetupError(f"Setting Health map path failed. {e}")
-
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
@@ -848,123 +413,16 @@ class CsmSetup(Setup):
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
 
-    def post_install(self, args):
-        """
-        Perform post-install for csm
-            : Configure csm user
-            : Add Permission for csm user
-        Post install is used after just all rpms are install but
-        no service are started
-        """
-        try:
-            Log.info("Triggering csm_setup post_install")
-            self._verify_args(args)
-            self._config_user()
-            self.set_unsupported_feature_info()
-            self._configure_system_auto_restart()
-
-        except Exception as e:
-            Log.error(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup post_install failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def config(self, args):
-        """
-        Perform configuration for csm
-            : Move conf file to etc
-        Config is used to move update conf files one time configuration
-        """
-        try:
-            Log.info("Triggering csm_setup config")
-            self._verify_args(args)
-            uds_public_ip = args.get('uds_public_ip')
-            if uds_public_ip is not None:
-                ip_address(uds_public_ip)
-            if not self._replacement_node_flag:
-                self.Config.create(args)
-            self.Config.load()
-            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
-        except Exception as e:
-            Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def init(self, args):
-        """
-        Check and move required configuration file
-        Init is used after all dependency service started
-        """
-        Log.info("Triggering csm_setup post_install init")
-        cls = self.__class__
-        try:
-            self._verify_args(args)
-            self.Config.load()
-            self._config_user_permission()
-            if not self._replacement_node_flag:
-                self._set_rmq_cluster_nodes()
-                #TODO: Adding this implementation in try..except block to avoid build failure
-                # This workaround will be fixed once JIRA ticket #10551 is resolved
-                try:
-                    self._set_rmq_node_id()
-                except Exception as e:
-                    Log.error(f"Failed to fetch system node ids info from provisioner cli.- {e}")
-                minion_id = cls._get_minion_id()
-                data_nw = cls._get_data_nw_info(minion_id)
-                cls._set_db_host_addr('consul', data_nw.get('roaming_ip', 'localhost'))
-                cls._set_db_host_addr('es', data_nw.get('pvt_ip_addr', 'localhost'))
-            self.ConfigServer.reload()
-            self._rsyslog()
-            self._logrotate()
-            self._rsyslog_common()
-            Setup._set_fqdn_for_nodeid()
-            Setup._set_healthmap_path()
-            ha_check = Conf.get(const.CSM_GLOBAL_INDEX, "HA.enabled")
-            if ha_check:
-                self._config_cluster(args)
-        except Exception as e:
-            Log.error(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup init failed. Error: {e} - {str(traceback.print_exc())}")
-
     def reset(self, args):
-        """
-        Reset csm configuraion
-        Soft: Soft Reset is used to restrat service with log cleanup
-            - Cleanup all log
-            - Reset conf
-            - Restart service
-        Hard: Hard reset is used to remove all configuration used by csm
-            - Stop service
-            - Cleanup all log
-            - Delete all Dir created by csm
-            - Cleanup Job
-            - Disable csm service
-            - Delete csm user
-        """
         try:
-            Log.info("Triggering csm_setup reset")
             self._verify_args(args)
-            if args["hard"]:
-                self.Config.load()
-                self.ConfigServer.stop()
-                self._log_cleanup()
-                self._config_user_permission(reset=True)
-                self.Config.delete()
-                self._config_user(reset=True)
-                UDSConfigGenerator.delete()
-            else:
-                self.Config.reset()
-                self.ConfigServer.restart()
+            self.Config.load()
+            self.ConfigServer.stop()
+            self._log_cleanup()
+            self._config_user_permission(reset=True)
+            self.Config.delete()
+            self._config_user(reset=True)
+            UDSConfigGenerator.delete()
         except Exception as e:
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
-
-    def refresh_config(self, args):
-        """
-        Refresh context for CSM
-        """
-        try:
-            Log.info("Triggering csm_setup refresh_config")
-            node_id = self._get_faulty_node_uuid()
-            self._resolve_faulty_node_alerts(node_id)
-            Log.info(f"Resolved and acknowledged all the faulty node : {node_id} alerts")
-        except Exception as e:
-            Log.error(f"csm_setup refresh_config failed. Error: {e}")
-            raise CsmSetupError(f"csm_setup refresh_config failed. Error: {e}")

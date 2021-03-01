@@ -25,7 +25,7 @@ from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
 from datetime import datetime
 import uuid
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 
 class HealthPlugin(CsmPlugin):
     """
@@ -43,9 +43,9 @@ class HealthPlugin(CsmPlugin):
             self.health_callback = None
             self._health_mapping_dict = Json(const.HEALTH_MAPPING_TABLE).load()
             storage_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'HEALTH.storage_actuator_request')
+                    'HEALTH>storage_actuator_request')
             node_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'HEALTH.node_actuator_request')
+                    'HEALTH>node_actuator_request')
             self._storage_request_dict = Json(storage_request_path).load()
             self._node_request_dict = Json(node_request_path).load()
             self._no_of_request = 0

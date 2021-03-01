@@ -22,7 +22,7 @@ from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
 from csm.core.blogic import const
 
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 
 
@@ -54,7 +54,7 @@ class HAFramework:
 class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
-        self._user = const.NON_ROOT_USER
+        self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
 
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
@@ -91,7 +91,7 @@ class CortxHAFramework(HAFramework):
         _command = "{CSM_PATH}/scripts/cortxha_shutdown_cron.sh"
         _cluster_shutdown_cmd = _command.format(CSM_PATH = const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
-                                      "MAINTENANCE.shutdown_cron_time")
+                                      "MAINTENANCE>shutdown_cron_time")
         Log.info(f"Setting Cron Command with args ->  user : {self._user}")
         cron_job_obj = CronJob(self._user)
         cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
@@ -106,8 +106,8 @@ class PcsHAFramework(HAFramework):
     def __init__(self, resource_agents=None):
         super(PcsHAFramework, self).__init__(resource_agents)
         self._resource_agents = resource_agents
-        self._user = const.NON_ROOT_USER
-        self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM.password")
+        self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
+        self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
 
     def get_nodes(self):
         """
@@ -189,7 +189,7 @@ class PcsHAFramework(HAFramework):
         _cluster_shutdown_cmd = _command.format(node=node,
                           user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
-                                       "MAINTENANCE.shutdown_cron_time")
+                                       "MAINTENANCE>shutdown_cron_time")
         Log.info(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
         cron_job_obj = CronJob(self._user)
         cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)

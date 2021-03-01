@@ -17,6 +17,8 @@ import os
 from csm.common.payload import *
 from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
+from cortx.utils.log import Log
+from cortx.utils.conf_store.conf_store import Conf as conf_store
 from csm.common.process import SimpleProcess
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
@@ -68,26 +70,6 @@ class Conf:
         for index in indexes:
             Conf._payloads[index].dump()
 
-    @staticmethod
-    def decrypt_conf():
-        """
-        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
-        :return:
-        """
-        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
-        if not cluster_id:
-            raise ClusterIdFetchError("failed to get cluster id.")
-        for each_key in const.DECRYPTION_KEYS:
-            cipher_key = Cipher.generate_key(cluster_id,
-                                             const.DECRYPTION_KEYS[each_key])
-            encrypted_value = Conf.get(const.CSM_GLOBAL_INDEX, each_key)
-            try:
-                decrypted_value = Cipher.decrypt(cipher_key,
-                                                 encrypted_value.encode("utf-8"))
-                Conf.set(const.CSM_GLOBAL_INDEX, each_key,
-                        decrypted_value.decode("utf-8"))
-            except CipherInvalidToken as error:
-                raise CipherInvalidToken(f"Decryption for {each_key} Failed. {error}")
 
 class ConfSection:
     """Represents sub-section of config file"""
@@ -128,4 +110,29 @@ class DebugConf:
         """
         Validates if debug mode is enabled and HTTP is chosen
         """
-        return self._debug_settings.enabled and self._debug_settings.http_enabled
+        return self._debug_settings.enabled == 'true' and self._debug_settings.http_enabled == 'true'
+
+class Security:
+
+    @staticmethod
+    def decrypt_conf():
+        """
+        THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
+        :return:
+        """
+        cluster_id = conf_store.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        if not cluster_id:
+            raise ClusterIdFetchError("Failed to get cluster id.")
+        for each_key in const.DECRYPTION_KEYS:
+            cipher_key = Cipher.generate_key(cluster_id,
+                                             const.DECRYPTION_KEYS[each_key])
+            encrypted_value = conf_store.get(const.CSM_GLOBAL_INDEX, each_key)
+            try:
+                decrypted_value = Cipher.decrypt(cipher_key,
+                                                 encrypted_value.encode("utf-8"))
+                conf_store.set(const.CSM_GLOBAL_INDEX, each_key,
+                        decrypted_value.decode("utf-8"))
+            except CipherInvalidToken as error:
+                import traceback
+                Log.exception(f"Decryption for {each_key} Failed. {error}")
+                Log.exception(f"{traceback.format_exc()}")

@@ -18,7 +18,7 @@ import requests
 class StatsConsumer:
     def __init__(self, host, port):
         self.host = host
-        self.port = port
+        self.port = int(port)
 
     def __post_to_timelion(self, data):
         """Posts TimeLion Api to fetch response"""

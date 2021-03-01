@@ -16,8 +16,7 @@
 from typing import Dict
 
 from csm.core.blogic import const
-from csm.common.conf import Conf
-from csm.common.service_urls import ServiceUrls
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 from csm.common.services import ApplicationService
@@ -31,15 +30,13 @@ class S3AccountService(S3BaseService):
     """
     Service for S3 account management
     """
-    def __init__(self, s3plugin, provisioner):
+    def __init__(self, s3plugin):
         """
         Initialize S3AccountService.
 
         :param s3plugin: S3 plugin object.
-        :param provisioner: provisioner object.
         """
         self._s3plugin = s3plugin
-        self._provisioner = provisioner
         #TODO
         """
         Password should be taken as input and not read from conf file directly.
@@ -140,10 +137,8 @@ class S3AccountService(S3BaseService):
                         }
                     )
                     break
-        service_urls = ServiceUrls(self._provisioner)
         resp = {
             "s3_accounts": accounts_list,
-            "s3_urls": await service_urls.get_s3_uris()
         }
         if accounts.is_truncated:
             resp["continue"] = accounts.marker
@@ -151,8 +146,8 @@ class S3AccountService(S3BaseService):
         return resp
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
-    async def patch_account(self, s3_session: S3Credentials, account_name: str,
-                            password: str = None, reset_access_key: bool = False) -> dict:
+    async def patch_account(self, account_name: str, password: str = None,
+                            reset_access_key: bool = False) -> dict:
         """
         Patching fields of an existing account.
         At the moment, it is impossible to change password without resetting access key.
@@ -181,10 +176,6 @@ class S3AccountService(S3BaseService):
 
             client = self._s3plugin.get_iam_client(new_creds.access_key_id,
                 new_creds.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
-        else:
-            client = self._s3plugin.get_iam_client(s3_session.access_key,
-                s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
-                s3_session.session_token)
 
         if password:
             # We will try to create login profile in case it doesn't exist

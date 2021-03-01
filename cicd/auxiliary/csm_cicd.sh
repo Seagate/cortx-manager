@@ -35,10 +35,10 @@ python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
 yum remove salt* -y
 pip3 uninstall -y salt
-
-csm_setup post_install
-csm_setup config --debug
-csm_setup init
+chmod 777 -R /var/log/seagate
+csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
+csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
+csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
 
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &

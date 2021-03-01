@@ -1,0 +1,43 @@
+{
+  "cluster": {
+    "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
+    "DEPLOYMENT": {
+      "mode": "dev"
+    },
+    "server_nodes": {
+      "machine_id": "srvnode-1"
+    },
+    "srvnode-1": {
+      "node_type": "VM",
+      "network": {
+        "data": {
+          "public_interfaces": [
+            "eth1",
+            "eth2"
+          ],
+          "private_interfaces": [
+            "eth3",
+            "eth4"
+          ],
+          "interface_type": "tcp",
+          "transport_type": "lnet",
+          "public_ip": "localhost",
+          "private_ip": "localhost",
+          "netmask": "None",
+          "gateway": "None",
+          "mtu": "1500",
+          "roaming_ip": "localhost"
+        }
+      }
+    }
+  },
+  "system": {
+    "service-user": {
+      "name": "csm",
+      "secret": "gAAAAABgJikGIfq1UNsrC-q2sUxWCAOX4_oo8bpr3ftIr6lesx_7_Q1ccF43fEt-c1O2f2QbyizbF7Losil8AuLeVfWOOSffsA=="
+    }
+  },
+  "storage": {
+    "type": "virtual"
+  }
+}

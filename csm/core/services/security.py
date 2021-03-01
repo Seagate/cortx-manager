@@ -28,7 +28,7 @@ from cryptography.hazmat.backends import default_backend
 from csm.common.iem import Iem
 from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
                                ResourceExist, CsmNotFoundError, CsmServiceConflict)
-from csm.common.conf import Conf
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.fs_utils import FSUtils
 from csm.common.services import ApplicationService
 from cortx.utils.log import Log
@@ -91,16 +91,20 @@ class SecurityService(ApplicationService):
         :param path: path to certificate file
         :return: certificate object
         """
-        with open(path, "br") as f:
-            # read certificate data as binary
-            data = f.read()
         try:
+            with open(path, "br") as f:
+                # read certificate data as binary
+                data = f.read()
             cert = x509.load_pem_x509_certificate(data, default_backend())
             return cert
+        except FileNotFoundError as e:
+            Log.error(f"Security certificate not available.{e}")
+            raise CsmNotFoundError("Security certificate not available.")
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
-            raise IndentationError(f"Cannot load certificate from .pem file: {e}")
+            Log.error(f"Cannot load certificate from .pem file: {e}")
+            raise CsmInternalError(f"Cannot load certificate from .pem file: {e}")
 
     async def _store_to_db(self, user: str, pemfile_path: str, save_time: datetime):
         """
@@ -292,7 +296,7 @@ class SecurityService(ApplicationService):
         pass
 
     async def get_certificate_expiry_time(self):
-        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS.certificate_path")
+        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
         def load():
             return self._load_certificate(path)
         cert = await self._loop.run_in_executor(self._executor, load)
@@ -319,7 +323,7 @@ class SecurityService(ApplicationService):
         return converted_time_ltz.strftime(const.CERT_TIME_FORMAT)
 
     async def _check_certificate_expiry_time(self, current_time):
-        warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY.ssl_cert_expiry_warning_days")
+        warning_days = Conf.get(const.CSM_GLOBAL_INDEX, "SECURITY>ssl_cert_expiry_warning_days")
         try:
             expiry_time = await self.get_certificate_expiry_time()
             expiry_time = expiry_time.replace(tzinfo=timezone.utc)
@@ -350,3 +354,35 @@ class SecurityService(ApplicationService):
                            tzinfo=timezone.utc),
             interval=timedelta(days=1)
         )
+
+    async def _get_name_details(self, rdns):
+        """
+        Get x509 Name object details (i.e Subject and Issuer)
+        rdns: Relatively Distinguished Names
+        """
+        name_details = {}
+        for name in rdns:
+            if name._attributes:
+                name_details[name._attributes[0].oid._name] = name._attributes[0].value
+        return name_details
+
+    async def get_certificate_details(self):
+        """
+        Get current certificate details
+        """
+        path = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
+        Log.debug(f"Getting SSL certificate details from {path}")
+        cert = self._load_certificate(path)
+        cert_details = {}
+        subject_details = await self._get_name_details(cert.subject.rdns)
+        issuer_details = await self._get_name_details(cert.issuer.rdns)
+
+        cert_details[const.SUBJECT] = subject_details
+        cert_details[const.ISSUER] = issuer_details
+        cert_details[const.NOT_VALID_AFTER] = cert.not_valid_after
+        cert_details[const.NOT_VALID_BEFORE] = cert.not_valid_before
+        cert_details[const.SERIAL_NUMBER] = cert.serial_number
+        cert_details[const.VERSION] = cert.version
+
+        Log.debug(f"SSL certificate details: {cert_details}")
+        return  { const.CERT_DETAILS: cert_details }

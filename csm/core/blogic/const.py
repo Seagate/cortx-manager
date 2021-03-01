@@ -26,20 +26,23 @@ ETC_PATH = "/etc"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
 CSM_SETUP_LOG_DIR = "/tmp"
-CORTXCLI_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
+CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
+                          f'{CORTXCLI_CONF_FILE_NAME}')
 DB_CONF_FILE_NAME = 'database.yaml'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
-
+PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
+CSM_SETUP_PASS = ":PASS"
+
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
-CORTXCLI_SETUP_CMD = 'cortxcli_setup'
 INTERACTIVE_SHELL_HEADER = """
 **********************************\n
 CORTX Interactive Shell
@@ -58,7 +61,7 @@ COMMAND_DIRECTORY = "{}/cli/schema".format(CORTXCLI_PATH)
 SUB_COMMANDS_PERMISSIONS = "permissions_tag"
 NO_AUTH_COMMANDS = ["support_bundle", "bundle_generate", "csm_bundle_generate",
                     "-h", "--help", "system"]
-EXCLUDED_COMMANDS = ['csm_setup','cortxcli_setup']
+EXCLUDED_COMMANDS = ['csm_setup']
 HIDDEN_COMMANDS = ["bundle_generate", "csm_bundle_generate",]
 RMQ_CLUSTER_STATUS_CMD = 'rabbitmqctl cluster_status'
 RUNNING_NODES = 'running_nodes'
@@ -109,6 +112,8 @@ CSM_GLOBAL_INDEX = 'CSM'
 INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
+CONSUMER_INDEX = 'CONSUMER'
+CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 
 # AMQP Consumer Tag
 CONSUMER_TAG = 'AMQP_CONSUMER'
@@ -147,9 +152,13 @@ CSM_MANAGE_ROLE = 'manage'
 CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
+CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
+CONF_STORE_USER_KEY = 'system>service-user>name'
+CONF_STORE_PASS_KEY = 'system>service-user>secret'
+NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'csm'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
@@ -159,6 +168,7 @@ SSH_PUBLIC_KEY='{}/id_rsa.pub'.format(SSH_DIR)
 SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
 SSH_CONFIG='{}/config'.format(SSH_DIR)
 PRIMARY_ROLE='primary'
+CONFIG_URL = 'config_url'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -287,7 +297,6 @@ FAULT_HEALTH = 'Fault'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
-CORTXCLI_SETUP_FILE = '{}/cli/schema/cortxcli_setup.json'.format(CORTXCLI_PATH)
 
 # Support Bundle
 SSH_USER_NAME = 'root'
@@ -314,12 +323,12 @@ PERMISSIONS = "permissions"
 LYVE_PILOT = "lyve_pilot"
 
 # S3
-S3_HOST = 'S3.host'
-S3_IAM_PORT = 'S3.iam_port'
-S3_PORT = 'S3.s3_port'
-S3_MAX_RETRIES_NUM = 'S3.max_retries_num'
-S3_LDAP_LOGIN = 'S3.ldap_login'
-S3_LDAP_PASSWORD = 'S3.ldap_password'
+S3_HOST = 'S3>host'
+S3_IAM_PORT = 'S3>iam_port'
+S3_PORT = 'S3>s3_port'
+S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
+S3_LDAP_LOGIN = 'S3>ldap_login'
+S3_LDAP_PASSWORD = 'S3>ldap_password'
 
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
 S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
@@ -425,6 +434,9 @@ PRIMARY_NODE = 'Node 0'
 SECONDARY_NODE = 'Node 1'
 SYSTEM_CONFIG = 'system_config'
 IS_DHCP = 'is_dhcp'
+ROAMING_IP = "roaming_ip"
+PRIVATE_IP = "private_ip"
+LOCALHOST = "localhost"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -434,6 +446,7 @@ S3_ACCOUNT_SERVICE = "s3_account_service"
 S3_IAM_USERS_SERVICE = "s3_iam_users_service"
 S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
+S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 
@@ -506,10 +519,11 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL.password": "sspl",
-    "S3.ldap_password": "openldap"
+    "CHANNEL>password": "sspl",
+    "S3>ldap_password": "openldap",
+    "CSM>password": "csm"
 }
-CLUSTER_ID_KEY = "PROVISIONER.cluster_id"
+CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -528,17 +542,21 @@ SSPL = 'sspl:LOGGINGPROCESSOR'
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
 CLUSTER_ID = 'cluster_id'
-PROVISIONER='PROVISIONER'
+PROVISIONER = 'PROVISIONER'
 RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='get_setup_info'
+GET_SETUP_INFO='cluster>{server-node}>node_type'
+NODE_TYPE="node_type"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
+DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
+VM = 'VM'
+ENV_TYPE = 'env_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -578,7 +596,7 @@ SUPPORT_MSG = "alerts_support_message"
 SUPPORT_DEFAULT_MSG = "Please contact CORTX community. Visit https://github.com/Seagate/cortx for details on how to contact CORTX community."
 ID = "id"
 CLUSTER = "cluster"
-HEALTH_SCHEMA_KEY = "HEALTH.health_schema"
+HEALTH_SCHEMA_KEY = "HEALTH>health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
@@ -608,16 +626,44 @@ DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
 FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
+TYPE = 'type'
 UNSUPPORTED_FEATURES = "unsupported_features"
 STORAGE_TYPE = "storage_type"
+STORAGE = "storage"
 STORAGE_TYPE_VIRTUAL = "virtual"
 FEATURE_ENDPOINT_MAP_INDEX = "FEATURE_COMPONENTS.feature_endpoint_map"
 OK = 'ok'
 EMPTY_PASS_FIELD = "Password field can't be empty."
 HEALTH_REQUIRED_FIELDS = {'health', 'severity', 'alert_uuid', 'alert_type'}
 SHUTDOWN_CRON_TIME = "shutdown_cron_time"
-ES_RETRY = "ELASTICSEARCH.retry"
+ES_RETRY = "ELASTICSEARCH>retry"
 ES_RECORD_LIMIT = 1000
 ES_CLEANUP_PERIOD_VIRTUAL = 2  # days
 LOGROTATE_AMOUNT_VIRTUAL = 3
 
+#SSL
+SUBJECT = "subject"
+ISSUER = "issuer"
+NOT_VALID_AFTER = "not_valid_after"
+NOT_VALID_BEFORE = "not_valid_before"
+SERIAL_NUMBER = "serial_number"
+VERSION = "version"
+SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
+CERT_DETAILS = "cert_details"
+
+# MEssage Bus
+PRODUCER_ID = 'producer_id'
+MESSAGE_TYPE = 'message_type'
+METHOD = 'method'
+ASYNC = 'async'
+CONSUMER_ID = 'consumer_id'
+CONSUMER_GROUP = 'consumer_group'
+CONSUMER_MSG_TYPES = 'consumer_message_types'
+AUTO_ACK = 'auto_ack'
+OFFSET = 'offset'
+EARLIEST = 'earliest'
+TYPE = 'type'
+BOTH = 'both'
+PRODUCER = 'producer'
+CONSUMER = 'consumer'
+CONSUMER_CALLBACK = 'consumer_callback'
