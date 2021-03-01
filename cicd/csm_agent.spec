@@ -17,7 +17,7 @@ Name: <RPM_NAME>
 Version: %{version}
 Release: %{dist}
 Summary: CSM Tools
-License: Seagate Proprietary
+License: Seagate
 URL: http://github.com/Seagate/cortx-manager
 Source0: <PRODUCT>-csm_agent-%{version}.tar.gz
 %define debug_package %{nil}
