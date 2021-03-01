@@ -30,7 +30,7 @@ class HotfixApplicationService(UpdateService):
 
     def __init__(self, storage_path, provisioner, update_repo):
         super().__init__(provisioner, update_repo)
-        self._sw_file = os.path.join(storage_path, 'hotfix_fw_candidate.iso')
+        self.storage_path = storage_path
         os.makedirs(storage_path, exist_ok=True)
 
     @Log.trace_method(Log.INFO)
@@ -42,26 +42,28 @@ class HotfixApplicationService(UpdateService):
         """
         try:
             info = await self._provisioner.validate_hotfix_package(file_ref.get_file_path(), file_name)
-        except CsmError:
+        except CsmError as ce:
+            Log.error(f"You have uploaded an invalid software update package: {ce}")
             raise InvalidRequest('You have uploaded an invalid software update package')
 
         model = await self._get_renewed_model(const.SOFTWARE_UPDATE_ID)
         if model and model.is_in_progress():
+            Log.error(f"You cannot upload a new package while there is an ongoing update: {model.to_printable()}")
             raise InvalidRequest("You can't upload a new package while there is an ongoing update")
+
+        try:
+            file_ref.save_file(self.storage_path, file_name, True)
+        except Exception as e:
+            Log.error(f'Failed to save the package: {e}')
+            raise CsmInternalError(f'Failed to save the package: {e}')
 
         model = UpdateStatusEntry.generate_new(const.SOFTWARE_UPDATE_ID)
         model.version = info.version
-        model.file_path = os.path.join(os.path.dirname(self._sw_file), file_name)
+        model.file_path = os.path.join(self.storage_path, file_name)
         model.description = info.description
         model.mark_uploaded()
-        Log.debug(model.to_printable())
+        Log.debug(f"Saving model for software update {model.to_printable()}")
         await self._update_repo.save_model(model)
-
-        try:
-            file_ref.save_file(os.path.dirname(self._sw_file),
-                file_name, True)
-        except Exception as e:
-            raise CsmInternalError(f'Failed to save the package: {e}')
 
         return {
             "version": info.version,

@@ -89,7 +89,21 @@ class FileRef():
         return path_to_cached_file
 
     def save_file(self, dir_to_save, filename, overwrite=False):
-        Log.debug(f"Saving f{filename} at f{dir_to_save}")
+        if not os.path.exists(dir_to_save):
+            Log.warn(f"{dir_to_save} not found. Recreating storage directory." )
+            try:
+                original_mask = os.umask(0o007)
+                Log.debug(f"original mask: {original_mask}")
+                os.makedirs(dir_to_save)
+            except Exception as e:
+                Log.error(f"Unable to create directory {dir_to_save}: {e}")
+                raise CsmInternalError(f"System error during directory creation for "
+                                       f"path='{dir_to_save}': {e}")
+            finally:
+                new_mask = os.umask(original_mask)
+                Log.debug(f"new mask: {new_mask}")
+
+        Log.info(f"Saving {filename} at {dir_to_save}")
         path_to_cached_file = self.get_file_path()
         path_to_file_to_save = os.path.join(dir_to_save, filename)
 
@@ -98,7 +112,11 @@ class FileRef():
                 f'File "{path_to_file_to_save}" already exists. Change ' +
                 '"overwrite" argument if you want to overwrite file')
 
-        copyfile(path_to_cached_file, path_to_file_to_save)
+        try:
+            copyfile(path_to_cached_file, path_to_file_to_save)
+        except PermissionError as pe:
+            Log.warn(f"Incorrect permissions for {dir_to_save}: {pe}.")
+            raise CsmInternalError(f"Incorrect permissions for {dir_to_save}")
         
         return path_to_file_to_save
 
