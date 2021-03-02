@@ -71,6 +71,13 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
+          "flag": "--csm-address",
+          "dest": "Address",
+          "type": "str",
+          "default": "127.0.0.1",
+          "help": "CSM URL"
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
