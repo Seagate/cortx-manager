@@ -93,15 +93,14 @@ class FileRef():
             Log.warn(f"{dir_to_save} not found. Recreating storage directory." )
             try:
                 original_mask = os.umask(0o007)
-                Log.debug(f"original mask: {original_mask}")
+                Log.debug(f"Setting umask value before creating directory: original mask: {original_mask}")
                 os.makedirs(dir_to_save)
             except Exception as e:
                 Log.error(f"Failed to create directory {dir_to_save}: {e}")
                 raise CsmInternalError(f"System error during directory creation for "
                                        f"path='{dir_to_save}': {e}")
             finally:
-                new_mask = os.umask(original_mask)
-                Log.debug(f"new mask: {new_mask}")
+                Log.debug(f"Resetting umask with original value: {os.umask(original_mask)}")
 
         Log.info(f"Saving {filename} at {dir_to_save}")
         path_to_cached_file = self.get_file_path()
