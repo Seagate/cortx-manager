@@ -242,6 +242,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R "$BASE_DIR/templates" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
+    cp -R "$BASE_DIR/csm/cli/schema/cli_setup.json" "$DIST/csm/schema/"
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
