@@ -159,7 +159,7 @@ NON_ROOT_USER = 'csm'
 CONF_STORE_USER_KEY = 'system>service-user>name'
 CONF_STORE_PASS_KEY = 'system>service-user>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
-CSM = 'csm'
+CSM = 'CSM'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 SSH_DIR='.ssh'
@@ -521,7 +521,7 @@ USAGE_PERCENTAGE = 'usage_percentage'
 DECRYPTION_KEYS = {
     "CHANNEL>password": "sspl",
     "S3>ldap_password": "openldap",
-    "CSM>password": "csm"
+    "CSM>password": "system"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status

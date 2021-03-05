@@ -88,7 +88,7 @@ class Configure(Setup):
         This Function Creates the CSM Conf File on Required Location.
         :return:
         """
-        Log.error("Creating CSM Conf File on Required Location.")
+        Log.info("Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
