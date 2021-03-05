@@ -69,7 +69,8 @@ class Setup:
         if self._setup_info[const.NODE_TYPE] == const.VM:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
-        if Conf.get(const.CONSUMER_INDEX, const.DEPLOYMENT_MODE) == const.DEV:
+        if Conf.get(const.CONSUMER_INDEX,  f"{const.DEPLOYMENT}>{const.MODE}") == const.DEV:
+            Log.info("Running Csm Setup for Dev Mode.")
             self._is_env_dev = True
 
     def _set_service_user(self):
