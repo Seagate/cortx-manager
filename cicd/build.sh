@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
+set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -73,7 +74,7 @@ install_py_req() {
 usage() {
     echo """
 usage: $PROG_NAME [-v <csm version>]
-                            [-b <build no>] [-k <key>]
+                            [-b <build no>]
                             [-p <product_name>]
                             [-c <all|backend>] [-t]
                             [-d][-i]
@@ -82,7 +83,6 @@ usage: $PROG_NAME [-v <csm version>]
 Options:
     -v : Build rpm with version
     -b : Build rpm with build number
-    -k : Provide key for encryption of code
     -p : Provide product name default cortx
     -c : Build rpm for [all|backend|cli]
     -n : brand name
@@ -95,7 +95,7 @@ Options:
     exit 1;
 }
 
-while getopts ":g:v:b:p:k:c:n:l:tdiq" o; do
+while getopts ":g:v:b:p:c:n:l:tdiq" o; do
     case "${o}" in
         v)
             VER=${OPTARG}
@@ -105,9 +105,6 @@ while getopts ":g:v:b:p:k:c:n:l:tdiq" o; do
             ;;
         p)
             PRODUCT=${OPTARG}
-            ;;
-        k)
-            KEY=${OPTARG}
             ;;
         c)
             COMPONENT=${OPTARG}
@@ -155,6 +152,9 @@ echo "Using COMPONENT=${COMPONENT} VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODU
 # Create fresh one to accomodate all packages.
 COPY_START_TIME=$(date +%s)
 DIST="$BASE_DIR/dist"
+[ -d "$DIST" ] && {
+    rm -rf ${DIST}
+}
 TMPDIR="$DIST/tmp"
 [ -d "$TMPDIR" ] && {
     rm -rf ${TMPDIR}
@@ -194,23 +194,12 @@ if [ "$DEV" == true ]; then
     source "${VENV}/bin/activate"
     python --version
     pip install --upgrade pip
-    pip install pyinstaller==3.5
-
-    install_py_req requirment.txt
-    install_py_req req_dev.txt
 
 else
     pip3 install --upgrade pip
-    pip3 install pyinstaller==3.5
-
     # add cortx-py-utils below
-    # Need to remove erase of eos-py-utils after re changes
-    yum erase -y -q eos-py-utils
     yum install -y cortx-py-utils 
     yum install -y python36-cortx-prvsnr
-
-    install_py_req requirment.txt
-
 fi
 
 # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
@@ -218,46 +207,36 @@ pip uninstall -y numpy
 pip install numpy --no-binary :all:
 
 ENV_END_TIME=$(date +%s)
+yum install -y tree
 
 ################### Backend ##############################
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
 
-cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
-
+    cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     # Build CSM Backend
     CORE_BUILD_START_TIME=$(date +%s)
-    mkdir -p "$DIST/csm/conf/service"
-    cp "$CONF/setup.yaml" "$DIST/csm/conf"
-    cp -R "$CONF/etc" "$DIST/csm/conf"
-    cp -R "$CONF/service/csm_agent.service" "$DIST/csm/conf/service"
-    cd "$TMPDIR"
+    mkdir -p "$DIST/csm/bin" "$DIST/csm/lib"
 
     # Copy Backend files
-    mkdir -p "$DIST/csm/lib" "$DIST/csm/bin" "$DIST/csm/conf" "$TMPDIR/csm"
-    cp -rs "$BASE_DIR/csm/"* "$TMPDIR/csm"
-    cp -rs "$BASE_DIR/test/" "$TMPDIR/csm"
+    cp -rf "$BASE_DIR/csm/"* "$DIST/csm"
+    cp -rf "$BASE_DIR/schema" "$DIST/csm/"
+    cp -rf "$BASE_DIR/templates" "$DIST/csm/"
+    cp -rf "$BASE_DIR/test/" "$DIST/csm"
+    cp -rf "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
 
-    cp -R "$BASE_DIR/schema" "$DIST/csm/"
-    cp -R "$BASE_DIR/templates" "$DIST/csm/"
-    cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
-    cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
-
+    # Copy executables files
+    cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
+    cp -f "$BASE_DIR/csm/conf/csm_setup.py" "$DIST/csm/lib/csm_setup"
+    cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
+    cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
+    chmod +x "$DIST/csm/lib/"*
+    cd "$TMPDIR"
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
-        PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm_test.spec
-        cp "$BASE_DIR/cicd/pyinstaller/product_csm_test.spec" "${PYINSTALLER_FILE}"
         mkdir -p "$DIST/csm/test"
         cp -R "$BASE_DIR/test/plans" "$BASE_DIR/test/test_data" "$DIST/csm/test"
-    } || {
-        PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_csm.spec
-        cp "$BASE_DIR/cicd/pyinstaller/product_csm.spec" "${PYINSTALLER_FILE}"
     }
-
-    sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
-        -e "s|<CSM_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
-    python3 -m PyInstaller --clean -y --distpath "${DIST}/csm" --key "${KEY}" "${PYINSTALLER_FILE}"
-
 ################## Add CSM_PATH #################################
 
     # Genrate spec file for CSM
@@ -286,38 +265,32 @@ fi
 
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
 
-cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
+    cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
 
     # Build CortxCli
     CLI_BUILD_START_TIME=$(date +%s)
-    mkdir -p "$DIST/cli/conf/service"
+    mkdir -p "$DIST/cli/lib" "$DIST/cli/bin" "$DIST/cli/conf" "$DIST/cli/cli/"
+
+    #Copy CLI files
+    cp -R "$BASE_DIR/schema" "$DIST/cli/"
+    cp -R "$BASE_DIR/templates" "$DIST/cli/"
+    cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
+    cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
+
     cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
     cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
     cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
+
+    # Copy executables files
+    cp -f "$BASE_DIR/csm/cli/cortxcli.py" "$DIST/cli/lib/cortxcli"
+    chmod +x "$DIST/cli/lib/"*    
     cd "$TMPDIR"
 
-    # Copy Backend files
-    mkdir -p "$DIST/cli/lib" "$DIST/cli/bin" "$DIST/cli/conf" "$TMPDIR/csm"
-    cp -rs "$BASE_DIR/csm/"* "$TMPDIR/csm"
-    #TODO: Allow test to work with cli
-
-    cp -R "$BASE_DIR/schema" "$DIST/cli/"
-    cp -R "$BASE_DIR/templates" "$DIST/cli/"
-    cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
-    mkdir -p  "$DIST/cli/cli/"
-    cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
-
-    PYINSTALLER_FILE=$TMPDIR/${PRODUCT}_cli.spec
-    cp "$BASE_DIR/cicd/pyinstaller/product_cli.spec" "${PYINSTALLER_FILE}"
-
-    sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
-        -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
-    python3 -m PyInstaller --clean -y --distpath "${DIST}/cli" --key "${KEY}" "${PYINSTALLER_FILE}"
-
 ################## Add CORTXCLI_PATH #################################
-
+tree -L 4 "$DIST/cli/"
+tree -L 4 "$DIST/csm/"
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
         -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
