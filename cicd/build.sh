@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
-set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -152,9 +151,6 @@ echo "Using COMPONENT=${COMPONENT} VERSION=${VER} BUILD=${BUILD} PRODUCT=${PRODU
 # Create fresh one to accomodate all packages.
 COPY_START_TIME=$(date +%s)
 DIST="$BASE_DIR/dist"
-[ -d "$DIST" ] && {
-    rm -rf ${DIST}
-}
 TMPDIR="$DIST/tmp"
 [ -d "$TMPDIR" ] && {
     rm -rf ${TMPDIR}
@@ -207,7 +203,6 @@ pip uninstall -y numpy
 pip install numpy --no-binary :all:
 
 ENV_END_TIME=$(date +%s)
-yum install -y tree
 
 ################### Backend ##############################
 
@@ -289,8 +284,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cd "$TMPDIR"
 
 ################## Add CORTXCLI_PATH #################################
-tree -L 4 "$DIST/cli/"
-tree -L 4 "$DIST/csm/"
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
         -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
