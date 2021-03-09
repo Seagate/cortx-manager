@@ -26,7 +26,8 @@ class S3ServerInfoView(CsmView):
     """
 
     def __init__(self, request):
-        super().__init__(request, const.S3_SERVER_INFO_SERVICE)
+        super().__init__(request)
+        self._service = self._request.app[const.S3_SERVER_INFO_SERVICE]
 
     async def get(self):
         """
