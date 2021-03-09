@@ -26,7 +26,7 @@ class CliSetupCommand:
         permission like log, bundle path.
     """
     def __init__(self, argv):
-        ''' Check csm setup command and initialize '''
+        ''' Check cli setup command and initialize '''
         self._args = argv
         self._args[0] = 'cli_setup'
         self._validate()
@@ -41,7 +41,7 @@ class CliSetupCommand:
             raise Exception('Usage: cli_setup -h')
 
     def _get_command(self):
-        ''' Parse csm setup command '''
+        ''' Parse cli setup command '''
         parser = argparse.ArgumentParser(description='CLI Setup', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
@@ -56,7 +56,7 @@ class CliSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        ''' Parse args for csm_setup and execute cmd to print output '''
+        ''' Parse args for cli_setup and execute cmd to print output '''
         self._cmd = self._get_command()
         obj = CsmDirectClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))

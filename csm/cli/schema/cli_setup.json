@@ -114,33 +114,6 @@
       }
     },
     {
-      "name": "refresh_config",
-      "description": "Refresh Context for CORTX CLI.",
-      "need_confirmation": false,
-      "permissions_tag": "update",
-      "args": [
-        {
-          "flag": "--config",
-          "dest": "config_url",
-          "type": "str",
-          "help": "Config Store URL e.g <type>://<path>."
-        },
-        {
-          "flag": "args",
-          "default": [],
-          "suppress_help": true,
-          "nargs": "?"
-        }
-      ],
-      "comm": {
-        "type": "direct",
-        "target": "csm.cli.conf.refresh_config",
-        "method": "execute",
-        "class": "RefreshConfig",
-        "is_static": false
-      }
-    },
-    {
       "name": "test",
       "description": "Run Self Test Command For CORTX CLI.",
       "need_confirmation": false,
