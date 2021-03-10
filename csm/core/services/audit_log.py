@@ -44,10 +44,10 @@ COMPONENT_MODEL_MAPPING = { "csm":
                             "s3":
                             { "model" : S3AuditLogModel,
                               "field" : S3AuditLogModel.timestamp,
-                              "format" : ("{bucket_owner} {bucket} {time}"
-      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
-      "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
-      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
+                              "format" : ("{bucket_owner} {bucket} {time} "
+      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri} "
+      "{http_status} {error_code} {bytes_sent} {object_size} {total_time} "
+      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id} "
       "{signature_version} {cipher_suite} {authentication_type} {host_header} {msg}")
                             }
                           }
