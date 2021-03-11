@@ -160,8 +160,8 @@ NON_ROOT_USER = 'csm'
 CONF_STORE_USER_KEY = 'system>service-user>name'
 CONF_STORE_PASS_KEY = 'system>service-user>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
-CSM = 'csm'
-CSM_USER_HOME = '/opt/seagate/cortx/csm/home/'
+CSM = 'CSM'
+CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
 HA_CLIENT_GROUP = 'haclient'
 SSH_DIR = '.ssh'
 SSH_PRIVATE_KEY = '{}/id_rsa'.format(SSH_DIR)
@@ -300,6 +300,7 @@ FAULT_HEALTH = 'Fault'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
+CLI_SETUP_FILE = '{}/schema/cli_setup.json'.format(CSM_PATH)
 
 # Support Bundle
 SSH_USER_NAME = 'root'
@@ -529,7 +530,7 @@ USAGE_PERCENTAGE = 'usage_percentage'
 DECRYPTION_KEYS = {
     "CHANNEL>password": "sspl",
     "S3>ldap_password": "openldap",
-    "CSM>password": "csm"
+    "CSM>password": "system"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 # Provisioner status

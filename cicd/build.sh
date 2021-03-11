@@ -206,7 +206,7 @@ else
     # add cortx-py-utils below
     # Need to remove erase of eos-py-utils after re changes
     yum erase -y -q eos-py-utils
-    yum install -y cortx-py-utils 
+    yum install -y cortx-py-utils
     yum install -y python36-cortx-prvsnr
 
     install_py_req requirment.txt
@@ -242,6 +242,7 @@ cp "$BASE_DIR/cicd/csm_agent.spec" "$TMPDIR"
     cp -R "$BASE_DIR/templates" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/scripts" "$DIST/csm/"
     cp -R "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
+    cp -R "$BASE_DIR/csm/cli/schema/cli_setup.json" "$DIST/csm/schema/"
 
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
@@ -315,6 +316,8 @@ cp "$BASE_DIR/cicd/cortxcli.spec" "$TMPDIR"
     sed -i -e "s|<PRODUCT>|${PRODUCT}|g" \
         -e "s|<CORTXCLI_PATH>|${TMPDIR}/csm|g" "${PYINSTALLER_FILE}"
     python3 -m PyInstaller --clean -y --distpath "${DIST}/cli" --key "${KEY}" "${PYINSTALLER_FILE}"
+
+    cp -f "$BASE_DIR/csm/cli/conf/cli_setup.py" "$DIST/cli/lib/cli_setup"
 
 ################## Add CORTXCLI_PATH #################################
 
