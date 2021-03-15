@@ -46,6 +46,8 @@ PRODUCT=<PRODUCT>
 [ -d "${CLI_DIR}/lib" ] && {
     ln -sf $CLI_DIR/lib/cortxcli /usr/bin/cortxcli
     ln -sf $CLI_DIR/lib/cortxcli $CLI_DIR/bin/cortxcli
+    ln -sf $CLI_DIR/lib/cli_setup /usr/bin/cli_setup
+    ln -sf $CLI_DIR/lib/cli_setup $CLI_DIR/bin/cli_setup
 }
 
 #TODO: add test for cli
@@ -55,6 +57,7 @@ exit 0
 
 %postun
 rm -f /usr/bin/cortxcli 2> /dev/null;
+rm -f /usr/bin/cli_setup 2> /dev/null;
 rm -rf <CORTXCLI_PATH>/bin/ 2> /dev/null;
 exit 0
 
