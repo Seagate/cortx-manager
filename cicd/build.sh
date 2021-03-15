@@ -283,6 +283,8 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     chmod +x "$DIST/cli/lib/"*    
     cd "$TMPDIR"
 
+    cp -f "$BASE_DIR/csm/cli/conf/cli_setup.py" "$DIST/cli/lib/cli_setup"
+
 ################## Add CORTXCLI_PATH #################################
 # Genrate spec file for CSM
     sed -i -e "s/<RPM_NAME>/${PRODUCT}-cli/g" \
