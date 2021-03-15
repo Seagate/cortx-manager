@@ -36,21 +36,28 @@ from csm.common.process import SimpleProcess
 
 # mapping of component with model, field for
 # range queires and log format
-COMPONENT_MODEL_MAPPING = { "csm":
-                            { "model" : CsmAuditLogModel,
-                              "field" : CsmAuditLogModel.timestamp,
-                              "format" : "{message}"
-                            },
-                            "s3":
-                            { "model" : S3AuditLogModel,
-                              "field" : S3AuditLogModel.timestamp,
-                              "format" : ("{bucket_owner} {bucket} {time}"
-      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
-      "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
-      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
-      "{signature_version} {cipher_suite} {authentication_type} {host_header}")
-                            }
-                          }
+COMPONENT_MODEL_MAPPING = {
+    "csm": {
+        "model" : CsmAuditLogModel,
+        "field" : CsmAuditLogModel.timestamp,
+        "format" : (
+            "{timestamp} {user} {remote_ip} {forwarded_for_ip} {method} {path} {user_agent} "
+            "{response_code}"
+        ),
+    },
+    "s3": {
+        "model" : S3AuditLogModel,
+        "field" : S3AuditLogModel.timestamp,
+        "format" : (
+            "{bucket_owner} {bucket} {time}"
+            "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
+            "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
+            "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
+            "{signature_version} {cipher_suite} {authentication_type} {host_header}"
+        )
+    }
+}
+
 COMPONENT_NOT_FOUND = "no_audit_log_for_component"
 
 class AuditLogManager():
@@ -143,8 +150,7 @@ class AuditService(ApplicationService):
                                                    "Log>max_result_window"), 0)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
-        return [COMPONENT_MODEL_MAPPING[component]["format"].
-                               format(**(log.to_primitive())) for log in audit_logs ]
+        return [log.to_primitive() for log in audit_logs]
 
     async def get_audit_log_zip(self, component: str, start_time: str, end_time: str):
         """ get zip file for all records from given range """
