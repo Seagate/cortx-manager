@@ -66,7 +66,7 @@ class PostInstall(Setup):
         Log.info("Validating third party rpms")
         PkgV().validate("rpms", const.third_party_rpms)
         Log.info("Valdating  3rd party Python Packages")
-        # PkgV().validate("pip3s", self.fetch_python_pkgs())
+        PkgV().validate("pip3s", self.fetch_python_pkgs())
 
     def fetch_python_pkgs(self):
         try:
