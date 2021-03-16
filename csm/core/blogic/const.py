@@ -128,6 +128,7 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
+CORTX = 'cortx'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -156,8 +157,8 @@ CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
-CONF_STORE_USER_KEY = 'system>service-user>name'
-CONF_STORE_PASS_KEY = 'system>service-user>secret'
+CONF_STORE_USER_KEY = 'cortx>software>csm>user'
+CONF_STORE_PASS_KEY = 'cortx>software>csm>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'CSM'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
@@ -525,6 +526,14 @@ DECRYPTION_KEYS = {
     "CSM>password": "system"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
+SERVER_NODE = "server_node"
+ENCLOSURE_ID = "enclosure_id"
+SOFTWARE = "software"
+
+#Third party packages information
+python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "templates/requirment.txt" 
+third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
+
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -668,3 +677,10 @@ BOTH = 'both'
 PRODUCER = 'producer'
 CONSUMER = 'consumer'
 CONSUMER_CALLBACK = 'consumer_callback'
+
+#ConfStore Keys
+KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
+KEY_SERVER_NODE_TYPE = f"{SERVER_NODE}>machine_id>{TYPE}"
+KEY_SERVER_ENCLOSURE_ID = f"{SERVER_NODE}>machine_id>{STORAGE}>{ENCLOSURE_ID}"
+KEY_SERVER_ENCLOSURE_TYPE = f"{STORAGE_ENCL}>enclosure_id>{TYPE}"
+KEY_CORTX_CSM_USERNAME = f"{CORTX}>{SOFTWARE}>{NON_ROOT_USER}>{USER}"

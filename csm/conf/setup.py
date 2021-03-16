@@ -70,7 +70,7 @@ class Setup:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
 
-        if Conf.get(const.CONSUMER_INDEX,  f"{const.DEPLOYMENT}>{const.MODE}") == const.DEV:
+        if Conf.get(const.CONSUMER_INDEX, const.KEY_DEPLOYMENT_MODE) == const.DEV:
             Log.info("Running Csm Setup for Dev Mode.")
             self._is_env_dev = True
 
@@ -79,7 +79,7 @@ class Setup:
         This Method will set the username for service user to Self._user
         :return:
         """
-        self._user = Conf.get(const.CONSUMER_INDEX, const.CONF_STORE_USER_KEY)
+        self._user = Conf.get(const.CONSUMER_INDEX, const.KEY_CORTX_CSM_USERNAME)
 
     @staticmethod
     def _run_cmd(cmd):
@@ -153,18 +153,14 @@ class Setup:
         Return Setup Info from Conf Store
         :return:
         """
-        self._setup_info = {"node_type": "",
-                            "storage_type": ""}
-        server_nodes = Conf.get(const.CONSUMER_INDEX, "cluster>server_nodes")
+        self._setup_info = {const.NODE_TYPE: "", const.STORAGE_TYPE: ""}
         machine_id = Setup._get_machine_id()
-        node_type_key = (f"{const.CLUSTER}>{server_nodes.get(machine_id, '')}"
-                         f">{const.NODE_TYPE}")
-        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX,
-                                               node_type_key)
-        storage_type_key = (f"{const.STORAGE}>{server_nodes.get(machine_id, '')}"
-                         f">{const.TYPE}")
-        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX,
-                                                  storage_type_key)
+        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX, 
+                            const.KEY_SERVER_NODE_TYPE.replace("machine_id",machine_id))
+        enclosure_id = Conf.get(const.CONSUMER_INDEX, 
+                            const.KEY_SERVER_ENCLOSURE_ID.replace("machine_id",machine_id))
+        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX, 
+                            const.KEY_SERVER_ENCLOSURE_TYPE.replace("enclosure_id",enclosure_id))
 
     @staticmethod
     def _get_machine_id():
