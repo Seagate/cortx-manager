@@ -99,7 +99,7 @@ class S3AccountsView(S3BaseView):
         """Calling Stats Get Method"""
         Log.debug(f"Handling s3 accounts delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        self._s3_session=self.request.session.credentials
+        self._s3_session = self.request.session.credentials
         with self._guard_service():
             response = await self._service.delete_account(self._s3_session,
                                                           self.account_id)
@@ -122,7 +122,7 @@ class S3AccountsView(S3BaseView):
             raise InvalidRequest(f"Invalid request body: {val_err}")
         with self._guard_service():
             response = await self._service.patch_account(self.account_id,
-                                                         patch_body['password'])
+                                                         **patch_body)
             await self._cleanup_sessions()
             return response
 

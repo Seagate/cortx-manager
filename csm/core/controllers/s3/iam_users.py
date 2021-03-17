@@ -122,8 +122,7 @@ class IamUserView(S3AuthenticatedView):
         req_ob=await self.request.json()
         try:
             schema = IamUserCreateSchema()
-            patch_body=schema.load({"user_name": user_name,"password":req_ob['password']}, unknown='EXCLUDE')
-            #patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            patch_body = schema.load({"user_name": user_name,"password":req_ob['password']}, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         with self._guard_service():
