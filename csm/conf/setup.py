@@ -36,7 +36,7 @@ from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from csm.conf.uds import UDSConfigGenerator
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
-
+from cortx.utils.validator.v_confkeys import ConfKeysV
 # try:
 #     from salt import client
 # except ModuleNotFoundError:
@@ -58,6 +58,17 @@ class Setup:
         self._setup_info = dict()
         self._is_env_vm = False
         self._is_env_dev = False
+        self._machine_id = Setup._get_machine_id()
+        # self._enclosure_id = None
+        const.KEY_SERVER_NODE_INFO = const.KEY_SERVER_NODE_INFO.replace("machine_id",self._machine_id)
+        self.conf_store_keys = {}
+
+    def _validate_conf_store_keys(self, index, keylist=None):
+        if not keylist:
+            ConfKeysV().validate("exists", index, self.conf_store_keys.values())
+        else:
+            ConfKeysV().validate("exists", index, keylist)
+            
 
     def _set_deployment_mode(self):
         """
@@ -79,7 +90,7 @@ class Setup:
         This Method will set the username for service user to Self._user
         :return:
         """
-        self._user = Conf.get(const.CONSUMER_INDEX, const.KEY_CORTX_CSM_USERNAME)
+        self._user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["csm_user_key"])
 
     @staticmethod
     def _run_cmd(cmd):
@@ -108,18 +119,12 @@ class Setup:
         csm_user_pass = None
         if self._is_env_dev:
             decrypt = False
-        Log.info("Fetching CSM User Password from Config Store.")
-        try:
-            # TODO: Need to Change Method for Fetching Csm Credentials.
-            csm_user_pass = Conf.get(const.CONSUMER_INDEX,
-                                     const.CONF_STORE_PASS_KEY)
-        except KvError as e:
-            Log.error(f"Failed to Fetch Csm Secret {e}")
+        Log.info("Fetching CSM User Password from Conf Store.")
+        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["csm_secret_key"])
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
-                cluster_id = Conf.get(const.CONSUMER_INDEX,
-                                      f"{const.CLUSTER}>{const.CLUSTER_ID}")
+                cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["cluster_id_key"])
                 cipher_key = Cipher.generate_key(cluster_id, "system")
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
@@ -155,12 +160,11 @@ class Setup:
         """
         self._setup_info = {const.NODE_TYPE: "", const.STORAGE_TYPE: ""}
         machine_id = Setup._get_machine_id()
-        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX, 
-                            const.KEY_SERVER_NODE_TYPE.replace("machine_id",machine_id))
-        enclosure_id = Conf.get(const.CONSUMER_INDEX, 
-                            const.KEY_SERVER_ENCLOSURE_ID.replace("machine_id",machine_id))
-        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX, 
-                            const.KEY_SERVER_ENCLOSURE_TYPE.replace("enclosure_id",enclosure_id))
+        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["server_node_type_key"])
+        enclosure_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["enclosure_id_key"])
+        storage_type_key = f"{const.STORAGE_ENCL}>{enclosure_id}>{const.TYPE}"
+        self._validate_conf_store_keys(const.CONSUMER_INDEX, [storage_type_key])
+        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX, storage_type_key)
 
     @staticmethod
     def _get_machine_id():
