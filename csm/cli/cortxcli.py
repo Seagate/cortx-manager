@@ -271,9 +271,8 @@ class CortxCli(Cmd):
         sys.exit()
 
 if __name__ == '__main__':
-    cli_path = os.path.realpath(sys.argv[0])
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(cli_path)), '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from csm.cli.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient, CsmDirectClient
     from cortx.utils.log import Log
