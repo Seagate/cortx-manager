@@ -439,6 +439,10 @@ IS_DHCP = 'is_dhcp'
 ROAMING_IP = "roaming_ip"
 PRIVATE_IP = "private_ip"
 LOCALHOST = "localhost"
+NETWORK = "network"
+DATA = "data"
+PUBLIC_FQDN = "public_fqdn"
+PRIVATE_FQDN = "private_fqdn"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -557,8 +561,8 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='cluster>{server-node}>node_type'
 NODE_TYPE="node_type"
+SGIAM = "sgiam"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
@@ -680,7 +684,4 @@ CONSUMER_CALLBACK = 'consumer_callback'
 
 #ConfStore Keys
 KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
-KEY_SERVER_NODE_TYPE = f"{SERVER_NODE}>machine_id>{TYPE}"
-KEY_SERVER_ENCLOSURE_ID = f"{SERVER_NODE}>machine_id>{STORAGE}>{ENCLOSURE_ID}"
-KEY_SERVER_ENCLOSURE_TYPE = f"{STORAGE_ENCL}>enclosure_id>{TYPE}"
-KEY_CORTX_CSM_USERNAME = f"{CORTX}>{SOFTWARE}>{NON_ROOT_USER}>{USER}"
+KEY_SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
