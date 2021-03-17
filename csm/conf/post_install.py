@@ -55,12 +55,20 @@ class PostInstall(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
         self._config_user()
         self._configure_system_auto_restart()
         self._configure_service_user()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        # import pdb;pdb.set_trace
+        self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
+        self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
+        self.conf_store_keys["csm_user_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+        self._validate_conf_store_keys(const.CONSUMER_INDEX)
 
     def validate_3rd_party_pkgs(self):
         Log.info("Validating third party rpms")
@@ -71,7 +79,7 @@ class PostInstall(Setup):
     def fetch_python_pkgs(self):
         try:
             pkgs_data = Text(const.python_pkgs_req_path).load()
-            pkgs_data.splitlines()
+            return pkgs_data.splitlines()
         except Exception as e:
             raise CsmSetupError("Failed to fetch python packages")
 
