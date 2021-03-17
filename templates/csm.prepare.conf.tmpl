@@ -1,0 +1,41 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "cortxub",
+        "secret": "cortxub"
+      },
+      "openldap": {
+        "sgiam": {
+          "user": "s3iamopenldapuser",
+          "secret": "s3iamopenldapsecret"
+        }
+      }
+    }
+  },
+  "server_node": {
+    "machine_id": {
+      "type": "VM",
+      "name": "srvnode-1",
+      "hostname": "srvnode1-host.seagate.com",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    }
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "RBOD"
+    }
+  }
+}
