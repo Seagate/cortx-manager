@@ -62,6 +62,5 @@ class S3AuthenticatedView(S3BaseView):
 
     def __init__(self, request, service_name):
         super().__init__(request, service_name)
-        
         if self._s3_session is None:
             raise CsmPermissionDenied(desc="Invalid credentials - not S3 Account or IAM User")
