@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
-set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -358,6 +357,3 @@ print_time $(( RPM_BUILD_END_TIME - RPM_BUILD_START_TIME ))
 
 printf "Total build time: \t\t"
 print_time $(( BUILD_END_TIME - BUILD_START_TIME ))
-ls -la /opt/seagate/cortx/
-ls -la /opt/seagate/cortx/csm
-ls -la /opt/seagate/cortx/utils
