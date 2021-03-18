@@ -567,7 +567,6 @@ SGIAM = "sgiam"
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
-DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
 VM = 'VM'
 ENV_TYPE = 'env_type'
