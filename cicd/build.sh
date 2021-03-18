@@ -191,7 +191,8 @@ if [ "$DEV" == true ]; then
     source "${VENV}/bin/activate"
     python --version
     pip install --upgrade pip
-
+    yum install -y cortx-py-utils 
+    yum install -y python36-cortx-prvsnr
 else
     pip3 install --upgrade pip
     # add cortx-py-utils below
