@@ -443,6 +443,9 @@ NETWORK = "network"
 DATA = "data"
 PUBLIC_FQDN = "public_fqdn"
 PRIVATE_FQDN = "private_fqdn"
+MANAGEMENT = "management"
+VIRTUAL_HOST = "virtual_host"
+PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"

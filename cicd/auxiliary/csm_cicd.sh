@@ -28,17 +28,31 @@ yum install -y $RPM_PATH/*.rpm
 mkdir -p /etc/ssl/stx/ /etc/cortx/ha/
 cp -f $CSM_REPO_PATH/cicd/auxiliary/stx.pem /etc/ssl/stx/
 #cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/database.json /etc/cortx/ha/
-
+yum install -y http://cortx-storage.colo.seagate.com/releases/eos/uploads/rhel/rhel-7.7.1908/csm_uploads/cortx-py-utils-1.0.0-177_8cc273a.src.rpm
 groupadd haclient
 
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
-pip3 freeze
 
+pip3 freeze
+MID=$(cat /etc/machine-id)
+echo $MID
 chmod 777 -R /var/log/seagate
+
+sed -i -e sed -i 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl"
+cat /opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl 
 csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl
+
+sed -i -e sed -i 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl"
+cat /opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
 csm_setup prepare --config json:///opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
+
+sed -i -e sed -i 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.config.conf.tmpl"
+cat /opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
 csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
+
+sed -i -e sed -i 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm_setup_conf_template.json"
+cat /opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
 csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
 
 #su -c "/usr/bin/csm_agent --debug &" csm
@@ -60,5 +74,5 @@ csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_t
 sleep 5s
 mkdir -p /tmp
 
-
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
+cat /tmp/result.txt

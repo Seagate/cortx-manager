@@ -24,7 +24,6 @@ from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
-from csm.conf.uds import UDSConfigGenerator
 
 
 class Prepare(Setup):
@@ -105,7 +104,7 @@ class Prepare(Setup):
         try:
             NetworkV().validate('connectivity', [roaming_ip, data_nw_public_fqdn])
         except Exception as e:
-            raise CsmSetupError("Failed to ") 
+            raise CsmSetupError("Network Validation failed.") 
         return roaming_ip, data_nw_public_fqdn
     
     @staticmethod
