@@ -33,6 +33,10 @@ class S3BaseView(CsmView):
         super().__init__(request)
 
         self._service = request.app.get(service_name, None)
+        if issubclass(type(self.request.session.credentials), S3Credentials):
+            self._s3_session = self.request.session.credentials
+        else:
+            self._s3_session = None
         if self._service is None:
             raise CsmInternalError(desc=f"Invalid service '{service_name}'")
 
@@ -58,8 +62,6 @@ class S3AuthenticatedView(S3BaseView):
 
     def __init__(self, request, service_name):
         super().__init__(request, service_name)
-
-        # Fetch S3 access_key, secret_key and session_token from session
-        self._s3_session = self.request.session.credentials
-        if not issubclass(type(self._s3_session), S3Credentials):
+        
+        if self._s3_session is None:
             raise CsmPermissionDenied(desc="Invalid credentials - not S3 Account or IAM User")

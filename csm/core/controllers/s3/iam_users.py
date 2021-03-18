@@ -64,6 +64,12 @@ class IamUserDeleteSchema(BaseSchema):
     """
     user_name = fields.Str(required=True, validate=[IamUserNameValidator()])
 
+class IamUserPatchSchema(BaseSchema):
+    """
+    IAM user patch schema validation class
+    """
+    password = fields.Str(required=True, validate=[PasswordValidator()])
+
 
 @CsmView._app_routes.view("/api/v1/iam_users")
 class IamUserListView(S3AuthenticatedView):
@@ -119,14 +125,13 @@ class IamUserView(S3AuthenticatedView):
         Log.debug(f"Handling  IAM USER patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_name = self.request.match_info["user_name"]
-        req_ob=await self.request.json()
         try:
-            schema = IamUserCreateSchema()
-            patch_body = schema.load({"user_name": user_name,"password":req_ob['password']}, unknown='EXCLUDE')
+            schema = IamUserPatchSchema()
+            patch_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         with self._guard_service():
-            return await self._service.patch_user(self._s3_session, **patch_body)
+            return await self._service.patch_user(self._s3_session, user_name, **patch_body)
 
     @CsmAuth.permissions({Resource.S3IAMUSERS: {Action.DELETE}})
     async def delete(self):
