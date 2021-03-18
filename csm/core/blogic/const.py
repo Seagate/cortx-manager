@@ -351,6 +351,17 @@ S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'
 S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
 
+# S3/Boto3
+S3_DEFAULT_REGION = 'us-west2'
+S3_RESOURCE_NAME_IAM = 'iam'
+S3_RESOURCE_NAME_S3 = 's3'
+S3_DEFAULT_RETRIES_MODE = 'standard'
+S3_DEFAULT_REQUEST_HEADERS = {
+    'content-type': 'application/x-www-form-urlencoded',
+    'accept': 'text/plain',
+}
+S3_RESP_LIST_ITEM = 'member'
+
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
 UDS_CERTIFICATES_PATH = '/var/csm/tls'
