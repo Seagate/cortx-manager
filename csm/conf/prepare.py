@@ -60,7 +60,8 @@ class Prepare(Setup):
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
-
+        if not self._replacement_node_flag:
+            self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -99,7 +100,6 @@ class Prepare(Setup):
         :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
-        import pdb;pdb.set_trace()
         roaming_ip = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["roaming_ip_key"])
         data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["data_nw_public_fqdn"] )
         try:

@@ -64,7 +64,6 @@ class PostInstall(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        # import pdb;pdb.set_trace
         self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
         self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
         self.conf_store_keys["csm_user_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
