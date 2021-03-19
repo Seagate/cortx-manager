@@ -88,7 +88,7 @@ class S3AccountsView(S3BaseView):
     def __init__(self, request):
         super().__init__(request, 's3_account_service')
         self.account_id = self.request.match_info["account_id"]
-        if hasattr(self, '_s3_session') and not self._s3_session.user_id == self.account_id:
+        if self._s3_session is not None and not self._s3_session.user_id == self.account_id:
             raise CsmPermissionDenied("Access denied. Cannot modify another S3 account.")
 
     """
