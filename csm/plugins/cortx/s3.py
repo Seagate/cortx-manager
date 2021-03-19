@@ -377,8 +377,8 @@ class IamClient(BaseClient):
             return self._create_error(code, body)
         else:
             result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
-            resp = self._create_response(ExtendedIamAccount, result['Account'],
-                self.EXT_ACCOUNT_MAPPING)
+            resp = self._create_response(
+                ExtendedIamAccount, result['Account'], self.EXT_ACCOUNT_MAPPING)
 
             # TODO: find out why there is no email the response
             return resp
@@ -586,15 +586,15 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._arbitrary_request(const.S3_IAM_CMD_CREATE_ACCESS_KEY,
-                                              params, '/', 'POST')
+        (code, body) = await self._arbitrary_request(
+            const.S3_IAM_CMD_CREATE_ACCESS_KEY, params, '/', 'POST')
         Log.audit(f"Create access key status code: {code}")
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
-                            const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
-                                const.S3_PARAM_ACCESS_KEY]
+                const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
+                    const.S3_PARAM_ACCESS_KEY]
             return self._create_response(IamUserCredentials, creds,
                                          self.IAM_USER_CREDENTIALS_MAPPING)
 
@@ -617,16 +617,17 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._arbitrary_request(const.S3_IAM_CMD_UPDATE_ACCESS_KEY,
-                                              params, '/', 'POST')
+        (code, body) = await self._arbitrary_request(
+            const.S3_IAM_CMD_UPDATE_ACCESS_KEY, params, '/', 'POST')
         Log.audit(f"Update access key status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
 
-    async def get_user_access_key_last_used(self, access_key_id,
-                                            user_name=None) -> Union[IamAccessKeyLastUsed, IamError]:
+    async def get_user_access_key_last_used(
+        self, access_key_id, user_name=None
+    ) -> Union[IamAccessKeyLastUsed, IamError]:
         """
         Retrieves the timestamp of the last access key usage.
 
@@ -641,8 +642,8 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._arbitrary_request(const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED,
-                                              params, '/', 'POST')
+        (code, body) = await self._arbitrary_request(
+            const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED, params, '/', 'POST')
         Log.audit(f"Update access key status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
@@ -695,14 +696,14 @@ class IamClient(BaseClient):
             resp = IamAccessKeysListResponse()
             resp.access_keys = converted_keys
             raw = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                            const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                                const.S3_PARAM_IS_TRUNCATED]
+                const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
+                    const.S3_PARAM_IS_TRUNCATED]
 
             resp.is_truncated = raw == 'true'
             if resp.is_truncated:
                 resp.marker = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                                        const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                                            const.S3_PARAM_MARKER]
+                    const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
+                        const.S3_PARAM_MARKER]
 
             return resp
 
@@ -722,8 +723,8 @@ class IamClient(BaseClient):
         if user_name is not None:
             params['UserName'] = user_name
 
-        (code, body) = await self._arbitrary_request(const.S3_IAM_CMD_DELETE_ACCESS_KEY, params,
-                                              '/', 'POST')
+        (code, body) = await self._arbitrary_request(
+            const.S3_IAM_CMD_DELETE_ACCESS_KEY, params, '/', 'POST')
         Log.debug(f"Delete iam User status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
@@ -771,14 +772,15 @@ class S3Client(BaseClient):
     @Log.trace_method(Log.DEBUG)
     async def delete_bucket(self, bucket_name: str):
         Log.debug(f"delete bucket: {bucket_name}")
-        bucket = await self._loop.run_in_executor(self._executor, self._resource.Bucket, bucket_name)
+        bucket = await self._loop.run_in_executor(
+            self._executor, self._resource.Bucket, bucket_name)
         # Assume that the bucket is empty, if not, the error will be returned.
         # It is user's responsibility to empty the bucket before the deletion.
         await self._loop.run_in_executor(self._executor, bucket.delete)
 
     @Log.trace_method(Log.DEBUG)
     async def get_all_buckets(self):
-        Log.debug(f"Get all buckets ")
+        Log.debug("Get all buckets")
         return await self._loop.run_in_executor(self._executor, self._resource.buckets.all)
 
     @Log.trace_method(Log.DEBUG)
@@ -786,10 +788,11 @@ class S3Client(BaseClient):
         # When the tag_set is not available ClientError is raised
         # Need to avoid that in order to iterate over tags for all available buckets
         Log.debug(f"Get bucket tagging: {bucket_name}")
+
         def _run():
             try:
                 tagging = self._resource.BucketTagging(bucket_name)
-                tag_set = {tag['Key'] : tag['Value'] for tag in tagging.tag_set}
+                tag_set = {tag['Key']: tag['Value'] for tag in tagging.tag_set}
             except ClientError:
                 tag_set = {}
             return tag_set
@@ -798,6 +801,7 @@ class S3Client(BaseClient):
     @Log.trace_method(Log.DEBUG)
     async def put_bucket_tagging(self, bucket_name, tags: dict):
         Log.debug(f"Put bucket tagging: bucket_name:{bucket_name}, tags:{tags}")
+
         def _run():
             tag_set = {
                 'TagSet': [
@@ -821,6 +825,7 @@ class S3Client(BaseClient):
         :returns: A dict of bucket policy
         """
         Log.debug(f"Get bucket tagging: {bucket_name}")
+
         def _run():
             bucket = self._resource.BucketPolicy(bucket_name)
             return json.loads(bucket.policy)
@@ -839,6 +844,7 @@ class S3Client(BaseClient):
         :returns:
         """
         Log.debug(f"Put bucket tagging: bucket_name: {bucket_name}, policy: {policy}")
+
         def _run():
             bucket = self._resource.BucketPolicy(bucket_name)
             bucket_policy = json.dumps(policy)
@@ -894,8 +900,10 @@ class S3Plugin:
     def __init__(self):
         Log.info('S3 plugin is loaded')
 
-    @Log.trace_method(Log.DEBUG, exclude_args=['access_key','secret_key','session_token'])
-    def get_iam_client(self, access_key, secret_key, connection_config=None, session_token=None) -> IamClient:
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
+    def get_iam_client(
+        self, access_key, secret_key, connection_config=None, session_token=None
+    ) -> IamClient:
         """
         Returns a management object for S3/IAM accounts.
         """
@@ -905,8 +913,10 @@ class S3Plugin:
         return IamClient(access_key, secret_key, connection_config,
                          asyncio.get_event_loop(), session_token)
 
-    @Log.trace_method(Log.DEBUG, exclude_args=['access_key','secret_key','session_token'])
-    def get_s3_client(self, access_key, secret_key, connection_config=None, session_token=None) -> S3Client:
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
+    def get_s3_client(
+        self, access_key, secret_key, connection_config=None, session_token=None
+    ) -> S3Client:
         """
         Returns a management object for S3/IAM accounts.
         """
@@ -915,7 +925,6 @@ class S3Plugin:
 
         return S3Client(access_key, secret_key, connection_config,
                         asyncio.get_event_loop(), session_token)
-
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
     async def get_temp_credentials(self, account_name, password, duration=None,
@@ -942,7 +951,8 @@ class S3Plugin:
         if user_name:
             params['UserName'] = user_name
 
-        (code, body) = await iamcli._arbitrary_request('GetTempAuthCredentials', params, '/', 'POST')
+        (code, body) = await iamcli._arbitrary_request(
+            'GetTempAuthCredentials', params, '/', 'POST')
         if code != 201:
             return iamcli._create_error(code, body)
         else:
