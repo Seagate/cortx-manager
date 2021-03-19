@@ -90,7 +90,7 @@ class Configure(Setup):
                      const.DEV)
         self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+        Setup._run_cmd(f"cp -rf {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     def store_encrypted_password(self):
         """
@@ -153,7 +153,7 @@ class Configure(Setup):
             Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                      f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
         Setup._run_cmd(
-            f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+            f"cp -rf {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     @staticmethod
     def _set_node_id():
