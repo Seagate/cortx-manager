@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 import ssl
-from typing import Any, Dict, Tuple, Optional, Union
+from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 from http import HTTPStatus
 import xmltodict
 from cortx.utils.log import Log
@@ -42,8 +42,21 @@ class BaseClient:
     Base class for IAM API operations.
     """
 
-    def __init__(self, access_key_id: str, secret_access_key: str, config: S3ConnectionConfig,
-                 loop=asyncio.get_event_loop(), session_token=None):
+    def __init__(
+        self, access_key_id: str, secret_access_key: str, config: S3ConnectionConfig,
+        loop: asyncio.AbstractEventLoop = asyncio.get_event_loop(), session_token: str = None
+    ) -> None:
+        """
+        Initialize the BaseClient.
+
+        :param access_key_id: access key ID or LDAP admin user name.
+        :param secret_access_key: secret access key or LDAP admin password.
+        :param config: object with client's configuration.
+        :param loop: event loop to run asynchronous calls.
+        :param session_token: session token.
+        :returns: None.
+        """
+
         self._loop = loop
         self._executor = ThreadPoolExecutor()
         self._session = Boto3Session(
@@ -72,10 +85,27 @@ class BaseClient:
             verify=verify, endpoint_url=self._url, config=boto3_config
         )
 
-    async def _run_async(self, function):
+    async def _run_async(self, function: Callable[..., Any]) -> Any:
+        """
+        Runs the provided function asynchronously.
+
+        :param function: a function to run.
+        """
         return await self._loop.run_in_executor(self._executor, function)
 
-    async def _arbitrary_request(self, action, params, path, verb):
+    async def _arbitrary_request(
+        self, action: str, params: Dict[str, Any], path: str, verb: str
+    ) -> Tuple[HTTPStatus, Dict[str, Any]]:
+        """
+        Make signed arbitrary request to S3 server.
+
+        :param action: S3/IAM server operation (e.g. CreateAccount).
+        :param params: JSON parameters for the request.
+        :param path: URI to send the request to.
+        :param verb: HTTP method.
+        :returns: HTTP status code and parsed response's body as a dict
+        """
+
         Log.debug(f"Make query:action:{action}, params:{params}, path:{path}, verb:{verb}")
 
         headers = const.S3_DEFAULT_REQUEST_HEADERS
@@ -95,12 +125,13 @@ class BaseClient:
                 body = await resp.text()
                 parsed_body = xmltodict.parse(
                     body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
+                print(f'{action} - {status}\n{parsed_body}')
                 Log.debug('%s responded with %s status', self._host, status)
                 return (status, parsed_body)
 
     def _extract_element(
         self, path: Tuple[str], resp: Dict[str, Any], is_list: bool = False
-    ) -> Any:
+    ) -> Union[str, Dict[str, Any], List[Dict[str, Any]]]:
         """
         Extracts an item from a parsed S3 server response.
 
@@ -126,10 +157,12 @@ class BaseClient:
             log = f"Malformed response from S3 server: expect path {path} in {resp}"
             raise CsmTypeError(log)
 
-    def _create_response(self, cls, data, mapping):
+    def _create_response(self, cls, data: Dict[str, Any], mapping: Dict[str, str]) -> Any:
         """
-        Creates an instance of type `cls` and fills its fields
-        according to mapping
+        Creates an instance of type `cls` and fills its fields according to mapping.
+        :param cls: model's class object.
+        :param data: dict with values.
+        :param mapping: dict that maps data values to model's attributes.
         :returns: an instance of `cls` type
         """
 
@@ -139,10 +172,15 @@ class BaseClient:
 
         return resp
 
-    def _create_error(self, status, body) -> IamError:
+    def _create_error(self, status: HTTPStatus, body: str) -> IamError:
         """
-        Converts a body of a failed query into IamError object
+        Converts a body of a failed query into IamError object.
+
+        :param status: HTTP Status code.
+        :param body: parsed HTTP response (dict) with the error's decription.
+        :returns: instance of IamError.
         """
+
         Log.error(f"Create error body: {body}")
         if 'ErrorResponse' not in body:
             return None
@@ -165,7 +203,11 @@ class IamClient(BaseClient):
 
     resource = const.S3_RESOURCE_NAME_IAM
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initializes the IamClient
+        """
+
         super().__init__(*args, **kwargs)
 
         self.EXT_ACCOUNT_MAPPING = {
@@ -216,24 +258,30 @@ class IamClient(BaseClient):
         }
 
         self.IAM_GET_TMP_CREDS_MAPPING = {
-                'UserName': 'user_name',
-                'AccessKeyId': 'access_key',
-                'SecretAccessKey': 'secret_key',
-                'Status': 'status',
-                'ExpiryTime': 'expiry_time',
-                'SessionToken': 'session_token'
+            'UserName': 'user_name',
+            'AccessKeyId': 'access_key',
+            'SecretAccessKey': 'secret_key',
+            'Status': 'status',
+            'ExpiryTime': 'expiry_time',
+            'SessionToken': 'session_token'
         }
 
     @Log.trace_method(Log.DEBUG)
-    async def create_account(self, account_name: str,
-                             account_email: str) -> Union[ExtendedIamAccount, IamError]:
+    async def create_account(
+        self, account_name: str, account_email: str
+    ) -> Union[ExtendedIamAccount, IamError]:
         """
-        IAM Account creation. This operation is not present in Amazon IAM API.
+        Create IAM account.
+
+        This operation is not present in Amazon IAM API.
         In order to perform this operation, LDAP credentials must be provided into
         the class constructor.
 
+        :param account_name: account's name.
+        :param account_email: account's email.
         :returns: ExtendedIamAccount in case of success, IamError otherwise
         """
+
         Log.debug(f"Create account profile. account_name:{account_name}, "
                   f"account_email:{account_email}")
         params = {
@@ -254,14 +302,20 @@ class IamClient(BaseClient):
             return resp
 
     @Log.trace_method(Log.DEBUG, exclude_args=['account_password'])
-    async def create_account_login_profile(self, account_name, account_password,
-                                           require_reset=False) -> Union[IamLoginProfile, IamError]:
+    async def create_account_login_profile(
+        self, account_name: str, account_password: str, require_reset: bool = False
+    ) -> Union[IamLoginProfile, IamError]:
         """
-        Login profile creation.
+        Create account login profile.
+
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
+        :param account name: account's name.
+        :param account_password: account's password.
+        :param require_reset: flag if the user needs to reset the password once logged in.
         :returns: IamLoginProfile in case of success, IamError otherwise
         """
+
         Log.debug(f"Create account login profile. account_name:{account_name}, "
                   f"require_reset:{require_reset}")
         params = {
@@ -281,14 +335,20 @@ class IamClient(BaseClient):
             return self._create_response(IamLoginProfile, profile, self.LOGIN_PROFILE_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['account_password'])
-    async def update_account_login_profile(self, account_name, account_password,
-                                           require_reset=False) -> Union[bool, IamError]:
+    async def update_account_login_profile(
+        self, account_name: str, account_password: str, require_reset: bool = False
+    ) -> Union[bool, IamError]:
         """
-        Login profile update.
+        Update account login profile.
+
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
-        :returns: True in case of success, IamError otherwise
+        :param account name: account's name.
+        :param account_password: account's password.
+        :param require_reset: flag if the user needs to reset the password once logged in.
+        :returns: True in case of success, IamError otherwise.
         """
+
         Log.debug(f"Update account login profile: account_name:{account_name}, "
                   f"require_reset:{require_reset}")
 
@@ -307,13 +367,16 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def list_account_login_profiles(self, account_name) -> Union[bool, IamError]:
+    async def list_account_login_profiles(self, account_name: str) -> Union[bool, IamError]:
         """
-        Login profile update.
+        List account login profile.
+
         Note that it is required to provide S3 account credentials, not LDAP ones.
 
+        :param account_name: account's name.
         :returns: True in case of success, IamError otherwise
         """
+
         Log.debug(f"List account login profile. account_name:{account_name}")
         params = {
             'AccountName': account_name
@@ -327,7 +390,14 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def get_account(self, account_name) -> Union[IamAccount, IamError]:
+    async def get_account(self, account_name: str) -> Union[Optional[IamAccount], IamError]:
+        """
+        Get IAM account.
+
+        :param account_name: account's name
+        :return account object if the account exists, None if not, IamError in case of error.
+        """
+
         accounts = await self.list_accounts()
         if isinstance(accounts, IamError):
             return accounts
@@ -337,14 +407,19 @@ class IamClient(BaseClient):
         return None
 
     @Log.trace_method(Log.DEBUG)
-    async def list_accounts(self, max_items=None,
-                            marker=None) -> Union[IamAccountListResponse, IamError]:
+    async def list_accounts(
+        self, max_items: Optional[int] = None, marker: Optional[str] = None
+    ) -> Union[IamAccountListResponse, IamError]:
         """
         Fetches the list of S3 accounts from the IAM server.
+
         Note that max_items and marker parameters are not supported yet!
 
+        :param max_items: maximum number of items to return.
+        :param marker: pagination marker.
         :returns: IamAccountListResponse or IamError
         """
+
         Log.debug(f"List account status. max_items:{max_items}, marker:{marker}")
         params = {}
 
@@ -377,12 +452,16 @@ class IamClient(BaseClient):
             return resp
 
     @Log.trace_method(Log.DEBUG)
-    async def reset_account_access_key(self, account_name) -> Union[ExtendedIamAccount, IamError]:
+    async def reset_account_access_key(
+        self, account_name: str
+    ) -> Union[ExtendedIamAccount, IamError]:
         """
-        Reset access and secret key
+        Reset access and secret key.
 
-        :returns: ExtendedIamAccount in case of success, IamError otherwise
+        :param account_name: account's name.
+        :returns: ExtendedIamAccount in case of success, IamError otherwise.
         """
+
         Log.debug(f"Reset account access key. account_name:{account_name}")
         params = {
             'AccountName': account_name
@@ -401,13 +480,18 @@ class IamClient(BaseClient):
             return resp
 
     @Log.trace_method(Log.DEBUG)
-    async def delete_account(self, account_name, force=False) -> Union[bool, IamError]:
+    async def delete_account(self, account_name: str, force: bool = False) -> Union[bool, IamError]:
         """
+        Delete IAM account
+
         Note that in order to delete account_name we need to use access key
         and secret key of account_name
 
+        :param account_name: account's name.
+        :force: flag if delete anyways.
         :returns: True in case of success, IamError in case of problem
         """
+
         Log.debug(f"Delete account access key: account_name:{account_name}, "
                   f"force:{force}")
         params = {
@@ -425,12 +509,14 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def create_user(self, user_name) -> Union[IamUser, IamError]:
+    async def create_user(self, user_name: str) -> Union[IamUser, IamError]:
         """
         Create an IAM user.
 
+        :param: IAM user name.
         :returns: IamUser in case of success, IamError otherwise
         """
+
         Log.debug(f"Create iam user. user_name:{user_name}")
         params = {
             'UserName': user_name
@@ -445,7 +531,18 @@ class IamClient(BaseClient):
             return self._create_response(IamUser, user, self.IAM_USER_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
-    async def create_user_login_profile(self, user_name, user_password, require_reset=False):
+    async def create_user_login_profile(
+        self, user_name: str, user_password: str, require_reset: Optional[bool] = False
+    ) -> Union[None, IamError]:
+        """
+        Create IAM user login profile.
+
+        :param user_name: IAM user's name.
+        :param user_password: IAM user's password.
+        :param require_reset: flag if the user needs to reset the password once logged in.
+        :returns: None in case of success, IamError otherwise
+        """
+
         # TODO: server returns OperationNotSupported. Why??
         Log.debug(f"Create user login profile. user_name:{user_name}, "
                   f"require_reset:{require_reset}")
@@ -463,14 +560,20 @@ class IamClient(BaseClient):
             return None
 
     @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
-    async def update_user_login_profile(self, user_name, user_password,
-                                        require_reset=False) -> Union[bool, IamError]:
+    async def update_user_login_profile(
+        self, user_name: str, user_password: str, require_reset: Optional[bool] = False
+    ) -> Union[bool, IamError]:
         """
         User's login profile update.
+
         Note that it is required to provide S3 account credentials.
 
-        :returns: True in case of success, IamError otherwise
+        :param user_name: IAM user's name.
+        :param user_password: IAM user's password.
+        :param require_reset: flag if the user needs to reset the password once logged in.
+        :returns: True in case of success, IamError otherwise.
         """
+
         Log.debug(f"Update user login profile: user_name:{user_name}, "
                   f"require_reset:{require_reset}")
 
@@ -488,13 +591,19 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def list_users(self, marker=None,
-                         max_items=None) -> Union[IamUserListResponse, IamError]:
+    async def list_users(
+        self, marker: Optional[str] = None, max_items: Optional[int] = None
+    ) -> Union[IamUserListResponse, IamError]:
         """
+        List IAM users.
+
         Note that max_items and marker are not working for now!!
 
+        :param marker: pagination marker from the previous response.
+        :param max items: maximum number of items to return.
         :returns: IamUserListResponse in case of success, IamError otherwise
         """
+
         Log.debug(f"List iam user. marker:{marker}, "
                   f"max_items:{max_items}")
         params = {}
@@ -527,11 +636,14 @@ class IamClient(BaseClient):
             return resp
 
     @Log.trace_method(Log.DEBUG)
-    async def delete_user(self, user_name) -> Union[bool, IamError]:
+    async def delete_user(self, user_name: str) -> Union[bool, IamError]:
         """
-        IAM user deletion.
-        :returns: True in case of success, IamError in case of problem
+        Deletes IAM user.
+
+        :param user_name: IAM user's name.
+        :returns: True in case of success, IamError otherwise.
         """
+
         Log.debug(f"Delete iam User: {user_name}")
         params = {
             'UserName': user_name
@@ -545,13 +657,16 @@ class IamClient(BaseClient):
             return True
 
     @Log.trace_method(Log.DEBUG)
-    async def get_user(self, user_name) -> Union[IamUser, IamError]:
+    async def get_user(self, user_name: str) -> Union[IamUser, IamError]:
         """
-        Queries a single IAM user.
+        Query the IAM user.
 
         TODO: Currently is not supported by our IAM server.
-        :returns: IamUser in case of success, IamError in case of problem
+
+        :param user_name: IAM user's name.
+        :returns: IamUser if user exists, None if not and IamError in case of error.
         """
+
         raise NotImplementedError()
 
         params = {
@@ -565,14 +680,15 @@ class IamClient(BaseClient):
             return None
 
     @Log.trace_method(Log.DEBUG)
-    async def update_user(self, user_name,
-                          new_user_name=None) -> Union[bool, IamError]:
+    async def update_user(
+        self, user_name: str, new_user_name: Optional[str] = None
+    ) -> Union[bool, IamError]:
         """
         Update an existing IAM user.
 
-        :param user_name: TODO: find out details about this field
-        :param new_user_name: If not None, user will be renamed accordingly
-        :returns: True in case of success, IamError in case of problem
+        :param user_name: TODO: find out details about this field.
+        :param new_user_name: If not None, user will be renamed accordingly.
+        :returns: True in case of success, IamError in case of problem.
         """
         Log.debug(f"Update iam User: {user_name} "
                   f"new_user_name:{new_user_name}")
@@ -591,7 +707,9 @@ class IamClient(BaseClient):
             # TODO: our IAM server does not return the updated user information
             return True
 
-    async def create_user_access_key(self, user_name=None) -> Union[ExtendedIamAccount, IamError]:
+    async def create_user_access_key(
+        self, user_name: Optional[str] = None
+    ) -> Union[ExtendedIamAccount, IamError]:
         """
         Creates an access key id and secret key for IAM user.
 
@@ -614,14 +732,16 @@ class IamClient(BaseClient):
             return self._create_response(IamUserCredentials, creds,
                                          self.IAM_USER_CREDENTIALS_MAPPING)
 
-    async def update_user_access_key(self, access_key_id, status, user_name=None) -> bool:
+    async def update_user_access_key(
+        self, access_key_id: str, status: str, user_name: Optional[str] = None
+    ) -> Union[bool, IamError]:
         """
         Updates an access key status (active/inactive) for IAM user.
 
-        :param user_name: IAM user name, if None, user is deduced from the current session
-        :param access_key_id: access key ID
-        :param status: new active key status (Active/inactive)
-        :returns: true in case of success, IamError in case of problem
+        :param user_name: IAM user's name, if None, user is deduced from the current session.
+        :param access_key_id: access key ID.
+        :param status: new active key status (Active/inactive).
+        :returns: true in case of success, IamError in case of problem.
         """
 
         Log.audit(f"Update access key {access_key_id} for user: {user_name}"
@@ -642,15 +762,16 @@ class IamClient(BaseClient):
             return True
 
     async def get_user_access_key_last_used(
-        self, access_key_id, user_name=None
+        self, access_key_id: str, user_name: Optional[str] = None
     ) -> Union[IamAccessKeyLastUsed, IamError]:
         """
-        Retrieves the timestamp of the last access key usage.
+        Retrieve the timestamp of the last access key usage.
 
-        :param access_key_id: access key ID
-        :param user_name: IAM user name, if None, user is deduced from the current session
-        :returns: timestamp in case of success, IamError in case of problem
+        :param access_key_id: access key ID.
+        :param user_name: IAM user name, if None, user is deduced from the current session.
+        :returns: timestamp in case of success, IamError in case of problem.
         """
+
         Log.audit(f"Get last used time of IAM user's {user_name} access key {access_key_id}")
         params = {
             'AccessKeyId': access_key_id
@@ -668,17 +789,21 @@ class IamClient(BaseClient):
             return self._create_response(IamAccessKeyLastUsed, info,
                                          self.IAM_ACCESS_KEY_LAST_USED_MAPPING)
 
-    async def list_user_access_keys(self, user_name=None, marker=None,
-                                    max_items=None) -> Union[IamAccessKeysListResponse, IamError]:
+    async def list_user_access_keys(
+        self, user_name: Optional[str] = None, marker: Optional[str] = None,
+        max_items: Optional[int] = None
+    ) -> Union[IamAccessKeysListResponse, IamError]:
         """
-        Gets the list of access keys for IAM user
-        Note that max_items and marker are not working for now!!
+        Get the list of access keys for IAM user.
 
-        :param user_name: IAM user name, if None, user is deduced from the current session
-        :param marker: pagination marker from the previous response
-        :param max_items: maximum number of access keys to return in single response
-        :returns: IamAccessKeysListResponse in case of success, IamError otherwise
+        Note that max_items and marker are not working for now!
+
+        :param user_name: IAM user name, if None, user is deduced from the current session.
+        :param marker: pagination marker from the previous response.
+        :param max_items: maximum number of access keys to return in single response.
+        :returns: IamAccessKeysListResponse in case of success, IamError otherwise.
         """
+
         Log.audit(f"List IAM user's {user_name} access keys. marker: {marker},"
                   f" max_items: {max_items}")
         params = {}
@@ -715,13 +840,15 @@ class IamClient(BaseClient):
 
             return resp
 
-    async def delete_user_access_key(self, access_key_id, user_name=None) -> Union[bool, IamError]:
+    async def delete_user_access_key(
+        self, access_key_id: str, user_name: Optional[str] = None
+    ) -> Union[bool, IamError]:
         """
-        Deletes an access key for IAM user.
+        Delete an access key for IAM user.
 
-        :param user_name: IAM user name, if None, user is deduced from the current session
-        :param access_key_id: ID of the access key to be deleted
-        :returns: true in case of success, IamError in case of problem
+        :param user_name: IAM user name, if None, user is deduced from the current session.
+        :param access_key_id: ID of the access key to be deleted.
+        :returns: true in case of success, IamError in case of problem.
         """
 
         Log.audit(f"Delete access key {access_key_id} for IAM user {user_name}")
@@ -749,8 +876,8 @@ class IamClient(BaseClient):
         :param account_name: S3 account name.
         :param password: S3 account login profile's password.
         :param duration: Session expiry time (in seconds). If set, it must be greater than 900.
-        :param user_name: IAM user name
-        :returns: IamTempCredentials or IamError instance
+        :param user_name: IAM user's name.
+        :returns: IamTempCredentials or IamError instance.
         """
 
         params = {
@@ -937,48 +1064,73 @@ class S3Plugin:
     the get_temp_credentials function, e.g.
         creds = await s3plugin.get_temp_credentials('login', 'pwd', connection_config=config)
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
+        """
+        Initialize S3 plugin
+        """
+
         Log.info('S3 plugin is loaded')
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
     def get_iam_client(
-        self, access_key, secret_key, connection_config=None, session_token=None
+        self, access_key_id: str, secret_access_key: str,
+        connection_config: Optional[S3ConnectionConfig] = None, session_token: Optional[str] = None
     ) -> IamClient:
         """
-        Returns a management object for S3/IAM accounts.
+        Return a management object for S3/IAM accounts.
+
+        :param access_key_id: access key ID.
+        :param secret_access_key: secret access key.
+        :param connection_config: object with client's configuration.
+        :param session_token: session token.
+        :returns: IamClient instance.
         """
+
         if not connection_config:
             raise CsmInternalError('Connection configuration must be provided')
 
-        return IamClient(access_key, secret_key, connection_config,
+        return IamClient(access_key_id, secret_access_key, connection_config,
                          asyncio.get_event_loop(), session_token)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key', 'session_token'])
     def get_s3_client(
-        self, access_key, secret_key, connection_config=None, session_token=None
+        self, access_key_id: str, secret_access_key: str,
+        connection_config: Optional[S3ConnectionConfig] = None, session_token: Optional[str] = None
     ) -> S3Client:
         """
-        Returns a management object for S3/IAM accounts.
+        Return a management object for S3/IAM accounts.
+
+        :param access_key_id: access key ID.
+        :param secret_access_key: secret access key.
+        :param connection_config: object with client's configuration.
+        :param session_token: session token.
+        :returns: S3Client instance.
         """
+
         if not connection_config:
             raise CsmInternalError('Connection configuration must be provided')
 
-        return S3Client(access_key, secret_key, connection_config,
+        return S3Client(access_key_id, secret_access_key, connection_config,
                         asyncio.get_event_loop(), session_token)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
-    async def get_temp_credentials(self, account_name, password, duration=None,
-                                   user_name=None, connection_config=None):
+    async def get_temp_credentials(
+        self, account_name: str, password: str, duration: Optional[int] = None,
+        user_name: Optional[str] = None, connection_config: Optional[S3ConnectionConfig] = None
+    ) -> Union[IamTempCredentials, IamError]:
         """
-        Authentication via some Login Profile
+        Authentication via some Login Profile.
+
         :param account_name:
         :param password:
         :param duration: Session expiry time (in seconds). If set, it must be
                          greater than 900.
         :param user_name: TODO: find out details about this field
         :param connection_config: TODO: find out details about this field
-        :returns: An instance of IamTempCredentials object
+        :returns: IamTempCredentials object in case of success, IamError otherwise.
         """
+
         Log.debug(f"Get temp credentials: {account_name}, user_name:{user_name}")
         iamcli = IamClient('', '', connection_config, asyncio.get_event_loop())
         return await iamcli.get_tmp_creds(account_name, password, duration, user_name)
