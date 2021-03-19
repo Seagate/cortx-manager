@@ -226,7 +226,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('CreateAccount', params, '/', 'POST')
         Log.debug(f"Create account profile status: {code}")
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             account = body['CreateAccountResponse']['CreateAccountResult']['Account']
@@ -256,7 +256,7 @@ class IamClient(BaseClient):
         (code, body) = await self._arbitrary_request(
             'CreateAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"Create login profile status: {code}")
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             profile = body['CreateAccountLoginProfileResponse']['CreateAccountLoginProfileResult']
@@ -284,7 +284,7 @@ class IamClient(BaseClient):
         (code, body) = await self._arbitrary_request(
             'UpdateAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"Update account profile status: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
@@ -304,7 +304,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('GetAccountLoginProfile', params, '/', 'POST')
         Log.debug(f"List account profile status: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
@@ -339,7 +339,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('ListAccounts', params, '/', 'POST')
         Log.debug(f"List account status: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             users = self._extract_list(
@@ -373,7 +373,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('ResetAccountAccessKey', params, '/', 'POST')
         Log.debug(f"Reset account access key status code: {code}")
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
@@ -402,7 +402,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('DeleteAccount', params, '/', 'POST')
         Log.debug(f"Delete account status code: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
@@ -421,7 +421,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('CreateUser', params, '/', 'POST')
         Log.debug(f"Create iam user status code: {code}")
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             user = body['CreateUserResponse']['CreateUserResult']['User']
@@ -440,7 +440,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('CreateLoginProfile', params, '/', 'POST')
         Log.debug(f"Create user profile status code: {code}")
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
             return None
@@ -465,7 +465,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('UpdateLoginProfile', params, '/', 'POST')
         Log.debug(f"Update user profile status: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
@@ -490,7 +490,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('ListUsers', params, '/', 'POST')
         Log.debug(f"List iam User status code: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             users = self._extract_list(['ListUsersResponse', 'ListUsersResult', 'Users'], body)
@@ -521,7 +521,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('DeleteUser', params, '/', 'POST')
         Log.debug(f"Delete iam User status code: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return True
@@ -541,7 +541,7 @@ class IamClient(BaseClient):
         }
 
         (code, body) = await self._arbitrary_request('GetUser', params, '/', 'POST')
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             return None
@@ -567,7 +567,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request('UpdateUser', params, '/', 'POST')
         Log.debug(f"Update iam User status code: {code}")
-        if code != 200:
+        if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
             # TODO: our IAM server does not return the updated user information
@@ -953,7 +953,7 @@ class S3Plugin:
 
         (code, body) = await iamcli._arbitrary_request(
             'GetTempAuthCredentials', params, '/', 'POST')
-        if code != 201:
+        if code != HTTPStatus.CREATED:
             return iamcli._create_error(code, body)
         else:
             creds = body['GetTempAuthCredentialsResponse']['GetTempAuthCredentialsResult']
