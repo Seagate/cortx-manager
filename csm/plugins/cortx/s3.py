@@ -125,7 +125,6 @@ class BaseClient:
                 body = await resp.text()
                 parsed_body = xmltodict.parse(
                     body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
-                print(f'{action} - {status}\n{parsed_body}')
                 Log.debug('%s responded with %s status', self._host, status)
                 return (status, parsed_body)
 
