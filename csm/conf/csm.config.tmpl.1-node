@@ -1,0 +1,23 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    },
+    "network": {
+        "data": {
+          "public_fqdn": "localhost"
+        }
+      }
+  },
+  "server_node": {
+    "TMPL_MACHINE_ID": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    }
+  }
+}
