@@ -331,21 +331,43 @@ S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
 S3_LDAP_LOGIN = 'S3>ldap_login'
 S3_LDAP_PASSWORD = 'S3>ldap_password'
 
+S3_CREATE_ACCOUNT_RESP_ACCOUNT_PATH = (
+    'CreateAccountResponse', 'CreateAccountResult', 'Account')
+S3_CREATE_ACCOUNT_LOGIN_PROFILE_RESP_PROFILE_PATH = (
+    'CreateAccountLoginProfileResponse', 'CreateAccountLoginProfileResult', 'LoginProfile')
+S3_LIST_ACCOUNTS_RESP_ACCOUNTS_PATH = (
+     'ListAccountsResponse', 'ListAccountsResult', 'Accounts')
+S3_LIST_ACCOUNTS_RESP_ISTRUNCATED_PATH = (
+    'ListAccountsResponse', 'ListAccountsResult', 'IsTruncated')
+S3_LIST_ACCOUNTS_RESP_MARKER_PATH = (
+    'ListAccountsResponse', 'ListAccountsResult', 'Marker')
+S3_RESET_ACCOUNT_ACCESS_KEY_RESP_ACCOUNT_PATH = (
+    'ResetAccountAccessKeyResponse', 'ResetAccountAccessKeyResult', 'Account')
+S3_CREATE_USER_RESP_USER_PATH = (
+    'CreateUserResponse', 'CreateUserResult', 'User')
+S3_LIST_USERS_RESP_ISTRUNCATED_PATH = (
+    'ListUsersResponse', 'ListUsersResult', 'IsTruncated')
+S3_LIST_USERS_RESP_MARKER_PATH = (
+    'ListUsersResponse', 'ListUsersResult', 'Marker')
+S3_CREATE_ACCESS_KEY_RESP_KEY_PATH = (
+    'CreateAccessKeyResponse', 'CreateAccessKeyResult', 'AccessKey')
+S3_GET_ACCESS_KEY_LAST_RESP_KEY_PATH = (
+    'GetAccessKeyLastUsedResponse', 'GetAccessKeyLastUsedResult', 'AccessKeyLastUsed')
+S3_LIST_ACCESS_KEYS_RESP_KEYS_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'AccessKeyMetadata')
+S3_LIST_ACCESS_KEYS_RESP_ISTRUNCATED_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'IsTruncated')
+S3_LIST_ACCESS_KEYS_RESP_MARKER_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'Marker')
+S3_GET_TMP_CREDS_RESP_CREDS_PATH = (
+    'GetTempAuthCredentialsResponse', 'GetTempAuthCredentialsResult', 'AccessKey')
+
+
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
-S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
-S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT = 'CreateAccessKeyResult'
 S3_IAM_CMD_UPDATE_ACCESS_KEY = 'UpdateAccessKey'
-S3_PARAM_ACCESS_KEY = 'AccessKey'
 S3_ACCESS_KEY_STATUSES = ['Active', 'Inactive']
 S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED = 'GetAccessKeyLastUsed'  # not supported by the S3 server yet
-S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP = 'GetAccessKeyLastUsedResponse'
-S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT = 'GetAccessKeyLastUsedResult'
-S3_PARAM_ACCESS_KEY_LAST_USED = 'AccessKeyLastUsed'
 S3_IAM_CMD_LIST_ACCESS_KEYS = 'ListAccessKeys'
-S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
-S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeysResult'
-S3_PARAM_ACCESS_KEY_METADATA = 'AccessKeyMetadata'
-S3_PARAM_IS_TRUNCATED = 'IsTruncated'
 S3_PARAM_USER_NAME = 'UserName'
 S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'

@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 import ssl
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Tuple, Union
 from http import HTTPStatus
 import xmltodict
 from cortx.utils.log import Log
@@ -98,22 +98,30 @@ class BaseClient:
                 Log.debug('%s responded with %s status', self._host, status)
                 return (status, parsed_body)
 
-    def _extract_list(self, path: List[str], resp: dict) -> List[Dict[str, Any]]:
+    def _extract_element(
+        self, path: Tuple[str], resp: Dict[str, Any], is_list: bool = False
+    ) -> Any:
         """
-        Extracts a list of items from a parsed S3 server response.
+        Extracts an item from a parsed S3 server response.
 
-        :param path: a path to the list in the response.
-        :param resp: a parsed response from S3 server.
-        :return: the list of extracted items (dicts).
+        :param path: a path (tuple of keys) to the list in the response.
+        :param resp: a parsed response (OrderedDict) from S3 server.
+        :param is_list: flag if the exracted item is list.
+        :return: the extracted item (either text, dict or list).
         """
 
-        items = resp
+        element = resp
         try:
             for key in path:
-                items = items[key]
-            # The list itself might be None in the response (e.g. <Users/>),
+                element = element[key]
+            # The actual list in XML parser output is stored under the key
+            # that denotes a single list item, e.g. 'member' or 'item'.
+            # The list might be None if no list items were in original XML (e.g. <Users/> case)
             # convert to [] if that so
-            return items[const.S3_RESP_LIST_ITEM] if items is not None else []
+            if is_list:
+                return element[const.S3_RESP_LIST_ITEM] if element is not None else []
+            else:
+                return element
         except (TypeError, KeyError):
             log = f"Malformed response from S3 server: expect path {path} in {resp}"
             raise CsmTypeError(log)
@@ -229,7 +237,7 @@ class IamClient(BaseClient):
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
-            account = body['CreateAccountResponse']['CreateAccountResult']['Account']
+            account = self._extract_element(const.S3_CREATE_ACCOUNT_RESP_ACCOUNT_PATH, body)
             resp = self._create_response(ExtendedIamAccount, account, self.EXT_ACCOUNT_MAPPING)
 
             # For some strange reason there is no email field in the server response
@@ -259,8 +267,8 @@ class IamClient(BaseClient):
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
-            profile = body['CreateAccountLoginProfileResponse']['CreateAccountLoginProfileResult']
-            profile = profile['LoginProfile']
+            profile = self._extract_element(
+                const.S3_CREATE_ACCOUNT_LOGIN_PROFILE_RESP_PROFILE_PATH, body)
             return self._create_response(IamLoginProfile, profile, self.LOGIN_PROFILE_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['account_password'])
@@ -342,8 +350,8 @@ class IamClient(BaseClient):
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
-            users = self._extract_list(
-                ['ListAccountsResponse', 'ListAccountsResult', 'Accounts'], body)
+            users = self._extract_element(
+                const.S3_LIST_ACCOUNTS_RESP_ACCOUNTS_PATH, body, is_list=True)
             converted_accounts = []
             for raw_user in users:
                 converted_accounts.append(self._create_response(IamAccount, raw_user,
@@ -351,11 +359,11 @@ class IamClient(BaseClient):
 
             resp = IamAccountListResponse()
             resp.iam_accounts = converted_accounts
-            raw = body['ListAccountsResponse']['ListAccountsResult']['IsTruncated']
+            raw = self._extract_element(const.S3_LIST_ACCOUNTS_RESP_ISTRUNCATED_PATH, body)
 
             resp.is_truncated = raw == 'true'
             if resp.is_truncated:
-                resp.marker = body['ListAccountsResponse']['ListAccountsResult']['Marker']
+                resp.marker = self._extract_element(const.S3_LIST_ACCOUNTS_RESP_MARKER_PATH, body)
 
             return resp
 
@@ -376,9 +384,9 @@ class IamClient(BaseClient):
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
-            result = body['ResetAccountAccessKeyResponse']['ResetAccountAccessKeyResult']
-            resp = self._create_response(
-                ExtendedIamAccount, result['Account'], self.EXT_ACCOUNT_MAPPING)
+            result = self._extract_element(
+                const.S3_RESET_ACCOUNT_ACCESS_KEY_RESP_ACCOUNT_PATH, body)
+            resp = self._create_response(ExtendedIamAccount, result, self.EXT_ACCOUNT_MAPPING)
 
             # TODO: find out why there is no email the response
             return resp
@@ -424,7 +432,7 @@ class IamClient(BaseClient):
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
-            user = body['CreateUserResponse']['CreateUserResult']['User']
+            user = self._extract_element(const.S3_CREATE_USER_RESP_USER_PATH, body)
             return self._create_response(IamUser, user, self.IAM_USER_MAPPING)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['user_password'])
@@ -493,18 +501,19 @@ class IamClient(BaseClient):
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
-            users = self._extract_list(['ListUsersResponse', 'ListUsersResult', 'Users'], body)
+            users = self._extract_element(
+                ('ListUsersResponse', 'ListUsersResult', 'Users'), body, is_list=True)
             converted_users = []
             for raw in users:
                 converted_users.append(self._create_response(IamUser, raw, self.IAM_USER_MAPPING))
 
             resp = IamUserListResponse()
             resp.iam_users = converted_users
-            raw = body['ListUsersResponse']['ListUsersResult']['IsTruncated']
+            raw = self._extract_element(const.S3_LIST_USERS_RESP_ISTRUNCATED_PATH, body)
 
             resp.is_truncated = raw == 'true'
             if resp.is_truncated:
-                resp.marker = body['ListUsersResponse']['ListUsersResult']['Marker']
+                resp.marker = self._extract_element(const.S3_LIST_USERS_RESP_MARKER_PATH, body)
 
             return resp
 
@@ -592,9 +601,7 @@ class IamClient(BaseClient):
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
-            creds = body[const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESP][
-                const.S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT][
-                    const.S3_PARAM_ACCESS_KEY]
+            creds = self._extract_element(const.S3_CREATE_ACCESS_KEY_RESP_KEY_PATH, body)
             return self._create_response(IamUserCredentials, creds,
                                          self.IAM_USER_CREDENTIALS_MAPPING)
 
@@ -648,9 +655,7 @@ class IamClient(BaseClient):
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
-            info = body[const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP][
-                const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT][
-                    const.S3_PARAM_ACCESS_KEY_LAST_USED]
+            info = self._extract_element(const.S3_GET_ACCESS_KEY_LAST_RESP_KEY_PATH, body)
             return self._create_response(IamAccessKeyLastUsed, info,
                                          self.IAM_ACCESS_KEY_LAST_USED_MAPPING)
 
@@ -683,11 +688,8 @@ class IamClient(BaseClient):
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
-            keys = self._extract_list(
-                [const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP,
-                 const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT,
-                 const.S3_PARAM_ACCESS_KEY_METADATA],
-                body)
+            keys = self._extract_element(
+                const.S3_LIST_ACCESS_KEYS_RESP_KEYS_PATH, body, is_list=True)
             converted_keys = []
             for raw in keys:
                 converted_keys.append(self._create_response(IamAccessKeyMetadata, raw,
@@ -695,15 +697,12 @@ class IamClient(BaseClient):
 
             resp = IamAccessKeysListResponse()
             resp.access_keys = converted_keys
-            raw = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                    const.S3_PARAM_IS_TRUNCATED]
+            raw = self._extract_element(const.S3_LIST_ACCESS_KEYS_RESP_ISTRUNCATED_PATH, body)
 
             resp.is_truncated = raw == 'true'
             if resp.is_truncated:
-                resp.marker = body[const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESP][
-                    const.S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT][
-                        const.S3_PARAM_MARKER]
+                resp.marker = self._extract_element(
+                    const.S3_LIST_ACCESS_KEYS_RESP_MARKER_PATH, body)
 
             return resp
 
@@ -956,8 +955,8 @@ class S3Plugin:
         if code != HTTPStatus.CREATED:
             return iamcli._create_error(code, body)
         else:
-            creds = body['GetTempAuthCredentialsResponse']['GetTempAuthCredentialsResult']
-            return iamcli._create_response(IamTempCredentials, creds['AccessKey'], {
+            creds = iamcli._extract_element(const.S3_GET_TMP_CREDS_RESP_CREDS_PATH, body)
+            return iamcli._create_response(IamTempCredentials, creds, {
                 'UserName': 'user_name',
                 'AccessKeyId': 'access_key',
                 'SecretAccessKey': 'secret_key',
