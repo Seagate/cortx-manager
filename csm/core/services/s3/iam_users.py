@@ -116,16 +116,8 @@ class IamUsersService(S3BaseService):
         response = {
             "user_name": user_name
         }
-        # Try to create login profile in case it doesn't exist
-        new_profile = await client.create_user_login_profile(user_name, password)
-        if isinstance(new_profile, IamError) and \
-            new_profile.error_code != IamErrors.EntityAlreadyExists:
-            self._handle_error(new_profile)
-
-        if isinstance(new_profile, IamError):
-            # Profile already exists, set new password
-            Log.debug(f"Update Login Profile for user {user_name}")
-            new_profile = await client.update_user_login_profile(user_name, password)
+        Log.debug(f"Update Login Profile for user {user_name}")
+        new_profile = await client.update_user_login_profile(user_name, password)
 
         if isinstance(new_profile, IamError):
             # Update failed
