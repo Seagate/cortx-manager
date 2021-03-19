@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -152,6 +154,7 @@ def add_cleanup_subcommand(main_parser):
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.log import Log
     from cortx.utils.cleanup.es_data_cleanup import esCleanup
     from cortx.utils.conf_store.conf_store import Conf, ConfSection, DebugConf
