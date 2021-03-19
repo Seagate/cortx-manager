@@ -23,7 +23,7 @@ from botocore.exceptions import ClientError
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 import ssl
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Optional, Union
 from http import HTTPStatus
 import xmltodict
 from cortx.utils.log import Log
@@ -213,6 +213,15 @@ class IamClient(BaseClient):
             'Region': 'region',
             'LastUsedDate': 'last_used',
             'ServiceName': 'service_name',
+        }
+
+        self.IAM_GET_TMP_CREDS_MAPPING = {
+                'UserName': 'user_name',
+                'AccessKeyId': 'access_key',
+                'SecretAccessKey': 'secret_key',
+                'Status': 'status',
+                'ExpiryTime': 'expiry_time',
+                'SessionToken': 'session_token'
         }
 
     @Log.trace_method(Log.DEBUG)
@@ -730,6 +739,38 @@ class IamClient(BaseClient):
         else:
             return True
 
+    async def get_tmp_creds(
+        self, account_name: str, password: str, duration: Optional[int] = None,
+        user_name: Optional[str] = None
+    ) -> Union[IamTempCredentials, IamError]:
+        """
+        Obtain temporary credentials via Login Profile.
+
+        :param account_name: S3 account name.
+        :param password: S3 account login profile's password.
+        :param duration: Session expiry time (in seconds). If set, it must be greater than 900.
+        :param user_name: IAM user name
+        :returns: IamTempCredentials or IamError instance
+        """
+
+        params = {
+            'AccountName': account_name,
+            'Password': password
+        }
+
+        if duration:
+            params['Duration'] = duration
+        if user_name:
+            params['UserName'] = user_name
+
+        (code, body) = await self._arbitrary_request(
+            'GetTempAuthCredentials', params, '/', 'POST')
+        if code != HTTPStatus.CREATED:
+            return self._create_error(code, body)
+        else:
+            creds = self._extract_element(const.S3_GET_TMP_CREDS_RESP_CREDS_PATH, body)
+            return self._create_response(IamTempCredentials, creds, self.IAM_GET_TMP_CREDS_MAPPING)
+
 
 class S3Client(BaseClient):
     """
@@ -940,27 +981,4 @@ class S3Plugin:
         """
         Log.debug(f"Get temp credentials: {account_name}, user_name:{user_name}")
         iamcli = IamClient('', '', connection_config, asyncio.get_event_loop())
-        params = {
-            'AccountName': account_name,
-            'Password': password
-        }
-
-        if duration:
-            params['Duration'] = duration
-        if user_name:
-            params['UserName'] = user_name
-
-        (code, body) = await iamcli._arbitrary_request(
-            'GetTempAuthCredentials', params, '/', 'POST')
-        if code != HTTPStatus.CREATED:
-            return iamcli._create_error(code, body)
-        else:
-            creds = iamcli._extract_element(const.S3_GET_TMP_CREDS_RESP_CREDS_PATH, body)
-            return iamcli._create_response(IamTempCredentials, creds, {
-                'UserName': 'user_name',
-                'AccessKeyId': 'access_key',
-                'SecretAccessKey': 'secret_key',
-                'Status': 'status',
-                'ExpiryTime': 'expiry_time',
-                'SessionToken': 'session_token'
-            })
+        return await iamcli.get_tmp_creds(account_name, password, duration, user_name)
