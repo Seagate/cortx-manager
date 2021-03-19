@@ -73,11 +73,11 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys["server_node_info_key"] = f"{const.KEY_SERVER_NODE_INFO}"
-        self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
-        self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
-        self.conf_store_keys["data_nw_public_fqdn_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}"
-        self.conf_store_keys["cluster_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.CLUSTER_ID}"
+        self.conf_store_keys[const.KEY_SERVER_NODE_INFO] = f"{const.SERVER_NODE_INFO}"
+        self.conf_store_keys[const.KEY_SERVER_NODE_TYPE] = f"{const.SERVER_NODE_INFO}>{const.TYPE}"
+        self.conf_store_keys[const.KEY_ENCLOSURE_ID] = f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
+        self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] = f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}"
+        self.conf_store_keys[const.KEY_CLUSTER_ID] = f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
 
         self._validate_conf_store_keys(const.CONSUMER_INDEX)
 

@@ -19,6 +19,7 @@ from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
+from cortx.utils.validator.error import VError
 from cortx.utils.validator.v_pkg import PkgV
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
@@ -64,11 +65,18 @@ class PostInstall(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
-        self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
-        self.conf_store_keys["csm_user_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
-
+        self.conf_store_keys.update({
+            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
+            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+            })
+        try:
+            self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
+        except Exception as e:
+            print(e)
     def validate_3rd_party_pkgs(self):
         Log.info("Validating third party rpms")
         PkgV().validate("rpms", const.third_party_rpms)

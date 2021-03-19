@@ -58,9 +58,7 @@ class Setup:
         self._setup_info = dict()
         self._is_env_vm = False
         self._is_env_dev = False
-        self._machine_id = Setup._get_machine_id()
-        # self._enclosure_id = None
-        const.KEY_SERVER_NODE_INFO = const.KEY_SERVER_NODE_INFO.replace("machine_id",self._machine_id)
+        const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
 
     def _validate_conf_store_keys(self, index, keylist=None):

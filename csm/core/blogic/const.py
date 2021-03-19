@@ -686,4 +686,15 @@ CONSUMER_CALLBACK = 'consumer_callback'
 
 #ConfStore Keys
 KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
-KEY_SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+KEY_SERVER_NODE_INFO = "server_node_info_key"
+KEY_SERVER_NODE_TYPE = "server_node_type_key"
+KEY_ENCLOSURE_ID = "enclosure_id_key"
+KEY_CLUSTER_ID = "cluster_id_key"
+KEY_CSM_USER = "csm_user_key"
+KEY_CSM_SECRET = "csm_secret_key"
+KEY_S3_LDAP_USER = "openldap_s3_user_key"
+KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
+KEY_ROAMING_IP = "roaming_ip_key"
+KEY_HOSTNAME = "node_hostname_key"
+KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"

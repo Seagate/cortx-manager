@@ -64,21 +64,21 @@ class Prepare(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys["server_node_info_key"] = f"{const.KEY_SERVER_NODE_INFO}"
-        self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
-        self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
-        self.conf_store_keys["roaming_ip_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.ROAMING_IP}"
-        self.conf_store_keys["node_hostname_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.HOSTNAME}"
-        self.conf_store_keys["cluster_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.CLUSTER_ID}"
-        self.conf_store_keys["openldap_s3_user_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}"
-        self.conf_store_keys["openldap_s3_secret_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}"
-        self.conf_store_keys["csm_user_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-        self.conf_store_keys["csm_secret_key"] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
+        self.conf_store_keys[const.KEY_SERVER_NODE_INFO] = f"{const.SERVER_NODE_INFO}"
+        self.conf_store_keys[const.KEY_SERVER_NODE_TYPE] = f"{const.SERVER_NODE_INFO}>{const.TYPE}"
+        self.conf_store_keys[const.KEY_ENCLOSURE_ID] = f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
+        self.conf_store_keys[const.KEY_ROAMING_IP] = f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.ROAMING_IP}"
+        self.conf_store_keys[const.KEY_HOSTNAME] = f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}"
+        self.conf_store_keys[const.KEY_CLUSTER_ID] = f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
+        self.conf_store_keys[const.KEY_S3_LDAP_USER] = f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}"
+        self.conf_store_keys[const.KEY_S3_LDAP_SECRET] = f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}"
+        self.conf_store_keys[const.KEY_CSM_USER] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+        self.conf_store_keys[const.KEY_CSM_SECRET] = f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
 
         self._validate_conf_store_keys(const.CONSUMER_INDEX)
 
     def _set_cluster_id(self):
-        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["cluster_id_key"])
+        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, self.cluster_id)
@@ -99,8 +99,8 @@ class Prepare(Setup):
         :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
-        roaming_ip = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["roaming_ip_key"])
-        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["data_nw_public_fqdn"] )
+        roaming_ip = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROAMING_IP])
+        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
         try:
             NetworkV().validate('connectivity', [roaming_ip, data_nw_public_fqdn])
         except Exception as e:
