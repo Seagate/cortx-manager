@@ -178,16 +178,8 @@ class S3AccountService(S3BaseService):
                 new_creds.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
 
         if password:
-            # We will try to create login profile in case it doesn't exist
-            new_profile = await client.create_account_login_profile(account_name, password)
-            if isinstance(new_profile, IamError) and \
-                    new_profile.error_code != IamErrors.EntityAlreadyExists:
-                self._handle_error(new_profile)
-
-            if isinstance(new_profile, IamError):
-                # Profile already exists, we need to set new passord
-                Log.debug(f"Update Login Profile for account {account_name}")
-                new_profile = await client.update_account_login_profile(account_name,
+            Log.debug(f"Update Login Profile for account {account_name}")
+            new_profile = await client.update_account_login_profile(account_name,
                     password)
 
             if isinstance(new_profile, IamError):
