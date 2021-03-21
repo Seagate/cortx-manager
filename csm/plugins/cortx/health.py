@@ -70,7 +70,7 @@ class HealthPlugin(CsmPlugin):
                     self._send_encl_request(resource, today)
                 elif resource.split(':')[0] == const.NODE:
                     self._send_node_request(resource, today)
-            """ Sending Enclosure and Node actuator requests. """
+            #Sending Enclosure and Node actuator requests.
             self.comm_client.send(self.encl_actuator_requests)
             self.comm_client.send(self.node_actuator_requests)
         except Exception as ex:

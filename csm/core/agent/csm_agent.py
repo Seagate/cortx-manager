@@ -72,10 +72,10 @@ class CsmAgent:
         for f in cached_files:
             os.remove(f)
 
-        """ Initializing MessageBus """
+        #Initializing MessageBus
         message_bus = None
         try:
-            """ MessageBus needs to be initialized once """
+            #MessageBus needs to be initialized once
             message_bus = MessageBus()
         except MessageBusError as ex:
             Log.error(f"Error occured while initializing MessageBus. {ex}")

@@ -650,6 +650,7 @@ class MessageBusComm(Comm):
         self.offset = kwargs.get(const.OFFSET, const.EARLIEST)
         self.callback = kwargs.get(const.CONSUMER_CALLBACK)
         self.is_blocking = kwargs.get(const.BLOCKING, False)
+        self.is_running = True
         if self.type == const.PRODUCER:
             self._initialize_producer()
         elif self.type == const.CONSUMER:
@@ -686,8 +687,11 @@ class MessageBusComm(Comm):
         :param kwargs: For future use. If we need some more config.
         """
         if self.producer:
-            self.producer.send(message)
-            Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+            if self.is_running:
+                self.producer.send(message)
+                Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+            else:
+                self.producer = None
         else:
             Log.error("Message Bus Producer not initialized.")
 
@@ -700,14 +704,19 @@ class MessageBusComm(Comm):
         if self.consumer:
             while True:
                 try:
-                    message = self.consumer.receive(self.recv_timeout)
-                    if message:
-                        decoded_message = message.decode('utf-8')
-                        Log.debug(f"Received Message: {decoded_message}")
-                        callback_fn(decoded_message)
+                    if self.is_running:
+                        message = self.consumer.receive(self.recv_timeout)
+                        if message:
+                            decoded_message = message.decode('utf-8')
+                            Log.debug(f"Received Message: {decoded_message}")
+                            callback_fn(decoded_message)
+                        else:
+                            #For non-blocking calls.
+                            time.sleep(1)
                     else:
-                        """ For non-blocking calls. """
-                        time.sleep(1)
+                        #Stop called need to break
+                        self.consumer = None
+                        break
                 except MessageBusError as ex:
                     Log.error(f"Message consuming failed. {ex}")
                     continue
@@ -718,3 +727,7 @@ class MessageBusComm(Comm):
         """ Acknowledge the read messages. """
         if self.consumer:
             self.consumer.ack()
+
+    def stop(self):
+        #Stopping the sending and receiving of messages.
+        self.is_running = False
