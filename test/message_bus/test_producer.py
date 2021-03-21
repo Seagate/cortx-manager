@@ -16,15 +16,16 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import MessageBusComm
+from cortx.utils.message_bus import MessageBus
 
 def init(args):
-    pass
+    args['message_bus'] = MessageBus()
 
 def test_send(args):
     ret = False
-    message_bus = MessageBusComm()
+    message_bus = MessageBusComm(args['message_bus'])
     if message_bus:
-        message_bus.init(type='producer', producer_id='test_1', message_type='test-1')
+        message_bus.init(type='producer', producer_id='test_1', message_type='test-1', method='sync')
         messages = []
         for i in range(0, 10):
             messages.append("This is test message number : " + str(i))
