@@ -40,7 +40,6 @@ def test_recv(args):
                 auto_ack=False, offset="earliest")
         try:
             message_bus.recv(callback_fn)
-            exit
             ret = True
         except AttributeError:
             ret = False
