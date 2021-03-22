@@ -538,7 +538,7 @@ ENCLOSURE_ID = "enclosure_id"
 SOFTWARE = "software"
 
 #Third party packages information
-python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "templates/requirment.txt" 
+python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt" 
 third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
 
 # Provisioner status
