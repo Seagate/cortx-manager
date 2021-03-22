@@ -16,20 +16,17 @@
 from csm.common.services import ApplicationService
 from csm.common.service_urls import ServiceUrls
 
+
 class S3ServerInfoService(ApplicationService):
     """
     Service for acessing S3 server information
     """
 
-    def __init__(self, provisioner):
-        self._provisioner = provisioner
-
     async def get_s3_server_info(self):
         """
         Obtain information about S3 server in json format
         """
-        service_urls = ServiceUrls(self._provisioner)
-        s3_urls = await service_urls.get_s3_uris()
+        s3_urls = ServiceUrls.get_s3_uris()
         return {
             "s3_urls": s3_urls
         }
