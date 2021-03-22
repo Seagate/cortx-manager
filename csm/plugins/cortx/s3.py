@@ -21,11 +21,15 @@ from botocore.awsrequest import AWSRequest
 from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
 from functools import partial
+from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 import ssl
 from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 from http import HTTPStatus
-import xmltodict
+# FIXME: Temporarily disable xmltodict until RE dependency is handled and installed.
+# Replace the S3RespParser with xmltodict once xmltodict>=0.12.0 is available.
+# import xmltodict
+import xml.sax
 from cortx.utils.log import Log
 import json
 from csm.common.errors import CsmInternalError, CsmTypeError
@@ -35,6 +39,155 @@ from csm.core.data.models.s3 import (S3ConnectionConfig, IamAccount, ExtendedIam
                                      IamAccountListResponse, IamTempCredentials, IamUserCredentials,
                                      IamAccessKeyMetadata, IamAccessKeysListResponse,
                                      IamAccessKeyLastUsed, IamErrors, IamError)
+
+
+Element = namedtuple('Element', 'type val')
+TYPE_KEY = 'key'
+TYPE_VAL = 'value'
+
+
+class S3RespParser(xml.sax.ContentHandler):
+    """
+    XML SAX Content handler for parsing S3 server responses.
+    """
+
+    def __init__(self, force_list: List[str] = []) -> None:
+        """
+        Initialize S3RespParser.
+
+        :param for_list: list of keys that values should be treated as lists.
+        """
+        self._stack = []
+        self._force_list = force_list
+
+    def startElement(self, name: str, attrs: List[str]) -> None:
+        """
+        Implement startElement for xml.sax.ContentHandler.
+
+        :param name: name of the element (e.g. for <Response> it's 'Response').
+        :param attrs: XML attributes of the element (e.g. <Response attr1='attr1)).
+                      attrs are ignored by the current implementation (S3 server doesn't use them).
+        """
+
+        element = Element(TYPE_KEY, name)
+        self._stack.append(element)
+
+    def endElement(self, name: str) -> None:
+        """
+        Implement endElement for xml.sax.ContentHandler.
+
+        :param name: name of the element (e.g. for </Response> it's 'Response').
+        """
+
+        acc = None
+        # Logic: extract values from stack and merge them until the key appears
+        # If key's name matches the name from parameters assign the merged value
+        # to the key and push the resulting value to the stack
+        while len(self._stack):
+            element = self._stack.pop()
+            if element.type == TYPE_KEY:
+                if element.val != name:
+                    raise CsmTypeError(f'Malformed XML: expected </{name}>, got </{element.val}>')
+                if name in self._force_list:
+                    acc = [acc]
+                acc_elem = Element(TYPE_VAL, {name: acc})
+                self._stack.append(acc_elem)
+                break
+            else:
+                acc = S3RespParser.merge(acc, element.val)
+        if not len(self._stack):
+            raise CsmTypeError(f'Malformed XML: unexpected </{name}>')
+
+    def characters(self, content: str) -> None:
+        """
+        Implements characters for xml.sax.ContentHandler.
+
+        :param content: text appeared during parsing an XML document.
+        """
+
+        content = content.strip()
+        if not content:
+            return
+        element = Element(TYPE_VAL, content)
+        self._stack.append(element)
+
+    @staticmethod
+    def merge_str(acc: str, elem: str) -> str:
+        """
+        Merge the string from the stack with the accumulator string.
+
+        :param acc: the accumulator string.
+        :param elem: the string from the stack.
+        :returns: concatenated string.
+        """
+
+        if not isinstance(elem, str):
+            msg = f'Unexpected element to merge: {elem} of type {type(elem)} (expected str)'
+            raise CsmTypeError(msg)
+        return ' '.join([elem, acc])
+
+    @staticmethod
+    def merge_dict(acc: Dict[str, Any], elem: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Merges the dict value from the stack with the accumulator dict.
+
+        :param acc: the accumulator dict.
+        :param elem: the dict from the stack.
+        :returns: the merged dict.
+        """
+
+        if not isinstance(elem, dict) or len(elem.keys()) != 1:
+            msg = f'Unexpected element to merge: {elem} of type {type(elem)}'\
+                f' (expected dict with single key)'
+            raise CsmTypeError(msg)
+        key = list(elem.keys())[0]
+        val = elem[key]
+        # merge dicts with different keys
+        if key not in acc.keys():
+            acc.update(elem)
+            return acc
+        # merge acc[key] and elem[key] into { 'key': [acc[key], elem[key]]}
+        if isinstance(acc[key], list):
+            if isinstance(val, list):
+                acc[key] = acc[key] + val
+            else:
+                acc[key].append(val)
+        else:
+            acc[key] = [acc[key], val]
+        return acc
+
+    @staticmethod
+    def merge(
+        acc: Optional[Union[str, Dict[str, Any]]], elem: Union[str, Dict[str, Any]]
+    ) -> Union[str, Dict[str, Any]]:
+        """
+        Merge the element from the stack with the accumulator element.
+
+        :param acc: the accumulator element.
+        :param elem: the element from the stack.
+        :returns: merged object (str or dict).
+        """
+
+        # merge None
+        if acc is None:
+            return elem
+        # merge strings
+        if isinstance(acc, str):
+            return S3RespParser.merge_str(acc, elem)
+        # merge dicts
+        if isinstance(acc, dict):
+            return S3RespParser.merge_dict(acc, elem)
+        msg = f'Parsing error. Element {elem} of type {type(elem)} is not None, str or dict'
+        raise CsmTypeError(msg)
+
+    def root(self) -> Dict[str, Any]:
+        """
+        Get parser's stack root element.
+
+        Used to obtain the parsed result.
+        """
+
+        return self._stack[0].val
 
 
 class BaseClient:
@@ -123,8 +276,13 @@ class BaseClient:
                                             timeout=const.TIMEOUT) as resp:
                 status = resp.status
                 body = await resp.text()
-                parsed_body = xmltodict.parse(
-                    body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
+                # FIXME: Temporarily disable xmltodict until RE dependency is handled and installed.
+                # Replace the S3RespParser with xmltodict once xmltodict>=0.12.0 is available.
+                # parsed_body = xmltodict.parse(
+                #     body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
+                parser = S3RespParser(force_list=[const.S3_RESP_LIST_ITEM])
+                xml.sax.parseString(body, parser)
+                parsed_body = parser.root()
                 Log.debug('%s responded with %s status', self._host, status)
                 return (status, parsed_body)
 
