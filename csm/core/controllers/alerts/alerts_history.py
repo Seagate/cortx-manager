@@ -82,6 +82,7 @@ class AlertsHistoryQueryParameter(Schema):
         strict = False
 
 @CsmView._app_routes.view("/api/v1/alerts_history")
+@CsmView._app_routes.view("/api/v2/alerts_history")
 class AlertsHistoryListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -100,6 +101,7 @@ class AlertsHistoryListView(CsmView):
         return await self.alerts_service.fetch_all_alerts_history(**alerts_history_data)
 
 @CsmView._app_routes.view("/api/v1/alerts_history/{alert_id}")
+@CsmView._app_routes.view("/api/v2/alerts_history/{alert_id}")
 class AlertsHistoryView(CsmView):
     def __init__(self, request):
         super().__init__(request)

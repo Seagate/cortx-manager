@@ -72,6 +72,7 @@ class IamUserPatchSchema(BaseSchema):
 
 
 @CsmView._app_routes.view("/api/v1/iam_users")
+@CsmView._app_routes.view("/api/v2/iam_users")
 class IamUserListView(S3AuthenticatedView):
     def __init__(self, request):
         """
@@ -110,6 +111,7 @@ class IamUserListView(S3AuthenticatedView):
 
 
 @CsmView._app_routes.view("/api/v1/iam_users/{user_name}")
+@CsmView._app_routes.view("/api/v2/iam_users/{user_name}")
 class IamUserView(S3AuthenticatedView):
     def __init__(self, request):
         """

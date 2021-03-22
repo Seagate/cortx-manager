@@ -27,6 +27,7 @@ class OnboardingStateSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/onboarding/state")
+@CsmView._app_routes.view("/api/v2/onboarding/state")
 class OnboardingStateView(CsmView):
 
     def __init__(self, request):

@@ -22,6 +22,7 @@ from aiohttp import web
 
 
 @CsmView._app_routes.view("/api/v1/login")
+@CsmView._app_routes.view("/api/v2/login")
 @CsmAuth.public
 class LoginView(CsmView):
 
@@ -48,6 +49,7 @@ class LoginView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/logout")
+@CsmView._app_routes.view("/api/v2/logout")
 class LogoutView(CsmView):
 
     async def post(self):

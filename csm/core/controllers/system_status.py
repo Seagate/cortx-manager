@@ -24,6 +24,7 @@ class GetSystemStatusSchema(Schema):
     db_name = fields.Str(required=True, validate=[Enum([const.SYSTEM_STATUS_CONSUL, const.SYSTEM_STATUS_ELASTICSEARCH])])
 
 @CsmView._app_routes.view("/api/v1/system/status")
+@CsmView._app_routes.view("/api/v2/system/status")
 @CsmAuth.public
 class SystemStatusAllView(CsmView):
     def __init__(self, request):
@@ -41,6 +42,7 @@ class SystemStatusAllView(CsmView):
         return resp
 
 @CsmView._app_routes.view("/api/v1/system/status/{db_name}")
+@CsmView._app_routes.view("/api/v2/system/status/{db_name}")
 @CsmAuth.public
 class SystemStatusView(CsmView):
     def __init__(self, request):

@@ -1,271 +1,271 @@
 {
-  "/api/v1/alerts": {
+  "/api/*/alerts": {
     "feature_name": "alerts",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/alerts/*": {
+  "/api/*/alerts/*": {
     "feature_name": "alerts",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/alerts/*/comments": {
+  "/api/*/alerts/*/comments": {
     "feature_name": "alerts",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/alerts_history": {
+  "/api/*/alerts_history": {
     "feature_name": "alerts",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/alerts_history/*": {
+  "/api/*/alerts_history/*": {
     "feature_name": "alerts",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/update/firmware/upload": {
+  "/api/*/update/firmware/upload": {
     "feature_name": "FW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/update/firmware/start": {
+  "/api/*/update/firmware/start": {
     "feature_name": "FW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/update/firmware/availability": {
+  "/api/*/update/firmware/availability": {
     "feature_name": "FW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/update/firmware/status": {
+  "/api/*/update/firmware/status": {
     "feature_name": "FW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/system/health/summary": {
+  "/api/*/system/health/summary": {
     "feature_name": "health",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/system/health/view": {
+  "/api/*/system/health/view": {
     "feature_name": "health",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/system/health/node": {
+  "/api/*/system/health/node": {
     "feature_name": "health",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/system/health/components": {
+  "/api/*/system/health/components": {
     "feature_name": "health",
     "dependent_on": [
       "sspl"
     ]
   },
-  "/api/v1/update/hotfix/status": {
+  "/api/*/update/hotfix/status": {
     "feature_name": "SW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/update/hotfix/upload": {
+  "/api/*/update/hotfix/upload": {
     "feature_name": "SW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/update/hotfix/start": {
+  "/api/*/update/hotfix/start": {
     "feature_name": "SW_Update",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/maintenance/cluster": {
+  "/api/*/maintenance/cluster": {
     "feature_name": "cluster_management",
     "dependent_on": [
       "hare"
     ]
   },
-  "/api/v1/maintenance/cluster/*": {
+  "/api/*/maintenance/cluster/*": {
     "feature_name": "cluster_management",
     "dependent_on": [
       "hare"
     ]
   },
-  "/api/v1/onboarding/state": {
+  "/api/*/onboarding/state": {
     "feature_name": "onboarding",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/s3/access_keys": {
+  "/api/*/s3/access_keys": {
     "feature_name": "s3_account",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3/access_keys/*": {
+  "/api/*/s3/access_keys/*": {
     "feature_name": "s3_account",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3_accounts/*": {
+  "/api/*/s3_accounts/*": {
     "feature_name": "s3_account",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3_accounts": {
+  "/api/*/s3_accounts": {
     "feature_name": "s3_account",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3/bucket": {
+  "/api/*/s3/bucket": {
     "feature_name": "s3_bucket",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3/bucket/*": {
+  "/api/*/s3/bucket/*": {
     "feature_name": "s3_bucket",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/s3/bucket_policy/*": {
+  "/api/*/s3/bucket_policy/*": {
     "feature_name": "s3_bucket",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/iam_users": {
+  "/api/*/iam_users": {
     "feature_name": "s3_iam_user",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/iam_users/*": {
+  "/api/*/iam_users/*": {
     "feature_name": "s3_iam_user",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/tls/bundle/upload": {
+  "/api/*/tls/bundle/upload": {
     "feature_name": "support_bundle",
     "dependent_on": []
   },
-  "/api/v1/tls/bundle/install": {
+  "/api/*/tls/bundle/install": {
     "feature_name": "support_bundle",
     "dependent_on": []
   },
-  "/api/v1/tls/bundle/status": {
+  "/api/*/tls/bundle/status": {
     "feature_name": "support_bundle",
     "dependent_on": []
   },
-  "/api/v1/stats/*": {
+  "/api/*/stats/*": {
     "feature_name": "performance",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/stats": {
+  "/api/*/stats": {
     "feature_name": "performance",
     "dependent_on": [
       "s3"
     ]
   },
-  "/api/v1/capacity": {
+  "/api/*/capacity": {
     "feature_name": "capacity",
     "dependent_on": [
       "hare"
     ]
   },
-  "/api/v1/sysconfig": {
+  "/api/*/sysconfig": {
     "feature_name": "sysconfig",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/sysconfig/*": {
+  "/api/*/sysconfig/*": {
     "feature_name": "sysconfig",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/license/onboarding": {
+  "/api/*/license/onboarding": {
     "feature_name": "licence_agreement",
     "dependent_on": []
   },
-  "/api/v1/provisioner/status": {
+  "/api/*/provisioner/status": {
     "feature_name": "onboarding",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/api/v1/product_version": {
+  "/api/*/product_version": {
     "feature_name": "about",
     "dependent_on": [
       "provisioner"
     ]
   },
-  "/usl/v1/registerDevice": {
+  "/usl/*/registerDevice": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/registrationToken": {
+  "/usl/*/registrationToken": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/devices": {
+  "/usl/*/devices": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/devices/*/volumes": {
+  "/usl/*/devices/*/volumes": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/devices/*/volumes/*/mount": {
+  "/usl/*/devices/*/volumes/*/mount": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/devices/*/volumes/*/umount": {
+  "/usl/*/devices/*/volumes/*/umount": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/events": {
+  "/usl/*/events": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/system": {
+  "/usl/*/system": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/system/certificates": {
+  "/usl/*/system/certificates": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/system/certificates/*": {
+  "/usl/*/system/certificates/*": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   },
-  "/usl/v1/system/network/interfaces": {
+  "/usl/*/system/network/interfaces": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
   }

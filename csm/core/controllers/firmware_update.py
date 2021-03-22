@@ -32,6 +32,7 @@ class FirmwareUploadSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/update/firmware/upload")
+@CsmView._app_routes.view("/api/v2/update/firmware/upload")
 class FirmwarePackageUploadView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -57,6 +58,7 @@ class FirmwarePackageUploadView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/update/firmware/start")
+@CsmView._app_routes.view("/api/v2/update/firmware/start")
 class FirmwareUpdateView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -75,6 +77,7 @@ class FirmwareUpdateView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/update/firmware/status")
+@CsmView._app_routes.view("/api/v2/update/firmware/status")
 class FirmwareUpdateStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -92,6 +95,7 @@ class FirmwareUpdateStatusView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/update/firmware/availability")
+@CsmView._app_routes.view("/api/v2/update/firmware/availability")
 class FirmwarePackageAvailibility(CsmView):
     def __init__(self, request):
         super().__init__(request)
