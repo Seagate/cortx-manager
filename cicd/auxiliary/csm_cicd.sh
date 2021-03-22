@@ -40,19 +40,19 @@ MID=$(cat /etc/machine-id)
 echo $MID
 chmod 777 -R /var/log/seagate
 
-# sed -i -e 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl"
+sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl"
 cat /opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl 
 csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl
 
-# sed -i -e 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl"
+sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl"
 cat /opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
 csm_setup prepare --config json:///opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
 
-# sed -i -e 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm.config.conf.tmpl"
+sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.config.conf.tmpl"
 cat /opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
 csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
 
-# sed -i -e 's|machine_id|${MID}|g' "/opt/seagate/cortx/csm/templates/csm_setup_conf_template.json"
+sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm_setup_conf_template.json"
 cat /opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
 csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
 
