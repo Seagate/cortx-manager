@@ -31,5 +31,14 @@
         "enclosure_id": "enclosure_id"
       }
     }
+  },
+  "cluster": {
+    "cluster_id": {
+      "network": {
+        "management": {
+          "virtual_host": "127.0.0.1"
+        }
+      }
+    }
   }
 }

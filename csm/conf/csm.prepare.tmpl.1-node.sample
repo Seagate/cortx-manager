@@ -5,8 +5,8 @@
   "cortx": {
     "software": {
       "csm": {
-        "user": "cortxub",
-        "secret": "cortxub"
+        "user": "csm",
+        "secret": "csm"
       },
       "openldap": {
         "sgiam": {

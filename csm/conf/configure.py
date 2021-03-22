@@ -167,11 +167,11 @@ class Configure(Setup):
 
     def _configure_uds_keys(self):
         Log.info("Configuring UDS keys")
-        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["cluster_id_key"])
+        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         virtual_host_key = f"{const.CLUSTER_ID}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
         self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
         virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host)
-        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["data_nw_public_fqdn_key"] )
+        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
         Log.debug(f"Validating connectivity for virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn}")
         try:
             NetworkV().validate('connectivity', [virtual_host, data_nw_public_fqdn])

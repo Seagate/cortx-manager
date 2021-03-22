@@ -5,8 +5,8 @@
   "cortx": {
     "software": {
       "csm": {
-        "user": "cortxub",
-        "secret": "cortxub"
+        "user": "csm",
+        "secret": "csm"
       },
       "openldap": {
         "sgiam": {
@@ -17,7 +17,7 @@
     }
   },
   "server_node": {
-    "TMPL_MACHINE_ID-1": {
+    "TMPL_MACHINE_ID": {
       "type": "VM",
       "name": "TMPL_SERVER_NAME",
       "hostname": "TMPL_SERVER_HOSTNAME",
