@@ -78,6 +78,7 @@ class Configure(Setup):
             const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
             const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
             const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
             })
 
@@ -168,9 +169,9 @@ class Configure(Setup):
     def _configure_uds_keys(self):
         Log.info("Configuring UDS keys")
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-        virtual_host_key = f"{const.CLUSTER_ID}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
+        virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
         self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
-        virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host)
+        virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host_key)
         data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
         Log.debug(f"Validating connectivity for virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn}")
         try:

@@ -87,7 +87,7 @@ class Setup:
         This Method will set the username for service user to Self._user
         :return:
         """
-        self._user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["csm_user_key"])
+        self._user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.const.KEY_CSM_USER])
 
     @staticmethod
     def _run_cmd(cmd):

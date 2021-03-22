@@ -10,7 +10,7 @@
     }
   },
   "server_node": {
-    "TMPL_MACHINE_ID": {
+    "$(mid)": {
       "type": "VM",
       "storage": {
         "enclosure_id": "enclosure_id"
