@@ -40,21 +40,21 @@ MID=$(cat /etc/machine-id)
 echo $MID
 chmod 777 -R /var/log/seagate
 
-sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl"
-cat /opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl 
-csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm.post-install.conf.tmpl
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
+csm_setup post_install --config json:///opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
 
-sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl"
-cat /opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
-csm_setup prepare --config json:///opt/seagate/cortx/csm/templates/csm.prepare.conf.tmpl
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node
+csm_setup prepare --config json:///opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node
 
-sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm.config.conf.tmpl"
-cat /opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
-csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm.config.conf.tmpl
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
+csm_setup config --config json:///opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
 
-sed -i -e 's|machine_id|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/templates/csm_setup_conf_template.json"
-cat /opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
-csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
+csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
 
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
