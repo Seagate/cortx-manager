@@ -26,6 +26,7 @@ from marshmallow import Schema, fields, ValidationError
 from datetime import datetime
 import uuid
 from cortx.utils.conf_store.conf_store import Conf
+from csm.common.comm import MessageBusComm
 
 class HealthPlugin(CsmPlugin):
     """
@@ -36,20 +37,28 @@ class HealthPlugin(CsmPlugin):
     listening for the response.
     """
 
-    def __init__(self):
+    def __init__(self, message_bus):
         super().__init__()
         try:
-            self.comm_client = AmqpActuatorComm()
+            self.comm_client = MessageBusComm(message_bus)
             self.health_callback = None
             self._health_mapping_dict = Json(const.HEALTH_MAPPING_TABLE).load()
             storage_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
                     'HEALTH>storage_actuator_request')
             node_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
                     'HEALTH>node_actuator_request')
+            self._producer_id = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.PRODUCER_ID_KEY)
+            self._message_type = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.MSG_TYPE_KEY)
+            self._method = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.METHOD_KEY)
             self._storage_request_dict = Json(storage_request_path).load()
             self._node_request_dict = Json(node_request_path).load()
             self._no_of_request = 0
             self._no_of_responses = 0
+            self.encl_actuator_requests = []
+            self.node_actuator_requests = []
         except Exception as e:
             Log.exception(e)
 
@@ -61,6 +70,9 @@ class HealthPlugin(CsmPlugin):
                     self._send_encl_request(resource, today)
                 elif resource.split(':')[0] == const.NODE:
                     self._send_node_request(resource, today)
+            #Sending Enclosure and Node actuator requests.
+            self.comm_client.send(self.encl_actuator_requests)
+            self.comm_client.send(self.node_actuator_requests)
         except Exception as ex:
             Log.warn(f"Sending actuator request failed. Reason : {ex}")
 
@@ -71,8 +83,7 @@ class HealthPlugin(CsmPlugin):
                     [const.UUID] = str(uuid.uuid1())
             self._storage_request_dict[const.ALERT_MESSAGE][const.ACT_REQ_TYPE]\
                     [const.STORAGE_ENCL][const.ENCL_REQ] = const.ENCL + str(key)
-            self.comm_client.send(self._storage_request_dict, \
-                    is_storage_request = True)
+            self.encl_actuator_requests.append(str(self._storage_request_dict))
             self._no_of_request+=1
             Log.debug(f"Sent storage enclosure request for : {key}")
         except Exception as ex:
@@ -86,13 +97,8 @@ class HealthPlugin(CsmPlugin):
             self._node_request_dict[const.ALERT_MESSAGE][const.ACT_REQ_TYPE]\
                     [const.NODE_CONTROLLER][const.NODE_REQ] = const.NODE_HW + \
                     str(key)
-            self.comm_client.send(self._node_request_dict, \
-                    is_storage_request = False)
-            """
-            Incrementing number of request with 2 as we will be sending
-            requests for both node1 and node2.
-            """
-            self._no_of_request+=2
+            self.node_actuator_requests.append(str(self._node_request_dict))
+            self._no_of_request+=1
             Log.debug(f"Sent node request for : {key}")
         except Exception as ex:
             Log.warn(f"Sending node request failed. Reason : {ex}")
@@ -108,7 +114,8 @@ class HealthPlugin(CsmPlugin):
         """
         self.health_callback = callback_fn
         self.db_update_callback = db_update_callback_fn
-        self.comm_client.init()
+        self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
+                message_type=self._message_type, method=self._method)
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():

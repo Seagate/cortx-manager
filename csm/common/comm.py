@@ -33,7 +33,8 @@ from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroke
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
-from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
+from cortx.utils.message_bus import MessageProducer, MessageConsumer
+from cortx.utils.message_bus.error import MessageBusError
 
 class Channel(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel to a node """
@@ -602,10 +603,10 @@ class MessageBusComm(Comm):
     send or receive messages across any component on a node to any other
     component on the other nodes
     """
-    def __init__(self):
+    def __init__(self, message_bus):
         Comm.__init__(self)
         self.message_callback = None
-        self.message_bus = None
+        self.message_bus = message_bus
         self.producer_id = None
         self.message_type = None
         self.consumer_id = None
@@ -613,7 +614,7 @@ class MessageBusComm(Comm):
         self.consumer_message_types = None
         self.producer = None
         self.consumer = None
-
+        self.recv_timeout = 0.5
 
     def init(self, **kwargs):
         """
@@ -636,8 +637,7 @@ class MessageBusComm(Comm):
             offset[Optional] : Can be set to "earliest" (default) or "latest".
                 ("earliest" will cause messages to be read from the beginning)
         """
-        self.message_bus = MessageBus()
-        self.type = kwargs.get(const.TYPE, const.BOTH)
+        self.type = kwargs.get(const.TYPE)
         #Producer related configuration
         self.producer_id = kwargs.get(const.PRODUCER_ID)
         self.message_type = kwargs.get(const.MESSAGE_TYPE)
@@ -649,12 +649,11 @@ class MessageBusComm(Comm):
         self.auto_ack = kwargs.get(const.AUTO_ACK, False)
         self.offset = kwargs.get(const.OFFSET, const.EARLIEST)
         self.callback = kwargs.get(const.CONSUMER_CALLBACK)
+        self.is_blocking = kwargs.get(const.BLOCKING, False)
+        self.is_running = True
         if self.type == const.PRODUCER:
             self._initialize_producer()
         elif self.type == const.CONSUMER:
-            self._initialize_consumer()
-        else:
-            self._initialize_producer()
             self._initialize_consumer()
 
     def _initialize_producer(self):
@@ -662,16 +661,18 @@ class MessageBusComm(Comm):
         self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
                 message_type=self.message_type, method=self.method)
         Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
-                f"Message Type: {self.message_type}, method: {self.method}")
+                f" Message Type: {self.message_type}, method: {self.method}")
 
     def _initialize_consumer(self):
         """ Initializing Consumer """
         self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
-                consumer_group=self.consumer_group, message_type=self.consumer_message_types,
+                consumer_group=self.consumer_group, message_types=self.consumer_message_types,
                 auto_ack=self.auto_ack, offset=self.offset)
         Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\
-                f"Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
-                f"Message Types: {self.consumer_message_types}, Offset: {self.offset}")
+                f" Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
+                f" Message Types: {self.consumer_message_types}, Offset: {self.offset}")
+        if self.is_blocking:
+            self.recv_timeout = 0
 
     def connect(self):
         raise Exception('connect not implemented for MessageBusComm')
@@ -686,8 +687,11 @@ class MessageBusComm(Comm):
         :param kwargs: For future use. If we need some more config.
         """
         if self.producer:
-            self.producer.send(message)
-            Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+            if self.is_running:
+                self.producer.send(message)
+                Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+            else:
+                self.producer = None
         else:
             Log.error("Message Bus Producer not initialized.")
 
@@ -698,10 +702,24 @@ class MessageBusComm(Comm):
         receive messages from message bus.
         """
         if self.consumer:
-            message = self.consumer.receive()
-            decoded_message = message.decode('utf-8')
-            Log.debug(f"Received Message: {decoded_message}")
-            callback_fn(decoded_message)
+            while True:
+                try:
+                    if self.is_running:
+                        message = self.consumer.receive(self.recv_timeout)
+                        if message:
+                            decoded_message = message.decode('utf-8')
+                            Log.debug(f"Received Message: {decoded_message}")
+                            callback_fn(decoded_message)
+                        else:
+                            #For non-blocking calls.
+                            time.sleep(1)
+                    else:
+                        #Stop called need to break
+                        self.consumer = None
+                        break
+                except MessageBusError as ex:
+                    Log.error(f"Message consuming failed. {ex}")
+                    continue
         else:
             Log.error("Message Bus Consumer not initialized.")
 
@@ -709,3 +727,7 @@ class MessageBusComm(Comm):
         """ Acknowledge the read messages. """
         if self.consumer:
             self.consumer.ack()
+
+    def stop(self):
+        #Stopping the sending and receiving of messages.
+        self.is_running = False
