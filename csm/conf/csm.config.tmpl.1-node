@@ -5,22 +5,22 @@
   "cortx": {
     "software": {
       "csm": {
-        "user": "cortxub",
-        "secret": "cortxub"
+        "user": "csm",
+        "secret": "csm"
       },
       "openldap": {
         "sgiam": {
-          "user": "s3iamopenldapuser",
-          "secret": "s3iamopenldapsecret"
+          "user": "sgiamadmin",
+          "secret": "ldapadmin"
         }
       }
     }
   },
   "server_node": {
-    "machine_id": {
+    "TMPL_MACHINE_ID": {
       "type": "VM",
-      "name": "srvnode-1",
-      "hostname": "srvnode1-host.seagate.com",
+      "name": "TMPL_SERVER_NAME",
+      "hostname": "TMPL_SERVER_HOSTNAME",
       "cluster_id": "cluster_id",
       "storage": {
         "enclosure_id": "enclosure_id"
@@ -35,7 +35,7 @@
   },
   "storage_enclosure": {
     "enclosure_id": {
-      "type": "RBOD"
+      "type": "other"
     }
   }
 }

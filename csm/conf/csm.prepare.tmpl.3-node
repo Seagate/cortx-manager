@@ -1,0 +1,71 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "csm",
+        "secret": "csm"
+      },
+      "openldap": {
+        "sgiam": {
+          "user": "sgiamadmin",
+          "secret": "ldapadmin"
+        }
+      }
+    }
+  },
+  "server_node": {
+    "TMPL_MACHINE_ID-1": {
+      "type": "VM",
+      "name": "TMPL_SERVER_NAME-1",
+      "hostname": "TMPL_SERVER_HOSTNAME-1",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    },
+    "TMPL_MACHINE_ID-2": {
+      "type": "VM",
+      "name": "TMPL_SERVER_NAME-2",
+      "hostname": "TMPL_SERVER_HOSTNAME-2",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    },
+    "TMPL_MACHINE_ID-3": {
+      "type": "VM",
+      "name": "TMPL_SERVER_NAME-3",
+      "hostname": "TMPL_SERVER_HOSTNAME-3",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    }
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    }
+  }
+}

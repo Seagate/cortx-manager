@@ -443,6 +443,9 @@ NETWORK = "network"
 DATA = "data"
 PUBLIC_FQDN = "public_fqdn"
 PRIVATE_FQDN = "private_fqdn"
+MANAGEMENT = "management"
+VIRTUAL_HOST = "virtual_host"
+PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -535,7 +538,7 @@ ENCLOSURE_ID = "enclosure_id"
 SOFTWARE = "software"
 
 #Third party packages information
-python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "templates/requirment.txt" 
+python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt" 
 third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
 
 # Provisioner status
@@ -683,4 +686,15 @@ CONSUMER_CALLBACK = 'consumer_callback'
 
 #ConfStore Keys
 KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
-KEY_SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+KEY_SERVER_NODE_INFO = "server_node_info_key"
+KEY_SERVER_NODE_TYPE = "server_node_type_key"
+KEY_ENCLOSURE_ID = "enclosure_id_key"
+KEY_CLUSTER_ID = "cluster_id_key"
+KEY_CSM_USER = "csm_user_key"
+KEY_CSM_SECRET = "csm_secret_key"
+KEY_S3_LDAP_USER = "openldap_s3_user_key"
+KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
+KEY_ROAMING_IP = "roaming_ip_key"
+KEY_HOSTNAME = "node_hostname_key"
+KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"

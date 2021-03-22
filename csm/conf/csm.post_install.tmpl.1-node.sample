@@ -5,12 +5,12 @@
   "cortx": {
     "software": {
       "csm": {
-        "user": "csm_user_1"
+        "user": "csm"
       }
     }
   },
   "server_node": {
-    "machine_id": {
+    "bdf68ed0efc148ce8d580aef3cc6420c": {
       "type": "VM",
       "storage": {
         "enclosure_id": "enclosure_id"
@@ -19,7 +19,7 @@
   },
   "storage_enclosure": {
     "enclosure_id": {
-      "type": "RBOD"
+      "type": "other"
     }
   }
 }

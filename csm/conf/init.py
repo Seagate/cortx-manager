@@ -44,10 +44,8 @@ class Init(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        self._set_deployment_mode()
         self._config_user_permission()
         self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -69,7 +67,6 @@ class Init(Setup):
         """
         Log.info("Set User Permission")
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
         os.makedirs(bundle_path, exist_ok=True)

@@ -22,9 +22,9 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
-from csm.conf.uds import UDSConfigGenerator
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.validator.v_network import NetworkV
 
 class Configure(Setup):
     """
@@ -55,13 +55,12 @@ class Configure(Setup):
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         try:
-            #TODO: UDS config
-            # if not self._is_env_vm:
-            #     Prepare._config_uds(self.conf_store_keys)
+            self._configure_uds_keys()
+            if not self._is_env_vm:
+                Configure._validate_healthmap_path()
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
-            Configure._validate_healthmap_path()
             await self._set_unsupported_feature_info()
             if not self._replacement_node_flag:
                 self.create()
@@ -74,10 +73,13 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys["server_node_info_key"] = f"{const.KEY_SERVER_NODE_INFO}"
-        self.conf_store_keys["server_node_type_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.TYPE}"
-        self.conf_store_keys["enclosure_id_key"] = f"{const.KEY_SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}"
-        self.conf_store_keys["data_nw_public_fqdn"] = f"{const.KEY_SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}"
+        self.conf_store_keys.update({
+            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
+            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
+            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+            const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
+            })
 
         self._validate_conf_store_keys(const.CONSUMER_INDEX)
 
@@ -93,6 +95,8 @@ class Configure(Setup):
                      const.DEV)
         self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
+        Conf.save(const.DATABASE_INDEX)
+        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     def _rsyslog(self):
@@ -100,6 +104,7 @@ class Configure(Setup):
         Configure rsyslog
         """
         Log.info("Configuring rsyslog")
+        os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
             Setup._run_cmd("systemctl restart rsyslog")
@@ -154,20 +159,27 @@ class Configure(Setup):
         This minion id will be required to fetch the healthmap path.
         Will use 'srvnode-1' in case the salt command fails to fetch the id.
         """
-        try:
-            healthmap_path = Conf.get(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY)
-            if not os.path.exists(healthmap_path):
-                Log.logger.error("Health map not available at {healthmap_path}")
-                raise CsmSetupError("Health map not available at {healthmap_path}")
-        except Exception as e:
-            raise CsmSetupError(f"Setting Health map path failed. {e}")
+        Log.info("Validating Healthmap path")
+        healthmap_path = Conf.get(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY)
+        if not os.path.exists(healthmap_path):
+            Log.logger.error(f"Health map not available at {healthmap_path}")
+            raise CsmSetupError(f"Health map not available at {healthmap_path}")
 
-    @staticmethod
-    def _config_uds(conf_store_keys, command):
-        uds_public_ip = command.options.get('uds_public_ip')
-        if uds_public_ip is not None:
-            ip_address(uds_public_ip)
-        UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
+    def _configure_uds_keys(self):
+        Log.info("Configuring UDS keys")
+        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
+        virtual_host_key = f"{const.CLUSTER_ID}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
+        self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
+        virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host)
+        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
+        Log.debug(f"Validating connectivity for virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn}")
+        try:
+            NetworkV().validate('connectivity', [virtual_host, data_nw_public_fqdn])
+        except Exception as e:
+            raise CsmSetupError("Network Validation failed.")
+        Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm config")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
 
     async def _set_unsupported_feature_info(self):
         """
