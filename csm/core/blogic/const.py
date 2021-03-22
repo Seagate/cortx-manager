@@ -128,6 +128,7 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
+CORTX = 'cortx'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -156,8 +157,8 @@ CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
-CONF_STORE_USER_KEY = 'system>service-user>name'
-CONF_STORE_PASS_KEY = 'system>service-user>secret'
+CONF_STORE_USER_KEY = 'cortx>software>csm>user'
+CONF_STORE_PASS_KEY = 'cortx>software>csm>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'CSM'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
@@ -438,6 +439,13 @@ IS_DHCP = 'is_dhcp'
 ROAMING_IP = "roaming_ip"
 PRIVATE_IP = "private_ip"
 LOCALHOST = "localhost"
+NETWORK = "network"
+DATA = "data"
+PUBLIC_FQDN = "public_fqdn"
+PRIVATE_FQDN = "private_fqdn"
+MANAGEMENT = "management"
+VIRTUAL_HOST = "virtual_host"
+PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -525,6 +533,14 @@ DECRYPTION_KEYS = {
     "CSM>password": "system"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
+SERVER_NODE = "server_node"
+ENCLOSURE_ID = "enclosure_id"
+SOFTWARE = "software"
+
+#Third party packages information
+python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt" 
+third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
+
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -548,13 +564,12 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='cluster>{server-node}>node_type'
 NODE_TYPE="node_type"
+SGIAM = "sgiam"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
-DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
 VM = 'VM'
 ENV_TYPE = 'env_type'
@@ -668,3 +683,18 @@ BOTH = 'both'
 PRODUCER = 'producer'
 CONSUMER = 'consumer'
 CONSUMER_CALLBACK = 'consumer_callback'
+
+#ConfStore Keys
+KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
+SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+KEY_SERVER_NODE_INFO = "server_node_info_key"
+KEY_SERVER_NODE_TYPE = "server_node_type_key"
+KEY_ENCLOSURE_ID = "enclosure_id_key"
+KEY_CLUSTER_ID = "cluster_id_key"
+KEY_CSM_USER = "csm_user_key"
+KEY_CSM_SECRET = "csm_secret_key"
+KEY_S3_LDAP_USER = "openldap_s3_user_key"
+KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
+KEY_ROAMING_IP = "roaming_ip_key"
+KEY_HOSTNAME = "node_hostname_key"
+KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"

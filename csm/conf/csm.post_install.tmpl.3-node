@@ -1,0 +1,37 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "csm"
+      }
+    }
+  },
+  "server_node": {
+    "TMPL_MACHINE_ID-1": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    },
+    "TMPL_MACHINE_ID-2": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    },
+    "TMPL_MACHINE_ID-3": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    }
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    }
+  }
+}

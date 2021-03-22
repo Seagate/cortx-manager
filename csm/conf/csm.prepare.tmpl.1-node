@@ -1,0 +1,41 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "csm",
+        "secret": "csm"
+      },
+      "openldap": {
+        "sgiam": {
+          "user": "sgiamadmin",
+          "secret": "ldapadmin"
+        }
+      }
+    }
+  },
+  "server_node": {
+    "TMPL_MACHINE_ID": {
+      "type": "VM",
+      "name": "TMPL_SERVER_NAME",
+      "hostname": "TMPL_SERVER_HOSTNAME",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    }
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    }
+  }
+}

@@ -76,6 +76,7 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.cli.csm_client import CsmDirectClient
     from csm.conf.post_install import PostInstall
+    from csm.conf.prepare import Prepare
     from csm.conf.configure import Configure
     from csm.conf.init import Init
     from csm.conf.reset import Reset

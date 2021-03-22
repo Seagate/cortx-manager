@@ -28,17 +28,33 @@ yum install -y $RPM_PATH/*.rpm
 mkdir -p /etc/ssl/stx/ /etc/cortx/ha/
 cp -f $CSM_REPO_PATH/cicd/auxiliary/stx.pem /etc/ssl/stx/
 #cp -f $CSM_REPO_PATH/cicd/auxiliary/etc/database.json /etc/cortx/ha/
-
+yum install -y http://cortx-storage.colo.seagate.com/releases/eos/uploads/rhel/rhel-7.7.1908/csm_uploads/cortx-py-utils-1.0.0-177_8cc273a.noarch.rpm
 groupadd haclient
 
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
-yum remove salt* -y
-pip3 uninstall -y salt
+
+pip3 freeze
+cat /etc/machine-id
+MID=$(cat /etc/machine-id)
+echo $MID
 chmod 777 -R /var/log/seagate
-csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
-csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
-csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
+
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
+csm_setup post_install --config json:///opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
+
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node
+csm_setup prepare --config json:///opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node
+
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
+csm_setup config --config json:///opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
+
+sed -i -e 's|TMPL_MACHINE_ID|$(cat /etc/machine-id)|g' "/opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node"
+cat /opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
+csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
 
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
@@ -59,5 +75,5 @@ csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_t
 sleep 5s
 mkdir -p /tmp
 
-
 /usr/bin/csm_test -t $CSM_PATH/test/plans/cicd.pln -f $CSM_PATH/test/test_data/args.yaml -o /tmp/result.txt
+cat /tmp/result.txt
