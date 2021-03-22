@@ -55,13 +55,11 @@ class Init(Setup):
         Create user and allow permission for csm resources
         """
         Log.info("Create user and allow permission for csm resources")
-        bundle_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
-                               "SUPPORT_BUNDLE>bundle_path")
         crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
         key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>private_key_path")
-        self._config_user_permission_set(bundle_path, crt, key)
+        self._config_user_permission_set(crt, key)
 
-    def _config_user_permission_set(self, bundle_path, crt, key):
+    def _config_user_permission_set(self, crt, key):
         """
         Set User Permission
         """
@@ -69,13 +67,11 @@ class Init(Setup):
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
-        os.makedirs(bundle_path, exist_ok=True)
         os.makedirs(const.PROVISIONER_LOG_FILE_PATH, exist_ok=True)
         os.makedirs(const.CSM_TMP_FILE_CACHE_DIR, exist_ok=True)
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PATH}")
         Setup._run_cmd((f"setfacl -R -m u:{self._user}:rwx "
                         f"{const.CSM_TMP_FILE_CACHE_DIR}"))
-        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {bundle_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")

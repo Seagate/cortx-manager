@@ -94,7 +94,6 @@ class Configure(Setup):
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
-        self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)

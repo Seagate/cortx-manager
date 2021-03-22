@@ -86,7 +86,7 @@ class PostInstall(Setup):
     def fetch_python_pkgs(self):
         try:
             pkgs_data = Text(const.python_pkgs_req_path).load()
-            return pkgs_data.splitlines()
+            return {ele.split("==")[0]:ele.split("==")[1] for ele in pkgs_data.splitlines()}
         except Exception as e:
             raise CsmSetupError("Failed to fetch python packages")
 
