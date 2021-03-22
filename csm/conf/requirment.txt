@@ -14,10 +14,10 @@ marshmallow==3.2.1
 schematics==2.1.0
 dataclasses==0.7
 python-consul==1.1.0
-elasticsearch>=6.8.1
-elasticsearch-dsl>=6.4.0
+elasticsearch==6.8.1
+elasticsearch-dsl==6.4.0
 secure==0.2.1
-requests==2.22.0
+requests==2.25.1
 pathlib==1.0.1
 statsd==3.2.2
 urllib3==1.25.7
