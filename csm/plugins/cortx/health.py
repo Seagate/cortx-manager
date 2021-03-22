@@ -48,11 +48,11 @@ class HealthPlugin(CsmPlugin):
             node_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
                     'HEALTH>node_actuator_request')
             self._producer_id = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>PRODUCER>ACTUATOR>producer_id')
+                    const.PRODUCER_ID_KEY)
             self._message_type = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>PRODUCER>ACTUATOR>message_type')
+                    const.MSG_TYPE_KEY)
             self._method = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>PRODUCER>ACTUATOR>method')
+                    const.METHOD_KEY)
             self._storage_request_dict = Json(storage_request_path).load()
             self._node_request_dict = Json(node_request_path).load()
             self._no_of_request = 0

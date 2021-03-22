@@ -117,13 +117,13 @@ class AlertPlugin(CsmPlugin):
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
             self.decision_maker_service = DecisionMakerService()
             self._consumer_id = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>CONSUMER>ALERTS>consumer_id')
+                    const.CONSUMER_ID_KEY)
             self._consumer_group = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>CONSUMER>ALERTS>consumer_group')
+                    const.CONSUMER_GROUP_KEY)
             self._consumer_message_types = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>CONSUMER>ALERTS>consumer_message_types')
+                    const.CONSUER_MSG_TYPES_KEY)
             self._offset = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    'MESSGAEBUS>CONSUMER>ALERTS>offset')
+                    const.CONSUMER_OFFSET)
         except Exception as e:
             Log.exception(e)
 
