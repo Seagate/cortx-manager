@@ -245,6 +245,7 @@ class SystemConfigConverter:
 
 
 @CsmView._app_routes.view("/api/v1/sysconfig")
+@CsmView._app_routes.view("/api/v2/sysconfig")
 class SystemConfigListView(CsmView):
 
     _converter = SystemConfigConverter()
@@ -297,6 +298,7 @@ class ConfigTypeSchema(Schema):
                            validate=validate.OneOf(const.SYSCONFIG_TYPE))
 
 @CsmView._app_routes.view("/api/v1/sysconfig/{config_id}")
+@CsmView._app_routes.view("/api/v2/sysconfig/{config_id}")
 class SystemConfigView(CsmView):
 
     _converter = SystemConfigConverter()
@@ -368,6 +370,7 @@ class SystemConfigView(CsmView):
         return SystemConfigView._converter._model_to_view(system_config)
 
 @CsmView._app_routes.view("/api/v1/sysconfig_helpers/email_test")
+@CsmView._app_routes.view("/api/v2/sysconfig_helpers/email_test")
 class TestEmailView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -397,6 +400,7 @@ class OnboardingLicenseSchema(Schema):
     csm_onboarding_license_key = fields.Str(required=True)
 
 @CsmView._app_routes.view("/api/v1/license/onboarding")
+@CsmView._app_routes.view("/api/v2/license/onboarding")
 @CsmAuth.public
 class OnboardingLicenseView(CsmView):
     def __init__(self, request):
@@ -429,6 +433,7 @@ class ProvisionerStatusSchema(Schema):
                            validate=validate.OneOf(const.PROVISIONER_CONFIG_TYPES))
 
 @CsmView._app_routes.view("/api/v1/provisioner/status")
+@CsmView._app_routes.view("/api/v2/provisioner/status")
 class ProvisionerStatus(CsmView):
     """
     Rest implementation to get provisioner config status like success or faield

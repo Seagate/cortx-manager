@@ -33,6 +33,7 @@ class HotFixUploadSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/update/hotfix/upload")
+@CsmView._app_routes.view("/api/v2/update/hotfix/upload")
 class CsmHotfixUploadView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -54,6 +55,7 @@ class CsmHotfixUploadView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/update/hotfix/start")
+@CsmView._app_routes.view("/api/v2/update/hotfix/start")
 class CsmHotfixStartView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -69,6 +71,7 @@ class CsmHotfixStartView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/update/hotfix/status")
+@CsmView._app_routes.view("/api/v2/update/hotfix/status")
 class CsmHotfixStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)

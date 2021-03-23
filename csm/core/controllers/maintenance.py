@@ -34,6 +34,7 @@ class PostMaintenanceSchema(Schema):
     ssh_port = fields.Int(missing=True, required=False, validate=[PortValidator()])
 
 @CsmView._app_routes.view("/api/v1/maintenance/cluster/{action}")
+@CsmView._app_routes.view("/api/v2/maintenance/cluster/{action}")
 class MaintenanceView(CsmView):
     def __init__(self, request):
         super(MaintenanceView, self).__init__(request)

@@ -68,6 +68,7 @@ class GetResponseBody:
         return self.to_response()
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/upload")
+@CsmView._app_routes.view("/api/v2/tls/bundle/upload")
 class SecurityUploadView(CsmView):
     """ Security View for POST REST API implementation:
         1. Upload private key and corresponding certificate to the server
@@ -114,6 +115,7 @@ class SecurityUploadView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/install")
+@CsmView._app_routes.view("/api/v2/tls/bundle/install")
 class SecurityInstallView(CsmView):
     """ Security View for POST REST API implementation:
         1. Install lastly uploaded certificate
@@ -155,6 +157,7 @@ class SecurityInstallView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/status")
+@CsmView._app_routes.view("/api/v2/tls/bundle/status")
 class SecurityStatusView(CsmView):
     """ Security View for GET REST API implementation:
         1. Get information about lastly uploaded certficate
@@ -182,6 +185,7 @@ class SecurityStatusView(CsmView):
         return GetResponseBody(security_config).to_response()
 
 @CsmView._app_routes.view("/api/v1/tls/bundle/details")
+@CsmView._app_routes.view("/api/v2/tls/bundle/details")
 class SecurityDetailsView(CsmView):
     """ Security details for GET REST API implementation:
         1. Get certificate details

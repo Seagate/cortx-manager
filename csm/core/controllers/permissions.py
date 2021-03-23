@@ -51,6 +51,7 @@ class BasePermissionsView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/permissions")
+@CsmView._app_routes.view("/api/v2/permissions")
 class CurrentPermissionsView(BasePermissionsView):
     def __init__(self, request):
         super(CurrentPermissionsView, self).__init__(request)
@@ -67,6 +68,7 @@ class CurrentPermissionsView(BasePermissionsView):
         return permissions
 
 @CsmView._app_routes.view("/api/v1/permissions/{user_id}")
+@CsmView._app_routes.view("/api/v2/permissions/{user_id}")
 class UserPermissionsView(BasePermissionsView):
     def __init__(self, request):
         super(UserPermissionsView, self).__init__(request)

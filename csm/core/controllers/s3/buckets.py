@@ -34,6 +34,7 @@ class S3BucketCreationSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket")
+@CsmView._app_routes.view("/api/v2/s3/bucket")
 class S3BucketListView(S3AuthenticatedView):
     """
     S3 Bucket List View for GET and POST REST API implementation:
@@ -81,6 +82,7 @@ class S3BucketListView(S3AuthenticatedView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket/{bucket_name}")
+@CsmView._app_routes.view("/api/v2/s3/bucket/{bucket_name}")
 class S3BucketView(S3AuthenticatedView):
     """
     S3 Bucket view for DELETE REST API implementation:
@@ -105,6 +107,7 @@ class S3BucketView(S3AuthenticatedView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/bucket_policy/{bucket_name}")
+@CsmView._app_routes.view("/api/v2/s3/bucket_policy/{bucket_name}")
 class S3BucketPolicyView(S3AuthenticatedView):
     """
     S3 Bucket Policy View for GET, PUT and DELETE REST API implementation:

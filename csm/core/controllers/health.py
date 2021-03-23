@@ -34,6 +34,7 @@ class HealthResourceViewQueryParameter(Schema):
     severity = fields.Str(default=const.OK, missing=const.OK, validate=[Enum(severity_values)])
 
 @CsmView._app_routes.view("/api/v1/system/health/summary")
+@CsmView._app_routes.view("/api/v2/system/health/summary")
 class HealthSummaryView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -44,6 +45,7 @@ class HealthSummaryView(CsmView):
         return await self.health_service.fetch_health_summary()
 
 @CsmView._app_routes.view("/api/v1/system/health/view")
+@CsmView._app_routes.view("/api/v2/system/health/view")
 class HealthView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -66,6 +68,7 @@ class HealthView(CsmView):
         return node_health_summary
 
 @CsmView._app_routes.view("/api/v1/system/health/components")
+@CsmView._app_routes.view("/api/v2/system/health/components")
 class HealthComponentView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -88,6 +91,7 @@ class HealthComponentView(CsmView):
         return component_health_summary
 
 @CsmView._app_routes.view("/api/v1/system/health/node")
+@CsmView._app_routes.view("/api/v2/system/health/node")
 class NodeHealthView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -110,6 +114,7 @@ class NodeHealthView(CsmView):
         return node_health_summary
 
 @CsmView._app_routes.view("/api/v1/system/health/resources")
+@CsmView._app_routes.view("/api/v2/system/health/resources")
 class HealthResourceView(CsmView):
     def __init__(self, request):
         super().__init__(request)

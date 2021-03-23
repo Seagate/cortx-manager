@@ -19,6 +19,7 @@ from cortx.utils.log import Log
 
 
 @CsmView._app_routes.view("/api/v1/s3")
+@CsmView._app_routes.view("/api/v2/s3")
 class S3ServerInfoView(CsmView):
     """
     S3 Server Info View for GET REST API implementation:

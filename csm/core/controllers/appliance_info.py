@@ -18,6 +18,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 
 @CsmView._app_routes.view("/api/v1/appliance_info")
+@CsmView._app_routes.view("/api/v2/appliance_info")
 @CsmAuth.public
 class ApplianceInfoView(CsmView):
     def __init__(self, request):
