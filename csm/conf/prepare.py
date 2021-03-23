@@ -85,7 +85,7 @@ class Prepare(Setup):
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
- 
+
     def _set_fqdn_for_nodeid(self):
         Log.info("Setting hostname to server node name")
         server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
@@ -107,7 +107,7 @@ class Prepare(Setup):
         try:
             NetworkV().validate('connectivity', [roaming_ip, data_nw_public_fqdn])
         except Exception as e:
-            raise CsmSetupError("Network Validation failed.") 
+            raise CsmSetupError("Network Validation failed.")
         return roaming_ip, data_nw_public_fqdn
     
     @staticmethod
