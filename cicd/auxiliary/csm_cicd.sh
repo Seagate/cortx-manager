@@ -33,12 +33,14 @@ groupadd haclient
 
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
-yum remove salt* -y
-pip3 uninstall -y salt
+pip3 freeze
 chmod 777 -R /var/log/seagate
-csm_setup post_install --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
-csm_setup config --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
-csm_setup init --config json:///opt/seagate/cortx/csm/templates/csm_setup_conf_template.json
+cat /etc/machine-id
+
+csm_setup post_install --config json:///opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
+csm_setup prepare --config json:///opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1-node
+csm_setup config --config json:///opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
+csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
 
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
