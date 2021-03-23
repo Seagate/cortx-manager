@@ -201,6 +201,7 @@ class Configure(Setup):
         try:
             NetworkV().validate('connectivity', [virtual_host, data_nw_public_fqdn])
         except Exception as e:
+            Log.error(f"Network Validation failed. {e}")
             raise CsmSetupError("Network Validation failed.")
         Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm config")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)

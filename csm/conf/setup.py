@@ -118,11 +118,11 @@ class Setup:
         if self._is_env_dev:
             decrypt = False
         Log.info("Fetching CSM User Password from Conf Store.")
-        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["csm_secret_key"])
+        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_USER])
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
-                cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["cluster_id_key"])
+                cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
                 cipher_key = Cipher.generate_key(cluster_id, "system")
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
