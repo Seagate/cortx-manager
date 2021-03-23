@@ -165,7 +165,7 @@ class CsmRestApi(CsmApi, ABC):
         url = request.path
         if (not request.app[const.USL_POLLING_LOG]
                 and url.startswith('/usl/')
-                and not url.endswith('/registerDevice'):
+                and not url.endswith('/registerDevice')):
             return
         audit = CsmRestApi.http_request_to_log_string(request)
         if (getattr(request, "session", None) is not None
