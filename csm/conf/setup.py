@@ -65,7 +65,7 @@ class Setup:
             keylist = list(self.conf_store_keys.values())
         if not isinstance(keylist, list):
             raise CsmSetupError("Keylist should be kind of list")
-        Log.debug(f"Validating confstore keys {keylist}")
+        Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
 
     def _set_deployment_mode(self):
@@ -157,7 +157,6 @@ class Setup:
         :return:
         """
         self._setup_info = {const.NODE_TYPE: "", const.STORAGE_TYPE: ""}
-        machine_id = Setup._get_machine_id()
         self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
         enclosure_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ENCLOSURE_ID])
         storage_type_key = f"{const.STORAGE_ENCL}>{enclosure_id}>{const.TYPE}"

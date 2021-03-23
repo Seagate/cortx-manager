@@ -66,6 +66,7 @@ class PostInstall(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
+            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
             const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
             const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
@@ -84,7 +85,7 @@ class PostInstall(Setup):
             PkgV().validate("pip3s", self.fetch_python_pkgs())
         except VError as ve:
             Log.error(f"Failed at package Validation: {ve}")
-            CsmSetupError(f"Failed at package Validation: {ve}")
+            raise CsmSetupError(f"Failed at package Validation: {ve}")
 
     def fetch_python_pkgs(self):
         try:
