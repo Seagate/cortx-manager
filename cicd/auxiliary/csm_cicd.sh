@@ -42,9 +42,12 @@ csm_setup prepare --config json:///opt/seagate/cortx/csm/conf/csm.prepare.tmpl.1
 csm_setup config --config json:///opt/seagate/cortx/csm/conf/csm.config.tmpl.1-node
 csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.1-node
 
+csm_setup post_install --config json:///opt/seagate/cortx/csm/conf/csm.post_install.tmpl.3-node
+csm_setup prepare --config json:///opt/seagate/cortx/csm/conf/csm.prepare.tmpl.3-node
+csm_setup config --config json:///opt/seagate/cortx/csm/conf/csm.config.tmpl.3-node
+csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.3-node
 #su -c "/usr/bin/csm_agent --debug &" csm
 /usr/bin/csm_agent --debug &
-
 
 # TODO: Uncomment when container able to start systemd service
 #systemctl restart csm_agent
