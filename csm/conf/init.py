@@ -46,15 +46,23 @@ class Init(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+        self._prepare_and_validate_confstore_keys()
+        self._set_service_user()
         self._config_user_permission()
         self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+        })
+        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+
     def _config_user_permission(self, reset=False):
         """
-        Create user and allow permission for csm resources
+        Allow permission for csm resources
         """
-        Log.info("Create user and allow permission for csm resources")
+        Log.info("Allow permission for csm resources")
         crt = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>certificate_path")
         key = Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS>private_key_path")
         self._config_user_permission_set(crt, key)

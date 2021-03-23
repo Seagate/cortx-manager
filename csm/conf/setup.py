@@ -62,10 +62,11 @@ class Setup:
 
     def _validate_conf_store_keys(self, index, keylist=None):
         if not keylist:
-            ConfKeysV().validate("exists", index, self.conf_store_keys.values())
-        else:
-            ConfKeysV().validate("exists", index, keylist)
-            
+            keylist = list(self.conf_store_keys.values())
+        if not isinstance(keylist, list):
+            raise CsmSetupError("Keylist should be kind of list")
+        Log.debug(f"Validating confstore keys {keylist}")
+        ConfKeysV().validate("exists", index, keylist)
 
     def _set_deployment_mode(self):
         """
