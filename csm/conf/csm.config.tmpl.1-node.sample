@@ -1,0 +1,50 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "csm",
+        "secret": "csm"
+      },
+      "openldap": {
+        "sgiam": {
+          "user": "sgiamadmin",
+          "secret": "ldapadmin"
+        }
+      }
+    }
+  },
+  "server_node": {
+    "bdf68ed0efc148ce8d580aef3cc6420c": {
+      "type": "VM",
+      "name": "srvnode-1",
+      "hostname": "ssc-vm-2623.colo.seagate.com",
+      "cluster_id": "cluster_id",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      },
+      "network": {
+        "data": {
+          "roaming_ip": "127.0.0.1",
+          "public_fqdn": "localhost"
+        }
+      }
+    }
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    }
+  },
+   "cluster": {
+    "cluster_id": {
+      "network": {
+        "management": {
+          "virtual_host": "127.0.0.1"
+        }
+      }
+    }
+  }
+}

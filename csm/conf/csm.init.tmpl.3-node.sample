@@ -1,0 +1,44 @@
+{
+  "DEPLOYMENT": {
+    "mode": "dev"
+  },
+  "storage_enclosure": {
+    "enclosure_id": {
+      "type": "other"
+    },
+    "network": {
+        "data": {
+          "public_fqdn": "localhost"
+        }
+      }
+  },
+  "server_node": {
+    "bdf68ed0efc148ce8d20c580aef3cc64": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    },
+    "c148ce8d580ad0efef3cc6bdf68e420c": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    },
+    "80aef3cc6420cbdf68ed0efc148ce8d5": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "enclosure_id"
+      }
+    }
+  },
+  "cluster": {
+    "cluster_id": {
+      "network": {
+        "management": {
+          "virtual_host": "127.0.0.1"
+        }
+      }
+    }
+  }
+}
