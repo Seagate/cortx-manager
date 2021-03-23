@@ -683,7 +683,7 @@ class AlertMonitorService(Service, Observable):
         Even if more then one alert piles up on RMQ queue this fix will handle it.
         """
         prev_alert = None
-        for count in range(0, self._es_retry):
+        for count in range(0, int(self._es_retry)):
             try:
                 Log.info("Fetching previous alert to check the state and severity.")
                 prev_alert = self._run_coroutine\

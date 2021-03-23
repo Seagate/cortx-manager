@@ -17,6 +17,7 @@ import json
 import os
 import time
 import asyncio
+from csm.common.comm import MessageBusComm
 from csm.common.comm import AmqpComm
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
@@ -26,6 +27,7 @@ from csm.core.blogic import const
 from marshmallow import Schema, fields, ValidationError
 from concurrent.futures import ThreadPoolExecutor
 from csm.common.services import Service
+from cortx.utils.conf_store.conf_store import Conf
 try:
     from cortx.utils.ha.dm.decision_maker import DecisionMaker
 except ModuleNotFoundError:
@@ -106,14 +108,22 @@ class AlertPlugin(CsmPlugin):
     listening for the alerts.
     """
 
-    def __init__(self):
+    def __init__(self, message_bus):
         super().__init__()
         try:
-            self.comm_client = AmqpComm()
+            self.comm_client = MessageBusComm(message_bus)
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
             self.decision_maker_service = DecisionMakerService()
+            self._consumer_id = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.CONSUMER_ID_KEY)
+            self._consumer_group = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.CONSUMER_GROUP_KEY)
+            self._consumer_message_types = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.CONSUER_MSG_TYPES_KEY)
+            self._offset = Conf.get(const.CSM_GLOBAL_INDEX, \
+                    const.CONSUMER_OFFSET)
         except Exception as e:
             Log.exception(e)
 
@@ -128,7 +138,10 @@ class AlertPlugin(CsmPlugin):
         try:
             self.monitor_callback = callback_fn
             self.health_plugin = health_plugin
-            self.comm_client.init()
+            self.comm_client.init(type=const.CONSUMER, consumer_id=self._consumer_id, \
+                    consumer_group=self._consumer_group, \
+                    consumer_message_types=self._consumer_message_types, \
+                    auto_ack=False, offset=self._offset)
         except Exception as e:
             Log.error(f"Error occured while calling alert plugin init. {e}")
 
@@ -153,44 +166,47 @@ class AlertPlugin(CsmPlugin):
         3. Validating with wrong data type in schema.
         4. Validating empty alert data.
         5. Validating with all appropriate data.
-        """
-        """
         Since actuator response and alerts comes on same channel we need to
         bifercate them.
         """
         status = False
-        sensor_queue_msg = JsonMessage(message).load()
-        Log.info(f"Message on sensor queue: {sensor_queue_msg}")
-        title = sensor_queue_msg.get("title", "")
-        if "actuator" in title.lower():
-            status = self.health_plugin.health_plugin_callback(message)
-        elif "sensor" in title.lower():
-            try:
-                if self.monitor_callback:
-                    Log.info("Coverting and validating alert.")
-                    alert = self._convert_to_csm_schema(message)
-                    """Validating Schema using marshmallow"""
-                    alert_validator = AlertSchemaValidator()
-                    alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
-                    Log.debug(f"Alert validated : {alert_data}")
-                    status = self.monitor_callback(alert_data)
-                    """
-                    Calling HA Decision Maker for Alerts.
-                    """
-                    if self.decision_maker_service and status:
-                        self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
-            except ValidationError as ve:
-                # Acknowledge incase of validation error.
-                Log.warn(f"Acknowledge incase of validation error {ve}")
+        sensor_queue_msg = None
+        try:
+            sensor_queue_msg = JsonMessage(message).load()
+        except ValueError as ex:
+            Log.error(f"Alert message parsing failed. {ex}")
+        if sensor_queue_msg:
+            Log.info(f"Message on sensor queue: {sensor_queue_msg}")
+            title = sensor_queue_msg.get("title", "")
+            if "actuator" in title.lower():
+                status = self.health_plugin.health_plugin_callback(message)
+            elif "sensor" in title.lower():
+                try:
+                    if self.monitor_callback:
+                        Log.info("Coverting and validating alert.")
+                        alert = self._convert_to_csm_schema(message)
+                        """Validating Schema using marshmallow"""
+                        alert_validator = AlertSchemaValidator()
+                        alert_data = alert_validator.load(alert,  unknown='EXCLUDE')
+                        Log.debug(f"Alert validated : {alert_data}")
+                        status = self.monitor_callback(alert_data)
+                        """
+                        Calling HA Decision Maker for Alerts.
+                        """
+                        if self.decision_maker_service and status:
+                            self.decision_maker_service.decision_maker_callback(sensor_queue_msg)
+                except ValidationError as ve:
+                    # Acknowledge incase of validation error.
+                    Log.warn(f"Acknowledge incase of validation error {ve}")
+                    self.comm_client.acknowledge()
+                except Exception as e:
+                    # Code should not reach here.
+                    Log.warn(f"Error occured during processing alerts: {e}")
+            if status:
+                # Acknowledge the alert so that it could be
+                # removed from the queue.
+                Log.debug(f"Marking sensor response as acknowleged. status: {status}")
                 self.comm_client.acknowledge()
-            except Exception as e:
-                # Code should not reach here.
-                Log.warn(f"Error occured during processing alerts: {e}")
-        if status:
-            # Acknowledge the alert so that it could be
-            # removed from the queue.
-            Log.debug(f"Marking sensor response as acknowleged. status: {status}")
-            self.comm_client.acknowledge()
 
     def _listen(self):
         """
