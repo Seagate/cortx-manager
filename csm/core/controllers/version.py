@@ -18,6 +18,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 
 @CsmView._app_routes.view("/api/v1/product_version")
+@CsmView._app_routes.view("/api/v2/product_version")
 @CsmAuth.public
 class ProductVersionView(CsmView):
     def __init__(self, request):

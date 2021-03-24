@@ -44,6 +44,7 @@ class PatchAccessKeySchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/s3/access_keys")
+@CsmView._app_routes.view("/api/v2/s3/access_keys")
 class S3AccessKeysView(S3AuthenticatedView):
 
     def __init__(self, request):
@@ -86,6 +87,7 @@ class S3AccessKeysView(S3AuthenticatedView):
 
 
 @CsmView._app_routes.view("/api/v1/s3/access_keys/{access_key_id}")
+@CsmView._app_routes.view("/api/v2/s3/access_keys/{access_key_id}")
 class S3AccessKeysListView(S3AuthenticatedView):
 
     def __init__(self, request):
