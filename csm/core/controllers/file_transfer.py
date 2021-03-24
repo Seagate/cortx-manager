@@ -38,6 +38,7 @@ class CsmFileUploadSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/csm/file/transfer")
+@CsmView._app_routes.view("/api/v2/csm/file/transfer")
 class CsmFileView(CsmView):
     """
     This is not an active controller! If you want to test it 

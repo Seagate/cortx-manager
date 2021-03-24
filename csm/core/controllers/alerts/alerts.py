@@ -71,6 +71,7 @@ class AlertsPatchParameter(Schema):
         strict = False
     
 @CsmView._app_routes.view("/api/v1/alerts")
+@CsmView._app_routes.view("/api/v2/alerts")
 # TODO: Implement base class for sharing common controller logic
 class AlertsListView(CsmView):
     def __init__(self, request):
@@ -102,6 +103,7 @@ class AlertsListView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/alerts/{alert_id}")
+@CsmView._app_routes.view("/api/v2/alerts/{alert_id}")
 class AlertsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -144,6 +146,7 @@ class AlertCommentsCreateSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/alerts/{alert_uuid}/comments")
+@CsmView._app_routes.view("/api/v2/alerts/{alert_uuid}/comments")
 class AlertCommentsView(CsmView):
     def __init__(self, request):
         super().__init__(request)

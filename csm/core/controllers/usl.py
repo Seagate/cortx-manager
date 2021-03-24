@@ -86,6 +86,7 @@ class _SecuredView(_View):
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
+@CsmView._app_routes.view("/usl/v2/saas")
 class SaaSURLView(_View):
     """
     Lyve Pilot SaaS URL view.
@@ -97,6 +98,7 @@ class SaaSURLView(_View):
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registerDevice")
+@CsmView._app_routes.view("/usl/v2/registerDevice")
 class DeviceRegistrationView(_View):
     """
     Device registration view.
@@ -159,6 +161,7 @@ class DeviceRegistrationView(_View):
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/registrationToken")
+@CsmView._app_routes.view("/usl/v2/registrationToken")
 class RegistrationTokenView(_View):
     """
     Registration token generation view.
@@ -171,6 +174,7 @@ class RegistrationTokenView(_View):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices")
+@CsmView._app_routes.view("/usl/v2/devices")
 class DeviceView(_SecuredView):
     """
     Devices list view.
@@ -182,6 +186,7 @@ class DeviceView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes")
+@CsmView._app_routes.view("/usl/v2/devices/{device_id}/volumes")
 class DeviceVolumesListView(_SecuredView):
     """
     Volumes list view.
@@ -212,6 +217,7 @@ class DeviceVolumesListView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/mount")
+@CsmView._app_routes.view("/usl/v2/devices/{device_id}/volumes/{volume_id}/mount")
 class DeviceVolumeMountView(_SecuredView):
     """
     Volume mount view.
@@ -245,6 +251,7 @@ class DeviceVolumeMountView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/devices/{device_id}/volumes/{volume_id}/umount")
+@CsmView._app_routes.view("/usl/v2/devices/{device_id}/volumes/{volume_id}/umount")
 class DeviceVolumeUnmountView(_SecuredView):
     """
     Volume unmount view.
@@ -283,6 +290,7 @@ class DeviceVolumeUnmountView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/events")
+@CsmView._app_routes.view("/usl/v2/events")
 class UdsEventsView(_SecuredView):
     """
     UDS Events view.
@@ -294,6 +302,7 @@ class UdsEventsView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system")
+@CsmView._app_routes.view("/usl/v2/system")
 class SystemView(_SecuredView):
     """
     System information view.
@@ -305,6 +314,7 @@ class SystemView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates")
+@CsmView._app_routes.view("/usl/v2/system/certificates")
 class SystemCertificatesView(_SecuredView):
     """
     System certificates view.
@@ -336,6 +346,7 @@ class SystemCertificatesView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/certificates/{type}")
+@CsmView._app_routes.view("/usl/v2/system/certificates/{type}")
 class SystemCertificatesByTypeView(_SecuredView):
     """
     System certificates view by type.
@@ -371,6 +382,7 @@ class SystemCertificatesByTypeView(_SecuredView):
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmAuth.public
 @CsmView._app_routes.view("/usl/v1/system/network/interfaces")
+@CsmView._app_routes.view("/usl/v2/system/network/interfaces")
 class NetworkInterfacesView(_SecuredView):
     """
     Network interfaces list view.

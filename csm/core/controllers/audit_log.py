@@ -27,6 +27,7 @@ class AuditLogRangeQuerySchema(Schema):
     end_date = fields.Int(required=True)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
+@CsmView._app_routes.view("/api/v2/auditlogs/show/{component}")
 class AuditLogShowView(CsmView):
     def __init__(self, request):
         super(AuditLogShowView, self).__init__(request)
@@ -52,6 +53,7 @@ class AuditLogShowView(CsmView):
         return await self._service.get_by_range(component, start_date, end_date)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
+@CsmView._app_routes.view("/api/v2/auditlogs/download/{component}")
 class AuditLogDownloadView(CsmView):
     def __init__(self, request):
         super(AuditLogDownloadView, self).__init__(request)

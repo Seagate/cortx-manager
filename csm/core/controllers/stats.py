@@ -21,6 +21,7 @@ from csm.common.permission_names import Resource, Action
 
 #@atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
+@CsmView._app_routes.view("/api/v2/stats/{panel}")
 class StatsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
@@ -58,6 +59,7 @@ class StatsView(CsmView):
                 interval, total_sample, unit, output_format, query)
 
 @CsmView._app_routes.view("/api/v1/stats")
+@CsmView._app_routes.view("/api/v2/stats")
 class StatsPanelListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
