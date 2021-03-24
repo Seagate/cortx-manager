@@ -109,7 +109,7 @@ class Prepare(Setup):
         except Exception as e:
             raise CsmSetupError("Network Validation failed.")
         return roaming_ip, data_nw_public_fqdn
-    
+
     @staticmethod
     def _set_db_host_addr(backend, addr):
         """
