@@ -157,15 +157,16 @@ class CsmRestApi(CsmApi, ABC):
         path = request.path
         method = request.method
         user_agent = request.headers.get('User-Agent')
-        return (
-            f'User:{user} '
-            f'Remote-IP:{remote_ip} '
-            f'Forwarded-For-IP:{forwarded_for_ip} '
-            f'Method:{method} '
-            f'Path:{path} '
-            f'User-Agent:{user_agent} '
-            f'RC:{response_code}'
-        )
+        entry = {
+            'user': user,
+            'remote_ip': remote_ip,
+            'forwarded_for_ip': forwarded_for_ip,
+            'method': method,
+            'path': path,
+            'user_agent': user_agent,
+            'response_code': response_code,
+        }
+        return json.dumps(entry)
 
     @staticmethod
     def process_audit_log(request, response_code):
