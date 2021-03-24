@@ -26,6 +26,10 @@ class AuditLogRangeQuerySchema(Schema):
     start_date = fields.Int(required=True)
     end_date = fields.Int(required=True)
 
+class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
+    limit = fields.Int(validate=validate.Range(min=1))
+    marker = fields.Int(validate=validate.Range(min=0))
+
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
 @CsmView._app_routes.view("/api/v2/auditlogs/show/{component}")
 class AuditLogShowView(CsmView):
@@ -41,7 +45,7 @@ class AuditLogShowView(CsmView):
     async def get(self):
         Log.debug("Handling audit log fetch request")
         component = self.request.match_info["component"]
-        audit_log = AuditLogRangeQuerySchema()
+        audit_log = AuditLogShowQuerySchema()
         try:
             request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
@@ -50,7 +54,10 @@ class AuditLogShowView(CsmView):
 
         start_date = request_data["start_date"]
         end_date = request_data["end_date"] 
-        return await self._service.get_by_range(component, start_date, end_date)
+        limit = request_data.get('limit')
+        marker = request_data.get('marker')
+        return await self._service.get_by_range(
+            component, start_date, end_date, limit=limit, marker=marker)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
 @CsmView._app_routes.view("/api/v2/auditlogs/download/{component}")

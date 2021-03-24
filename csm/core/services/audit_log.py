@@ -138,7 +138,14 @@ class AuditService(ApplicationService):
         except OSError as err:
             if err.errno != errno.EEXIST: raise
 
-    async def get_by_range(self, component: str, start_time: str, end_time: str):
+    async def get_by_range(
+        self,
+        component: str,
+        start_time: str,
+        end_time: str,
+        limit: Optional[int] = None,
+        marker: Optional[int] = None,
+    ):
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
         if not COMPONENT_MODEL_MAPPING.get(component, None):
@@ -146,8 +153,10 @@ class AuditService(ApplicationService):
                                                    COMPONENT_NOT_FOUND)
 
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
-        query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                   "Log>max_result_window"), 0)
+        max_result_window = int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>max_result_window"))
+        effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
+        effective_marker = marker if marker is not None else 0
+        query_limit = QueryLimits(effective_limit, effective_marker)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
         return [log.to_primitive() for log in audit_logs]
