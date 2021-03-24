@@ -21,7 +21,7 @@
       "type": "VM",
       "name": "srvnode-1",
       "hostname": "ssc-vm-2623.colo.seagate.com",
-      "cluster_id": "cluster_id",
+      "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
       },

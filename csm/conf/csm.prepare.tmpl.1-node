@@ -21,7 +21,7 @@
       "type": "VM",
       "name": "TMPL_SERVER_NAME",
       "hostname": "TMPL_SERVER_HOSTNAME",
-      "cluster_id": "cluster_id",
+      "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
       },

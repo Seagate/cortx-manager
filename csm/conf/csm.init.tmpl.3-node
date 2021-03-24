@@ -21,7 +21,7 @@
       "type": "VM",
       "name": "TMPL_SERVER_NAME-1",
       "hostname": "TMPL_SERVER_HOSTNAME-1",
-      "cluster_id": "cluster_id",
+      "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
       },
@@ -36,7 +36,7 @@
       "type": "VM",
       "name": "TMPL_SERVER_NAME-2",
       "hostname": "TMPL_SERVER_HOSTNAME-2",
-      "cluster_id": "cluster_id",
+      "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
       },
@@ -51,7 +51,7 @@
       "type": "VM",
       "name": "TMPL_SERVER_NAME-3",
       "hostname": "TMPL_SERVER_HOSTNAME-3",
-      "cluster_id": "cluster_id",
+      "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
       },
@@ -69,7 +69,7 @@
     }
   },
   "cluster": {
-    "cluster_id": {
+    "TMPL_CLUSTER_ID": {
       "network": {
         "management": {
           "virtual_host": "127.0.0.1"
