@@ -142,7 +142,12 @@ class CsmRestApi(CsmApi, ABC):
         return 'debug' in request.rel_url.query
 
     @staticmethod
-    def http_request_to_log_string(request):
+    def generate_audit_log_string(request, response_code):
+        if (getattr(request, "session", None) is not None
+                and getattr(request.session, "credentials", None) is not None):
+            user = request.session.credentials.user_id
+        else:
+            user = None
         remote_ip = request.remote
         forwarded_for_ip = str(request.headers.get('X-Forwarded-For')).split(',', 2)[0].strip()
         try:
@@ -153,27 +158,24 @@ class CsmRestApi(CsmApi, ABC):
         method = request.method
         user_agent = request.headers.get('User-Agent')
         return (
+            f'User:{user} '
             f'Remote-IP:{remote_ip} '
             f'Forwarded-For-IP:{forwarded_for_ip} '
-            f'Path:{path} '
             f'Method:{method} '
-            f'User-Agent:{user_agent}'
+            f'Path:{path} '
+            f'User-Agent:{user_agent} '
+            f'RC:{response_code}'
         )
 
     @staticmethod
-    def process_audit_log(resp, request, status):
+    def process_audit_log(request, response_code):
         url = request.path
         if (not request.app[const.USL_POLLING_LOG]
                 and url.startswith('/usl/')
                 and not url.endswith('/registerDevice')):
             return
-        audit = CsmRestApi.http_request_to_log_string(request)
-        if (getattr(request, "session", None) is not None
-                and getattr(request.session, "credentials", None) is not None):
-            Log.audit(f'User: {request.session.credentials.user_id} '
-                      f'{audit} RC: {status}')
-        else:
-            Log.audit(f'{audit} RC: {status}')
+        entry = CsmRestApi.generate_audit_log_string(request, response_code)
+        Log.audit(f'{entry}')
 
     @staticmethod
     def error_response(err: Exception, request) -> dict:
@@ -200,7 +202,7 @@ class CsmRestApi(CsmApi, ABC):
         else:
             resp["message"] = f'{str(err)}'
 
-        CsmRestApi.process_audit_log(resp, request, resp['error_code'])
+        CsmRestApi.process_audit_log(request, resp['error_code'])
         return resp
 
     @staticmethod
@@ -312,7 +314,6 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
-
         try:
             await CsmRestApi.check_for_unsupported_endpoint(request)
 
@@ -323,7 +324,7 @@ class CsmRestApi(CsmApi, ABC):
                 return file_resp
 
             if isinstance(resp, web.StreamResponse):
-                Log.audit(f'{CsmRestApi.http_request_to_log_string(request)} RC: {resp.status}')
+                CsmRestApi.process_audit_log(request, resp.status)
                 return resp
 
             status = 200
@@ -334,7 +335,7 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            CsmRestApi.process_audit_log(resp, request, status)
+            CsmRestApi.process_audit_log(request, status)
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
