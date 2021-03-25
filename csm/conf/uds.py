@@ -206,7 +206,10 @@ backend uds-backend
 
     @classmethod
     def remove_uds_config(cls):
-        rmtree(cls.UDS_CONFIG_DIR)
+        try:
+            rmtree(cls.UDS_CONFIG_DIR)
+        except FileNotFoundError:
+            pass
 
     @classmethod
     def apply(cls, uds_public_ip):
