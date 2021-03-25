@@ -16,7 +16,6 @@
 from typing import Dict
 
 from botocore.exceptions import ClientError
-from boto.s3.bucket import Bucket
 
 from cortx.utils.log import Log
 
