@@ -35,7 +35,7 @@
   },
   "storage_enclosure": {
     "enclosure_id": {
-      "type": "other"
+      "type": "virtual"
     }
   },
    "cluster": {

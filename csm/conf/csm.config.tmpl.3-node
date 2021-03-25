@@ -1,26 +1,23 @@
 {
-  "DEPLOYMENT": {
-    "mode": "dev"
-  },
   "cortx": {
     "software": {
       "csm": {
         "user": "csm",
-        "secret": "csm"
+        "secret": "TMPL_CSM_SECRET_KEY"
       },
       "openldap": {
         "sgiam": {
           "user": "sgiamadmin",
-          "secret": "ldapadmin"
+          "secret": "TMPL_SGIAM_SECRET_KEY"
         }
       }
     }
   },
   "server_node": {
-    "TMPL_MACHINE_ID-1": {
+    "TMPL_MACHINE_ID_1": {
       "type": "VM",
-      "name": "TMPL_SERVER_NAME-1",
-      "hostname": "TMPL_SERVER_HOSTNAME-1",
+      "name": "TMPL_SERVER_NAME_1",
+      "hostname": "TMPL_SERVER_HOSTNAME_1",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
@@ -32,10 +29,10 @@
         }
       }
     },
-    "TMPL_MACHINE_ID-2": {
+    "TMPL_MACHINE_ID_2": {
       "type": "VM",
-      "name": "TMPL_SERVER_NAME-2",
-      "hostname": "TMPL_SERVER_HOSTNAME-2",
+      "name": "TMPL_SERVER_NAME_2",
+      "hostname": "TMPL_SERVER_HOSTNAME_2",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
@@ -47,10 +44,10 @@
         }
       }
     },
-    "TMPL_MACHINE_ID-3": {
+    "TMPL_MACHINE_ID_3": {
       "type": "VM",
-      "name": "TMPL_SERVER_NAME-3",
-      "hostname": "TMPL_SERVER_HOSTNAME-3",
+      "name": "TMPL_SERVER_NAME_3",
+      "hostname": "TMPL_SERVER_HOSTNAME_3",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
         "enclosure_id": "enclosure_id"
@@ -65,7 +62,7 @@
   },
   "storage_enclosure": {
     "enclosure_id": {
-      "type": "other"
+      "type": "virtual"
     }
   },
   "cluster": {

@@ -1,17 +1,14 @@
 {
-  "DEPLOYMENT": {
-    "mode": "dev"
-  },
   "cortx": {
     "software": {
       "csm": {
         "user": "csm",
-        "secret": "csm"
+        "secret": "TMPL_CSM_SECRET_KEY"
       },
       "openldap": {
         "sgiam": {
           "user": "sgiamadmin",
-          "secret": "ldapadmin"
+          "secret": "TMPL_SGIAM_SECRET_KEY"
         }
       }
     }
@@ -35,7 +32,7 @@
   },
   "storage_enclosure": {
     "enclosure_id": {
-      "type": "other"
+      "type": "virtual"
     }
   }
 }
