@@ -21,7 +21,6 @@ from botocore.awsrequest import AWSRequest
 from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
 from functools import partial
-from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 import ssl
 from typing import Any, Callable, Dict, List, Tuple, Optional, Union
@@ -113,10 +112,19 @@ class BaseClient:
         headers['host'] = self._host
         payload = params
         payload['Action'] = action
-        aws_request = AWSRequest(method=verb, url='/', data=payload, headers=headers)
-        creds = self._session.get_credentials().get_frozen_credentials()
-        SigV4Auth(creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
-        headers = dict(aws_request.headers)
+        try:
+            creds = self._session.get_credentials().get_frozen_credentials()
+        except AttributeError:
+            msg = (
+                f'AWS credentials are missing for the session.\n'
+                f'Request for {action} will be sent unsigned.'
+            )
+            Log.warn(msg)
+            creds = None
+        if creds:
+            aws_request = AWSRequest(method=verb, url='/', data=payload, headers=headers)
+            SigV4Auth(creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
+            headers = dict(aws_request.headers)
         # Let all the HTTP client exceptions propagate as is
         async with ClientSession() as http_session:
             async with http_session.request(method=verb, headers=headers, data=payload,
