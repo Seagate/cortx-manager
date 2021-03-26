@@ -68,7 +68,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/alerts",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -160,7 +160,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/alerts_history",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -210,7 +210,7 @@
         "type": "rest",
         "method": "patch",
         "target": "/{version}/alerts/{alerts_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Alert Updated."
@@ -256,7 +256,7 @@
             "type": "rest",
             "method": "get",
             "target": "/{version}/alerts/{alert_uuid}/comments",
-            "version": "v1"
+            "version": "v2"
           },
           "output": {
             "table": {
@@ -299,7 +299,7 @@
             "type": "rest",
             "method": "post",
             "target": "/{version}/alerts/{alert_uuid}/comments",
-            "version": "v1"
+            "version": "v2"
           },
           "output": {
             "success": "Alert Comment Added."
