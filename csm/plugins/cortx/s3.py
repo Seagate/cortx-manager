@@ -15,10 +15,11 @@
 
 import asyncio
 from aiohttp import ClientSession
-from boto3.session import Session as Boto3Session
+import boto3
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.config import Config as Boto3Config
+from botocore.credentials import ReadOnlyCredentials
 from botocore.exceptions import ClientError
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
@@ -59,11 +60,11 @@ class BaseClient:
 
         self._loop = loop
         self._executor = ThreadPoolExecutor()
-        self._session = Boto3Session(
-            aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key,
-            aws_session_token=session_token, region_name=const.S3_DEFAULT_REGION)
-
-        resource_name = self.__class__.resource
+        # Empty credentials are possible for the "get temporary credentials" operation
+        if access_key_id and secret_access_key:
+            self._creds = ReadOnlyCredentials(access_key_id, secret_access_key, session_token)
+        else:
+            self._creds = None
         use_ssl = config.use_ssl
         scheme = 'https' if use_ssl else 'http'
         self._host = f'{config.host}:{config.port}'
@@ -73,17 +74,22 @@ class BaseClient:
         verify = config.ca_cert_file
         # Create SSL context for HTTP client that handles arbitrary IAM requests
         self._ssl_ctx = ssl.create_default_context(cafile=verify) if verify else False
-        boto3_config = None
-        if config.max_retries_num:
-            retries = {
-                'max_attempts': int(config.max_retries_num)
-            }
-            boto3_config = Boto3Config(retries=retries)
-        # Note: use_ssl is ignored if endpoint url is provided with scheme (e.g. https or http)
-        self._resource = self._session.resource(
-            resource_name, use_ssl=use_ssl,
-            verify=verify, endpoint_url=self._url, config=boto3_config
-        )
+        # Do not create high-level resource if credentials are not available
+        if self._creds:
+            boto3_config = None
+            if config.max_retries_num:
+                retries = {
+                    'max_attempts': int(config.max_retries_num)
+                }
+                boto3_config = Boto3Config(retries=retries)
+            resource_name = self.__class__.resource
+            # Note: use_ssl is ignored if endpoint url is provided with scheme (e.g. https or http)
+            self._resource = boto3.resource(
+                resource_name, aws_access_key_id=access_key_id,
+                aws_secret_access_key=secret_access_key, aws_session_token=session_token,
+                use_ssl=use_ssl, region_name=const.S3_DEFAULT_REGION,
+                verify=verify, endpoint_url=self._url, config=boto3_config
+            )
 
     async def _run_async(self, function: Callable[..., Any]) -> Any:
         """
@@ -112,18 +118,11 @@ class BaseClient:
         headers['host'] = self._host
         payload = params
         payload['Action'] = action
-        try:
-            creds = self._session.get_credentials().get_frozen_credentials()
-        except AttributeError:
-            msg = (
-                f'AWS credentials are missing for the session.\n'
-                f'Request for {action} will be sent unsigned.'
-            )
-            Log.warn(msg)
-            creds = None
-        if creds:
+
+        if self._creds:
             aws_request = AWSRequest(method=verb, url='/', data=payload, headers=headers)
-            SigV4Auth(creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
+            SigV4Auth(
+                self._creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
             headers = dict(aws_request.headers)
         # Let all the HTTP client exceptions propagate as is
         async with ClientSession() as http_session:
@@ -135,7 +134,7 @@ class BaseClient:
 
                 parsed_body = xmltodict.parse(
                     body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
-                Log.debug('%s responded with %s status', self._host, status)
+                Log.debug(f'{self._host} responded with {status}')
                 return (status, parsed_body)
 
     def _extract_element(
