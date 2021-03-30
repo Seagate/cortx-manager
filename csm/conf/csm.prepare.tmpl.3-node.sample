@@ -14,9 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 {
-  "DEPLOYMENT": {
-    "mode": "dev"
-  },
   "cortx": {
     "software": {
       "csm": {
