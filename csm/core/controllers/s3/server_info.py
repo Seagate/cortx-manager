@@ -38,7 +38,7 @@ class S3ServerInfoView(CsmView):
         """
         Log.debug(f"Handling list s3 buckets fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        schemas = self.request.rel_url.query.get("schemas", None)
+        schemas = self.request.rel_url.query.get("schemas")
         if schemas is not None:
             schemas = schemas.split(',')
         return await self._service.get_s3_server_info(schemas)
