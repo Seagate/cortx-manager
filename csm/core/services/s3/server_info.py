@@ -22,11 +22,15 @@ class S3ServerInfoService(ApplicationService):
     Service for acessing S3 server information
     """
 
-    async def get_s3_server_info(self):
+    async def get_s3_server_info(self, schemas):
         """
         Obtain information about S3 server in json format
         """
-        s3_urls = ServiceUrls.get_s3_uris()
-        return {
-            "s3_urls": s3_urls
-        }
+        if schemas is not None:
+            s3_urls = [ServiceUrls.get_s3_uri(s) for s in schemas]
+        else:
+            s3_urls = [ServiceUrls.get_s3_uri(s) for s in ('http', 'https', 's3')]
+        if s3_urls is not None:
+            return {
+                "s3_urls": s3_urls
+            }

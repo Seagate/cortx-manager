@@ -66,7 +66,7 @@ class ServiceUrls:
 
         :returns: List of S3 server URIs.
         """
-        return [ServiceUrls.get_s3_uri(s) for s in ('http', 'https')]
+        return [ServiceUrls.get_s3_uri(s) for s in ('http', 'https', 's3')]
 
     @staticmethod
     def get_bucket_url(bucket_name: str, scheme: str) -> str:
