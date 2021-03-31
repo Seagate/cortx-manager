@@ -18,7 +18,6 @@ import time
 
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
-from boto.s3.bucket import Bucket
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -135,7 +134,7 @@ class UslService(ApplicationService):
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
         return uuid5(self._device_uuid, bucket_name)
 
-    async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
+    async def _format_bucket_as_volume(self, bucket) -> Volume:
         bucket_name = bucket.name
         volume_name = await self._get_volume_name(bucket_name)
         device_uuid = self._device_uuid
