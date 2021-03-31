@@ -26,6 +26,8 @@ class S3ServerInfoService(ApplicationService):
     async def get_s3_server_info(self, schemas):
         """
         Obtain information about S3 server in json format
+        :param schemas: List of supported schemas for s3_server_info eg. http,https,s3
+        :returns: s3_urls in json format based on the provided schemas
         """
         supported_schemas = ServiceUrls.get_s3_supported_schemas()
         if schemas is not None:
