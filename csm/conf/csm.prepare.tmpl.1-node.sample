@@ -18,12 +18,12 @@
     "software": {
       "csm": {
         "user": "csm",
-        "secret": "csm"
+        "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
       },
       "openldap": {
         "sgiam": {
           "user": "sgiamadmin",
-          "secret": "ldapadmin"
+          "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
         }
       }
     }
