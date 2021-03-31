@@ -41,4 +41,4 @@ class S3ServerInfoView(CsmView):
         schemas = self.request.rel_url.query.get("schemas")
         if schemas is not None:
             schemas = schemas.split(',')
-        return await self._service.get_s3_server_info(schemas)
+        return self._service.get_s3_server_info(schemas)

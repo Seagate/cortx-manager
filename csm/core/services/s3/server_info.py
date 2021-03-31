@@ -23,7 +23,7 @@ class S3ServerInfoService(ApplicationService):
     Service for acessing S3 server information
     """
 
-    async def get_s3_server_info(self, schemas):
+    def get_s3_server_info(self, schemas):
         """
         Obtain information about S3 server in json format
         :param schemas: List of supported schemas for s3_server_info eg. http,https,s3
