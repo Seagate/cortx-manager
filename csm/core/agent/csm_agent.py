@@ -73,12 +73,12 @@ class CsmAgent:
             os.remove(f)
 
         #Initializing MessageBus
-        message_bus = None
-        try:
-            #MessageBus needs to be initialized once
-            message_bus = MessageBus()
-        except MessageBusError as ex:
-            Log.error(f"Error occured while initializing MessageBus. {ex}")
+        #message_bus = None
+        #try:
+         #   #MessageBus needs to be initialized once
+         #   message_bus = MessageBus()
+        #except MessageBusError as ex:
+        #    Log.error(f"Error occured while initializing MessageBus. {ex}")
 
         # Alert configuration
         alerts_repository = AlertRepository(db)
