@@ -290,7 +290,6 @@ DURABLE_ID = 'durable_id'
 NODE_RESPONSE = 'node_response'
 FETCH_TIME = 'fetch_time'
 HOST_ID = 'host_id'
-HOST_NAME = "host_name"
 CREATED_TIME = 'created_time'
 FAULT_HEALTH = 'Fault'
 

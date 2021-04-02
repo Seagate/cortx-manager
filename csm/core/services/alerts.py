@@ -226,7 +226,7 @@ class AlertRepository(IAlertStorage):
 
     def set_hostname_in_alert(self, alert):
         if alert and alert.get(const.HOST_ID):
-                alert[const.HOST_NAME] = self.hostname_nodeid_map.get(alert.get(const.HOST_ID),
+                alert[const.HOSTNAME] = self.hostname_nodeid_map.get(alert.get(const.HOST_ID),
                                                 alert.get(const.HOST_ID))
         return alert
 
@@ -279,7 +279,7 @@ class AlertRepository(IAlertStorage):
             False  #show_active
         )
         combined_alert_list.extend(resolved_alerts_list)
-        return [self.set_hostname_in_alert(alert.to_primitive_filter_empty) for alert in combined_alert_list if not alert.module_type == const.IEM]
+        return [self.set_hostname_in_alert(alert.to_primitive_filter_empty()) for alert in combined_alert_list if not alert.module_type == const.IEM]
 
 class AlertsAppService(ApplicationService):
     """
