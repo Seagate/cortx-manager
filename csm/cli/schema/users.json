@@ -71,7 +71,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/csm/users",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -135,7 +135,7 @@
         "type": "rest",
         "method": "post",
         "target": "/{version}/csm/users",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "User created"
@@ -165,7 +165,7 @@
         "type": "rest",
         "method": "delete",
         "target": "/{version}/csm/users/{username}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "User deleted"
@@ -212,7 +212,7 @@
         "type": "rest",
         "method": "patch",
         "target": "/{version}/csm/users/{user_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Password Updated."
@@ -269,7 +269,7 @@
       "type": "rest",
       "method": "patch",
       "target": "/{version}/csm/users/{user_id}",
-      "version": "v1"
+      "version": "v2"
       },
       "output": {
       "success": "User information updated."

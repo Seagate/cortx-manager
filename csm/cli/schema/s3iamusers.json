@@ -32,7 +32,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/iam_users",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -91,7 +91,7 @@
         "type": "rest",
         "method": "post",
         "target": "/{version}/iam_users",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -149,7 +149,7 @@
         "type": "rest",
         "method": "patch",
         "target": "/{version}/iam_users/{user_name}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table":{
@@ -182,7 +182,7 @@
         "type": "rest",
         "method": "delete",
         "target": "/{version}/iam_users/{user_name}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "IAM User Deleted."
