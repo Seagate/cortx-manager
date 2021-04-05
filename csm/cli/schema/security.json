@@ -31,7 +31,7 @@
           "type": "rest",
           "method": "get",
           "target": "/{version}/tls/bundle/details",
-          "version": "v1"
+          "version": "v2"
         }
       }
     ]

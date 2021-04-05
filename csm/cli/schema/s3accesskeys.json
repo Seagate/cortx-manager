@@ -40,7 +40,7 @@
       "type":"rest",
         "method": "get",
         "target": "/{version}/s3/access_keys",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table":{
@@ -90,7 +90,7 @@
         "type": "rest",
         "method": "post",
         "target": "/{version}/s3/access_keys",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table":{
@@ -132,7 +132,7 @@
       "type": "rest",
         "method": "delete",
         "target": "/{version}/s3/access_keys/{access_key_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Access Key Deleted."
@@ -176,7 +176,7 @@
       "type": "rest",
         "method": "patch",
         "target": "/{version}/s3/access_keys/{access_key_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Access Key updated."
