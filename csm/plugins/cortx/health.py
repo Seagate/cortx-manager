@@ -37,10 +37,10 @@ class HealthPlugin(CsmPlugin):
     listening for the response.
     """
 
-    def __init__(self, message_bus):
+    def __init__(self):
         super().__init__()
         try:
-            self.comm_client = MessageBusComm(message_bus)
+            self.comm_client = MessageBusComm()
             self.health_callback = None
             self._health_mapping_dict = Json(const.HEALTH_MAPPING_TABLE).load()
             storage_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
