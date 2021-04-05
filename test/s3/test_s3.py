@@ -179,7 +179,7 @@ def test_delete_account(args):
     account = args['s3_account']
 
     iam_conf = S3ConnectionConfig()
-    iam_conf.host = "sati10b-m08.mero.colo.seagate.com"
+    iam_conf.host = args['S3']['host']
     iam_conf.port = 9080
 
     delete_client = s3_plugin.get_iam_client(account.access_key_id, account.secret_key_id, iam_conf)
@@ -254,5 +254,5 @@ test_list = [test_create_account,
              test_create_iam_user, test_create_list_delete_iam_user_credentials,
              test_delete_iam_user,
              test_create_list_delete_bucket,
-             test_delete_account,
-             test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket]
+             test_disallow_list_lyve_pilot_bucket, test_disallow_delete_lyve_pilot_bucket,
+             test_delete_account]
