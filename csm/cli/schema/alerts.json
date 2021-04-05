@@ -79,7 +79,8 @@
             "severity": "Severity",
             "state": "State",
             "acknowledged": "Acknowledged",
-            "resolved": "Resolved"
+            "resolved": "Resolved",
+            "hostname": "Hostname"
           },
           "filters": "alerts"
         }
@@ -172,7 +173,8 @@
             "state": "State",
             "acknowledged": "Acknowledged",
             "resolved": "Resolved",
-            "sensor_info": "Sensor Info"
+            "sensor_info": "Sensor Info",
+            "hostname": "Hostname"
           },
           "filters": "alerts"
         }
