@@ -118,7 +118,7 @@ class Setup:
         if self._is_env_dev:
             decrypt = False
         Log.info("Fetching CSM User Password from Conf Store.")
-        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_USER])
+        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_SECRET])
         if decrypt and csm_user_pass:
             Log.info("Decrypting CSM Password.")
             try:
