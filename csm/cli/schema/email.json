@@ -18,7 +18,7 @@
          "type": "rest",
         "method": "get",
         "target": "/{version}/",
-        "version": "v1"
+        "version": "v2"
       }
 
     }
