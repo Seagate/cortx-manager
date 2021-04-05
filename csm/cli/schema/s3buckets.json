@@ -31,7 +31,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/s3/bucket",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table": {
@@ -65,7 +65,7 @@
         "type": "rest",
         "method": "post",
         "target": "/{version}/s3/bucket",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Bucket created."
@@ -93,7 +93,7 @@
         "type": "rest",
         "method": "delete",
         "target": "/{version}/s3/bucket/{bucket_name}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Bucket deleted."

@@ -16,14 +16,13 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import MessageBusComm
-from cortx.utils.message_bus import MessageBus
 
 def init(args):
-    args['message_bus'] = MessageBus()
+    pass
 
 def test_send(args):
     ret = False
-    message_bus = MessageBusComm(args['message_bus'])
+    message_bus = MessageBusComm()
     if message_bus:
         message_bus.init(type='producer', producer_id='test_1', message_type='test-1', method='sync')
         messages = []

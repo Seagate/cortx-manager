@@ -108,10 +108,10 @@ class AlertPlugin(CsmPlugin):
     listening for the alerts.
     """
 
-    def __init__(self, message_bus):
+    def __init__(self):
         super().__init__()
         try:
-            self.comm_client = MessageBusComm(message_bus)
+            self.comm_client = MessageBusComm()
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
