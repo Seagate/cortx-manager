@@ -15,6 +15,7 @@
 
 import os
 import crypt
+import functools
 import pwd
 import grp
 import errno
@@ -142,6 +143,7 @@ class Setup:
             return False
 
     @staticmethod
+    @functools.lru_cache(maxsize=None)
     def get_data_from_provisioner_cli(method, output_format="json"):
         try:
             process = SimpleProcess(f"provisioner {method} --out={output_format}")
@@ -604,6 +606,18 @@ class Setup:
         except Exception as ex:
             raise CsmSetupError(f"Refresh Context: Resolving of alerts failed. {ex}")
 
+    @staticmethod
+    def _get_unsupported_features_from_schema():
+        schema = Json(const.UNSUPPORTED_FEATURE_SCHEMA).load()
+        all_unsupported_features = {
+            e[const.NAME]: e[const.UNSUPPORTED_FEATURES] for e in
+            schema[const.SETUP_TYPES]
+        }
+        setup_info = Setup.get_data_from_provisioner_cli(const.GET_SETUP_INFO)
+        storage_type = setup_info.get(const.STORAGE_TYPE)
+        unsupported_features = all_unsupported_features.get(storage_type)
+        return unsupported_features if unsupported_features is not None else []
+
     def set_unsupported_feature_info(self):
         """
         This method stores CSM unsupported features in two ways:
@@ -796,7 +810,9 @@ class CsmSetup(Setup):
             if not self._replacement_node_flag:
                 self.Config.create(args)
             self.Config.load()
-            UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
+            unsupported_features = Setup._get_unsupported_features_from_schema()
+            if const.LYVE_PILOT not in unsupported_features:
+                UDSConfigGenerator.apply(uds_public_ip=uds_public_ip)
         except Exception as e:
             Log.error(f"csm_setup config failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup config failed. Error: {e}")
@@ -863,7 +879,9 @@ class CsmSetup(Setup):
                 self._config_user_permission(reset=True)
                 self.Config.delete()
                 self._config_user(reset=True)
-                UDSConfigGenerator.delete()
+                unsupported_features = Setup._get_unsupported_features_from_schema()
+                if const.LYVE_PILOT not in unsupported_features:
+                    UDSConfigGenerator.delete()
             else:
                 self.Config.reset()
                 self.ConfigServer.restart()
