@@ -15,25 +15,29 @@
 
 csm:
     post_install:
-        cmd: /usr/bin/csm_setup post_install
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup post_install
+        args: --config $URL
+
+    prepare:
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup prepare
         args: --config $URL
 
     config:
-        cmd: /usr/bin/csm_setup config
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup config
         args: --config $URL
 
     init:
-        cmd: /usr/bin/csm_setup init
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup init
         args: --config $URL
 
     test:
-        cmd: /usr/bin/csm_setup test
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup test
         args:
             - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
     reset:
-        cmd: /usr/bin/csm_setup reset
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup reset
         args: --config $URL
 
 

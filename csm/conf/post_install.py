@@ -19,11 +19,14 @@ from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
+from cortx.utils.validator.error import VError
+from cortx.utils.validator.v_pkg import PkgV
 from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.common.payload import Text
 
 
 class PostInstall(Setup):
@@ -53,28 +56,53 @@ class PostInstall(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
+        self.validate_3rd_party_pkgs()
         self._config_user()
-        await self._set_unsupported_feature_info()
         self._configure_system_auto_restart()
         self._configure_service_user()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
+            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
+            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+            })
+        try:
+            self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
+
+    def validate_3rd_party_pkgs(self):
+        try:
+            Log.info("Validating third party rpms")
+            PkgV().validate("rpms", const.third_party_rpms)
+            Log.info("Valdating  3rd party Python Packages")
+            PkgV().validate("pip3s", self.fetch_python_pkgs())
+        except VError as ve:
+            Log.error(f"Failed at package Validation: {ve}")
+            raise CsmSetupError(f"Failed at package Validation: {ve}")
+
+    def fetch_python_pkgs(self):
+        try:
+            pkgs_data = Text(const.python_pkgs_req_path).load()
+            return {ele.split("==")[0]:ele.split("==")[1] for ele in pkgs_data.splitlines()}
+        except Exception as e:
+            Log.error(f"Failed to fetch python packages: {e}")
+            raise CsmSetupError("Failed to fetch python packages")
 
     def _config_user(self, reset=False):
         """
         Check user already exist and create if not exist
         If reset true then delete user
         """
-        Log.info("Check user already exist and create if not exist.")
         if not self._is_user_exist():
-            _password = self._fetch_csm_user_password(decrypt=True)
-            if not _password:
-                Log.error("CSM Password Not Available.")
-                raise CsmSetupError("CSM Password Not Available.")
-            Log.info("Creating CSM User.")
-            _password = crypt.crypt(_password, "22")
-            Setup._run_cmd((f"useradd -M -p {_password} "
-                            f"{self._user}"))
+            Log.info("Creating CSM User without password.")
+            Setup._run_cmd((f"useradd -M {self._user}"))
             Log.info("Adding CSM User to Wheel Group.")
             Setup._run_cmd(f"usermod -aG wheel {self._user}")
             Log.info("Enabling nologin for CSM user.")
@@ -82,64 +110,14 @@ class PostInstall(Setup):
             if not self._is_user_exist():
                 Log.error("Csm User Creation Failed.")
                 raise CsmSetupError(f"Unable to create {self._user} user")
+        else:
+            Log.info(f"User {self._user} already exist")
+
         if self._is_user_exist() and Setup._is_group_exist(
                 const.HA_CLIENT_GROUP):
-            Log.info("Add Csm User to HA-Client Group.")
+            Log.info(f"Add Csm User: {self._user} to HA-Client Group.")
             Setup._run_cmd(
                 f"usermod -a -G {const.HA_CLIENT_GROUP} {self._user}")
-
-    async def _set_unsupported_feature_info(self):
-        """
-        This method stores CSM unsupported features in two ways:
-        1. It first gets all the unsupported features lists of the components,
-        which CSM interacts with. Add all these features as CSM unsupported
-        features. The list of components, CSM interacts with, is
-        stored in csm.conf file. So if there is change in name of any
-        component, csm.conf file must be updated accordingly.
-        2. Installation/envioronment type and its mapping with CSM unsupported
-        features are maintained in unsupported_feature_schema. Based on the
-        installation/environment type received as argument, CSM unsupported
-        features can be stored.
-        """
-
-        def get_component_list_from_features_endpoints():
-            Log.info("Get Component List.")
-            feature_endpoints = Json(
-                const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-            component_list = [feature for v in feature_endpoints.values() for
-                              feature in v.get(const.DEPENDENT_ON)]
-            return list(set(component_list))
-        try:
-            Log.info("Set unsupported feature list to ES.")
-            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            components_list = get_component_list_from_features_endpoints()
-            unsupported_features_list = []
-            for component in components_list:
-                Log.info(f"Fetch Unsupported Features for {component}.")
-                unsupported = await unsupported_feature_instance.get_unsupported_features(
-                    component_name=component)
-                for feature in unsupported:
-                    unsupported_features_list.append(
-                        feature.get(const.FEATURE_NAME))
-            csm_unsupported_feature = Json(
-                const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
-                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
-                    unsupported_features_list.extend(
-                        setup[const.UNSUPPORTED_FEATURES])
-            unsupported_features_list = list(set(unsupported_features_list))
-            unique_unsupported_features_list = list(
-                filter(None, unsupported_features_list))
-            if unique_unsupported_features_list:
-                Log.info("Store Unsupported Features.")
-                await unsupported_feature_instance.store_unsupported_features(
-                    component_name=str(const.CSM_COMPONENT_NAME),
-                    features=unique_unsupported_features_list)
-            else:
-                Log.info("Unsupported features list is empty.")
-        except Exception as e_:
-            Log.error(f"Error in storing unsupported features: {e_}")
-            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     def _configure_system_auto_restart(self):
         """
