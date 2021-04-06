@@ -34,8 +34,11 @@ class S3ServerInfoView(CsmView):
         """
         GET REST implementation for S3 server information request
 
-        :return:
+        :return: s3_urls in json format
         """
         Log.debug(f"Handling list s3 buckets fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        return await self._service.get_s3_server_info()
+        schemas = self.request.rel_url.query.get("schemas")
+        if schemas is not None:
+            schemas = schemas.split(',')
+        return self._service.get_s3_server_info(schemas)
