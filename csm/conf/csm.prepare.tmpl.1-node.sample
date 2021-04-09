@@ -20,7 +20,7 @@
       "hostname": "ssc-vm-2623.colo.seagate.com",
       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
       "storage": {
-        "enclosure_id": "TMPL_ENCLOSURE_ID"
+        "enclosure_id": "encbdf68ed0efc148ce8d580aef3cc6420c"
       },
       "network": {
         "data": {
@@ -31,7 +31,7 @@
     }
   },
   "storage_enclosure": {
-    "TMPL_ENCLOSURE_ID": {
+    "encencbdf68ed0efc148ce8d580aef3cc6420c": {
       "type": "virtual"
     }
   }

@@ -10,12 +10,12 @@
     "bdf68ed0efc148ce8d580aef3cc6420c": {
       "type": "VM",
       "storage": {
-        "enclosure_id": "TMPL_ENCLOSURE_ID"
+        "enclosure_id": "encbdf68ed0efc148ce8d580aef3cc6420c"
       }
     }
   },
   "storage_enclosure": {
-    "TMPL_ENCLOSURE_ID": {
+    "encbdf68ed0efc148ce8d580aef3cc6420c": {
       "type": "virtual"
     }
   }
