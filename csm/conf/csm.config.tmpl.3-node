@@ -20,7 +20,7 @@
       "hostname": "TMPL_SERVER_HOSTNAME_1",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
-        "enclosure_id": "TMPL_ENCLOSURE_ID_3"
+        "enclosure_id": "TMPL_ENCLOSURE_ID_1"
       },
       "network": {
         "data": {
@@ -35,7 +35,7 @@
       "hostname": "TMPL_SERVER_HOSTNAME_2",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
-        "enclosure_id": "TMPL_ENCLOSURE_ID_3"
+        "enclosure_id": "TMPL_ENCLOSURE_ID_2"
       },
       "network": {
         "data": {
