@@ -228,6 +228,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
     chmod +x "$DIST/csm/lib/"*
     cd "$TMPDIR"
+
     # Create spec for pyinstaller
     [ "$TEST" == true ] && {
         mkdir -p "$DIST/csm/test"
