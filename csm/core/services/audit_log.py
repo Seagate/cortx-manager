@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
+import errno
 import re
 import time
 import os
@@ -136,7 +137,7 @@ class AuditService(ApplicationService):
             with tarfile.open(tar_file_name, "w:gz") as tar:
                 tar.add(txt_file_name, arcname=f'{file_name}.txt')
         except OSError as err:
-            if err.errno != errno.EEXIST: raise
+            if err.errno != errno.EEXIST: raise Exception(f"OS error occurred {err}")
 
     async def get_by_range(
         self,
