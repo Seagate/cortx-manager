@@ -32,7 +32,7 @@
         "type":"rest",
           "method": "get",
           "target": "/{version}/s3_accounts",
-          "version": "v1"
+          "version": "v2"
         },
         "output": {
           "table":{
@@ -96,7 +96,7 @@
           "type": "rest",
           "method": "post",
           "target": "/{version}/s3_accounts",
-          "version": "v1"
+          "version": "v2"
         },
         "output": {
           "table":{
@@ -158,7 +158,7 @@
           "type": "rest",
           "method": "patch",
           "target": "/{version}/s3_accounts/{account_name}",
-          "version": "v1"
+          "version": "v2"
         },
         "output": {
           "table":{
@@ -190,7 +190,7 @@
         "type": "rest",
           "method": "delete",
           "target": "/{version}/s3_accounts/{account_name}",
-          "version": "v1"
+          "version": "v2"
         },
         "output": {
           "success": "Account Deleted."

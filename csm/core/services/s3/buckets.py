@@ -16,7 +16,6 @@
 from typing import Dict
 
 from botocore.exceptions import ClientError
-from boto.s3.bucket import Bucket
 
 from cortx.utils.log import Log
 
@@ -45,8 +44,8 @@ class S3BucketService(S3BaseService):
         :return:
         """
         # TODO: it should be a common method for all services
-        return self._s3plugin.get_s3_client(access_key=s3_session.access_key,
-                                            secret_key=s3_session.secret_key,
+        return self._s3plugin.get_s3_client(access_key_id=s3_session.access_key,
+                                            secret_access_key=s3_session.secret_key,
                                             connection_config=self._s3_connection_config,
                                             session_token=s3_session.session_token)
 

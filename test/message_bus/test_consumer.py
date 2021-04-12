@@ -16,13 +16,12 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from csm.common.comm import MessageBusComm
-from cortx.utils.message_bus import MessageBus
 import time
 
 comm_client = None
 
 def init(args):
-    args['message_bus'] = MessageBusComm(MessageBus())
+    pass
 
 def callback_fn(message):
     print(f"Message received: {message}")
@@ -32,7 +31,7 @@ def callback_fn(message):
 def test_recv(args):
     global comm_client
     ret = False
-    message_bus = args['message_bus']
+    message_bus = MessageBusComm()
     comm_client = message_bus
     if message_bus:
         message_bus.init(type='consumer', consumer_id='csm',

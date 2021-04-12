@@ -603,10 +603,9 @@ class MessageBusComm(Comm):
     send or receive messages across any component on a node to any other
     component on the other nodes
     """
-    def __init__(self, message_bus):
+    def __init__(self):
         Comm.__init__(self)
         self.message_callback = None
-        self.message_bus = message_bus
         self.producer_id = None
         self.message_type = None
         self.consumer_id = None
@@ -621,7 +620,6 @@ class MessageBusComm(Comm):
         Initializes the producer and consumer communication.
         :param kwargs:
             type: producer|consumer|both(default)
-            message_bus: Instance of MessageBus class
             producer_id: String representing ID that uniquely identifies a producer
             messge_type : This is essentially equivalent to the queue/topic
             name, e.g. "sensor-key"
@@ -658,14 +656,14 @@ class MessageBusComm(Comm):
 
     def _initialize_producer(self):
         """ Initializing Producer """
-        self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
+        self.producer = MessageProducer(producer_id=self.producer_id,\
                 message_type=self.message_type, method=self.method)
         Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
                 f" Message Type: {self.message_type}, method: {self.method}")
 
     def _initialize_consumer(self):
         """ Initializing Consumer """
-        self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
+        self.consumer = MessageConsumer(consumer_id=self.consumer_id,\
                 consumer_group=self.consumer_group, message_types=self.consumer_message_types,
                 auto_ack=self.auto_ack, offset=self.offset)
         Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\

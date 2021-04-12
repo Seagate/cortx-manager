@@ -53,6 +53,7 @@ ALERTS_MSG_NON_SORTABLE_COLUMN = "alerts_non_sortable_column"
 class AlertRepository(IAlertStorage):
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
+        self.hostname_nodeid_map = Conf.get(const.CSM_GLOBAL_INDEX, const.MAINTENANCE)
 
     async def store(self, alert: AlertModel):
         await self.db(AlertModel).store(alert)
@@ -223,6 +224,12 @@ class AlertRepository(IAlertStorage):
         query = query.limit(limits.limit)
         return await self.db(AlertModel).get(query)
 
+    def set_hostname_in_alert(self, alert):
+        if alert and alert.get(const.HOST_ID):
+                alert[const.HOSTNAME] = self.hostname_nodeid_map.get(alert.get(const.HOST_ID),
+                                                alert.get(const.HOST_ID))
+        return alert
+
     async def fetch_alert_for_support_bundle(self):
         """
         Fetches New and Active alerts except for IEM alerts.
@@ -272,7 +279,7 @@ class AlertRepository(IAlertStorage):
             False  #show_active
         )
         combined_alert_list.extend(resolved_alerts_list)
-        return [alert.to_primitive_filter_empty() for alert in combined_alert_list if not alert.module_type == const.IEM]
+        return [self.set_hostname_in_alert(alert.to_primitive_filter_empty()) for alert in combined_alert_list if not alert.module_type == const.IEM]
 
 class AlertsAppService(ApplicationService):
     """
@@ -314,7 +321,7 @@ class AlertsAppService(ApplicationService):
                 alert.resolved = AlertModel.resolved.to_native(True)
 
         await self.repo.update(alert)
-        return alert.to_primitive()
+        return self.repo.set_hostname_in_alert(alert.to_primitive())
 
     @Log.trace_method(Log.DEBUG)
     async def add_comment_to_alert(self, alert_uuid: str, user_id: str, comment_text: str):
@@ -404,7 +411,7 @@ class AlertsAppService(ApplicationService):
             if alert.module_type == const.IEM:
                 alert.resolved = AlertModel.resolved.to_native(True)
             await self.repo.update(alert)
-            alerts.append(alert.to_primitive())
+            alerts.append(self.repo.set_hostname_in_alert(alert.to_primitive()))
 
         return alerts
 
@@ -467,7 +474,7 @@ class AlertsAppService(ApplicationService):
                 severity, resolved, acknowledged, show_active)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.to_primitive_filter_empty() for alert in alerts_list]
+            "alerts": [self.repo.set_hostname_in_alert(alert.to_primitive_filter_empty()) for alert in alerts_list]
         }
 
     async def fetch_alert(self, alert_id):
@@ -481,7 +488,7 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive_filter_empty()
+        return self.repo.set_hostname_in_alert(alert.to_primitive_filter_empty())
 
     async def fetch_all_alerts_history(self, duration, direction, sort_by, \
                                         offset: Optional[int] = None \
@@ -535,7 +542,7 @@ class AlertsAppService(ApplicationService):
         alerts_count = await self.repo.count_alerts_history(time_range, sensor_info)
         return {
             "total_records": alerts_count,
-            "alerts": [alert.to_primitive_filter_empty() for alert in alerts_list]
+            "alerts": [self.repo.set_hostname_in_alert(alert.to_primitive_filter_empty()) for alert in alerts_list]
         }
 
     async def fetch_alert_history(self, alert_id):
@@ -548,7 +555,7 @@ class AlertsAppService(ApplicationService):
         alert = await self.repo.retrieve_alert_history(alert_id)
         if not alert:
             raise CsmNotFoundError("Alert was not found", ALERTS_MSG_NOT_FOUND)
-        return alert.to_primitive_filter_empty()
+        return self.repo.set_hostname_in_alert(alert.to_primitive_filter_empty())
 
 class AlertEmailNotifier(Service):
     def __init__(self, email_sender_queue, config_manager: SystemConfigManager,

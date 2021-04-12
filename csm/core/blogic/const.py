@@ -33,6 +33,7 @@ CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
 CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
                           f'{CORTXCLI_CONF_FILE_NAME}')
 DB_CONF_FILE_NAME = 'database.yaml'
+DB_SOURCE_CONF_FILE_URL = f'yaml://{CSM_PATH}/conf/etc/csm/{DB_CONF_FILE_NAME}'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
@@ -128,6 +129,7 @@ TYPE_SSU = 'SSU'
 TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
+CORTX = 'cortx'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -156,8 +158,6 @@ CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 
 # Non root user
 NON_ROOT_USER = 'csm'
-CONF_STORE_USER_KEY = 'system>service-user>name'
-CONF_STORE_PASS_KEY = 'system>service-user>secret'
 NON_ROOT_USER_KEY = 'CSM>username'
 CSM = 'CSM'
 CSM_USER_HOME='/opt/seagate/cortx/csm/home/'
@@ -331,25 +331,58 @@ S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
 S3_LDAP_LOGIN = 'S3>ldap_login'
 S3_LDAP_PASSWORD = 'S3>ldap_password'
 
+S3_CREATE_ACCOUNT_RESP_ACCOUNT_PATH = (
+    'CreateAccountResponse', 'CreateAccountResult', 'Account')
+S3_CREATE_ACCOUNT_LOGIN_PROFILE_RESP_PROFILE_PATH = (
+    'CreateAccountLoginProfileResponse', 'CreateAccountLoginProfileResult', 'LoginProfile')
+S3_LIST_ACCOUNTS_RESP_ACCOUNTS_PATH = (
+     'ListAccountsResponse', 'ListAccountsResult', 'Accounts')
+S3_LIST_ACCOUNTS_RESP_ISTRUNCATED_PATH = (
+    'ListAccountsResponse', 'ListAccountsResult', 'IsTruncated')
+S3_LIST_ACCOUNTS_RESP_MARKER_PATH = (
+    'ListAccountsResponse', 'ListAccountsResult', 'Marker')
+S3_RESET_ACCOUNT_ACCESS_KEY_RESP_ACCOUNT_PATH = (
+    'ResetAccountAccessKeyResponse', 'ResetAccountAccessKeyResult', 'Account')
+S3_CREATE_USER_RESP_USER_PATH = (
+    'CreateUserResponse', 'CreateUserResult', 'User')
+S3_LIST_USERS_RESP_ISTRUNCATED_PATH = (
+    'ListUsersResponse', 'ListUsersResult', 'IsTruncated')
+S3_LIST_USERS_RESP_MARKER_PATH = (
+    'ListUsersResponse', 'ListUsersResult', 'Marker')
+S3_CREATE_ACCESS_KEY_RESP_KEY_PATH = (
+    'CreateAccessKeyResponse', 'CreateAccessKeyResult', 'AccessKey')
+S3_GET_ACCESS_KEY_LAST_RESP_KEY_PATH = (
+    'GetAccessKeyLastUsedResponse', 'GetAccessKeyLastUsedResult', 'AccessKeyLastUsed')
+S3_LIST_ACCESS_KEYS_RESP_KEYS_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'AccessKeyMetadata')
+S3_LIST_ACCESS_KEYS_RESP_ISTRUNCATED_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'IsTruncated')
+S3_LIST_ACCESS_KEYS_RESP_MARKER_PATH = (
+    'ListAccessKeysResponse', 'ListAccessKeysResult', 'Marker')
+S3_GET_TMP_CREDS_RESP_CREDS_PATH = (
+    'GetTempAuthCredentialsResponse', 'GetTempAuthCredentialsResult', 'AccessKey')
+
+
 S3_IAM_CMD_CREATE_ACCESS_KEY = 'CreateAccessKey'
-S3_IAM_CMD_CREATE_ACCESS_KEY_RESP = 'CreateAccessKeyResponse'
-S3_IAM_CMD_CREATE_ACCESS_KEY_RESULT = 'CreateAccessKeyResult'
 S3_IAM_CMD_UPDATE_ACCESS_KEY = 'UpdateAccessKey'
-S3_PARAM_ACCESS_KEY = 'AccessKey'
 S3_ACCESS_KEY_STATUSES = ['Active', 'Inactive']
 S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED = 'GetAccessKeyLastUsed'  # not supported by the S3 server yet
-S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESP = 'GetAccessKeyLastUsedResponse'
-S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED_RESULT = 'GetAccessKeyLastUsedResult'
-S3_PARAM_ACCESS_KEY_LAST_USED = 'AccessKeyLastUsed'
 S3_IAM_CMD_LIST_ACCESS_KEYS = 'ListAccessKeys'
-S3_IAM_CMD_LIST_ACCESS_KEYS_RESP = 'ListAccessKeysResponse'
-S3_IAM_CMD_LIST_ACCESS_KEYS_RESULT = 'ListAccessKeysResult'
-S3_PARAM_ACCESS_KEY_METADATA = 'AccessKeyMetadata'
-S3_PARAM_IS_TRUNCATED = 'IsTruncated'
 S3_PARAM_USER_NAME = 'UserName'
 S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'
 S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
+
+# S3/Boto3
+S3_DEFAULT_REGION = 'us-west2'
+S3_RESOURCE_NAME_IAM = 'iam'
+S3_RESOURCE_NAME_S3 = 's3'
+S3_DEFAULT_RETRIES_MODE = 'standard'
+S3_DEFAULT_REQUEST_HEADERS = {
+    'content-type': 'application/x-www-form-urlencoded',
+    'accept': 'text/plain',
+}
+S3_RESP_LIST_ITEM = 'member'
 
 # UDS/USL
 UDS_SERVER_DEFAULT_BASE_URL = 'http://localhost:5000'
@@ -438,6 +471,13 @@ IS_DHCP = 'is_dhcp'
 ROAMING_IP = "roaming_ip"
 PRIVATE_IP = "private_ip"
 LOCALHOST = "localhost"
+NETWORK = "network"
+DATA = "data"
+PUBLIC_FQDN = "public_fqdn"
+PRIVATE_FQDN = "private_fqdn"
+MANAGEMENT = "management"
+VIRTUAL_HOST = "virtual_host"
+PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
 SYSTEM_CONFIG_SERVICE = "system_config_service"
@@ -525,6 +565,14 @@ DECRYPTION_KEYS = {
     "CSM>password": "system"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
+SERVER_NODE = "server_node"
+ENCLOSURE_ID = "enclosure_id"
+SOFTWARE = "software"
+
+#Third party packages information
+python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
+third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
+
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
@@ -548,13 +596,12 @@ RET='ret'
 DEBUG='debug'
 NA='NA'
 GET_NODE_ID='get_node_id'
-GET_SETUP_INFO='cluster>{server-node}>node_type'
 NODE_TYPE="node_type"
+SGIAM = "sgiam"
 
 #Deployment Mode
 DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
-DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 DEV = 'dev'
 VM = 'VM'
 ENV_TYPE = 'env_type'
@@ -664,14 +711,22 @@ AUTO_ACK = 'auto_ack'
 OFFSET = 'offset'
 EARLIEST = 'earliest'
 TYPE = 'type'
+BOTH = 'both'
 PRODUCER = 'producer'
 CONSUMER = 'consumer'
 CONSUMER_CALLBACK = 'consumer_callback'
-BLOCKING = 'blocking'
-PRODUCER_ID_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>producer_id'
-MSG_TYPE_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>message_type'
-METHOD_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>method'
-CONSUMER_ID_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_id'
-CONSUMER_GROUP_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_group'
-CONSUER_MSG_TYPES_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_message_types'
-CONSUMER_OFFSET = 'MESSAGEBUS>CONSUMER>ALERTS>offset'
+
+#ConfStore Keys
+KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
+SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
+KEY_SERVER_NODE_INFO = "server_node_info_key"
+KEY_SERVER_NODE_TYPE = "server_node_type_key"
+KEY_ENCLOSURE_ID = "enclosure_id_key"
+KEY_CLUSTER_ID = "cluster_id_key"
+KEY_CSM_USER = "csm_user_key"
+KEY_CSM_SECRET = "csm_secret_key"
+KEY_S3_LDAP_USER = "openldap_s3_user_key"
+KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
+KEY_ROAMING_IP = "roaming_ip_key"
+KEY_HOSTNAME = "node_hostname_key"
+KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
