@@ -19,6 +19,8 @@ import errno
 import argparse
 import inspect
 import traceback
+import os
+import pathlib
 
 from csm.conf.usl import Usl
 from csm.conf.usl import UslSetupError
@@ -194,4 +196,6 @@ def main(argv: dict):
 
 
 if __name__ == '__main__':
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     sys.exit(main(sys.argv))
