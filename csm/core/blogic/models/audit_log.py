@@ -27,6 +27,7 @@ class CsmAuditLogModel(CsmModel):
     path = StringType()
     user_agent = StringType()
     response_code = StringType()
+    request_id = IntType()
 
 class S3AuditLogModel(CsmModel):
     """ Model for s3 audit logs """
