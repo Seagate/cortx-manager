@@ -58,6 +58,7 @@ PRODUCT=<PRODUCT>
     ln -sf $CSM_DIR/lib/csm_cleanup $CSM_DIR/bin/csm_cleanup
 
     cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
+    cp -R $CFG_DIR/etc/csm/ /etc/csm/
 }
 
 [ -d "${CSM_DIR}/test" ] && {
