@@ -157,7 +157,7 @@ class SupportBundle:
         """
         try:
             bundle_id = command.options.get("bundle_id", "")
-            conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
+            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
             db = DataBaseProvider(conf)
             repo = SupportBundleRepository(db)
             all_nodes_status = await repo.retrieve_all(bundle_id)
