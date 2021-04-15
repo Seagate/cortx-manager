@@ -562,7 +562,7 @@ USAGE_PERCENTAGE = 'usage_percentage'
 DECRYPTION_KEYS = {
     "CHANNEL>password": "sspl",
     "S3>ldap_password": "openldap",
-    "CSM>password": "system"
+    "CSM>password": "cortx"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
@@ -730,3 +730,4 @@ KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
 KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
+KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
