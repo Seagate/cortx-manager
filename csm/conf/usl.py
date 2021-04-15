@@ -16,6 +16,7 @@
 
 import traceback
 import os
+import pwd
 from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
@@ -171,8 +172,8 @@ class Usl:
     def config(self):
         """ Performs configurations. Raises exception on error """
         self.validate_cert_paths()
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key', 
-                Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["crt_path"]))
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path', 
+                Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["crt_path_key"]))
         Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt', 
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["domain_crt"]))
         Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key', 
@@ -187,6 +188,7 @@ class Usl:
     def init(self):
         """ Perform initialization. Raises exception on error """
         self._set_service_user()
+        self._config_user()
         cert_path = Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key')
         Usl._run_cmd(f"setfacl -R -m u:{self._user}:rwx {cert_path}")
         return 0
@@ -208,7 +210,6 @@ class Usl:
         This Function Creates the CSM Conf File on Required Location.
         :return:
         """
-        import pdb;pdb.set_trace()
         Log.info("Creating CSM Conf File on Required Location.")
         Conf.save(Usl.USL_GLOBAL_INDEX)
         os.makedirs("/etc/csm", exist_ok=True)
@@ -220,3 +221,33 @@ class Usl:
         :return:
         """
         self._user = Conf.get(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>username')
+
+    def _is_user_exist(self):
+        """
+        Check if user exists
+        """
+        try:
+            u = pwd.getpwnam(self._user)
+            self._uid = u.pw_uid
+            self._gid = u.pw_gid
+            return True
+        except KeyError as err:
+            return False
+
+    def _config_user(self):
+        """
+        Check user already exist and create if not exist
+        If reset true then delete user
+        """
+        if not self._is_user_exist():
+            Log.info("Creating CSM User without password.")
+            Usl._run_cmd((f"useradd -M {self._user}"))
+            Log.info("Adding CSM User to Wheel Group.")
+            Usl._run_cmd(f"usermod -aG wheel {self._user}")
+            Log.info("Enabling nologin for CSM user.")
+            Usl._run_cmd(f"usermod -s /sbin/nologin {self._user}")
+            if not self._is_user_exist():
+                Log.error("Csm User Creation Failed.")
+                raise UslSetupError(f"Unable to create {self._user} user")
+        else:
+            Log.info(f"User {self._user} already exist")

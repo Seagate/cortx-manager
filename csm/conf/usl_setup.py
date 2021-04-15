@@ -22,9 +22,6 @@ import traceback
 import os
 import pathlib
 
-from csm.conf.usl import Usl
-from csm.conf.usl import UslSetupError
-
 
 class Cmd:
     """ Setup Command """
@@ -185,17 +182,17 @@ def main(argv: dict):
         return ":PASS"
     except UslSetupError as e:
         sys.stderr.write("%s\n" % str(e))
-        Cmd.usage(argv[0])
         return e.rc()
 
     except Exception as e:
         sys.stderr.write("error: %s\n\n" % str(e))
         sys.stderr.write("%s\n" % traceback.format_exc())
-        Cmd.usage(argv[0])
         return errno.EINVAL
 
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
+    from csm.conf.usl import Usl
+    from csm.conf.usl import UslSetupError
     sys.exit(main(sys.argv))
