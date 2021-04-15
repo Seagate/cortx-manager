@@ -78,8 +78,12 @@ class CsmAgent:
         CsmRestApi.init(alerts_service)
 
         # settting usl polling
-        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log>usl_polling_log")
-        CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+        try:
+            Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
+            usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
+            CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+        except Exception as e:
+            Log.warn("USL configuration not loaded")
 
         # system status
         system_status_service = SystemStatusService()

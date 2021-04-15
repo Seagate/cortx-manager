@@ -107,9 +107,9 @@ class UslService(ApplicationService):
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
-        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
+        cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
         if Options.debug and cluster_id is None:
-            cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG>default_cluster_id')
+            cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'DEBUG>default_cluster_id')
         device_uuid = cluster_id
         if device_uuid is None:
             reason = 'Could not obtain cluster ID from CSM configuration file'
@@ -268,7 +268,7 @@ class UslService(ApplicationService):
 
         :return: Dictionary containing SaaS URL
         """
-        saas_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>saas_url')
+        saas_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>saas_url')
         if saas_url is None:
             reason = 'Lyve Pilot SaaS URL is not configured'
             Log.debug(reason)
@@ -289,7 +289,7 @@ class UslService(ApplicationService):
 
         :param registration_info: UDS registration info
         """
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
             validate_url = URL(schemes=('http', 'https'))
             validate_url(uds_url)
@@ -350,7 +350,7 @@ class UslService(ApplicationService):
             raise e
 
     async def get_register_device(self) -> None:
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
         # FIXME add relevant certificates to SSL context instead of disabling validation
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:
