@@ -143,7 +143,7 @@ class ComponentsBundle:
                                          ERROR, bundle_id, node_name, comment)
             return None
         # Path Location for creating Support Bundle.
-        path = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX,
+        path = os.path.join(Conf.get(const.CORTXCLI_GLOBAL_INDEX,
                                      f"{const.SUPPORT_BUNDLE}>{const.SB_BUNDLE_PATH}"))
         if os.path.isdir(path):
             try:
@@ -180,7 +180,7 @@ class ComponentsBundle:
                     thread_obj.start()
                     Log.debug(f"Started thread -> {thread_obj.ident}  Component -> {each_component}")
                     threads.append(thread_obj)
-        directory_path = Conf.get(const.CSM_GLOBAL_INDEX,
+        directory_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
                                   f"{const.SUPPORT_BUNDLE}>{const.SB_BUNDLE_PATH}")
         tar_file_name = os.path.join(directory_path,
                                      f"{bundle_id}_{node_name}.tar.gz")
@@ -205,7 +205,7 @@ class ComponentsBundle:
             return None
 
         Log.debug(f'Summary file created')
-        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
+        symlink_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
             f"{const.SUPPORT_BUNDLE}>{const.SB_SYMLINK_PATH}")
         if os.path.exists(symlink_path):
             try:
