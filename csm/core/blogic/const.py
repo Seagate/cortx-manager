@@ -562,9 +562,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL>password": "sspl",
-    "S3>ldap_password": "openldap",
-    "CSM>password": "system"
+    "S3>ldap_password": "S3>password_decryption_key",
+    "CSM>password": "CSM>password_decryption_key"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
@@ -606,6 +605,7 @@ DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
 DEV = 'dev'
 VM = 'VM'
+VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
 
 # System config list
@@ -732,3 +732,4 @@ KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
 KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
+KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"

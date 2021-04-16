@@ -75,7 +75,7 @@ class Setup:
         """
         self._get_setup_info()
         self._set_service_user()
-        if self._setup_info[const.NODE_TYPE] == const.VM:
+        if self._setup_info[const.NODE_TYPE] in [const.VM, const.VIRTUAL]:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
 
@@ -123,7 +123,8 @@ class Setup:
             Log.info("Decrypting CSM Password.")
             try:
                 cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-                cipher_key = Cipher.generate_key(cluster_id, "system")
+                cipher_key = Cipher.generate_key(cluster_id,
+                            Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password_decryption_key")
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
                 return None
