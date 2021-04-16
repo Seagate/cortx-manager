@@ -145,7 +145,7 @@ class AuditService(ApplicationService):
         start_time: str,
         end_time: str,
         limit: Optional[int] = None,
-        marker: Optional[int] = None,
+        offset: Optional[int] = None,
     ):
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
@@ -156,7 +156,7 @@ class AuditService(ApplicationService):
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
         max_result_window = int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>max_result_window"))
         effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
-        effective_marker = marker if marker is not None else 0
+        effective_marker = offset if offset is not None else 0
         query_limit = QueryLimits(effective_limit, effective_marker)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
