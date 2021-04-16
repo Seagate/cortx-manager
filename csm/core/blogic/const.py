@@ -604,6 +604,7 @@ DEPLOYMENT = 'DEPLOYMENT'
 MODE = 'mode'
 DEV = 'dev'
 VM = 'VM'
+VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
 
 # System config list

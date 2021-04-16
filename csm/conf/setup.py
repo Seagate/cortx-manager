@@ -75,7 +75,7 @@ class Setup:
         """
         self._get_setup_info()
         self._set_service_user()
-        if self._setup_info[const.NODE_TYPE] == const.VM:
+        if self._setup_info[const.NODE_TYPE] in [const.VM, const.VIRTUAL]:
             Log.info("Running Csm Setup for VM Environment Mode.")
             self._is_env_vm = True
 
