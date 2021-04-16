@@ -124,7 +124,7 @@ class Setup:
             try:
                 cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
                 cipher_key = Cipher.generate_key(cluster_id,
-                            Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password_decryption_key")
+                            Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password_decryption_key"))
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
                 return None
