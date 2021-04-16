@@ -52,9 +52,10 @@ class Prepare(Setup):
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
+        self._set_secret_string_for_decryption()
         self._set_cluster_id()
-        roaming_ip, data_nw_public_fqdn = self._get_data_nw_info()
-        Prepare._set_db_host_addr('consul', roaming_ip)
+        data_nw_private_fqdn, data_nw_public_fqdn = self._get_data_nw_info()
+        Prepare._set_db_host_addr('consul', data_nw_private_fqdn)
         Prepare._set_db_host_addr('es', data_nw_public_fqdn)
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
@@ -68,7 +69,7 @@ class Prepare(Setup):
             const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
             const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
             const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_ROAMING_IP:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.ROAMING_IP}",
+            const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
             const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
             const.KEY_HOSTNAME:f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}",
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
@@ -79,6 +80,17 @@ class Prepare(Setup):
             })
 
         self._validate_conf_store_keys(const.CONSUMER_INDEX)
+
+    def _set_secret_string_for_decryption(self):
+        '''
+        This will be the root of csm secret key
+        eg: for "cortx>software>csm>secret" root is "cortx"
+        '''
+        Log.info("Set decryption keys for CSM and S3")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
+                    self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
+                    self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
@@ -102,13 +114,13 @@ class Prepare(Setup):
         :param machine_id: Minion id.
         """
         Log.info("Fetching data N/W info.")
-        roaming_ip = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROAMING_IP])
+        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
         data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
         try:
-            NetworkV().validate('connectivity', [roaming_ip, data_nw_public_fqdn])
+            NetworkV().validate('connectivity', [data_nw_private_fqdn, data_nw_public_fqdn])
         except Exception as e:
             raise CsmSetupError("Network Validation failed.")
-        return roaming_ip, data_nw_public_fqdn
+        return data_nw_private_fqdn, data_nw_public_fqdn
 
     @staticmethod
     def _set_db_host_addr(backend, addr):
