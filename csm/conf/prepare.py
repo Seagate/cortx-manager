@@ -83,7 +83,7 @@ class Prepare(Setup):
 
     def _set_secret_string_for_decryption(self):
         '''
-        This will be the root of csm secret key 
+        This will be the root of csm secret key
         eg: for "cortx>software>csm>secret" root is "cortx"
         '''
         Log.info("Set decryption keys for CSM and S3")
