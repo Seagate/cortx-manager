@@ -55,21 +55,23 @@ class SupportBundle:
     @staticmethod
     async def fetch_host_from_cluster():
         """
-        This Method is for reading hostnames, node_list information from cortxcli.conf.
+        This Method is for reading hostnames, node_list information from csm.conf.
         :return: hostnames : List of Hostname :type: List
         :return: node_list : : List of Node Name :type: List
         """
-        Log.info("reading hostnames, node_list information from cortxcli.conf.")
-        active_nodes = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
-                                     "node_list",[])
+        Log.info("reading hostnames, node_list information from csm.conf.")
+        node_hostname_map = dict()
+        mapping_dict = dict()
+        mapping_dict = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
+        node_hostname_map = mapping_dict.copy()
+        node_hostname_map.pop('shutdown_cron_time')
+        active_nodes = list(node_hostname_map.keys())
         if not active_nodes:
             response_msg = {
                 "message": "No active nodes found. Cluster file may not be valid"}
             return Response(output=response_msg,
                             rc=CSM_ERR_INVALID_VALUE), None
-        hostnames = []
-        for each_node in active_nodes:
-            hostnames.append(Conf.get(const.CORTXCLI_GLOBAL_INDEX,f"{each_node}>hostname"))
+        hostnames = list(node_hostname_map.values())
         return hostnames, active_nodes
 
     @staticmethod
@@ -135,7 +137,7 @@ class SupportBundle:
                 return Response(output = "Bundle Generation Failed.",
                                 rc = str(errno.ENOENT))
 
-        symlink_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
+        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}>{const.SB_SYMLINK_PATH}")
         display_string_len = len(bundle_id) + 4
         response_msg = (
@@ -231,7 +233,7 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
-        support_bundle_config = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
+        support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
                                          const.SUPPORT_BUNDLE)
         return Response(output = support_bundle_config,
                         rc = CSM_OPERATION_SUCESSFUL)

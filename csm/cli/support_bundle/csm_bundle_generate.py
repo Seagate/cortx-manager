@@ -41,12 +41,12 @@ class CSMBundle:
         :return:
         """
         # Read Config to Fetch Log File Path
-        csm_log_directory_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>log_path")
-        uds_log_directory_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>uds_log_path")
-        es_cluster_log_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>es_cluster_log_path")
-        es_gc_log_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>es_gc_log_path")
-        es_indexing_log_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>es_indexing_log_path")
-        es_search_log_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>es_search_log_path")
+        csm_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
+        uds_log_directory_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>uds_log_path")
+        es_cluster_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_cluster_log_path")
+        es_gc_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_gc_log_path")
+        es_indexing_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_indexing_log_path")
+        es_search_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>es_search_log_path")
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
@@ -58,7 +58,7 @@ class CSMBundle:
                                             es_indexing_log_path,
                                             es_search_log_path]}
         if component_name == "alerts":
-            alerts_filename = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
+            alerts_filename = Conf.get(const.CSM_GLOBAL_INDEX,
                                        "SUPPORT_BUNDLE>alerts_filename")
             # Fetch alerts for support bundle.
             alerts_data = await CSMBundle.fetch_and_save_alerts()
