@@ -52,6 +52,7 @@ class Prepare(Setup):
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
+        self._set_secret_string_for_decryption()
         self._set_cluster_id()
         data_nw_private_fqdn, data_nw_public_fqdn = self._get_data_nw_info()
         Prepare._set_db_host_addr('consul', data_nw_private_fqdn)
@@ -79,6 +80,17 @@ class Prepare(Setup):
             })
 
         self._validate_conf_store_keys(const.CONSUMER_INDEX)
+
+    def _set_secret_string_for_decryption(self):
+        '''
+        This will be the root of csm secret key 
+        eg: for "cortx>software>csm>secret" root is "cortx"
+        '''
+        Log.info("Set decryption keys for CSM and S3")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
+                    self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
+                    self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])

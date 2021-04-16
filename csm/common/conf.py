@@ -125,7 +125,8 @@ class Security:
             raise ClusterIdFetchError("Failed to get cluster id.")
         for each_key in const.DECRYPTION_KEYS:
             cipher_key = Cipher.generate_key(cluster_id,
-                                             const.DECRYPTION_KEYS[each_key])
+                                             conf_store.get(const.CSM_GLOBAL_INDEX, 
+                                             const.DECRYPTION_KEYS[each_key]))
             encrypted_value = conf_store.get(const.CSM_GLOBAL_INDEX, each_key)
             try:
                 decrypted_value = Cipher.decrypt(cipher_key,

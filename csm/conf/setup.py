@@ -123,7 +123,8 @@ class Setup:
             Log.info("Decrypting CSM Password.")
             try:
                 cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-                cipher_key = Cipher.generate_key(cluster_id, "cortx")
+                cipher_key = Cipher.generate_key(cluster_id, 
+                            Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM}>secret_string_key"))
             except KvError as error:
                 Log.error(f"Failed to Fetch Cluster Id. {error}")
                 return None

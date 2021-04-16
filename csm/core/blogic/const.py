@@ -560,9 +560,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "CHANNEL>password": "sspl",
-    "S3>ldap_password": "openldap",
-    "CSM>password": "cortx"
+    "S3>ldap_password": "S3>password_decryption_key",
+    "CSM>password": "CSM>password_decryption_key"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
