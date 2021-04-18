@@ -93,6 +93,7 @@ class UslService(ApplicationService):
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
+        Log.info("USL Service initialized")
 
     async def _get_system_friendly_name(self) -> str:
         entries = await self._storage(ApplianceName).get(Query())
@@ -107,6 +108,7 @@ class UslService(ApplicationService):
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
+        Log.info("Fetch cluster id from USL configuration")
         cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
         if Options.debug and cluster_id is None:
             cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'DEBUG>default_cluster_id')

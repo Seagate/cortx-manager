@@ -77,14 +77,6 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
 
-        # settting usl polling
-        try:
-            Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
-            usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
-            CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
-        except Exception as e:
-            Log.warn("USL configuration not loaded")
-
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
@@ -184,7 +176,14 @@ class CsmAgent:
 
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         # USL Service
-        CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+        try:
+            Log.info("Load USL Configurations")
+            Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
+            usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
+            CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+        except Exception as e:
+            Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
