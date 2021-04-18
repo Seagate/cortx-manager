@@ -86,7 +86,7 @@ class _SecuredView(_View):
 
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
-@CsmView._app_routes.view("/usl/v2/udx_saas")
+@CsmView._app_routes.view("/usl/v2/saas")
 class SaaSURLView(_View):
     """
     Lyve Pilot SaaS URL view.
