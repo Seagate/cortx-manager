@@ -121,9 +121,10 @@ class CsmRestApi(CsmApi, ABC):
     def update_roles_permission():
         # Remove lyve_pilot permission if it is not supported
         try:
+            _loop = asyncio.get_event_loop()
             roles = Json(const.ROLES_MANAGEMENT).load()
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            feature_supported = CsmRestApi._app._loop.run_until_complete(
+            feature_supported = _loop.run_until_complete(
                 unsupported_feature_instance.is_feature_supported(
                     const.CSM_COMPONENT_NAME, const.LYVE_PILOT))
 
