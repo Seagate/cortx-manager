@@ -372,6 +372,10 @@ S3_PARAM_USER_NAME = 'UserName'
 S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'
 S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
+USER_NAME = 'user_name'
+S3_ACCESS_KEYS = 'access_keys'
+S3_ACCESS_KEY_ID = 'access_key_id'
+ROOT = 'root'
 
 # S3/Boto3
 S3_DEFAULT_REGION = 'us-west2'

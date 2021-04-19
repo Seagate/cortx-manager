@@ -67,13 +67,13 @@ class S3AccessKeysView(S3AuthenticatedView):
             user_id = self.request.session.credentials.user_id
             tmp_keys = await login_service.get_temp_access_keys(user_id)
             resp = await self._service.list_access_keys(self._s3_session, **request_url_data)
-            filtered_keys = [k for k in resp['access_keys'] if k['access_key_id'] not in tmp_keys]
-            resp['access_keys'] = filtered_keys
+            filtered_keys = [k for k in resp[const.S3_ACCESS_KEYS] if k[const.S3_ACCESS_KEY_ID] not in tmp_keys]
+            resp[const.S3_ACCESS_KEYS] = filtered_keys
             # change the user_name, root to s3username in case of s3user request for accesskeys
-            if request_url_data.get('user_name') is None:
-                for key in resp['access_keys']:
-                    if key['user_name'] == "root":
-                        key['user_name'] = user_id
+            if request_url_data.get(const.USER_NAME) is None:
+                for key in resp[const.S3_ACCESS_KEYS]:
+                    if key[const.USER_NAME] == const.ROOT:
+                        key[const.USER_NAME] = user_id
             return resp
 
     @CsmAuth.permissions({Resource.S3ACCESSKEYS: {Action.CREATE}})
