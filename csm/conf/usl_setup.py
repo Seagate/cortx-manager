@@ -67,7 +67,7 @@ class Cmd:
     @staticmethod
     def _add_extended_args(parser):
         """ Override this method to add extended args """
-        pass
+        return 0
 
     @staticmethod
     def add_args(parser: str, cls: str, name: str):

@@ -99,7 +99,6 @@ class Usl:
                 "domain_key":"cortx>software>uds>domain_key",
                 "native_crt":"cortx>software>uds>native_crt",
                 "native_key":"cortx>software>uds>native_key",
-                
             })
 
         self._validate_conf_store_keys(Usl.CONSUMER_INDEX)
@@ -109,7 +108,7 @@ class Usl:
         if not keylist:
             keylist = list(self.conf_store_keys.values())
         if not isinstance(keylist, list):
-            raise UslSetupError(message="Keylist should be kind of list")
+            raise UslSetupError(rc=0, message="Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
 
@@ -146,7 +145,7 @@ class Usl:
         csm_user = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["csm_user_key"])
         Conf.set(Usl.USL_GLOBAL_INDEX, 'S3>ldap_login', sgiam_user)
         Conf.set(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>username', csm_user)
-        self.create() 
+        self.create()
         return 0
 
     def prepare(self):
@@ -161,7 +160,7 @@ class Usl:
         try:
             NetworkV().validate('connectivity', [virtual_host, data_nw_public_fqdn])
         except Exception as e:
-            raise UslSetupError(message="Network Validation failed.")
+            raise UslSetupError(rc=-1, message="Network Validation failed.")
         Conf.set(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>cluster_id', cluster_id)
         Conf.set(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>virtual_host', virtual_host)
         Conf.set(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>node_public_data_domain_name', data_nw_public_fqdn)
@@ -172,15 +171,15 @@ class Usl:
     def config(self):
         """ Performs configurations. Raises exception on error """
         self.validate_cert_paths()
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path', 
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path',
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["crt_path_key"]))
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt', 
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt',
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["domain_crt"]))
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key', 
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key',
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["domain_key"]))
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_crt', 
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_crt',
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["native_crt"]))
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_key', 
+        Conf.set(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_key',
                 Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["native_key"]))
         self.create()
         return 0
@@ -256,6 +255,6 @@ class Usl:
             Usl._run_cmd(f"usermod -s /sbin/nologin {self._user}")
             if not self._is_user_exist():
                 Log.error("Csm User Creation Failed.")
-                raise UslSetupError(f"Unable to create {self._user} user")
+                raise UslSetupError(rc=-1, message=f"Unable to create {self._user} user")
         else:
             Log.info(f"User {self._user} already exist")
