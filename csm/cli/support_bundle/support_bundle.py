@@ -53,24 +53,29 @@ class SupportBundle:
         return provisioner
 
     @staticmethod
-    async def fetch_host_from_cluster():
+    async def fetch_active_nodes_hosts():
         """
-        This Method is for reading hostnames, node_list information from csm.conf.
+        This Method is for reading hostnames, node_list information.
         :return: hostnames : List of Hostname :type: List
         :return: node_list : : List of Node Name :type: List
         """
-        Log.info("reading hostnames, node_list information from csm.conf.")
+        Log.info("reading hostnames, node_list information")
         node_hostname_map = dict()
         mapping_dict = dict()
         mapping_dict = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
-        node_hostname_map = mapping_dict.copy()
-        node_hostname_map.pop('shutdown_cron_time')
-        active_nodes = list(node_hostname_map.keys())
-        if not active_nodes:
+        if not mapping_dict:
             response_msg = {
-                "message": "No active nodes found. Cluster file may not be valid"}
+                "message": "No MAINTENANCE dictionary found. csm.conf file may not be valid"}
             return Response(output=response_msg,
                             rc=CSM_ERR_INVALID_VALUE), None
+        node_hostname_map = mapping_dict.copy()
+        node_hostname_map.pop(const.SHUTDOWN_CRON_TIME)
+        if not node_hostname_map:
+            response_msg = {
+                "message": "No node_hostname_map found. csm.conf file may not be valid"}
+            return Response(output=response_msg,
+                            rc=CSM_ERR_INVALID_VALUE), None
+        active_nodes = list(node_hostname_map.keys())
         hostnames = list(node_hostname_map.values())
         return hostnames, active_nodes
 
@@ -118,7 +123,7 @@ class SupportBundle:
         comp_list = SupportBundle.get_components(components)
 
         # Get HostNames and Node Names.
-        hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
+        hostnames, node_list = await SupportBundle.fetch_active_nodes_hosts()
         if not isinstance(hostnames, list):
             return hostnames
 
@@ -217,7 +222,7 @@ class SupportBundle:
         ftp_details = await SupportBundle.fetch_ftp_data(ftp_details)
         conf_file_data[const.SUPPORT_BUNDLE] = ftp_details
         Yaml(csm_conf_file_name).dump(conf_file_data)
-        hostnames, node_list = await SupportBundle.fetch_host_from_cluster()
+        hostnames, node_list = await SupportBundle.fetch_active_nodes_hosts()
         if not isinstance(hostnames, list):
             return hostnames
         for hostname in hostnames:
