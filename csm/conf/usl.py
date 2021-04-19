@@ -190,7 +190,15 @@ class Usl:
         self._set_service_user()
         self._config_user()
         cert_path = Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key')
-        Usl._run_cmd(f"setfacl -R -m u:{self._user}:rwx {cert_path}")
+        Usl._run_cmd(f"chmod 700 {cert_path}")
+        for each_cert in [
+            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt'),
+            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key'),
+            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_crt'),
+            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_key')
+        ]:
+            Usl._run_cmd(f"chmod 600 {cert_path}/{each_cert}")
+            Usl._run_cmd(f"chown {self._user}:{self._user} {cert_path}/{each_cert}")
         return 0
 
     def test(self, plan):
