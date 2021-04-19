@@ -3,35 +3,35 @@
     "software": {
       "csm": {
         "user": "csm",
-        "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
+        "secret": "gAAAAABgeRq9FgDzEC1D2MbSEdrZwDwydryjcoYvUN4cjSBYG7rB0u4RwSxXhvFYieDphtfA_sPLW9Lqj3Kg2z3mZZAPRIx3tQ=="
       },
       "openldap": {
         "sgiam": {
           "user": "sgiamadmin",
-          "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
+          "secret": "gAAAAABgeRq9FgDzEC1D2MbSEdrZwDwydryjcoYvUN4cjSBYG7rB0u4RwSxXhvFYieDphtfA_sPLW9Lqj3Kg2z3mZZAPRIx3tQ=="
         }
       }
     }
   },
   "server_node": {
     "bdf68ed0efc148ce8d580aef3cc6420c": {
-      "type": "VM",
+      "type": "virtual",
       "name": "srvnode-1",
       "hostname": "ssc-vm-2623.colo.seagate.com",
       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "encbdf68ed0efc148ce8d580aef3cc6420c"
       },
       "network": {
         "data": {
-          "roaming_ip": "127.0.0.1",
-          "public_fqdn": "localhost"
+          "private_fqdn": "127.0.0.1",
+          "public_fqdn": "127.0.0.1"
         }
       }
     }
   },
   "storage_enclosure": {
-    "enclosure_id": {
+    "encbdf68ed0efc148ce8d580aef3cc6420c": {
       "type": "virtual"
     }
   },
