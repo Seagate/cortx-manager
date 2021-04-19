@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
+import errno
 import re
 import time
 import os
@@ -36,21 +37,28 @@ from csm.common.process import SimpleProcess
 
 # mapping of component with model, field for
 # range queires and log format
-COMPONENT_MODEL_MAPPING = { "csm":
-                            { "model" : CsmAuditLogModel,
-                              "field" : CsmAuditLogModel.timestamp,
-                              "format" : "{message}"
-                            },
-                            "s3":
-                            { "model" : S3AuditLogModel,
-                              "field" : S3AuditLogModel.timestamp,
-                              "format" : ("{bucket_owner} {bucket} {time}"
-      "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
-      "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
-      "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
-      "{signature_version} {cipher_suite} {authentication_type} {host_header}")
-                            }
-                          }
+COMPONENT_MODEL_MAPPING = {
+    "csm": {
+        "model" : CsmAuditLogModel,
+        "field" : CsmAuditLogModel.timestamp,
+        "format" : (
+            "{timestamp} {user} {remote_ip} {forwarded_for_ip} {method} {path} {user_agent} "
+            "{response_code} {request_id}"
+        ),
+    },
+    "s3": {
+        "model" : S3AuditLogModel,
+        "field" : S3AuditLogModel.timestamp,
+        "format" : (
+            "{bucket_owner} {bucket} {time}"
+            "{remote_ip} {requester} {request_id} {operation} {key} {request_uri}"
+            "{http_status} {error_code} {bytes_sent} {object_size} {total_time}"
+            "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
+            "{signature_version} {cipher_suite} {authentication_type} {host_header}"
+        )
+    }
+}
+
 COMPONENT_NOT_FOUND = "no_audit_log_for_component"
 
 class AuditLogManager():
@@ -129,9 +137,16 @@ class AuditService(ApplicationService):
             with tarfile.open(tar_file_name, "w:gz") as tar:
                 tar.add(txt_file_name, arcname=f'{file_name}.txt')
         except OSError as err:
-            if err.errno != errno.EEXIST: raise
+            if err.errno != errno.EEXIST: raise Exception(f"OS error occurred {err}")
 
-    async def get_by_range(self, component: str, start_time: str, end_time: str):
+    async def get_by_range(
+        self,
+        component: str,
+        start_time: str,
+        end_time: str,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ):
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
         if not COMPONENT_MODEL_MAPPING.get(component, None):
@@ -139,12 +154,13 @@ class AuditService(ApplicationService):
                                                    COMPONENT_NOT_FOUND)
 
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
-        query_limit = QueryLimits(Conf.get(const.CSM_GLOBAL_INDEX,
-                                                   "Log>max_result_window"), 0)
+        max_result_window = int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>max_result_window"))
+        effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
+        effective_marker = offset if offset is not None else 0
+        query_limit = QueryLimits(effective_limit, effective_marker)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range)
-        return [COMPONENT_MODEL_MAPPING[component]["format"].
-                               format(**(log.to_primitive())) for log in audit_logs ]
+        return [log.to_primitive() for log in audit_logs]
 
     async def get_audit_log_zip(self, component: str, start_time: str, end_time: str):
         """ get zip file for all records from given range """
