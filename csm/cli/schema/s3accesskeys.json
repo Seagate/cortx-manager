@@ -153,7 +153,7 @@
         {
           "flag": "access_key_id",
           "type": "str",
-          "help": "Access key id for which status need to be updated"
+          "help": "Access key id for which status needs to be updated."
         },
         {
           "flag": "status",
