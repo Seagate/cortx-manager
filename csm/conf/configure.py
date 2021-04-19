@@ -56,7 +56,8 @@ class Configure(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
-        self._validate_consul_service()
+        # TODO: Consul service validation to uncommented once fixed from Hare/Provisioner 
+        # self._validate_consul_service()
         self._validate_es_service()
         self._set_deployment_mode()
         try:
