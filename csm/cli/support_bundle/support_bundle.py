@@ -63,16 +63,11 @@ class SupportBundle:
         node_hostname_map = dict()
         mapping_dict = dict()
         mapping_dict = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
-        if not mapping_dict:
-            response_msg = {
-                "message": "No MAINTENANCE dictionary found. csm.conf file may not be valid"}
-            return Response(output=response_msg,
-                            rc=CSM_ERR_INVALID_VALUE), None
         node_hostname_map = mapping_dict.copy()
         node_hostname_map.pop(const.SHUTDOWN_CRON_TIME)
         if not node_hostname_map:
             response_msg = {
-                "message": "No node_hostname_map found. csm.conf file may not be valid"}
+                "message": "Node list and hostname not found."}
             return Response(output=response_msg,
                             rc=CSM_ERR_INVALID_VALUE), None
         active_nodes = list(node_hostname_map.keys())
