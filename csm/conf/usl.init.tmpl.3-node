@@ -14,33 +14,33 @@
     }
   },
   "server_node": {
-    "a08a73547618066310ad270b48723b43": {
+    "TMPL_MACHINE_ID_1": {
       "network": {
         "data": {
           "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "cluster_id": "TMPL_CLUSTER_ID"
         }
       }
     },
-    "plmn35476180663h270b48723b43": {
+    "TMPL_MACHINE_ID_2": {
       "network": {
         "data": {
           "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "cluster_id": "TMPL_CLUSTER_ID"
         }
       }
     },
-    "098735476180663h270b48723b43": {
+    "TMPL_MACHINE_ID_3": {
       "network": {
         "data": {
           "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "cluster_id": "TMPL_CLUSTER_ID"
         }
       }
     }
   },
   "cluster": {
-    "bae4b468-565d-49df-9495-a43a5d89babc": {
+    "TMPL_CLUSTER_ID": {
       "network": {
         "management": {
           "virtual_host": "127.0.0.1"

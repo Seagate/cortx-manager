@@ -3,13 +3,6 @@
     "software": {
       "csm": {
         "user": "cortxub"
-      },
-      "uds": {
-        "certificate_path": "/var/csm/tls",
-        "domain_crt": "domain.crt",
-        "domain_key": "domain.key",
-        "native_key": "native.key",
-        "native_crt": "native.crt"
       }
     }
   },
