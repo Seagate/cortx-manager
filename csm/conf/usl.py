@@ -81,7 +81,6 @@ class Usl:
         """ Perform validtions. Raises exceptions if validation fails """
         if phase == "post_install":
             self.conf_store_keys.update({
-                "sgiam_user_key": "cortx>software>openldap>sgiam>user",
                 "csm_user_key": "cortx>software>csm>user"
                 })
         if phase == "prepare":
@@ -89,8 +88,6 @@ class Usl:
                 "server_node_info":self.server_node_info,
                 "data_public_fqdn":f"{self.server_node_info}>network>data>public_fqdn",
                 "cluster_id":f"{self.server_node_info}>cluster_id",
-                "sgiam_user_secret": "cortx>software>openldap>sgiam>secret"
-
             })
         elif phase == "config":
             self.conf_store_keys.update({
@@ -108,7 +105,7 @@ class Usl:
         if not keylist:
             keylist = list(self.conf_store_keys.values())
         if not isinstance(keylist, list):
-            raise UslSetupError(rc=0, message="Keylist should be kind of list")
+            raise UslSetupError(rc=-1, message="Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
 
@@ -141,17 +138,13 @@ class Usl:
 
     def post_install(self):
         """ Performs post install operations. Raises exception on error """
-        sgiam_user = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["sgiam_user_key"])
         csm_user = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["csm_user_key"])
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'S3>ldap_login', sgiam_user)
         Conf.set(Usl.USL_GLOBAL_INDEX, 'PROVISIONER>username', csm_user)
         self.create()
         return 0
 
     def prepare(self):
         """ Performs post install operations. Raises exception on error """
-        sgiam_secret = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["sgiam_user_secret"])
-        Conf.set(Usl.USL_GLOBAL_INDEX, 'S3>ldap_password', sgiam_secret)
         cluster_id = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["cluster_id"])
         virtual_host_key = f'cluster>{cluster_id}>network>management>virtual_host'
         self._validate_conf_store_keys(Usl.CONSUMER_INDEX,[virtual_host_key])
