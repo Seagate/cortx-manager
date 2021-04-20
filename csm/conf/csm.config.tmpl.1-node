@@ -20,18 +20,18 @@
       "hostname": "TMPL_SERVER_HOSTNAME",
       "cluster_id": "TMPL_CLUSTER_ID",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "TMPL_ENCLOSURE_ID"
       },
       "network": {
         "data": {
-          "roaming_ip": "127.0.0.1",
-          "public_fqdn": "localhost"
+          "private_fqdn": "127.0.0.1",
+          "public_fqdn": "127.0.0.1"
         }
       }
     }
   },
   "storage_enclosure": {
-    "enclosure_id": {
+    "TMPL_ENCLOSURE_ID": {
       "type": "virtual"
     }
   },

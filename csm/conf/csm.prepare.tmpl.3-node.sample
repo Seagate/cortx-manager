@@ -20,12 +20,12 @@
       "hostname": "ssc-vm-2623.colo.seagate.com",
       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "encbdf68ed0efc148ce8d20c580aef3cc64"
       },
       "network": {
         "data": {
-          "roaming_ip": "127.0.0.1",
-          "public_fqdn": "localhost"
+          "private_fqdn": "127.0.0.1",
+          "public_fqdn": "127.0.0.1"
         }
       }
     },
@@ -35,12 +35,12 @@
       "hostname": "ssc-vm-2624.colo.seagate.com",
       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "encc148ce8d580ad0efef3cc6bdf68e420c"
       },
       "network": {
         "data": {
-          "roaming_ip": "127.0.0.1",
-          "public_fqdn": "localhost"
+          "private_fqdn": "127.0.0.1",
+          "public_fqdn": "127.0.0.1"
         }
       }
     },
@@ -50,18 +50,24 @@
       "hostname": "ssc-vm-2625.colo.seagate.com",
       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "enc80aef3cc6420cbdf68ed0efc148ce8d5"
       },
       "network": {
         "data": {
-          "roaming_ip": "127.0.0.1",
-          "public_fqdn": "localhost"
+          "private_fqdn": "127.0.0.1",
+          "public_fqdn": "127.0.0.1"
         }
       }
     }
   },
   "storage_enclosure": {
-    "enclosure_id": {
+    "encbdf68ed0efc148ce8d20c580aef3cc64": {
+      "type": "virtual"
+    },
+    "encc148ce8d580ad0efef3cc6bdf68e420c": {
+      "type": "virtual"
+    },
+    "enc80aef3cc6420cbdf68ed0efc148ce8d5": {
       "type": "virtual"
     }
   }
