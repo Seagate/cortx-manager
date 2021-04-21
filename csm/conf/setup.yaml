@@ -40,19 +40,3 @@ csm:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup reset
         args: --config $URL
 
-
-    ha_sanity:
-        cmd: /usr/bin/csm_test
-        args:
-            - -t <CSM_PATH>/test/plans/self_ha_test.pln
-            - -f <CSM_PATH>/test/test_data/args.yaml
-
-    ha:
-        cmd: /opt/seagate/cortx/ha/conf/script/build-ha-csm
-        args:
-            - /opt/seagate/cortx/ha/conf/build-ha-csm-args.yaml
-
-    ha-cleanup:
-        cmd: /opt/seagate/cortx/ha/conf/script/prov-ha-csm-reset
-        args: null
-

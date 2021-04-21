@@ -10,24 +10,30 @@
     "TMPL_MACHINE_ID_1": {
       "type": "VM",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "TMPL_ENCLOSURE_ID_1"
       }
     },
     "TMPL_MACHINE_ID_2": {
       "type": "VM",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "TMPL_ENCLOSURE_ID_2"
       }
     },
     "TMPL_MACHINE_ID_3": {
       "type": "VM",
       "storage": {
-        "enclosure_id": "enclosure_id"
+        "enclosure_id": "TMPL_ENCLOSURE_ID_3"
       }
     }
   },
   "storage_enclosure": {
-    "enclosure_id": {
+    "TMPL_ENCLOSURE_ID_1": {
+      "type": "virtual"
+    },
+    "TMPL_ENCLOSURE_ID_2": {
+      "type": "virtual"
+    },
+    "TMPL_ENCLOSURE_ID_3": {
       "type": "virtual"
     }
   }

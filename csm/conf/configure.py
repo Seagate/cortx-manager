@@ -92,22 +92,24 @@ class Configure(Setup):
     def _validate_consul_service(self):
         Log.info("Getting consul status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>host')
-        if not host: raise CsmSetupError("Consul host not available.")
+        consul_host = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>host')
+        if not consul_host: raise CsmSetupError("Consul host not available.")
         port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         if not port: raise CsmSetupError("Consul port not available.")
         # Validation throws exception on failure
-        ConsulV().validate('service', [host, port])
+        for host in (consul_host, const.LOCALHOST):
+            ConsulV().validate('service', [host, port])
 
     def _validate_es_service(self):
         Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>host')
-        if not host: raise CsmSetupError("Elasticsearch host not available.")
+        es_host = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>host')
+        if not es_host: raise CsmSetupError("Elasticsearch host not available.")
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         if not port: raise CsmSetupError("Elasticsearch port not available.")
         # Validation throws exception on failure
-        ElasticsearchV().validate('service', [host, port])
+        for host in (es_host, const.LOCALHOST):
+            ElasticsearchV().validate('service', [host, port])
 
     def create(self):
         """
