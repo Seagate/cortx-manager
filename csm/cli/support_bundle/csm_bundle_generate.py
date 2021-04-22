@@ -89,7 +89,7 @@ class CSMBundle:
         """
         alerts =[]
         try:
-            conf = GeneralConfig(Yaml(const.DATABASE_CLI_CONF).load())
+            conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
             db = DataBaseProvider(conf)
             repo = AlertRepository(db)
             alerts = await repo.fetch_alert_for_support_bundle()
