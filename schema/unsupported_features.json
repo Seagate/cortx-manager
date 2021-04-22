@@ -9,6 +9,10 @@
             "unsupported_features": ["lyve_pilot", "health"]
         },
         {
+            "name":"other",
+            "unsupported_features": ["lyve_pilot", "health"]
+        },
+        {
             "name":"5u84",
             "unsupported_features": ["lyve_pilot", "health"]
         },
