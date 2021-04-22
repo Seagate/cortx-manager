@@ -33,7 +33,7 @@ class NetworkAddresses:
         :return: String representation of virtual host IP address
         """
         try:
-            ip = str(Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER>virtual_host'))
+            ip = str(Conf.get(const.USL_GLOBAL_INDEX, 'PROVISIONER>virtual_host'))
             ip_address(ip)
             return ip
         except ValueError as e:
@@ -49,7 +49,7 @@ class NetworkAddresses:
         """
         try:
             domain_name = \
-                str(Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER>node_public_data_domain_name'))
+                str(Conf.get(const.USL_GLOBAL_INDEX, 'PROVISIONER>node_public_data_domain_name'))
             ip = gethostbyname(domain_name)
             ip_address(ip)
             return ip
