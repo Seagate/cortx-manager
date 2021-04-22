@@ -124,11 +124,4 @@ class S3AccountsView(S3BaseView):
         with self._guard_service():
             response = await self._service.patch_account(self.account_id,
                                                          **patch_body)
-            await self._cleanup_sessions()
             return response
-
-    async def _cleanup_sessions(self):
-        login_service = self.request.app.login_service
-        session_id = self.request.session.session_id
-
-        await login_service.delete_all_sessions(session_id)
