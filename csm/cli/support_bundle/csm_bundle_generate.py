@@ -50,6 +50,7 @@ class CSMBundle:
         # Creates CSM Directory
         path = command.options.get("path")
         bundle_id = command.options.get("bundle_id")
+        alerts_file_path = None
         component_name = command.options.get("component", "csm")
         component_data = {"csm": [csm_log_directory_path],
                           "uds": [uds_log_directory_path],
@@ -76,6 +77,8 @@ class CSMBundle:
         else:
             raise CsmError(rc = errno.ENOENT,
                            desc = f"Component log missing: {component_data[component_name]}")
+        if alerts_file_path is not None:
+            os.remove(alerts_file_path)
 
     @staticmethod
     async def fetch_and_save_alerts():
@@ -94,3 +97,4 @@ class CSMBundle:
             Log.error(f"Error occured while fetching alerts: {ex}")
             alerts = [{"Error": "Internal error: Could not fetch alerts."}]
         return alerts
+        
