@@ -45,6 +45,9 @@ PRODUCT=<PRODUCT>
 
 # Move binary file
 [ -d "${CSM_DIR}/lib" ] && {
+    ln -sf $CSM_DIR/lib/usl_setup /usr/bin/usl_setup
+    ln -sf $CSM_DIR/lib/usl_setup $CSM_DIR/bin/usl_setup
+
     ln -sf $CSM_DIR/lib/csm_setup /usr/bin/csm_setup
     ln -sf $CSM_DIR/lib/csm_setup $CSM_DIR/bin/csm_setup
 
@@ -75,6 +78,7 @@ systemctl stop csm_agent
 [ $1 -eq 1 ] && exit 0
 rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
+rm -f /usr/bin/usl_setup 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;
