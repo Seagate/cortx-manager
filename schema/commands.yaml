@@ -25,8 +25,8 @@ COMMANDS:
     - '<CORTX_PATH>/sspl/conf/setup.yaml'
   s3server:
     - '<CORTX_PATH>/s3/conf/setup.yaml'
-  core:
-    - '<CORTX_PATH>/core/conf/setup.yaml'
+  motr:
+    - '<CORTX_PATH>/motr/conf/setup.yaml'
   hare:
     - '<CORTX_PATH>/hare/conf/setup.yaml'
     - '<CORTX_PATH>/hare/conf/setup-ha.yaml'
