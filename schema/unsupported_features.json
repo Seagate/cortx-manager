@@ -2,27 +2,19 @@
     "setup_types": [
         {
             "name":"virtual",
-            "unsupported_features": ["lyve_pilot", "health"]
-        },
-        {
-            "name":"VM",
-            "unsupported_features": ["lyve_pilot", "health"]
-        },
-        {
-            "name":"other",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot"]
         },
         {
             "name":"5u84",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot"]
         },
         {
             "name":"PODS",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot"]
         },
         {
             "name":"JBOD",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot"]
         }
     ]
 }
