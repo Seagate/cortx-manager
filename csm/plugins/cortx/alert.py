@@ -18,7 +18,6 @@ import os
 import time
 import asyncio
 from csm.common.comm import MessageBusComm
-from csm.common.comm import AmqpComm
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict

@@ -16,7 +16,6 @@
 import json
 import os
 import time
-from csm.common.comm import AmqpActuatorComm
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict
