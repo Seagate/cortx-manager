@@ -16,19 +16,16 @@
 import sys, os, getpass, socket, filecmp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from csm.common.comm import SSHChannel, AmqpComm
+from csm.common.comm import SSHChannel
 from cortx.utils.log import Log
 from csm.test.common import Const, TestFailed
 from csm.common.cluster import Cluster, Node
 import json, time
 
-client = None
 file_path = Const.MOCK_PATH
 
 def init(args):
     args[Const.CLUSTER] = Cluster(args[Const.INVENTORY_FILE])
-    global client
-    client = args['amqp_client']
 
 def test1(args):
     """ SSH Command """
@@ -68,30 +65,4 @@ def test3(args):
         if not filecmp.cmp("/etc/hosts", "/tmp/hosts1"):
             raise TestFailed('File Copy failed')
 
-def amqp_callback(body):
-    with open(file_path + 'output.text', 'w+') as json_file:
-        json.dump(json.loads(body), json_file, indent=4)
-        json_file.close()
-        compare_results()
-        global client
-        client.acknowledge()
-        client.stop()
-
-def compare_results():
-    if not filecmp.cmp(file_path + 'input.text', file_path + 'output.text'):
-        raise TestFailed('Input and Output alerts do not match.')
-
-def send_recv(args):
-    """ Receive alerts from RMQ Channel """
-
-    global client
-    client.init() 
-    with open(file_path + 'input.text') as json_file:
-        data = json.load(json_file)
-        client.send(data)
-    client.recv(amqp_callback)
-
-def test4(args):
-    send_recv(args)
-
-test_list = [ test1, test2, test3, test4 ]
+test_list = [ test1, test2, test3 ]
