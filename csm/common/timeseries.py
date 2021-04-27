@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from cortx.utils.log import Log
-from csm.common.errors import CsmError, CsmInternalError
+from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
 from csm.common.payload import *
 
 class TimeSeriesProvider:
@@ -203,11 +203,16 @@ class TimelionProvider(TimeSeriesProvider):
             metric_list, unit_list = await self._get_metric_list(panel, metric_list, unit)
             res = await self._aggregate_metric(panel, from_t, duration_t,
                                             interval, metric_list, query)
-            return await self._convert_payload(res, stats_id, panel, output_format, unit_list)
-        except Exception as e:
+            output = await self._convert_payload(res, stats_id, panel, output_format, unit_list)
+        except InvalidRequest as e:
             Log.debug("Failed to request stats %s" %e)
-            raise CsmInternalError("id: %s, Error: Failed to process timelion "
-                "request %s" %(stats_id,e))
+            raise InvalidRequest("id: %s, Error: Failed to process "
+                "request %s" % (stats_id, e))
+        except CsmInternalError as e:
+            Log.debug("Failed to request stats %s" %e)
+            raise CsmInternalError("id: %s, Error: Failed to process "
+                "request %s" % (stats_id, e))
+        return output
 
     async def get_all_units(self):
         """
@@ -255,15 +260,21 @@ class TimelionProvider(TimeSeriesProvider):
         Check from_t, duration_t time interval and
         calculate interval from total_sample
         """
-        diff_sec = int(duration_t) - int(from_t)
+        try:
+            diff_sec = int(duration_t) - int(from_t)
+        except (ValueError, TypeError):
+            raise InvalidRequest(f"from and to time should be integer")
         if diff_sec <= 0:
-            raise CsmInternalError("to time should be grater than from time")
+            raise InvalidRequest("to time should be grater than from time")
         from_t = int(from_t) - int(self._offset_interval)
         duration_t = int(duration_t) - int(self._offset_interval)
         if total_sample == "" and interval == "":
             interval = str(self._storage_interval) + 's'
         elif total_sample != "":
-            interval = str(int(diff_sec/int(total_sample))) + 's'
+            try:
+                interval = str(int(diff_sec / int(total_sample))) + 's'
+            except (ValueError, ZeroDivisionError):
+                raise InvalidRequest('total_sample should be integer and greater than zero')
         elif interval != "":
             interval = str(int(interval)) + 's'
         else:
