@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import time
 from cortx.utils.product_features import unsupported_features
 from csm.common.payload import Json
 from ipaddress import ip_address
@@ -66,7 +67,17 @@ class Configure(Setup):
             self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
-            await self._set_unsupported_feature_info()
+            for count in range(0, 10):
+                try:
+                    Log.info("Going for Unsupported feature ")
+                    await self._set_unsupported_feature_info()
+                    Log.info("Breaking as success...")
+                    break
+                except Exception as e_:
+                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}.{e_}")
+                    time.sleep(2**count)
+                    
+
             if not self._replacement_node_flag:
                 self.create()
         except Exception as e:
@@ -134,7 +145,7 @@ class Configure(Setup):
         os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
-            Setup._run_cmd("systemctl restart rsyslog")
+            # Setup._run_cmd("systemctl restart rsyslog")
         else:
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
