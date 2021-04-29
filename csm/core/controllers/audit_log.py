@@ -30,7 +30,7 @@ class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
     limit = fields.Int(validate=validate.Range(min=1))
     offset = fields.Int(validate=validate.Range(min=0))
     sort_by = fields.Str(data_key='sortby', missing="timestamp", default="timestamp")
-    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
+    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']),
         missing='desc', default='desc')
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")

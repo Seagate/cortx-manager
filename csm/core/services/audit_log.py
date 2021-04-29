@@ -90,7 +90,7 @@ class AuditLogManager():
 
         if limits and limits.limit:
             query = query.limit(limits.limit)
-        
+
         if sort:
             query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
         else:
