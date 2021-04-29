@@ -69,14 +69,11 @@ class Configure(Setup):
             self._rsyslog_common()
             for count in range(0, 10):
                 try:
-                    Log.info("Going for Unsupported feature ")
                     await self._set_unsupported_feature_info()
-                    Log.info("Breaking as success...")
                     break
                 except Exception as e_:
-                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}.{e_}")
+                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
-                    
 
             if not self._replacement_node_flag:
                 self.create()
