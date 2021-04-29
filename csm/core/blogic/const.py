@@ -449,6 +449,8 @@ NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 # Audit Log
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
+CSM_AUDIT_LOG_SORTABLE_FIELDS = ['timestamp', 'request_id']
+S3_AUDIT_LOG_SORTABLE_FIELDS = ['timestamp']
 
 # Syslog constants
 LOG_LEVEL = "INFO"

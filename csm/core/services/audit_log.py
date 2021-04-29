@@ -30,7 +30,7 @@ from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common import queries
 from schematics import Model
-from csm.common.errors import CsmNotFoundError
+from csm.common.errors import CsmNotFoundError, InvalidRequest
 from typing import Optional, Iterable
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess
@@ -60,6 +60,8 @@ COMPONENT_MODEL_MAPPING = {
 }
 
 COMPONENT_NOT_FOUND = "no_audit_log_for_component"
+CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "csm_audit_log_non_sortable_column"
+S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "s3_audit_log_non_sortable_column"
 
 class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
@@ -80,7 +82,7 @@ class AuditLogManager():
         return db_conditions
 
     async def retrieve_by_range(self, component, limits,
-                       time_range: DateTimeRange):
+                       time_range: DateTimeRange, sort: Optional[str] = None):
         query_filter = self._prepare_filters(component, time_range)
         query = Query().filter_by(query_filter)
         if limits and limits.offset:
@@ -88,8 +90,11 @@ class AuditLogManager():
 
         if limits and limits.limit:
             query = query.limit(limits.limit)
-
-        query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
+        
+        if sort:
+            query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
+        else:
+            query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
 
     async def count_by_range(self, component,
@@ -146,6 +151,8 @@ class AuditService(ApplicationService):
         end_time: str,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        sort_by: Optional[str] = None,
+        direction: Optional[str] = None
     ):
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
@@ -158,8 +165,18 @@ class AuditService(ApplicationService):
         effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
         effective_marker = offset if offset is not None else 0
         query_limit = QueryLimits(effective_limit, effective_marker)
+        if sort_by:
+            if component == "csm" and sort_by not in const.CSM_AUDIT_LOG_SORTABLE_FIELDS:
+                raise InvalidRequest("The specified column cannot be used for sorting",
+                    CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
+
+            if component == "s3" and sort_by not in const.S3_AUDIT_LOG_SORTABLE_FIELDS:
+                raise InvalidRequest("The specified column cannot be used for sorting",
+                    S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
+
+        sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
-                                                   query_limit, time_range)
+                                                   query_limit, time_range, sort_options)
         return [log.to_primitive() for log in audit_logs]
 
     async def get_audit_log_zip(self, component: str, start_time: str, end_time: str):

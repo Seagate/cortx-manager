@@ -29,6 +29,9 @@ class AuditLogRangeQuerySchema(Schema):
 class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
     limit = fields.Int(validate=validate.Range(min=1))
     offset = fields.Int(validate=validate.Range(min=0))
+    sort_by = fields.Str(data_key='sortby', missing="timestamp", default="timestamp")
+    direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']), 
+        missing='desc', default='desc')
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
 @CsmView._app_routes.view("/api/v2/auditlogs/show/{component}")
@@ -56,8 +59,10 @@ class AuditLogShowView(CsmView):
         end_date = request_data["end_date"] 
         limit = request_data.get('limit')
         offset = request_data.get('offset')
+        sort_by = request_data.get('sort_by')
+        direction = request_data.get('direction')
         return await self._service.get_by_range(
-            component, start_date, end_date, limit=limit, offset=offset)
+            component, start_date, end_date, limit=limit, offset=offset, sort_by=sort_by, direction=direction )
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
 @CsmView._app_routes.view("/api/v2/auditlogs/download/{component}")
