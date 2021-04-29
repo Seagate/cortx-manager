@@ -142,7 +142,6 @@ class Configure(Setup):
         os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
-            # Setup._run_cmd("systemctl restart rsyslog")
         else:
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
