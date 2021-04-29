@@ -725,14 +725,14 @@ class IamClient(BaseClient):
         :returns: credentials in case of success, IamError in case of problem
         """
 
-        Log.audit(f"Create access key for user: {user_name}")
+        Log.info(f"Create access key for user: {user_name}")
         params = {}
         if user_name is not None:
             params['UserName'] = user_name
 
         (code, body) = await self._arbitrary_request(
             const.S3_IAM_CMD_CREATE_ACCESS_KEY, params, '/', 'POST')
-        Log.audit(f"Create access key status code: {code}")
+        Log.info(f"Create access key status code: {code}")
         if code != HTTPStatus.CREATED:
             return self._create_error(code, body)
         else:
@@ -752,7 +752,7 @@ class IamClient(BaseClient):
         :returns: true in case of success, IamError in case of problem.
         """
 
-        Log.audit(f"Update access key {access_key_id} for user: {user_name}"
+        Log.info(f"Update access key {access_key_id} for user: {user_name}"
                   f" with status {status}")
         params = {
             'AccessKeyId': access_key_id,
@@ -763,7 +763,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request(
             const.S3_IAM_CMD_UPDATE_ACCESS_KEY, params, '/', 'POST')
-        Log.audit(f"Update access key status code: {code}")
+        Log.info(f"Update access key status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
@@ -780,7 +780,7 @@ class IamClient(BaseClient):
         :returns: timestamp in case of success, IamError in case of problem.
         """
 
-        Log.audit(f"Get last used time of IAM user's {user_name} access key {access_key_id}")
+        Log.info(f"Get last used time of IAM user's {user_name} access key {access_key_id}")
         params = {
             'AccessKeyId': access_key_id
         }
@@ -789,7 +789,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request(
             const.S3_IAM_CMD_GET_ACCESS_KEY_LAST_USED, params, '/', 'POST')
-        Log.audit(f"Update access key status code: {code}")
+        Log.info(f"Update access key status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
@@ -812,7 +812,7 @@ class IamClient(BaseClient):
         :returns: IamAccessKeysListResponse in case of success, IamError otherwise.
         """
 
-        Log.audit(f"List IAM user's {user_name} access keys. marker: {marker},"
+        Log.info(f"List IAM user's {user_name} access keys. marker: {marker},"
                   f" max_items: {max_items}")
         params = {}
         if user_name is not None:
@@ -826,7 +826,7 @@ class IamClient(BaseClient):
 
         (code, body) = await self._arbitrary_request(
             const.S3_IAM_CMD_LIST_ACCESS_KEYS, params, '/', 'POST')
-        Log.audit(f"List IAM user's access keys status code: {code}")
+        Log.info(f"List IAM user's access keys status code: {code}")
         if code != HTTPStatus.OK:
             return self._create_error(code, body)
         else:
@@ -859,7 +859,7 @@ class IamClient(BaseClient):
         :returns: true in case of success, IamError in case of problem.
         """
 
-        Log.audit(f"Delete access key {access_key_id} for IAM user {user_name}")
+        Log.info(f"Delete access key {access_key_id} for IAM user {user_name}")
         params = {
             'AccessKeyId': access_key_id
         }
