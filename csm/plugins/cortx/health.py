@@ -115,7 +115,7 @@ class HealthPlugin(CsmPlugin):
         try:
             self.health_callback = callback_fn
             self.db_update_callback = db_update_callback_fn
-            #Adding delay 
+            #Adding delay
             time.sleep(1)
             self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
                     message_type=self._message_type, method=self._method)
