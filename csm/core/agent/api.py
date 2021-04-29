@@ -160,9 +160,9 @@ class CsmRestApi(CsmApi, ABC):
         method = request.method
         user_agent = request.headers.get('User-Agent')
         entry = {
-            'user': user,
+            'user': user if user else "",
             'remote_ip': remote_ip,
-            'forwarded_for_ip': forwarded_for_ip,
+            'forwarded_for_ip': forwarded_for_ip if forwarded_for_ip else "",
             'method': method,
             'path': path,
             'user_agent': user_agent,
