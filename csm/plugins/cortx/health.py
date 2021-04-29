@@ -112,10 +112,15 @@ class HealthPlugin(CsmPlugin):
         2. db_update_callback_fn :- This parameter specifies the name of
            HealthMonitor class function to update health map using db.
         """
-        self.health_callback = callback_fn
-        self.db_update_callback = db_update_callback_fn
-        self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
-                message_type=self._message_type, method=self._method)
+        try:
+            self.health_callback = callback_fn
+            self.db_update_callback = db_update_callback_fn
+            #Adding delay 
+            time.sleep(1)
+            self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
+                    message_type=self._message_type, method=self._method)
+        except Exception as e:
+            Log.error(f"Error occured while calling health plugin init. {e}")
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():
