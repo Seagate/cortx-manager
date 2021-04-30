@@ -181,7 +181,7 @@ class AuditService(ApplicationService):
                                                    query_limit, time_range, sort_options)
         audit_logs_count = await self.audit_mngr.count_by_range(component, time_range)
         return {
-            "total_records": audit_logs_count,
+            "total_records": min(audit_logs_count, max_result_window),
             "logs": [log.to_primitive() for log in audit_logs]
         }
 
