@@ -64,7 +64,6 @@ COMPONENT_MODEL_MAPPING = {
 COMPONENT_NOT_FOUND = "no_audit_log_for_component"
 CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "csm_audit_log_non_sortable_column"
 S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "s3_audit_log_non_sortable_column"
-SORTABLE_FIELDS = "sortable_fields"
 class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
@@ -92,7 +91,7 @@ class AuditLogManager():
 
         if limits and limits.limit:
             query = query.limit(limits.limit)
-
+        #TO DO: A better solution for sorting in case of show logs and download logs
         if sort:
             query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
         else:
@@ -168,11 +167,11 @@ class AuditService(ApplicationService):
         effective_marker = offset if offset is not None else 0
         query_limit = QueryLimits(effective_limit, effective_marker)
 
-        if component == const.CSM_COMPONENT_NAME and sort_by not in COMPONENT_MODEL_MAPPING[component][SORTABLE_FIELDS]:
+        if component == const.CSM_COMPONENT_NAME and sort_by not in COMPONENT_MODEL_MAPPING[component][const.SORTABLE_FIELDS]:
             raise InvalidRequest("The specified column cannot be used for sorting",
                 CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
 
-        if component == const.S3_RESOURCE_NAME_S3 and sort_by not in COMPONENT_MODEL_MAPPING[component][SORTABLE_FIELDS]:
+        if component == const.S3_RESOURCE_NAME_S3 and sort_by not in COMPONENT_MODEL_MAPPING[component][const.SORTABLE_FIELDS]:
             raise InvalidRequest("The specified column cannot be used for sorting",
                 S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
 
