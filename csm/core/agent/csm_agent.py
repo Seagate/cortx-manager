@@ -225,8 +225,8 @@ class CsmAgent:
 
         if not Options.debug:
             CsmAgent._daemonize()
-        CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
+        CsmAgent.health_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
