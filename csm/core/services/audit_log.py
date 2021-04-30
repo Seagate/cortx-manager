@@ -179,8 +179,9 @@ class AuditService(ApplicationService):
         sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range, sort_options)
+        audit_logs_count = await self.audit_mngr.count_by_range(component, time_range)
         return {
-            "total_records": len(audit_logs),
+            "total_records": audit_logs_count,
             "logs": [log.to_primitive() for log in audit_logs]
         }
 
