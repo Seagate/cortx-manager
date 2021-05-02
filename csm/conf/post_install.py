@@ -15,6 +15,7 @@
 
 
 import crypt
+import os
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
