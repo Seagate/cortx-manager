@@ -164,8 +164,11 @@ class AuditService(ApplicationService):
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
         max_result_window = int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>max_result_window"))
         effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
-        effective_marker = offset if offset is not None else 0
-        query_limit = QueryLimits(effective_limit, effective_marker)
+        query_limit = None
+        if offset is not None and offset > 1:
+            query_limit = QueryLimits(effective_limit, (offset - 1) * effective_limit)
+        else:
+            query_limit = QueryLimits(effective_limit, 0)
 
         if component == const.CSM_COMPONENT_NAME and sort_by not in COMPONENT_MODEL_MAPPING[component][const.SORTABLE_FIELDS]:
             raise InvalidRequest("The specified column cannot be used for sorting",
