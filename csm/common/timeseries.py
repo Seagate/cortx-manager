@@ -263,9 +263,9 @@ class TimelionProvider(TimeSeriesProvider):
         try:
             diff_sec = int(duration_t) - int(from_t)
         except (ValueError, TypeError):
-            raise InvalidRequest(f"from and to time should be integer")
+            raise InvalidRequest(f"'from' and 'to' time should be integer")
         if diff_sec <= 0:
-            raise InvalidRequest("to time should be grater than from time")
+            raise InvalidRequest("'to time' should be grater than 'from time'")
         from_t = int(from_t) - int(self._offset_interval)
         duration_t = int(duration_t) - int(self._offset_interval)
         if total_sample == "" and interval == "":
@@ -274,7 +274,7 @@ class TimelionProvider(TimeSeriesProvider):
             try:
                 interval = str(int(diff_sec / int(total_sample))) + 's'
             except (ValueError, ZeroDivisionError):
-                raise InvalidRequest('total_sample should be integer and greater than zero')
+                raise InvalidRequest("'total_sample' should be integer and greater than zero")
         elif interval != "":
             interval = str(int(interval)) + 's'
         else:
