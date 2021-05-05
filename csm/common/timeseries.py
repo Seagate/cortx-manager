@@ -114,7 +114,7 @@ class TimelionProvider(TimeSeriesProvider):
                                 "time": { \
                                         "from": "$from_t", \
                                         "interval": "$interval", \
-                                        "mode":"quick", \
+                                        "timezone":"UTC", \
                                         "to":"$to_t" \
                                 }}')
         self._timelion_query = Template('.es(q=$metric, timefield=$timestamp, ' +
