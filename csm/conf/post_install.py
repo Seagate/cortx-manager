@@ -15,6 +15,7 @@
 
 
 import crypt
+import os
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
@@ -62,6 +63,7 @@ class PostInstall(Setup):
         self._config_user()
         self._configure_system_auto_restart()
         self._configure_service_user()
+        self._configure_rsyslog()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -160,3 +162,16 @@ class PostInstall(Setup):
         :return:
         """
         Setup._update_service_file("<USER>", self._user)
+
+    def _configure_rsyslog(self):
+        """
+        Configure rsyslog
+        """
+        Log.info("Configuring rsyslog")
+        os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
+        if os.path.exists(const.RSYSLOG_DIR):
+            Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
+        else:
+            msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
+            Log.error(msg)
+            raise CsmSetupError(msg)
