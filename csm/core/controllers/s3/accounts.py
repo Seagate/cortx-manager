@@ -124,7 +124,6 @@ class S3AccountsView(S3BaseView):
         with self._guard_service():
             response = await self._service.patch_account(self.account_id,
                                                          **patch_body)
-            await self._cleanup_sessions()
             return response
 
     async def _cleanup_sessions(self):

@@ -115,6 +115,7 @@ COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
+USL_GLOBAL_INDEX = 'USL'
 
 # AMQP Consumer Tag
 CONSUMER_TAG = 'AMQP_CONSUMER'
@@ -132,6 +133,7 @@ TYPE_S3_SERVER = 'S3_SERVER'
 CORTX = 'cortx'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
+USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
 CORTXCLI_SECTION = 'CORTXCLI'
 CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
@@ -372,6 +374,10 @@ S3_PARAM_USER_NAME = 'UserName'
 S3_PARAM_MARKER = 'Marker'
 S3_PARAM_MAX_ITEMS = 'MaxItems'
 S3_IAM_CMD_DELETE_ACCESS_KEY = 'DeleteAccessKey'
+USER_NAME = 'user_name'
+S3_ACCESS_KEYS = 'access_keys'
+S3_ACCESS_KEY_ID = 'access_key_id'
+ROOT = 'root'
 
 # S3/Boto3
 S3_DEFAULT_REGION = 'us-west2'
@@ -443,6 +449,7 @@ NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 # Audit Log
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
+SORTABLE_FIELDS = "sortable_fields"
 
 # Syslog constants
 LOG_LEVEL = "INFO"
@@ -711,10 +718,17 @@ AUTO_ACK = 'auto_ack'
 OFFSET = 'offset'
 EARLIEST = 'earliest'
 TYPE = 'type'
-BOTH = 'both'
 PRODUCER = 'producer'
 CONSUMER = 'consumer'
 CONSUMER_CALLBACK = 'consumer_callback'
+BLOCKING = 'blocking'
+PRODUCER_ID_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>producer_id'
+MSG_TYPE_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>message_type'
+METHOD_KEY = 'MESSAGEBUS>PRODUCER>ACTUATOR>method'
+CONSUMER_ID_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_id'
+CONSUMER_GROUP_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_group'
+CONSUER_MSG_TYPES_KEY = 'MESSAGEBUS>CONSUMER>ALERTS>consumer_message_types'
+CONSUMER_OFFSET = 'MESSAGEBUS>CONSUMER>ALERTS>offset'
 
 #ConfStore Keys
 KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
