@@ -15,6 +15,8 @@
 
 from csm.common.services import ApplicationService
 from cortx.utils.appliance_info.appliance import ApplianceInfo
+from cortx.utils.conf_store.conf_store import Conf
+from csm.core.blogic import const
 
 class ApplianceInfoService(ApplicationService):
     """
@@ -36,4 +38,6 @@ class ApplianceInfoService(ApplicationService):
         ret_dict = {}
         self._appliance_obj.load()
         ret_dict["serial_number"] = self._appliance_obj.get().strip()
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, "PROVISIONER>cluster_id")
+        ret_dict["cluster_id"] = cluster_id
         return [ret_dict]
