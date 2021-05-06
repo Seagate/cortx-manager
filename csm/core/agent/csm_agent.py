@@ -15,6 +15,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import asyncio
 import sys
 import os
 import glob
@@ -71,6 +72,9 @@ class CsmAgent:
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
         for f in cached_files:
             os.remove(f)
+
+        # Audit log DB initialization (see function implementation for details)
+        CsmAgent._initialize_audit_log_db(db)
 
         # Alert configuration
         alerts_repository = AlertRepository(db)
@@ -216,6 +220,23 @@ class CsmAgent:
 
         with open(pidfile, "w") as f:
             f.write(str(os.getpid()))
+
+    @staticmethod
+    def _initialize_audit_log_db(db):
+        # The following workaround is required to ensure the ElasticSearch mappings for
+        # `CsmAuditLogModel` will be in place before any audit log entries are generated.  The query
+        # will force the correct mappings to be created on ElasticSearch according to the
+        # corresponding CSM model if they are not yet in place.  This is required because new audit
+        # log entries are added to ElasticSearch by rsyslog and, in case mappings are not present,
+        # rsyslog will create new ones itself.  The newly created mappings will differ from the ones
+        # expected by our business logic, and we will fail to read data from ElasticSearch.
+        async def audit_log_query(db):
+            from csm.core.blogic.models.audit_log import CsmAuditLogModel
+            from cortx.utils.data.access import Query
+            await db(CsmAuditLogModel).get(Query().limit(0))
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(audit_log_query(db))
 
     @staticmethod
     def run():
