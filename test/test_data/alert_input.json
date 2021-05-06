@@ -1,86 +1,40 @@
 [
     {
         "username": "sspl-ll",
-        "description": "Seagate Storage Platform Library - Low Level - Sensor Response",
-        "title": "SSPL-LL Sensor Response",
+        "description": "Seagate Storage Platform Library - Sensor Response",
+        "title": "SSPL Sensor Response",
         "expires": 3600,
-        "signature": "None",
-        "time": "2019-11-18 16:48:30.055424",
+        "signature": "b'None'",
+        "time": "1591067332",
         "message": {
-          "sspl_ll_msg_header": {
-            "msg_version": "1.0.0",
+            "sspl_ll_msg_header": {
             "schema_version": "1.0.0",
-            "sspl_version": "1.0.0"
-          },
-          "sensor_response_type": {
+            "sspl_version": "1.0.0",
+            "msg_version": "1.0.0"
+            },
+            "sensor_response_type": {
             "info": {
-              "event_time": "1574075909",
-              "resource_id": "Fan Module 4",
-              "site_id": 1,
-              "node_id": 1,
-              "cluster_id": 1,
-              "rack_id": 1,
-              "resource_type": "enclosure:fru:fan"
+            "event_time": "1591067328",
+            "resource_id": "iem",
+            "site_id": "001",
+            "node_id": "001",
+            "cluster_id": "156e8ec6-5394-4f89-b6d3-615416f4881a",
+            "rack_id": "001",
+            "resource_type": "iem"
             },
-            "alert_type": "missing",
-            "severity": "critical",
+            "alert_type": "fault",
+            "severity": "error",
             "specific_info": {
-              "status": "Not Installed",
-              "name": "Fan Module 4",
-              "enclosure-id": 0,
-              "durable-id": "fan_module_0.4",
-              "fans": [],
-              "health-reason": "The fan module is not installed.",
-              "health": "Fault",
-              "location": "Enclosure 0 - Right",
-              "position": "Indexed",
-              "health-recommendation": "Install the missing fan module."
+            "source": "Software",
+            "component": "009",
+            "module": "009",
+            "event": "0009",
+            "description": "Test IEM",
+            "IEC": "ES0090090009"
             },
-            "alert_id": "15740759091a4e14bca51d46908ac3e9102605d560",
-            "host_id": "s3node-host-1"
-          }
+            "alert_id": "159106733238ec00e476ed4d90b608d02ad58f17ed",
+            "host_id": "ssc-vm-0128.colo.seagate.com"
+            }
         }
-      },
-      {
-        "username": "sspl-ll",
-        "description": "Seagate Storage Platform Library - Low Level - Sensor Response",
-        "title": "SSPL-LL Sensor Response",
-        "expires": 3600,
-        "signature": "None",
-        "time": "2019-11-18 16:48:30.055000",
-        "message": {
-          "sspl_ll_msg_header": {
-            "msg_version": "1.0.0",
-            "schema_version": "1.0.0",
-            "sspl_version": "1.0.0"
-          },
-          "sensor_response_type": {
-            "info": {
-              "event_time": "1574075909",
-              "resource_id": "Fan Module 4",
-              "site_id": 1,
-              "node_id": 1,
-              "cluster_id": 1,
-              "rack_id": 1,
-              "resource_type": "enclosure:fru:fan"
-            },
-            "alert_type": "missing",
-            "severity": "critical",
-            "specific_info": {
-              "status": "Not Installed",
-              "name": "Fan Module 4",
-              "enclosure-id": 0,
-              "durable-id": "fan_module_0.4",
-              "fans": [],
-              "health-reason": "The fan module is not installed.",
-              "health": "Fault",
-              "location": "Enclosure 0 - Right",
-              "position": "Indexed",
-              "health-recommendation": "Install the missing fan module."
-            },
-            "alert_id": "15740759091a4e14bca51d46908ac3e9102605d000",
-            "host_id": "s3node-host-1"
-          }
-        }
-      }
+    }
 ]
