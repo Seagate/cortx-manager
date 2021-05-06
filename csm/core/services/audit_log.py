@@ -45,7 +45,6 @@ COMPONENT_MODEL_MAPPING = {
             "{timestamp} {user} {remote_ip} {forwarded_for_ip} {method} {path} {user_agent} "
             "{response_code} {request_id}"
         ),
-        "sortable_fields" : ['timestamp', 'request_id']
     },
     "s3": {
         "model" : S3AuditLogModel,
@@ -57,13 +56,10 @@ COMPONENT_MODEL_MAPPING = {
             "{turn_around_time} {referrer} {user_agent} {version_id} {host_id}"
             "{signature_version} {cipher_suite} {authentication_type} {host_header}"
         ),
-        "sortable_fields" : ['timestamp']
     }
 }
 
 COMPONENT_NOT_FOUND = "no_audit_log_for_component"
-CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "csm_audit_log_non_sortable_column"
-S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN = "s3_audit_log_non_sortable_column"
 class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
@@ -169,15 +165,6 @@ class AuditService(ApplicationService):
             query_limit = QueryLimits(effective_limit, (offset - 1) * effective_limit)
         else:
             query_limit = QueryLimits(effective_limit, 0)
-
-        if component == const.CSM_COMPONENT_NAME and sort_by not in COMPONENT_MODEL_MAPPING[component][const.SORTABLE_FIELDS]:
-            raise InvalidRequest("The specified column cannot be used for sorting",
-                CSM_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
-
-        if component == const.S3_RESOURCE_NAME_S3 and sort_by not in COMPONENT_MODEL_MAPPING[component][const.SORTABLE_FIELDS]:
-            raise InvalidRequest("The specified column cannot be used for sorting",
-                S3_AUDIT_LOG_MSG_NON_SORTABLE_COLUMN)
-
         sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range, sort_options)
