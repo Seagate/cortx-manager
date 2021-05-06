@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
-from schematics.models import Model
 from schematics.types import DateTimeType, IntType, StringType
 from csm.core.blogic.models import CsmModel
 
@@ -27,9 +26,8 @@ class CsmAuditLogModel(CsmModel):
     method = StringType(default="")
     path = StringType(default="")
     user_agent = StringType(default="")
-    response_code = StringType(default="")
+    response_code = IntType(default=-1)
     request_id = IntType(default=int(time.time()))
-    msg = StringType(min_length=0, default="")
 
 class S3AuditLogModel(CsmModel):
     """ Model for s3 audit logs """
