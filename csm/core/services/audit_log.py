@@ -13,27 +13,21 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
 import errno
-import re
-import time
 import os
 import tarfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from cortx.utils.log import Log
-from csm.common.services import Service, ApplicationService
+from csm.common.services import ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.blogic import const
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
-from csm.common import queries
-from schematics import Model
-from csm.common.errors import CsmNotFoundError, InvalidRequest
-from typing import Optional, Iterable, Dict
+from csm.common.errors import CsmNotFoundError
+from typing import Optional, Dict
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.process import SimpleProcess
 
 # mapping of component with model, field for
 # range queires and log format
