@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 from typing import Dict
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
-from csm.common.errors import CsmInternalError
+from csm.common.errors import CsmInternalError, InvalidRequest
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -130,8 +130,8 @@ class StatsAppService(ApplicationService):
                     panels[li[0]]["unit"].append("")
                 else:
                     panels[li[0]]["unit"].append(li[2])
-        except:
-            raise CsmInternalError("Invalid metric list for Stats %s" %metrics_list)
+        except (IndexError, KeyError):
+            raise InvalidRequest("Invalid metric list for Stats %s" %metrics_list)
 
         if stats_id:
             output["id"]=stats_id

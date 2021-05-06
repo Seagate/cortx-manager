@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import time
 from cortx.utils.product_features import unsupported_features
 from csm.common.payload import Json
 from ipaddress import ip_address
@@ -63,10 +64,16 @@ class Configure(Setup):
             self._configure_uds_keys()
             if not self._is_env_vm:
                 Configure._validate_healthmap_path()
-            self._rsyslog()
             self._logrotate()
             self._rsyslog_common()
-            await self._set_unsupported_feature_info()
+            for count in range(0, 10):
+                try:
+                    await self._set_unsupported_feature_info()
+                    break
+                except Exception as e_:
+                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
+                    time.sleep(2**count)
+
             if not self._replacement_node_flag:
                 self.create()
         except Exception as e:
@@ -125,20 +132,6 @@ class Configure(Setup):
         Conf.save(const.DATABASE_INDEX)
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
-
-    def _rsyslog(self):
-        """
-        Configure rsyslog
-        """
-        Log.info("Configuring rsyslog")
-        os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
-        if os.path.exists(const.RSYSLOG_DIR):
-            Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
-            Setup._run_cmd("systemctl restart rsyslog")
-        else:
-            msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
-            Log.error(msg)
-            raise CsmSetupError(msg)
 
     def _rsyslog_common(self):
         """
