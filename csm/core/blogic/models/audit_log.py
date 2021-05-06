@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
-from schematics.models import Model
 from schematics.types import DateTimeType, IntType, StringType
 from csm.core.blogic.models import CsmModel
 
