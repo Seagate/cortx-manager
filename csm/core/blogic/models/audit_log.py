@@ -26,7 +26,7 @@ class CsmAuditLogModel(CsmModel):
     method = StringType(default="")
     path = StringType(default="")
     user_agent = StringType(default="")
-    response_code = StringType(default="")
+    response_code = IntType(default=-1)
     request_id = IntType(default=int(time.time()))
 
 class S3AuditLogModel(CsmModel):
