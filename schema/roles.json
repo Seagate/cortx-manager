@@ -21,7 +21,8 @@
             "s3accounts": ["list", "create", "update"],
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
-            "health": ["list"]
+            "health": ["list"],
+            "security": ["read"]
 
         }
     },
@@ -36,7 +37,8 @@
             "s3accounts": ["list"],
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
-            "health": ["list"]
+            "health": ["list"],
+            "security": ["read"]
         }
     },
     "s3": {

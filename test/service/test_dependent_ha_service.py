@@ -17,7 +17,6 @@ import sys, os
 import time
 import json
 import requests
-import pika
 import random
 from statsd import StatsClient
 import provisioner
@@ -120,7 +119,7 @@ def test_elasticsearch(args):
     except Exception as e:
         raise TestFailed("Elasticsearch is not working. Exception %s ..." %e)
 
-def test_consule(args):
+def test_consul(args):
     """
     Check if consul is working on system
     """
@@ -133,24 +132,4 @@ def test_consule(args):
     except:
         raise TestFailed("Consul is not working ...")
 
-def test_rabbitmq(args):
-    """
-    Check status for rabbitmq service
-    """
-    try:
-        Log.console("\n\n******************* Testing rabbitmq *******************")
-        hosts = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>hosts")
-        username = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>username")
-        password = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>password")
-        virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, "CHANNEL>virtual_host")
-        ampq_hosts = [f'amqp://{username}:{password}@{host}/{virtual_host}' \
-                      for host in hosts]
-        ampq_hosts = [pika.URLParameters(host) for host in ampq_hosts]
-        random.shuffle(ampq_hosts)
-        connection = pika.BlockingConnection(ampq_hosts)
-        channel = connection.channel()
-        connection.close()
-    except Exception as e:
-        raise TestFailed("RabbitMQ is not working %s ..." %e)
-
-test_list = [ test_statsd, test_kibana, test_elasticsearch, test_consule, test_rabbitmq ]
+test_list = [ test_statsd, test_kibana, test_elasticsearch, test_consul ]
