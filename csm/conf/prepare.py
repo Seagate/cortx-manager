@@ -107,9 +107,8 @@ class Prepare(Setup):
 
     def _get_consul_info(self):
         """
-        Obtains minion data network info.
-
-        :param machine_id: Minion id.
+        Obtains list of consul host address
+        :return: list of ip where consule is running
         """
         Log.info("Fetching data N/W info.")
         data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
@@ -122,9 +121,8 @@ class Prepare(Setup):
     
     def _get_es_hosts_info(self):
     	"""
-        Obtains minion data network info
-
-    	:param machine_id: Host Minion id.
+        Obtains list of elasticsearch hosts ip running in a cluster
+    	:return: list of elasticsearch hosts ip running in a cluster
     	"""
     	Log.info("Fetching data N/W info.")
     	server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
@@ -140,10 +138,8 @@ class Prepare(Setup):
 
     def _set_db_host_addr(self):
         """
-        Sets database backend host address in CSM config.
-
-        :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
-        :param addr: Host address.
+        Sets database hosts address in CSM config.
+        :return:
         """
         consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
