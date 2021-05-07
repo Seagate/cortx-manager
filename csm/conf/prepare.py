@@ -105,7 +105,7 @@ class Prepare(Setup):
             node_name = node_data.get(const.NAME)
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}>{node_name}",f"{hostname}")
 
-    def _get_data_nw_info(self):
+    def _get_consul_info(self):
         """
         Obtains minion data network info.
 
@@ -118,7 +118,25 @@ class Prepare(Setup):
         except VError as e:
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
-        return data_nw_private_fqdn
+        return [data_nw_private_fqdn]
+    
+    def _get_es_hosts_info(self):
+    	"""
+        Obtains minion data network info
+
+    	:param machine_id: Host Minion id.
+    	"""
+    	Log.info("Fetching data N/W info.")
+    	server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
+    	data_nw_private_fqdn_list = []
+    	for machine_id, node_data in server_node_info.items():
+            data_nw_private_fqdn_list.append(node_data["network"]["data"]["private_fqdn"])
+    	try:
+            NetworkV().validate('connectivity', data_nw_private_fqdn_list)
+    	except VError as e:
+            Log.error(f"Network Validation failed.{e}")
+            raise CsmSetupError(f"Network Validation failed.{e}")
+    	return data_nw_private_fqdn_list
 
     def _set_db_host_addr(self):
         """
@@ -127,10 +145,11 @@ class Prepare(Setup):
         :param backend: Databased backend. Supports Elasticsearch('es'), Consul ('consul').
         :param addr: Host address.
         """
-        addr = self._get_data_nw_info()
+        consul_host = self._get_consul_info()
+        es_host = self._get_es_hosts_info()
         try:
-            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>host', addr)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>host', addr)
+            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', consul_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', es_host)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
