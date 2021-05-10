@@ -26,82 +26,6 @@ from cmd import Cmd
 import pathlib
 import argparse
 
-class ArgumentError(argparse.ArgumentError):
-    def __init__(self, rc, message, argument=None):
-        super(ArgumentError, self).__init__(argument, message)
-        self.rc = rc
-        self.message = message
-
-    def __str__(self):
-        return f"{self.rc}: {self.message}"
-
-class Terminal:
-
-    EMPTY_PASS_FIELD = "Password field can't be empty."
-    @staticmethod
-    def get_quest_answer(name: str) -> bool:
-        """
-        Asks user user a question using stdout
-        Returns True or False, depending on an answer
-
-        :param quest: question string
-        :return: True or False depending on user input
-        """
-
-        while True:
-            # Postive answer is default
-            sys.stdout.write(f'Are you sure you want to perform "{name}" command? [Y/n] ')
-
-            usr_input = input().lower()
-            if usr_input in ['y', 'yes', '']:
-                return True
-            elif usr_input in ['n', 'no']:
-                return False
-            else:
-                sys.stdout.write("Please answer with 'yes' or 'no'\n")
-
-    @staticmethod
-    def logout_alert(is_logged_out: bool):
-        if is_logged_out:
-            sys.stdout.write('Successfully logged out\n')
-        else:
-            Log.error(traceback.format_exc())
-            sys.stderr('Logout failed\n')
-
-    @staticmethod
-    def get_current_password(value):
-        """
-        Fetches current password for user in non-echo mode.
-        :param value:
-        :return:
-        """
-        value = value or getpass(prompt="Current Password: ")
-        if not value:
-            raise ArgumentError(errno.EINVAL,
-                                f"Current {Terminal.EMPTY_PASS_FIELD}")
-        return value
-
-    @staticmethod
-    def get_password(value, confirm_pass_flag=True):
-        """
-        Fetches the Password from Terminal in Non-Echo Mode.
-        :return:
-        """
-        sys.stdout.write(("\nPassword must contain the following.\n1) 1 upper and lower "
-        "case character.\n2) 1 numeric character.\n3) 1 of the !@#$%^&*()_+-=[]{}|' "
-                          "characters.\n"))
-        value = value or getpass(prompt="Password: ")
-        if not value:
-            raise ArgumentError(errno.EINVAL, Terminal.EMPTY_PASS_FIELD)
-        if confirm_pass_flag:
-            confirm_password = getpass(prompt="Confirm Password: ")
-            if not confirm_password:
-                raise ArgumentError(errno.EINVAL,
-                                    f"Confirm {Terminal.EMPTY_PASS_FIELD}")
-            if not confirm_password == value:
-                raise ArgumentError(errno.EINVAL, "Password do not match.")
-        return value
-
 class CortxCli(Cmd):
     def __init__(self, args):
         super(CortxCli, self).__init__()
@@ -220,7 +144,7 @@ class CortxCli(Cmd):
         """
         try:
             Log.debug(f"{self.username}: {cmd}")
-            command = CommandFactory.get_command(self.args, self._permissions)
+            command = CommandFactory.get_command(self.args, self._permissions, const.COMMAND_DIRECTORY, const.EXCLUDED_COMMANDS, const.HIDDEN_COMMANDS)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))
@@ -250,7 +174,7 @@ class CortxCli(Cmd):
             Log.debug(f"{self.username}: Stopped via keyboard interrupt.")
             self.do_exit()
         except Exception as e:
-            Log.critical(f"{self.username}:{e}")
+            print(f"{self.username}:{e}")
             self.do_exit(self.some_error_occured)
 
     def do_exit(self, args=""):
@@ -273,10 +197,13 @@ class CortxCli(Cmd):
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
-    from csm.cli.command_factory import CommandFactory
-    from csm.cli.csm_client import CsmRestClient, CsmDirectClient
+    from cortx.utils.cli.command_factory import CommandFactory
+    from csm.cli.csm_client import CsmRestClient
+    from cortx.utils.cli.cli_client import DirectClient
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import Conf
+    from cortx.utils.cli.errors import ArgumentError
+    from cortx.utils.cli.terminal import Terminal
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
     from csm.common.payload import Yaml
@@ -291,6 +218,6 @@ if __name__ == '__main__':
     except InvalidRequest as e:
         raise InvalidRequest(f"{e}")
     except Exception as e:
-        Log.critical(f"{e}")
+        print(f"{e}")
+        print(traceback.print_exc())
         sys.stderr.write('Some error occurred.\nPlease try login again.\n')
-

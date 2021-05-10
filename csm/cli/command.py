@@ -24,7 +24,8 @@ from copy import deepcopy
 from dict2xml import dict2xml
 from prettytable import PrettyTable
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.cli.cortxcli import Terminal, ArgumentError
+from cortx.utils.cli.terminal import Terminal
+from cortx.utils.cli.errors import ArgumentError
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from csm.core.controllers.validators import BucketNameValidator

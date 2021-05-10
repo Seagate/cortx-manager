@@ -27,21 +27,10 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from csm.cli.command import Command
+from cortx.utils.cli.cli_client import CliClient
 
 
-class CsmClient:
-    """ Base class for invoking business logic functionality """
-
-    def __init__(self, url):
-        self._url = url
-
-    def call(self, command):
-        pass
-
-    def process_request(self, session, cmd, action, options, args, method):
-        pass
-
-class CsmApiClient(CsmClient):
+class CsmApiClient(CliClient):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
 
     def __init__(self):
@@ -73,23 +62,7 @@ class CsmApiClient(CsmClient):
     def process_response(self, response):
         self._response = response
 
-class CsmDirectClient(CsmClient):
-    """Class Handles Direct Calls for CSM CLI"""
-    def __init__(self):
-        super(CsmDirectClient, self).__init__(None)
-
-    async def call(self, command):
-        module_obj = import_module(command.comm.get("target"))
-        if command.comm.get("class", None):
-            if command.comm.get("is_static", False):
-                target = getattr(module_obj, command.comm.get("class"))
-            else:
-                target = getattr(module_obj, command.comm.get("class"))()
-        else:
-            target = module_obj
-        return await getattr(target, command.comm.get("method"))(command)
-
-class CsmRestClient(CsmClient):
+class CsmRestClient(CliClient):
     """ REST API client for CSM server """
 
     def __init__(self, url):
