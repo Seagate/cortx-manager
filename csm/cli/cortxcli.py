@@ -124,7 +124,7 @@ class CortxCli(Cmd):
         return command
 
     def process_direct_command(self, command):
-        obj = CsmDirectClient()
+        obj = DirectClient()
         response = self.loop.run_until_complete(obj.call(command))
         if response:
             command.process_response(out=sys.stdout, err=sys.stderr,
@@ -144,7 +144,11 @@ class CortxCli(Cmd):
         """
         try:
             Log.debug(f"{self.username}: {cmd}")
-            command = CommandFactory.get_command(self.args, self._permissions, const.COMMAND_DIRECTORY, const.EXCLUDED_COMMANDS, const.HIDDEN_COMMANDS)
+            command = CommandFactory.get_command(self.args, 
+                                                self._permissions, 
+                                                const.COMMAND_DIRECTORY, 
+                                                const.EXCLUDED_COMMANDS, 
+                                                const.HIDDEN_COMMANDS)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
                                                     command.sub_command_name)))
@@ -175,6 +179,7 @@ class CortxCli(Cmd):
             self.do_exit()
         except Exception as e:
             print(f"{self.username}:{e}")
+            import traceback;traceback.print_exc()
             self.do_exit(self.some_error_occured)
 
     def do_exit(self, args=""):
@@ -210,6 +215,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     from csm.common.conf import Security
+    from csm.cli.cli_validators import Validatiors
     try:
         CortxCli(sys.argv).cmdloop()
     except KeyboardInterrupt:

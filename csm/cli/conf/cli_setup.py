@@ -58,7 +58,7 @@ class CliSetupCommand:
     def process(self):
         ''' Parse args for cli_setup and execute cmd to print output '''
         self._cmd = self._get_command()
-        obj = CsmDirectClient()
+        obj = DirectClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))
         if response:
             self._cmd.process_response(out=sys.stdout, err=sys.stderr,
@@ -68,10 +68,10 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..'))
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
-    from csm.cli.command import CommandParser
+    from cortx.utils.cli.command import CommandParser
     from csm.core.blogic import const
     from cortx.utils.log import Log
-    from csm.cli.csm_client import CsmDirectClient
+    from cortx.utils.cli.cli_client import DirectClient
     from csm.cli.conf.post_install import PostInstall
     from csm.cli.conf.configure import Configure
     from csm.cli.conf.init import Init
