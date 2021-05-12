@@ -39,7 +39,7 @@ class CsmSetupCommand:
 
     def _validate(self):
         ''' Validate setup command '''
-        
+
         if len(self._args) < 2:
             raise Exception('Usage: csm_setup -h')
 

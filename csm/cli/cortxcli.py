@@ -144,10 +144,10 @@ class CortxCli(Cmd):
         """
         try:
             Log.debug(f"{self.username}: {cmd}")
-            command = CommandFactory.get_command(self.args, 
-                                                self._permissions, 
-                                                const.COMMAND_DIRECTORY, 
-                                                const.EXCLUDED_COMMANDS, 
+            command = CommandFactory.get_command(self.args,
+                                                self._permissions,
+                                                const.COMMAND_DIRECTORY,
+                                                const.EXCLUDED_COMMANDS,
                                                 const.HIDDEN_COMMANDS)
             if command.need_confirmation:
                 res = Terminal.get_quest_answer(" ".join((command.name,
@@ -178,8 +178,7 @@ class CortxCli(Cmd):
             Log.debug(f"{self.username}: Stopped via keyboard interrupt.")
             self.do_exit()
         except Exception as e:
-            print(f"{self.username}:{e}")
-            import traceback;traceback.print_exc()
+            Log.critical(f"{self.username}:{e}")
             self.do_exit(self.some_error_occured)
 
     def do_exit(self, args=""):
@@ -224,6 +223,5 @@ if __name__ == '__main__':
     except InvalidRequest as e:
         raise InvalidRequest(f"{e}")
     except Exception as e:
-        print(f"{e}")
-        print(traceback.print_exc())
+        Log.critical(f"{e}")
         sys.stderr.write('Some error occurred.\nPlease try login again.\n')

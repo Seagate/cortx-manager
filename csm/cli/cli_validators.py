@@ -5,7 +5,7 @@ from cortx.utils.cli.errors import ArgumentError
 from csm.core.controllers.validators import BucketNameValidator
 
 class Validatiors:
-    
+
     """CLI Validatiors Class"""
     @staticmethod
     def positive_int(value):
