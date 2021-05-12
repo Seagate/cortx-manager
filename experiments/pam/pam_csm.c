@@ -79,7 +79,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	/* set curl options */
 	
 	curl_easy_setopt(pCurl, CURLOPT_URL, pUrl);
-	curl_easy_setopt(pCurl, CURLOPT_FAILONERROR, true);
+	curl_easy_setopt(pCurl, CURLOPT_FAILONERROR, TRUE);
 	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "POST");
 	curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, json_object_to_json_string(jobj));
