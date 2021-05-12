@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -65,7 +67,7 @@ class CliSetupCommand:
                                      response=response)
 
 if __name__ == '__main__':
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..','..'))
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
     from cortx.utils.cli.command import CommandParser
