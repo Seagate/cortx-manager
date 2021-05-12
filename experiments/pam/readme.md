@@ -18,6 +18,8 @@ please email opensource@seagate.com or cortx-questions@seagate.com.
 
 #### **Required Packages.**
 
+* **gcc**
+    * sudo yum install gcc
 * **pam-devel**
 	* sudo  yum install pam-devel
 * **curl-devel**
@@ -26,24 +28,17 @@ please email opensource@seagate.com or cortx-questions@seagate.com.
 	* sudo yum install json-c-devel
 
 ### **Make PAM FIle **
-    * gcc -fPIC -c pam.c
-    * gcc -shared -o pam_csm.so pam.o -lpam  -lcurl -ljson-c
+    * gcc -fPIC -c pam_csm.c
+    * gcc -shared -o pam_csm.so pam_csm.o -lpam  -lcurl -ljson-c
 
 
 ### **Configuration**
-   
-   1.  add the following line in /etc/pam.d/sshd at starting.
+
+   1.  copy pam_csm.so to /lib64/security/
+
+   2.  add the following line in /etc/pam.d/password-auth
    ```
-   auth       optional   pam_csm.so
-   ```
-   2.  Add the Following Configuration in /etc/pam.d/system-auth-ac
-   ```
-   auth       optional  pam_csm.so
-   ```
-   3.
-   /etc/pam.d/password-auth 
-   ```
-   auth        sufficient   pam_csm.so
-   account     sufficient   pam_csm.so
+   auth        sufficient    pam_csm.so
+   account     sufficient    pam_csm.so
    password    sufficient    pam_csm.so 
    ```
