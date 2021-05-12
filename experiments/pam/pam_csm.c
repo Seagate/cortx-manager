@@ -29,6 +29,11 @@
 // libjson
 #include <json-c/json.h>
 
+/* 
+pam_sm_open_session() and pam_sm_close_session() are missing. These functions are for
+opening and closing the session for authenticated user.
+*/
+
 /* expected hook */
 PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv)
 {
@@ -49,14 +54,14 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 {
     //Login Function for CSM Initialization.
 	pam_syslog(pamh, LOG_INFO, "Verify CSM User %s \n", pUsername);
-	const char *pUrl = "http://localhost:8101/api/v1/login?debug";
+	const char *pUrl = "http://localhost:28101/api/v1/login";
 	CURL *pCurl = curl_easy_init();
 	struct curl_slist *headers = NULL;
 	int res = -1;
 	static const char *header_file_name = "/var/log/response_headers.out";
-	FILE *header_file;
+	FILE *header_file = NULL;
 	static const char *body_file_name = "/var/log/response_body.out";
-	FILE *body_file;
+	FILE *body_file = NULL;
 	pam_syslog(pamh, LOG_ERR, "URL- %s \n", pUrl);
 	if (!pCurl)
 	{
@@ -68,15 +73,18 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	/* create json object for post */
 	json_object *jobj = json_object_new_object();
 	pam_syslog(pamh, LOG_DEBUG, "Using Username %s", pUsername);
+	pam_syslog(pamh, LOG_DEBUG, "Using Password %s", pPassword);
 	json_object_object_add(jobj, "username", json_object_new_string(pUsername));
 	json_object_object_add(jobj, "password", json_object_new_string(pPassword));
 	/* set curl options */
+	
 	curl_easy_setopt(pCurl, CURLOPT_URL, pUrl);
+	curl_easy_setopt(pCurl, CURLOPT_FAILONERROR, true);
 	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "POST");
 	curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, json_object_to_json_string(jobj));
 	/* Write Output */
-	header_file = fopen(header_file_name, "wb");
+	header_file = fopen(header_file_name, "w");
 	if (!header_file)
 	{
 		curl_easy_cleanup(pCurl);
@@ -85,7 +93,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	}
 
 	/* open the body file */
-	body_file = fopen(body_file_name, "wb");
+	body_file = fopen(body_file_name, "w");
 	if (!body_file)
 	{
 		curl_easy_cleanup(pCurl);
@@ -95,10 +103,10 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	}
 
 	/* we want the headers be written to this file handle */
-	curl_easy_setopt(pCurl, CURLOPT_HEADERDATA, headerfile);
+	curl_easy_setopt(pCurl, CURLOPT_HEADERDATA, header_file);
 
 	/* we want the body be written to this file handle instead of stdout */
-	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, bodyfile);
+	curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, body_file);
 	curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 1);
 	res = curl_easy_perform(pCurl);
 	curl_easy_cleanup(pCurl);
