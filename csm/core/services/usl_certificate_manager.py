@@ -1,4 +1,5 @@
 # CORTX-CSM: CORTX Management web and CLI interface.
+# CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -16,6 +17,7 @@
 from asyncio import Lock
 from csm.core.blogic import const
 from cortx.utils.log import Log
+from cortx.utils.conf_store import Conf
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -157,9 +159,9 @@ class USLNativeCertificateManager(CertificateManager):
 
     def __init__(self) -> None:
         super().__init__(
-            const.UDS_CERTIFICATES_PATH,
-            const.UDS_NATIVE_PRIVATE_KEY_FILENAME,
-            const.UDS_NATIVE_CERTIFICATE_FILENAME,
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key'),
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_key'),
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_crt'),
         )
 
     # FIXME private key should not be exposed
@@ -181,9 +183,9 @@ class USLDomainCertificateManager(CertificateManager):
 
     def __init__(self, secure_storage: SecureStorage) -> None:
         super().__init__(
-            const.UDS_CERTIFICATES_PATH,
-            const.UDS_DOMAIN_PRIVATE_KEY_FILENAME,
-            const.UDS_DOMAIN_CERTIFICATE_FILENAME,
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key'),
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key'),
+            Conf.get(const.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt'),
             secure_storage
         )
 
