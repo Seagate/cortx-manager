@@ -73,11 +73,9 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	/* create json object for post */
 	json_object *jobj = json_object_new_object();
 	pam_syslog(pamh, LOG_DEBUG, "Using Username %s", pUsername);
-	pam_syslog(pamh, LOG_DEBUG, "Using Password %s", pPassword);
 	json_object_object_add(jobj, "username", json_object_new_string(pUsername));
 	json_object_object_add(jobj, "password", json_object_new_string(pPassword));
 	/* set curl options */
-	
 	curl_easy_setopt(pCurl, CURLOPT_URL, pUrl);
 	curl_easy_setopt(pCurl, CURLOPT_FAILONERROR, TRUE);
 	curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "POST");
@@ -131,31 +129,24 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
 	pam_syslog(pamh, LOG_INFO, "Logging In With CSM User.\n");
 	int ret = 0;
 	const char *pUsername = NULL;
-	struct pam_message msg;
-	struct pam_conv *pItem;
-	struct pam_response *pResp;
-	const struct pam_message *pMsg = &msg;
+	const char *pPassword = NULL;
 
-	msg.msg_style = PAM_PROMPT_ECHO_OFF;
 	if (pam_get_user(pamh, &pUsername, NULL) != PAM_SUCCESS)
 	{
 		pam_syslog(pamh, LOG_ERR, "Error in Fetching Username.\n");
 		return PAM_AUTH_ERR;
 	}
 
-	if (pam_get_item(pamh, PAM_CONV, (const void **)&pItem) != PAM_SUCCESS || !pItem)
+	if (pam_get_authtok(pamh, PAM_AUTHTOK, &pPassword , NULL) != PAM_SUCCESS)
 	{
-		pam_syslog(pamh, LOG_ERR, "Error in Fetching Pam Conversation Pointer.\n");
+		pam_syslog(pamh, LOG_ERR, "Error in Fetching Password.\n");
 		return PAM_AUTH_ERR;
 	}
-	memset(pResp, 0, sizeof(struct pam_response));
-	pItem->conv(1, &pMsg, &pResp, pItem->appdata_ptr);
+
 	ret = PAM_SUCCESS;
-	if (login(pamh, pUsername, pResp[0].resp) != 0)
+	if (login(pamh, pUsername, pPassword) != 0)
 	{
 		ret = PAM_AUTH_ERR;
 	}
-	memset(pResp[0].resp, 0, strlen(pResp[0].resp));
-	free(pResp);
 	return ret;
 }
