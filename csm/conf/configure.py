@@ -196,7 +196,7 @@ class Configure(Setup):
         data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
         Log.debug(f"Validating connectivity for virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn}")
         try:
-            NetworkV().validate('connectivity', [virtual_host, data_nw_public_fqdn])
+            NetworkV().validate('connectivity', [data_nw_public_fqdn])
         except Exception as e:
             Log.error(f"Network Validation failed. {e}")
             raise CsmSetupError("Network Validation failed.")
