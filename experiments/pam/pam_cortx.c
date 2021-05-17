@@ -29,11 +29,6 @@
 // libjson
 #include <json-c/json.h>
 
-/* 
-pam_sm_open_session() and pam_sm_close_session() are missing. These functions are for
-opening and closing the session for authenticated user.
-*/
-
 /* expected hook */
 PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv)
 {
