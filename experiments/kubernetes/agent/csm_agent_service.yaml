@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: csm-agent-svc
+  labels:
+    app: csm-agent
+spec:
+  type: NodePort
+  ports:
+  - port: 28101
+    nodePort: 32101
+  selector:
+    app: csm-agent
