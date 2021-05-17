@@ -10,7 +10,7 @@
       "args": [
         {
           "flag": "-o",
-          "type": "Validatiors.positive_int",
+          "type": "Validators.positive_int",
           "type_target": "csm.cli.cli_validators",
           "dest": "offset",
           "help": "Amount of users you want to get",
@@ -18,7 +18,7 @@
         },
         {
           "flag": "-l",
-          "type": "Validatiors.positive_int",
+          "type": "Validators.positive_int",
           "type_target": "csm.cli.cli_validators",
           "dest": "limit",
           "help": "Limit of amount of users you want to view",

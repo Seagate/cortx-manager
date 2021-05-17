@@ -1,41 +1,12 @@
 import errno
-from csm.common.payload import CommonPayload
 from cortx.utils.log import Log
 from cortx.utils.cli.errors import ArgumentError
+from cortx.utils.cli.cli_validators import CommonValidators
 from csm.core.controllers.validators import BucketNameValidator
 
-class Validatiors:
+class Validators(CommonValidators):
 
-    """CLI Validatiors Class"""
-    @staticmethod
-    def positive_int(value):
-        try:
-            if int(value) > -1:
-                return int(value)
-            raise ArgumentError(errno.EINVAL, "Value Must be Positive Integer")
-        except ValueError:
-            raise ArgumentError(errno.EINVAL,"Value Must be Positive Integer")
-
-    @staticmethod
-    def file_parser(value):
-        try:
-            return CommonPayload(value).load()
-        except ValueError as ve:
-            Log.error(f"File parsing failed. {value}: {ve}")
-            raise ArgumentError(errno.EINVAL,
-                ("File operations failed. "
-                 "Please check if the file is valid or not"))
-        except FileNotFoundError as err:
-            Log.error(f"No such file present. {value}: {err}")
-            raise ArgumentError(errno.ENOENT,
-                ("File operation failed. "
-                 "Please check if the file exists."))
-        except KeyError as err:
-            Log.error(f"Check file type. {value}: {err}")
-            raise ArgumentError(errno.ENOENT,
-                ("File operation failed. "
-                 "Please check if the file exists and its type."))
-
+    """CLI Validators Class"""
     @staticmethod
     def bucket_name(value):
         validator = BucketNameValidator()

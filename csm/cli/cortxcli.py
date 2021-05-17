@@ -214,7 +214,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     from csm.common.conf import Security
-    from csm.cli.cli_validators import Validatiors
+    from csm.cli.cli_validators import Validators
     try:
         CortxCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
