@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
-set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -331,8 +330,6 @@ BUILD_END_TIME=$(date +%s)
 
 echo "CSM RPMs ..."
 find "$BASE_DIR" -name "*.rpm"
-
-ls -la /opt/seagate/cortx/utils/cli/schema/
 
 [ "$INTEGRATION" == true ] && {
     INTEGRATION_TEST_START=$(date +%s)
