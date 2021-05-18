@@ -15,7 +15,7 @@
 
 import sys, os
 import json, unittest
-from cortx.utils.cli.command_factory import CommandFactory
+from cortx.utils.cli_framework.command_factory import CommandFactory
 from csm.cli.support_bundle.support_bundle import SupportBundle
 from csm.test.common import Const
 

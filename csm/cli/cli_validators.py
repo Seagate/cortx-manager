@@ -15,8 +15,8 @@
 
 import errno
 from cortx.utils.log import Log
-from cortx.utils.cli.errors import ArgumentError
-from cortx.utils.cli.cli_validators import CommonValidators
+from cortx.utils.cli_framework.errors import ArgumentError
+from cortx.utils.cli_framework.cli_validators import CommonValidators
 from csm.core.controllers.validators import BucketNameValidator
 
 class Validators(CommonValidators):

@@ -72,10 +72,10 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
-    from cortx.utils.cli.command import CommandParser
+    from cortx.utils.cli_framework.command import CommandParser
     from csm.core.blogic import const
     from cortx.utils.log import Log
-    from cortx.utils.cli.cli_client import DirectClient
+    from cortx.utils.cli_framework.cli_client import DirectClient
     from csm.conf.post_install import PostInstall
     from csm.conf.prepare import Prepare
     from csm.conf.configure import Configure

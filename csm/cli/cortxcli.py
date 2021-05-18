@@ -201,13 +201,13 @@ class CortxCli(Cmd):
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
-    from cortx.utils.cli.command_factory import CommandFactory
+    from cortx.utils.cli_framework.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient
-    from cortx.utils.cli.cli_client import DirectClient
+    from cortx.utils.cli_framework.cli_client import DirectClient
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import Conf
-    from cortx.utils.cli.errors import ArgumentError
-    from cortx.utils.cli.terminal import Terminal
+    from cortx.utils.cli_framework.errors import ArgumentError
+    from cortx.utils.cli_framework.terminal import Terminal
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
     from csm.common.payload import Yaml

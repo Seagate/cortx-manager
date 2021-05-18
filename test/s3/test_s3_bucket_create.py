@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from cortx.utils.cli.command_factory import CommandFactory
+from cortx.utils.cli_framework.command_factory import CommandFactory
 import unittest
 import json
 import os
