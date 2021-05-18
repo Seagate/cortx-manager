@@ -206,7 +206,7 @@ if __name__ == '__main__':
     from cortx.utils.cli_framework.cli_client import DirectClient
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import Conf
-    from cortx.utils.cli_framework.errors import ArgumentError
+    from cortx.utils.cli_framework.errors import CliError
     from cortx.utils.cli_framework.terminal import Terminal
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *

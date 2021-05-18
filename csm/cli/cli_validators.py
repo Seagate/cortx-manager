@@ -15,7 +15,7 @@
 
 import errno
 from cortx.utils.log import Log
-from cortx.utils.cli_framework.errors import ArgumentError
+from cortx.utils.cli_framework.errors import CliError
 from cortx.utils.cli_framework.cli_validators import CommonValidators
 from csm.core.controllers.validators import BucketNameValidator
 
@@ -26,7 +26,7 @@ class Validators(CommonValidators):
     def bucket_name(value):
         validator = BucketNameValidator()
         if not validator.is_value_valid(value):
-            raise ArgumentError(errno.EINVAL,
+            raise CliError(errno.EINVAL,
                 ("Bucket Name should be between 4-56 Characters long. "
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))
