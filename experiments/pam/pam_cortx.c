@@ -49,7 +49,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 {
     //Login Function for CSM Initialization.
 	pam_syslog(pamh, LOG_INFO, "Verify CSM User %s \n", pUsername);
-	const char *pUrl = "http://localhost:28101/api/v1/login";
+	static const char *pUrl = "http://localhost:28101/api/v1/login";
 	CURL *pCurl = curl_easy_init();
 	struct curl_slist *headers = NULL;
 	int res = -1;
@@ -77,7 +77,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, json_object_to_json_string(jobj));
 	/* Write Output */
-	header_file = fopen(header_file_name, "w");
+	header_file = fopen(header_file_name, "wb");
 	if (!header_file)
 	{
 		curl_easy_cleanup(pCurl);
@@ -86,7 +86,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	}
 
 	/* open the body file */
-	body_file = fopen(body_file_name, "w");
+	body_file = fopen(body_file_name, "wb");
 	if (!body_file)
 	{
 		curl_easy_cleanup(pCurl);
