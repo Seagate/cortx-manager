@@ -59,7 +59,7 @@
         
         {
           "flag": "Statement",
-          "type": "Validators.file_parser",
+          "type": "Validators._file_parser",
           "type_target": "csm.cli.cli_validators",
           "help": "Path to file",
           "json": true

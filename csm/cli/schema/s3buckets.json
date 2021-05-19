@@ -50,7 +50,7 @@
       "args": [
         {
           "flag": "bucket_name",
-          "type": "Validators.bucket_name",
+          "type": "Validators._bucket_name",
           "type_target": "csm.cli.cli_validators",
           "help": "Give a bucket name to create.",
           "json": true
