@@ -100,8 +100,8 @@ class Configure(Setup):
         Log.info("Getting consul status")
         # get host and port of consul database from conf
         consul_hosts = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>hosts')
-        if not consul_host: raise CsmSetupError("Consul host not available.")
-        cosul_hosts.append(const.LOCALHOST)
+        if not consul_hosts: raise CsmSetupError("Consul host not available.")
+        consul_hosts.append(const.LOCALHOST)
         port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         if not port: raise CsmSetupError("Consul port not available.")
         # Validation throws exception on failure
@@ -112,7 +112,7 @@ class Configure(Setup):
         Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
         es_hosts = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>hosts')
-        if not es_host: raise CsmSetupError("Elasticsearch host not available.")
+        if not es_hosts: raise CsmSetupError("Elasticsearch host not available.")
         es_hosts.append(const.LOCALHOST)
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         if not port: raise CsmSetupError("Elasticsearch port not available.")
