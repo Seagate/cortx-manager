@@ -24,13 +24,13 @@ import aiohttp
 
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
-from csm.core.providers.providers import Request, Response
+from cortx.utils.schema.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from cortx.utils.cli_framework.command import Command
-from cortx.utils.cli_framework.cli_client import CliClient
+from cortx.utils.cli_framework.cli_client import Client
 
 
-class CsmApiClient(CliClient):
+class CsmApiClient(Client):
     """ Concrete class to communicate with RAS API, invokes CsmApi directly """
 
     def __init__(self):
@@ -62,7 +62,7 @@ class CsmApiClient(CliClient):
     def process_response(self, response):
         self._response = response
 
-class CsmRestClient(CliClient):
+class CsmRestClient(Client):
     """ REST API client for CSM server """
 
     def __init__(self, url):
