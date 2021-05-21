@@ -37,7 +37,7 @@ class UnsupportedFeaturesService(ApplicationService):
             const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for
                               feature in v.get(const.DEPENDENT_ON)]
-            return list(set(component_list))        
+            return list(set(component_list))
         components_list = get_component_list_from_features_endpoints()
         components_list.append(const.CSM)
         unsupported_features_list = []
@@ -53,4 +53,3 @@ class UnsupportedFeaturesService(ApplicationService):
         return {
             "unsupported_features": unique_unsupported_features_list
         }
-            
