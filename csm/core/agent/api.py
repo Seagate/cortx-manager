@@ -116,7 +116,7 @@ class CsmRestApi(CsmApi, ABC):
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
-        
+
     @staticmethod
     def is_debug(request) -> bool:
         return 'debug' in request.rel_url.query
