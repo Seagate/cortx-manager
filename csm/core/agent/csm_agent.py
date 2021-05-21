@@ -175,6 +175,7 @@ class CsmAgent:
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
 
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
+        CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
         # USL Service
         try:
             Log.info("Load USL Configurations")
@@ -284,6 +285,7 @@ if __name__ == '__main__':
     from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
+    from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     try:
         # try:
