@@ -25,7 +25,7 @@ class UnsupportedFeaturesView(CsmView):
         self._service = self.request.app[const.UNSUPPORTED_FEATURES_SERVICE]
         self._service_dispatch = {}
 
-    ''' GET REST implementation for fetching unsupported features '''
     async def get(self):
+        ''' GET REST implementation for fetching unsupported features '''
         Log.debug("Handling unsupported features fetch request")
         return await self._service.get_unsupported_features()
