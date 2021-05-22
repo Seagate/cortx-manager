@@ -36,6 +36,10 @@ csm:
             - -t <CSM_PATH>/test/plans/self_test.pln
             - -f <CSM_PATH>/test/test_data/args.yaml
 
+    cleanup:
+        cmd: /opt/seagate/cortx/csm/bin/csm_setup cleanup
+        args: --config $URL
+
     reset:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup reset
         args: --config $URL
