@@ -64,7 +64,7 @@ class HealthView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        return None 
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/components")
 @CsmView._app_routes.view("/api/v2/system/health/components")
