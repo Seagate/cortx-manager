@@ -133,4 +133,4 @@ class HealthResourceView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        return None 
+        return None
