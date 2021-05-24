@@ -118,7 +118,6 @@ class Prepare(Setup):
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
         return [data_nw_private_fqdn]
-    
     def _get_es_hosts_info(self):
     	"""
         Obtains list of elasticsearch hosts ip running in a cluster
@@ -144,8 +143,8 @@ class Prepare(Setup):
         consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
         try:
-            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', consul_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', es_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
