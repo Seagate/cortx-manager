@@ -42,3 +42,9 @@ class HealthPlugin(CsmPlugin):
             self.health_callback = None
         except Exception as e:
             Log.exception(e)
+
+    def init(self, **kwargs):
+        pass
+
+    def process_request(self, **kwargs):
+        pass
