@@ -241,8 +241,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
-    from csm.core.services.health import HealthAppService, HealthRepository \
-            , HealthMonitorService
+    from csm.core.services.health import HealthAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService
     from csm.core.services.s3.accounts import S3AccountService
