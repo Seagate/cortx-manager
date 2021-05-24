@@ -222,7 +222,7 @@ class CsmAgent:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
-        Log.info("Started stopping csm agent")
+        Log.info("Started stopping csm agent.")
         CsmAgent.alert_monitor.stop()
         Log.info("Finished stopping alert monitor service")
 
