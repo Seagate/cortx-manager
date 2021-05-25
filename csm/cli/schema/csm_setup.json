@@ -246,40 +246,10 @@
       "permissions_tag": "update",
       "args": [
         {
-          "flag": "-p",
-          "dest": "Product",
-          "help": "Product name",
-          "default": "cortx",
-          "type": "str",
-          "choices": [
-            "cortx"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "-c",
-          "dest": "Component",
-          "help": "Component name",
-          "default": "all",
-          "type": "str",
-          "choices": [
-            "backend",
-            "frontend",
-            "all"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "--hard",
-          "action": "store_true",
-          "default": false,
-          "help": "Hard Reset"
-        },
-        {
-          "flag": "--soft",
-          "action": "store_true",
-          "default": false,
-          "help": "Soft reset"
+            "flag": "--config",
+            "dest": "config_url",
+            "type": "str",
+            "help": "Config Store URL e.g <type>://<path>."
         },
         {
           "flag": "args",
