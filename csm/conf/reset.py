@@ -40,7 +40,7 @@ class Reset(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -48,6 +48,7 @@ class Reset(Setup):
         self.directory_cleanup()
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):
         service_obj = Service('csm_agent.service')
@@ -75,7 +76,7 @@ class Reset(Setup):
 
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         self._es_db_url = (f"http://localhost:{port}/")
-        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
+        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         self._consul_db_url = (f"http://localhost:{port}/v1/kv/{CONSUL_ROOT}/")
 
         for each_model in Conf.get(const.DATABASE_INDEX, "models"):
@@ -86,7 +87,7 @@ class Reset(Setup):
             else:
                 db = "consul_db"
                 collection = f"{each_model.get('config').get('consul_db').get('collection')}"
-                url = f"{self._consul_db_url}{collection}/?recurse"
+                url = f"{self._consul_db_url}{collection}?recurse"
 
             Log.info(f"Deleting for collection:{collection} from {db}")
             await self.erase_index(collection, url, "delete")
@@ -97,7 +98,7 @@ class Reset(Setup):
     async def erase_index(self, collection, url, method ):
         Log.info(f"Url: {url}")
         try:
-            response, headers, status = await Setup.request(url, 'delete')
+            response, headers, status = await Setup.request(url, method)
             if status != 200:
                 Log.error(f"Index {collection} Could Not Be Deleted.")
                 Log.error(f"Response --> {response}")
