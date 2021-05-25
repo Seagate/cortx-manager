@@ -58,7 +58,6 @@ class Setup:
         self._is_env_vm = False
         self._is_env_dev = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
-        self._copy_skeleton_configs()
         self.conf_store_keys = {}
 
     def _copy_skeleton_configs(self):

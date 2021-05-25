@@ -38,6 +38,7 @@ class Prepare(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
+        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
