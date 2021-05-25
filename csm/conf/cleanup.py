@@ -1,5 +1,4 @@
 # CORTX-CSM: CORTX Management web and CLI interface.
-# CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -16,7 +15,6 @@
 
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
-
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from cortx.utils.kv_store.error import KvError
