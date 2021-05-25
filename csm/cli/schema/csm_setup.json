@@ -389,7 +389,7 @@
         ],
         "comm": {
           "type": "direct",
-          "target": "csm.cli.conf.cleanup",
+          "target": "csm.conf.cleanup",
           "method": "execute",
           "class": "Cleanup",
           "is_static": false

@@ -21,7 +21,6 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from cortx.utils.kv_store.error import KvError
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.fs_utils import FSUtils
 from csm.conf.setup import CsmSetupError, Setup
 
 class Cleanup(Setup):
@@ -43,6 +42,8 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+        self.directory_cleanup()
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def directory_cleanup(self):
         files_directory_list = [
@@ -54,8 +55,4 @@ class Cleanup(Setup):
 
         for dir_path in files_directory_list:
             Log.info(f"Deleteing path :{dir_path}")
-            FSUtils.delete(dir_path)
-
-
-
-
+            Setup._run_cmd(f"rm -rf {dir_path}")
