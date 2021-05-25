@@ -60,7 +60,8 @@ class Setup:
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
 
-    def _copy_skeleton_configs(self):
+    @staticmethod
+    def _copy_skeleton_configs():
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
