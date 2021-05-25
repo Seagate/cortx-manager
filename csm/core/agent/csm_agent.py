@@ -72,22 +72,10 @@ class CsmAgent:
         for f in cached_files:
             os.remove(f)
 
-        #Initializing MessageBus
-        message_bus = None
-        try:
-            #MessageBus needs to be initialized once
-            message_bus = MessageBus()
-        except MessageBusError as ex:
-            Log.error(f"Error occured while initializing MessageBus. {ex}")
-
         # Alert configuration
         alerts_repository = AlertRepository(db)
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
-
-        # settting usl polling
-        usl_polling_log = Conf.get(const.CSM_GLOBAL_INDEX, "Log>usl_polling_log")
-        CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
 
         # system status
         system_status_service = SystemStatusService()
@@ -96,7 +84,7 @@ class CsmAgent:
         #Heath configuration
         health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
-        health_plugin_obj = health_plugin.HealthPlugin(message_bus)
+        health_plugin_obj = health_plugin.HealthPlugin()
         health_service = HealthAppService(health_repository, alerts_repository, \
             health_plugin_obj)
         CsmAgent.health_monitor = HealthMonitorService(\
@@ -106,7 +94,7 @@ class CsmAgent:
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(message_bus), CsmAgent.health_monitor.health_plugin, \
+                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin, \
                 http_notifications)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
@@ -188,7 +176,14 @@ class CsmAgent:
 
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         # USL Service
-        CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+        try:
+            Log.info("Load USL Configurations")
+            Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
+            usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
+            CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+        except Exception as e:
+            Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
@@ -230,8 +225,8 @@ class CsmAgent:
 
         if not Options.debug:
             CsmAgent._daemonize()
-        CsmAgent.health_monitor.start()
         CsmAgent.alert_monitor.start()
+        CsmAgent.health_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
@@ -290,8 +285,6 @@ if __name__ == '__main__':
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
     from csm.core.services.system_status import SystemStatusService
-    from cortx.utils.message_bus import MessageBus
-    from cortx.utils.message_bus.error import MessageBusError
     try:
         # try:
         #     from salt import client

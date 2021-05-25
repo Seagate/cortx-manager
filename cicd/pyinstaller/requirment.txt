@@ -4,11 +4,11 @@ toml==0.10.0
 configparser==4.0.2
 argparse==1.4.0
 dict2xml==1.6.1
+xmltodict==0.12.0
 prettytable==0.7.2
 pika==1.1.0
 idna==2.8
 jsonschema==3.0.2
-boto==2.49.0
 boto3==1.10.27
 marshmallow==3.2.1
 schematics==2.1.0

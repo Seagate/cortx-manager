@@ -40,7 +40,7 @@
       "type":"rest",
         "method": "get",
         "target": "/{version}/s3/access_keys",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table":{
@@ -90,7 +90,7 @@
         "type": "rest",
         "method": "post",
         "target": "/{version}/s3/access_keys",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "table":{
@@ -132,7 +132,7 @@
       "type": "rest",
         "method": "delete",
         "target": "/{version}/s3/access_keys/{access_key_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Access Key Deleted."
@@ -140,20 +140,20 @@
     },
     {
       "name": "update",
-      "description": "Update the given access key",
+      "description": "Update the status of the given access key",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
         {
           "flag": "user_name",
           "type": "str",
-          "help": "S3 IAM user name for which access key needs to be updated.",
+          "help": "S3 IAM user name for which status of access key needs to be updated.",
           "params": true
         },
         {
           "flag": "access_key_id",
           "type": "str",
-          "help": "Access key id to be updated."
+          "help": "Access key id for which status needs to be updated."
         },
         {
           "flag": "status",
@@ -176,7 +176,7 @@
       "type": "rest",
         "method": "patch",
         "target": "/{version}/s3/access_keys/{access_key_id}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Access Key updated."

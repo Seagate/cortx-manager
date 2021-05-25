@@ -1,0 +1,22 @@
+{
+  "cortx": {
+    "software": {
+      "csm": {
+        "user": "csm"
+      }
+    }
+  },
+  "server_node": {
+    "TMPL_MACHINE_ID": {
+      "type": "VM",
+      "storage": {
+        "enclosure_id": "TMPL_ENCLOSURE_ID"
+      }
+    }
+  },
+  "storage_enclosure": {
+    "TMPL_ENCLOSURE_ID": {
+      "type": "virtual"
+    }
+  }
+}

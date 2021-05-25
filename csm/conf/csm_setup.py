@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
@@ -76,10 +77,12 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.cli.csm_client import CsmDirectClient
     from csm.conf.post_install import PostInstall
+    from csm.conf.prepare import Prepare
     from csm.conf.configure import Configure
     from csm.conf.init import Init
     from csm.conf.reset import Reset
     from csm.conf.test import Test
+    from csm.conf.test import Cleanup
     try:
         csm_setup = CsmSetupCommand(sys.argv)
         csm_setup.process()

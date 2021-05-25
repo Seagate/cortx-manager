@@ -13,14 +13,23 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
 from schematics.models import Model
-from schematics.types import DateType, StringType, DateTimeType
+from schematics.types import DateTimeType, IntType, StringType
 from csm.core.blogic.models import CsmModel
 
 class CsmAuditLogModel(CsmModel):
     """ Model for csm audit logs """
-    message = StringType()
     timestamp = DateTimeType()
+    user = StringType(default="")
+    remote_ip = StringType(default="")
+    forwarded_for_ip = StringType(default="")
+    method = StringType(default="")
+    path = StringType(default="")
+    user_agent = StringType(default="")
+    response_code = StringType(default="")
+    request_id = IntType(default=int(time.time()))
+    msg = StringType(min_length=0, default="")
 
 class S3AuditLogModel(CsmModel):
     """ Model for s3 audit logs """

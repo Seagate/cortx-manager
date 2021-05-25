@@ -18,7 +18,6 @@ import os
 import time
 import asyncio
 from csm.common.comm import MessageBusComm
-from csm.common.comm import AmqpComm
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict
@@ -108,10 +107,10 @@ class AlertPlugin(CsmPlugin):
     listening for the alerts.
     """
 
-    def __init__(self, message_bus):
+    def __init__(self):
         super().__init__()
         try:
-            self.comm_client = MessageBusComm(message_bus)
+            self.comm_client = MessageBusComm()
             self.monitor_callback = None
             self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()

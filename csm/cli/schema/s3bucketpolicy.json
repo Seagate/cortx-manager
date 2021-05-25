@@ -36,7 +36,7 @@
         "type": "rest",
         "method": "get",
         "target": "/{version}/s3/bucket_policy/{bucket_name}",
-        "version": "v1"
+        "version": "v2"
       }
     },
     {
@@ -83,7 +83,7 @@
         "type": "rest",
         "method": "put",
         "target": "/{version}/s3/bucket_policy/{bucket_name}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Bucket Policy Updated Successfully."
@@ -112,7 +112,7 @@
         "type": "rest",
         "method": "delete",
         "target": "/{version}/s3/bucket_policy/{bucket_name}",
-        "version": "v1"
+        "version": "v2"
       },
       "output": {
         "success": "Bucket policy deleted."

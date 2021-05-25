@@ -46,7 +46,7 @@ class ComponentsBundle:
         #Initilize Logger for Uploading the Final Comment to ElasticSearch.
         Log.init("support_bundle",
                  syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
-                 syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port"),
+                 syslog_port=int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")),
                  backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files"),
                  file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX,
                                           "Log>file_size"),

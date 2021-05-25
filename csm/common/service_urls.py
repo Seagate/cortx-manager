@@ -60,13 +60,13 @@ class ServiceUrls:
         return uri
 
     @staticmethod
-    def get_s3_uris() -> List[str]:
+    def get_s3_supported_schemas() -> List[str]:
         """
-        Obtains a list of S3 server URIs.
+        Obtains a list of S3 supported schemas.
 
-        :returns: List of S3 server URIs.
+        :returns: List of S3 supported schemas.
         """
-        return [ServiceUrls.get_s3_uri(s) for s in ('http', 'https')]
+        return ['http', 'https', 's3']
 
     @staticmethod
     def get_bucket_url(bucket_name: str, scheme: str) -> str:

@@ -26,10 +26,7 @@ from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError
-import pika
 import json
-from pika.exceptions import AMQPConnectionError, AMQPError, ChannelClosedByBroker, \
-    ChannelWrongStateError
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
@@ -169,187 +166,6 @@ class SSHChannel(Channel):
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for SSH Channel')
 
-class AmqpChannel(Channel):
-    """
-    Represents Amqp channel to a node for communication
-    Communication to node is taken care by this class using pika    
-    """
-
-    def __init__(self, **kwargs):
-        Channel.__init__(self)
-        self._connection = None
-        self._channel = None
-        self.exchange = None
-        self.exchange_queue = None
-        self.routing_key = None
-        self.connection_exceptions = (AMQPConnectionError, \
-            ChannelClosedByBroker, ChannelWrongStateError, AttributeError)
-        self.connection_error_msg = (\
-            'RabbitMQ channel closed with error {}. Retrying with another host...')
-        self.is_actuator = kwargs.get(const.IS_ACTUATOR, False)
-        self.is_node1 = kwargs.get(const.IS_NODE1, False)
-        self.node1 = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.NODE1}")
-        self.node2 = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.NODE2}")
-        self.hosts = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.RMQ_HOSTS}")
-        self.port = int(Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.PORT}"))
-        self.virtual_host = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.VHOST}")
-        self.username = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.UNAME}")
-        self.password = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.PASS}")
-        self.exchange_type = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.EXCH_TYPE}")
-        self.retry_counter = Conf.get(const.CSM_GLOBAL_INDEX, \
-                f"{const.CHANNEL}>{const.RETRY_COUNT}")
-        self.durable = (Conf.get(const.CSM_GLOBAL_INDEX,
-                f"{const.CHANNEL}>{const.DURABLE}") == 'true')
-        self.exclusive = (Conf.get(const.CSM_GLOBAL_INDEX,
-                f"{const.CHANNEL}>{const.EXCLUSIVE}") == 'true')
-        self._setExchangeandQueue()
-
-    def _setExchangeandQueue(self):
-        if not self.is_actuator:
-            self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}>{const.EXCH}")
-            self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}>{const.EXCH_QUEUE}")
-            self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}>{const.ROUTING_KEY}")
-        elif self.is_actuator:
-            self.exchange = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}>{const.ACT_REQ_EXCH}")
-            self.exchange_queue = Conf.get(const.CSM_GLOBAL_INDEX, \
-                    f"{const.CHANNEL}>{const.ACT_REQ_EXCH_QUEUE}")
-            if self.is_node1:
-                self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                        f"{const.CHANNEL}>{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node1
-            else:
-                self.routing_key = Conf.get(const.CSM_GLOBAL_INDEX, \
-                        f"{const.CHANNEL}>{const.ACT_REQ_ROUTING_KEY}") + "_" + self.node2
-
-    def init(self):
-        """
-        Initialize the object from a configuration file.
-        Establish connection with Rabbit-MQ server.
-        """
-        self._connection = None
-        self._channel = None
-        retry_count = 0
-        while not(self._connection and self._channel) and \
-            int(self.retry_counter) > retry_count:
-            self.connect()
-            if not (self._connection and self._channel):
-                Log.warn(f"RMQ Connection Failed. Retry Attempt: {retry_count+1}" \
-                    f" in {2**retry_count} seconds")
-                time.sleep(2**retry_count)
-                retry_count += 1
-            else:
-                Log.debug(f"RMQ connection is Initialized. Attempts:{retry_count+1}")
-        self._declare_exchange_and_queue()
-
-    def _declare_exchange_and_queue(self):
-        if(self._connection and self._channel):
-            try:
-                self._channel.exchange_declare(exchange=self.exchange,
-                                           exchange_type=self.exchange_type, \
-                                                   durable=self.durable)
-            except AMQPError as err:
-                Log.error('Exchange: [{%s}], type: [ {%s} ] cannot be declared.\
-                           Details: {%s}'%(self.exchange,
-                                              self.exchange_type,
-                                              str(err)))
-            try:
-                self._channel.queue_declare(queue=self.exchange_queue,
-                                            exclusive=self.exclusive, \
-                                                    durable=self.durable)
-                self._channel.queue_bind(exchange=self.exchange,
-                                         queue=self.exchange_queue,
-                                         routing_key=self.routing_key)
-                Log.info(f'Initialized Exchange: {self.exchange}, '
-                        f'Queue: {self.exchange_queue}, routing_key: {self.routing_key}')
-            except AMQPError as err:
-                Log.error(f'CSM Fails to initialize the queue.\
-                      Details: {err}')
-                Log.exception(err)
-                raise CsmError(-1, f'{err}')
-
-    def connect(self):
-        """
-        Initiate the connection with RMQ and open the necessary communication channel.
-        """
-        try:
-            ampq_hosts = [f'amqp://{self.username}:{self.password}@{host}/{self.virtual_host}'\
-                for host in self.hosts]
-            ampq_hosts = [pika.URLParameters(host) for host in ampq_hosts]
-            random.shuffle(ampq_hosts)
-            self._connection = pika.BlockingConnection(ampq_hosts)
-            self._channel = self._connection.channel()
-        except self.connection_exceptions as e:
-            Log.error(self.connection_error_msg.format(repr(e)))
-
-    def disconnect(self):
-        """
-        Disconnect the connection
-        """
-        try:
-            if self._connection:
-                Log.info("Start: AmqpChannel's disconnect method")
-                consumer_tag = const.CONSUMER_TAG
-                self._channel.basic_cancel(consumer_tag=consumer_tag)
-                self._channel.stop_consuming()
-                self._channel.close()
-                self._connection.close()
-                self._channel = None
-                self._connection = None
-                Log.info("End: AmqpChannel's disconnect method. RabbitMQ connection closed.")
-        except Exception as e:
-            Log.error(f"Error closing RabbitMQ connection. {e}")
-
-    def recv(self, message=None):
-        raise Exception('recv not implemented for AMQP Channel')
-
-    def connection(self):
-        return self._connection
-
-    def channel(self):
-        return self._channel
-
-    def send(self, message):
-        """
-        Publish the message to SSPL Rabbit-MQ queue.
-        @param message: message to be published to queue.
-        @type message: str
-        """
-        try:
-            if self._channel:
-                self._channel.basic_publish(exchange=self.exchange,\
-                    routing_key=self.routing_key, body=json.dumps(message))
-                Log.info(f"Message Publish to Xchange: {self.exchange},"\
-                    f"Key: {self.routing_key}, Msg Details: {message}")
-        except self.connection_exceptions as e:
-            Log.error(self.connection_error_msg.format(repr(e)))
-            self.init()
-            self.send(message)
-
-    def recv_file(self, remote_file, local_file):
-        raise Exception('recv_file not implemented for AMQP Channel')
-
-    def send_file(self, local_file, remote_file):
-        raise Exception('send_file not implemented for AMQP Channel')
-
-    def acknowledge(self, delivery_tag=None):
-        try:
-            self._channel.basic_ack(delivery_tag=delivery_tag)
-        except self.connection_exceptions as e:
-            Log.error(self.connection_error_msg.format(repr(e)))
-            self.init()
-            self.acknowledge(delivery_tag)
-
 class FILEChannel(Channel):
     def __init__(self, *args, **kwargs):
         super(FILEChannel, self).__init__()
@@ -476,137 +292,15 @@ class Comm(metaclass=ABCMeta):
     def acknowledge(self):
         raise Exception('acknowledge not implemented in Comm class') 
 
-class AmqpComm(Comm):
-    def __init__(self):
-        Comm.__init__(self)
-        self._inChannel = AmqpChannel()
-        self._outChannel = AmqpChannel()
-        self.plugin_callback = None
-        self.delivery_tag = None
-        self._is_disconnect = False
-
-    def init(self):
-        self._inChannel.init()
-        self._outChannel.init()
-
-    def send(self, message, **kwargs):
-        self._outChannel.send(message)
-
-    def _alert_callback(self, ct, ch, method, properties, body):
-        """
-        1. This is the callback method on which we will receive the 
-           alerts from RMQ channel.
-        2. This method will call AlertPlugin class function and will 
-           send the alert JSON string as parameter.
-        Parameters -
-        1. ch - RMQ Channel
-        2. method - Contains the server-assigned delivery tag
-        3. properties - Contains basic properties like delivery_mode etc. 
-        4. body - Actual alert JSON string
-        """
-        self.delivery_tag = method.delivery_tag
-        self.plugin_callback(body)
-
-    def acknowledge(self):
-        self._inChannel.acknowledge(self.delivery_tag)
-
-    def stop(self):
-        self.disconnect()
-
-    def recv(self, callback_fn=None, message=None):
-        """
-        Start consuming the queue messages.
-        """
-        try:
-            consumer_tag = const.CONSUMER_TAG
-            self.plugin_callback = callback_fn
-            if self._inChannel.channel():
-                self._inChannel.channel().basic_consume(self._inChannel.exchange_queue,\
-                        partial(self._alert_callback, consumer_tag), consumer_tag=consumer_tag)
-                self._inChannel.channel().start_consuming()
-        except self._inChannel.connection_exceptions as e:
-            """
-            Currently there are 2 scenarios in which recv method will fail -
-            1. When RMQ on the current node fails
-            2. When we stop csm_agent
-            For the 1st case csm should retry to connect to second node.
-            But for the 2nd case since we are closing the app we should not
-            try to re-connect.
-            """
-            if not self._is_disconnect:
-                Log.error(self._inChannel.connection_error_msg.format(repr(e)))
-                self.init()
-                self.recv(callback_fn)
-
-    def disconnect(self):
-        try:
-            Log.info("Start : Calling AMQP's disconnect method")
-            self._is_disconnect = True
-            self._outChannel.disconnect()
-            self._inChannel.disconnect()
-            Log.info("End : Calling AMQP's disconnect method")
-        except Exception as e:
-            Log.exception(e)
-
-    def connect(self):
-        raise Exception('connect not implemented for AMQP Comm')
-
-class AmqpActuatorComm(Comm):
-    def __init__(self):
-        Comm.__init__(self)
-        self._outChannel_node1 = AmqpChannel(is_actuator = True, \
-                is_node1 = True)
-        self._outChannel_node2 = AmqpChannel(is_actuator = True, \
-                is_node1 = False)
-
-    def init(self):
-        self._outChannel_node1.init()
-        self._outChannel_node2.init()
-
-    def send(self, message, **kwargs):
-        """
-        For sending storage encl we will only send it to 1 node.
-        For node server request we will send it to both node 1 & 2.
-        """
-        if kwargs.get("is_storage_request", True):
-            self._outChannel_node1.send(message)
-        else:
-            self._outChannel_node1.send(message)
-            self._outChannel_node2.send(message)
-
-    def acknowledge(self):
-        raise Exception('acknowledge not implemented for AMQPActuator Comm')
-
-    def stop(self):
-        Log.info("Start: AmqpActuator stop initiated.")
-        self.disconnect()
-        Log.info("End: AmqpActuator stop finished.")
-
-    def recv(self, callback_fn=None, message=None):
-        raise Exception('recv not implemented for AMQPActuator Comm')
-
-    def disconnect(self):
-        try:
-            Log.info("Start: Disconnecting AMQPActuator RMQ communication")
-            self._outChannel_node1.disconnect()
-            self._outChannel_node2.disconnect()
-            Log.info("End: Disconnecting AMQPActuator RMQ communication")
-        except Exception as e:
-            Log.exception(e)
-
-    def connect(self):
-        raise Exception('connect not implemented for AMQPActuator Comm')
-
 class MessageBusComm(Comm):
     """
     MessageBusComm Classprovides an easy-to-use interface which can be used to
     send or receive messages across any component on a node to any other
     component on the other nodes
     """
-    def __init__(self, message_bus):
+    def __init__(self):
         Comm.__init__(self)
         self.message_callback = None
-        self.message_bus = message_bus
         self.producer_id = None
         self.message_type = None
         self.consumer_id = None
@@ -621,7 +315,6 @@ class MessageBusComm(Comm):
         Initializes the producer and consumer communication.
         :param kwargs:
             type: producer|consumer|both(default)
-            message_bus: Instance of MessageBus class
             producer_id: String representing ID that uniquely identifies a producer
             messge_type : This is essentially equivalent to the queue/topic
             name, e.g. "sensor-key"
@@ -658,14 +351,14 @@ class MessageBusComm(Comm):
 
     def _initialize_producer(self):
         """ Initializing Producer """
-        self.producer = MessageProducer(self.message_bus, producer_id=self.producer_id,
+        self.producer = MessageProducer(producer_id=self.producer_id,\
                 message_type=self.message_type, method=self.method)
         Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
                 f" Message Type: {self.message_type}, method: {self.method}")
 
     def _initialize_consumer(self):
         """ Initializing Consumer """
-        self.consumer = MessageConsumer(self.message_bus, consumer_id=self.consumer_id,
+        self.consumer = MessageConsumer(consumer_id=self.consumer_id,\
                 consumer_group=self.consumer_group, message_types=self.consumer_message_types,
                 auto_ack=self.auto_ack, offset=self.offset)
         Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\

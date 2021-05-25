@@ -18,7 +18,6 @@ import time
 
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
-from boto.s3.bucket import Bucket
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -94,6 +93,7 @@ class UslService(ApplicationService):
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
         self._native_certificate_manager = USLNativeCertificateManager()
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
+        Log.info("USL Service initialized")
 
     async def _get_system_friendly_name(self) -> str:
         entries = await self._storage(ApplianceName).get(Query())
@@ -108,9 +108,10 @@ class UslService(ApplicationService):
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
-        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
+        Log.info("Fetch cluster id from USL configuration")
+        cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'PROVISIONER>cluster_id')
         if Options.debug and cluster_id is None:
-            cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, 'DEBUG>default_cluster_id')
+            cluster_id = Conf.get(const.USL_GLOBAL_INDEX, 'DEBUG>default_cluster_id')
         device_uuid = cluster_id
         if device_uuid is None:
             reason = 'Could not obtain cluster ID from CSM configuration file'
@@ -135,7 +136,7 @@ class UslService(ApplicationService):
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
         return uuid5(self._device_uuid, bucket_name)
 
-    async def _format_bucket_as_volume(self, bucket: Bucket) -> Volume:
+    async def _format_bucket_as_volume(self, bucket) -> Volume:
         bucket_name = bucket.name
         volume_name = await self._get_volume_name(bucket_name)
         device_uuid = self._device_uuid
@@ -269,7 +270,7 @@ class UslService(ApplicationService):
 
         :return: Dictionary containing SaaS URL
         """
-        saas_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>saas_url')
+        saas_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>saas_url')
         if saas_url is None:
             reason = 'Lyve Pilot SaaS URL is not configured'
             Log.debug(reason)
@@ -290,7 +291,7 @@ class UslService(ApplicationService):
 
         :param registration_info: UDS registration info
         """
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         try:
             validate_url = URL(schemes=('http', 'https'))
             validate_url(uds_url)
@@ -351,7 +352,7 @@ class UslService(ApplicationService):
             raise e
 
     async def get_register_device(self) -> None:
-        uds_url = Conf.get(const.CSM_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
+        uds_url = Conf.get(const.USL_GLOBAL_INDEX, 'UDS>url') or const.UDS_SERVER_DEFAULT_BASE_URL
         endpoint_url = str(uds_url) + '/uds/v1/registration/RegisterDevice'
         # FIXME add relevant certificates to SSL context instead of disabling validation
         async with ClientSession(connector=TCPConnector(verify_ssl=False)) as session:

@@ -16,7 +16,6 @@
 import json
 import os
 import time
-from csm.common.comm import AmqpActuatorComm
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.common.payload import Payload, Json, JsonMessage, Dict
@@ -37,10 +36,10 @@ class HealthPlugin(CsmPlugin):
     listening for the response.
     """
 
-    def __init__(self, message_bus):
+    def __init__(self):
         super().__init__()
         try:
-            self.comm_client = MessageBusComm(message_bus)
+            self.comm_client = MessageBusComm()
             self.health_callback = None
             self._health_mapping_dict = Json(const.HEALTH_MAPPING_TABLE).load()
             storage_request_path = Conf.get(const.CSM_GLOBAL_INDEX, \
@@ -112,10 +111,15 @@ class HealthPlugin(CsmPlugin):
         2. db_update_callback_fn :- This parameter specifies the name of
            HealthMonitor class function to update health map using db.
         """
-        self.health_callback = callback_fn
-        self.db_update_callback = db_update_callback_fn
-        self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
-                message_type=self._message_type, method=self._method)
+        try:
+            self.health_callback = callback_fn
+            self.db_update_callback = db_update_callback_fn
+            #Adding delay
+            time.sleep(1)
+            self.comm_client.init(type=const.PRODUCER, producer_id=self._producer_id, \
+                    message_type=self._message_type, method=self._method)
+        except Exception as e:
+            Log.error(f"Error occured while calling health plugin init. {e}")
 
     def process_request(self, **kwargs):
         for key, value in kwargs.items():
