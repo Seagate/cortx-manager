@@ -1,4 +1,5 @@
 # CORTX-CSM: CORTX Management web and CLI interface.
+# CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -93,12 +94,15 @@ class Reset(Setup):
             await self.erase_index(collection, url, "delete")
 
     async def _unsupported_feature_entry_cleanup(self):
-        pass
+        collection = "config"
+        url = f"{self._es_db_url}{collection}/_delete_by_query"
+        payload = {"query": {"match": {"component_name": "csm"}}}
+        await self.erase_index(collection, url, "post", payload)
 
-    async def erase_index(self, collection, url, method ):
+    async def erase_index(self, collection, url, method, payload=None):
         Log.info(f"Url: {url}")
         try:
-            response, headers, status = await Setup.request(url, method)
+            response, headers, status = await Setup.request(url, method, payload)
             if status != 200:
                 Log.error(f"Index {collection} Could Not Be Deleted.")
                 Log.error(f"Response --> {response}")
