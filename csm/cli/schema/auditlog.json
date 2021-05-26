@@ -1,0 +1,116 @@
+{
+    "name": "auditlog",
+    "description": "Auditlogts",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Display audit logs",
+        "permissions_tag": "list",
+        "sub_commands": [
+          {
+            "name": "csm",
+            "description": "Displays Audit Logs On the cli",
+            "need_confirmation": false,
+            "permissions_tag": "list",
+            "args": [
+              {
+                "flag": "-b",
+                "dest": "start_date",
+                "nargs": "+",
+                "type": "int",
+                "help": "Start epoch time from which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-e",
+                "dest": "end_date",
+                "nargs": "+",
+                "type": "int",
+                "help": "End epoch time till which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-s",
+                "dest": "sortby",
+                "nargs": "+",
+                "type": "str",
+                "help": "The field on which audit logs should be sorted.",
+                "default": "timestamp",
+                "params": true
+              },
+              {
+                "flag": "-d",
+                "dest": "dir",
+                "nargs": "+",
+                "type": "str",
+                "help": "The direction on which the sudit logs logs should be sorted on the field (asc/desc)",
+                "default": "desc",
+                "params": true
+              },
+              {
+                "flag": "-o",
+                "dest": "offset",
+                "nargs": "+",
+                "type": "int",
+                "help": "The (page) number from which the audit logs should be fetched",
+                "default": "1",
+                "params": true
+              },
+              {
+                "flag": "-l",
+                "dest": "limit",
+                "nargs": "+",
+                "type": "int",
+                "help": "The no. of audit logs to be fetched.",
+                "default": "10000",
+                "params": true
+              },
+              {
+                "flag": "args",
+                "default": [],
+                "suppress_help": true,
+                "nargs": "?",
+                "help": ""
+              },
+              {
+                "flag": "-f",
+                "dest": "format",
+                "help": "Format of Output",
+                "default": "table",
+                "type": "str",
+                "choices": [
+                  "table",
+                  "xml",
+                  "json"
+                ]
+              }
+            ],
+            "comm": {
+              "type": "rest",
+              "method": "get",
+              "target": "/{version}/auditlogs/show/csm",
+              "version": "v2"
+            },
+            "output": {
+              "table": {
+                "headers": {
+                  "timestamp": "Timestamp",
+                  "user": "User",
+                  "remote_ip": "Remote IP",
+                  "forwarded_for_ip": "Forwarded For IP",
+                  "method": "Method",
+                  "path": "Path",
+                  "user_agent": "User Agent",
+                  "response_code": "Response Code",
+                  "request_id": "Request Id"
+                },
+                "filters": "logs"
+              }
+            }
+          }
+        ]        
+      }    
+    ]
+  }
