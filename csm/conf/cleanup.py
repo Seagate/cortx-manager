@@ -28,7 +28,7 @@ class Cleanup(Setup):
 
     def __init__(self):
         super(Cleanup, self).__init__()
-        Log.info("Running Cleanup for CSM.")
+        Log.info("Triggering Cleanup for CSM.")
 
     async def execute(self, command):
         """
@@ -36,7 +36,7 @@ class Cleanup(Setup):
         :return:
         """
         try:
-            Log.info("Loading Url into conf store.")
+            Log.info("Loading configuration")
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
