@@ -103,10 +103,10 @@ class Reset(Setup):
             await self.erase_index(collection, url, "delete")
 
     async def _unsupported_feature_entry_cleanup(self):
-        Log.info(f"Deleting for collection:{collection} from es_db")
         collection = "config"
         url = f"{self._es_db_url}{collection}/_delete_by_query"
         payload = {"query": {"match": {"component_name": "csm"}}}
+        Log.info(f"Deleting for collection:{collection} from es_db")
         await self.erase_index(collection, url, "post", payload)
 
     async def erase_index(self, collection, url, method, payload=None):
