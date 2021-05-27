@@ -367,6 +367,34 @@
         "class": "Test",
         "is_static": false
       }
+    },
+    {
+      "name": "backup",
+      "description": "Perform backup for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.backup",
+        "method": "execute",
+        "class": "Backup",
+        "is_static": false
+      }
     }
   ]
 }

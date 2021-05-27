@@ -81,6 +81,7 @@ if __name__ == '__main__':
     from csm.conf.init import Init
     from csm.conf.reset import Reset
     from csm.conf.test import Test
+    from csm.conf.backup import Backup
     try:
         csm_setup = CsmSetupCommand(sys.argv)
         csm_setup.process()
