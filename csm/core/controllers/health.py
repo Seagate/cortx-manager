@@ -42,7 +42,7 @@ class HealthSummaryView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        return await self.health_service.fetch_health_summary()
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/view")
 @CsmView._app_routes.view("/api/v2/system/health/view")
@@ -64,8 +64,7 @@ class HealthView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        node_health_summary = await self.health_service.fetch_health_view(**health_view_data)
-        return node_health_summary
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/components")
 @CsmView._app_routes.view("/api/v2/system/health/components")
@@ -87,8 +86,7 @@ class HealthComponentView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        component_health_summary = await self.health_service.fetch_component_health_view(**health_view_data)
-        return component_health_summary
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/node")
 @CsmView._app_routes.view("/api/v2/system/health/node")
@@ -110,8 +108,7 @@ class NodeHealthView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        node_health_summary = await self.health_service.fetch_node_health(**health_view_data) 
-        return node_health_summary
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/resources")
 @CsmView._app_routes.view("/api/v2/system/health/resources")
@@ -136,5 +133,4 @@ class HealthResourceView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        resource_health = await self.health_service.get_resources(**health_view_data)
-        return resource_health
+        return None
