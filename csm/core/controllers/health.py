@@ -42,7 +42,7 @@ class HealthSummaryView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        return None 
+        return None
 
 @CsmView._app_routes.view("/api/v1/system/health/view")
 @CsmView._app_routes.view("/api/v2/system/health/view")
