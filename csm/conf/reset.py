@@ -54,14 +54,23 @@ class Reset(Setup):
     def disable_and_stop_service(self):
         service_obj = Service('csm_agent.service')
         if service_obj.is_enabled():
-            Log.info("Disable csm_sgent.service")
+            Log.info("Disabling csm_sgent.service")
             service_obj.disable()
         if service_obj.get_state().state == 'active':
-            Log.info("Stop csm_sgent.service")
+            Log.info("Stopping csm_sgent.service")
             service_obj.stop()
 
+        Log.info("Checking if csm_agent.service stopped.")
+        for count in range(0, 10):
+            if not service_obj.get_state().state == 'active':
+                break
+            time.sleep(2**count)
+        if service_obj.get_state().state == 'active':
+            Log.error("csm_agent.service still active")
+            raise CsmSetupError("csm_agent.service still active")
+
     def directory_cleanup(self):
-        Log.info("Delete files and folders")
+        Log.info("Deleting files and folders")
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
@@ -70,7 +79,7 @@ class Reset(Setup):
         ]
 
         for dir_path in files_directory_list:
-            Log.info(f"Deleteing path :{dir_path}")
+            Log.info(f"Deleting path :{dir_path}")
             Setup._run_cmd(f"rm -rf {dir_path}")
 
     async def db_cleanup(self):
@@ -94,6 +103,7 @@ class Reset(Setup):
             await self.erase_index(collection, url, "delete")
 
     async def _unsupported_feature_entry_cleanup(self):
+        Log.info(f"Deleting for collection:{collection} from es_db")
         collection = "config"
         url = f"{self._es_db_url}{collection}/_delete_by_query"
         payload = {"query": {"match": {"component_name": "csm"}}}
