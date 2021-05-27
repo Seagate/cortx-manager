@@ -188,7 +188,7 @@ class S3AccountService(S3BaseService):
         return response
 
     @Log.trace_method(Log.DEBUG)
-    async def delete_account(self, s3_session: S3Credentials, account_name: str):
+    async def delete_account(self, account_name: str):
         """
         S3 account deletion
         :param s3_session: S3 Accounts Session Details
@@ -196,10 +196,7 @@ class S3AccountService(S3BaseService):
         :returns: dictionary in case of success. Otherwise throws an exception.
         """
         Log.debug(f"Delete account service. account_name:{account_name}")
-        account_s3_client = self._s3plugin.get_iam_client(s3_session.access_key,
-            s3_session.secret_key, CsmS3ConfigurationFactory.get_iam_connection_config(),
-            s3_session.session_token)
-        result = await account_s3_client.delete_account(account_name)
+        result = await self._s3_root_client.delete_account(account_name)
         if isinstance(result, IamError):
             self._handle_error(result)
         return {"message": "Account Deleted Successfully."}
