@@ -15,7 +15,7 @@
 
 import inspect
 
-from cortx.utils.errors import BaseError
+from cortx.utils.errors import UtilsError
 from cortx.utils.log import Log
 
 CSM_OPERATION_SUCESSFUL     = 0x0000
@@ -28,7 +28,7 @@ CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
 CSM_OPERATION_NOT_PERMITTED = 0x1008
 
-class CsmError(BaseError):
+class CsmError(UtilsError):
     """ Parent class for the cli error classes """
 
     def __init__(self, rc=0, desc=None, message_id=None, message_args=None):
