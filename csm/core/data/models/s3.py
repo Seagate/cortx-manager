@@ -135,6 +135,8 @@ class IamErrors(Enum):
     InvalidCredentials = 'InvalidCredentials'
     BadRequest = 'BadRequest'
     AccessKeyQotaExceeded = 'AccessKeyQuotaExceeded'
+    MaxAccountLimitExceeded = 'MaxAccountLimitExceeded'
+    MaxUserLimitExceeded = 'MaxUserLimitExceeded'
 
 
 class IamError:
