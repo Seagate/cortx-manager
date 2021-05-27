@@ -62,8 +62,6 @@ class Configure(Setup):
         self._set_deployment_mode()
         try:
             self._configure_uds_keys()
-            if not self._is_env_vm:
-                Configure._validate_healthmap_path()
             self._logrotate()
             self._rsyslog_common()
             for count in range(0, 10):
@@ -169,21 +167,6 @@ class Configure(Setup):
             err_msg = f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing."
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
-
-    @staticmethod
-    def _validate_healthmap_path():
-        """
-        This method gets the healthmap path fron salt command and saves the
-        value in csm.conf config.
-        Fetching the minion id of the node where this cli command is fired.
-        This minion id will be required to fetch the healthmap path.
-        Will use 'srvnode-1' in case the salt command fails to fetch the id.
-        """
-        Log.info("Validating Healthmap path")
-        healthmap_path = Conf.get(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY)
-        if not os.path.exists(healthmap_path):
-            Log.logger.error(f"Health map not available at {healthmap_path}")
-            raise CsmSetupError(f"Health map not available at {healthmap_path}")
 
     def _configure_uds_keys(self):
         Log.info("Configuring UDS keys")
