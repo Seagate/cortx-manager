@@ -36,6 +36,7 @@ from csm.core.controllers.maintenance import MaintenanceView
 from csm.core.controllers.version import ProductVersionView
 from csm.core.controllers.health import HealthResourceView
 from csm.core.controllers.appliance_info import ApplianceInfoView
+from csm.core.controllers.unsupported_features import UnsupportedFeaturesView
 from csm.core.controllers.system_status import SystemStatusView, SystemStatusAllView
 
 

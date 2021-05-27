@@ -624,8 +624,7 @@ class AlertMonitorService(Service, Observable):
     web server.
     """
 
-    def __init__(self, repo: AlertRepository, plugin, health_plugin, \
-        http_notifications):
+    def __init__(self, repo: AlertRepository, plugin, http_notifications):
         """
         Initializes the Alert Plugin
         """
@@ -635,7 +634,6 @@ class AlertMonitorService(Service, Observable):
         self._thread_running = False
         self._ret = False
         self.repo = repo
-        self._health_plugin = health_plugin
         self._http_notfications = http_notifications
         self._es_retry = Conf.get(const.CSM_GLOBAL_INDEX, const.ES_RETRY, 5)
         super().__init__()
@@ -647,8 +645,7 @@ class AlertMonitorService(Service, Observable):
         This method passes consume_alert as a callback function to alert plugin.
         """
         self._thread_running = True
-        self._alert_plugin.init(callback_fn=self._consume, \
-                health_plugin=self._health_plugin)
+        self._alert_plugin.init(callback_fn=self._consume)
         self._alert_plugin.process_request(cmd='listen')
 
     def start(self):
@@ -754,20 +751,12 @@ class AlertMonitorService(Service, Observable):
                 self._run_coroutine(self.repo.store(alert))
                 self.add_listener(self._http_notfications.handle_alert)
                 Log.debug(f"Alert stored successfully. Alert ID : {alert.alert_uuid}")
-                """
-                Updating health map with alerts
-                """
-                self._health_plugin.update_health_map_with_alert(alert.to_primitive())
             else:
                 if self._resolve_alert(message, prev_alert):
                     self.remove_listener(self._http_notfications.handle_alert)
                     alert.alert_uuid = prev_alert.alert_uuid
                     Log.debug(f"Alert updated successfully." \
                             f"Alert ID : {alert.alert_uuid}")
-                    """
-                    Updating health map with alerts
-                    """
-                    self._health_plugin.update_health_map_with_alert(alert.to_primitive())
             self._notify_listeners(alert, loop=self._loop)
             """
             Storing the incoming alert to alert's history collection.

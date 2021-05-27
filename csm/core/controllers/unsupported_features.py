@@ -13,27 +13,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from csm.core.controllers.view import CsmView, CsmAuth
 from cortx.utils.log import Log
-from csm.common.plugin import CsmPlugin
+from csm.core.blogic import const
 
-class HealthPlugin(CsmPlugin):
-    """
-    Health Plugin is responsible for listening and sending on the comm channel.
-    It has a callback which is called to send the received response to health
-    service.. 
-    Note, Health Plugin needs to be called in thread context as it blocks while
-    listening for the response.
-    """
+@CsmView._app_routes.view("/api/v2/unsupported_features")
+@CsmAuth.public
+class UnsupportedFeaturesView(CsmView):
+    def __init__(self, request):
+        super(UnsupportedFeaturesView, self).__init__(request)
+        self._service = self.request.app[const.UNSUPPORTED_FEATURES_SERVICE]
+        self._service_dispatch = {}
 
-    def __init__(self):
-        super().__init__()
-        try:
-            self.health_callback = None
-        except Exception as e:
-            Log.exception(e)
-
-    def init(self, **kwargs):
-        pass
-
-    def process_request(self, **kwargs):
-        pass
+    async def get(self):
+        ''' GET REST implementation for fetching unsupported features '''
+        Log.debug("Handling unsupported features fetch request")
+        return await self._service.get_unsupported_features()
