@@ -82,20 +82,15 @@ class CsmAgent:
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
 
         #Heath configuration
-        health_repository = HealthRepository()
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
         health_plugin_obj = health_plugin.HealthPlugin()
-        health_service = HealthAppService(health_repository, alerts_repository, \
-            health_plugin_obj)
-        CsmAgent.health_monitor = HealthMonitorService(\
-                health_plugin_obj, health_service)
+        health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), CsmAgent.health_monitor.health_plugin, \
-                http_notifications)
+                pm.AlertPlugin(), http_notifications)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -227,12 +222,10 @@ class CsmAgent:
         if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
-        CsmAgent.health_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
         Log.info("Finished stopping alert monitor service")
-        CsmAgent.health_monitor.stop()
         Log.info("Finished stopping csm agent")
 
 
@@ -250,8 +243,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
-    from csm.core.services.health import HealthAppService, HealthRepository \
-            , HealthMonitorService
+    from csm.core.services.health import HealthAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService
     from csm.core.services.s3.accounts import S3AccountService
