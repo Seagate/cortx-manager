@@ -28,7 +28,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.payload import Text
-
+from cortx.utils.service.service_handler import Service
 
 class PostInstall(Setup):
     """
@@ -171,6 +171,9 @@ class PostInstall(Setup):
         os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
+            Log.info("Restarting rsyslog service")
+            service_obj = Service('rsyslog.service')
+            service_obj.restart()
         else:
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
