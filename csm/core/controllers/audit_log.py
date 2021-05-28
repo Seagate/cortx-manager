@@ -33,6 +33,19 @@ class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
     direction = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']),
         missing='desc', default='desc')
 
+
+@CsmView._app_routes.view("/api/v2/auditlogs/schema_info")
+class AuditLogsSchemaInfo(CsmView):
+    def __init__(self, request):
+        super(AuditLogsSchemaInfo, self).__init__(request)
+        self._service = self.request.app["audit_log"]
+        self._service_dispatch = {}
+
+    @CsmAuth.permissions({Resource.AUDITLOG: {Action.LIST}})
+    async def get(self):
+        return await self._service.get_schema_info()
+
+
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
 @CsmView._app_routes.view("/api/v2/auditlogs/show/{component}")
 class AuditLogShowView(CsmView):
