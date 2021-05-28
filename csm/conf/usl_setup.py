@@ -179,7 +179,8 @@ def main(argv: dict):
         rc = command.process()
         if rc != 0:
             raise ValueError(f"Failed to run {argv[1]}")
-        return ":PASS"
+        print(":PASS")
+        return 0
     except UslSetupError as e:
         sys.stderr.write("%s\n" % str(e))
         return e.rc()
