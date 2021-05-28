@@ -30,7 +30,7 @@ class Init(Setup):
     """
     def __init__(self):
         """
-
+        Perform init operation for csm_setup
         """
         super(Init, self).__init__()
 
@@ -47,7 +47,6 @@ class Init(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
-        self._set_service_user()
         self._config_user_permission()
         self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -71,6 +70,7 @@ class Init(Setup):
         """
         Set User Permission
         """
+        self._set_service_user()
         Log.info("Set User Permission")
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)

@@ -63,7 +63,7 @@ class Configure(Setup):
         try:
             self._configure_uds_keys()
             self._logrotate()
-            self._rsyslog_common()
+            self._configure_cron()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -131,7 +131,7 @@ class Configure(Setup):
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
-    def _rsyslog_common(self):
+    def _configure_cron(self):
         """
         Configure common rsyslog and logrotate
         Also cleanup statsd
