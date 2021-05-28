@@ -751,6 +751,12 @@ class AlertMonitorService(Service, Observable):
             prev_alert = self._get_previous_alert(sensor_info, module_type)
             alert = AlertModel(message)
             if not prev_alert:
+                """
+                Checking if the new alert is good or not. If it is good then
+                we need to set the resolved flag.
+                """
+                if self._is_good_alert(alert):
+                    alert.resolved = True
                 self._run_coroutine(self.repo.store(alert))
                 self.add_listener(self._http_notfications.handle_alert)
                 Log.debug(f"Alert stored successfully. Alert ID : {alert.alert_uuid}")
