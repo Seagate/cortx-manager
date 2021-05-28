@@ -47,8 +47,8 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DB_SOURCE_CONF_FILE_URL)
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
 
