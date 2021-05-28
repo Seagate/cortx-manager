@@ -67,7 +67,7 @@ class Setup:
         os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
-    @staticmethod   
+    @staticmethod
     async def request(url, method, json=None):
         """
         Call DB for Executing the Given API.
