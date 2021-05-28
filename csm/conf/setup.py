@@ -21,6 +21,8 @@ import grp
 import errno
 import shlex
 import json
+import aiohttp
+from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from csm.common.payload import Yaml
 from csm.core.blogic import const
@@ -59,6 +61,27 @@ class Setup:
         self._is_env_dev = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
+
+    @staticmethod
+    async def request(url, method, json=None):
+        """
+        Call DB for Executing the Given API.
+        :param url: URI for Connection.
+        :param method: API Method.
+        :return: Response Object.
+        """
+        if not json:
+            json = dict()
+        try:
+            async with aiohttp.ClientSession(headers={}) as session:
+                async with session.request(method=method.lower(), url=url,
+                                           json=json) as response:
+                    return await response.text(), response.headers, response.status
+        except ClientConnectionError as e:
+            Log.error(f"Connection to URI {url} Failed: {e}")
+        except Exception as e:
+            Log.error(f"Connection to Db Failed. {traceback.format_exc()}")
+            raise CsmSetupError(f"Connection to Db Failed. {e}")
 
     def _validate_conf_store_keys(self, index, keylist=None):
         if not keylist:
