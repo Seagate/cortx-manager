@@ -71,8 +71,6 @@ class Usl:
         cert_base_path = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["crt_path_key"])
         PathV().validate('exists', [
             f"dir:{cert_base_path}",
-            f"file:{os.path.join(cert_base_path, Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys['domain_crt']))}",
-            f"file:{os.path.join(cert_base_path, Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys['domain_key']))}",
             f"file:{os.path.join(cert_base_path, Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys['native_crt']))}",
             f"file:{os.path.join(cert_base_path, Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys['native_key']))}"
         ])

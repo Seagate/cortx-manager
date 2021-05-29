@@ -129,6 +129,7 @@ TYPE_S3_SERVER = 'S3_SERVER'
 # Config
 CORTX = 'cortx'
 CSM_ETC_DIR = '/etc/csm'
+TMP_CSM = '/tmp/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -137,6 +138,7 @@ CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
+DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
@@ -478,6 +480,7 @@ S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
+UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 
 # System Status flight
