@@ -19,6 +19,7 @@ import json
 import io
 import re
 import errno
+import datetime
 from typing import Dict, Any
 from copy import deepcopy
 from dict2xml import dict2xml
@@ -125,6 +126,12 @@ class Validatiors:
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))
         return str(value)
+
+
+class Converter:
+    @staticmethod
+    def convert_date_to_epoch(date):
+        return int(datetime.datetime.strptime(str(date), '%Y-%m-%d').timestamp())
 
 
 class CommandParser:
