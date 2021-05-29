@@ -113,16 +113,16 @@
               {
                 "flag": "-b",
                 "dest": "start_date",
-                "type": "Validatiors.positive_int",
-                "help": "Start epoch time from which audit logs to be fetched.",
+                "type": "Converter.convert_date_to_epoch",
+                "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
                 "params": true,
                 "required": true
               },
               {
                 "flag": "-e",
                 "dest": "end_date",
-                "type": "Validatiors.positive_int",
-                "help": "End epoch time till which audit logs to be fetched.",
+                "type": "Converter.convert_date_to_epoch",
+                "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
                 "params": true,
                 "required": true
               },
