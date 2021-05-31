@@ -17,6 +17,7 @@
                 "flag": "-b",
                 "dest": "start_date",
                 "type": "Converter.convert_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -24,7 +25,8 @@
               {
                 "flag": "-e",
                 "dest": "end_date",
-                "type": "Converter.convert_date_to_epoch",
+                "type": "Converter.convert_end_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -114,6 +116,7 @@
                 "flag": "-b",
                 "dest": "start_date",
                 "type": "Converter.convert_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -121,7 +124,8 @@
               {
                 "flag": "-e",
                 "dest": "end_date",
-                "type": "Converter.convert_date_to_epoch",
+                "type": "Converter.convert_end_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
                 "params": true,
                 "required": true
