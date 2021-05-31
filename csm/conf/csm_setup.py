@@ -48,7 +48,7 @@ class CsmSetupCommand:
         subparsers = parser.add_subparsers()
         # hardcoded permissions
         csm_setup_permissions_dict = {'update': True}
-        cmd_obj = CommandParser(Json("/home/731368/forked_repos/cortx-manager/csm/cli/schema/csm_setup.json").load(), csm_setup_permissions_dict)
+        cmd_obj = CommandParser(Json(const.CSM_SETUP_FILE).load(), csm_setup_permissions_dict)
         cmd_obj.handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
