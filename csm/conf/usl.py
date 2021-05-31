@@ -25,7 +25,7 @@ from cortx.utils.validator.v_pkg import PkgV
 from cortx.utils.validator.v_confkeys import ConfKeysV
 from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.v_path import PathV
-
+from datetime import datetime
 from csm.common.process import SimpleProcess
 
 
@@ -146,6 +146,14 @@ class Usl:
             raise UslSetupError(rc=_rc,message=f'Obtained non-zero response count for cmd: {cmd} Error: {_err} ')
         return _output, _err, _rc
 
+    def _create_config_backup(self):
+        if os.path.exists("/etc/csm"):
+            Log.info("Creating backup for older csm configurations")
+            Usl._run_cmd(f"cp -r /etc/csm /etc/csm_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp")
+        else:
+            os.makedirs("/etc/csm", exist_ok=True)
+            Usl._run_cmd("cp -r /opt/seagate/cortx/csm/conf/etc/csm /etc/csm")
+
     def post_install(self):
         """ Performs post install operations. Raises exception on error """
         csm_user = Conf.get(Usl.CONSUMER_INDEX, self.conf_store_keys["csm_user_key"])
@@ -212,6 +220,7 @@ class Usl:
 
     def post_upgrade(self):
         """ Performs Post upgrade functionalitied. Raises exception on error """
+        self._create_config_backup()
         self.validate_pkgs()
         self.post_install()
         self.prepare()

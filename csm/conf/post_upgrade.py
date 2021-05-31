@@ -32,8 +32,8 @@ from csm.core.providers.providers import Response
 
 class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
     """
-    Perform post-upgrade for regenerating the coonfigurations after 
-    upgrade is done.    
+    Perform post-upgrade for regenerating the coonfigurations after
+    upgrade is done.
     """
 
     def __init__(self):
