@@ -312,8 +312,8 @@
       }
     },
     {
-      "name": "pre_install",
-      "description": "Perform pre-install opertions for csm",
+      "name": "pre_upgrade",
+      "description": "Perform pre-upgrade opertions for csm",
       "need_confirmation": false,
       "permissions_tag": "update",
       "args": [
@@ -333,9 +333,9 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.conf.pre_install",
+        "target": "csm.conf.pre_upgrade",
         "method": "execute",
-        "class": "PreInstall",
+        "class": "PreUpgrade",
         "is_static": false
       }
     },

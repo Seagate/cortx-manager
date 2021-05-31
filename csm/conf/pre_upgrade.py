@@ -19,12 +19,12 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.log import Log
 
 
-class PreInstall(Setup):
+class PreUpgrade(Setup):
     """
     Perform preinstall operations for csm
     """
     def __init__(self):
-        super(PreInstall, self).__init__()
+        super(PreUpgrade, self).__init__()
 
     async def execute(self, command):
         Log.info("Perform backup for csm_setup")
