@@ -27,6 +27,6 @@ class PreUpgrade(Setup):
         super(PreUpgrade, self).__init__()
 
     async def execute(self, command):
-        Log.info("Perform backup for csm_setup")
-        # TODO: Implement backup logic
+        Log.info("Perform preupgrade for csm_setup")
+        # TODO: Implement preupgrade logic
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
