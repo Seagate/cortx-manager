@@ -128,6 +128,7 @@ TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
 CORTX = 'cortx'
+TMP_CSM = '/tmp/csm'
 CSM_ETC_DIR = '/etc/csm'
 TMP_CSM = '/tmp/csm'
 CSM_CONF = '/etc/csm/csm.conf'
@@ -156,7 +157,11 @@ CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
-
+DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
+# cron dir
+CRON_DIR = "/etc/cron.daily"
+SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
+DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -433,7 +438,6 @@ NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 # Audit Log
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
-SORTABLE_FIELDS = "sortable_fields"
 
 # Syslog constants
 LOG_LEVEL = "INFO"
