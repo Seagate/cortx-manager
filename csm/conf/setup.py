@@ -63,6 +63,11 @@ class Setup:
         self.conf_store_keys = {}
 
     @staticmethod
+    def _copy_skeleton_configs():
+        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
+        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+
+    @staticmethod
     async def request(url, method, json=None):
         """
         Call DB for Executing the Given API.
