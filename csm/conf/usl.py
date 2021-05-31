@@ -81,7 +81,7 @@ class Usl:
             self.conf_store_keys.update({
                 "csm_user_key": "cortx>software>csm>user"
                 })
-        if phase == "prepare":
+        elif phase == "prepare":
             self.conf_store_keys.update({
                 "server_node_info":self.server_node_info,
                 "data_public_fqdn":f"{self.server_node_info}>network>data>public_fqdn",
@@ -89,6 +89,18 @@ class Usl:
             })
         elif phase == "config":
             self.conf_store_keys.update({
+                "crt_path_key":"cortx>software>uds>certificate_path",
+                "domain_crt":"cortx>software>uds>domain_crt",
+                "domain_key":"cortx>software>uds>domain_key",
+                "native_crt":"cortx>software>uds>native_crt",
+                "native_key":"cortx>software>uds>native_key",
+            })
+        elif phase == "post_upgrade":
+            self.conf_store_keys.update({
+                "csm_user_key": "cortx>software>csm>user",
+                "server_node_info":self.server_node_info,
+                "data_public_fqdn":f"{self.server_node_info}>network>data>public_fqdn",
+                "cluster_id":f"{self.server_node_info}>cluster_id",
                 "crt_path_key":"cortx>software>uds>certificate_path",
                 "domain_crt":"cortx>software>uds>domain_crt",
                 "domain_key":"cortx>software>uds>domain_key",
@@ -189,6 +201,22 @@ class Usl:
         ]:
             Usl._run_cmd(f"chmod 600 {cert_path}/{each_cert}")
             Usl._run_cmd(f"chown {self._user}:{self._user} {cert_path}/{each_cert}")
+        return 0
+
+
+    def pre_upgrade(self):
+        """ Performs Pre upgrade functionalitied. Raises exception on error """
+
+        # TODO: Perform actual steps. Obtain inputs using Conf.get(index, ..)
+        return 0
+
+    def post_upgrade(self):
+        """ Performs Post upgrade functionalitied. Raises exception on error """
+        self.validate_pkgs()
+        self.post_install()
+        self.prepare()
+        self.config()
+        self.init()
         return 0
 
     def test(self, plan):
