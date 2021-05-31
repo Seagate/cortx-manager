@@ -312,8 +312,8 @@
       }
     },
     {
-      "name": "backup",
-      "description": "Perform backup for csm",
+      "name": "pre_install",
+      "description": "Perform pre-install opertions for csm",
       "need_confirmation": false,
       "permissions_tag": "update",
       "args": [
@@ -333,9 +333,9 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.conf.backup",
+        "target": "csm.conf.pre_install",
         "method": "execute",
-        "class": "Backup",
+        "class": "PreInstall",
         "is_static": false
       }
     },
