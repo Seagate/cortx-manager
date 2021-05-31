@@ -132,6 +132,12 @@ class Converter:
     @staticmethod
     def convert_date_to_epoch(date):
         return int(datetime.datetime.strptime(str(date), '%Y-%m-%d').timestamp())
+    
+    @staticmethod
+    def convert_end_date_to_epoch(date):
+        return int(datetime.datetime.strptime(str(date), '%Y-%m-%d').replace(hour=23, minute=59, \
+            second=59).timestamp())
+
 
 
 class CommandParser:

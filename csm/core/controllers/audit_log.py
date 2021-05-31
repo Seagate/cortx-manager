@@ -36,7 +36,9 @@ class AuditLogRangeQuerySchema(Schema):
             raise ValidationError(
                 "start date cannot be greater than end date.",
                 field_name="start_date")
-        elif data["start_date"] > datetime.now().timestamp() or data["end_date"] > datetime.now().timestamp():
+        elif data["start_date"] > datetime.now().replace(hour=23, minute=59, \
+            second=59).timestamp() or data["end_date"] > datetime.now().replace( \
+                hour=23, minute=59, second=59).timestamp():
             raise ValidationError(
                 "Start/End date cannot be greater than today.")
 
