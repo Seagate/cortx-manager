@@ -83,9 +83,10 @@ class Setup:
             Log.error(f"Connection to Db Failed. {traceback.format_exc()}")
             raise CsmSetupError(f"Connection to Db Failed. {e}")
 
-    def _validate_conf_store_keys(self, index, keylist=None):
+    @staticmethod
+    def _validate_conf_store_keys(index, keylist=None):
         if not keylist:
-            keylist = list(self.conf_store_keys.values())
+            raise CsmSetupError("Keylist should not be empty")
         if not isinstance(keylist, list):
             raise CsmSetupError("Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")

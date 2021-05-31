@@ -23,6 +23,7 @@ from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.validator.error import VError
 
 class Init(Setup):
     """
@@ -55,7 +56,11 @@ class Init(Setup):
         self.conf_store_keys.update({
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
         })
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def _config_user_permission(self, reset=False):
         """

@@ -23,11 +23,14 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.conf.setup import Setup, CsmSetupError
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
+from cortx.utils.validator.error import VError
 import time
 import os
+from datetime import datetime
+from csm.core.providers.providers import Response
 
 
-class PostUpgrade(PostInstall, Prepare, Configure, Init):
+class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
     """
     Perform post-upgrade for regenerating the coonfigurations after 
     upgrade is done.    
@@ -52,9 +55,11 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
 
+        self._prepare_and_validate_confstore_keys()
         #Postinstall functionality
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
+        self._config_user()
         self._configure_system_auto_restart()
         self._configure_system_auto_restart()
         self._configure_service_user()
@@ -82,10 +87,47 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init):
         #Init functionality
         self._config_user_permission()
 
+        self.create()
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
+            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
+            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
+            const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
+            const.KEY_HOSTNAME:f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}",
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
+            const.KEY_S3_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
+            const.KEY_S3_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
+            const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}",
+            const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
+            })
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
+
     def _backup_config_dir(self):
         if os.path.exists(const.CSM_ETC_DIR):
             Log.info("Creating backup for older csm configurations")
-            Setup._run_cmd(f"cp -r {const.CSM_ETC_DIR} {const.CSM_ETC_DIR}_backup")
+            Setup._run_cmd(f"cp -r {const.CSM_ETC_DIR} {const.CSM_ETC_DIR}_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp")
         else:
             os.makedirs(const.CSM_ETC_DIR, exist_ok=True)
             Setup._run_cmd(f"cp -r {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+
+    def create(self):
+        """
+        This Function Creates the CSM Conf File on Required Location.
+        :return:
+        """
+
+        Log.info("Creating CSM Conf File on Required Location.")
+        if self._is_env_dev:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.DEV)
+        self.store_encrypted_password()
+        Conf.save(const.CSM_GLOBAL_INDEX)
+        Conf.save(const.DATABASE_INDEX)

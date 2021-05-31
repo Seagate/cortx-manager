@@ -92,7 +92,7 @@ class Configure(Setup):
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
             })
 
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def _validate_consul_service(self):
         Log.info("Getting consul status")
