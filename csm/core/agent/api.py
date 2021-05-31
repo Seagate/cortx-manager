@@ -28,6 +28,7 @@ from aiohttp import web, web_exceptions
 from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
+from csm.core.blogic.models.audit_log import CsmAuditLogModel
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.common.observer import Observable
@@ -49,6 +50,8 @@ from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
+from cortx.utils.data.access import Query
+from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 import re
 
 
@@ -295,11 +298,47 @@ class CsmRestApi(CsmApi, ABC):
         SecureHeaders(csp=True).aiohttp(resp)
         return resp
 
+    # The following workaround is required to ensure the ElasticSearch mappings for
+    # `CsmAuditLogModel` will be in place before any audit log entries are generated.  The query
+    # will force the correct mappings to be created on ElasticSearch according to the corresponding
+    # CSM model if they are not yet in place.  This is required because new audit log entries are
+    # added to ElasticSearch by rsyslog and, in case mappings are not present, rsyslog will create
+    # new ones itself.  The newly created mappings will differ from the ones expected by our
+    # business logic, and we will fail to read data from ElasticSearch.  The operation should be
+    # executed only once for performance purposes.
+
+    # Simple flag to keep track of its initialization amidst the sea of static methods in this
+    # module.
+
+    class AuditLogDbInitialized:
+        status = False
+
+    # This function should be invoked before `Log.audit()`.  The call will be placed inside
+    # `rest_middleware()` because it's the closest async parent call to `Log.audit()`.  We load the
+    # database schema from the YAML file again to avoid having to inject the database provider
+    # through the class constructor.  It is a workaround after all.
+
+    @staticmethod
+    async def _initialize_audit_log_db():
+        if CsmRestApi.AuditLogDbInitialized.status:
+            return
+        db_config = Yaml(const.DATABASE_CONF).load()
+        db_config['databases']["es_db"]["config"][const.PORT] = int(
+            db_config['databases']["es_db"]["config"][const.PORT])
+        db_config['databases']["es_db"]["config"]["replication"] = int(
+            db_config['databases']["es_db"]["config"]["replication"])
+        conf = GeneralConfig(db_config)
+        db = DataBaseProvider(conf)
+        await db(CsmAuditLogModel).get(Query().limit(0))
+        CsmRestApi.AuditLogDbInitialized.status = True
+
+
     @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
         try:
             request_id = int(time.time())
+            await CsmRestApi._initialize_audit_log_db()
             await CsmRestApi.check_for_unsupported_endpoint(request)
 
             resp = await handler(request)
