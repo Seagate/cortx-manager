@@ -115,6 +115,37 @@ class AuditService(ApplicationService):
                                           tzinfo=tz).isoformat()
         return DateTimeRange(start_date, end_date)
 
+    # TODO this is obviously a stub; derive from `CsmAuditLogModel` if possible.
+    async def get_schema_info(self):
+
+        def is_visible(field_id):
+            not_visible = ["remote_ip"]
+            return field_id not in not_visible
+
+        fields = [
+            ["timestamp", "Timestamp", 201],
+            ["user", "User", 301],
+            ["remote_ip", "Remote IP", 401],
+            ["forwarded_for_ip", "Forwarded for IP", 501],
+            ["method", "Method", 601],
+            ["path", "Path", 701],
+            ["user_agent", "User agent", 801],
+            ["response_code", "Response code", 901],
+            ["request_id", "Request ID", 1001],
+            ["msg", "Message", 1101],
+        ]
+        return [
+            {
+                "field_id": f[0],
+                "label": f[1],
+                "display_id": f[2],
+                "display": is_visible(f[0]),
+                "sortable": True,
+                "filterable": False,
+            }
+            for f in fields
+        ]
+
     async def create_audit_log_file(self, file_name, component, time_range):
         """ create audit log file and comrpess to tar.gz """
         try:
