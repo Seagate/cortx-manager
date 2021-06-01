@@ -220,6 +220,9 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -rf "$BASE_DIR/templates" "$DIST/csm/"
     cp -rf "$BASE_DIR/test/" "$DIST/csm"
     cp -rf "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
+    #move all templates to conf directory
+    mv -rf "$DIST/csm/conf/miniprovisioning_templates/*" "$DIST/csm/conf/"
+    rm -f "$DIST/csm/conf/miniprovisioning_templates/"
 
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
