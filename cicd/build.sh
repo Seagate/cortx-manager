@@ -231,6 +231,8 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
     chmod +x "$DIST/csm/lib/"*
+    yum install -y tree
+    tree -L 4 $DIST/csm
     cd "$TMPDIR"
 
     # Create spec for pyinstaller
