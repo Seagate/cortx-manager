@@ -42,7 +42,7 @@ class ResourcesHealthView(CsmView):
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
         """
-        Get health of all resources of type {resource} 
+        Get health of all resources of type {resource}
         and/or their sub resources based on input depth.
         """
         resource = self.request.match_info["resource"]
@@ -68,7 +68,7 @@ class ResourceHealthByIdView(CsmView):
     async def get(self):
         """
         Get health of resource (cluster, site, rack, node etc.)
-        with resource_id and/or its sub resources based on input level. 
+        with resource_id and/or its sub resources based on input level.
         """
         resource = self.request.match_info["resource"]
         resource_id = self.request.match_info["resource_id"]

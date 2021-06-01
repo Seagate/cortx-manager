@@ -28,7 +28,7 @@ class HealthAppService(ApplicationService):
 
     async def fetch_resources_health(self, resource, **kwargs):
         """
-        Fetch health of all resources of type {resource} 
+        Fetch health of all resources of type {resource}
         and/or their sub resources based on input level.
         """
         depth = kwargs.get(const.ARG_DEPTH, 1)
