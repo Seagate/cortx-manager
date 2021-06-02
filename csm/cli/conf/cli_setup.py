@@ -49,7 +49,7 @@ class CliSetupCommand:
         # hardcoded permissions
         cli_setup_permissions_dict = {'update': True}
         cmd_obj = CommandParser(Json(const.CLI_SETUP_FILE).load(), cli_setup_permissions_dict)
-        cmd_obj.handle_main_parse(subparsers)
+        cmd_obj._handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
         for attr in ['command', 'action', 'args']:
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..','..'))
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
-    from cortx.utils.cli_framework.command import CommandParser
+    from cortx.utils.cli_framework.parser import CommandParser
     from csm.core.blogic import const
     from cortx.utils.log import Log
     from cortx.utils.cli_framework.cli_client import DirectClient

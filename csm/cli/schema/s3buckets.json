@@ -50,8 +50,8 @@
       "args": [
         {
           "flag": "bucket_name",
-          "type": "Validators._bucket_name",
-          "type_target": "csm.cli.cli_validators",
+          "type": "FormatV._validate_file_format",
+          "type_target": "cortx.utils.validator.v_format",
           "help": "Give a bucket name to create.",
           "json": true
         },

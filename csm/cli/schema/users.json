@@ -10,16 +10,16 @@
       "args": [
         {
           "flag": "-o",
-          "type": "Validators._positive_int",
-          "type_target": "csm.cli.cli_validators",
+          "type": "FormatV._validate_positive_int",
+          "type_target": "cortx.utils.validator.v_format",
           "dest": "offset",
           "help": "Amount of users you want to get",
           "params": true
         },
         {
           "flag": "-l",
-          "type": "Validators._positive_int",
-          "type_target": "csm.cli.cli_validators",
+          "type": "FormatV._validate_positive_int",
+          "type_target": "cortx.utils.validator.v_format",
           "dest": "limit",
           "help": "Limit of amount of users you want to view",
           "params": true

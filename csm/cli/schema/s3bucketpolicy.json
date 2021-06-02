@@ -59,8 +59,8 @@
         
         {
           "flag": "Statement",
-          "type": "Validators._file_parser",
-          "type_target": "csm.cli.cli_validators",
+          "type": "FormatV._validate_file_format",
+          "type_target": "cortx.utils.validator.v_format",
           "help": "Path to file",
           "json": true
         },

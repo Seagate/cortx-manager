@@ -50,7 +50,8 @@
               {
                 "flag": "-o",
                 "dest": "offset",
-                "type": "Validatiors.positive_int",
+                "type": "FormatV._validate_positive_int",
+                "type_target": "cortx.utils.validator.v_format",
                 "help": "The (page) number from which the audit logs should be fetched",
                 "default": "1",
                 "params": true
@@ -58,7 +59,8 @@
               {
                 "flag": "-l",
                 "dest": "limit",
-                "type": "Validatiors.positive_int",
+                "type": "FormatV._validate_positive_int",
+                "type_target": "cortx.utils.validator.v_format",
                 "help": "The no. of audit logs to be fetched.",
                 "default": "10000",
                 "params": true
@@ -149,7 +151,8 @@
               {
                 "flag": "-o",
                 "dest": "offset",
-                "type": "Validatiors.positive_int",
+                "type": "FormatV._validate_positive_int",
+                "type_target": "cortx.utils.validator.v_format",
                 "help": "The (page) number from which the audit logs should be fetched",
                 "default": "1",
                 "params": true
@@ -157,7 +160,8 @@
               {
                 "flag": "-l",
                 "dest": "limit",
-                "type": "Validatiors.positive_int",
+                "type": "FormatV._validate_positive_int",
+                "type_target": "cortx.utils.validator.v_format",
                 "help": "The no. of audit logs to be fetched.",
                 "default": "10000",
                 "params": true

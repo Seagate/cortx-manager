@@ -16,10 +16,9 @@
 import errno
 from cortx.utils.log import Log
 from cortx.utils.cli_framework.errors import CliError
-from cortx.utils.validator.cli_validators import CliValidators
 from csm.core.controllers.validators import BucketNameValidator
 
-class Validators(CliValidators):
+class Validators():
 
     """CLI Validators Class"""
     @staticmethod
