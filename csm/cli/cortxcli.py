@@ -172,6 +172,9 @@ class CortxCli(Cmd):
             self.do_exit(self.server_down)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
+        except VError as ve:
+            sys.stdout.write(f"{ve.desc}\n")
+            Log.error(f"{self.username}:{ve}")
         except SystemExit:
             Log.debug(f"{self.username}: Command executed system exit")
         except KeyboardInterrupt:
@@ -215,6 +218,7 @@ if __name__ == '__main__':
     from csm.common.errors import InvalidRequest
     from csm.common.conf import Security
     from csm.cli.cli_validators import Validators
+    from cortx.utils.validator.error import VError
     try:
         CortxCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
