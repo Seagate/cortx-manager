@@ -64,7 +64,7 @@ class Configure(Setup):
         try:
             self._configure_uds_keys()
             self._logrotate()
-            self._rsyslog_common()
+            self._configure_cron()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -93,7 +93,7 @@ class Configure(Setup):
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
             })
 
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def _validate_consul_service(self):
         Log.info("Getting consul status")
@@ -130,7 +130,7 @@ class Configure(Setup):
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
 
-    def _rsyslog_common(self):
+    def _configure_cron(self):
         """
         Configure common rsyslog and logrotate
         Also cleanup statsd

@@ -23,6 +23,7 @@ from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.validator.error import VError
 
 class Init(Setup):
     """
@@ -30,7 +31,7 @@ class Init(Setup):
     """
     def __init__(self):
         """
-
+        Perform init operation for csm_setup
         """
         super(Init, self).__init__()
 
@@ -47,7 +48,6 @@ class Init(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
-        self._set_service_user()
         self._config_user_permission()
         self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -56,7 +56,11 @@ class Init(Setup):
         self.conf_store_keys.update({
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
         })
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def _config_user_permission(self, reset=False):
         """
@@ -71,6 +75,7 @@ class Init(Setup):
         """
         Set User Permission
         """
+        self._set_service_user()
         Log.info("Set User Permission")
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         os.makedirs(const.CSM_PIDFILE_PATH, exist_ok=True)
