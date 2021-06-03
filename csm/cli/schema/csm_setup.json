@@ -312,6 +312,62 @@
       }
     },
     {
+      "name": "pre_upgrade",
+      "description": "Perform pre-upgrade opertions for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.pre_upgrade",
+        "method": "execute",
+        "class": "PreUpgrade",
+        "is_static": false
+      }
+    },
+    {
+      "name": "post_upgrade",
+      "description": "Perform post_upgrade for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.post_upgrade",
+        "method": "execute",
+        "class": "PostUpgrade",
+        "is_static": false
+      }
+    },
+    {
         "name": "cleanup",
         "description": "Perform Cleanup for csm",
         "need_confirmation": false,
@@ -337,6 +393,6 @@
           "class": "Cleanup",
           "is_static": false
         }
-      }
+    }
   ]
 }
