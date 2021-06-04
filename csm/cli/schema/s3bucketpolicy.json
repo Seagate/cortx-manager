@@ -59,7 +59,7 @@
         
         {
           "flag": "Statement",
-          "type": "FormatV._validate_file_format",
+          "type": "FormatV.validate",
           "type_target": "cortx.utils.validator.v_format",
           "help": "Path to file",
           "json": true
