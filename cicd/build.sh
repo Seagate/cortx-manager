@@ -221,7 +221,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -rf "$BASE_DIR/templates" "$DIST/csm/"
     cp -rf "$BASE_DIR/test/" "$DIST/csm"
     cp -rf "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
-    mv "$DIST/csm/conf/miniprovisioning_templates/*" "$DIST/csm/conf"
+    mv "$DIST/csm/conf/miniprovisioning_templates/"* "$DIST/csm/conf"
     ls -la "$BASE_DIR/csm"
     ls -la "$BASE_DIR/csm/conf"
     ls -la "$DIST/csm"
