@@ -9,25 +9,25 @@
   "server_node": {
     "a08a73547618066310ad270b48723b43": {
       "network": {
+       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
         "data": {
-          "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "public_fqdn": "127.0.0.1"
         }
       }
     },
     "plmn35476180663h270b48723b43": {
       "network": {
+       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
         "data": {
-          "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "public_fqdn": "127.0.0.1"
         }
       }
     },
     "098735476180663h270b48723b43": {
       "network": {
+       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
         "data": {
-          "public_fqdn": "127.0.0.1",
-          "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc"
+          "public_fqdn": "127.0.0.1"
         }
       }
     }

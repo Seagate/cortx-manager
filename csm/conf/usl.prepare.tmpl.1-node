@@ -9,9 +9,9 @@
   "server_node": {
     "TMPL_MACHINE_ID": {
       "network": {
+       "cluster_id": "TMPL_CLUSTER_ID",
         "data": {
-          "public_fqdn": "127.0.0.1",
-          "cluster_id": "TMPL_CLUSTER_ID"
+          "public_fqdn": "127.0.0.1"
         }
       }
     }

@@ -1,4 +1,5 @@
 #!/bin/env python3
+#!/bin/env python3
 
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -202,8 +203,6 @@ class Usl:
         cert_path = Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>cert_path_key')
         Usl._run_cmd(f"chmod 700 {cert_path}")
         for each_cert in [
-            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_crt'),
-            Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>domain_key'),
             Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_crt'),
             Conf.get(Usl.USL_GLOBAL_INDEX, 'UDS_CERTIFICATES>native_key')
         ]:
