@@ -15,8 +15,8 @@
   },
   "server_node": {
     "a08a73547618066310ad270b48723b43": {
-      "network": {
-       "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
+        "cluster_id": "bae4b468-565d-49df-9495-a43a5d89babc",
+        "network": {
         "data": {
           "public_fqdn": "127.0.0.1"
         }
