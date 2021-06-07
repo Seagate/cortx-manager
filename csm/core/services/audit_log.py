@@ -132,7 +132,6 @@ class AuditService(ApplicationService):
             ["user_agent", "User agent", 801],
             ["response_code", "Response code", 901],
             ["request_id", "Request ID", 1001],
-            ["msg", "Message", 1101],
         ]
         return [
             {
