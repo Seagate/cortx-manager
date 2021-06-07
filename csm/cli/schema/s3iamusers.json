@@ -104,8 +104,8 @@
       }
     },
     {
-      "name": "reset_password",
-      "description": "Reset password for IAM user.",
+      "name": "password",
+      "description": "Change/Reset password for IAM user.",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
