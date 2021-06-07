@@ -14,11 +14,34 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
+from csm.core.blogic import const
+
 
 class HealthAppService(ApplicationService):
     """
-        Provides operations on in memory health schema
+    Provides operations to fetch health of resources
+    from HA.
     """
 
     def __init__(self, plugin):
         self._health_plugin = plugin
+
+    async def fetch_resources_health(self, resource, **kwargs):
+        """
+        Fetch health of all resources of type {resource}
+        and/or their sub resources based on input level.
+        """
+        depth = kwargs.get(const.ARG_DEPTH, 1)
+        response_format = kwargs.get(const.ARG_RESPONSE_FORMAT, const.RESPONSE_FORMAT_TREE)
+
+        return {'version': '1.0', 'data': []}
+
+    async def fetch_resource_health_by_id(self, resource, resource_id, **kwargs):
+        """
+        Get health of resource (cluster, site, rack, node etc.)
+        with resource_id and/or its sub resources based on input level.
+        """
+        depth = kwargs.get(const.ARG_DEPTH, 1)
+        response_format = kwargs.get(const.ARG_RESPONSE_FORMAT, const.RESPONSE_FORMAT_TREE)
+
+        return {'version': '1.0', 'data': []}
