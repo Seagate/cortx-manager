@@ -27,10 +27,14 @@ from csm.core.controllers.validators import ValidationErrorFormatter, Enum
 
 class HealthViewQueryParameter(Schema):
     response_format_values = [const.RESPONSE_FORMAT_TABLE, const.RESPONSE_FORMAT_TREE]
-    depth = fields.Number(default=1, missing=1)
-    response_format = fields.Str(default=const.RESPONSE_FORMAT_TREE, \
-                                    missing=const.RESPONSE_FORMAT_TREE, \
+    depth = fields.Int(validate=validate.Range(min=0), default=1, missing=1)
+    response_format = fields.Str(default=const.RESPONSE_FORMAT_TREE,
+                                    missing=const.RESPONSE_FORMAT_TREE,
                                     validate=[Enum(response_format_values)])
+    offset = fields.Int(validate=validate.Range(min=1), allow_none=True,
+                            default=1, missing=1)
+    limit = fields.Int(validate=validate.Range(min=0), allow_none=True,
+                            default=0, missing=0)
 
 
 @CsmView._app_routes.view("/api/v2/system/health/{resource}")
@@ -54,7 +58,8 @@ class ResourcesHealthView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        resources_health = await self.health_service.fetch_resources_health(**health_view_qp)
+        resources_health = await self.health_service.fetch_resources_health(resource,
+                                        **health_view_qp)
         return resources_health
 
 
@@ -80,5 +85,6 @@ class ResourceHealthByIdView(CsmView):
                                         unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        resource_health = await self.health_service.fetch_resource_health_by_id(**health_view_qp)
+        resource_health = await self.health_service.fetch_resource_health_by_id(resource,
+                                        resource_id, **health_view_qp)
         return resource_health

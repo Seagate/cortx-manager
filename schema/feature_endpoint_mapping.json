@@ -53,28 +53,16 @@
       "provisioner"
     ]
   },
-  "/api/*/system/health/summary": {
+  "/api/*/system/health/*": {
     "feature_name": "health",
     "dependent_on": [
-      "sspl"
+      "ha"
     ]
   },
-  "/api/*/system/health/view": {
+  "/api/*/system/health/*/*": {
     "feature_name": "health",
     "dependent_on": [
-      "sspl"
-    ]
-  },
-  "/api/*/system/health/node": {
-    "feature_name": "health",
-    "dependent_on": [
-      "sspl"
-    ]
-  },
-  "/api/*/system/health/components": {
-    "feature_name": "health",
-    "dependent_on": [
-      "sspl"
+      "ha"
     ]
   },
   "/api/*/update/hotfix/status": {

@@ -18,7 +18,7 @@ import os
 import time
 import crypt
 from csm.common.process import SimpleProcess
-from csm.common.payload import JsonMessage
+from csm.common.payload import JsonMessage, Json
 from cortx.utils.cron import CronJob
 from csm.core.blogic import const
 
@@ -103,7 +103,11 @@ class CortxHAFramework(HAFramework):
 
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
         # TODO - Implement when API is available from HA.
-        pass
+        # return Json(const.HA_HEALTH_SCHEMA).load()
+        return {
+            "version": "1.0",
+            "health": list()
+        }
 
 
 class PcsHAFramework(HAFramework):
