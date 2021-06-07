@@ -65,7 +65,8 @@
           {
             "flag": "-p",
             "dest": "password",
-            "type": "Terminal.get_password",
+            "type": "str",
+            "type_method": "Terminal.get_password",
             "type_target": "cortx.utils.cli_framework.terminal",
             "help": "",
             "default": "",
@@ -134,7 +135,8 @@
           {
             "flag": "-p",
             "dest": "password",
-            "type": "Terminal.get_password",
+            "type": "str",
+            "type_method": "Terminal.get_password",
             "type_target": "cortx.utils.cli_framework.terminal",
             "help": "",
             "default": "",
