@@ -112,7 +112,6 @@ class AlertPlugin(CsmPlugin):
         try:
             self.comm_client = MessageBusComm()
             self.monitor_callback = None
-            self.health_plugin = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
             self.decision_maker_service = DecisionMakerService()
             self._consumer_id = Conf.get(const.CSM_GLOBAL_INDEX, \
@@ -126,7 +125,7 @@ class AlertPlugin(CsmPlugin):
         except Exception as e:
             Log.exception(e)
 
-    def init(self, callback_fn, health_plugin):
+    def init(self, callback_fn):
         """
         Establish connection with the RMQ Server.
         AlertPlugin's _listen method acts as the thread function.
@@ -136,7 +135,6 @@ class AlertPlugin(CsmPlugin):
         """
         try:
             self.monitor_callback = callback_fn
-            self.health_plugin = health_plugin
             self.comm_client.init(type=const.CONSUMER, consumer_id=self._consumer_id, \
                     consumer_group=self._consumer_group, \
                     consumer_message_types=self._consumer_message_types, \
@@ -177,9 +175,7 @@ class AlertPlugin(CsmPlugin):
         if sensor_queue_msg:
             Log.info(f"Message on sensor queue: {sensor_queue_msg}")
             title = sensor_queue_msg.get("title", "")
-            if "actuator" in title.lower():
-                status = self.health_plugin.health_plugin_callback(message)
-            elif "sensor" in title.lower():
+            if "sensor" in title.lower():
                 try:
                     if self.monitor_callback:
                         Log.info("Coverting and validating alert.")

@@ -43,6 +43,7 @@ class Configure(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
+        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -52,8 +53,8 @@ class Configure(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DB_SOURCE_CONF_FILE_URL)
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
@@ -62,10 +63,8 @@ class Configure(Setup):
         self._set_deployment_mode()
         try:
             self._configure_uds_keys()
-            if not self._is_env_vm:
-                Configure._validate_healthmap_path()
             self._logrotate()
-            self._rsyslog_common()
+            self._configure_cron()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -94,7 +93,7 @@ class Configure(Setup):
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
             })
 
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def _validate_consul_service(self):
         Log.info("Getting consul status")
@@ -130,10 +129,8 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
-    def _rsyslog_common(self):
+    def _configure_cron(self):
         """
         Configure common rsyslog and logrotate
         Also cleanup statsd
@@ -169,21 +166,6 @@ class Configure(Setup):
             err_msg = f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing."
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
-
-    @staticmethod
-    def _validate_healthmap_path():
-        """
-        This method gets the healthmap path fron salt command and saves the
-        value in csm.conf config.
-        Fetching the minion id of the node where this cli command is fired.
-        This minion id will be required to fetch the healthmap path.
-        Will use 'srvnode-1' in case the salt command fails to fetch the id.
-        """
-        Log.info("Validating Healthmap path")
-        healthmap_path = Conf.get(const.CSM_GLOBAL_INDEX, const.HEALTH_SCHEMA_KEY)
-        if not os.path.exists(healthmap_path):
-            Log.logger.error(f"Health map not available at {healthmap_path}")
-            raise CsmSetupError(f"Health map not available at {healthmap_path}")
 
     def _configure_uds_keys(self):
         Log.info("Configuring UDS keys")
