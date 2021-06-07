@@ -1,0 +1,223 @@
+{
+    "name": "auditlog",
+    "description": "Auditlogs",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Display Audit Logs",
+        "permissions_tag": "list",
+        "sub_commands": [
+          {
+            "name": "csm",
+            "description": "Displays CSM Audit Logs on the CLI",
+            "need_confirmation": false,
+            "permissions_tag": "list",
+            "args": [
+              {
+                "flag": "-b",
+                "dest": "start_date",
+                "type": "Converter.convert_date_to_epoch",
+                "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-e",
+                "dest": "end_date",
+                "type": "Converter.convert_end_date_to_epoch",
+                "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-s",
+                "dest": "sortby",
+                "type": "str",
+                "help": "The field on which audit logs should be sorted.",
+                "default": "timestamp",
+                "params": true
+              },
+              {
+                "flag": "-d",
+                "dest": "dir",
+                "type": "str",
+                "help": "The direction on which the sudit logs logs should be sorted on the field (asc/desc)",
+                "default": "desc",
+                "params": true
+              },
+              {
+                "flag": "-o",
+                "dest": "offset",
+                "type": "Validatiors.positive_int",
+                "help": "The (page) number from which the audit logs should be fetched",
+                "default": "1",
+                "params": true
+              },
+              {
+                "flag": "-l",
+                "dest": "limit",
+                "type": "Validatiors.positive_int",
+                "help": "The no. of audit logs to be fetched.",
+                "default": "10000",
+                "params": true
+              },
+              {
+                "flag": "args",
+                "default": [],
+                "suppress_help": true,
+                "nargs": "?",
+                "help": ""
+              },
+              {
+                "flag": "-f",
+                "dest": "format",
+                "help": "Format of Output",
+                "default": "table",
+                "type": "str",
+                "choices": [
+                  "table",
+                  "xml",
+                  "json"
+                ]
+              }
+            ],
+            "comm": {
+              "type": "rest",
+              "method": "get",
+              "target": "/{version}/auditlogs/show/csm",
+              "version": "v2"
+            },
+            "output": {
+              "table": {
+                "headers": {
+                  "timestamp": "Timestamp",
+                  "user": "User",
+                  "remote_ip": "Remote IP",
+                  "forwarded_for_ip": "Forwarded For IP",
+                  "method": "Method",
+                  "path": "Path",
+                  "user_agent": "User Agent",
+                  "response_code": "Response Code",
+                  "request_id": "Request Id"
+                },
+                "filters": "logs"
+              }
+            }
+          },
+          {
+            "name": "s3",
+            "description": "Displays S3 Audit Logs on the CLI",
+            "need_confirmation": false,
+            "permissions_tag": "list",
+            "args": [
+              {
+                "flag": "-b",
+                "dest": "start_date",
+                "type": "Converter.convert_date_to_epoch",
+                "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-e",
+                "dest": "end_date",
+                "type": "Converter.convert_end_date_to_epoch",
+                "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
+                "params": true,
+                "required": true
+              },
+              {
+                "flag": "-s",
+                "dest": "sortby",
+                "type": "str",
+                "help": "The field on which audit logs should be sorted.",
+                "default": "timestamp",
+                "params": true
+              },
+              {
+                "flag": "-d",
+                "dest": "dir",
+                "type": "str",
+                "help": "The direction on which the sudit logs logs should be sorted on the field (asc/desc)",
+                "default": "desc",
+                "params": true
+              },
+              {
+                "flag": "-o",
+                "dest": "offset",
+                "type": "Validatiors.positive_int",
+                "help": "The (page) number from which the audit logs should be fetched",
+                "default": "1",
+                "params": true
+              },
+              {
+                "flag": "-l",
+                "dest": "limit",
+                "type": "Validatiors.positive_int",
+                "help": "The no. of audit logs to be fetched.",
+                "default": "10000",
+                "params": true
+              },
+              {
+                "flag": "args",
+                "default": [],
+                "suppress_help": true,
+                "nargs": "?",
+                "help": ""
+              },
+              {
+                "flag": "-f",
+                "dest": "format",
+                "help": "Format of Output",
+                "default": "table",
+                "type": "str",
+                "choices": [
+                  "table",
+                  "xml",
+                  "json"
+                ]
+              }
+            ],
+            "comm": {
+              "type": "rest",
+              "method": "get",
+              "target": "/{version}/auditlogs/show/s3",
+              "version": "v2"
+            },
+            "output": {
+              "table": {
+                "headers": {
+                  "timestamp": "Timestamp",
+                  "authentication_type": "Authentication Type",
+                  "bucket": "Bucket",
+                  "bucket_owner": "Bucket Owner",
+                  "bytes_received": "Bytes Received",
+                  "bytes_sent": "Bytes Sent",
+                  "cipher_suite": "Cipher Suite",
+                  "error_code": "Error Code",
+                  "host_header": "Host Header",
+                  "host_id": "Host Id",
+                  "http_status": "HTTP Status",
+                  "key": "Key",
+                  "object_size": "Object Size",
+                  "operation": "Operation",
+                  "referrer": "Referrer",
+                  "remote_ip": "Remote IP",
+                  "request_uri": "Request URI",
+                  "request_id": "Request Id",
+                  "requester": "Requester",
+                  "signature_version": "Signature Version",
+                  "time": "Time",
+                  "total_time": "Total Time",
+                  "turn_around_time": "Turn Around Time",
+                  "user_agent": "User Agent",
+                  "version_id": "Version Id"
+                },
+                "filters": "logs"
+              }
+            }
+          }
+        ]        
+      }    
+    ]
+  }

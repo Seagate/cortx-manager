@@ -101,6 +101,10 @@ class CortxHAFramework(HAFramework):
         return {
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
+    def get_system_health(self, element='cluster', depth: int=1, **kwargs):
+        # TODO - Implement when API is available from HA.
+        pass
+
 
 class PcsHAFramework(HAFramework):
     def __init__(self, resource_agents=None):

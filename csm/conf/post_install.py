@@ -74,7 +74,7 @@ class PostInstall(Setup):
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
             })
         try:
-            self._validate_conf_store_keys(const.CONSUMER_INDEX)
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")

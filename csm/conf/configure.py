@@ -43,6 +43,7 @@ class Configure(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
+        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -52,8 +53,8 @@ class Configure(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DB_SOURCE_CONF_FILE_URL)
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
@@ -63,7 +64,7 @@ class Configure(Setup):
         try:
             self._configure_uds_keys()
             self._logrotate()
-            self._rsyslog_common()
+            self._configure_cron()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -92,7 +93,7 @@ class Configure(Setup):
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
             })
 
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def _validate_consul_service(self):
         Log.info("Getting consul status")
@@ -128,10 +129,8 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
-    def _rsyslog_common(self):
+    def _configure_cron(self):
         """
         Configure common rsyslog and logrotate
         Also cleanup statsd
