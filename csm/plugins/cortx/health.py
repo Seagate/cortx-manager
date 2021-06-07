@@ -54,7 +54,7 @@ class HealthPlugin(CsmPlugin):
 
         resource_health = self._ha.get_system_health(resource, depth, id=resource_id)
         resource_health_resp = self._parse_ha_resp(resource_health, filters)
-        
+
         return resource_health_resp
 
     def _parse_ha_resp(self, resource_health, filters):

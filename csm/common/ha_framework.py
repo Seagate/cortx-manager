@@ -113,10 +113,8 @@ class CortxHAFramework(HAFramework):
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
         parsed_system_health = None
         try:
-            """
-            TODO: Need to move this to __init__ after ConfStore delimiter
-            issue is fixed.
-            """
+            # TODO: Need to move this to __init__ after
+            # ConfStore delimiter issue is fixed.
             self._cluster_manager = CortxClusterManager(default_log_enable=False)
             system_health = self._cluster_manager.get_system_health(element, depth, \
                                                                         **kwargs)
