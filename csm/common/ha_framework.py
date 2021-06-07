@@ -18,12 +18,14 @@ import os
 import time
 import crypt
 from csm.common.process import SimpleProcess
-from csm.common.payload import JsonMessage, Json
+from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
 from csm.core.blogic import const
 
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
+
+from ha.core.cluster.cluster_manager import CortxClusterManager
 
 
 class HAFramework:
@@ -55,6 +57,13 @@ class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
+        try:
+            # self._cluster_manager = CortxClusterManager(default_log_enable=False)
+            self._cluster_manager = None
+        except Exception as e:
+            err_msg = f"Error instantiating CortxClusterManager: {e}"
+            Log.error(err_msg)
+            raise Exception(err_msg)
 
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
@@ -102,12 +111,22 @@ class CortxHAFramework(HAFramework):
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
-        # TODO - Implement when API is available from HA.
-        # return Json(const.HA_HEALTH_SCHEMA).load()
-        return {
-            "version": "1.0",
-            "health": list()
-        }
+        parsed_system_health = None
+        try:
+            """
+            TODO: Need to move this to __init__ after ConfStore delimiter
+            issue is fixed.
+            """
+            self._cluster_manager = CortxClusterManager(default_log_enable=False)
+            system_health = self._cluster_manager.get_system_health(element, depth, \
+                                                                        **kwargs)
+            parsed_system_health = JsonMessage(system_health).load()
+        except Exception as e:
+            err_msg = f"Error fetching health from ha : {e}"
+            Log.error(err_msg)
+            raise Exception(err_msg)
+
+        return parsed_system_health["output"]
 
 
 class PcsHAFramework(HAFramework):

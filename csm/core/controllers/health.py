@@ -13,10 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
-import re
-from aiohttp import web
-from marshmallow import Schema, fields, validate, ValidationError, validates
+from marshmallow import Schema, fields, validate, ValidationError
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action

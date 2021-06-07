@@ -35,6 +35,7 @@ class HealthAppService(ApplicationService):
         plugin_request_params = self._build_request_parameters(filters)
         plugin_request_params[const.ARG_RESOURCE] = resource
 
+        Log.debug(f"Health service fetch {resource} health with filters: {filters}")
         plugin_response = self._health_plugin.process_request(**plugin_request_params)
         return plugin_response
 
@@ -47,10 +48,15 @@ class HealthAppService(ApplicationService):
         plugin_request_params[const.ARG_RESOURCE] = resource
         plugin_request_params[const.ARG_RESOURCE_ID] = resource_id
 
+        Log.debug(f"Health service fetch {resource} health with id {resource_id} and \
+                    filters {filters}")
         plugin_response = self._health_plugin.process_request(**plugin_request_params)
         return plugin_response
 
     def _build_request_parameters(self, filters):
+        """
+        Build request parameters based on the filters.
+        """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.FETCH_RESOURCE_HEALTH_REQ
         request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH, 1)

@@ -15,19 +15,20 @@
 
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
+from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 
 
 class HealthPlugin(CsmPlugin):
     """
+    Communicates with HA via ha_framework to fetch health
+    of resources based on filters.
     """
 
     def __init__(self, ha):
         super().__init__()
-        try:
-            self._ha = ha
-        except Exception as e:
-            Log.exception(e)
+
+        self._ha = ha
 
     def init(self, **kwargs):
         pass
@@ -35,12 +36,18 @@ class HealthPlugin(CsmPlugin):
     def process_request(self, **kwargs):
         request = kwargs.get(const.PLUGIN_REQUEST, "")
         response = None
+
+        Log.debug(f"Health plugin process_request with arguments: {kwargs}")
         if request == const.FETCH_RESOURCE_HEALTH_REQ:
             response = self._fetch_resource_health(kwargs)
 
         return response
 
     def _fetch_resource_health(self, filters):
+        """
+        Make call to CortxHAFramework get_system_health method
+        to get the health of resources.
+        """
         resource = filters.get(const.ARG_RESOURCE, "")
         resource_id = filters.get(const.ARG_RESOURCE_ID, "")
         depth = filters.get(const.ARG_DEPTH, 1)
@@ -60,9 +67,13 @@ class HealthPlugin(CsmPlugin):
             offset = filters.get(const.ARG_OFFSET, 1)
             limit = filters.get(const.ARG_LIMIT, 0)
             total_resources = len(flattened_health_resp)
-            effective_limit = min(limit, total_resources)
             start = (offset - 1) * limit
-            end = start + effective_limit
+            end = min((start + limit), total_resources)
+
+            if start >= end:
+                raise InvalidRequest(f"Invalid offset {offset}. \
+                                        Offset is out of bounds.")
+
             resource_health_resp = {
                 "data": flattened_health_resp[start:end],
                 "total_records": total_resources
