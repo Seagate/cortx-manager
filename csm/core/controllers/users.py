@@ -21,7 +21,8 @@ from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmPermissionDenied
+from cortx.utils.conf_store.conf_store import Conf
 
 
 INVALID_REQUEST_PARAMETERS = "invalid request parameter"
@@ -153,6 +154,11 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
+
+        max_users_allowed = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM_MAX_USERS_ALLOWED}")
+        existing_users_count = await self._service.get_user_count()
+        if existing_users_count>=max_users_allowed:
+            raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
 
         s3_account = await self.request.app["s3_account_service"].get_account(
             user_body['user_id'])

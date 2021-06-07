@@ -156,6 +156,7 @@ CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
+CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
 # Non root user
 NON_ROOT_USER = 'csm'
