@@ -19,7 +19,7 @@ from .s3.iam_users import IamUserListView, IamUserView
 from .s3.accounts import S3AccountsListView, S3AccountsView
 from .alerts.alerts import AlertsView, AlertsListView
 from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
-from .health import HealthView, HealthResourceView
+from .health import ResourcesHealthView, ResourceHealthByIdView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView

@@ -112,8 +112,8 @@
         }
       },
       {
-        "name": "reset_password",
-        "description": "Reset password for S3 Account.",
+        "name": "password",
+        "description": "Change/Reset password for S3 Account.",
         "need_confirmation": true,
         "permissions_tag": "update",
         "args": [
