@@ -283,6 +283,10 @@ FETCH_TIME = 'fetch_time'
 HOST_ID = 'host_id'
 CREATED_TIME = 'created_time'
 FAULT_HEALTH = 'Fault'
+RESPONSE_FORMAT_TREE = 'tree'
+RESPONSE_FORMAT_TABLE = 'table'
+ARG_DEPTH = 'depth'
+ARG_RESPONSE_FORMAT = 'response_format'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
