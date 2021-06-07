@@ -46,7 +46,7 @@ class Cmd:
         sys.stderr.write(
             f"usage: {prog} [-h] <cmd> --config <url> <args>...\n"
             f"where:\n"
-            f"cmd   post_install, prepare, config, init, reset, test\n"
+            f"cmd   post_install, prepare, config, init, reset, test, pre_upgrade, post_upgrade\n"
             f"url   Config URL\n")
 
     @staticmethod
@@ -171,6 +171,31 @@ class ResetCmd(Cmd):
         rc = self.usl.reset()
         return rc
 
+class PreUpgradeCmd(Cmd):
+    """ Reset Setup Cmd """
+    name = "pre_upgrade"
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.usl = Usl(args.config)
+
+    def process(self):
+        # TODO: Add actions here
+        rc = self.usl.pre_upgrade()
+        return rc
+
+class PostUpgradeCmd(Cmd):
+    """ Reset Setup Cmd """
+    name = "post_upgrade"
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.usl = Usl(args.config)
+
+    def process(self):
+        self.usl._prepare_and_validate_confstore_keys("post_upgrade")
+        rc = self.usl.post_upgrade()
+        return rc
 
 def main(argv: dict):
     try:

@@ -17,14 +17,31 @@ import json
 from csm.core.services.file_transfer import FileType
 from cortx.utils.log import Log
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from marshmallow import Schema, fields, validate, ValidationError, validates
+from marshmallow import Schema, fields, validate, ValidationError, validates, \
+        validates_schema
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
+from datetime import datetime
+from typing import Dict
+
 
 class AuditLogRangeQuerySchema(Schema):
     """ schema to validate date range """
     start_date = fields.Int(required=True)
     end_date = fields.Int(required=True)
+
+    @validates_schema
+    def check_date(self, data: Dict, *args, **kwargs):
+        if data["start_date"] > data["end_date"]:
+            raise ValidationError(
+                "start date cannot be greater than end date.",
+                field_name="start_date")
+        elif data["start_date"] > datetime.now().replace(hour=23, minute=59, \
+            second=59).timestamp() or data["end_date"] > datetime.now().replace( \
+                hour=23, minute=59, second=59).timestamp():
+            raise ValidationError(
+                "Start/End date cannot be greater than today.")
+
 
 class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
     limit = fields.Int(validate=validate.Range(min=1))
@@ -66,7 +83,7 @@ class AuditLogShowView(CsmView):
             request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
-                "Invalid Range query", str(val_err))
+                f"Invalid Range query {str(val_err)}")
 
         start_date = request_data["start_date"]
         end_date = request_data["end_date"] 
@@ -99,7 +116,7 @@ class AuditLogDownloadView(CsmView):
             request_data = audit_log.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(
-                "Invalid Range query", str(val_err))
+                f"Invalid Range query {str(val_err)}")
 
         start_date = request_data["start_date"]
         end_date = request_data["end_date"]
