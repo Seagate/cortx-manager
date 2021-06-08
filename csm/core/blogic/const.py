@@ -293,6 +293,13 @@ ARG_OFFSET = 'offset'
 ARG_LIMIT = 'limit'
 FETCH_RESOURCE_HEALTH_REQ = 'fetch_resource_health'
 FETCH_RESOURCE_HEALTH_BY_ID_REQ = 'fetch_resource_health_by_id'
+STATUS_LITERAL = 'status'
+OUTPUT_LITERAL = 'output'
+ERROR_LITERAL = 'error'
+STATUS_SUCCEEDED = 'Succeeded'
+STATUS_FAILED = 'Failed'
+STATUS_PARTIAL = 'Partial'
+HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
