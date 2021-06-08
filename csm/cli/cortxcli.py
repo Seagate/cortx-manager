@@ -124,7 +124,7 @@ class CortxCli(Cmd):
         return command
 
     def process_direct_command(self, command):
-        obj = DirectClient()
+        obj = CliClient()
         response = self.loop.run_until_complete(obj.call(command))
         if response:
             command.process_response(out=sys.stdout, err=sys.stderr,
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.cli_framework.command_factory import CommandFactory
     from csm.cli.csm_client import CsmRestClient
-    from cortx.utils.cli_framework.cli_client import DirectClient
+    from cortx.utils.cli_framework.client import CliClient
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import Conf
     from cortx.utils.cli_framework.errors import CliError

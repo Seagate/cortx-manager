@@ -17,6 +17,7 @@ import errno
 from cortx.utils.log import Log
 from cortx.utils.cli_framework.errors import CliError
 from csm.core.controllers.validators import BucketNameValidator
+from csm.common.payload import CommonPayload
 
 class Validators():
 
@@ -30,3 +31,23 @@ class Validators():
                  "Should contain either lowercase, numeric or '-' characters. "
                  "Not starting or ending with '-'"))
         return str(value)
+
+    @staticmethod
+    def file_parser(value):
+        try:
+            return CommonPayload(value).load()
+        except ValueError as ve:
+            Log.error(f"File parsing failed. {value}: {ve}")
+            raise CliError(errno.EINVAL,
+                ("File operations failed. "
+                 "Please check if the file is valid or not"))
+        except FileNotFoundError as err:
+            Log.error(f"No such file present. {value}: {err}")
+            raise CliError(errno.ENOENT,
+                ("File operation failed. "
+                 "Please check if the file exists."))
+        except KeyError as err:
+            Log.error(f"Check file type. {value}: {err}")
+            raise CliError(errno.ENOENT,
+                ("File operation failed. "
+                 "Please check if the file exists and its type."))
