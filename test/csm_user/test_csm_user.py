@@ -49,7 +49,7 @@ def test_csm_user_create(args):
     user_service = args.get('user_service')
     data = {'user_id': 'csm_test_manage_user',
             'password': 'Csmuser@123',
-            'roles': ['manage'],
+            'role': 'manage',
             'email': 'csm@test.com',
             'alert_notification': True}
 
@@ -65,7 +65,7 @@ def test_csm_user_create(args):
     assert 'updated_time' in user
     assert 'created_time' in user
     assert user['username'] == data['user_id']
-    assert user['roles'] == data['roles']
+    assert user['role'] == data['role']
     assert user['email'] == data['email']
     assert user['alert_notification'] == data['alert_notification']
 
@@ -110,19 +110,19 @@ def test_csm_user_update_roles(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'roles': ['monitor'],
+    data = {'role': 'monitor',
             'current_password': 'Csmuser@123'}
 
     # Initial roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['roles'] == ['manage']
+    assert user['role'] == 'manage'
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['roles'] == ['monitor']
+    assert user['role'] == 'monitor'
 
 
 def test_csm_user_update_email(args):

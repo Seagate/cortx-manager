@@ -62,7 +62,7 @@ class UserManager:
         :returns: User object in case of success. None otherwise.
         """
         Log.debug(f"Get user service user id:{user_id}")
-        # TODO In absence of ComapareIgnoreCase manually filtering 
+        # TODO In absence of ComapareIgnoreCase manually filtering
         # query = Query().filter_by(Compare(User.to_native("user_id").lower(), '=', user_id.lower()))
         # return next(iter(await self.storage(User).get(query)), None)
         all_users = await self.get_list()
@@ -136,7 +136,7 @@ class CsmUserService(ApplicationService):
             "id": user.user_id,
             "username": user.user_id,
             "user_type": user.user_type,
-            "roles": user.roles,
+            "role": user.role,
             "email": user.email,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z'
@@ -147,7 +147,7 @@ class CsmUserService(ApplicationService):
         Handles the csm user creation
         :param user_id: User identifier
         :param user_password: User password (not hashed)
-        :param roles: List of roles of the user
+        :param role: role of the user
         :param interfaces: List of user interfaces
         :returns: A dictionary describing the newly created user.
         In case of error, an exception is raised.
@@ -178,9 +178,8 @@ class CsmUserService(ApplicationService):
         # TODO: Decide the default preboarding user roles once we
         # implement user role management. Replace this hardcoded values
         # with proper constants.
-        roles = [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]
-        user = User.instantiate_csm_user(user_id, password, email=email, roles=roles,
-                                         alert_notification=True)
+        user = User.instantiate_csm_user(
+            user_id, password, email=email, role=const.CSM_SUPER_USER_ROLE, alert_notification=True)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
@@ -247,8 +246,8 @@ class CsmUserService(ApplicationService):
             raise InvalidRequest("Value for current_password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
-        if self.is_super_user(user) and ('roles' in new_values):
-            raise CsmPermissionDenied("Cannot change roles for admin user",
+        if self.is_super_user(user) and ('role' in new_values):
+            raise CsmPermissionDenied("Cannot change the role for admin user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
 
     async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
@@ -260,15 +259,15 @@ class CsmUserService(ApplicationService):
         if user_id.lower() != loggedin_user_id.lower():
             raise CsmPermissionDenied("Non admin user cannot change other user",
                                     USERS_MSG_PERMISSION_DENIED, user_id)
-        
+
         if not current_password:
             raise InvalidRequest("Value for current_password is required",
                                     USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
 
-        if 'roles' in new_values:
-            raise CsmPermissionDenied("Non admin user cannot change roles for self",
+        if 'role' in new_values:
+            raise CsmPermissionDenied("Non admin user cannot change the role for self",
                                       USERS_MSG_PERMISSION_DENIED, user_id)
-       
+
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
         """
         Update user .
@@ -285,11 +284,11 @@ class CsmUserService(ApplicationService):
             await self._validation_for_update_by_superuser(user_id, user, new_values)
         else:
             await self._validation_for_update_by_normal_user(user_id, loggedin_user_id, new_values)
-        
+
         if current_password and not self._verfiy_current_password(user, current_password):
             raise InvalidRequest("Cannot update user details without valid current password",
                                       USERS_MSG_UPDATE_NOT_ALLOWED)
-        
+
         user.update(new_values)
         await self.user_mgr.save(user)
         return self._user_to_dict(user)
@@ -302,4 +301,4 @@ class CsmUserService(ApplicationService):
 
     def is_super_user(self, user: User):
         """ Check if user is super user """
-        return const.CSM_SUPER_USER_ROLE in user.roles
+        return user.role == const.CSM_SUPER_USER_ROLE
