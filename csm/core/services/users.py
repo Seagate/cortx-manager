@@ -139,7 +139,8 @@ class CsmUserService(ApplicationService):
             "role": user.role,
             "email": user.email,
             "created_time": user.created_time.isoformat() + 'Z',
-            "updated_time": user.updated_time.isoformat() + 'Z'
+            "updated_time": user.updated_time.isoformat() + 'Z',
+            "alert_notification": user.alert_notification
         }
 
     async def create_user(self, user_id: str, password: str, **kwargs) -> dict:

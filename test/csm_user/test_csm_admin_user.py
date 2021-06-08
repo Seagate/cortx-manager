@@ -80,7 +80,7 @@ def test_csm_admin_user_update_without_current_password(args):
     with t.assertRaises(InvalidRequest) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-    assert 'Super user current password is required' in str(e.exception)
+    assert 'Value for current_password is required' in str(e.exception)
 
 
 def test_csm_admin_user_update_password(args):
@@ -116,7 +116,7 @@ def test_csm_admin_user_update_roles(args):
     with t.assertRaises(CsmPermissionDenied) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-    assert 'Cannot change roles for super user' in str(e.exception)
+    assert 'Cannot change the role for admin user' in str(e.exception)
 
 
 def test_csm_admin_user_delete(args):
@@ -126,7 +126,7 @@ def test_csm_admin_user_delete(args):
     user_id = args.get('user').get('id')
     with t.assertRaises(CsmPermissionDenied) as e:
         loop.run_until_complete(user_service.delete_user(user_id, user_id))
-    assert 'Can\'t delete super user' in str(e.exception)
+    assert 'Cannot delete admin user' in str(e.exception)
 
 
 test_list = [

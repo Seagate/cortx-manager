@@ -81,7 +81,7 @@ def test_csm_user_update_without_current_password(args):
     with t.assertRaises(InvalidRequest) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-    assert 'Current password is required' in str(e.exception)
+    assert 'Value for current_password is required' in str(e.exception)
 
 
 def test_csm_user_update_password(args):
@@ -173,7 +173,7 @@ def test_csm_user_delete(args):
     loop.run_until_complete(user_service.delete_user(user_id, user_id))
     with t.assertRaises(CsmNotFoundError) as e:
         loop.run_until_complete(user_service.get_user(user_id))
-    assert 'There is no such user' in str(e.exception)
+    assert 'User does not exist' in str(e.exception)
 
 
 test_list = [test_csm_user_create,
