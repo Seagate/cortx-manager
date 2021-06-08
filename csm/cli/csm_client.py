@@ -27,7 +27,7 @@ from csm.core.blogic import const
 from cortx.utils.schema.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from cortx.utils.cli_framework.command import Command
-from cortx.utils.cli_framework.cli_client import Client
+from cortx.utils.cli_framework.client import Client
 
 
 class CsmApiClient(Client):
