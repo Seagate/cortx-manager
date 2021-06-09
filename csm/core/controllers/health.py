@@ -32,7 +32,7 @@ class HealthViewQueryParameter(Schema):
     offset = fields.Int(validate=validate.Range(min=1), allow_none=True,
                             default=1, missing=1)
     limit = fields.Int(validate=validate.Range(min=0), allow_none=True,
-                            default=0, missing=0)
+                            default=1, missing=1)
 
 
 @CsmView._app_routes.view("/api/v2/system/health/{resource}")

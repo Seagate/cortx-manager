@@ -49,7 +49,7 @@ class HealthAppService(ApplicationService):
         request_params[const.ARG_RESOURCE_ID] = filters.get(const.ARG_RESOURCE_ID, "")
         request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH, 1)
         request_params[const.ARG_OFFSET] = filters.get(const.ARG_OFFSET, 1)
-        request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT, 0)
+        request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT, 1)
         request_params[const.ARG_RESPONSE_FORMAT] = filters.get(
                                                         const.ARG_RESPONSE_FORMAT,
                                                         const.RESPONSE_FORMAT_TREE)
