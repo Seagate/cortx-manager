@@ -143,11 +143,14 @@ class CsmUserService(ApplicationService):
             "alert_notification": user.alert_notification
         }
 
-    async def create_user(self, user_id: str, password: str, **kwargs) -> dict:
+    async def create_user(
+        self, user_id: str, password: str, role: str, creator_id: Optional[str], **kwargs
+    ) -> dict:
         """
         Handles the csm user creation
         :param user_id: User identifier
         :param user_password: User password (not hashed)
+        :param creator_id: identifier of the user who triggered the new user creation
         :param role: role of the user
         :param interfaces: List of user interfaces
         :returns: A dictionary describing the newly created user.

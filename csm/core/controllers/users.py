@@ -26,48 +26,20 @@ from cortx.utils.conf_store.conf_store import Conf
 
 
 INVALID_REQUEST_PARAMETERS = "invalid request parameter"
-class RolesList(fields.List):
-    """
-    A list of strings representing an role type.
-    When deserialised, will be deduped"
-    """
 
-    def __init__(self, required=False, _validate=None, **kwargs):
-        if _validate is not None:
-            raise ValueError(
-                "The RolesList field provides its own validation "
-                "and thus does not accept a the 'validate' argument."
-            )
 
-        super().__init__(
-            fields.String(validate=validate.OneOf(const.CSM_USER_ROLES)),
-            required=required,
-            validate=validate.Length(equal=1),
-            allow_none=False,
-            **kwargs,
-        )
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        # for unique entry of role
-        return [ role
-            for role in set(super()._deserialize(value, attr, data, **kwargs))
-        ]
-
-class CsmSuperUserCreateSchema(Schema):
+class CsmUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
                          validate=[UserNameValidator()])
     password = fields.Str(required=True, validate=[PasswordValidator()])
     email = fields.Email(required=True)
+    role = fields.Str(required=True, validate=validate.OneOf(const.CSM_USER_ROLES))
 
-
-# TODO: find out about policies for names and passwords
-class CsmUserCreateSchema(CsmSuperUserCreateSchema):
-    roles = RolesList(required=True)
 
 class CsmUserPatchSchema(Schema):
     current_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
-    roles = RolesList()
+    role = fields.Str(validate=validate.OneOf(const.CSM_USER_ROLES))
     email = fields.Email()
 
     """
@@ -92,6 +64,7 @@ class CsmUserPatchSchema(Schema):
             raise InvalidRequest(f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
         return data
 
+
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
         if value == 'username':
@@ -107,6 +80,7 @@ class CsmGetUsersSchema(Schema):
                                                       'username',
                                                       'user_type',
                                                       'email',
+                                                      'role',
                                                       'created_time',
                                                       'updated_time']),
                              default="user_id",
@@ -148,10 +122,12 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
-    @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
+    @CsmAuth.public
     async def post(self):
-        Log.debug(f"Handling users post request."
-                  f" user_id: {self.request.session.credentials.user_id}")
+        Log.debug("Handling users post request.")
+
+        creator = self.request.session.credentials.user_id if self.request.session else None
+        Log.debug(f"User ID {creator}")
 
         try:
             schema = CsmUserCreateSchema()
@@ -168,6 +144,7 @@ class CsmUsersListView(CsmView):
         if s3_account is not None:
             raise InvalidRequest("S3 account with same name as passed CSM username already exists")
 
+        user_body['creator_id'] = creator
         response = await self._service.create_user(**user_body)
         return CsmResponse(response, const.STATUS_CREATED)
 
@@ -200,8 +177,9 @@ class CsmUsersView(CsmView):
         user_id = self.request.match_info["user_id"]
         resp = await self._service.delete_user(user_id,
                                                self.request.session.credentials.user_id)
+        # TODO: check if the user has really been deleted
         # delete session for user
-        # admin cannot be deleted         
+        # admin cannot be deleted
         await self.request.app.login_service.delete_all_sessions_for_user(user_id)
         return resp
 
@@ -226,43 +204,3 @@ class CsmUsersView(CsmView):
         resp = await self._service.update_user(user_id, user_body,
                                                self.request.session.credentials.user_id)
         return resp
-
-@CsmView._app_routes.view("/api/v1/preboarding/user")
-@CsmView._app_routes.view("/api/v2/preboarding/user")
-@CsmAuth.public
-class AdminUserView(CsmView):
-
-    STATUS_CREATED = 201
-    STATUS_CONFLICT = 409
-
-    def __init__(self, request):
-        super().__init__(request)
-        self._service = self.request.app["csm_user_service"]
-
-    async def post(self):
-        """
-        POST REST implementation of creating a super user for preboarding
-        """
-        Log.debug("Creating super user")
-
-        try:
-            schema = CsmSuperUserCreateSchema()
-            user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args="Request body missing")
-        except ValidationError as val_err:
-            raise InvalidRequest(message_args=f"Invalid request body: {val_err}")
-
-        status = const.STATUS_CREATED
-        response = await self._service.create_super_user(**user_body)
-        if not response:
-            status = const.STATUS_CONFLICT
-            response = {
-                'message_id': 'admin_already_exists',
-                'message_text': 'Admin user already exists',
-                'extended_message': user_body['user_id']
-            }
-
-        # TODO: We need to return specific HTTP codes here.
-        # Change this after we have proper exception hierarchy.
-        return CsmResponse(response, status=status)
