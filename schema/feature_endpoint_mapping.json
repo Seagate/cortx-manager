@@ -59,12 +59,6 @@
       "ha"
     ]
   },
-  "/api/*/system/health/*/*": {
-    "feature_name": "health",
-    "dependent_on": [
-      "ha"
-    ]
-  },
   "/api/*/update/hotfix/status": {
     "feature_name": "SW_Update",
     "dependent_on": [

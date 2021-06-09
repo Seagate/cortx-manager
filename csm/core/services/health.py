@@ -32,33 +32,21 @@ class HealthAppService(ApplicationService):
         Fetch health of all resources of type {resource}
         and/or their sub resources based on input level.
         """
-        plugin_request_params = self._build_request_parameters(filters)
-        plugin_request_params[const.ARG_RESOURCE] = resource
+        plugin_request_params = self._build_request_parameters(resource, filters)
+        Log.debug(f"Health service fetch {resource} health with filters: \
+                    {plugin_request_params}")
 
-        Log.debug(f"Health service fetch {resource} health with filters: {filters}")
         plugin_response = self._health_plugin.process_request(**plugin_request_params)
         return plugin_response
 
-    async def fetch_resource_health_by_id(self, resource, resource_id, **filters):
-        """
-        Get health of resource (cluster, site, rack, node etc.)
-        with resource_id and/or its sub resources based on input level.
-        """
-        plugin_request_params = self._build_request_parameters(filters)
-        plugin_request_params[const.ARG_RESOURCE] = resource
-        plugin_request_params[const.ARG_RESOURCE_ID] = resource_id
-
-        Log.debug(f"Health service fetch {resource} health with id {resource_id} and \
-                    filters {filters}")
-        plugin_response = self._health_plugin.process_request(**plugin_request_params)
-        return plugin_response
-
-    def _build_request_parameters(self, filters):
+    def _build_request_parameters(self, resource, filters):
         """
         Build request parameters based on the filters.
         """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.FETCH_RESOURCE_HEALTH_REQ
+        request_params[const.ARG_RESOURCE] = resource
+        request_params[const.ARG_RESOURCE_ID] = filters.get(const.ARG_RESOURCE_ID, "")
         request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH, 1)
         request_params[const.ARG_OFFSET] = filters.get(const.ARG_OFFSET, 1)
         request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT, 0)
