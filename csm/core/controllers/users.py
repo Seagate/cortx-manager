@@ -123,6 +123,12 @@ class CsmUsersListView(CsmView):
         self._service = self.request.app["csm_user_service"]
         self._service_dispatch = {}
 
+    async def check_max_user_limit(self):
+        max_users_allowed = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM_MAX_USERS_ALLOWED}")
+        existing_users_count = await self._service.get_user_count()
+        if existing_users_count>=max_users_allowed:
+            raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
+
     """
     GET REST implementation for fetching csm users
     """
@@ -155,10 +161,7 @@ class CsmUsersListView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
-        max_users_allowed = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM_MAX_USERS_ALLOWED}")
-        existing_users_count = await self._service.get_user_count()
-        if existing_users_count>=max_users_allowed:
-            raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
+        await self.check_max_user_limit()
 
         s3_account = await self.request.app["s3_account_service"].get_account(
             user_body['user_id'])
