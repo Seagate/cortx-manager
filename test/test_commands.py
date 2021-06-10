@@ -21,7 +21,7 @@ from mock import MagicMock, call
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
+from cortx.utils.cli_framework.command_factory import CommandFactory
 
 
 class SupportBundleTest(unittest.TestCase):

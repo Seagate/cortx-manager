@@ -128,7 +128,9 @@ TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
 CORTX = 'cortx'
+TMP_CSM = '/tmp/csm'
 CSM_ETC_DIR = '/etc/csm'
+TMP_CSM = '/tmp/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -137,6 +139,7 @@ CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
+DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
@@ -154,7 +157,11 @@ CSM_MONITOR_ROLE = 'monitor'
 CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
-
+DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
+# cron dir
+CRON_DIR = "/etc/cron.daily"
+SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
+DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -276,12 +283,16 @@ FETCH_TIME = 'fetch_time'
 HOST_ID = 'host_id'
 CREATED_TIME = 'created_time'
 FAULT_HEALTH = 'Fault'
+RESPONSE_FORMAT_TREE = 'tree'
+RESPONSE_FORMAT_TABLE = 'table'
+ARG_DEPTH = 'depth'
+ARG_RESPONSE_FORMAT = 'response_format'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
-CLI_SETUP_FILE = '{}/schema/cli_setup.json'.format(CSM_PATH)
+CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
 
 # Support Bundle
 SSH_USER_NAME = 'root'
@@ -431,7 +442,6 @@ NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 # Audit Log
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
-SORTABLE_FIELDS = "sortable_fields"
 
 # Syslog constants
 LOG_LEVEL = "INFO"
@@ -478,6 +488,7 @@ S3_BUCKET_SERVICE = "s3_bucket_service"
 S3_ACCESS_KEYS_SERVICE = 's3_access_keys_service'
 S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
+UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 
 # System Status flight

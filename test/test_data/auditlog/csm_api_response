@@ -1,0 +1,65 @@
+{
+  "total_records": 5,
+  "logs": [
+    {
+      "timestamp": "2021-05-31T05:33:05.066961+0000",
+      "user": "admin",
+      "remote_ip": "127.0.0.1",
+      "forwarded_for_ip": "10.4.149.149",
+      "method": "GET",
+      "path": "/api/v2/auditlogs/show/csm",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.66",
+      "response_code": "200",
+      "request_id": 1622439184,
+      "msg": ""
+    },
+    {
+      "timestamp": "2021-05-31T05:32:52.567251+0000",
+      "user": "admin",
+      "remote_ip": "127.0.0.1",
+      "forwarded_for_ip": "10.4.149.149",
+      "method": "GET",
+      "path": "/api/v2/capacity",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.66",
+      "response_code": "200",
+      "request_id": 1622439171,
+      "msg": ""
+    },
+    {
+      "timestamp": "2021-05-31T05:32:52.231699+0000",
+      "user": "admin",
+      "remote_ip": "127.0.0.1",
+      "forwarded_for_ip": "10.4.149.149",
+      "method": "GET",
+      "path": "/api/v2/alerts",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.66",
+      "response_code": "200",
+      "request_id": 1622439171,
+      "msg": ""
+    },
+    {
+      "timestamp": "2021-05-31T05:32:52.157026+0000",
+      "user": "admin",
+      "remote_ip": "127.0.0.1",
+      "forwarded_for_ip": "10.4.149.149",
+      "method": "GET",
+      "path": "/api/v2/alerts",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.66",
+      "response_code": "200",
+      "request_id": 1622439171,
+      "msg": ""
+    },
+    {
+      "timestamp": "2021-05-31T05:32:51.442172+0000",
+      "user": "admin",
+      "remote_ip": "127.0.0.1",
+      "forwarded_for_ip": "10.4.149.149",
+      "method": "GET",
+      "path": "/api/v2/stats",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 Edg/90.0.818.66",
+      "response_code": "200",
+      "request_id": 1622439171,
+      "msg": ""
+    }    
+  ]
+}

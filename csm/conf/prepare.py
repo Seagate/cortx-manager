@@ -38,6 +38,7 @@ class Prepare(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
+        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -47,8 +48,8 @@ class Prepare(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_SOURCE_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DB_SOURCE_CONF_FILE_URL)
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self._prepare_and_validate_confstore_keys()
@@ -77,7 +78,11 @@ class Prepare(Setup):
             const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
             })
 
-        self._validate_conf_store_keys(const.CONSUMER_INDEX)
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def _set_secret_string_for_decryption(self):
         '''
@@ -91,6 +96,7 @@ class Prepare(Setup):
                     self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
+        Log.info("Setting up cluster id")
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
@@ -204,4 +210,3 @@ class Prepare(Setup):
         self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")

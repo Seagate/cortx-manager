@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -47,7 +49,7 @@ class CliSetupCommand:
         # hardcoded permissions
         cli_setup_permissions_dict = {'update': True}
         cmd_obj = CommandParser(Json(const.CLI_SETUP_FILE).load(), cli_setup_permissions_dict)
-        cmd_obj.handle_main_parse(subparsers)
+        cmd_obj._handle_main_parse(subparsers)
         namespace = parser.parse_args(self._args)
         sys_module = sys.modules[__name__]
         for attr in ['command', 'action', 'args']:
@@ -58,20 +60,20 @@ class CliSetupCommand:
     def process(self):
         ''' Parse args for cli_setup and execute cmd to print output '''
         self._cmd = self._get_command()
-        obj = CsmDirectClient()
+        obj = CliClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))
         if response:
             self._cmd.process_response(out=sys.stdout, err=sys.stderr,
                                      response=response)
 
 if __name__ == '__main__':
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(sys.argv[0]))), '..', '..','..'))
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import *
-    from csm.cli.command import CommandParser
+    from cortx.utils.cli_framework.parser import CommandParser
     from csm.core.blogic import const
     from cortx.utils.log import Log
-    from csm.cli.csm_client import CsmDirectClient
+    from cortx.utils.cli_framework.client import CliClient
     from csm.cli.conf.post_install import PostInstall
     from csm.cli.conf.configure import Configure
     from csm.cli.conf.init import Init
