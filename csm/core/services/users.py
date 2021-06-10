@@ -114,6 +114,15 @@ class UserManager:
         # TODO: validate the model
         await self.storage(User).store(user)
 
+    async def count_admins(self):
+        """
+        Counts the number of created CORTX admin users.
+
+        :returns: number of CORTX admin users.
+        """
+        fltr = Compare(User.role, '=', const.CSM_SUPER_USER_ROLE)
+        return await self.storage(User).count(fltr)
+
 
 USERS_MSG_USER_NOT_FOUND = "users_not_found"
 USERS_MSG_PERMISSION_DENIED = "user_permission_denied"
@@ -157,9 +166,24 @@ class CsmUserService(ApplicationService):
         In case of error, an exception is raised.
         """
         Log.debug(f"Create user service. user_id: {user_id}")
-        user = User.instantiate_csm_user(user_id, password)
+
+        creator = await self.user_mgr.get(creator_id) if creator_id else None
+        # Perform pre-creation checks for anonymous user
+        if creator is None:
+            num_admins = await self.user_mgr.count_admins()
+            if role == const.CSM_SUPER_USER_ROLE and num_admins == 0:
+                Log.info("Anonymous user's creating the first CORTX admin")
+            else:
+                raise CsmPermissionDenied("Please, log in to create a user")
+        # ... and for logged in user
+        else:
+            if creator.role not in [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]:
+                raise CsmPermissionDenied("This user is not allowed to create other users")
+            if role == const.CSM_SUPER_USER_ROLE and creator.role != const.CSM_SUPER_USER_ROLE:
+                raise CsmPermissionDenied("Only admin user can create other admin users")
+
+        user = User.instantiate_csm_user(user_id, password, role=role, alert_notification=True)
         user.update(kwargs)
-        user['alert_notification'] = True
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
@@ -229,8 +253,10 @@ class CsmUserService(ApplicationService):
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         if self.is_super_user(user):
-            raise CsmPermissionDenied("Cannot delete admin user",
-                                      USERS_MSG_PERMISSION_DENIED, user_id)
+            num_admins = await self.user_mgr.count_admins()
+            if num_admins == 1:
+                raise CsmPermissionDenied(
+                    "Cannot delete the last admin user", USERS_MSG_PERMISSION_DENIED, user_id)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
         # Is Logged in user normal user
         if not self.is_super_user(loggedin_user):
