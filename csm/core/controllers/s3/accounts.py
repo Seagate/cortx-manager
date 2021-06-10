@@ -102,9 +102,8 @@ class S3AccountsView(S3BaseView):
         Log.debug(f"Handling s3 accounts delete request."
                   f" user_id: {self.request.session.credentials.user_id}")
         with self._guard_service():
-            response = await self._service.delete_account(self._s3_session,
-                                                          self.account_id)
-            await self._cleanup_sessions()
+            response = await self._service.delete_account(self.account_id)
+            await self.request.app.login_service.delete_all_sessions_for_user(self.account_id)
             return response
 
     """
