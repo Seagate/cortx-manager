@@ -177,8 +177,6 @@ class CsmUserService(ApplicationService):
                 raise CsmPermissionDenied("Please, log in to create a user")
         # ... and for logged in user
         else:
-            if creator.role not in [const.CSM_SUPER_USER_ROLE, const.CSM_MANAGE_ROLE]:
-                raise CsmPermissionDenied("This user is not allowed to create other users")
             if role == const.CSM_SUPER_USER_ROLE and creator.role != const.CSM_SUPER_USER_ROLE:
                 raise CsmPermissionDenied("Only admin user can create other admin users")
 

@@ -123,6 +123,7 @@ class CsmUsersListView(CsmView):
     POST REST implementation for creating a csm user
     """
     @CsmAuth.public
+    @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         Log.debug("Handling users post request.")
 
