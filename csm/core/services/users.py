@@ -213,6 +213,12 @@ class CsmUserService(ApplicationService):
 
         return [self._user_to_dict(x) for x in user_list]
 
+    async def get_user_count(self):
+        """
+        returns the count of existing users
+        """
+        return await self.user_mgr.count()
+
     async def delete_user(self, user_id: str, loggedin_user_id: str):
         """ User deletion """
         Log.debug(f"Delete user service user_id: {user_id}.")
