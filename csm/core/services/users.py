@@ -190,30 +190,6 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
-    async def create_super_user(self, user_id: str, password: str,
-                                email: str) -> dict:
-        """
-        Handles the preboarding super user creation
-        :param user_id: User identifier
-        :param password: User password (not hashed)
-        :param email: User email
-        :returns: A dictionary describing the newly created user.
-        In case of error, an exception is raised.
-        """
-        Log.debug(f"Create root user service user_id: {user_id}")
-        if await self.user_mgr.count() != 0:
-            # The root user is allowed to be created only once during preboarding.
-            # Non-zero user count means that such user was already created.
-            return None
-
-        # TODO: Decide the default preboarding user roles once we
-        # implement user role management. Replace this hardcoded values
-        # with proper constants.
-        user = User.instantiate_csm_user(
-            user_id, password, email=email, role=const.CSM_SUPER_USER_ROLE, alert_notification=True)
-        await self.user_mgr.create(user)
-        return self._user_to_dict(user)
-
     async def get_user(self, user_id: str):
         """
         Fetches a single user.
