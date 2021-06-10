@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.core.blogic import const
-from csm.cli.command_factory import CommandFactory
+from cortx.utils.cli_framework.command_factory import CommandFactory
 from csm.test.common import Const
 from argparse import ArgumentError
 import unittest
