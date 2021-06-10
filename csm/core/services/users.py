@@ -215,7 +215,7 @@ class CsmUserService(ApplicationService):
 
     async def get_user_count(self):
         """
-        returns the count of existing users
+        Return the count of existing users
         """
         return await self.user_mgr.count()
 
