@@ -250,30 +250,62 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f"Feature endpoint is not found for {request.path}")
 
     @classmethod
+    def _extract_bearer(cls, headers) -> str:
+        """
+        Extract the bearer token from HTTP headers.
+
+        :param headers: HTTP headers.
+        :returns: bearer token.
+        """
+
+        hdr = headers.get(CsmAuth.HDR)
+        if not hdr:
+            raise CsmNotFoundError(f'No {CsmAuth.HDR} header')
+        auth_pair = hdr.split(' ')
+        if len(auth_pair) != 2:
+            raise CsmNotFoundError(f'The header is incorrect. Expected "{CsmAuth.HDR} session_id"')
+        auth_type, session_id = auth_pair
+        if auth_type != CsmAuth.TYPE:
+            raise CsmNotFoundError(f'Invalid auth type {auth_type}')
+        return session_id
+
+    @classmethod
+    async def _validate_bearer(cls, login_service, session_id):
+        """
+        Validate the bearer token.
+
+        Search for the session with ID equal to the token value and return it.
+        Throw a Permission denied exception otherwise.
+        :param login_service: login service.
+        :param session_id: bearer token's value.
+        :returns: session object.
+        """
+
+        try:
+            session = await login_service.auth_session(session_id)
+            Log.info(f'Username: {session.credentials.user_id}')
+        except CsmError as e:
+            raise CsmNotFoundError(e.error())
+        if not session:
+            raise CsmNotFoundError('Invalid auth token')
+        return session
+
+    @classmethod
     @web.middleware
     async def session_middleware(cls, request, handler):
         session = None
         is_public = await cls._is_public(request)
-        if not is_public:
-            hdr = request.headers.get(CsmAuth.HDR)
-            if not hdr:
-                cls._unauthorised(f'No {CsmAuth.HDR} header')
-            auth_pair = hdr.split(' ')
-            if len(auth_pair) != 2:
-                cls._unauthorised(f'The header is incorrect. Expected "{CsmAuth.HDR} session_id"')
-            auth_type, session_id = auth_pair
-            if auth_type != CsmAuth.TYPE:
-                cls._unauthorised(f'Invalid auth type {auth_type}')
+        try:
+            session_id = cls._extract_bearer(request.headers)
+            session = await cls._validate_bearer(request.app.login_service, session_id)
             Log.debug(f'Non-Public: {request}')
-            try:
-                session = await request.app.login_service.auth_session(session_id)
-                Log.info(f'Username: {session.credentials.user_id}')
-            except CsmError as e:
+            Log.info(f'Username: {session.credentials.user_id}')
+        except CsmNotFoundError as e:
+            is_public = await cls._is_public(request)
+            if is_public:
+                Log.debug(f'Public: {request}')
+            else:
                 cls._unauthorised(e.error())
-            if not session:
-                cls._unauthorised('Invalid auth token')
-        else:
-            Log.debug(f'Public: {request}')
         request.session = session
         return await handler(request)
 
