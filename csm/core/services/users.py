@@ -75,8 +75,9 @@ class UserManager:
         Log.debug(f"Delete user service user id:{user_id}")
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
-    async def get_list(self, offset: int = None, limit: int = None,
-                       sort: SortBy = None, role: Optional[str] = None) -> List[User]:
+    async def get_list(self, offset: Optional[int] = None, limit: Optional[int] = None,
+                       sort: Optional[SortBy] = None,
+                       role: Optional[str] = None, username: Optional[str] = None) -> List[User]:
         """
         Fetches the list of users.
         :param offset: Number of items to skip.
@@ -86,6 +87,7 @@ class UserManager:
         :returns: A list of User models
         """
         query = Query()
+        query_filters = []
 
         if offset:
             query = query.offset(offset)
@@ -97,7 +99,13 @@ class UserManager:
             query = query.order_by(getattr(User, sort.field), sort.order)
 
         if role:
-            query = query.filter_by(Compare(User.role, '=', role))
+            query_filters.append(Compare(User.role, '=', role))
+
+        if username:
+            query_filters.append(Compare(User.user_id, 'like', username))
+
+        if query_filters:
+            query = query.filter_by(And(*query_filters))
 
         Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
@@ -200,7 +208,7 @@ class CsmUserService(ApplicationService):
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         return self._user_to_dict(user)
 
-    async def get_user_list(self, limit, offset, sort_by, sort_dir, role):
+    async def get_user_list(self, limit, offset, sort_by, sort_dir, role, username):
         """
         Fetches the list of existing users.
         """
@@ -208,7 +216,7 @@ class CsmUserService(ApplicationService):
             offset or None,
             limit or None,
             SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
-            role)
+            role, username)
 
         field_mapping = {
             "id": "user_id",

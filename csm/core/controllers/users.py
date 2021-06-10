@@ -87,6 +87,7 @@ class CsmGetUsersSchema(Schema):
                              missing="user_id")
     sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
                           missing='asc', default='asc')
+    username = fields.Str(default=None, missing=None, validate=validate.Length(min=1, max=56))
     role = fields.Str(default=None, missing=None, validate=validate.OneOf(const.CSM_USER_ROLES))
 
 
