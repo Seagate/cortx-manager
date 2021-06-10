@@ -76,12 +76,13 @@ class UserManager:
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
     async def get_list(self, offset: int = None, limit: int = None,
-                       sort: SortBy = None) -> List[User]:
+                       sort: SortBy = None, role: Optional[str] = None) -> List[User]:
         """
         Fetches the list of users.
         :param offset: Number of items to skip.
         :param limit: Maximum number of items to return.
         :param sort: What field to sort on.
+        :param role: Role to filter the list.
         :returns: A list of User models
         """
         query = Query()
@@ -94,6 +95,10 @@ class UserManager:
 
         if sort:
             query = query.order_by(getattr(User, sort.field), sort.order)
+
+        if role:
+            query = query.filter_by(Compare(User.role, '=', role))
+
         Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
 
@@ -219,12 +224,15 @@ class CsmUserService(ApplicationService):
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
         return self._user_to_dict(user)
 
-    async def get_user_list(self, limit, offset, sort_by, sort_dir):
+    async def get_user_list(self, limit, offset, sort_by, sort_dir, role):
         """
         Fetches the list of existing users.
         """
-        user_list = await self.user_mgr.get_list(offset or None, limit or None,
-            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC))
+        user_list = await self.user_mgr.get_list(
+            offset or None,
+            limit or None,
+            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
+            role)
 
         field_mapping = {
             "id": "user_id",

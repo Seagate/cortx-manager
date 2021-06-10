@@ -87,6 +87,7 @@ class CsmGetUsersSchema(Schema):
                              missing="user_id")
     sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
                           missing='asc', default='asc')
+    role = fields.Str(default=None, missing=None, validate=validate.OneOf(const.CSM_USER_ROLES))
 
 
 @CsmView._app_routes.view("/api/v1/csm/users")
