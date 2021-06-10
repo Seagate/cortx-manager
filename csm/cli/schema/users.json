@@ -172,8 +172,8 @@
       }
     },
     {
-      "name": "reset_password",
-      "description": "Reset Password for user",
+      "name": "password",
+      "description": "Change/Reset Password for user",
       "need_confirmation": true,
       "permissions_tag": "update",
       "args": [
