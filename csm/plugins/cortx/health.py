@@ -15,25 +15,99 @@
 
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
+from csm.common.errors import InvalidRequest
+from csm.core.blogic import const
+
 
 class HealthPlugin(CsmPlugin):
     """
-    Health Plugin is responsible for listening and sending on the comm channel.
-    It has a callback which is called to send the received response to health
-    service.. 
-    Note, Health Plugin needs to be called in thread context as it blocks while
-    listening for the response.
+    Communicates with HA via ha_framework to fetch health
+    of resources based on filters.
     """
 
-    def __init__(self):
+    def __init__(self, ha):
         super().__init__()
-        try:
-            self.health_callback = None
-        except Exception as e:
-            Log.exception(e)
+
+        self._ha = ha
 
     def init(self, **kwargs):
         pass
 
     def process_request(self, **kwargs):
-        pass
+        request = kwargs.get(const.PLUGIN_REQUEST, "")
+        response = None
+
+        Log.debug(f"Health plugin process_request with arguments: {kwargs}")
+        if request == const.FETCH_RESOURCE_HEALTH_REQ:
+            response = self._fetch_resource_health(kwargs)
+
+        return response
+
+    def _fetch_resource_health(self, filters):
+        """
+        Make call to CortxHAFramework get_system_health method
+        to get the health of resources.
+        """
+        resource = filters.get(const.ARG_RESOURCE, "")
+        resource_id = filters.get(const.ARG_RESOURCE_ID, "")
+        depth = filters.get(const.ARG_DEPTH, 1)
+
+        resource_health = self._ha.get_system_health(resource, depth, id=resource_id)
+        resource_health_resp = self._parse_ha_resp(resource_health, filters)
+
+        return resource_health_resp
+
+    def _parse_ha_resp(self, resource_health, filters):
+        resource_health_resp = dict()
+        response_format = filters.get(const.ARG_RESPONSE_FORMAT,
+                                    const.RESPONSE_FORMAT_TREE)
+
+        if response_format == const.RESPONSE_FORMAT_TABLE:
+            flattened_health_resp = self._flatten_ha_resp(resource_health)
+            offset = filters.get(const.ARG_OFFSET, 1)
+            limit = filters.get(const.ARG_LIMIT, 1)
+            total_resources = len(flattened_health_resp)
+
+            if limit == 0:
+                limit = total_resources
+
+            start = (offset - 1) * limit
+            end = min((start + limit), total_resources)
+
+            if start >= end:
+                raise InvalidRequest(f"Invalid offset {offset}. \
+                                        Offset is out of bounds.")
+
+            resource_health_resp = {
+                "data": flattened_health_resp[start:end],
+                "total_records": total_resources
+            }
+        else:
+            resource_health_resp["data"] = resource_health["health"]
+
+        resource_health_resp["version"] = resource_health["version"]
+        return resource_health_resp
+
+    def _flatten_ha_resp(self, resource_health):
+        resources = []
+        stack = list()
+        for res_health in reversed(resource_health.get("health", [])):
+            stack.append(res_health)
+
+        while len(stack) > 0:
+            resource = stack.pop()
+            resources.append(self._build_resource_obj(resource))
+
+            if len(resource["sub_resources"]) > 0:
+                for sub_resource in reversed(resource["sub_resources"]):
+                    stack.append(sub_resource)
+
+        return resources
+
+    def _build_resource_obj(self, resource):
+        return {
+            "resource" : resource["resource"],
+            "id" : resource["id"],
+            "status" : resource["status"],
+            "last_updated_time" : resource["last_updated_time"]
+        }
