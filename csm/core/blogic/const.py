@@ -292,7 +292,7 @@ ARG_RESPONSE_FORMAT = 'response_format'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
-CLI_SETUP_FILE = '{}/schema/cli_setup.json'.format(CSM_PATH)
+CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
 
 # Support Bundle
 SSH_USER_NAME = 'root'

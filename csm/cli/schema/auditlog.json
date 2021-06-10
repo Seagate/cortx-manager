@@ -16,7 +16,9 @@
               {
                 "flag": "-b",
                 "dest": "start_date",
-                "type": "Converter.convert_date_to_epoch",
+                "type": "str",
+                "type_method": "Converter.convert_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -24,7 +26,9 @@
               {
                 "flag": "-e",
                 "dest": "end_date",
-                "type": "Converter.convert_end_date_to_epoch",
+                "type": "str",
+                "type_method": "Converter.convert_end_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -48,7 +52,7 @@
               {
                 "flag": "-o",
                 "dest": "offset",
-                "type": "Validatiors.positive_int",
+                "type": "int",
                 "help": "The (page) number from which the audit logs should be fetched",
                 "default": "1",
                 "params": true
@@ -56,7 +60,7 @@
               {
                 "flag": "-l",
                 "dest": "limit",
-                "type": "Validatiors.positive_int",
+                "type": "int",
                 "help": "The no. of audit logs to be fetched.",
                 "default": "10000",
                 "params": true
@@ -113,7 +117,9 @@
               {
                 "flag": "-b",
                 "dest": "start_date",
-                "type": "Converter.convert_date_to_epoch",
+                "type": "str",
+                "type_method": "Converter.convert_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "Start date in yyyy-mm-dd from which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -121,7 +127,9 @@
               {
                 "flag": "-e",
                 "dest": "end_date",
-                "type": "Converter.convert_end_date_to_epoch",
+                "type": "str",
+                "type_method": "Converter.convert_end_date_to_epoch",
+                "type_target": "csm.common.converter",
                 "help": "End date in yyyy-mm-dd till which audit logs to be fetched.",
                 "params": true,
                 "required": true
@@ -145,7 +153,7 @@
               {
                 "flag": "-o",
                 "dest": "offset",
-                "type": "Validatiors.positive_int",
+                "type": "int",
                 "help": "The (page) number from which the audit logs should be fetched",
                 "default": "1",
                 "params": true
@@ -153,7 +161,7 @@
               {
                 "flag": "-l",
                 "dest": "limit",
-                "type": "Validatiors.positive_int",
+                "type": "int",
                 "help": "The no. of audit logs to be fetched.",
                 "default": "10000",
                 "params": true

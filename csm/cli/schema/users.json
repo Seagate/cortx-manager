@@ -10,14 +10,14 @@
       "args": [
         {
           "flag": "-o",
-          "type": "Validatiors.positive_int",
+          "type": "int",
           "dest": "offset",
           "help": "Amount of users you want to get",
           "params": true
         },
         {
           "flag": "-l",
-          "type": "Validatiors.positive_int",
+          "type": "int",
           "dest": "limit",
           "help": "Limit of amount of users you want to view",
           "params": true
@@ -117,7 +117,9 @@
         {
           "flag": "-p",
           "dest": "password",
-          "type": "Terminal.get_password",
+          "type": "str",
+          "type_method": "Terminal.get_password",
+          "type_target": "cortx.utils.cli_framework.terminal",
           "help": "",
           "default": "",
           "suppress_help": true,
@@ -185,7 +187,9 @@
         {
           "flag": "-cp",
           "dest": "current_password",
-          "type": "Terminal.get_current_password",
+          "type": "str",
+          "type_method": "Terminal.get_current_password",
+          "type_target": "cortx.utils.cli_framework.terminal",
           "suppress_help": true,
           "help": "",
           "default": "",
@@ -194,7 +198,9 @@
         {
           "flag": "-p",
           "dest": "password",
-          "type": "Terminal.get_password",
+          "type": "str",
+          "type_method": "Terminal.get_password",
+          "type_target": "cortx.utils.cli_framework.terminal",
           "help": "",
           "default": "",
           "suppress_help": true,
@@ -251,7 +257,9 @@
         {
           "flag": "-cp",
           "dest": "current_password",
-          "type": "Terminal.get_current_password",
+          "type": "str",
+          "type_method": "Terminal.get_current_password",
+          "type_target": "cortx.utils.cli_framework.terminal",
           "suppress_help": true,
           "help": "",
           "default": "",
