@@ -1,0 +1,87 @@
+{
+    "name": "health",
+    "description": "Health",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Displays health of the cluster and resources in it.",
+        "need_confirmation": false,
+        "permissions_tag": "list",
+        "args": [
+          {
+            "flag": "resource",
+            "type": "str",
+            "help": "The type of element in the hierarchy. Ex. node"
+          },
+          {
+            "flag": "-i",
+            "dest": "resource_id",
+            "type": "str",
+            "help": "Id of the resource.",
+            "default": "",
+            "params": true
+          },
+          {
+            "flag": "-o",
+            "dest": "offset",
+            "type": "int",
+            "help": "The (page) number from which the records should be fetched",
+            "default": "1",
+            "params": true
+          },
+          {
+            "flag": "-l",
+            "dest": "limit",
+            "type": "int",
+            "help": "The number of records to be fetched.",
+            "default": "0",
+            "params": true
+          },
+          {
+            "flag": "-r",
+            "dest": "response_format",
+            "type": "str",
+            "default": "table",
+            "suppress_help": true,
+            "help": "",
+            "params": true
+          },
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?",
+            "help": ""
+          },
+          {
+            "flag": "-f",
+            "dest": "format",
+            "help": "Format of Output",
+            "default": "table",
+            "type": "str",
+            "choices": [
+              "table",
+              "xml",
+              "json"
+            ]
+          }
+        ],
+        "comm": {
+          "type": "rest",
+          "method": "get",
+          "target": "/{version}/system/health/{resource}",
+          "version": "v2"
+        },
+        "output": {
+          "table": {
+            "headers": {
+              "resource": "Resource",
+              "id": "Resource Id",
+              "status": "Status"
+            },
+            "filters": "data"
+          }
+        }
+      }
+    ]
+  }
