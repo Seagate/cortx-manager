@@ -65,8 +65,12 @@ class HealthPlugin(CsmPlugin):
         if response_format == const.RESPONSE_FORMAT_TABLE:
             flattened_health_resp = self._flatten_ha_resp(resource_health)
             offset = filters.get(const.ARG_OFFSET, 1)
-            limit = filters.get(const.ARG_LIMIT, 0)
+            limit = filters.get(const.ARG_LIMIT, 1)
             total_resources = len(flattened_health_resp)
+
+            if limit == 0:
+                limit = total_resources
+
             start = (offset - 1) * limit
             end = min((start + limit), total_resources)
 
