@@ -285,8 +285,21 @@ CREATED_TIME = 'created_time'
 FAULT_HEALTH = 'Fault'
 RESPONSE_FORMAT_TREE = 'tree'
 RESPONSE_FORMAT_TABLE = 'table'
+ARG_RESOURCE = 'resource'
+ARG_RESOURCE_ID = 'resource_id'
 ARG_DEPTH = 'depth'
 ARG_RESPONSE_FORMAT = 'response_format'
+ARG_OFFSET = 'offset'
+ARG_LIMIT = 'limit'
+FETCH_RESOURCE_HEALTH_REQ = 'fetch_resource_health'
+FETCH_RESOURCE_HEALTH_BY_ID_REQ = 'fetch_resource_health_by_id'
+STATUS_LITERAL = 'status'
+OUTPUT_LITERAL = 'output'
+ERROR_LITERAL = 'error'
+STATUS_SUCCEEDED = 'Succeeded'
+STATUS_FAILED = 'Failed'
+STATUS_PARTIAL = 'Partial'
+HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
@@ -536,6 +549,7 @@ ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
+PLUGIN_REQUEST = "request"
 
 # REST METHODS
 POST = "POST"
