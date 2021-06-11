@@ -14,9 +14,12 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.common.services import ApplicationService
+from cortx.utils.iem_framework import EventMessage
 
-class AlertsAppService(ApplicationService):
+class IemAppService(ApplicationService):
     """
     Provides producer and consumer operations on IEMs
     """
-    pass
+    def __init__(self):
+        self._source = None
+        self._componenet = None
