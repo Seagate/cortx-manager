@@ -70,6 +70,7 @@ class HealthPlugin(CsmPlugin):
 
             if limit == 0:
                 limit = total_resources
+                offset = 1
 
             start = (offset - 1) * limit
             end = min((start + limit), total_resources)

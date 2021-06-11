@@ -114,8 +114,12 @@ class CortxHAFramework(HAFramework):
         self._validate_resource(element)
         parsed_system_health = None
         try:
-            system_health = self._cluster_manager.get_system_health(element, depth, \
-                                                                        **kwargs)
+            system_health = self._cluster_manager.get_system_health(element, \
+                                                                    depth=depth, \
+                                                                    **kwargs)
+            # TODO: Remove the statement below when delimiter issue is
+            # fixed in cortx-utils.
+            Conf.init(delim='>')
             Log.debug(f"HA Framework-System Health: {system_health}")
             parsed_system_health = JsonMessage(system_health).load()
         except Exception as e:
