@@ -103,7 +103,7 @@ class HealthPlugin(CsmPlugin):
             resource = stack.pop()
             resources.append(self._build_resource_obj(resource))
 
-            if len(resource["sub_resources"]) > 0:
+            if resource["sub_resources"] != None and len(resource["sub_resources"]) > 0:
                 for sub_resource in reversed(resource["sub_resources"]):
                     stack.append(sub_resource)
 
