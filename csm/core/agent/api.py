@@ -28,9 +28,11 @@ from aiohttp import web, web_exceptions
 from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
+from typing import Dict, Tuple
 from csm.core.blogic.models.audit_log import CsmAuditLogModel
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
+from csm.core.services.sessions import LoginService
 from csm.common.observer import Observable
 from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
@@ -202,8 +204,8 @@ class CsmRestApi(CsmApi, ABC):
         return web.json_response(
             resp_obj, status=status, dumps=CsmRestApi.json_serializer)
 
-    @classmethod
-    def _unauthorised(cls, reason):
+    @staticmethod
+    def _unauthorised(reason: str):
         Log.debug(f'Unautorized: {reason}')
         raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
 
@@ -212,14 +214,14 @@ class CsmRestApi(CsmApi, ABC):
         match_info = await request.app.router.resolve(request)
         return match_info.handler
 
-    @classmethod
-    async def _is_public(cls, request):
-        handler = await cls._resolve_handler(request)
+    @staticmethod
+    async def _is_public(request):
+        handler = await CsmRestApi._resolve_handler(request)
         return CsmView.is_public(handler, request.method)
 
     @classmethod
     async def _get_permissions(cls, request):
-        handler = await cls._resolve_handler(request)
+        handler = await CsmRestApi._resolve_handler(request)
         return CsmView.get_permissions(handler, request.method)
 
     @staticmethod
@@ -249,8 +251,8 @@ class CsmRestApi(CsmApi, ABC):
         else:
             Log.debug(f"Feature endpoint is not found for {request.path}")
 
-    @classmethod
-    def _extract_bearer(cls, headers) -> str:
+    @staticmethod
+    def _extract_bearer(headers: Dict) -> Tuple[str, str]:
         """
         Extract the bearer token from HTTP headers.
 
@@ -269,43 +271,41 @@ class CsmRestApi(CsmApi, ABC):
             raise CsmNotFoundError(f'Invalid auth type {auth_type}')
         return session_id
 
-    @classmethod
-    async def _validate_bearer(cls, login_service, session_id):
+    @staticmethod
+    async def _validate_bearer(login_service: LoginService, session_id: str):
         """
         Validate the bearer token.
 
         Search for the session with ID equal to the token value and return it.
         Throw a Permission denied exception otherwise.
         :param login_service: login service.
+        :param auth_type: authorization token type.
         :param session_id: bearer token's value.
         :returns: session object.
         """
 
         try:
             session = await login_service.auth_session(session_id)
-            Log.info(f'Username: {session.credentials.user_id}')
         except CsmError as e:
             raise CsmNotFoundError(e.error())
         if not session:
             raise CsmNotFoundError('Invalid auth token')
+        Log.info(f'Username: {session.credentials.user_id}')
         return session
 
-    @classmethod
+    @staticmethod
     @web.middleware
-    async def session_middleware(cls, request, handler):
+    async def session_middleware(request, handler):
         session = None
-        is_public = await cls._is_public(request)
+        is_public = await CsmRestApi._is_public(request)
+        Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
         try:
-            session_id = cls._extract_bearer(request.headers)
-            session = await cls._validate_bearer(request.app.login_service, session_id)
-            Log.debug(f'Non-Public: {request}')
+            session_id = CsmRestApi._extract_bearer(request.headers)
+            session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
             Log.info(f'Username: {session.credentials.user_id}')
         except CsmNotFoundError as e:
-            is_public = await cls._is_public(request)
-            if is_public:
-                Log.debug(f'Public: {request}')
-            else:
-                cls._unauthorised(e.error())
+            if not is_public:
+                CsmRestApi._unauthorised(e.error())
         request.session = session
         return await handler(request)
 
