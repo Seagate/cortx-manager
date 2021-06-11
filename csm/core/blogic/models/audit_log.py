@@ -56,4 +56,3 @@ class S3AuditLogModel(CsmModel):
     turn_around_time = StringType()
     user_agent = StringType()
     version_id = StringType()
-
