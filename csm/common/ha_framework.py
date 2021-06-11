@@ -114,7 +114,7 @@ class CortxHAFramework(HAFramework):
         self._validate_resource(element)
         parsed_system_health = None
         try:
-            system_health = self._cluster_manager.get_system_health(element, \
+            system_health = self._cluster_manager.get_system_health(element=element, \
                                                                     depth=depth, \
                                                                     **kwargs)
             # TODO: Remove the statement below when delimiter issue is

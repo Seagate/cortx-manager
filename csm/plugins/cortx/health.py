@@ -52,7 +52,11 @@ class HealthPlugin(CsmPlugin):
         resource_id = filters.get(const.ARG_RESOURCE_ID, "")
         depth = filters.get(const.ARG_DEPTH, 1)
 
-        resource_health = self._ha.get_system_health(resource, depth, id=resource_id)
+        resource_health = None
+        if resource_id == "":
+            resource_health = self._ha.get_system_health(resource, depth)
+        else:
+            resource_health = self._ha.get_system_health(resource, depth, id=resource_id)
         resource_health_resp = self._parse_ha_resp(resource_health, filters)
 
         return resource_health_resp
