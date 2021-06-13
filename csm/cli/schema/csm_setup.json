@@ -273,10 +273,29 @@
       "permissions_tag": "update",
       "args": [
         {
-          "flag": "-t",
-          "default": "",
+            "flag": "--config",
+            "dest": "config_url",
+            "type": "str",
+            "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "--plan",
+          "dest": "plan",
+          "default": "sanity_service",
+          "choices":[
+              "sanity_service",
+              "sanity",
+              "regression",
+              "full"
+          ],
           "type": "str",
-          "help": "Plan File Name that needs to be Executed."
+          "help": "Execution plan"
+        },
+        {
+            "flag": "-t",
+            "default": "",
+            "type": "str",
+            "help": "Path of args.yaml."
         },
         {
           "flag": "-f",

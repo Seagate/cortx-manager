@@ -739,3 +739,12 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+
+#CSM TEST Consts
+DEFAULT_USERNAME = 'admin'
+DEFAULT_PASSWORD = 'Seagate@1'
+DEFAULT_BROWSER = 'chrome'
+DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/sanity_service.pln'
+DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
+DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
+DEFAULT_OUTPUTFILE = '/tmp/output.log'
