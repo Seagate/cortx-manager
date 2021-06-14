@@ -167,7 +167,7 @@ class Configure(Setup):
             err_msg = f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing."
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
-        
+    
     def _fetch_management_ip(self):
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
