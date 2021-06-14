@@ -20,7 +20,7 @@ from typing import NamedTuple
 
 class IemPayload(NamedTuple):
     severity: str
-    module: str 
+    module: str
     event_id: int
     message_blob: str
 
@@ -57,7 +57,7 @@ class IemAppService(ApplicationService):
     def send(payload: IemPayload):
         Log.info("Sending IEM : {payload}")
         try:
-            ''' Message BLOB format is not defined yet. Using string as the data type. '''
+            """ Message BLOB format is not defined yet. Using string as the data type. """
             EventMessage.send(module=payload.module, event_id=payload.event_id, severity=payload.severity, \
                 message_blob=payload.message_blob)
         except EventMessageError as iemerror:
