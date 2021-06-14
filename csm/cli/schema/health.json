@@ -34,7 +34,7 @@
             "dest": "limit",
             "type": "int",
             "help": "The number of records to be fetched.",
-            "default": "1",
+            "default": "0",
             "params": true
           },
           {
