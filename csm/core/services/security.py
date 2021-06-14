@@ -25,7 +25,6 @@ from concurrent.futures import ThreadPoolExecutor
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from csm.common.iem import Iem
 from csm.common.errors import (CsmInternalError, CsmError, CsmTypeError,
                                ResourceExist, CsmNotFoundError, CsmServiceConflict)
 from cortx.utils.conf_store.conf_store import Conf
@@ -39,6 +38,7 @@ from csm.core.services.file_transfer import FileRef
 from csm.plugins.cortx.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.blogic import const
+from csm.core.services.iem import IemAppService, IemPayload
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
@@ -76,6 +76,7 @@ class SecurityService(ApplicationService):
         self._last_configuration = None
         self._provisioner_id = None
         self._executor = ThreadPoolExecutor(max_workers=1)
+        self._iem_service = IemAppService()
 
     def _provisioner_to_installation_status(self, prv_status: ProvisionerCommandStatus):
         """ Convert provisioner job status into corresponding certificate installation status
@@ -337,10 +338,17 @@ class SecurityService(ApplicationService):
                 message = None
 
             if message:
-                Log.warn(f'{message}')
-                Iem.generate(Iem.SEVERITY_WARN,
-                             Iem.IEC_CSM_SECURITY_SSL_CERT_EXPIRING,
-                             message)
+                if self._iem_service:
+                    Log.warn(f'{message}')
+                    self._iem_service.init()
+                    severity = self._iem_service.severity_levels['WARN']
+                    module = self._iem_service.modules['SSL_EXPIRY']
+                    ''' event_id is not finalized yet. Using a dummy value. '''
+                    payload = IemPayload(severity=severity, module=module, \
+                        event_id= 100, message_blob=message)
+                    self._iem_service.send(payload)
+                else:
+                    Log.error("Failed to send SSL expiry IEM. IEM service not initialized.")
 
         except Exception as e:
             Log.error(f'Failed to obtain certificate expiry time: {e}')

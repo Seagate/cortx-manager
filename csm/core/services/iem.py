@@ -15,11 +15,50 @@
 
 from csm.common.services import ApplicationService
 from cortx.utils.iem_framework import EventMessage
+from cortx.utils.iem_framework.error import EventMessageError
+from typing import NamedTuple
+
+class IemPayload(NamedTuple):
+    severity: str
+    module: str 
+    event_id: int
+    message_blob: str
 
 class IemAppService(ApplicationService):
     """
     Provides producer and consumer operations on IEMs
     """
+    severity_levels = {
+        'INFO' : 'I',
+        'WARN' : 'W',
+        'ERROR' : 'E',
+        'CRITICAL' : 'X',
+        'ALERT' : 'A',
+        'NOTICE' : 'N',
+        'CONFIG' : 'C',
+        'DETAIL' : 'D',
+        'DEBUG' : 'B'
+    }
+
+    modules = {
+        'SSL_EXPIRY': 'SSL'
+    }
+
     def __init__(self):
-        self._source = None
-        self._componenet = None
+        super().__init__()
+
+    def init(self, source: str = 'S', component: str = 'CSM'):
+        Log.info(f"Intializing IEM service - Component: {component}, Source: {source}")
+        try:
+            EventMessage.init(component, source)
+        except EventMessageError as iemerror:
+            Log.error(f"Event Message Initialization Error : {iemerror}")
+
+    def send(payload: IemPayload):
+        Log.info("Sending IEM : {payload}")
+        try:
+            ''' Message BLOB format is not defined yet. Using string as the data type. '''
+            EventMessage.send(module=payload.module, event_id=payload.event_id, severity=payload.severity, \
+                message_blob=payload.message_blob)
+        except EventMessageError as iemerror:
+            Log.error(f"Error in sending IEM. Payload : {payload}. {iemerror}")
