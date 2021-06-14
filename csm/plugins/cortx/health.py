@@ -49,17 +49,22 @@ class HealthPlugin(CsmPlugin):
         to get the health of resources.
         """
         resource = filters.get(const.ARG_RESOURCE, "")
-        resource_id = filters.get(const.ARG_RESOURCE_ID, "")
-        depth = filters.get(const.ARG_DEPTH, 1)
+        depth = filters.get(const.ARG_DEPTH, const.HEALTH_DEFAULT_DEPTH)
+        args = self._build_args_to_get_system_health(filters)
 
-        resource_health = None
-        if resource_id == "":
-            resource_health = self._ha.get_system_health(resource, depth)
-        else:
-            resource_health = self._ha.get_system_health(resource, depth, id=resource_id)
+        resource_health = self._ha.get_system_health(resource, depth, **args)
         resource_health_resp = self._parse_ha_resp(resource_health, filters)
 
         return resource_health_resp
+
+    def _build_args_to_get_system_health(self, filters):
+        args = dict()
+
+        resource_id = filters.get(const.ARG_RESOURCE_ID, "")
+        if resource_id != "":
+            args["id"] = resource_id
+
+        return args
 
     def _parse_ha_resp(self, resource_health, filters):
         resource_health_resp = dict()
@@ -68,20 +73,19 @@ class HealthPlugin(CsmPlugin):
 
         if response_format == const.RESPONSE_FORMAT_TABLE:
             flattened_health_resp = self._flatten_ha_resp(resource_health)
-            offset = filters.get(const.ARG_OFFSET, 1)
-            limit = filters.get(const.ARG_LIMIT, 1)
+            offset = filters.get(const.ARG_OFFSET, const.HEALTH_DEFAULT_OFFSET)
+            limit = filters.get(const.ARG_LIMIT, const.HEALTH_DEFAULT_LIMIT)
             total_resources = len(flattened_health_resp)
 
             if limit == 0:
                 limit = total_resources
-                offset = 1
 
             start = (offset - 1) * limit
             end = min((start + limit), total_resources)
 
             if start >= end:
-                raise InvalidRequest(f"Invalid offset {offset}. \
-                                        Offset is out of bounds.")
+                raise InvalidRequest(f"Invalid offset {offset}."
+                                        " Offset is out of bounds.")
 
             resource_health_resp = {
                 "data": flattened_health_resp[start:end],

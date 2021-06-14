@@ -25,14 +25,20 @@ from csm.core.controllers.validators import ValidationErrorFormatter, Enum
 class HealthViewQueryParameter(Schema):
     response_format_values = [const.RESPONSE_FORMAT_TABLE, const.RESPONSE_FORMAT_TREE]
     resource_id = fields.Str(default="", missing="")
-    depth = fields.Int(validate=validate.Range(min=0), default=1, missing=1)
+    depth = fields.Int(validate=validate.Range(min=0),
+                        default=const.HEALTH_DEFAULT_DEPTH,
+                        missing=const.HEALTH_DEFAULT_DEPTH)
     response_format = fields.Str(default=const.RESPONSE_FORMAT_TREE,
                                     missing=const.RESPONSE_FORMAT_TREE,
                                     validate=[Enum(response_format_values)])
-    offset = fields.Int(validate=validate.Range(min=1), allow_none=True,
-                            default=1, missing=1)
-    limit = fields.Int(validate=validate.Range(min=0), allow_none=True,
-                            default=1, missing=1)
+    offset = fields.Int(validate=validate.Range(min=1),
+                            allow_none=True,
+                            default=const.HEALTH_DEFAULT_OFFSET,
+                            missing=const.HEALTH_DEFAULT_OFFSET)
+    limit = fields.Int(validate=validate.Range(min=0),
+                            allow_none=True,
+                            default=const.HEALTH_DEFAULT_LIMIT,
+                            missing=const.HEALTH_DEFAULT_LIMIT)
 
 
 @CsmView._app_routes.view("/api/v2/system/health/{resource}")

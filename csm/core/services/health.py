@@ -47,9 +47,12 @@ class HealthAppService(ApplicationService):
         request_params[const.PLUGIN_REQUEST] = const.FETCH_RESOURCE_HEALTH_REQ
         request_params[const.ARG_RESOURCE] = resource
         request_params[const.ARG_RESOURCE_ID] = filters.get(const.ARG_RESOURCE_ID, "")
-        request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH, 1)
-        request_params[const.ARG_OFFSET] = filters.get(const.ARG_OFFSET, 1)
-        request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT, 1)
+        request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH,
+                                                        const.HEALTH_DEFAULT_DEPTH)
+        request_params[const.ARG_OFFSET] = filters.get(const.ARG_OFFSET,
+                                                        const.HEALTH_DEFAULT_OFFSET)
+        request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT,
+                                                        const.HEALTH_DEFAULT_LIMIT)
         request_params[const.ARG_RESPONSE_FORMAT] = filters.get(
                                                         const.ARG_RESPONSE_FORMAT,
                                                         const.RESPONSE_FORMAT_TREE)
