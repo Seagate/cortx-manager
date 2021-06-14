@@ -81,8 +81,8 @@ class PostInstall(Setup):
 
     def validate_3rd_party_pkgs(self):
         try:
-            Log.info("Validating third party rpms")
-            PkgV().validate("rpms", const.third_party_rpms)
+            Log.info("Validating dependent rpms")
+            PkgV().validate("rpms", const.dependent_rpms)
             Log.info("Valdating  3rd party Python Packages")
             PkgV().validate("pip3s", self.fetch_python_pkgs())
         except VError as ve:
@@ -152,7 +152,7 @@ class PostInstall(Setup):
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                       "Failure")
-            Setup._update_service_file("#< RESTART_OPTION >",
+            Setup._update_csm_files("#< RESTART_OPTION >",
                                        "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
@@ -161,7 +161,7 @@ class PostInstall(Setup):
         Configures the Service user in CSM service files.
         :return:
         """
-        Setup._update_service_file("<USER>", self._user)
+        Setup._update_csm_files("<USER>", self._user)
 
     def _configure_rsyslog(self):
         """
