@@ -343,9 +343,7 @@ class SecurityService(ApplicationService):
                     self._iem_service.init()
                     severity = self._iem_service.severity_levels['WARN']
                     module = self._iem_service.modules['SSL_EXPIRY']
-                    """
-                    event_id is not finalized yet. Using a dummy value.
-                    """
+                    # event_id is not finalized yet. Using a dummy value.
                     payload = IemPayload(severity=severity, module=module, \
                         event_id= 100, message_blob=message)
                     self._iem_service.send(payload)
