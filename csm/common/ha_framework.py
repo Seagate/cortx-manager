@@ -17,6 +17,7 @@ import sys
 import os
 import time
 import crypt
+from csm.common.errors import InvalidRequest
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
@@ -24,6 +25,9 @@ from csm.core.blogic import const
 
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
+
+from ha.core.cluster.cluster_manager import CortxClusterManager
+from ha.core.system_health.const import CLUSTER_ELEMENTS
 
 
 class HAFramework:
@@ -55,6 +59,11 @@ class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
+        try:
+            self._cluster_manager = CortxClusterManager(default_log_enable=False)
+        except Exception as e:
+            err_msg = f"Error instantiating CortxClusterManager: {e}"
+            Log.error(err_msg)
 
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
@@ -102,8 +111,42 @@ class CortxHAFramework(HAFramework):
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
-        # TODO - Implement when API is available from HA.
-        pass
+        self._validate_resource(element)
+        parsed_system_health = None
+        try:
+            system_health = self._cluster_manager.get_system_health(element, depth,
+                                                                    **kwargs)
+            # TODO: Remove the statement below when delimiter issue is
+            # fixed in cortx-utils.
+            Conf.init(delim='>')
+            Log.debug(f"HA Framework-System Health: {system_health}")
+            parsed_system_health = JsonMessage(system_health).load()
+        except Exception as e:
+            err_msg = f"{const.HEALTH_FETCH_ERR_MSG} : {e}"
+            Log.error(err_msg)
+            raise Exception(err_msg)
+
+        self._validate_system_health_response(parsed_system_health)
+
+        return parsed_system_health[const.OUTPUT_LITERAL]
+
+    def _validate_resource(self, resource):
+        unsupported_resource = True
+        for supported_resource in CLUSTER_ELEMENTS:
+            if resource == supported_resource.value:
+                unsupported_resource = False
+                break
+
+        if unsupported_resource == True:
+            raise InvalidRequest(f"Invalid resource {resource} provided.")
+
+    def _validate_system_health_response(self, system_health):
+        if system_health == None:
+            raise Exception(const.HEALTH_FETCH_ERR_MSG)
+
+        if system_health[const.STATUS_LITERAL] == const.STATUS_FAILED:
+            raise Exception(f"{const.HEALTH_FETCH_ERR_MSG} : \
+                                {system_health[const.ERROR_LITERAL]}")
 
 
 class PcsHAFramework(HAFramework):
