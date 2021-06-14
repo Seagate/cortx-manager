@@ -41,7 +41,7 @@
             "flag": "-r",
             "dest": "response_format",
             "type": "str",
-            "default": "table",
+            "default": "flattened",
             "suppress_help": true,
             "help": "",
             "params": true
