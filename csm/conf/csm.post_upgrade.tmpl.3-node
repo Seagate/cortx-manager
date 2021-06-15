@@ -2,7 +2,7 @@
   "cortx": {
     "software": {
       "csm": {
-        "user": "csm",
+        "user": "cortxub",
         "secret": "TMPL_CSM_SECRET_KEY"
       },
       "openldap": {
