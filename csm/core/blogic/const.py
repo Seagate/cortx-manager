@@ -158,10 +158,13 @@ CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
+CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
+
 # cron dir
 CRON_DIR = "/etc/cron.daily"
 SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
+
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
