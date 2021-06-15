@@ -273,17 +273,17 @@
       "permissions_tag": "update",
       "args": [
         {
-            "flag": "--config",
-            "dest": "config_url",
+            "flag": "--param",
+            "dest": "param_url",
             "type": "str",
-            "help": "Config Store URL e.g <type>://<path>."
+            "help": " Test parameters url e.g <type>://<path>."
         },
         {
           "flag": "--plan",
           "dest": "plan",
-          "default": "sanity_service",
+          "default": "service_sanity",
           "choices":[
-              "sanity_service",
+              "service_sanity",
               "sanity",
               "regression",
               "full"

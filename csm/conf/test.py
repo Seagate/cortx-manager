@@ -39,8 +39,7 @@ class Test(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
-            Conf.load(const.CONSUMER_INDEX, command.options.get(
-                const.CONFIG_URL))
+            Conf.load(const.TEST_INDEX, command.options.get("param_url"))
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -52,28 +51,15 @@ class Test(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_HOSTNAME:f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}",
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
+            "admin_user":"test>csm>admin_user",
+            "admin_pass":"test>csm>admin_password",
+            "web_url":"test>csm>web_url"
             })
         try:
-            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+            Setup._validate_conf_store_keys(const.TEST_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
-
-    def _fetch_mgmnt_ip(self):
-        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-        virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
-        self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
-        virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host_key)
-        Log.debug(f"Validating connectivity for virtual_host:{virtual_host}")
-        try:
-            NetworkV().validate('connectivity', [virtual_host])
-        except Exception as e:
-            Log.error(f"Network Validation failed. {e}")
-            raise CsmSetupError("Network Validation failed.")
-        return virtual_host
 
     def _validate_csm_gui_test_rpm(self):
         try:
@@ -86,7 +72,7 @@ class Test(Setup):
     def _execute_test_plans(self, command):
         test_plan = command.options.get("plan", "")
         Log.info(f"Executing test plan: {test_plan}")
-        if test_plan == "sanity_service":
+        if test_plan == "service_sanity":
             plan_file = command.options.get("t", "")
             args_loc = command.options.get("f", "")
             log_path = command.options.get("l", "")
@@ -108,13 +94,12 @@ class Test(Setup):
                                     f"Error {_err} \n Return Code {_return_code}")
         else:
             self._prepare_and_validate_confstore_keys()
-            management_ip = self._fetch_mgmnt_ip()
             import_obj = import_module("csm.csm_test.csm_test")
             csm_gui_test = import_obj.CsmGuiTest(const.DEFAULT_LOGFILE)
             args = Namespace(browser=const.DEFAULT_BROWSER,
-                            csm_pass=const.DEFAULT_PASSWORD,
-                            csm_url=f'https://{management_ip}/#/',
-                            csm_user=const.DEFAULT_USERNAME,
+                            csm_pass=Conf.get(const.TEST_INDEX, self.conf_store_keys.get("admin_pass")),
+                            csm_url=Conf.get(const.TEST_INDEX, self.conf_store_keys.get("web_url")),
+                            csm_user=Conf.get(const.TEST_INDEX, self.conf_store_keys.get("admin_user")),
                             headless='True',
                             test_tags=test_plan)
             Log.info(f"CSM Gui Test Arguments: {args}")

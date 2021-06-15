@@ -114,6 +114,7 @@ INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
+TEST_INDEX = 'TEST'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 USL_GLOBAL_INDEX = 'USL'
 
@@ -744,10 +745,8 @@ KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
 
 #CSM TEST Consts
-DEFAULT_USERNAME = 'admin'
-DEFAULT_PASSWORD = 'Seagate@1'
 DEFAULT_BROWSER = 'chrome'
-DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/sanity_service.pln'
+DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
