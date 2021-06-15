@@ -54,7 +54,7 @@ class IemAppService(ApplicationService):
         except EventMessageError as iemerror:
             Log.error(f"Event Message Initialization Error : {iemerror}")
 
-    def send(payload: IemPayload):
+    def send(self, payload: IemPayload):
         Log.info("Sending IEM : {payload}")
         try:
             # Message BLOB format is not defined yet. Using string as the data type.
