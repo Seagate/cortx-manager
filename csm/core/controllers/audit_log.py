@@ -122,4 +122,3 @@ class AuditLogDownloadView(CsmView):
         end_date = request_data["end_date"]
         zip_file = await self._service.get_audit_log_zip(component, start_date, end_date)
         return self._file_service.get_file_response(FileType.AUDIT_LOG, zip_file)
-
