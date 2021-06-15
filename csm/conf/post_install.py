@@ -64,7 +64,12 @@ class PostInstall(Setup):
         self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
+        self._allow_access_to_pvt_ports()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _allow_access_to_pvt_ports(self):
+        Log.info("Binding low ports to start a service as non-root")
+        Setup._run_cmd("setcap CAP_NET_BIND_SERVICE=+ep /opt/nodejs/node-v12.13.0-linux-x64/bin/node")
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
