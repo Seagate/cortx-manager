@@ -106,8 +106,8 @@ class PasswordValidator(Validator):
                    for each_char in password):
             error.append(f"Must include {''.join(const.PASSWORD_SPECIAL_CHARACTER)}.")
         if error:
-            error_str = "\n".join(error)
-            raise ValidationError(f"Password Policy Not Met.\n{error_str}")
+            error_str = " ".join(error)
+            raise ValidationError(f"Password Policy Not Met. {error_str}")
 
 
 class BucketNameValidator(Validator):
