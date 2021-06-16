@@ -158,6 +158,7 @@ CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
+CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 # cron dir
 CRON_DIR = "/etc/cron.daily"
 SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
@@ -571,7 +572,7 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-third_party_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8"]
+third_party_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
