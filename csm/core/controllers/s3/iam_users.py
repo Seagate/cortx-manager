@@ -103,7 +103,7 @@ class IamUserListView(S3AuthenticatedView):
             body = await self.request.json()
             request_data = schema.load(body, unknown='EXCLUDE')
         except ValidationError as val_err:
-            raise InvalidRequest(_desc=f"Invalid request body: {val_err}")
+            raise InvalidRequest(f"Invalid request body: {val_err}")
         # Create User
         with self._guard_service():
             return await self._service.create_user(self._s3_session,
