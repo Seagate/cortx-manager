@@ -17,6 +17,7 @@ import sys
 import os
 import time
 import crypt
+from importlib import import_module
 from csm.common.errors import InvalidRequest
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
@@ -25,9 +26,6 @@ from csm.core.blogic import const
 
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
-
-from ha.core.cluster.cluster_manager import CortxClusterManager
-from ha.core.system_health.const import CLUSTER_ELEMENTS
 
 
 class HAFramework:
@@ -59,11 +57,8 @@ class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
-        try:
-            self._cluster_manager = CortxClusterManager(default_log_enable=False)
-        except Exception as e:
-            err_msg = f"Error instantiating CortxClusterManager: {e}"
-            Log.error(err_msg)
+        self._cluster_manager = None
+        self._cluster_elements = None
 
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
@@ -111,6 +106,10 @@ class CortxHAFramework(HAFramework):
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
+        if self._cluster_manager is None or \
+            not hasattr(self._cluster_manager, "get_system_health"):
+            self._init_cluster_manager()
+
         self._validate_resource(element)
         parsed_system_health = None
         try:
@@ -130,9 +129,21 @@ class CortxHAFramework(HAFramework):
 
         return parsed_system_health[const.OUTPUT_LITERAL]
 
+    def _init_cluster_manager(self):
+        Log.info("Initializing CortxClusterManager")
+        cortx_cluster_manager = import_module(f'ha.core.cluster.cluster_manager')
+        ha_system_health_const = import_module(f'ha.core.system_health.const')
+
+        try:
+            self._cluster_manager = cortx_cluster_manager.CortxClusterManager(default_log_enable=False)
+            self._cluster_elements = ha_system_health_const.CLUSTER_ELEMENTS
+        except Exception as e:
+            err_msg = f"Error instantiating CortxClusterManager: {e}"
+            Log.error(err_msg)
+
     def _validate_resource(self, resource):
         unsupported_resource = True
-        for supported_resource in CLUSTER_ELEMENTS:
+        for supported_resource in self._cluster_elements:
             if resource == supported_resource.value:
                 unsupported_resource = False
                 break

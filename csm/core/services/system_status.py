@@ -20,6 +20,7 @@ from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from cortx.utils.validator.error import VError
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
+import random
 
 class SystemStatusService(ApplicationService):
     """
@@ -57,7 +58,8 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting consul status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>host')
+        hosts = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>hosts')
+        host = random.choice(hosts)
         port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         # Validation throws exception on failure
         ConsulV().validate('service', [host, port])
@@ -69,7 +71,8 @@ class SystemStatusService(ApplicationService):
         """
         Log.info("Getting elasticsearch status")
         # get host and port of consul database from conf
-        host = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>host')
+        hosts = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>hosts')
+        host = random.choice(hosts)
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         # Validation throws exception on failure
         ElasticsearchV().validate('service', [host, port])
