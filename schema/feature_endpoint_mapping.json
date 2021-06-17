@@ -225,6 +225,10 @@
       "provisioner"
     ]
   },
+  "/api/*/appliance_info": {
+    "feature_name": "appliance_info",
+    "dependent_on": []
+  },
   "/usl/*/registerDevice": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
