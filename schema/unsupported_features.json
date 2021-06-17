@@ -2,27 +2,27 @@
     "setup_types": [
         {
             "name":"virtual",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         },
         {
             "name":"VM",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         },
         {
             "name":"other",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         },
         {
             "name":"5u84",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         },
         {
             "name":"PODS",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         },
         {
             "name":"JBOD",
-            "unsupported_features": ["lyve_pilot", "health"]
+            "unsupported_features": ["lyve_pilot", "health", "appliance_info"]
         }
     ]
 }
