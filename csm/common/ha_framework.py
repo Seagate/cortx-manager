@@ -27,8 +27,6 @@ from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 
-from ha.core.cluster.cluster_manager import CortxClusterManager
-
 
 class HAFramework:
     def __init__(self, resource_agents):
