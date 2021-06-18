@@ -576,7 +576,7 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-dependent_rpms = ["elasticsearch-oss-6.8", "consul-1.9", "kibana-oss-6.8", "cortx-csm_web"]
+dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
