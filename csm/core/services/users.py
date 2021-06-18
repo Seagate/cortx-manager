@@ -18,13 +18,14 @@
 import asyncio
 import re
 from datetime import datetime, timedelta, timezone
+from enum import Enum, auto
 from typing import Dict, List, Optional
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
 from csm.core.data.models.users import User, UserType, Passwd
-from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest,
-                                CsmPermissionDenied, ResourceExist)
+from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest, CsmInternalError,
+                               CsmPermissionDenied, ResourceExist)
 import time
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from cortx.utils.data.access.filters import Compare, And, Or
@@ -34,6 +35,7 @@ from schematics import Model
 from schematics.types import StringType, BooleanType, IntType
 from typing import Optional, Iterable
 from cortx.utils.conf_store.conf_store import Conf
+
 
 class UserManager:
     """
@@ -144,6 +146,72 @@ USERS_MSG_CANNOT_SORT = "users_non_sortable_field"
 USERS_MSG_UPDATE_NOT_ALLOWED = "update_not_allowed"
 
 
+class UpdateUserRule(Enum):
+    """
+    The class handles user updating rules across different user roles.
+    """
+    NONE = auto()
+    ALL = auto()
+    SELF = auto()
+    OTHERS = auto()
+
+    def apply(self, self_update: bool) -> bool:
+        """
+        Apply the rule.
+
+        Convert the rule to the decision (allowed/not allowed) according to the context.
+        :param self_update: flag if the rule is applied to user himself.
+        :returns: True if the rule is passed, False otherwise
+        """
+        decision = True
+        if self is UpdateUserRule.NONE:
+            decision = False
+        elif self is UpdateUserRule.SELF:
+            if not self_update:
+                decision = False
+        elif self is UpdateUserRule.OTHERS:
+            if self_update:
+                decision = False
+        return decision
+
+
+CSM_USER_PASSWD_UPDATE_RULES = {
+    const.CSM_SUPER_USER_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.ALL,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.ALL,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.ALL
+    },
+    const.CSM_MANAGE_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.NONE,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.SELF,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.ALL
+    },
+    const.CSM_MONITOR_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.NONE,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.NONE,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.SELF
+    }
+}
+
+CSM_USER_ROLE_UPDATE_RULES = {
+    const.CSM_SUPER_USER_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.ALL,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.ALL,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.ALL
+    },
+    const.CSM_MANAGE_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.NONE,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.OTHERS,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.ALL
+    },
+    const.CSM_MONITOR_ROLE: {
+        const.CSM_SUPER_USER_ROLE: UpdateUserRule.NONE,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.NONE,
+        const.CSM_MONITOR_ROLE: UpdateUserRule.NONE
+    }
+}
+
+
 class CsmUserService(ApplicationService):
     """
     Service that exposes csm user management actions from the csm core.
@@ -242,14 +310,13 @@ class CsmUserService(ApplicationService):
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
-        if self.is_super_user(user):
+        if user.role == const.CSM_SUPER_USER_ROLE:
             num_admins = await self.user_mgr.count_admins()
             if num_admins == 1:
                 raise CsmPermissionDenied(
                     "Cannot delete the last admin user", USERS_MSG_PERMISSION_DENIED, user_id)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
-        # Is Logged in user normal user
-        if not self.is_super_user(loggedin_user):
+        if loggedin_user.role != const.CSM_SUPER_USER_ROLE:
             if user_id.lower() != loggedin_user_id.lower():
                 raise CsmPermissionDenied("Normal user cannot delete other user",
                                           USERS_MSG_PERMISSION_DENIED, user_id)
@@ -257,36 +324,61 @@ class CsmUserService(ApplicationService):
         await self.user_mgr.delete(user.user_id)
         return {"message": "User Deleted Successfully."}
 
-    async def _validation_for_update_by_superuser(self, user_id: str, user: User, new_values: dict):
+    async def _validate_user_update(
+        self, user: User, loggedin_user: User,
+        password: Optional[str], current_password: Optional[str],
+        role: Optional[str]
+    ) -> None:
         """
-        Validation done for updation by super user.
+        Check the user update is possible.
+
+        Apply update rules for different user roles. Throw an exception in case of violation,
+        otherwise pass.
+        :param user: user to be updated.
+        :param loggedin_user: user who triggered the update.
+        :param password: the new password value.
+        :param current_password: user's current password.
+        :param role: the new role value.
+        :returns: None.
         """
-        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
-        if self.is_super_user(user) and not current_password:
-            raise InvalidRequest("Value for current_password is required",
-                                    USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+        user_role = user.role
+        loggedin_user_role = loggedin_user.role
+        self_update = user.user_id == loggedin_user.user_id
 
-        if self.is_super_user(user) and ('role' in new_values):
-            raise CsmPermissionDenied("Cannot change the role for admin user",
-                                    USERS_MSG_PERMISSION_DENIED, user_id)
+        if password:
+            allowed = CSM_USER_PASSWD_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
+            if not allowed:
+                msg = f'{loggedin_user.user_id} can not update the password for {user.user_id}'
+                raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
-    async def _validation_for_update_by_normal_user(self, user_id: str, loggedin_user_id: str,
-                                                    new_values: dict):
-        """
-        Validation done for updation by normal  user.
-        """
-        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
-        if user_id.lower() != loggedin_user_id.lower():
-            raise CsmPermissionDenied("Non admin user cannot change other user",
-                                    USERS_MSG_PERMISSION_DENIED, user_id)
+        if role:
+            allowed = CSM_USER_ROLE_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
+            if not allowed:
+                msg = f'{loggedin_user.user_id} can not update the role for {user.user_id}'
+                raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
-        if not current_password:
-            raise InvalidRequest("Value for current_password is required",
-                                    USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+            # Run additional roles check
+            if loggedin_user_role == const.CSM_SUPER_USER_ROLE:
+                # Do not downgrade the last admin's role
+                # so that the system won't be left without any admin user
+                num_admins = await self.user_mgr.count_admins()
+                if num_admins == 1:
+                    msg = "Cannot change role for the last admin user"
+                    raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+            else:
+                # Prohibit raising role to admin for other users
+                if role == const.CSM_SUPER_USER_ROLE:
+                    msg = 'Can not update role to admin'
+                    raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
-        if 'role' in new_values:
-            raise CsmPermissionDenied("Non admin user cannot change the role for self",
-                                      USERS_MSG_PERMISSION_DENIED, user_id)
+        # Enforce the password check for self-updating the user
+        if self_update:
+            if current_password is None:
+                msg = 'The current password is missing'
+                raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
+            if not Passwd.verify(current_password, user.password_hash):
+                msg = 'The current password is not valid'
+                raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
         """
@@ -297,28 +389,13 @@ class CsmUserService(ApplicationService):
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
 
+        password = new_values.get(const.PASS, None)
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
-        loggedin_user = await self.user_mgr.get(loggedin_user_id)
-        # Is Logged in user super user
-        if self.is_super_user(loggedin_user):
-            await self._validation_for_update_by_superuser(user_id, user, new_values)
-        else:
-            await self._validation_for_update_by_normal_user(user_id, loggedin_user_id, new_values)
+        role = new_values.get('role', None)
 
-        if current_password and not self._verfiy_current_password(user, current_password):
-            raise InvalidRequest("Cannot update user details without valid current password",
-                                      USERS_MSG_UPDATE_NOT_ALLOWED)
+        loggedin_user = await self.user_mgr.get(loggedin_user_id)
+        await self._validate_user_update(user, loggedin_user, password, current_password, role)
 
         user.update(new_values)
         await self.user_mgr.save(user)
         return self._user_to_dict(user)
-
-    def _verfiy_current_password(self, user: User, password):
-        """
-        Verify current password of user .
-        """
-        return Passwd.verify(password, user.password_hash)
-
-    def is_super_user(self, user: User):
-        """ Check if user is super user """
-        return user.role == const.CSM_SUPER_USER_ROLE
