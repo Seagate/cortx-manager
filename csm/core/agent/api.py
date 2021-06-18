@@ -142,11 +142,11 @@ class CsmRestApi(CsmApi, ABC):
         user_agent = request.headers.get('User-Agent')
         entry = {
             'user': user if user else "",
-            'remote_ip': remote_ip,
+            'remote_ip': remote_ip if remote_ip else "",
             'forwarded_for_ip': forwarded_for_ip if forwarded_for_ip else "",
-            'method': method,
-            'path': path,
-            'user_agent': user_agent,
+            'method': method if method else "",
+            'path': path if path else "",
+            'user_agent': user_agent if user_agent else "",
             'response_code': kwargs.get("response_code", ""),
             'request_id': kwargs.get("request_id", int(time.time()))
         }
