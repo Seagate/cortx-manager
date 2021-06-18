@@ -15,26 +15,17 @@
 
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
-import asyncio
-import re
-from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
-from typing import Dict, List, Optional
+from typing import List, Optional
 from cortx.utils.log import Log
-from csm.common.services import Service, ApplicationService
-from csm.common.queries import SortBy, SortOrder, QueryLimits, DateTimeRange
-from csm.core.data.models.users import User, UserType, Passwd
-from csm.common.errors import (CsmNotFoundError, CsmError, InvalidRequest, CsmInternalError,
-                               CsmPermissionDenied, ResourceExist)
-import time
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-from cortx.utils.data.access.filters import Compare, And, Or
+from csm.common.services import ApplicationService
+from csm.common.queries import SortBy
+from csm.core.data.models.users import User, Passwd
+from csm.common.errors import (CsmNotFoundError, InvalidRequest, CsmPermissionDenied, ResourceExist)
+from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
-from schematics import Model
-from schematics.types import StringType, BooleanType, IntType
-from typing import Optional, Iterable
-from cortx.utils.conf_store.conf_store import Conf
 
 
 class UserManager:
@@ -53,7 +44,8 @@ class UserManager:
         # validate the model
         existing_user = await self.get(user.user_id)
         if existing_user:
-            raise ResourceExist(f"User already exists: {existing_user.user_id}", USERS_MSG_ALREADY_EXISTS)
+            msg = f"User already exists: {existing_user.user_id}"
+            raise ResourceExist(msg, USERS_MSG_ALREADY_EXISTS)
 
         return await self.storage(User).store(user)
 
@@ -65,7 +57,7 @@ class UserManager:
         """
         Log.debug(f"Get user service user id:{user_id}")
         # TODO In absence of ComapareIgnoreCase manually filtering
-        # query = Query().filter_by(Compare(User.to_native("user_id").lower(), '=', user_id.lower()))
+        # query = Query().filter_by(Compare(User.to_native("user_id").lower(),'=',user_id.lower()))
         # return next(iter(await self.storage(User).get(query)), None)
         all_users = await self.get_list()
         for user in all_users:
@@ -364,7 +356,7 @@ class CsmUserService(ApplicationService):
                 num_admins = await self.user_mgr.count_admins()
                 if num_admins == 1:
                     msg = "Cannot change role for the last admin user"
-                    raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED, user_id)
+                    raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED, user.user_id)
             else:
                 # Prohibit raising role to admin for other users
                 if role == const.CSM_SUPER_USER_ROLE:
