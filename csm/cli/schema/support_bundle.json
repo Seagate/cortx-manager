@@ -53,8 +53,8 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "cortx.utils.support_bundle.support_bundle",
-        "method": "bundle_generate",
+        "target": "cortx.utils.support.support_bundle",
+        "method": "generate_bundle",
         "class": "SupportBundle",
         "is_static": true
       }
@@ -92,8 +92,8 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "cortx.utils.support_bundle.support_bundle",
-        "method": "bundle_status",
+        "target": "cortx.utils.support.support_bundle",
+        "method": "get_bundle_status",
         "class": "SupportBundle",
         "is_static": true
       },

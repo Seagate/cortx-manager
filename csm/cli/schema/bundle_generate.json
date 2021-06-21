@@ -52,7 +52,7 @@
   ],
   "comm": {
     "type": "direct",
-    "target": "cortx.utils.support_bundle.bundle_generate",
+    "target": "cortx.utils.support.bundle_generate",
     "method": "init",
     "class": "ComponentsBundle",
     "is_static": true
