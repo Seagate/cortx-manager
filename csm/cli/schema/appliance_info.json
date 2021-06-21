@@ -19,7 +19,7 @@
             "flag": "-f",
             "dest": "format",
             "help": "Format of Output",
-            "default": "json",
+            "default": "table",
             "type": "str",
             "choices": [
               "table",
