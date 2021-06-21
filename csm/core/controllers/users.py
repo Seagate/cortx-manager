@@ -76,16 +76,11 @@ class CsmGetUsersSchema(Schema):
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
                         default=None, missing=None)
     limit = fields.Int(default=None, validate=validate.Range(min=0), missing=None)
-    sort_by = GetUsersSortBy(validate=validate.OneOf(['user_id',
-                                                      'username',
-                                                      'user_type',
-                                                      'email',
-                                                      'role',
-                                                      'created_time',
-                                                      'updated_time']),
+    sort_by = GetUsersSortBy(data_key='sortby',
+                             validate=validate.OneOf(const.CSM_USER_SORTABLE_FIELDS),
                              default="user_id",
                              missing="user_id")
-    sort_dir = fields.Str(validate=validate.OneOf(['desc', 'asc']),
+    sort_dir = fields.Str(data_key='dir', validate=validate.OneOf(['desc', 'asc']),
                           missing='asc', default='asc')
     username = fields.Str(
         default=None, missing=None,

@@ -404,7 +404,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'role', 'created_time', 'updated_time']
+CSM_USER_SORTABLE_FIELDS = [
+    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
