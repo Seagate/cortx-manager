@@ -57,11 +57,13 @@ class CsmUserPatchSchema(Schema):
     def post_load(self, data, **kwargs):
         # empty body is invalid request
         if not data:
-            raise InvalidRequest("Insufficient information in request body", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest(
+                "Insufficient information in request body", INVALID_REQUEST_PARAMETERS)
 
         # just current_password in body is invalid
         if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
-            raise InvalidRequest(f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest(
+                f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
         return data
 
 
@@ -99,7 +101,7 @@ class CsmUsersListView(CsmView):
     async def check_max_user_limit(self):
         max_users_allowed = Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED)
         existing_users_count = await self._service.get_user_count()
-        if existing_users_count>=max_users_allowed:
+        if existing_users_count >= max_users_allowed:
             raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
 
     """
@@ -133,7 +135,7 @@ class CsmUsersListView(CsmView):
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest(message_args=f"Request body missing: {jde}")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
@@ -197,7 +199,7 @@ class CsmUsersView(CsmView):
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest(message_args=f"Request body missing {jde}")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
