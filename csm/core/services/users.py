@@ -175,7 +175,7 @@ CSM_USER_PASSWD_UPDATE_RULES = {
     },
     const.CSM_MANAGE_ROLE: {
         const.CSM_SUPER_USER_ROLE: UpdateUserRule.NONE,
-        const.CSM_MANAGE_ROLE: UpdateUserRule.SELF,
+        const.CSM_MANAGE_ROLE: UpdateUserRule.ALL,
         const.CSM_MONITOR_ROLE: UpdateUserRule.ALL
     },
     const.CSM_MONITOR_ROLE: {
