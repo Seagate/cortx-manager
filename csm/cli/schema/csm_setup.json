@@ -273,10 +273,29 @@
       "permissions_tag": "update",
       "args": [
         {
-          "flag": "-t",
-          "default": "",
+            "flag": "--param",
+            "dest": "param_url",
+            "type": "str",
+            "help": " Test parameters url e.g <type>://<path>."
+        },
+        {
+          "flag": "--plan",
+          "dest": "plan",
+          "default": "service_sanity",
+          "choices":[
+              "service_sanity",
+              "sanity",
+              "regression",
+              "full"
+          ],
           "type": "str",
-          "help": "Plan File Name that needs to be Executed."
+          "help": "Execution plan"
+        },
+        {
+            "flag": "-t",
+            "default": "",
+            "type": "str",
+            "help": "Path of args.yaml."
         },
         {
           "flag": "-f",
