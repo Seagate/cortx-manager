@@ -114,6 +114,7 @@ INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
+TEST_INDEX = 'TEST'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 USL_GLOBAL_INDEX = 'USL'
 
@@ -159,10 +160,12 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
+
 # cron dir
 CRON_DIR = "/etc/cron.daily"
 SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
 DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
+
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -740,3 +743,10 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+
+#CSM TEST Consts
+DEFAULT_BROWSER = 'chrome'
+DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
+DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
+DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
+DEFAULT_OUTPUTFILE = '/tmp/output.log'

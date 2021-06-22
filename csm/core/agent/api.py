@@ -338,7 +338,7 @@ class CsmRestApi(CsmApi, ABC):
     async def rest_middleware(request, handler):
         try:
             request_id = int(time.time())
-            await CsmRestApi._initialize_audit_log_db()
+            #await CsmRestApi._initialize_audit_log_db()
             await CsmRestApi.check_for_unsupported_endpoint(request)
 
             resp = await handler(request)
