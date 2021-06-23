@@ -77,6 +77,11 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
 
+        # IEM configuration
+        iem_repository = IemRepository(db)
+        iem_service = IemAppService(iem_repository)
+        CsmRestApi.init(iem_service)
+
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
@@ -96,6 +101,9 @@ class CsmAgent:
 
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
+
+        CsmAgent.iem_monitor = IemMonitorService(iem_repository)
+        CsmRestApi._app["iem_service"] = iem_service
 
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
@@ -157,7 +165,7 @@ class CsmAgent:
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
-        security_service = SecurityService(db, provisioner)
+        security_service = SecurityService(db, provisioner, iem_service)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
@@ -222,9 +230,11 @@ class CsmAgent:
         if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
+        CsmAgent.iem_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
+        CsmAgent.iem_monitor.stop()
         Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")
 
@@ -232,6 +242,7 @@ class CsmAgent:
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
+    import time
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
@@ -243,6 +254,8 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
+    from csm.core.services.iem import IemAppService, IemMonitorService, \
+                                        IemRepository
     from csm.core.services.health import HealthAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService

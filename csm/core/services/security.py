@@ -66,7 +66,8 @@ class SecurityService(ApplicationService):
         ProvisionerCommandStatus.Unknown: CertificateInstallationStatus.UNKNOWN
     }
 
-    def __init__(self, database: DataBaseProvider, provisioner: ProvisionerPlugin):
+    def __init__(self, database: DataBaseProvider, provisioner: ProvisionerPlugin, \
+        iem_service: IemAppService):
         super().__init__()
         self._fs_utils = FSUtils()
         self._cert_dir_base_name = Template(self.CERT_DIR_BASE_NAME_TEMPLATE)
@@ -76,7 +77,7 @@ class SecurityService(ApplicationService):
         self._last_configuration = None
         self._provisioner_id = None
         self._executor = ThreadPoolExecutor(max_workers=1)
-        self._iem_service = IemAppService()
+        self._iem_service = iem_service
 
     def _provisioner_to_installation_status(self, prv_status: ProvisionerCommandStatus):
         """ Convert provisioner job status into corresponding certificate installation status
