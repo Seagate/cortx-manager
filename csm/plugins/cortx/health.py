@@ -52,6 +52,12 @@ class HealthPlugin(CsmPlugin):
         depth = filters.get(const.ARG_DEPTH, const.HEALTH_DEFAULT_DEPTH)
         args = self._build_args_to_get_system_health(filters)
 
+        response_format = filters.get(const.ARG_RESPONSE_FORMAT,
+                                        const.RESPONSE_FORMAT_TREE)
+
+        if response_format == const.RESPONSE_FORMAT_TABLE:
+            depth = 0
+
         resource_health = self._ha.get_system_health(resource, depth, **args)
         resource_health_resp = self._parse_ha_resp(resource_health, filters)
 

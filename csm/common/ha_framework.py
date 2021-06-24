@@ -18,7 +18,7 @@ import os
 import time
 import crypt
 from importlib import import_module
-from csm.common.errors import InvalidRequest
+from csm.common.errors import CsmNotFoundError, InvalidRequest
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
@@ -149,15 +149,14 @@ class CortxHAFramework(HAFramework):
                 break
 
         if unsupported_resource == True:
-            raise InvalidRequest(f"Invalid resource {resource} provided.")
+            raise CsmNotFoundError(f"Resource {resource} not found.")
 
     def _validate_system_health_response(self, system_health):
         if system_health == None:
             raise Exception(const.HEALTH_FETCH_ERR_MSG)
 
         if system_health[const.STATUS_LITERAL] == const.STATUS_FAILED:
-            raise Exception(f"{const.HEALTH_FETCH_ERR_MSG} : \
-                                {system_health[const.ERROR_LITERAL]}")
+            raise InvalidRequest(system_health[const.ERROR_LITERAL])
 
 
 class PcsHAFramework(HAFramework):
