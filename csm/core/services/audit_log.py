@@ -25,8 +25,10 @@ from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
+from csm.core.services.s3.utils import CsmS3ConfigurationFactory
+from csm.plugins.cortx.s3 import S3Plugin
 from csm.common.errors import CsmNotFoundError
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 from cortx.utils.conf_store.conf_store import Conf
 
 # mapping of component with model, field for
@@ -94,8 +96,9 @@ class AuditLogManager():
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
 
 class AuditService(ApplicationService):
-    def __init__(self, audit_mngr: AuditLogManager):
+    def __init__(self, audit_mngr: AuditLogManager, s3_plugin: S3Plugin):
         self.audit_mngr = audit_mngr
+        self._s3_plugin = s3_plugin
 
     def generate_audit_log_filename(self, component, start_time, end_time):
         """ generate audit log file name from time range"""
@@ -116,7 +119,12 @@ class AuditService(ApplicationService):
         return DateTimeRange(start_date, end_date)
 
     # TODO this is obviously a stub; derive from `CsmAuditLogModel` if possible.
-    async def get_schema_info(self):
+    async def get_csm_schema_info(self) -> List[Dict[str, Any]]:
+        """
+        Get CSM audit log schema.
+
+        :returns: list of audit log field descriptors.
+        """
 
         def is_visible(field_id):
             not_visible = ["remote_ip"]
@@ -152,6 +160,28 @@ class AuditService(ApplicationService):
             descriptors.append(item)
 
         return descriptors
+
+    async def get_s3_schema_info(self) -> List[Dict[str, Any]]:
+        """
+        Get S3 audit log schema.
+
+        :returns: list of CSM audit log field descriptors.
+        """
+
+        connection_config = CsmS3ConfigurationFactory.get_s3_connection_config()
+        schema = await self._s3_plugin.get_s3_audit_logs_schema(connection_config)
+        return schema
+
+    async def get_schema_info(self, component: str):
+        COMPONENT_SCHEMA_MAPPING = {
+            "csm": self.get_csm_schema_info(),
+            "s3": self.get_s3_schema_info()
+        }
+
+        method = COMPONENT_SCHEMA_MAPPING.get(component, None)
+        if method is None:
+            raise CsmNotFoundError(f'No audit log schema for {component}', COMPONENT_NOT_FOUND)
+        return await method
 
     async def create_audit_log_file(self, file_name, component, time_range):
         """ create audit log file and comrpess to tar.gz """
