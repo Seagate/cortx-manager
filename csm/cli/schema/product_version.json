@@ -43,7 +43,8 @@
               "DATETIME": "Date",
               "KERNEL": "Kernel",
               "OS": "OS",
-              "THIRD_PARTY_VERSION": "Third Party Version"
+              "THIRD_PARTY_VERSION": "Third Party Version",
+              "BUILD": "Build"
             }
           }
         }
