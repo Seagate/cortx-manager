@@ -772,7 +772,7 @@ class IamClient(BaseClient):
         """
 
         Log.info(f"Update access key {access_key_id} for user: {user_name}"
-                  f" with status {status}")
+                 f" with status {status}")
         params = {
             'AccessKeyId': access_key_id,
             'Status': status
@@ -832,7 +832,7 @@ class IamClient(BaseClient):
         """
 
         Log.info(f"List IAM user's {user_name} access keys. marker: {marker},"
-                  f" max_items: {max_items}")
+                 f" max_items: {max_items}")
         params = {}
         if user_name is not None:
             params[const.S3_PARAM_USER_NAME] = user_name
