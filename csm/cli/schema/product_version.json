@@ -39,12 +39,12 @@
             "headers": {
               "NAME": "Name",
               "VERSION": "Version",
+              "BUILD": "Build",
               "BRANCH": "Branch",
               "DATETIME": "Date",
               "KERNEL": "Kernel",
               "OS": "OS",
-              "THIRD_PARTY_VERSION": "Third Party Version",
-              "BUILD": "Build"
+              "THIRD_PARTY_VERSION": "Third Party Version"              
             }
           }
         }
