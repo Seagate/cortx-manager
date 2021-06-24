@@ -38,6 +38,7 @@ class Const:
     CSM_PATH = '/opt/seagate/cortx/csm'
     HEALTH_SCHEMA = '{}/schema/health_schema.json'.format(CSM_PATH)
     MOCK_PATH = '{}/test/test_data/'.format(CSM_PATH)
+    CLI_SCHEMA_PATH = '{}/cli/schema/'.format(CSM_PATH)
     DEV = 'dev'
     STATSD_PORT = 8125
     DEV = "dev"
