@@ -99,6 +99,31 @@ class BaseClient:
         """
         return await self._loop.run_in_executor(self._executor, function)
 
+    async def http_request(
+        self, headers: Optional[Dict[str, str]], payload: Any, path: str, verb: str
+    ) -> Tuple[HTTPStatus, Optional[str]]:
+        """
+        Make HTTP request to S3 server.
+
+        :param headers: HTTP headers.
+        :param params: request body in JSON.
+        :param path: request URI.
+        :param verb: request method.
+        :returns: HTTP code and the response payload as a text.
+        """
+
+        Log.debug(f"Make HTTP request: headers {headers}, payload: {payload},"
+                  f" path {path}, verb {verb}")
+
+        # Let all the HTTP client exceptions propagate as is
+        async with ClientSession() as http_session:
+            async with http_session.request(method=verb, headers=headers, data=payload,
+                                            url=self._url, rel_url=path, ssl=self._ssl_ctx,
+                                            timeout=const.TIMEOUT) as resp:
+                status = resp.status
+                body = await resp.text()
+                return status, body
+
     async def _arbitrary_request(
         self, action: str, params: Dict[str, Any], path: str, verb: str
     ) -> Tuple[HTTPStatus, Dict[str, Any]]:
@@ -120,22 +145,16 @@ class BaseClient:
         payload['Action'] = action
 
         if self._creds:
-            aws_request = AWSRequest(method=verb, url='/', data=payload, headers=headers)
+            aws_request = AWSRequest(method=verb, url=path, data=payload, headers=headers)
             SigV4Auth(
                 self._creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
             headers = dict(aws_request.headers)
-        # Let all the HTTP client exceptions propagate as is
-        async with ClientSession() as http_session:
-            async with http_session.request(method=verb, headers=headers, data=payload,
-                                            url=self._url, ssl=self._ssl_ctx,
-                                            timeout=const.TIMEOUT) as resp:
-                status = resp.status
-                body = await resp.text()
 
-                parsed_body = xmltodict.parse(
-                    body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
-                Log.debug(f'{self._host} responded with {status}')
-                return (status, parsed_body)
+        status, body = await self.http_request(headers, payload, path, verb)
+        Log.debug(f'{self._host} responded with {status}')
+        parsed_body = xmltodict.parse(
+            body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
+        return (status, parsed_body)
 
     def _extract_element(
         self, path: Tuple[str], resp: Dict[str, Any], is_list: bool = False
