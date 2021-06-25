@@ -61,7 +61,6 @@ class PostInstall(Setup):
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
         self._config_user()
-        self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
         self._allow_access_to_pvt_ports()
@@ -125,41 +124,6 @@ class PostInstall(Setup):
             Log.info(f"Add Csm User: {self._user} to HA-Client Group.")
             Setup._run_cmd(
                 f"usermod -a -G {const.HA_CLIENT_GROUP} {self._user}")
-
-    def _configure_system_auto_restart(self):
-        """
-        Check's System Installation Type an dUpdate the Service File
-        Accordingly.
-        :return: None
-        """
-        Log.info("Configuring System Auto restart")
-        is_auto_restart_required = list()
-        if self._setup_info:
-            for each_key in self._setup_info:
-                comparison_data = const.EDGE_INSTALL_TYPE.get(each_key,
-                                                              None)
-                # Check Key Exists:
-                if comparison_data is None:
-                    Log.warn(f"Edge Installation missing key {each_key}")
-                    continue
-                if isinstance(comparison_data, list):
-                    if self._setup_info[each_key] in comparison_data:
-                        is_auto_restart_required.append(False)
-                    else:
-                        is_auto_restart_required.append(True)
-                elif self._setup_info[each_key] == comparison_data:
-                    is_auto_restart_required.append(False)
-                else:
-                    is_auto_restart_required.append(True)
-        else:
-            Log.warn("Setup info does not exist.")
-            is_auto_restart_required.append(True)
-        if any(is_auto_restart_required):
-            Log.debug("Updating All setup file for Auto Restart on "
-                      "Failure")
-            Setup._update_csm_files("#< RESTART_OPTION >",
-                                       "Restart=on-failure")
-            Setup._run_cmd("systemctl daemon-reload")
 
     def _configure_service_user(self):
         """
