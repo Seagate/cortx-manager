@@ -40,15 +40,16 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        self.directory_cleanup()
+        self.files_directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def directory_cleanup(self):
+    def files_directory_cleanup(self):
         files_directory_list = [
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
             const.CSM_CONF_PATH,
+            const.CSM_WEB_DIST_ENV_FILE_PATH
         ]
 
         for dir_path in files_directory_list:
