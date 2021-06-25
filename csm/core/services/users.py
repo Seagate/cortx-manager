@@ -353,10 +353,11 @@ class CsmUserService(ApplicationService):
             if loggedin_user_role == const.CSM_SUPER_USER_ROLE:
                 # Do not downgrade the last admin's role
                 # so that the system won't be left without any admin user
-                num_admins = await self.user_mgr.count_admins()
-                if num_admins == 1:
-                    msg = "Cannot change role for the last admin user"
-                    raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED, user.user_id)
+                if self_update:
+                    num_admins = await self.user_mgr.count_admins()
+                    if num_admins == 1:
+                        msg = "Cannot change role for the last admin user"
+                        raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED, user.user_id)
             else:
                 # Prohibit raising role to admin for other users
                 if role == const.CSM_SUPER_USER_ROLE:
