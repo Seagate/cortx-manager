@@ -28,8 +28,8 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, InvalidRequest
-from csm.core.blogic.csm_ha import CsmResourceAgent
-from csm.common.ha_framework import PcsHAFramework
+# from csm.core.blogic.csm_ha import CsmResourceAgent
+# from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 import traceback
@@ -313,20 +313,21 @@ class Setup:
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
             Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
 
-    def _config_cluster(self, args):
-        """
-        Instantiation of csm cluster with resources
-        Create csm user
-        """
-        Log.info("Instantiation of csm cluster with resources")
-        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
-        self._csm_ra = {
-            "csm_resource_agent": CsmResourceAgent(self._csm_resources)
-        }
-        self._ha_framework = PcsHAFramework(self._csm_ra)
-        self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-        self._cluster.init(args['f'])
-        CsmApi.set_cluster(self._cluster)
+    # TODO: Need to remove unused code after proper testing.
+    # def _config_cluster(self, args):
+    #     """
+    #     Instantiation of csm cluster with resources
+    #     Create csm user
+    #     """
+    #     Log.info("Instantiation of csm cluster with resources")
+    #     self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
+    #     self._csm_ra = {
+    #         "csm_resource_agent": CsmResourceAgent(self._csm_resources)
+    #     }
+    #     self._ha_framework = PcsHAFramework(self._csm_ra)
+    #     self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
+    #     self._cluster.init(args['f'])
+    #     CsmApi.set_cluster(self._cluster)
 
     def _log_cleanup(self):
         """
