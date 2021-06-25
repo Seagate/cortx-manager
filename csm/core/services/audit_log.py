@@ -26,8 +26,9 @@ from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common.errors import CsmNotFoundError
-from typing import Optional, Dict
+from typing import Any, Optional, Dict
 from cortx.utils.conf_store.conf_store import Conf
+from csm.common.filter import Filter
 
 # mapping of component with model, field for
 # range queires and log format
@@ -58,11 +59,16 @@ class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
 
-    def _prepare_filters(self, component, create_time_range: DateTimeRange):
+    def _prepare_filters(self, component, create_time_range: DateTimeRange, filter: Optional[str] = None):
         range_condition = []
         range_condition = self._prepare_time_range(
                   COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
-        return And(*range_condition)
+                  
+        query_filter = And(*range_condition)
+        if filter:
+            param_filter = Filter._prepare_filters(filter, COMPONENT_MODEL_MAPPING[component]["model"])
+            query_filter = And(query_filter, param_filter)
+        return query_filter
 
     def _prepare_time_range(self, field, time_range: DateTimeRange):
         db_conditions = []
@@ -73,8 +79,8 @@ class AuditLogManager():
         return db_conditions
 
     async def retrieve_by_range(self, component, limits,
-                       time_range: DateTimeRange, sort: Optional[SortBy] = None):
-        query_filter = self._prepare_filters(component, time_range)
+                       time_range: DateTimeRange, sort: Optional[SortBy] = None, filter: Optional[str] = None):
+        query_filter = self._prepare_filters(component, time_range, filter)
         query = Query().filter_by(query_filter)
         if limits and limits.offset:
             query = query.offset(limits.offset)
@@ -174,14 +180,14 @@ class AuditService(ApplicationService):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         sort_by: Optional[str] = None,
-        direction: Optional[str] = None
+        direction: Optional[str] = None,
+        filter: Optional[str] = None
     ) -> Dict:
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
         if not COMPONENT_MODEL_MAPPING.get(component, None):
             raise CsmNotFoundError("No audit logs for %s" % component,
                                                    COMPONENT_NOT_FOUND)
-
         time_range = self.get_date_range_from_duration(int(start_time), int(end_time))
         max_result_window = int(Conf.get(const.CSM_GLOBAL_INDEX, "Log>max_result_window"))
         effective_limit = min(limit, max_result_window) if limit is not None else max_result_window
@@ -192,7 +198,8 @@ class AuditService(ApplicationService):
             query_limit = QueryLimits(effective_limit, 0)
         sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
-                                                   query_limit, time_range, sort_options)
+                                                   query_limit, time_range, sort_options, 
+                                                   filter)
         audit_logs_count = await self.audit_mngr.count_by_range(component, time_range)
         return {
             "total_records": min(audit_logs_count, max_result_window),
