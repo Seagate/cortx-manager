@@ -403,24 +403,23 @@ class Setup:
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                              "Failure")
-            Setup._update_service_file("#< RESTART_OPTION >",
+            Setup._update_csm_files("#< RESTART_OPTION >",
                                       "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
-    def _update_service_file(key, value):
+    def _update_csm_files(key, value):
         """
-        Update CSM Agent and CSM Web service Files Depending on Job Type of
-        Setup.
+        Update CSM Files Depending on Job Type of Setup.
         """
-        Log.info(f"Update service file for {key}:{value}")
-        for each_service_file in const.CSM_SERVICE_FILES:
-            service_file_data = Text(each_service_file).load()
+        Log.info(f"Update file for {key}:{value}")
+        for each_file in const.CSM_FILES:
+            service_file_data = Text(each_file).load()
             if not service_file_data:
-                Log.warn(f"File {each_service_file} not updated.")
+                Log.warn(f"File {each_file} not updated.")
                 continue
             data = service_file_data.replace(key, value)
-            Text(each_service_file).dump(data)
+            Text(each_file).dump(data)
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
