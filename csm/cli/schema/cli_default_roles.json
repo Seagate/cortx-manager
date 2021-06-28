@@ -11,5 +11,11 @@
   },
   "system": {
     "startup": true
+  },
+  "product_version": {
+    "read": true
+  },
+  "appliance_info": {
+    "read": true
   }
 }
