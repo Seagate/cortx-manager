@@ -114,6 +114,7 @@ INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
+TEST_INDEX = 'TEST'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 USL_GLOBAL_INDEX = 'USL'
 
@@ -143,7 +144,9 @@ DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
-CSM_SERVICE_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH]
+CSM_WEB_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/.env"
+CSM_WEB_DIST_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/web-dist/.env"
+CSM_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH, CSM_WEB_ENV_FILE_PATH, CSM_WEB_DIST_ENV_FILE_PATH]
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
@@ -288,9 +291,25 @@ HOST_ID = 'host_id'
 CREATED_TIME = 'created_time'
 FAULT_HEALTH = 'Fault'
 RESPONSE_FORMAT_TREE = 'tree'
-RESPONSE_FORMAT_TABLE = 'table'
+RESPONSE_FORMAT_TABLE = 'flattened'
+ARG_RESOURCE = 'resource'
+ARG_RESOURCE_ID = 'resource_id'
 ARG_DEPTH = 'depth'
+HEALTH_DEFAULT_DEPTH = 1
 ARG_RESPONSE_FORMAT = 'response_format'
+ARG_OFFSET = 'offset'
+HEALTH_DEFAULT_OFFSET = 1
+ARG_LIMIT = 'limit'
+HEALTH_DEFAULT_LIMIT = 0
+FETCH_RESOURCE_HEALTH_REQ = 'fetch_resource_health'
+FETCH_RESOURCE_HEALTH_BY_ID_REQ = 'fetch_resource_health_by_id'
+STATUS_LITERAL = 'status'
+OUTPUT_LITERAL = 'output'
+ERROR_LITERAL = 'error'
+STATUS_SUCCEEDED = 'Succeeded'
+STATUS_FAILED = 'Failed'
+STATUS_PARTIAL = 'Partial'
+HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
@@ -541,6 +560,7 @@ ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
+PLUGIN_REQUEST = "request"
 
 # REST METHODS
 POST = "POST"
@@ -575,7 +595,7 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-third_party_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12"]
+dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
@@ -743,3 +763,10 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+
+#CSM TEST Consts
+DEFAULT_BROWSER = 'chrome'
+DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
+DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
+DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
+DEFAULT_OUTPUTFILE = '/tmp/output.log'
