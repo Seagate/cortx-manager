@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
+set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -220,6 +221,10 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -rf "$BASE_DIR/templates" "$DIST/csm/"
     cp -rf "$BASE_DIR/test/" "$DIST/csm"
     cp -rf "$BASE_DIR/csm/cli/schema/csm_setup.json" "$DIST/csm/schema/"
+
+    # move mini provisioning templates to csm/conf/ directory
+    mv "$DIST/csm/conf/miniprovisioning_templates/"* "$DIST/csm/conf"
+    rm -rf "$DIST/csm/conf/miniprovisioning_templates/"
 
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
