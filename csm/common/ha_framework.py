@@ -17,6 +17,8 @@ import sys
 import os
 import time
 import crypt
+from importlib import import_module
+from csm.common.errors import CsmNotFoundError, InvalidRequest
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from cortx.utils.cron import CronJob
@@ -55,6 +57,8 @@ class CortxHAFramework(HAFramework):
     def __init__(self, resource_agents = None):
         super(CortxHAFramework, self).__init__(resource_agents)
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
+        self._cluster_manager = None
+        self._cluster_elements = None
 
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
@@ -102,8 +106,57 @@ class CortxHAFramework(HAFramework):
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
     def get_system_health(self, element='cluster', depth: int=1, **kwargs):
-        # TODO - Implement when API is available from HA.
-        pass
+        if self._cluster_manager is None or \
+            not hasattr(self._cluster_manager, "get_system_health"):
+            self._init_cluster_manager()
+
+        self._validate_resource(element)
+        parsed_system_health = None
+        try:
+            system_health = self._cluster_manager.get_system_health(element, depth,
+                                                                    **kwargs)
+            # TODO: Remove the statement below when delimiter issue is
+            # fixed in cortx-utils.
+            Conf.init(delim='>')
+            Log.debug(f"HA Framework-System Health: {system_health}")
+            parsed_system_health = JsonMessage(system_health).load()
+        except Exception as e:
+            err_msg = f"{const.HEALTH_FETCH_ERR_MSG} : {e}"
+            Log.error(err_msg)
+            raise Exception(err_msg)
+
+        self._validate_system_health_response(parsed_system_health)
+
+        return parsed_system_health[const.OUTPUT_LITERAL]
+
+    def _init_cluster_manager(self):
+        Log.info("Initializing CortxClusterManager")
+        cortx_cluster_manager = import_module(f'ha.core.cluster.cluster_manager')
+        ha_system_health_const = import_module(f'ha.core.system_health.const')
+
+        try:
+            self._cluster_manager = cortx_cluster_manager.CortxClusterManager(default_log_enable=False)
+            self._cluster_elements = ha_system_health_const.CLUSTER_ELEMENTS
+        except Exception as e:
+            err_msg = f"Error instantiating CortxClusterManager: {e}"
+            Log.error(err_msg)
+
+    def _validate_resource(self, resource):
+        unsupported_resource = True
+        for supported_resource in self._cluster_elements:
+            if resource == supported_resource.value:
+                unsupported_resource = False
+                break
+
+        if unsupported_resource == True:
+            raise CsmNotFoundError(f"Resource {resource} not found.")
+
+    def _validate_system_health_response(self, system_health):
+        if system_health == None:
+            raise Exception(const.HEALTH_FETCH_ERR_MSG)
+
+        if system_health[const.STATUS_LITERAL] == const.STATUS_FAILED:
+            raise InvalidRequest(system_health[const.ERROR_LITERAL])
 
 
 class PcsHAFramework(HAFramework):

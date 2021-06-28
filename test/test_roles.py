@@ -214,10 +214,10 @@ class Method:
 class User:
     """ Typical users with predefined roles """
 
-    Anon = []
-    CsmAdmin = ['admin', 'manage']
-    CsmUser = ['monitor']
-    S3Account = ['s3']
+    Anon = None
+    CsmAdmin = 'admin'
+    CsmUser = 'monitor'
+    S3Account = 's3'
 
 
 class Access:
