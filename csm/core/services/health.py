@@ -15,7 +15,6 @@
 
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from cortx.utils.log import Log
 
 
 class HealthAppService(ApplicationService):
@@ -27,35 +26,22 @@ class HealthAppService(ApplicationService):
     def __init__(self, plugin):
         self._health_plugin = plugin
 
-    async def fetch_resources_health(self, resource, **filters):
+    async def fetch_resources_health(self, resource, **kwargs):
         """
         Fetch health of all resources of type {resource}
         and/or their sub resources based on input level.
         """
-        plugin_request_params = self._build_request_parameters(resource, filters)
-        Log.debug(f"Health service fetch {resource} health with filters: \
-                    {plugin_request_params}")
+        depth = kwargs.get(const.ARG_DEPTH, 1)
+        response_format = kwargs.get(const.ARG_RESPONSE_FORMAT, const.RESPONSE_FORMAT_TREE)
 
-        plugin_response = self._health_plugin.process_request(**plugin_request_params)
-        return plugin_response
+        return {'version': '1.0', 'data': []}
 
-    def _build_request_parameters(self, resource, filters):
+    async def fetch_resource_health_by_id(self, resource, resource_id, **kwargs):
         """
-        Build request parameters based on the filters.
+        Get health of resource (cluster, site, rack, node etc.)
+        with resource_id and/or its sub resources based on input level.
         """
-        request_params = dict()
-        request_params[const.PLUGIN_REQUEST] = const.FETCH_RESOURCE_HEALTH_REQ
-        request_params[const.ARG_RESOURCE] = resource
-        request_params[const.ARG_RESOURCE_ID] = filters.get(const.ARG_RESOURCE_ID, "")
-        request_params[const.ARG_DEPTH] = filters.get(const.ARG_DEPTH,
-                                                        const.HEALTH_DEFAULT_DEPTH)
-        request_params[const.ARG_OFFSET] = filters.get(const.ARG_OFFSET,
-                                                        const.HEALTH_DEFAULT_OFFSET)
-        request_params[const.ARG_LIMIT] = filters.get(const.ARG_LIMIT,
-                                                        const.HEALTH_DEFAULT_LIMIT)
-        request_params[const.ARG_RESPONSE_FORMAT] = filters.get(
-                                                        const.ARG_RESPONSE_FORMAT,
-                                                        const.RESPONSE_FORMAT_TREE)
+        depth = kwargs.get(const.ARG_DEPTH, 1)
+        response_format = kwargs.get(const.ARG_RESPONSE_FORMAT, const.RESPONSE_FORMAT_TREE)
 
-        return request_params
-
+        return {'version': '1.0', 'data': []}

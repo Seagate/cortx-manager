@@ -253,11 +253,11 @@ class LoginService:
             # TODO: Try to search Customer LDAP or S3 account
             # and create corresponding user record if found.
             Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
-            user = User.instantiate_s3_account_user(user_id)
+            user = User.instantiate_s3_account_user(user_id, roles=['s3'])
             credentials = await self._auth_service.authenticate(user, password)
 
         if credentials:
-            permissions = await self._role_manager.calc_effective_permissions(user.role)
+            permissions = await self._role_manager.calc_effective_permissions(*user.roles)
             session = await self._session_manager.create(credentials, permissions)
             if session:
                 return session.session_id

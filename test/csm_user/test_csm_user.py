@@ -49,7 +49,7 @@ def test_csm_user_create(args):
     user_service = args.get('user_service')
     data = {'user_id': 'csm_test_manage_user',
             'password': 'Csmuser@123',
-            'role': 'manage',
+            'roles': ['manage'],
             'email': 'csm@test.com',
             'alert_notification': True}
 
@@ -65,7 +65,7 @@ def test_csm_user_create(args):
     assert 'updated_time' in user
     assert 'created_time' in user
     assert user['username'] == data['user_id']
-    assert user['role'] == data['role']
+    assert user['roles'] == data['roles']
     assert user['email'] == data['email']
     assert user['alert_notification'] == data['alert_notification']
 
@@ -81,7 +81,7 @@ def test_csm_user_update_without_current_password(args):
     with t.assertRaises(InvalidRequest) as e:
         loop.run_until_complete(
             user_service.update_user(user_id, data, user_id))
-    assert 'Value for current_password is required' in str(e.exception)
+    assert 'Current password is required' in str(e.exception)
 
 
 def test_csm_user_update_password(args):
@@ -110,19 +110,19 @@ def test_csm_user_update_roles(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'role': 'monitor',
+    data = {'roles': ['monitor'],
             'current_password': 'Csmuser@123'}
 
     # Initial roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['role'] == 'manage'
+    assert user['roles'] == ['manage']
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['role'] == 'monitor'
+    assert user['roles'] == ['monitor']
 
 
 def test_csm_user_update_email(args):
@@ -173,7 +173,7 @@ def test_csm_user_delete(args):
     loop.run_until_complete(user_service.delete_user(user_id, user_id))
     with t.assertRaises(CsmNotFoundError) as e:
         loop.run_until_complete(user_service.get_user(user_id))
-    assert 'User does not exist' in str(e.exception)
+    assert 'There is no such user' in str(e.exception)
 
 
 test_list = [test_csm_user_create,

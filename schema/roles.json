@@ -1,15 +1,7 @@
 {
     "admin": {
         "permissions": {
-            "permissions": ["list"],
-            "alerts": ["list", "update", "delete"],
             "maintenance": ["list", "update"],
-            "stats": ["list"],
-            "capacity": ["list"],
-            "sysconfig": ["list", "update", "delete"],
-            "users": ["create", "list", "update", "delete"],
-            "s3accounts": ["create", "list", "update", "delete"],
-            "auditlog": ["list", "read"],
             "system": ["list", "update"],
             "notification": ["update"],
             "security": ["read", "update"],
