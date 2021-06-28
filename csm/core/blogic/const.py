@@ -699,6 +699,7 @@ FEATURE_ENDPOINT_MAPPING_SCHEMA = '{}/schema/feature_endpoint_mapping.json'.form
 L18N_SCHEMA = '{}/schema/l18n.json'.format(CSM_PATH)
 DEPENDENT_ON = "dependent_on"
 CSM_COMPONENT_NAME = "csm"
+COMPONENT_NAME = "component_name"
 FEATURE_NAME = "feature_name"
 SETUP_TYPES = "setup_types"
 TYPE = 'type'
