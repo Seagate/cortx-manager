@@ -144,7 +144,9 @@ DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE_FILE_PATH = "/etc/systemd/system/csm_agent.service"
 CSM_WEB_SERVICE_FILE_PATH = "/etc/systemd/system/csm_web.service"
-CSM_SERVICE_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH]
+CSM_WEB_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/.env"
+CSM_WEB_DIST_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/web-dist/.env"
+CSM_FILES = [CSM_AGENT_SERVICE_FILE_PATH, CSM_WEB_SERVICE_FILE_PATH, CSM_WEB_ENV_FILE_PATH, CSM_WEB_DIST_ENV_FILE_PATH]
 SUPPORT_BUNDLE_ROOT = 'SUPPORT_BUNDLE_ROOT'
 DEFAULT_SUPPORT_BUNDLE_ROOT = BASE_DIR + '/bundle'
 SSH_TIMEOUT = 'SSH_TIMEOUT'
@@ -155,7 +157,8 @@ DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'admin'
 CSM_MANAGE_ROLE = 'manage'
 CSM_MONITOR_ROLE = 'monitor'
-CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
+CSM_S3_ACCOUNT_ROLE = 's3'
+CSM_USER_ROLES = [CSM_SUPER_USER_ROLE, CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
@@ -420,8 +423,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
-                            'updated_time']
+CSM_USER_SORTABLE_FIELDS = [
+    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -592,7 +595,7 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-third_party_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12"]
+dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']

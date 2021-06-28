@@ -46,7 +46,11 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         :param command:
         :return:
         """
-        self._backup_config_dir()
+        backup_dirname = None
+        if os.path.exists(const.CSM_ETC_DIR):
+            backup_dirname = PostUpgrade.__backup_config_dir()
+        # TODO Multiple parents invoke this method on construction, but we need to do it again.
+        self._copy_skeleton_configs()
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
@@ -84,6 +88,9 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
             except Exception as e_:
                 Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                 time.sleep(2**count)
+        # Restore backup config before the init phase if it exists
+        if backup_dirname is not None:
+            PostUpgrade.__restore_backup_config(backup_dirname)
         #Init functionality
         self._config_user_permission()
 
@@ -110,13 +117,21 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
-    def _backup_config_dir(self):
-        if os.path.exists(const.CSM_ETC_DIR):
-            Log.info("Creating backup for older csm configurations")
-            Setup._run_cmd(f"cp -r {const.CSM_ETC_DIR} {const.CSM_ETC_DIR}_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp")
-        else:
-            os.makedirs(const.CSM_ETC_DIR, exist_ok=True)
-            Setup._run_cmd(f"cp -r {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+    @staticmethod
+    def __backup_config_dir():
+        Log.info("Creating backup for older csm configurations")
+        backup_dirname = \
+            f"{const.CSM_ETC_DIR}_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp"
+        Setup._run_cmd(f"mv {const.CSM_ETC_DIR} {backup_dirname}")
+        return backup_dirname
+
+    @staticmethod
+    def __restore_backup_config(backup_dirname):
+        backup_index = f"{const.CSM_GLOBAL_INDEX}_BACKUP"
+        backup_url = f"yaml://{backup_dirname}/{const.CSM_CONF_FILE_NAME}"
+        Conf.load(backup_index, backup_url)
+        Conf.copy(backup_index, const.CSM_GLOBAL_INDEX, Conf.get_keys(backup_index))
+        Conf.save(const.CSM_GLOBAL_INDEX)
 
     def create(self):
         """
