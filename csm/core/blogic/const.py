@@ -157,7 +157,8 @@ DEFAULT_USER = 'admin'
 CSM_SUPER_USER_ROLE = 'admin'
 CSM_MANAGE_ROLE = 'manage'
 CSM_MONITOR_ROLE = 'monitor'
-CSM_USER_ROLES = [CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
+CSM_S3_ACCOUNT_ROLE = 's3'
+CSM_USER_ROLES = [CSM_SUPER_USER_ROLE, CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
@@ -422,8 +423,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = ['user_id', 'email', 'user_type', 'created_time',
-                            'updated_time']
+CSM_USER_SORTABLE_FIELDS = [
+    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
