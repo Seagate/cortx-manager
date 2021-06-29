@@ -1,0 +1,29 @@
+{
+    "expected_product_version_show": {
+      "format": "table",
+      "comm": {
+        "type": "rest",
+        "method": "get",
+        "target": "/{version}/product_version",
+        "version": "v2",
+        "params": {},
+        "json": {}
+      },
+      "output": {
+        "table": {
+          "headers": {
+            "NAME": "Name",
+            "VERSION": "Version",
+            "BRANCH": "Branch",
+            "DATETIME": "Date",
+            "KERNEL": "Kernel",
+            "OS": "OS",
+            "THIRD_PARTY_VERSION": "Third Party Version",
+            "BUILD": "Build"
+          }
+        }
+      },
+      "need_confirmation": false,
+      "sub_command_name": "show"
+    }
+}

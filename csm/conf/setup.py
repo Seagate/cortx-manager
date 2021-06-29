@@ -28,8 +28,8 @@ from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, InvalidRequest
-from csm.core.blogic.csm_ha import CsmResourceAgent
-from csm.common.ha_framework import PcsHAFramework
+# from csm.core.blogic.csm_ha import CsmResourceAgent
+# from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
 from csm.core.agent.api import CsmApi
 import traceback
@@ -313,20 +313,21 @@ class Setup:
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
             Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
 
-    def _config_cluster(self, args):
-        """
-        Instantiation of csm cluster with resources
-        Create csm user
-        """
-        Log.info("Instantiation of csm cluster with resources")
-        self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
-        self._csm_ra = {
-            "csm_resource_agent": CsmResourceAgent(self._csm_resources)
-        }
-        self._ha_framework = PcsHAFramework(self._csm_ra)
-        self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-        self._cluster.init(args['f'])
-        CsmApi.set_cluster(self._cluster)
+    # TODO: Need to remove unused code after proper testing.
+    # def _config_cluster(self, args):
+    #     """
+    #     Instantiation of csm cluster with resources
+    #     Create csm user
+    #     """
+    #     Log.info("Instantiation of csm cluster with resources")
+    #     self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
+    #     self._csm_ra = {
+    #         "csm_resource_agent": CsmResourceAgent(self._csm_resources)
+    #     }
+    #     self._ha_framework = PcsHAFramework(self._csm_ra)
+    #     self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
+    #     self._cluster.init(args['f'])
+    #     CsmApi.set_cluster(self._cluster)
 
     def _log_cleanup(self):
         """
@@ -402,24 +403,23 @@ class Setup:
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                              "Failure")
-            Setup._update_service_file("#< RESTART_OPTION >",
+            Setup._update_csm_files("#< RESTART_OPTION >",
                                       "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
-    def _update_service_file(key, value):
+    def _update_csm_files(key, value):
         """
-        Update CSM Agent and CSM Web service Files Depending on Job Type of
-        Setup.
+        Update CSM Files Depending on Job Type of Setup.
         """
-        Log.info(f"Update service file for {key}:{value}")
-        for each_service_file in const.CSM_SERVICE_FILES:
-            service_file_data = Text(each_service_file).load()
+        Log.info(f"Update file for {key}:{value}")
+        for each_file in const.CSM_FILES:
+            service_file_data = Text(each_file).load()
             if not service_file_data:
-                Log.warn(f"File {each_service_file} not updated.")
+                Log.warn(f"File {each_file} not updated.")
                 continue
             data = service_file_data.replace(key, value)
-            Text(each_service_file).dump(data)
+            Text(each_file).dump(data)
 
 # TODO: Devide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component

@@ -37,3 +37,6 @@ stats.test_timelion_provider
 onboarding.test_system_config
 validators.test_validators
 update.test_hotfix
+auditlog.test_auditlog_list
+about.test_product_version_cli
+about.test_appliance_info_cli

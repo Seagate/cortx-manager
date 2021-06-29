@@ -63,6 +63,7 @@ class Configure(Setup):
         self._set_deployment_mode()
         try:
             self._configure_uds_keys()
+            self._configure_csm_web_keys()
             self._logrotate()
             self._configure_cron()
             for count in range(0, 10):
@@ -169,14 +170,18 @@ class Configure(Setup):
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
 
-    def _configure_uds_keys(self):
-        Log.info("Configuring UDS keys")
+    def _fetch_management_ip(self):
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
         self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
         virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host_key)
+        return virtual_host
+
+    def _configure_uds_keys(self):
+        Log.info("Configuring UDS keys")
+        virtual_host = self._fetch_management_ip()
         data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
-        Log.debug(f"Validating connectivity for virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn}")
+        Log.debug(f"Validating connectivity for data_nw_public_fqdn:{data_nw_public_fqdn}")
         try:
             NetworkV().validate('connectivity', [data_nw_public_fqdn])
         except Exception as e:
@@ -185,6 +190,12 @@ class Configure(Setup):
         Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm config")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
+
+    def _configure_csm_web_keys(self):
+        Log.info("Configuring CSM Web keys")
+        virtual_host = self._fetch_management_ip()
+        Log.info(f"Set virtual_host:{virtual_host} to csm config")
+        Setup._update_csm_files("<MANAGEMENT_IP>", virtual_host)
 
     async def _set_unsupported_feature_info(self):
         """
