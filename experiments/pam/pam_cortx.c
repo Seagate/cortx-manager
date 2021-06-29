@@ -146,11 +146,15 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	/* we want the headers be written to this file handle */
 	if(curl_easy_setopt(pCurl, CURLOPT_HEADERDATA, header_file)!=CURLE_OK){
 		curl_cleanup(headers,pCurl);
+		fclose(header_file);
+		fclose(body_file);
 		return -1;
 	}
 	/* we want the body be written to this file handle instead of stdout */
 	if(curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, body_file)!=CURLE_OK){
 		curl_cleanup(headers,pCurl);
+		fclose(header_file);
+		fclose(body_file);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 1)!=CURLE_OK){
