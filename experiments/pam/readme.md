@@ -39,6 +39,4 @@ please email opensource@seagate.com or cortx-questions@seagate.com.
    2.  add the following line in /etc/pam.d/password-auth
    ```
    auth        sufficient    pam_cortx.so   try_first_pass
-   account     sufficient    pam_cortx.so
-   password    sufficient    pam_cortx.so 
    ```
