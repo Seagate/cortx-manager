@@ -360,14 +360,18 @@ class IemMonitorService(Service, Observable):
         except Exception as e:
             Log.warn(f"Error in stopping IEM monitor thread: {e}")
 
-    def _recv(self, iem):
-        print(iem)
+    def _recv(self, message):
+        if message:
+            msg = str(message)
+            decoded_message = JsonMessage(msg).load()#iem.decode('utf-8')
+            Log.debug(f"Received Message: {decoded_message}")
+            print(decoded_message)
 
     def _monitor_iem(self, callback):
         while self._thread_running:
             try:
                 alert = EventMessage.receive()
                 callback(alert)
-                time.sleep(5.0)
+                time.sleep(1.0)
             except EventException as e:
                 Log.error(f"Error occured during IEM receive process. {e}")
