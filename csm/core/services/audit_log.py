@@ -26,7 +26,7 @@ from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common.errors import CsmNotFoundError
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 from cortx.utils.conf_store.conf_store import Conf
 
 # mapping of component with model, field for
@@ -115,8 +115,13 @@ class AuditService(ApplicationService):
                                           tzinfo=tz).isoformat()
         return DateTimeRange(start_date, end_date)
 
-    # TODO this is obviously a stub; derive from `CsmAuditLogModel` if possible.
-    async def get_schema_info(self):
+# TODO this is obviously a stub; derive from `CsmAuditLogModel` if possible.
+    async def get_csm_schema_info(self) -> List[Dict[str, Any]]:
+        """
+        Get CSM audit log schema.
+
+        :returns: list of audit log field descriptors.
+        """
 
         def is_visible(field_id):
             not_visible = ["remote_ip"]
@@ -145,6 +150,26 @@ class AuditService(ApplicationService):
             }
             for f in fields
         ]
+
+    async def get_s3_schema_info(self) -> List[Dict[str, Any]]:
+        """
+        Get S3 audit log schema.
+
+        :returns: list of CSM audit log field descriptors.
+        """
+
+        raise NotImplementedError('S3 schema info is TBD')
+
+    async def get_schema_info(self, component: str):
+        COMPONENT_SCHEMA_MAPPING = {
+            "csm": self.get_csm_schema_info(),
+            "s3": self.get_s3_schema_info()
+        }
+
+        method = COMPONENT_SCHEMA_MAPPING.get(component, None)
+        if method is None:
+            raise CsmNotFoundError(f'No audit log schema for {component}', COMPONENT_NOT_FOUND)
+        return await method
 
     async def create_audit_log_file(self, file_name, component, time_range):
         """ create audit log file and comrpess to tar.gz """

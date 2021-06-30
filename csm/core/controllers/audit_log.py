@@ -51,7 +51,7 @@ class AuditLogShowQuerySchema(AuditLogRangeQuerySchema):
         missing='desc', default='desc')
 
 
-@CsmView._app_routes.view("/api/v2/auditlogs/schema_info")
+@CsmView._app_routes.view("/api/v2/auditlogs/schema_info/{component}")
 class AuditLogsSchemaInfo(CsmView):
     def __init__(self, request):
         super(AuditLogsSchemaInfo, self).__init__(request)
@@ -60,7 +60,8 @@ class AuditLogsSchemaInfo(CsmView):
 
     @CsmAuth.permissions({Resource.AUDITLOG: {Action.LIST}})
     async def get(self):
-        return await self._service.get_schema_info()
+        component = self.request.match_info["component"]
+        return await self._service.get_schema_info(component)
 
 
 @CsmView._app_routes.view("/api/v1/auditlogs/show/{component}")
@@ -86,7 +87,7 @@ class AuditLogShowView(CsmView):
                 f"Invalid Range query {str(val_err)}")
 
         start_date = request_data["start_date"]
-        end_date = request_data["end_date"] 
+        end_date = request_data["end_date"]
         limit = request_data.get('limit')
         offset = request_data.get('offset')
         sort_by = request_data.get('sort_by')
