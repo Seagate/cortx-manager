@@ -123,7 +123,7 @@ class AuditService(ApplicationService):
             return field_id not in not_visible
 
         fields = [
-            ["timestamp", "Timestamp", 201],
+            ["timestamp", "Timestamp", 201, {"type": "date"}],
             ["user", "User", 301],
             ["remote_ip", "Remote IP", 401],
             ["forwarded_for_ip", "Forwarded for IP", 501],
@@ -134,8 +134,10 @@ class AuditService(ApplicationService):
             ["request_id", "Request ID", 1001],
             ["msg", "Message", 1101],
         ]
-        return [
-            {
+
+        descriptors = []
+        for f in fields:
+            item = {
                 "field_id": f[0],
                 "label": f[1],
                 "display_id": f[2],
@@ -143,8 +145,13 @@ class AuditService(ApplicationService):
                 "sortable": True,
                 "filterable": False,
             }
-            for f in fields
-        ]
+            try:
+                item["value"] = f[3]
+            except IndexError:
+                pass
+            descriptors.append(item)
+
+        return descriptors
 
     async def create_audit_log_file(self, file_name, component, time_range):
         """ create audit log file and comrpess to tar.gz """

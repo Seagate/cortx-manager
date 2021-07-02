@@ -1,0 +1,49 @@
+{
+    "name": "appliance_info",
+    "description": "Appliance Info",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Display Appliance Info",
+        "need_confirmation": false,
+        "permissions_tag": "read",
+        "args": [
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?",
+            "help": ""
+          },
+          {
+            "flag": "-f",
+            "dest": "format",
+            "help": "Format of Output",
+            "default": "table",
+            "type": "str",
+            "choices": [
+              "table",
+              "xml",
+              "json"
+            ]
+          }
+        ],
+        "comm": {
+          "type": "rest",
+          "method": "get",
+          "target": "/{version}/appliance_info",
+          "version": "v2"
+        },
+        "output": {
+          "table": {
+            "headers": {
+              "serial_number": "Serial Number",
+              "cluster_id": "Cluster ID"              
+            },
+            "filters": "appliance_info" 
+          }       
+        }
+      }
+    ]
+  }
+  

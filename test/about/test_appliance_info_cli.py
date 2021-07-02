@@ -25,35 +25,35 @@ import sys
 from csm.test.common import Const
 
 permissions = {
-            'auditlog': { 'list': True, 'read': True }
+            'appliance_info': { 'read': True }
 }
 
 show_csm_command = CommandFactory.get_command(
-    ["auditlog", "show", "csm", "-b", "2021-05-21", "-e", "2021-05-22", "-l", "5", "-o", "1", "-s", "request_id", "-d", "asc"], permissions, Const.CLI_SCHEMA_PATH, [], [])
+    ["appliance_info", "show"], permissions, Const.CLI_SCHEMA_PATH, [], [])
 
 t = unittest.TestCase()
 file_path = Const.MOCK_PATH
 
-obtained_output_file = os.path.join("/tmp","auditlog_show_table_obtained_output")
-with open(file_path + "auditlog/cmd_expceted_output_table") as fp:
+obtained_output_file = os.path.join("/tmp","appliance_info_table_obtained_output")
+with open(file_path + "about/appliance_info_cmd_expceted_output_table") as fp:
     EXPECTED_OUTPUT = fp.readlines()
 
-with open(file_path + "auditlog/csm_api_response") as fp:
+with open(file_path + "about/appliance_info_api_response") as fp:
     API_RESPONSE =  json.loads(fp.read())
 
 
-with open(file_path + "auditlog/auditlog_commands_output.json") as fp:
+with open(file_path + "about/appliance_info_commands_output.json") as fp:
     COMMANDS_OUTPUT = json.loads(fp.read())
 
 
 def test_command_name(*args):
-    expected_output = 'auditlog'
+    expected_output = 'appliance_info'
     actual_output = show_csm_command.name
     t.assertEqual(actual_output, expected_output)
 
 
 def test_command_options(*args):
-    expected_output = COMMANDS_OUTPUT.get("expected_csm_auditlog_show")
+    expected_output = COMMANDS_OUTPUT.get("expected_appliance_info_show")
     actual_output = show_csm_command.options
     t.assertDictEqual(actual_output, expected_output)
 

@@ -90,7 +90,7 @@ class CsmAgent:
 
         #Heath configuration
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
-        health_plugin_obj = health_plugin.HealthPlugin()
+        health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
