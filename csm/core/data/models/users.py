@@ -13,20 +13,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
-import json
 import bcrypt
-from schematics.models import Model
-from schematics.types import (StringType, ListType,
-                              DateTimeType, BooleanType)
-from datetime import datetime, timedelta, timezone
-from csm.common.queries import SortBy, QueryLimits, DateTimeRange
-from typing import Optional, Iterable
+from schematics.types import (StringType, DateTimeType, BooleanType)
+from datetime import datetime, timezone
 from enum import Enum
-from csm.common.errors import CsmError, CsmNotFoundError
-from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.core.blogic.models import CsmModel
+
 
 # TODO: move to the appropriate location
 class Passwd:
@@ -53,7 +46,7 @@ class User(CsmModel):
 
     user_id = StringType()
     user_type = StringType()
-    roles = ListType(StringType)
+    role = StringType()
     password_hash = StringType()
     email = StringType()
     alert_notification = BooleanType()
@@ -70,12 +63,14 @@ class User(CsmModel):
         self.updated_time = datetime.now(timezone.utc)
 
     @staticmethod
-    def instantiate_csm_user(user_id, password, email="", roles=[], alert_notification=True):
+    def instantiate_csm_user(
+        user_id, password, email="", role=const.CSM_MONITOR_ROLE, alert_notification=True
+    ):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
         user.password_hash = Passwd.hash(password)
-        user.roles = roles
+        user.role = role
         user.email = email
         user.alert_notification = alert_notification
         user.created_time = datetime.now(timezone.utc)
@@ -83,12 +78,12 @@ class User(CsmModel):
         return user
 
     @staticmethod
-    def instantiate_s3_account_user(user_id, roles=[]):
+    def instantiate_s3_account_user(user_id, role=const.CSM_S3_ACCOUNT_ROLE):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.S3AccountUser.value
         user.password_hash = None
-        user.roles = roles
+        user.role = role
         user.email = ""
         user.alert_notification = True
         user.created_time = datetime.now(timezone.utc)

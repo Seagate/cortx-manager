@@ -61,7 +61,7 @@
           "flag": "Statement",
           "type": "str",
           "type_method": "Validators.file_parser",
-          "type_target": "csm.common.payload",
+          "type_target": "csm.cli.cli_validators",
           "help": "Path to file",
           "json": true
         },

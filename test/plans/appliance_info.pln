@@ -13,30 +13,4 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
-service.test_csm_service
-service.test_dependent_service
-service.test_upload_service
-alerts.test_alerts_command
-alerts.test_alerts_acknowledgement
-cli.csm_user.test_csm_user_create
-cli.csm_user.test_csm_user_delete
-cli.csm_user.test_csm_user_list
-test_email_sender
-s3.test_s3_account_create
-s3.test_s3_account_delete
-s3.test_s3_account_list
-s3.test_s3_iamuser_create
-s3.test_s3_iamuser_delete
-s3.test_s3_iamuser_list
-s3.test_s3
-s3.test_s3_bucket_create
-s3.test_s3_bucket_list
-s3.test_s3_bucket_delete
-setup.test_setup_provider
-stats.test_timelion_provider
-onboarding.test_system_config
-validators.test_validators
-update.test_hotfix
-auditlog.test_auditlog_list
-about.test_product_version_cli
 about.test_appliance_info_cli

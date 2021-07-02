@@ -1,0 +1,54 @@
+{
+    "name": "product_version",
+    "description": "Product Version",
+    "sub_commands": [
+      {
+        "name": "show",
+        "description": "Display Product Version",
+        "need_confirmation": false,
+        "permissions_tag": "read",
+        "args": [
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?",
+            "help": ""
+          },
+          {
+            "flag": "-f",
+            "dest": "format",
+            "help": "Format of Output",
+            "default": "table",
+            "type": "str",
+            "choices": [
+              "table",
+              "xml",
+              "json"
+            ]
+          }
+        ],
+        "comm": {
+          "type": "rest",
+          "method": "get",
+          "target": "/{version}/product_version",
+          "version": "v2"
+        },
+        "output": {
+          "table": {
+            "headers": {
+              "NAME": "Name",
+              "VERSION": "Version",
+              "BUILD": "Build",
+              "BRANCH": "Branch",
+              "DATETIME": "Date",
+              "KERNEL": "Kernel",
+              "OS": "OS",
+              "THIRD_PARTY_VERSION": "Third Party Version"              
+            }
+          }
+        }
+      }
+    ]
+  }
+  
