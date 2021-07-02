@@ -61,13 +61,12 @@ class AuditLogManager():
 
     def _prepare_filters(self, component, create_time_range: DateTimeRange, filter: Optional[str] = None):
         range_condition = []
-        range_condition = self._prepare_time_range(
-                  COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
-                  
-        query_filter = And(*range_condition)
+        range_condition = self._prepare_time_range(COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
+        param_filter = []
         if filter:
             param_filter = Filter._prepare_filters(filter, COMPONENT_MODEL_MAPPING[component]["model"])
-            query_filter = And(query_filter, param_filter)
+            range_condition.append(param_filter)
+        query_filter = And(*range_condition)
         return query_filter
 
     def _prepare_time_range(self, field, time_range: DateTimeRange):
@@ -95,8 +94,8 @@ class AuditLogManager():
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
 
     async def count_by_range(self, component,
-                       time_range: DateTimeRange) -> int:
-        query_filter = self._prepare_filters(component, time_range)
+                       time_range: DateTimeRange, filter: Optional[str] = None) -> int:
+        query_filter = self._prepare_filters(component, time_range, filter)
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
 
 class AuditService(ApplicationService):
@@ -200,7 +199,7 @@ class AuditService(ApplicationService):
         audit_logs = await self.audit_mngr.retrieve_by_range(component,
                                                    query_limit, time_range, sort_options, 
                                                    filter)
-        audit_logs_count = await self.audit_mngr.count_by_range(component, time_range)
+        audit_logs_count = await self.audit_mngr.count_by_range(component, time_range, filter)
         return {
             "total_records": min(audit_logs_count, max_result_window),
             "logs": [log.to_primitive() for log in audit_logs]
