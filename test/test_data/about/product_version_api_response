@@ -1,0 +1,30 @@
+{
+    "BRANCH": "main",
+    "BUILD": "1386",
+    "COMPONENTS": [
+        "cortx-cli-2.0.0-849_72e58642.x86_64.rpm",
+        "cortx-csm_agent-2.0.0-849_72e58642.x86_64.rpm",
+        "cortx-csm_web-2.0.0-77_1efac5a.x86_64.rpm",
+        "cortx-ha-2.0.0-110_6b35035.x86_64.rpm",
+        "cortx-hare-2.0.0-364_git996d146.el7.x86_64.rpm",
+        "cortx-libsspl_sec-2.0.0-122_gitfead9cbb.el7.x86_64.rpm",
+        "cortx-libsspl_sec-method_none-2.0.0-122_gitfead9cbb.el7.x86_64.rpm",
+        "cortx-motr-2.0.0-213_gitc0216cd7_3.10.0_1127.el7.x86_64.rpm",
+        "cortx-motr-ivt-2.0.0-213_gitc0216cd7_3.10.0_1127.el7.x86_64.rpm",
+        "cortx-prereq-2.0.0-172_gitaa1bcfe_el7.x86_64.rpm",
+        "cortx-prvsnr-2.0.0-159_git1e4281cb_el7.x86_64.rpm",
+        "cortx-py-utils-2.0.0-250_87b21d5.noarch.rpm",
+        "cortx-s3server-2.0.0-675_gitd281cf17_el7.x86_64.rpm",
+        "cortx-sspl-2.0.0-122_gitfead9cbb.el7.noarch.rpm",
+        "python36-cortx-prvsnr-2.0.52-159_git1e4281cb.x86_64.rpm",
+        "stats_utils-2.0.0-250_87b21d5.x86_64.rpm",
+        "uds-pyi-1.3.0-1.r10.el7.x86_64.rpm",
+        "udx-discovery-0.1.2-3.el7.x86_64.rpm"
+    ],
+    "DATETIME": "22-Jun-2021 15:47 UTC",
+    "KERNEL": "3.10.0_1127.el7",
+    "NAME": "CORTX",
+    "OS": "CentOS Linux release 7.8.2003 (Core)",
+    "THIRD_PARTY_VERSION": "centos-7.8.2003-2.0.0-7",
+    "VERSION": "2.0.0"
+}

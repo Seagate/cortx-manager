@@ -40,4 +40,4 @@ class ApplianceInfoService(ApplicationService):
         ret_dict["serial_number"] = self._appliance_obj.get().strip()
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, "PROVISIONER>cluster_id")
         ret_dict["cluster_id"] = cluster_id
-        return [ret_dict]
+        return {"appliance_info": [ret_dict]}
