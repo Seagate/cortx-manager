@@ -38,7 +38,7 @@ from csm.core.services.file_transfer import FileRef
 from csm.plugins.cortx.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.blogic import const
-from csm.core.services.iem import IemAppService, IemPayload
+from csm.core.services.iem import IemAppService, IemPayload, Messageblob
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
@@ -344,9 +344,10 @@ class SecurityService(ApplicationService):
                     self._iem_service.init()
                     severity = self._iem_service.severity_levels['WARN']
                     module = self._iem_service.modules['SSL_EXPIRY']
+                    msg_blob = Messageblob(visible=True, description=message, destination='All', type='bad')
                     # event_id is not finalized yet. Using a dummy value.
                     payload = IemPayload(severity=severity, module=module, \
-                        event_id= 100, message_blob=message)
+                        event_id= 100, message_blob=msg_blob)
                     self._iem_service.send(payload)
                 else:
                     Log.error("Failed to send SSL expiry IEM. IEM service not initialized.")

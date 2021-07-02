@@ -78,13 +78,15 @@ class CsmAgent:
         CsmRestApi.init(alerts_service)
 
         # IEM configuration
-        iem_repository = IemRepository(db)
-        iem_service = IemAppService(iem_repository)
+        iem_service = IemAppService()
         CsmRestApi.init(iem_service)
 
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
+
+        CsmAgent.iem_monitor = IemMonitorService()
+        CsmRestApi._app["iem_service"] = iem_service
 
         #Heath configuration
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
@@ -95,15 +97,12 @@ class CsmAgent:
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), http_notifications)
+                pm.AlertPlugin(), http_notifications, CsmAgent.iem_monitor)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
         CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
         CsmRestApi._app["alerts_service"] = alerts_service
-
-        CsmAgent.iem_monitor = IemMonitorService(iem_repository)
-        CsmRestApi._app["iem_service"] = iem_service
 
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
@@ -254,8 +253,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
-    from csm.core.services.iem import IemAppService, IemMonitorService, \
-                                        IemRepository
+    from csm.core.services.iem import IemAppService, IemMonitorService
     from csm.core.services.health import HealthAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService
