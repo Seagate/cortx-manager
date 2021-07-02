@@ -108,10 +108,11 @@
         {
           "flag": "role",
           "type": "str",
-          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. *Role Changes only allowed to User with Admin Access.",
+          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. Admin has ultimate access. *Role Changes only allowed to User with Admin Access.",
           "choices": [
             "monitor",
-            "manage"
+            "manage",
+            "admin"
           ],
           "json": true
         },
@@ -250,8 +251,9 @@
           "action": "append",
           "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
           "choices": [
-          "monitor",
-          "manage"
+            "monitor",
+            "manage",
+            "admin"
           ],
           "json": true
         },
