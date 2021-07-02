@@ -30,6 +30,7 @@
           "choices": [
             "user_id",
             "user_type",
+            "role",
             "created_time",
             "updated_time"
           ],
@@ -78,7 +79,7 @@
           "headers": {
             "username": "Username",
             "user_type": "User Type",
-            "roles": "Roles",
+            "role": "Role",
             "created_time": "Creation time",
             "updated_time": "Last update time"
           },
@@ -105,7 +106,7 @@
           "json": true
         },
         {
-          "flag": "roles",
+          "flag": "role",
           "type": "str",
           "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. *Role Changes only allowed to User with Admin Access.",
           "choices": [
@@ -244,7 +245,7 @@
         },
         {
           "flag": "-r",
-          "dest": "roles",
+          "dest": "role",
           "type": "str",
           "action": "append",
           "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
