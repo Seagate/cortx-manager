@@ -16,7 +16,7 @@
 import os
 import time
 from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json
+from csm.common.payload import Json, Text
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -195,7 +195,13 @@ class Configure(Setup):
         Log.info("Configuring CSM Web keys")
         virtual_host = self._fetch_management_ip()
         Log.info(f"Set virtual_host:{virtual_host} to csm config")
-        Setup._update_csm_files("<MANAGEMENT_IP>", virtual_host)
+        file_data = Text(const.CSM_WEB_DIST_ENV_FILE_PATH)
+        data = file_data.load().split("\n")
+        for ele in data:
+            if "MANAGEMENT_IP" in ele:
+                data.remove(ele)
+        data.append(f"MANAGEMENT_IP={virtual_host}")
+        file_data.dump(("\n").join(data))
 
     async def _set_unsupported_feature_info(self):
         """
