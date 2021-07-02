@@ -34,7 +34,6 @@ class Messageblob(NamedTuple):
     type: str
     recommendation: Any = ''
     extended_info: Any = {}
-    
 
 class IemPayload(NamedTuple):
     severity: str
@@ -68,7 +67,7 @@ class IemAppService(ApplicationService):
     def init(self, source: str = 'S', component: str = 'CSM'):
         """
         Intializing EventMessage for sending IEMs.
-        :param source : A single character that indicates type of component. 
+        :param source : A single character that indicates type of component.
                         i.e H-Hardware, S-Software, F-Firmware, O-OS
         :param component: Indicates component that generated IEM.
         :return: None
@@ -162,7 +161,7 @@ class IemMonitorService(Service, Observable):
         iem_schema = {}
         try:
             input_schema = Payload(Dict(message))
-            # Only proceed if the IEM is targeted for end user 
+            # Only proceed if the IEM is targeted for end user
             if input_schema.get('iem.contents.message.visible'):
                 converted_schema = Payload(Dict(dict()))
                 input_schema.convert(self.mapping_dict.get(const.COMMON), \
@@ -195,7 +194,7 @@ class IemMonitorService(Service, Observable):
     def _prepare_iem_info(self, iem_schema):
         """
         This method converts the IEM alert from any module to CSM specific schema.
-        Currently HW/SW input schema is different than IEM schema. So, the IEM 
+        Currently HW/SW input schema is different than IEM schema. So, the IEM
         schema needs to be mapped differently so that it complies with CSM alert schema.
         :param iem_schema: IEM input schema
         :return True/False
@@ -253,8 +252,8 @@ class IemMonitorService(Service, Observable):
     def _monitor_iem(self, callback):
         """
         The is a thread function and it will keep on polling for IEM alerts
-        every 1 second. 
-        :param callback: Callback function where IEM message will be send. 
+        every 1 second.
+        :param callback: Callback function where IEM message will be send.
         :return None
         """
         while self._thread_running:
