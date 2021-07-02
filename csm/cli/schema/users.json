@@ -49,6 +49,25 @@
           "params": true
         },
         {
+          "flag": "-u",
+          "type": "str",
+          "dest": "username",
+          "help": "User name pattern to filter with",
+          "params": true
+        },
+        {
+          "flag": "-r",
+          "type": "str",
+          "dest": "role",
+          "help": "Role to filter with",
+          "choices": [
+            "monitor",
+            "manage",
+            "admin"
+          ],
+          "params": true
+        },
+        {
           "flag": "-f",
           "dest": "format",
           "help": "Format of Output",
