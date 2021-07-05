@@ -203,9 +203,7 @@ class AuditService(ApplicationService):
         else:
             query_limit = QueryLimits(effective_limit, 0)
         sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
-        audit_logs = await self.audit_mngr.retrieve_by_range(component,
-                                                   query_limit, time_range, sort_options, 
-                                                   filter)
+        audit_logs = await self.audit_mngr.retrieve_by_range(component, query_limit, time_range, sort_options, filter)
         audit_logs_count = await self.audit_mngr.count_by_range(component, time_range, filter)
         return {
             "total_records": min(audit_logs_count, max_result_window),
