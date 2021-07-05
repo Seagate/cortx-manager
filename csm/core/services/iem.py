@@ -133,7 +133,7 @@ class IemMonitorService(Service, Observable):
                 self._iem_monitor_thread.start()
 
         except Exception as e:
-            Log.warn(f"Error in starting alert monitor thread: {e}")
+            Log.warn(f"Error in starting IEM monitor thread: {e}")
 
     def stop(self):
         """
