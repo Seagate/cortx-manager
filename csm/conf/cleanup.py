@@ -57,5 +57,5 @@ class Cleanup(Setup):
             Setup._run_cmd(f"rm -rf {dir_path}")
 
     def web_env_file_cleanup(self):
-       Log.info(f"Replacing {const.CSM_WEB_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}")
-       Setup._run_cmd(f"cp -f {const.CSM_WEB_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")

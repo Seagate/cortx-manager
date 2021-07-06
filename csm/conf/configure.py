@@ -192,6 +192,7 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
 
     def _configure_csm_web_keys(self):
+        Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
         Log.info("Configuring CSM Web keys")
         virtual_host = self._fetch_management_ip()
         Log.info(f"Set virtual_host:{virtual_host} to csm config")
