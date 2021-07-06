@@ -2,27 +2,27 @@
     "setup_types": [
         {
             "name":"virtual",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         },
         {
             "name":"VM",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         },
         {
             "name":"other",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         },
         {
             "name":"5u84",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         },
         {
             "name":"PODS",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         },
         {
             "name":"JBOD",
-            "unsupported_features": ["lyve_pilot"]
+            "unsupported_features": ["lyve_pilot", "cluster_management", "sw_update"]
         }
     ]
 }
