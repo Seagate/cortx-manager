@@ -35,7 +35,7 @@ class Filter():
         query_fields, operations = Filter.parse_query(list(query[0][1:-1].split(" ")))
         db_conditions = []
         nested_operations = 0
-        filter = []
+        filter_obj = []
         for key, value in query_fields.items():
             if not (db_conditions):
                 try:
@@ -47,15 +47,15 @@ class Filter():
                 db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
             except AttributeError as err:
                 raise Exception(f"Attribute {key} not found in a model: {err}")
-            filter.clear()
+            filter_obj.clear()
             if operations[nested_operations] == "AND":
-                filter.append(And(*db_conditions))
+                filter_obj.append(And(*db_conditions))
             else:
-                filter.append(Or(*db_conditions))
+                filter_obj.append(Or(*db_conditions))
             nested_operations += 1
             db_conditions.clear()
-            db_conditions = [*filter]
+            db_conditions = [*filter_obj]
         if len(query_fields) == 1:
             return db_conditions[0]
         else:
-            return filter[0]
+            return filter_obj[0]

@@ -59,12 +59,12 @@ class AuditLogManager():
     def __init__(self, storage: DataBaseProvider):
         self.db = storage
 
-    def _prepare_filters(self, component, create_time_range: DateTimeRange, filter: Optional[str] = None):
+    def _prepare_filters(self, component, create_time_range: DateTimeRange, filter_query: Optional[str] = None):
         range_condition = []
         range_condition = self._prepare_time_range(COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
         param_filter = []
-        if filter:
-            param_filter = Filter._prepare_filters(filter, COMPONENT_MODEL_MAPPING[component]["model"])
+        if filter_query:
+            param_filter = Filter._prepare_filters(filter_query, COMPONENT_MODEL_MAPPING[component]["model"])
             range_condition.append(param_filter)
         query_filter = And(*range_condition)
         return query_filter
@@ -78,8 +78,8 @@ class AuditLogManager():
         return db_conditions
 
     async def retrieve_by_range(self, component, limits,
-                       time_range: DateTimeRange, sort: Optional[SortBy] = None, filter: Optional[str] = None):
-        query_filter = self._prepare_filters(component, time_range, filter)
+                       time_range: DateTimeRange, sort: Optional[SortBy] = None, filter_query: Optional[str] = None):
+        query_filter = self._prepare_filters(component, time_range, filter_query)
         query = Query().filter_by(query_filter)
         if limits and limits.offset:
             query = query.offset(limits.offset)
@@ -94,8 +94,8 @@ class AuditLogManager():
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
 
     async def count_by_range(self, component,
-                       time_range: DateTimeRange, filter: Optional[str] = None) -> int:
-        query_filter = self._prepare_filters(component, time_range, filter)
+                       time_range: DateTimeRange, filter_query: Optional[str] = None) -> int:
+        query_filter = self._prepare_filters(component, time_range, filter_query)
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
 
 class AuditService(ApplicationService):
@@ -187,7 +187,7 @@ class AuditService(ApplicationService):
         offset: Optional[int] = None,
         sort_by: Optional[str] = None,
         direction: Optional[str] = None,
-        filter: Optional[str] = None
+        filter_query: Optional[str] = None
     ) -> Dict:
         """ fetch all records for given range from audit log """
         Log.logger.info(f"auditlogs for {component} from {start_time} to {end_time}")
@@ -203,8 +203,8 @@ class AuditService(ApplicationService):
         else:
             query_limit = QueryLimits(effective_limit, 0)
         sort_options = SortBy(sort_by, SortOrder.ASC if direction == "asc" else SortOrder.DESC)
-        audit_logs = await self.audit_mngr.retrieve_by_range(component, query_limit, time_range, sort_options, filter)
-        audit_logs_count = await self.audit_mngr.count_by_range(component, time_range, filter)
+        audit_logs = await self.audit_mngr.retrieve_by_range(component, query_limit, time_range, sort_options, filter_query)
+        audit_logs_count = await self.audit_mngr.count_by_range(component, time_range, filter_query)
         return {
             "total_records": min(audit_logs_count, max_result_window),
             "logs": [log.to_primitive() for log in audit_logs]
