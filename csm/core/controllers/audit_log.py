@@ -93,7 +93,7 @@ class AuditLogShowView(CsmView):
         direction = request_data.get('direction')
         filter_query = request_data.get('filter_query')
         return await self._service.get_by_range(
-            component, start_date, end_date, 
+            component, start_date, end_date,
             limit=limit, offset=offset, sort_by=sort_by, direction=direction, filter_query=filter_query)
 
 @CsmView._app_routes.view("/api/v1/auditlogs/download/{component}")
