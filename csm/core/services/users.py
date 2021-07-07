@@ -93,7 +93,7 @@ class UserManager:
             query = query.order_by(getattr(User, sort.field), sort.order)
 
         if role:
-            query_filters.append(Compare(User.role, '=', role))
+            query_filters.append(Compare(User.role, 'like', role))
 
         if username:
             query_filters.append(Compare(User.user_id, 'like', username))
