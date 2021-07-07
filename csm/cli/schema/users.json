@@ -30,6 +30,7 @@
           "choices": [
             "user_id",
             "user_type",
+            "role",
             "created_time",
             "updated_time"
           ],
@@ -44,6 +45,25 @@
           "choices": [
             "desc",
             "asc"
+          ],
+          "params": true
+        },
+        {
+          "flag": "-u",
+          "type": "str",
+          "dest": "username",
+          "help": "User name pattern to filter with",
+          "params": true
+        },
+        {
+          "flag": "-r",
+          "type": "str",
+          "dest": "role",
+          "help": "Role to filter with",
+          "choices": [
+            "monitor",
+            "manage",
+            "admin"
           ],
           "params": true
         },
@@ -78,7 +98,7 @@
           "headers": {
             "username": "Username",
             "user_type": "User Type",
-            "roles": "Roles",
+            "role": "Role",
             "created_time": "Creation time",
             "updated_time": "Last update time"
           },
@@ -105,12 +125,13 @@
           "json": true
         },
         {
-          "flag": "roles",
+          "flag": "role",
           "type": "str",
-          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. *Role Changes only allowed to User with Admin Access.",
+          "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access. Admin has ultimate access. *Role Changes only allowed to User with Admin Access.",
           "choices": [
             "monitor",
-            "manage"
+            "manage",
+            "admin"
           ],
           "json": true
         },
@@ -244,13 +265,14 @@
         },
         {
           "flag": "-r",
-          "dest": "roles",
+          "dest": "role",
           "type": "str",
           "action": "append",
           "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
           "choices": [
-          "monitor",
-          "manage"
+            "monitor",
+            "manage",
+            "admin"
           ],
           "json": true
         },
