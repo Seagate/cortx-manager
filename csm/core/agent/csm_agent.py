@@ -132,9 +132,6 @@ class CsmAgent:
         CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
-        # audit log download api
-        audit_mngr = AuditLogManager(db)
-        CsmRestApi._app["audit_log"] = AuditService(audit_mngr)
 
         try:
             # TODO: consider a more safe storage
@@ -153,6 +150,10 @@ class CsmAgent:
         CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3)
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
+
+        # audit log download api
+        audit_mngr = AuditLogManager(db)
+        CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
 
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service

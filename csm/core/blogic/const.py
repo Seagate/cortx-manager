@@ -505,6 +505,7 @@ VIRTUAL_HOST = "virtual_host"
 PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
+AUDIT_LOG_SERVICE = "audit_log"
 SYSTEM_CONFIG_SERVICE = "system_config_service"
 PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"
