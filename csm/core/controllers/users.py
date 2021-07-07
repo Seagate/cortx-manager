@@ -87,7 +87,7 @@ class CsmGetUsersSchema(Schema):
     username = fields.Str(
         default=None, missing=None,
         validate=validate.Length(min=1, max=const.CSM_USER_NAME_MAX_LEN))
-    role = fields.Str(default=None, missing=None, validate=validate.OneOf(const.CSM_USER_ROLES))
+    role = fields.Str(default=None, missing=None)
 
 
 @CsmView._app_routes.view("/api/v1/csm/users")
