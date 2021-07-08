@@ -21,7 +21,7 @@ import traceback
 import asyncio
 import errno
 import shlex
-from getpass import getpass
+from getpass import getpass, getuser
 from cmd import Cmd
 import pathlib
 import argparse
@@ -90,21 +90,22 @@ class CortxCli(Cmd):
         :return:None
         """
         try:
-            self.username = input('Username: ').strip()
-            Log.debug(f"{self.username} attempted to Login.")
-            if self.username:
-                password = getpass(prompt="Password: ")
-                self._session_token = self.loop.run_until_complete(self.rest_client.login(
-                    self.username, password))
-                if not self._session_token:
-                    self.do_exit("Server authentication check failed.")
-                self.headers = {'Authorization': f'Bearer {self._session_token}'}
-                Log.info(f"{self.username}: Logged in.")
-                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
-                if response:
-                    self._permissions.update(response)
-            else:
-                self.do_exit("Username wasn't provided.")
+            if not self.pam_login():
+                self.username = input('Username: ').strip()
+                Log.debug(f"{self.username} attempted to Login.")
+                if self.username:
+                    password = getpass(prompt="Password: ")
+                    self._session_token = self.loop.run_until_complete(self.rest_client.login(
+                        self.username, password))
+                    if not self._session_token:
+                        self.do_exit("Server authentication check failed.")
+                    self.headers = {'Authorization': f'Bearer {self._session_token}'}
+                    Log.info(f"{self.username}: Logged in.")
+                    response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
+                    if response:
+                        self._permissions.update(response)
+                else:
+                    self.do_exit("Username wasn't provided.")
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:
@@ -112,6 +113,38 @@ class CortxCli(Cmd):
         except Exception as e:
             Log.critical(f"{self.username}:{e}")
             self.do_exit(self.some_error_occured)
+
+    def pam_login(self) -> bool:
+        """
+        Function checks the existence of session token in pam output file and validate it.
+        :return:Boolean
+        """
+        if not os.path.exists(const.PAM_RESPONSE_HEADER_FILE):
+            return False
+        try:
+            with open(const.PAM_RESPONSE_HEADER_FILE, "r") as pam_response_file:
+                header_data = pam_response_file.read()
+        except IOError as e:
+            Log.error(f"IO error:{e}")
+            return False
+        header_data_list = header_data.splitlines()
+        if len(header_data_list) >= 2:
+            token = header_data_list[1].split()
+            if len(token) !=3 or token[0] != 'Authorization:' or token[1] != 'Bearer':
+                return False
+            self._session_token = token[2].strip()
+            try:
+                self.headers = {'Authorization': f'Bearer {self._session_token}'}
+                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
+                if response:
+                    self._permissions.update(response)
+            except CsmUnauthorizedError as e:
+                Log.error(f"Session Validation Error:{e}")
+                self._session_token = None
+                return False
+            self.username = getuser()
+            return True
+        return False
 
     def precmd(self, command):
         """
