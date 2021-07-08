@@ -133,9 +133,8 @@ class AuditService(ApplicationService):
         :returns: list of audit log field descriptors.
         """
 
-        def is_visible(field_id):
-            not_visible = ["remote_ip"]
-            return field_id not in not_visible
+        not_visible = {"remote_ip"}
+        sortable = {"timestamp", "response_code"}
 
         fields = [
             ["timestamp", "Timestamp", 201, {"type": "date"}],
@@ -152,12 +151,13 @@ class AuditService(ApplicationService):
 
         descriptors = []
         for f in fields:
+            field_name = f[0]
             item = {
-                "field_id": f[0],
+                "field_id": field_name,
                 "label": f[1],
                 "display_id": f[2],
-                "display": is_visible(f[0]),
-                "sortable": True,
+                "display": field_name not in not_visible,
+                "sortable": field_name in sortable,
                 "filterable": False,
             }
             try:
