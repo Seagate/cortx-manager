@@ -93,19 +93,18 @@ class CortxCli(Cmd):
             if not self.pam_login():
                 self.username = input('Username: ').strip()
                 Log.debug(f"{self.username} attempted to Login.")
-                if self.username:
-                    password = getpass(prompt="Password: ")
-                    self._session_token = self.loop.run_until_complete(self.rest_client.login(
-                        self.username, password))
-                    if not self._session_token:
-                        self.do_exit("Server authentication check failed.")
-                    self.headers = {'Authorization': f'Bearer {self._session_token}'}
-                    Log.info(f"{self.username}: Logged in.")
-                    response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
-                    if response:
-                        self._permissions.update(response)
-                else:
+                if not self.username:
                     self.do_exit("Username wasn't provided.")
+                password = getpass(prompt="Password: ")
+                self._session_token = self.loop.run_until_complete(self.rest_client.login(
+                    self.username, password))
+                if not self._session_token:
+                    self.do_exit("Server authentication check failed.")
+                self.headers = {'Authorization': f'Bearer {self._session_token}'}
+                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
+                if response:
+                    self._permissions.update(response)
+            Log.info(f"{self.username}: Logged in.")
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:
