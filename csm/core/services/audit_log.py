@@ -30,6 +30,7 @@ from csm.plugins.cortx.s3 import S3Plugin
 from csm.common.errors import CsmNotFoundError
 from typing import Optional, Dict, List, Any
 from cortx.utils.conf_store.conf_store import Conf
+from elasticsearch.exceptions import NotFoundError
 from csm.common.filter import Filter
 
 # mapping of component with model, field for
@@ -96,12 +97,22 @@ class AuditLogManager():
                 sort.field), sort.order, string_field_type="keyword")
         else:
             query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        result = []
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
     async def count_by_range(self, component,
                        time_range: DateTimeRange, filter_query: Optional[str] = None) -> int:
-        query_filter = self._prepare_filters(component, time_range, filter_query)
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        query_filter = self._prepare_filters(component, time_range)
+        result = 0
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
 
 class AuditService(ApplicationService):
