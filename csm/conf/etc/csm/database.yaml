@@ -86,6 +86,7 @@ models:
     config:
         es_db:
             collection: "s3-rsys-index"
+            create_schema: "false"
 -   import_path: "csm.core.data.models.system_config.CertificateConfig"
     database: "consul_db"
     config:

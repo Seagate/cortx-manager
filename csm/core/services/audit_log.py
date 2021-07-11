@@ -28,6 +28,7 @@ from csm.core.blogic.models.audit_log import CsmAuditLogModel, S3AuditLogModel
 from csm.common.errors import CsmNotFoundError
 from typing import Optional, Dict
 from cortx.utils.conf_store.conf_store import Conf
+from elasticsearch.exceptions import NotFoundError
 
 # mapping of component with model, field for
 # range queires and log format
@@ -83,16 +84,25 @@ class AuditLogManager():
             query = query.limit(limits.limit)
         #TO DO: A better solution for sorting in case of show logs and download logs
         if sort:
-            query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], \
-                sort.field), sort.order, string_field_type="keyword")
+            query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
         else:
             query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        result = []
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
     async def count_by_range(self, component,
                        time_range: DateTimeRange) -> int:
         query_filter = self._prepare_filters(component, time_range)
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        result = 0
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
 class AuditService(ApplicationService):
     def __init__(self, audit_mngr: AuditLogManager):
