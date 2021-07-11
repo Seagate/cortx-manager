@@ -92,8 +92,8 @@ class AuditLogManager():
             query = query.limit(limits.limit)
         # TODO: A better solution for sorting in case of show logs and download logs
         if sort:
-            query = query.order_by(
-                getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
+            query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], \
+                sort.field), sort.order, string_field_type="keyword")
         else:
             query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
         return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
