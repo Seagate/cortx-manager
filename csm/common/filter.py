@@ -63,4 +63,3 @@ class Filter():
                 return filter_obj[0]
             except (IndexError):
                 raise Exception("Empty query_parameters passed")
-                
