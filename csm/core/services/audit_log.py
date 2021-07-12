@@ -106,7 +106,7 @@ class AuditLogManager():
 
     async def count_by_range(self, component,
                        time_range: DateTimeRange, filter_query: Optional[str] = None) -> int:
-        query_filter = self._prepare_filters(component, time_range)
+        query_filter = self._prepare_filters(component, time_range, filter_query)
         result = 0
         try:
             result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
