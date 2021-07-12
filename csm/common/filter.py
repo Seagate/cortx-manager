@@ -18,8 +18,15 @@ from csm.core.blogic.models import CsmModel
 import urllib.parse
 
 class Filter():
+    """Query to filter_object builder"""
     @staticmethod
     def parse_query(fields_of_filter):
+        """
+        Segregate list of key_val pairs and operands.
+        :param fields_of_filter: list of key_val pairs and operands like ['field1=val1', 'operand1', 'field2=val2']
+        :returns: dict(key_val_fields), dictionary of field(key) and value pairs
+        :returns: operations, Ordered list of operations to be performed on give field and value pairs  
+        """
         operations = []
         key_val_fields = []
         for key in fields_of_filter:
@@ -32,6 +39,12 @@ class Filter():
 
     @staticmethod
     def _prepare_filters(query_rcvd, model):
+        """
+        Prepare filter object from plain query like "{field1=val1 OR field2=val2 AND field3=val3}"
+        :param query_rcvd: nested query, here query_rcvd could be encoded "{field1%3Dval1 OR field2%3Dval2 AND field3%3Dval3}"
+        :param Type[BaseModel] model: model for constructing data mapping for index
+        :returns: IFilter filter_obj 
+        """
         query = [urllib.parse.unquote(query_rcvd)]
         query_fields, operations = Filter.parse_query(list(query[0][1:-1].split(" ")))
         db_conditions = []
