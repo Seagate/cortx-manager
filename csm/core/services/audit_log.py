@@ -30,6 +30,7 @@ from csm.plugins.cortx.s3 import S3Plugin
 from csm.common.errors import CsmNotFoundError
 from typing import Optional, Dict, List, Any
 from cortx.utils.conf_store.conf_store import Conf
+from elasticsearch.exceptions import NotFoundError
 from csm.common.filter import Filter
 
 # mapping of component with model, field for
@@ -92,16 +93,26 @@ class AuditLogManager():
             query = query.limit(limits.limit)
         # TODO: A better solution for sorting in case of show logs and download logs
         if sort:
-            query = query.order_by(
-                getattr(COMPONENT_MODEL_MAPPING[component]["model"], sort.field), sort.order)
+            query = query.order_by(getattr(COMPONENT_MODEL_MAPPING[component]["model"], \
+                sort.field), sort.order, string_field_type="keyword")
         else:
             query = query.order_by(COMPONENT_MODEL_MAPPING[component]["field"], "desc")
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        result = []
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).get(query)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
     async def count_by_range(self, component,
                        time_range: DateTimeRange, filter_query: Optional[str] = None) -> int:
         query_filter = self._prepare_filters(component, time_range, filter_query)
-        return await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        result = 0
+        try:
+            result = await self.db(COMPONENT_MODEL_MAPPING[component]["model"]).count(query_filter)
+        except NotFoundError as nfe:
+            Log.warn(f"No index found for auditlog: {nfe}")
+        return result
 
 
 class AuditService(ApplicationService):
@@ -133,9 +144,8 @@ class AuditService(ApplicationService):
         :returns: list of audit log field descriptors.
         """
 
-        def is_visible(field_id):
-            not_visible = ["remote_ip"]
-            return field_id not in not_visible
+        not_visible = {"remote_ip"}
+        sortable = {"timestamp", "response_code"}
 
         fields = [
             ["timestamp", "Timestamp", 201, {"type": "date"}],
@@ -152,12 +162,13 @@ class AuditService(ApplicationService):
 
         descriptors = []
         for f in fields:
+            field_name = f[0]
             item = {
-                "field_id": f[0],
+                "field_id": field_name,
                 "label": f[1],
                 "display_id": f[2],
-                "display": is_visible(f[0]),
-                "sortable": True,
+                "display": field_name not in not_visible,
+                "sortable": field_name in sortable,
                 "filterable": False,
             }
             try:
