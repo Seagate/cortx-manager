@@ -15,6 +15,7 @@
 
 from cortx.utils.data.access.filters import Compare, And, Or
 from csm.core.blogic.models import CsmModel
+import urllib.parse
 
 class Filter():
     @staticmethod
@@ -31,7 +32,7 @@ class Filter():
 
     @staticmethod
     def _prepare_filters(query_rcvd, model):
-        query = [query_rcvd.replace("%20", " ")]
+        query = [urllib.parse.unquote(query_rcvd)]
         query_fields, operations = Filter.parse_query(list(query[0][1:-1].split(" ")))
         db_conditions = []
         nested_operations = 0
@@ -58,4 +59,8 @@ class Filter():
         if len(query_fields) == 1:
             return db_conditions[0]
         else:
-            return filter_obj[0]
+            try:
+                return filter_obj[0]
+            except (IndexError):
+                raise Exception("Empty query_parameters passed")
+                
