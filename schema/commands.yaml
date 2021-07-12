@@ -41,3 +41,5 @@ COMMANDS:
     - '<CORTX_PATH>/cli/conf/elasticsearch_setup.yaml'
   ha:
     - '/opt/seagate/cortx/ha/conf/setup.yaml'
+  utils:
+    - '<CORTX_PATH>/utils/conf/setup.yaml'
