@@ -91,7 +91,8 @@ class AlertSchemaValidator(Schema):
     disk_slot = fields.Integer(required=False, allow_none = True, \
             description="Slot number of the disk.")
     durable_id = fields.String(required=False, description="Durable Id")
-    host_id = fields.String(required=True, description="Host id of the resource")
+    #Set it to true once IEM schema is finalized
+    host_id = fields.String(required=False, description="Host id of the resource")
     source = fields.String(required=False, description="Source for IEM")
     component = fields.String(required=False, description="Component for IEM")
     module = fields.String(required=False, description="Module for IEM")

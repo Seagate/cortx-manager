@@ -317,7 +317,8 @@ class AlertsAppService(ApplicationService):
             We will mark IEM alert as resolved as soon as it is acknowledged, as
             there will be no state change occurs for IEM alerts.
             """
-            if alert.module_type == const.IEM:
+            if alert.module_type == const.IEM or \
+                alert.module_name.find(const.NODE_IEM) > -1:
                 alert.resolved = AlertModel.resolved.to_native(True)
 
         await self.repo.update(alert)
@@ -408,7 +409,8 @@ class AlertsAppService(ApplicationService):
             We will mark IEM alert as resolved as soon as it is acknowledged, as
             there will be no state change occurs for IEM alerts.
             """
-            if alert.module_type == const.IEM:
+            if alert.module_type == const.IEM or \
+                alert.module_name.find(const.NODE_IEM) > -1:
                 alert.resolved = AlertModel.resolved.to_native(True)
             await self.repo.update(alert)
             alerts.append(self.repo.set_hostname_in_alert(alert.to_primitive()))
@@ -624,7 +626,7 @@ class AlertMonitorService(Service, Observable):
     web server.
     """
 
-    def __init__(self, repo: AlertRepository, plugin, http_notifications):
+    def __init__(self, repo: AlertRepository, plugin, http_notifications, iem_service):
         """
         Initializes the Alert Plugin
         """
@@ -636,6 +638,7 @@ class AlertMonitorService(Service, Observable):
         self.repo = repo
         self._http_notfications = http_notifications
         self._es_retry = Conf.get(const.CSM_GLOBAL_INDEX, const.ES_RETRY, 5)
+        iem_service.init(self._consume)
         super().__init__()
 
     def _monitor(self):
@@ -849,7 +852,8 @@ class AlertMonitorService(Service, Observable):
         update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
-        if alert.get(const.ALERT_MODULE_TYPE, "") == const.IEM:
+        if alert.get(const.ALERT_MODULE_TYPE, "") == const.IEM or \
+            alert.get(const.ALERT_MODULE_NAME).find(const.NODE_IEM) > -1:
             update_params[const.ALERT_CREATED_TIME] = \
                 alert.get(const.ALERT_CREATED_TIME, "")
             update_params[const.DESCRIPTION] = alert.get(const.DESCRIPTION, "")

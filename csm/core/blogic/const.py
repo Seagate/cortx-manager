@@ -315,6 +315,7 @@ HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
+IEM_MAPPING_TABLE = '{}/schema/iem_mapping.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
 CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
@@ -773,3 +774,4 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
+NODE_IEM = 'node:iem'

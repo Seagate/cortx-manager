@@ -38,7 +38,7 @@ from csm.core.services.file_transfer import FileRef
 from csm.plugins.cortx.provisioner import ProvisionerPlugin
 from csm.core.data.models.upgrade import ProvisionerCommandStatus
 from csm.core.blogic import const
-from csm.core.services.iem import IemAppService, IemPayload
+from csm.core.services.iem import IemAppService, IemPayload, Messageblob
 
 
 CERT_BASE_TMP_DIR = "/tmp/.new"
@@ -66,7 +66,8 @@ class SecurityService(ApplicationService):
         ProvisionerCommandStatus.Unknown: CertificateInstallationStatus.UNKNOWN
     }
 
-    def __init__(self, database: DataBaseProvider, provisioner: ProvisionerPlugin):
+    def __init__(self, database: DataBaseProvider, provisioner: ProvisionerPlugin, \
+        iem_service: IemAppService):
         super().__init__()
         self._fs_utils = FSUtils()
         self._cert_dir_base_name = Template(self.CERT_DIR_BASE_NAME_TEMPLATE)
@@ -76,7 +77,7 @@ class SecurityService(ApplicationService):
         self._last_configuration = None
         self._provisioner_id = None
         self._executor = ThreadPoolExecutor(max_workers=1)
-        self._iem_service = IemAppService()
+        self._iem_service = iem_service
 
     def _provisioner_to_installation_status(self, prv_status: ProvisionerCommandStatus):
         """ Convert provisioner job status into corresponding certificate installation status
@@ -343,9 +344,10 @@ class SecurityService(ApplicationService):
                     self._iem_service.init()
                     severity = self._iem_service.severity_levels['WARN']
                     module = self._iem_service.modules['SSL_EXPIRY']
+                    msg_blob = Messageblob(visible=True, description=message, destination='All', type='bad')
                     # event_id is not finalized yet. Using a dummy value.
                     payload = IemPayload(severity=severity, module=module, \
-                        event_id= 100, message_blob=message)
+                        event_id= 100, message_blob=msg_blob)
                     self._iem_service.send(payload)
                 else:
                     Log.error("Failed to send SSL expiry IEM. IEM service not initialized.")

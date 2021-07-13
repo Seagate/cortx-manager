@@ -77,9 +77,16 @@ class CsmAgent:
         alerts_service = AlertsAppService(alerts_repository)
         CsmRestApi.init(alerts_service)
 
+        # IEM configuration
+        iem_service = IemAppService()
+        CsmRestApi.init(iem_service)
+
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
+
+        CsmAgent.iem_monitor = IemMonitorService()
+        CsmRestApi._app["iem_service"] = iem_service
 
         #Heath configuration
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
@@ -90,7 +97,7 @@ class CsmAgent:
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), http_notifications)
+                pm.AlertPlugin(), http_notifications, CsmAgent.iem_monitor)
         email_queue = EmailSenderQueue()
         email_queue.start_worker_sync()
 
@@ -157,7 +164,7 @@ class CsmAgent:
         user_service = CsmUserService(provisioner, user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
-        security_service = SecurityService(db, provisioner)
+        security_service = SecurityService(db, provisioner, iem_service)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
@@ -222,9 +229,11 @@ class CsmAgent:
         if not Options.debug:
             CsmAgent._daemonize()
         CsmAgent.alert_monitor.start()
+        CsmAgent.iem_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
         CsmAgent.alert_monitor.stop()
+        CsmAgent.iem_monitor.stop()
         Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")
 
@@ -243,6 +252,7 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
+    from csm.core.services.iem import IemAppService, IemMonitorService
     from csm.core.services.health import HealthAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService

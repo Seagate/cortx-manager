@@ -1,0 +1,18 @@
+{
+    "common":{
+        "iem.contents.message.description": "description",
+        "iem.contents.message.recommendation": "health_recommendation",
+        "iem.info.severity": "severity",
+        "iem.contents.message.type": "state",
+        "iem.contents.message.extended_info": "extended_info.specific_info",
+        "iem.source": "extended_info.info",
+        "iem.info.event_time": "created_time",
+        "iem.source.host_id": "host_id",
+        "iem.source.site_id": "sensor_info.site_id",
+        "iem.source.rack_id": "sensor_info.rack_id",
+        "iem.source.node_id": "sensor_info.node_id",
+        "iem.source.component": "sensor_info.component",
+        "iem.source.module": "sensor_info.module",
+        "iem.info.type": "source"
+    }
+}
