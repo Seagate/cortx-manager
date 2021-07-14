@@ -100,11 +100,15 @@ class CortxCli(Cmd):
                     self.username, password))
                 if not self._session_token:
                     self.do_exit("Server authentication check failed.")
-                self.headers = {'Authorization': f'Bearer {self._session_token}'}
-                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
-                if response:
-                    self._permissions.update(response)
+            self.headers = {'Authorization': f'Bearer {self._session_token}'}
+            response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
+            if response:
+                self._permissions.update(response)
             Log.info(f"{self.username}: Logged in.")
+        except CsmUnauthorizedError as e:
+                Log.error(f"{self.username}:{e}")
+                self._session_token = None
+                self.do_exit(self.session_expired_error)
         except CsmError as e:
             Log.error(f"{self.username}:{e}")
         except KeyboardInterrupt:
@@ -118,11 +122,14 @@ class CortxCli(Cmd):
         Function checks the existence of session token in pam output file and validate it.
         :return:Boolean
         """
-        if not os.path.exists(const.PAM_RESPONSE_HEADER_FILE):
+        user =  getuser()
+        header_file = const.PAM_RESPONSE_HEADER_FILE + user
+        if not os.path.exists(header_file):
             return False
         try:
-            with open(const.PAM_RESPONSE_HEADER_FILE, "r") as pam_response_file:
+            with open(header_file, "r") as pam_response_file:
                 header_data = pam_response_file.read()
+            os.remove(header_file)
         except IOError as e:
             Log.error(f"IO error:{e}")
             return False
@@ -132,16 +139,7 @@ class CortxCli(Cmd):
             if len(token) !=3 or token[0] != 'Authorization:' or token[1] != 'Bearer':
                 return False
             self._session_token = token[2].strip()
-            try:
-                self.headers = {'Authorization': f'Bearer {self._session_token}'}
-                response = self.loop.run_until_complete(self.rest_client.permissions(self.headers))
-                if response:
-                    self._permissions.update(response)
-            except CsmUnauthorizedError as e:
-                Log.error(f"Session Validation Error:{e}")
-                self._session_token = None
-                return False
-            self.username = getuser()
+            self.username = user
             return True
         return False
 

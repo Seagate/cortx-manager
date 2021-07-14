@@ -775,4 +775,4 @@ DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
 
 #PAM_CORTX Consts
-PAM_RESPONSE_HEADER_FILE = '/etc/csm/response_headers.out'
+PAM_RESPONSE_HEADER_FILE = '/tmp/pam/response_headers_'
