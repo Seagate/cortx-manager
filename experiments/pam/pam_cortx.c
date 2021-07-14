@@ -91,16 +91,16 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 		return -1;
 	}
 
-    char *pUsername_copy = malloc(strlen(pUsername));
+    char *pUsername_copy = malloc(strlen(pUsername) + 1);
 	strcpy(pUsername_copy,pUsername);
 
 	char *header_file_prefix = "/tmp/pam/response_headers_";
-	char *header_file_name = malloc(strlen(pUsername_copy)+strlen(header_file_prefix));
+	char *header_file_name = malloc(strlen(pUsername_copy) + strlen(header_file_prefix) + 1);
 	strcpy(header_file_name,header_file_prefix);
 	strcat(header_file_name,pUsername_copy);
 
 	char *body_file_prefix = "/tmp/pam/response_body_";
-	char *body_file_name = malloc(strlen(pUsername_copy)+strlen(body_file_prefix));
+	char *body_file_name = malloc(strlen(pUsername_copy) + strlen(body_file_prefix) + 1);
 	strcpy(body_file_name,body_file_prefix);
 	strcat(body_file_name,pUsername_copy);
 
