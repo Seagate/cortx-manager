@@ -10,6 +10,11 @@
           "user": "sgiamadmin",
           "secret": "TMPL_SGIAM_SECRET_KEY"
         }
+      },
+      "cluster_credential":{
+        "admin": "cortxadmin",
+        "password": "Cortxadmin@123",
+        "email":"cortxadmin@seagate.com"
       }
     }
   },

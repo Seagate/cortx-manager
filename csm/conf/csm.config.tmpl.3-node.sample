@@ -10,6 +10,11 @@
           "user": "sgiamadmin",
           "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
         }
+      },
+      "cluster_credential":{
+        "admin": "cortxadmin",
+        "password": "Cortxadmin@123",
+        "email":"cortxadmin@seagate.com"
       }
     }
   },
