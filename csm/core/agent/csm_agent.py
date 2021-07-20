@@ -154,7 +154,7 @@ class CsmAgent:
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
 
-        user_service = CsmUserService(provisioner, user_manager)
+        user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)

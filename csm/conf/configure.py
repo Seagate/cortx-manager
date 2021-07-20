@@ -31,6 +31,7 @@ from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from csm.core.data.models.users import User
 from csm.core.services.users import UserManager
 from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 
 
 class Configure(Setup):
@@ -279,8 +280,10 @@ class Configure(Setup):
         cluster_admin_email = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>email",
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
+        #TODO Username and Password Validation can change
+        UserNameValidator()(cluster_admin_user)
+        PasswordValidator()(cluster_admin_pass)
 
-        # TODO Username Password Validation to be added. 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
