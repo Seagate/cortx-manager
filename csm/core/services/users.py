@@ -243,11 +243,7 @@ class CsmUserService(ApplicationService):
         creator = await self.user_mgr.get(creator_id) if creator_id else None
         # Perform pre-creation checks for anonymous user
         if creator is None:
-            num_admins = await self.user_mgr.count_admins()
-            if role == const.CSM_SUPER_USER_ROLE and num_admins == 0:
-                Log.info("Anonymous user is creating the first CORTX admin")
-            else:
-                raise CsmPermissionDenied("Please, log in to create a user")
+            raise CsmPermissionDenied("Permission denied.")
         # ... and for logged in user
         else:
             if role == const.CSM_SUPER_USER_ROLE and creator.role != const.CSM_SUPER_USER_ROLE:
