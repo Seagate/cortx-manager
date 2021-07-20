@@ -123,6 +123,8 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         backup_dirname = \
             f"{const.CSM_ETC_DIR}_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp"
         Setup._run_cmd(f"mv {const.CSM_ETC_DIR} {backup_dirname}")
+        if os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH):
+            Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {backup_dirname}")
         return backup_dirname
 
     @staticmethod
@@ -132,6 +134,16 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         Conf.load(backup_index, backup_url)
         Conf.copy(backup_index, const.CSM_GLOBAL_INDEX, Conf.get_keys(backup_index))
         Conf.save(const.CSM_GLOBAL_INDEX)
+
+        # Restore csm/web/web-dist/.env after upgrade.
+        # Respecting userchanges as well as upgrade changes.
+        if os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH) and \
+                os.path.exists(f"{backup_dirname}/.env"):
+            Conf.load("env_backup_index", f"properties://{backup_dirname}/.env")
+            Conf.load("env_upgrade_index", f"properties://{const.CSM_WEB_DIST_ENV_FILE_PATH}")
+            Conf.merge("env_backup_index", "env_upgrade_index")
+            Conf.copy("env_backup_index", "env_upgrade_index")
+            Conf.save("env_upgrade_index")
 
     def create(self):
         """
