@@ -25,7 +25,7 @@ class Filter():
         Segregate list of key_val pairs and operands.
         :param fields_of_filter: list of key_val pairs and operands like ['field1=val1', 'operand1', 'field2=val2']
         :returns: dict(key_val_fields), dictionary of field(key) and value pairs
-        :returns: operations, Ordered list of operations to be performed on give field and value pairs  
+        :returns: operations, Ordered list of operations to be performed on give field and value pairs
         """
         operations = []
         key_val_fields = []
@@ -38,15 +38,36 @@ class Filter():
         return dict(key_val_fields), operations
 
     @staticmethod
+    def validate_query_fields(query_fields, model):
+        """
+        Validate and provide default values for those keys whose values are invalid for given field.
+        :param query_fields: collection of key value pairs received as input
+        :param Type[BaseModel] model: model for constructing data mapping for index
+        :returns: Updated key_value pairs
+        """
+        default_val = model()
+        default_val_dict = default_val.to_native()
+        updated_key_val = {}
+        for key, value in query_fields.items():
+            field = eval(f"model.{key}")
+            try:
+                valid_operand = field.to_native(value)
+            except:
+                updated_key_val[key] = default_val_dict[key]
+        return updated_key_val
+
+    @staticmethod
     def _prepare_filters(query_rcvd, model):
         """
         Prepare filter object from plain query like "{field1=val1 OR field2=val2 AND field3=val3}"
         :param query_rcvd: nested query, here query_rcvd could be encoded "{field1%3Dval1 OR field2%3Dval2 AND field3%3Dval3}"
         :param Type[BaseModel] model: model for constructing data mapping for index
-        :returns: IFilter filter_obj 
+        :returns: IFilter filter_obj
         """
         query = [urllib.parse.unquote(query_rcvd)]
         query_fields, operations = Filter.parse_query(list(query[0][1:-1].split(" ")))
+        updated_fields = Filter.validate_query_fields(query_fields, model)
+        query_fields.update(updated_fields)
         db_conditions = []
         nested_operations = 0
         filter_obj = []
