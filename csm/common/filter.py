@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.data.access.filters import Compare, And, Or
+from schematics.exceptions import ConversionError
 from csm.core.blogic.models import CsmModel
 import urllib.parse
 
@@ -52,7 +53,7 @@ class Filter():
             field = eval(f"model.{key}")
             try:
                 valid_operand = field.to_native(value)
-            except:
+            except ConversionError as e:
                 updated_key_val[key] = default_val_dict[key]
         return updated_key_val
 
