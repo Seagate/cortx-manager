@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.services.users import UserManager
 import os
 import time
 from cortx.utils.product_features import unsupported_features
@@ -30,6 +29,8 @@ from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from csm.core.data.models.users import User
+from csm.core.services.users import UserManager
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
 
 
 class Configure(Setup):
@@ -267,8 +268,8 @@ class Configure(Setup):
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     async def _create_cluster_admin(self):
-        from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        #TODO confstore keys can be changed.
+        # TODO confstore keys can be changed.
+        Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>admin",
                                     const.DEFAULT_CLUSTER_ADMIN_USER)
@@ -279,25 +280,26 @@ class Configure(Setup):
                                     "cortx>software>cluster_credential>email",
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
 
+        # TODO Username Password Validation to be added. 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
         db = DataBaseProvider(conf)
-        user_manager = UserManager(db)
+        usr_mngr = UserManager(db)
         if (not self.force_action) and \
-            ((await user_manager.count_admins() > 0) or \
-            (await user_manager.get(cluster_admin_user))):
+            ((await usr_mngr.count_admins() > 0) or \
+            (await usr_mngr.get(cluster_admin_user))):
             Log.console("WARNING: Cortx cluster admin already created.\n"
-                        "Please use '-f' option to create cluster admin forcefully.")
+                        "Please use '-f' option to create admin account forcefully.")
             return None
 
-        if self.force_action and await user_manager.get(cluster_admin_user):
+        if self.force_action and await usr_mngr.get(cluster_admin_user):
             Log.info(f"Removing current user: {cluster_admin_user}")
-            await user_manager.delete(cluster_admin_user)
+            await usr_mngr.delete(cluster_admin_user)
 
         Log.info(f"Creating cluster admin: {cluster_admin_user}")
-        user = User.instantiate_csm_user(cluster_admin_user,
-                                            cluster_admin_pass,
+        user = User.instantiate_csm_user(user_id=cluster_admin_user,
+                                            password=cluster_admin_pass,
                                             role=const.CSM_SUPER_USER_ROLE,
+                                            email=cluster_admin_email,
                                             alert_notification=True)
-
-        user.update({'email':cluster_admin_email})
-        await user_manager.create(user)
+        Log.debug(f"Creating user: \n{user.__dict__}")
+        await usr_mngr.create(user)
