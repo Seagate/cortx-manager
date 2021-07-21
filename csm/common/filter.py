@@ -16,21 +16,22 @@
 from cortx.utils.data.access.filters import Compare, And, Or
 from schematics.exceptions import ConversionError
 from csm.core.blogic.models import CsmModel
+from csm.common.errors import InvalidRequest
 import urllib.parse
 
-class Filter():
+class Filter:
     """Query to filter_object builder"""
-    @staticmethod
-    def parse_query(fields_of_filter):
+
+    def _parse_query(fields):
         """
         Segregate list of key_val pairs and operands.
-        :param fields_of_filter: list of key_val pairs and operands like ['field1=val1', 'operand1', 'field2=val2']
+        :param fields: list of key_val pairs and operands like ['field1=val1', 'operand1', 'field2=val2']
         :returns: dict(key_val_fields), dictionary of field(key) and value pairs
         :returns: operations, Ordered list of operations to be performed on give field and value pairs
         """
         operations = []
         key_val_fields = []
-        for key in fields_of_filter:
+        for key in fields:
             if key:
                 if key == "OR" or key == "AND":
                     operations.append(key)
@@ -38,63 +39,52 @@ class Filter():
                     key_val_fields.append(map(str.strip, key.split('=', 1)))
         return dict(key_val_fields), operations
 
-    @staticmethod
-    def validate_query_fields(query_fields, model):
+    def _validate_query_fields(fields, model):
         """
         Validate and provide default values for those keys whose values are invalid for given field.
-        :param query_fields: collection of key value pairs received as input
+        :param fields: collection of key value pairs received as input
         :param Type[BaseModel] model: model for constructing data mapping for index
         :returns: Updated key_value pairs
         """
-        default_val = model()
-        default_val_dict = default_val.to_native()
+        default_val_dict = model().to_native()
         updated_key_val = {}
-        for key, value in query_fields.items():
-            field = eval(f"model.{key}")
+        for key, value in fields.items():
             try:
+                field = eval(f"model.{key}")
                 valid_operand = field.to_native(value)
+            except AttributeError as err:
+                raise InvalidRequest(f"{key} not found: {err}")
             except ConversionError as e:
                 updated_key_val[key] = default_val_dict[key]
         return updated_key_val
 
     @staticmethod
-    def _prepare_filters(query_rcvd, model):
+    def prepare_filters(query, model):
         """
         Prepare filter object from plain query like "{field1=val1 OR field2=val2 AND field3=val3}"
-        :param query_rcvd: nested query, here query_rcvd could be encoded "{field1%3Dval1 OR field2%3Dval2 AND field3%3Dval3}"
+        :param query: nested query, here query could be encoded "{field1%3Dval1 OR field2%3Dval2 AND field3%3Dval3}"
         :param Type[BaseModel] model: model for constructing data mapping for index
         :returns: IFilter filter_obj
         """
-        query = [urllib.parse.unquote(query_rcvd)]
-        query_fields, operations = Filter.parse_query(list(query[0][1:-1].split(" ")))
-        updated_fields = Filter.validate_query_fields(query_fields, model)
-        query_fields.update(updated_fields)
+        query = [urllib.parse.unquote(query)]
+        query, operations = Filter._parse_query(list(query[0][1:-1].split(" ")))
+        updated_fields = Filter._validate_query_fields(query, model)
+        query.update(updated_fields)
         db_conditions = []
         nested_operations = 0
         filter_obj = []
-        for key, value in query_fields.items():
-            if not (db_conditions):
-                try:
-                    db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
-                except AttributeError as err:
-                    raise Exception(f"Attribute {key} not found in a model: {err}")
-                continue
-            try:
-                db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
-            except AttributeError as err:
-                raise Exception(f"Attribute {key} not found in a model: {err}")
-            filter_obj.clear()
-            if operations[nested_operations] == "AND":
-                filter_obj.append(And(*db_conditions))
-            else:
-                filter_obj.append(Or(*db_conditions))
-            nested_operations += 1
-            db_conditions.clear()
-            db_conditions = [*filter_obj]
-        if len(query_fields) == 1:
-            return db_conditions[0]
-        else:
-            try:
-                return filter_obj[0]
-            except (IndexError):
-                raise Exception("Empty query_parameters passed")
+        for key, value in query.items():
+            db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
+            if len(db_conditions) > 1:
+                filter_obj.clear()
+                if operations[nested_operations] == "AND":
+                    filter_obj.append(And(*db_conditions))
+                else:
+                    filter_obj.append(Or(*db_conditions))
+                nested_operations += 1
+                db_conditions.clear()
+                db_conditions = [*filter_obj]
+        if not db_conditions:
+            raise InvalidRequest(f"Empty query found")    
+        return db_conditions[0]
+        
