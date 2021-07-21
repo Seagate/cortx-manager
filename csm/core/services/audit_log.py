@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.common.queries import SortBy, QueryLimits, DateTimeRange
+from csm.common.payload import Json
 from csm.core.blogic import const
 from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
@@ -136,7 +137,6 @@ class AuditService(ApplicationService):
         end_date = datetime.fromtimestamp(end_date).replace(tzinfo=tz).isoformat()
         return DateTimeRange(start_date, end_date)
 
-    # TODO this is obviously a stub; derive from `CsmAuditLogModel` if possible.
     async def get_csm_schema_info(self) -> List[Dict[str, Any]]:
         """
         Get CSM audit log schema.
@@ -144,40 +144,8 @@ class AuditService(ApplicationService):
         :returns: list of audit log field descriptors.
         """
 
-        not_visible = {"remote_ip"}
-        sortable = {"timestamp", "response_code"}
-
-        fields = [
-            ["timestamp", "Timestamp", 201, {"type": "date"}],
-            ["user", "User", 301],
-            ["remote_ip", "Remote IP", 401],
-            ["forwarded_for_ip", "Forwarded for IP", 501],
-            ["method", "Method", 601],
-            ["path", "Path", 701],
-            ["user_agent", "User agent", 801],
-            ["response_code", "Response code", 901],
-            ["request_id", "Request ID", 1001],
-            ["msg", "Message", 1101],
-        ]
-
-        descriptors = []
-        for f in fields:
-            field_name = f[0]
-            item = {
-                "field_id": field_name,
-                "label": f[1],
-                "display_id": f[2],
-                "display": field_name not in not_visible,
-                "sortable": field_name in sortable,
-                "filterable": False,
-            }
-            try:
-                item["value"] = f[3]
-            except IndexError:
-                pass
-            descriptors.append(item)
-
-        return descriptors
+        schema = Json(const.CSM_AUDIT_LOG_SCHEMA).load()
+        return schema
 
     async def get_s3_schema_info(self) -> List[Dict[str, Any]]:
         """
