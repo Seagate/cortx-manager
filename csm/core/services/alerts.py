@@ -747,6 +747,7 @@ class AlertMonitorService(Service, Observable):
                 self._add_support_message(message)
             prev_alert = self._get_previous_alert(sensor_info, module_type)
             alert = AlertModel(message)
+            self.update_bad_alert_flag=False
             if not prev_alert:
                 """
                 Checking if the new alert is good or not. If it is good then
@@ -794,6 +795,7 @@ class AlertMonitorService(Service, Observable):
                 """
                 If it is a bad alert checking the state of previous alert.
                 """
+                self.update_bad_alert_flag = True
                 if self._is_bad_alert(prev_alert):
                     """ Previous alert is a bad one so updating. """
                     self._update_alert(new_alert, prev_alert)
@@ -849,6 +851,8 @@ class AlertMonitorService(Service, Observable):
         update_params[const.ALERT_SEVERITY] = alert.get(const.ALERT_SEVERITY, "")
         update_params[const.ALERT_UPDATED_TIME] = int(time.time())
         update_params[const.ALERT_HEALTH] = alert.get(const.ALERT_HEALTH, "")
+        if self.update_bad_alert_flag:
+            update_params[const.DESCRIPTION] = alert.get(const.DESCRIPTION, "")
         if alert.get(const.ALERT_MODULE_TYPE, "") == const.IEM:
             update_params[const.ALERT_CREATED_TIME] = \
                 alert.get(const.ALERT_CREATED_TIME, "")
