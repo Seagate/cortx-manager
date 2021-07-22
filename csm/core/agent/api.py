@@ -192,7 +192,6 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
-        
         CsmRestApi.process_audit_log(request, response_code=resp['error_code'], \
                 request_id = kwargs.get("request_id", int(time.time())), payload=kwargs.get("payload"))
         return resp
@@ -358,7 +357,7 @@ class CsmRestApi(CsmApi, ABC):
             request_body = dict(request.rel_url.query) if request.rel_url.query else {}
             if not request_body and request.content_length and request.content_length > 0:
                 try:
-                    request_body = await request.json()                    
+                    request_body = await request.json()
                 except Exception as e:
                     request_body = {}
                 if request_body and request_body.get("password"):
