@@ -70,7 +70,7 @@ class AuditLogManager():
         range_condition = self._prepare_time_range(COMPONENT_MODEL_MAPPING[component]["field"], create_time_range)
         param_filter = []
         if filter_query:
-            param_filter = Filter._prepare_filters(filter_query, COMPONENT_MODEL_MAPPING[component]["model"])
+            param_filter = Filter.prepare_filters(filter_query, COMPONENT_MODEL_MAPPING[component]["model"])
             range_condition.append(param_filter)
         query_filter = And(*range_condition)
         return query_filter
