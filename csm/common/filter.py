@@ -52,9 +52,15 @@ class Filter:
             try:
                 field = eval(f"model.{key}")
                 valid_operand = field.to_native(value)
+<<<<<<< HEAD
             except AttributeError:
                 raise InvalidRequest(f"key {key} not found")
             except ConversionError:
+=======
+            except AttributeError as err:
+                raise InvalidRequest(f"{key} not found: {err}")
+            except ConversionError as e:
+>>>>>>> b1d57b5342868ca7913564ae9d292609413b8961
                 updated_key_val[key] = default_val_dict[key]
         return updated_key_val
 
@@ -85,6 +91,10 @@ class Filter:
                 db_conditions.clear()
                 db_conditions = [*filter_obj]
         if not db_conditions:
+<<<<<<< HEAD
             raise InvalidRequest("Empty query found")
+=======
+            raise InvalidRequest(f"Empty query found")
+>>>>>>> b1d57b5342868ca7913564ae9d292609413b8961
         return db_conditions[0]
         
