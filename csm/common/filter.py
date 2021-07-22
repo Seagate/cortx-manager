@@ -85,6 +85,6 @@ class Filter:
                 db_conditions.clear()
                 db_conditions = [*filter_obj]
         if not db_conditions:
-            raise InvalidRequest(f"Empty query found")    
+            raise InvalidRequest(f"Empty query found")
         return db_conditions[0]
         
