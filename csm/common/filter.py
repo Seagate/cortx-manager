@@ -18,26 +18,26 @@ from schematics.exceptions import ConversionError
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import InvalidRequest
 import urllib.parse
+import re
 
 class Filter:
     """Query to filter_object builder"""
 
-    def _parse_query(fields):
+    def _parse_query(query):
         """
         Segregate list of key_val pairs and operands.
-        :param fields: list of key_val pairs and operands like ['field1=val1', 'operand1', 'field2=val2']
-        :returns: dict(key_val_fields), dictionary of field(key) and value pairs
+        :param query: string of key_val pairs and operands like: "key1=value1 AND key2=value2 OR key3=value3"
+        :returns: dict(key_value_fields), dictionary of key and value pairs
         :returns: operations, Ordered list of operations to be performed on give field and value pairs
         """
         operations = []
-        key_val_fields = []
-        for key in fields:
-            if key:
-                if key == "OR" or key == "AND":
-                    operations.append(key)
-                else:
-                    key_val_fields.append(map(str.strip, key.split('=', 1)))
-        return dict(key_val_fields), operations
+        key_value_fields = []
+        if query:
+            fields = list(re.split(' OR | AND ', query))
+            key_value_fields = [(map(str.strip, key.split('=', 1))) for key in fields]
+            fields = list(query.split(" "))
+            operations = [key for key in fields if key in ("AND", "OR")]
+        return dict(key_value_fields), operations
 
     def _validate_query_fields(fields, model):
         """
@@ -67,7 +67,7 @@ class Filter:
         :returns: IFilter filter_obj
         """
         query = [urllib.parse.unquote(query)]
-        query, operations = Filter._parse_query(list(query[0][1:-1].split(" ")))
+        query, operations = Filter._parse_query(query[0][1:-1])
         updated_fields = Filter._validate_query_fields(query, model)
         query.update(updated_fields)
         db_conditions = []
@@ -85,6 +85,6 @@ class Filter:
                 db_conditions.clear()
                 db_conditions = [*filter_obj]
         if not db_conditions:
-            raise InvalidRequest(f"Empty query found")
+            raise InvalidRequest(f"Empty query found")    
         return db_conditions[0]
         
