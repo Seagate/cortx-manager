@@ -12,9 +12,9 @@
         }
       },
       "cluster_credential":{
-        "admin": "cortxadmin",
-        "password": "Cortxadmin@123",
-        "email":"cortxadmin@seagate.com"
+        "username": "cortxadmin",
+        "secret": "Cortxadmin@123",
+        "emailid":"cortxadmin@seagate.com"
       }
     }
   },
