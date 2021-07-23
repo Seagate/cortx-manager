@@ -57,16 +57,16 @@ class User(CsmModel):
     def update(self, new_values: dict):
         if 'password' in new_values:
             self.password_hash = Passwd.hash(new_values['password'])
-            new_values.pop('password')      
+            new_values.pop('password')
         for key in new_values:
             setattr(self, key, new_values[key])
 
         self.updated_time = datetime.now(timezone.utc)
 
     @staticmethod
-    def instantiate_csm_user(user_id, 
-                                password, 
-                                email="", 
+    def instantiate_csm_user(user_id,
+                                password,
+                                email="",
                                 role=const.CSM_MONITOR_ROLE,
                                 reset_password = False,
                                 alert_notification=True):
