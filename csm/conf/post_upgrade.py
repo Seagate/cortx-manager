@@ -65,7 +65,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self.validate_3rd_party_pkgs()
         self._config_user()
         self._configure_system_auto_restart()
-        self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
         #Prepare functionality

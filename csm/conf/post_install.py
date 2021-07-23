@@ -61,8 +61,7 @@ class PostInstall(Setup):
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
         self._config_user()
-        if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
-            self._configure_system_auto_restart()
+        self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
         self._allow_access_to_pvt_ports()
@@ -133,6 +132,9 @@ class PostInstall(Setup):
         Accordingly.
         :return: None
         """
+        if not (Conf.get(const.CONSUMER_INDEX,
+                 'systemd>csm>csm_agent>restart_on_failure') == 'true'):
+            return None
         Log.info("Configuring System Auto restart")
         is_auto_restart_required = list()
         if self._setup_info:

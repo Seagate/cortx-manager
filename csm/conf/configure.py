@@ -299,6 +299,6 @@ class Configure(Setup):
             await usr_mngr.delete(cluster_admin_user)
 
         Log.info(f"Creating cluster admin: {cluster_admin_user}")
-        await usr_service.create_cluster_admin(cluster_admin_user, 
+        await usr_service.create_cluster_admin(cluster_admin_user,
                                                 cluster_admin_secret,
                                                 cluster_admin_emailid)
