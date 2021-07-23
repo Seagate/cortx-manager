@@ -219,6 +219,7 @@ class CsmUserService(ApplicationService):
             "user_type": user.user_type,
             "role": user.role,
             "email": user.email,
+            "reset_password": user.reset_password,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z',
             "alert_notification": user.alert_notification
@@ -389,5 +390,6 @@ class CsmUserService(ApplicationService):
         await self._validate_user_update(user, loggedin_user, password, current_password, role)
 
         user.update(new_values)
+        user.reset_password = True
         await self.user_mgr.save(user)
         return self._user_to_dict(user)

@@ -49,6 +49,7 @@ class User(CsmModel):
     role = StringType()
     password_hash = StringType()
     email = StringType()
+    reset_password = BooleanType()
     alert_notification = BooleanType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
@@ -56,16 +57,19 @@ class User(CsmModel):
     def update(self, new_values: dict):
         if 'password' in new_values:
             self.password_hash = Passwd.hash(new_values['password'])
-            new_values.pop('password')
+            new_values.pop('password')      
         for key in new_values:
             setattr(self, key, new_values[key])
 
         self.updated_time = datetime.now(timezone.utc)
 
     @staticmethod
-    def instantiate_csm_user(
-        user_id, password, email="", role=const.CSM_MONITOR_ROLE, alert_notification=True
-    ):
+    def instantiate_csm_user(user_id, 
+                                password, 
+                                email="", 
+                                role=const.CSM_MONITOR_ROLE,
+                                reset_password = False,
+                                alert_notification=True):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
@@ -73,6 +77,7 @@ class User(CsmModel):
         user.role = role
         user.email = email
         user.alert_notification = alert_notification
+        user.reset_password = reset_password
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
@@ -86,6 +91,7 @@ class User(CsmModel):
         user.role = role
         user.email = ""
         user.alert_notification = True
+        user.reset_password = None
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user

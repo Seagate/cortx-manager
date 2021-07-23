@@ -260,12 +260,12 @@ class LoginService:
             permissions = await self._role_manager.calc_effective_permissions(user.role)
             session = await self._session_manager.create(credentials, permissions)
             if session:
-                return session.session_id
+                return session.session_id, {"reset_password": user.reset_password}
             else:
                 Log.critical(f'Failed to create a new session')
         else:
             Log.error(f'Failed to authenticate {user_id}')
-        return None
+        return None, None
 
     async def logout(self, session_id):
         Log.debug(f'Logging out session {session_id}.')
