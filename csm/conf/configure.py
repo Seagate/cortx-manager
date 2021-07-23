@@ -272,7 +272,7 @@ class Configure(Setup):
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>user",
+                                    "cortx>software>cluster_credential>username",
                                     const.DEFAULT_CLUSTER_ADMIN_USER)
         cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>secret",
