@@ -90,7 +90,7 @@ class CortxCli(Cmd):
         :return:None
         """
         try:
-            if not self.pam_login():
+            if not self.extract_token():
                 self.username = input('Username: ').strip()
                 Log.debug(f"{self.username} attempted to Login.")
                 if not self.username:
@@ -117,7 +117,7 @@ class CortxCli(Cmd):
             Log.critical(f"{self.username}:{e}")
             self.do_exit(self.some_error_occured)
 
-    def pam_login(self) -> bool:
+    def extract_token(self) -> bool:
         """
         Function checks the existence of session token in pam output file and validate it.
         :return:Boolean
