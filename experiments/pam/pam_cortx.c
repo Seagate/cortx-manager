@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
-#include <errno.h>
 // pam stuff
 #include <security/pam_modules.h>
 #include <security/pam_ext.h>
@@ -66,52 +65,25 @@ static void curl_cleanup(struct curl_slist *headers, CURL *pCurl){
 	curl_easy_cleanup(pCurl);
 }
 
-static void memomry_cleanup(char *pUsername_copy, char *header_file_name, char *body_file_name){
-	free(pUsername_copy);
-	free(header_file_name);
-	free(body_file_name);
-}
-
 static int login(pam_handle_t *pamh, const char *pUsername, const char *pPassword){
     //Login Function for CSM/S3 users
-	pam_syslog(pamh, LOG_INFO, "Using Username %s", pUsername);
 	const char *pUrl = "http://localhost:28101/api/v2/login";
-	CURL *pCurl = curl_easy_init();
+	CURL *pCurl = NULL;
 	struct curl_slist *headers = NULL;
 	int res = -1;
-	int dir_status = -1;
-	const char *dirname = "/tmp/pam/";
-	dir_status = mkdir(dirname,0777);
-	if (dir_status == 0){
-		chmod(dirname,0777);
-	}
-	if (dir_status != 0 && errno != EEXIST){
-		pam_syslog(pamh, LOG_ERR, "Error while creating dir /tmp/pam/ \n");
-		curl_cleanup(headers, pCurl);
-		return -1;
-	}
-
-    char *pUsername_copy = malloc(strlen(pUsername) + 1);
-	strcpy(pUsername_copy,pUsername);
-
-	char *header_file_prefix = "/tmp/pam/response_headers_";
-	char *header_file_name = malloc(strlen(pUsername_copy) + strlen(header_file_prefix) + 1);
-	strcpy(header_file_name,header_file_prefix);
-	strcat(header_file_name,pUsername_copy);
-
-	char *body_file_prefix = "/tmp/pam/response_body_";
-	char *body_file_name = malloc(strlen(pUsername_copy) + strlen(body_file_prefix) + 1);
-	strcpy(body_file_name,body_file_prefix);
-	strcat(body_file_name,pUsername_copy);
-
+	char body_file_name[100] = "/tmp/response_body_";
+	char header_file_name[100] = "/tmp/response_headers_";
 	FILE *header_file = NULL;
 	FILE *body_file = NULL;
-	pam_syslog(pamh, LOG_INFO, "URL- %s \n", pUrl);
+
+	strcat(header_file_name,pUsername);
+	strcat(body_file_name,pUsername);
+	pam_syslog(pamh, LOG_INFO, "Login to CORTX... Username: %s\n", pUsername);
+	pCurl = curl_easy_init();
 
 	if (!pCurl){
 		pam_syslog(pamh, LOG_ERR, "Can't initialize curl.\n");
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 
@@ -119,13 +91,11 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	headers = curl_slist_append(headers, "Accept: application/json");
 	if (headers == NULL){
 		curl_cleanup(headers,pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}	
 	headers = curl_slist_append(headers, "Content-Type: application/json");
 	if (headers == NULL){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 
@@ -137,85 +107,72 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	/* set curl options */
 	if(curl_easy_setopt(pCurl, CURLOPT_URL, pUrl)!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_FAILONERROR, TRUE)!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "POST")!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers)!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, json_object_to_json_string(jobj))!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 10L)!=CURLE_OK){
 		curl_cleanup(headers, pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		return -1;
 	}
 	header_file = fopen(header_file_name, "wb");
 	if (!header_file){
 		curl_cleanup(headers,pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		pam_syslog(pamh, LOG_ERR, "Response Header File Not Opened\n");
 		return -1;
 	}
 	body_file = fopen(body_file_name, "wb");
 	if (!body_file){
 		curl_cleanup(headers,pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		pam_syslog(pamh, LOG_ERR, "Response Body File Not Opened\n");
 		fclose(header_file);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_HEADERDATA, header_file)!=CURLE_OK){
 		curl_cleanup(headers,pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		fclose(header_file);
 		fclose(body_file);
 		return -1;
 	}
 	if(curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, body_file)!=CURLE_OK){
 		curl_cleanup(headers,pCurl);
-		memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 		fclose(header_file);
 		fclose(body_file);
 		return -1;
 	}
 	res = curl_easy_perform(pCurl);
-
-	curl_cleanup(headers, pCurl);
 	fclose(header_file);
 	fclose(body_file);
+	curl_cleanup(headers, pCurl);
 
 	if (res != 0){
-		pam_syslog(pamh, LOG_ERR, "Login to CSM Failed\n");
 		remove(header_file_name);
+		pam_syslog(pamh, LOG_ERR, "Login to CORTX Failed\n");
 	}
 	else{
-		pam_syslog(pamh, LOG_INFO, "Login to CSM Successful\n");
+		pam_syslog(pamh, LOG_INFO, "Login to CORTX Successful\n");
 	}
 	remove(body_file_name);
-	memomry_cleanup(pUsername_copy, header_file_name, body_file_name);
 	pam_syslog(pamh, LOG_INFO, "CURL Response code: %d\n", res);
 	return res;
 }
 
 PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv){
     //PAM Function which is initialized whenever Login Mechanism is called.
-	pam_syslog(pamh, LOG_INFO, "Logging In With CSM User.\n");
 	int ret = 0;
 	const char *pUsername = NULL;
 	const char *pPassword = NULL;
