@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <pwd.h>
 // pam stuff
 #include <security/pam_modules.h>
 #include <security/pam_ext.h>
@@ -65,7 +66,8 @@ static void curl_cleanup(struct curl_slist *headers, CURL *pCurl){
 	curl_easy_cleanup(pCurl);
 }
 
-static int login(pam_handle_t *pamh, const char *pUsername, const char *pPassword){
+static int login(pam_handle_t *pamh, const char *pUsername, const char *pPassword,
+				uid_t uid, gid_t gid){
     //Login Function for CSM/S3 users
 	const char *pUrl = "http://localhost:28101/api/v2/login";
 	CURL *pCurl = NULL;
@@ -82,7 +84,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	pCurl = curl_easy_init();
 
 	if (!pCurl){
-		pam_syslog(pamh, LOG_ERR, "Can't initialize curl.\n");
+		pam_syslog(pamh, LOG_ERR, "Can't initialize curl\n");
 		curl_cleanup(headers, pCurl);
 		return -1;
 	}
@@ -160,10 +162,14 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 	curl_cleanup(headers, pCurl);
 
 	if (res != 0){
-		remove(header_file_name);
 		pam_syslog(pamh, LOG_ERR, "Login to CORTX Failed\n");
+		remove(header_file_name);
 	}
 	else{
+		if (chown(header_file_name, uid, gid) == -1){
+			pam_syslog(pamh, LOG_ERR, "CHOWN failed for REST response file\n");
+			return -1;
+		}
 		pam_syslog(pamh, LOG_INFO, "Login to CORTX Successful\n");
 	}
 	remove(body_file_name);
@@ -176,20 +182,32 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
 	int ret = 0;
 	const char *pUsername = NULL;
 	const char *pPassword = NULL;
+	struct passwd *pd;
+	uid_t uid = 0;
+	gid_t gid = 0;
 
 	if (pam_get_user(pamh, &pUsername, NULL) != PAM_SUCCESS || pUsername == NULL || *pUsername == '\0'){
-		pam_syslog(pamh, LOG_ERR, "Error in Fetching Username.\n");
+		pam_syslog(pamh, LOG_ERR, "Error in Fetching Username\n");
 		return PAM_AUTH_ERR;
 	}
 
+	if ((pd = getpwnam(pUsername)) == NULL){
+		pam_syslog(pamh, LOG_ERR, "user unknown\n");
+		return (PAM_USER_UNKNOWN);
+	}
+  	else{
+		  uid = pd->pw_uid;
+		  gid = pd->pw_gid;
+  	}
+
 	if (pam_get_authtok(pamh, PAM_AUTHTOK, &pPassword , NULL) != PAM_SUCCESS || pPassword == NULL || *pPassword == '\0'){
-		pam_syslog(pamh, LOG_ERR, "Error in Fetching Password.\n");
+		pam_syslog(pamh, LOG_ERR, "Error in Fetching Password\n");
 		return PAM_AUTH_ERR;
 	}
 
 	ret = PAM_SUCCESS;
 
-	if (login(pamh, pUsername, pPassword) != 0){
+	if (login(pamh, pUsername, pPassword, uid, gid) != 0){
 		ret = PAM_AUTH_ERR;
 	}
 	return ret;
