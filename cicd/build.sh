@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 set -e
-set -x
 BUILD_START_TIME=$(date +%s)
 BASE_DIR=$(realpath "$(dirname $0)/..")
 PROG_NAME=$(basename $0)
@@ -229,8 +228,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     PAM_CORTX_SRC="$DIST/csm/cortx-pam/src"
     gcc -fPIC -c "$PAM_CORTX_SRC/pam_cortx.c" -o "$PAM_CORTX_SRC/pam_cortx.o"
     gcc -shared -o "$DIST/csm/cortx-pam/pam_cortx.so" "$PAM_CORTX_SRC/pam_cortx.o" -lpam  -lcurl -ljson-c
-    ls -la "$DIST/csm/cortx-pam/"
-    ls -la "$DIST/csm/cortx-pam/src/"
 
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
