@@ -66,6 +66,7 @@ class Configure(Setup):
             self._configure_csm_web_keys()
             self._logrotate()
             self._configure_cron()
+            self._configure_cortx_pam()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -256,3 +257,19 @@ class Configure(Setup):
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+
+    def _configure_cortx_pam(self):
+        """
+        Configure CORTX-PAM
+        """
+        Log.info("Configuring CORTX PAM module")
+        Setup._run_cmd(f"gcc -fPIC -c {const.CORTX_PAM_SRC_PATH} -o {const.CORTX_PAM_OBJ_PATH}")
+        Setup._run_cmd(f"gcc -shared -o {const.CORTX_PAM_SO_PATH} {const.CORTX_PAM_OBJ_PATH} -lpam  -lcurl -ljson-c")
+        Setup._run_cmd(f"cp {const.CORTX_PAM_SO_PATH} {const.PAM_SO_PATH}")
+
+        Log.info(f"Updating PAM configs in {const.PAM_PASS_AUTH_FILE_PATH}")
+        tmpl_data = Text(const.CORTX_PAM_PASS_AUTH_TMPL_PATH).load()
+        tmpl_data = tmpl_data.replace('<type-1>','auth')
+        tmpl_data = tmpl_data.replace('<ctrl-flag-1>','sufficient')
+        tmpl_data = tmpl_data.replace('<module-1>','pam_cortx.so')
+        Text(const.PAM_PASS_AUTH_FILE_PATH).dump(tmpl_data)

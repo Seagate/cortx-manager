@@ -81,6 +81,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._configure_uds_keys()
         self._logrotate()
         self._configure_cron()
+        self._configure_cortx_pam()
         for count in range(0, 10):
             try:
                 await self._set_unsupported_feature_info()

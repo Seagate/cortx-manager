@@ -773,3 +773,10 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
+#PAM CSM Setup
+CORTX_PAM_SRC_PATH = "{}/cortx-pam/src/pam_cortx.c".format(CSM_PATH)
+CORTX_PAM_OBJ_PATH = "{}/cortx-pam/src/pam_cortx.o".format(CSM_PATH)
+CORTX_PAM_SO_PATH = "{}/cortx-pam/src/pam_cortx.so".format(CSM_PATH)
+PAM_SO_PATH = "/lib64/security/pam_cortx.so"
+CORTX_PAM_PASS_AUTH_TMPL_PATH = "{}/conf/etc/cortx-pam/pam.config.tmpl".format(CSM_PATH)
+PAM_PASS_AUTH_FILE_PATH = "/etc/pam.d/password-auth-ac"
