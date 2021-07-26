@@ -65,7 +65,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self.validate_3rd_party_pkgs()
         self._config_user()
         self._configure_system_auto_restart()
-        self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
         #Prepare functionality
@@ -79,6 +78,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._validate_consul_service()
         self._validate_es_service()
         self._configure_uds_keys()
+        self._configure_csm_web_keys()
         self._logrotate()
         self._configure_cron()
         for count in range(0, 10):
@@ -129,6 +129,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
 
     @staticmethod
     def __restore_backup_config(backup_dirname):
+        Log.info(f"Restoring backedup config data {backup_dirname}")
         backup_index = f"{const.CSM_GLOBAL_INDEX}_BACKUP"
         backup_url = f"yaml://{backup_dirname}/{const.CSM_CONF_FILE_NAME}"
         Conf.load(backup_index, backup_url)
