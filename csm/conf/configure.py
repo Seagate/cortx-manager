@@ -263,10 +263,7 @@ class Configure(Setup):
         Configure CORTX-PAM
         """
         Log.info("Configuring CORTX PAM module")
-        Setup._run_cmd(f"gcc -fPIC -c {const.CORTX_PAM_SRC_PATH} -o {const.CORTX_PAM_OBJ_PATH}")
-        Setup._run_cmd(f"gcc -shared -o {const.CORTX_PAM_SO_PATH} {const.CORTX_PAM_OBJ_PATH} -lpam  -lcurl -ljson-c")
-        Setup._run_cmd(f"cp {const.CORTX_PAM_SO_PATH} {const.PAM_SO_PATH}")
-
+        Setup._run_cmd(f"cp -f {const.CORTX_PAM_SO_PATH} {const.PAM_SO_PATH}")
         Log.info(f"Updating PAM configs in {const.PAM_PASS_AUTH_FILE_PATH}")
         tmpl_data = Text(const.CORTX_PAM_PASS_AUTH_TMPL_PATH).load()
         tmpl_data = tmpl_data.replace('<type-1>','auth')
