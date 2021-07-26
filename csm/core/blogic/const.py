@@ -773,6 +773,5 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
-
 #PAM_CORTX Consts
 PAM_RESPONSE_HEADER_FILE = '/tmp/response_headers_'

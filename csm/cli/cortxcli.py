@@ -90,7 +90,7 @@ class CortxCli(Cmd):
         :return:None
         """
         try:
-            if not self.extract_token():
+            if not self._extract_token():
                 self.username = input('Username: ').strip()
                 Log.debug(f"{self.username} attempted to Login.")
                 if not self.username:
@@ -117,7 +117,7 @@ class CortxCli(Cmd):
             Log.critical(f"{self.username}:{e}")
             self.do_exit(self.some_error_occured)
 
-    def extract_token(self) -> bool:
+    def _extract_token(self) -> bool:
         """
         Function checks the existence of session token in pam output file and validate it.
         :return:Boolean
@@ -129,7 +129,6 @@ class CortxCli(Cmd):
         try:
             with open(header_file, "r") as pam_response_file:
                 header_data = pam_response_file.read()
-            os.remove(header_file)
         except IOError as e:
             Log.error(f"IO error:{e}")
             return False
@@ -140,6 +139,10 @@ class CortxCli(Cmd):
                 return False
             self._session_token = token[2].strip()
             self.username = user
+            try:
+                os.remove(header_file)
+            except OSError as e:
+                Log.error(f"Failed to delete {header_file}:{e}")
             return True
         return False
 

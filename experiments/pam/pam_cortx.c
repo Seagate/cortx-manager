@@ -173,7 +173,6 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 		pam_syslog(pamh, LOG_INFO, "Login to CORTX Successful\n");
 	}
 	remove(body_file_name);
-	pam_syslog(pamh, LOG_INFO, "CURL Response code: %d\n", res);
 	return res;
 }
 
