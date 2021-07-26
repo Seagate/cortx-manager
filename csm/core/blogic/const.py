@@ -465,6 +465,7 @@ NTP_SERVER_ADDRESS = 'ntp_server_address'
 NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 
 # Audit Log
+CSM_AUDIT_LOG_SCHEMA = '{}/schema/csm_audit_log.json'.format(CSM_PATH)
 AUDIT_LOG = "/tmp/auditlogs/"
 MAX_RESULT_WINDOW = 10000
 SORTABLE_FIELDS = "sortable_fields"
@@ -505,6 +506,7 @@ VIRTUAL_HOST = "virtual_host"
 PUBLIC_DATA_DOMAIN_NAME = "node_public_data_domain_name"
 
 # Services
+AUDIT_LOG_SERVICE = "audit_log"
 SYSTEM_CONFIG_SERVICE = "system_config_service"
 PRODUCT_VERSION_SERVICE = "product_version_service"
 CSM_USER_SERVICE = "csm_user_service"

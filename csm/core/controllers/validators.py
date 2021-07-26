@@ -116,7 +116,7 @@ class BucketNameValidator(Validator):
     """
 
     def is_value_valid(self, value):
-        return re.search(r"^[a-z0-9][a-z0-9-.]{1,61}[a-z0-9]$", value)
+        return re.search(r"^[a-z0-9][a-z0-9-.]{2,54}[a-z0-9]$", value)
 
     def _check_ipv4(self, value):
         try:
@@ -131,7 +131,7 @@ class BucketNameValidator(Validator):
     def __call__(self, value):
         if not self.is_value_valid(value):
             raise ValidationError(
-                ("Bucket Name should be between 3-63 Characters long."
+                ("Bucket Name should be between 4-56 Characters long."
                  "Should contain either lowercase, numeric, '-' or '.' characters. "
                  "Not starting or ending with '-' or '.'"))
 
