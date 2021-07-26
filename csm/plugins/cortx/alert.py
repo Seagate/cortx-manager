@@ -368,8 +368,6 @@ class AlertPlugin(CsmPlugin):
                     specific_info.get(const.ALERT_HEALTH, "")
                 csm_schema[const.ALERT_HEALTH_RECOMMENDATION] = \
                     specific_info.get(const.ALERT_HEALTH_RECOMMENDATION, "")
-            else:
-                csm_schema[const.DESCRIPTION] = ""
         except Exception as e:
             Log.warn(f"Unable to fetch health fields from alert. {e}")
 
