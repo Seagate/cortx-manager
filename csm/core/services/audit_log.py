@@ -42,7 +42,7 @@ COMPONENT_MODEL_MAPPING = {
         "field": CsmAuditLogModel.timestamp,
         "format": (
             "{timestamp} {user} {remote_ip} {forwarded_for_ip} {method} {path} {user_agent} "
-            "{response_code} {request_id}"
+            "{response_code} {request_id} {payload}"
         ),
     },
     "s3": {
