@@ -52,9 +52,7 @@ class Cleanup(Setup):
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
             const.CSM_CONF_PATH,
-            const.PAM_SO_PATH,
-            const.CORTX_PAM_OBJ_PATH,
-            const.CORTX_PAM_SO_PATH
+            const.PAM_SO_PATH
         ]
 
         for dir_path in files_directory_list:
