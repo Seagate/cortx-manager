@@ -129,7 +129,7 @@ class CortxHAFramework(HAFramework):
 
         return parsed_system_health[const.OUTPUT_LITERAL]
 
-    def process_cluster_operation(self, element, id, operation, **kwargs):
+    def process_cluster_operation(self, element, id_, operation, **kwargs):
         if self._cluster_manager is None or \
             not hasattr(self._cluster_manager, "get_system_health"):
             self._init_cluster_manager()
