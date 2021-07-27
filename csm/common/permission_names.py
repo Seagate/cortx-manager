@@ -35,6 +35,7 @@ class Resource:
     SECURITY = "security"
     LYVE_PILOT = 'lyve_pilot'
     HEALTH = 'health'
+    CLUSTER_MANAGEMENT = 'cluster_management'
 
 
 class Action:

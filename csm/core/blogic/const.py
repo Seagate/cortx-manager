@@ -313,6 +313,13 @@ STATUS_FAILED = 'Failed'
 STATUS_PARTIAL = 'Partial'
 HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
+# Cluster Operations
+PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
+CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
+ARG_OPERATION = 'opertion'
+ARG_FORCE = 'force'
+ARG_CHECK_CLUSTER = 'check_cluster'
+
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
@@ -518,6 +525,7 @@ S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
+CLUSTER_OPERATIONS_SERVICE = "cluster_operations_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -562,6 +570,7 @@ REPLACE_NODE_SERVICE = "replace_node"
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
+CLUSTER_OPERATIONS_PLUGIN = "cluster_operations"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
