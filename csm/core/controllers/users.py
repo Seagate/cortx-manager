@@ -41,6 +41,7 @@ class CsmUserPatchSchema(Schema):
     password = fields.Str(validate=[PasswordValidator()])
     role = fields.Str(validate=validate.OneOf(const.CSM_USER_ROLES))
     email = fields.Email()
+    reset_password = fields.Bool(required=False)
 
     """
     Validate PATCH body pre  marshamallow validation
