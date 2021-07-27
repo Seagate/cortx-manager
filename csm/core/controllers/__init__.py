@@ -20,6 +20,7 @@ from .s3.accounts import S3AccountsListView, S3AccountsView
 from .alerts.alerts import AlertsView, AlertsListView
 from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
 from .health import ResourcesHealthView
+from .cluster_operations import ClusterOperationsView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView

@@ -87,6 +87,12 @@ class CsmAgent:
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
+        # Cluster Operations configuration
+        cluster_operations_plugin = import_plugin_module(const.CLUSTER_OPERATIONS_PLUGIN)
+        cluster_operations_plugin_obj = cluster_operations_plugin.ClusterOperationsPlugin(CortxHAFramework())
+        cluster_operations_service = ClusterOperationsAppService(cluster_operations_plugin_obj)
+        CsmRestApi._app[const.CLUSTER_OPERATIONS_SERVICE] = cluster_operations_service
+
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
         CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
@@ -245,6 +251,7 @@ if __name__ == '__main__':
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
     from csm.core.services.health import HealthAppService
+    from csm.core.services.cluster_operations import ClusterOperationsAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService
     from csm.core.services.s3.accounts import S3AccountService
