@@ -87,11 +87,7 @@ class CsmAgent:
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
-        # Cluster Operations configuration
-        cluster_operations_plugin = import_plugin_module(const.CLUSTER_OPERATIONS_PLUGIN)
-        cluster_operations_plugin_obj = cluster_operations_plugin.ClusterOperationsPlugin(CortxHAFramework())
-        cluster_operations_service = ClusterOperationsAppService(cluster_operations_plugin_obj)
-        CsmRestApi._app[const.CLUSTER_OPERATIONS_SERVICE] = cluster_operations_service
+        CsmAgent._configure_cluster_operations_service()
 
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
@@ -191,6 +187,14 @@ class CsmAgent:
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(CortxHAFramework(),  provisioner, db)
+
+    @staticmethod
+    def _configure_cluster_operations_service():
+        # Cluster Operations configuration
+        cluster_operations_plugin = import_plugin_module(const.CLUSTER_OPERATIONS_PLUGIN)
+        cluster_operations_plugin_obj = cluster_operations_plugin.ClusterOperationsPlugin(CortxHAFramework())
+        cluster_operations_service = ClusterOperationsAppService(cluster_operations_plugin_obj)
+        CsmRestApi._app[const.CLUSTER_OPERATIONS_SERVICE] = cluster_operations_service
 
     @staticmethod
     def _daemonize():
