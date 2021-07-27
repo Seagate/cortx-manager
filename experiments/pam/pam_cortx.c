@@ -163,6 +163,7 @@ static int login(pam_handle_t *pamh, const char *pUsername, const char *pPasswor
 
 	if (res != 0){
 		pam_syslog(pamh, LOG_ERR, "Login to CORTX Failed\n");
+		pam_syslog(pamh, LOG_INFO, "CURL Response code: %d\n", res);
 		remove(header_file_name);
 	}
 	else{
