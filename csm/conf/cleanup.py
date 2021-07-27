@@ -19,6 +19,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from cortx.utils.kv_store.error import KvError
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.common.payload import Text
 from csm.conf.setup import CsmSetupError, Setup
 
 class Cleanup(Setup):
@@ -40,6 +41,7 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+        self.cortx_pam_cleanup()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -49,7 +51,8 @@ class Cleanup(Setup):
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
-            const.CSM_CONF_PATH
+            const.CSM_CONF_PATH,
+            const.PAM_SO_PATH
         ]
 
         for dir_path in files_directory_list:
@@ -59,3 +62,11 @@ class Cleanup(Setup):
     def web_env_file_cleanup(self):
        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+
+    def cortx_pam_cleanup(self):
+        Log.info(f"Replacing content of {const.PAM_PASS_AUTH_FILE_PATH} with {const.CORTX_PAM_PASS_AUTH_TMPL_PATH} ")
+        tmpl_data = Text(const.CORTX_PAM_PASS_AUTH_TMPL_PATH).load()
+        tmpl_data = tmpl_data.replace('<type-1>','')
+        tmpl_data = tmpl_data.replace('<ctrl-flag-1>','')
+        tmpl_data = tmpl_data.replace('<module-1>','')
+        Text(const.PAM_PASS_AUTH_FILE_PATH).dump(tmpl_data)
