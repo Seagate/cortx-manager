@@ -28,6 +28,7 @@ class CsmAuditLogModel(CsmModel):
     user_agent = StringType(default="")
     response_code = IntType(default=-1)
     request_id = IntType(default=int(time.time()))
+    payload = StringType(default="")
 
 class S3AuditLogModel(CsmModel):
     """ Model for s3 audit logs """
