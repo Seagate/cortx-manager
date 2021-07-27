@@ -16,7 +16,7 @@
 import os
 import time
 from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json, Text
+from csm.common.payload import Json, Text, Yaml
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -28,6 +28,10 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV
+from csm.core.data.models.users import User
+from csm.core.services.users import CsmUserService, UserManager
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 
 
 class Configure(Setup):
@@ -57,15 +61,19 @@ class Configure(Setup):
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+
+        self.force_action = command.options.get('f')
+        Log.info(f"Force flag: {self.force_action}")
         self._prepare_and_validate_confstore_keys()
         self._validate_consul_service()
         self._validate_es_service()
         self._set_deployment_mode()
+        self._logrotate()
+        self._configure_cron()
+        self._configure_uds_keys()
+        self._configure_csm_web_keys()
+        await self._create_cluster_admin()
         try:
-            self._configure_uds_keys()
-            self._configure_csm_web_keys()
-            self._logrotate()
-            self._configure_cron()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -193,6 +201,9 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
 
     def _configure_csm_web_keys(self):
+        if not os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH):
+            Log.warn(f"{const.CSM_WEB_DIST_ENV_FILE_PATH} not exists.")
+            return None
         Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
         Log.info("Configuring CSM Web keys")
         virtual_host = self._fetch_management_ip()
@@ -257,3 +268,38 @@ class Configure(Setup):
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+
+    async def _create_cluster_admin(self):
+        # TODO confstore keys can be changed.
+        Log.info("Creating cluster admin account")
+        cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>username",
+                                    const.DEFAULT_CLUSTER_ADMIN_USER)
+        cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>secret",
+                                    const.DEFAULT_CLUSTER_ADMIN_PASS)
+        cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>emailid",
+                                    const.DEFAULT_CLUSTER_ADMIN_EMAIL)
+
+        UserNameValidator()(cluster_admin_user)
+        PasswordValidator()(cluster_admin_secret)
+
+        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        db = DataBaseProvider(conf)
+        usr_mngr = UserManager(db)
+        usr_service = CsmUserService(usr_mngr)
+        if (not self.force_action) and \
+            (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
+            Log.console("WARNING: Cortx cluster admin already created.\n"
+                        "Please use '-f' option to create admin user forcefully.")
+            return None
+
+        if self.force_action and await usr_mngr.get(cluster_admin_user):
+            Log.info(f"Removing current user: {cluster_admin_user}")
+            await usr_mngr.delete(cluster_admin_user)
+
+        Log.info(f"Creating cluster admin: {cluster_admin_user}")
+        await usr_service.create_cluster_admin(cluster_admin_user,
+                                                cluster_admin_secret,
+                                                cluster_admin_emailid)
