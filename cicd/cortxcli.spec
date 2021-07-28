@@ -43,12 +43,12 @@ CLI_DIR=<CORTXCLI_PATH>
 PRODUCT=<PRODUCT>
 
 # Move binary file
-#[ -d "${CLI_DIR}/lib" ] && {
-ln -sf $CLI_DIR/lib/cortxcli /usr/bin/cortxcli
- #   ln -sf $CLI_DIR/lib/cortxcli $CLI_DIR/bin/cortxcli
-ln -sf $CLI_DIR/lib/cli_setup /usr/bin/cli_setup
- #   ln -sf $CLI_DIR/lib/cli_setup $CLI_DIR/bin/cli_setup
-#}
+[ -d "${CLI_DIR}/lib" ] && {
+     ln -sf $CLI_DIR/lib/cortxcli /usr/bin/cortxcli
+     ln -sf $CLI_DIR/lib/cortxcli $CLI_DIR/bin/cortxcli
+     ln -sf $CLI_DIR/lib/cli_setup /usr/bin/cli_setup
+     ln -sf $CLI_DIR/lib/cli_setup $CLI_DIR/bin/cli_setup
+}
 
 #TODO: add test for cli
 exit 0
@@ -56,6 +56,7 @@ exit 0
 %preun
 
 %postun
+[ $1 -eq 1 ] && exit 0
 rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -f /usr/bin/cli_setup 2> /dev/null;
 rm -rf <CORTXCLI_PATH>/bin/ 2> /dev/null;
