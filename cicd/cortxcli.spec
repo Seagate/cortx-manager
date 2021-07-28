@@ -56,6 +56,7 @@ exit 0
 %preun
 
 %postun
+[ $1 -eq 1 ] && exit 0
 rm -f /usr/bin/cortxcli 2> /dev/null;
 rm -f /usr/bin/cli_setup 2> /dev/null;
 rm -rf <CORTXCLI_PATH>/bin/ 2> /dev/null;
