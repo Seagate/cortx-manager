@@ -30,25 +30,25 @@
     ]
   },
   "/api/*/update/firmware/upload": {
-    "feature_name": "FW_Update",
+    "feature_name": "fw_update",
     "dependent_on": [
       "provisioner"
     ]
   },
   "/api/*/update/firmware/start": {
-    "feature_name": "FW_Update",
+    "feature_name": "fw_update",
     "dependent_on": [
       "provisioner"
     ]
   },
   "/api/*/update/firmware/availability": {
-    "feature_name": "FW_Update",
+    "feature_name": "fw_update",
     "dependent_on": [
       "provisioner"
     ]
   },
   "/api/*/update/firmware/status": {
-    "feature_name": "FW_Update",
+    "feature_name": "fw_update",
     "dependent_on": [
       "provisioner"
     ]
@@ -60,19 +60,19 @@
     ]
   },
   "/api/*/update/hotfix/status": {
-    "feature_name": "SW_Update",
+    "feature_name": "sw_update",
     "dependent_on": [
       "provisioner"
     ]
   },
   "/api/*/update/hotfix/upload": {
-    "feature_name": "SW_Update",
+    "feature_name": "sw_update",
     "dependent_on": [
       "provisioner"
     ]
   },
   "/api/*/update/hotfix/start": {
-    "feature_name": "SW_Update",
+    "feature_name": "sw_update",
     "dependent_on": [
       "provisioner"
     ]
@@ -150,16 +150,22 @@
     ]
   },
   "/api/*/tls/bundle/upload": {
-    "feature_name": "support_bundle",
-    "dependent_on": []
+    "feature_name": "ssl_upload",
+    "dependent_on": [
+      "provisioner"
+    ]
   },
   "/api/*/tls/bundle/install": {
-    "feature_name": "support_bundle",
-    "dependent_on": []
+    "feature_name": "ssl_upload",
+    "dependent_on": [
+      "provisioner"
+    ]
   },
   "/api/*/tls/bundle/status": {
-    "feature_name": "support_bundle",
-    "dependent_on": []
+    "feature_name": "ssl_upload",
+    "dependent_on": [
+      "provisioner"
+    ]
   },
   "/api/*/stats/*": {
     "feature_name": "performance",

@@ -81,5 +81,13 @@
         "display": false,
         "sortable": false,
         "filterable": false
+    },
+    {
+        "field_id": "payload",
+        "label": "Payload",
+        "display_id": 1201,
+        "display": true,
+        "sortable": false,
+        "filterable": false
     }
 ]

@@ -176,6 +176,7 @@ class Configure(Setup):
         virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
         self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
         virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host_key)
+        Log.info(f"Fetch Virtual host: {virtual_host}")
         return virtual_host
 
     def _configure_uds_keys(self):
@@ -188,7 +189,7 @@ class Configure(Setup):
         except Exception as e:
             Log.error(f"Network Validation failed. {e}")
             raise CsmSetupError("Network Validation failed.")
-        Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm config")
+        Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm uds config")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
 
@@ -196,7 +197,7 @@ class Configure(Setup):
         Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
         Log.info("Configuring CSM Web keys")
         virtual_host = self._fetch_management_ip()
-        Log.info(f"Set virtual_host:{virtual_host} to csm config")
+        Log.info(f"Set MANAGEMENT_IP:{virtual_host} to csm web config")
         file_data = Text(const.CSM_WEB_DIST_ENV_FILE_PATH)
         data = file_data.load().split("\n")
         for ele in data:
