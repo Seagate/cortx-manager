@@ -136,16 +136,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         Conf.copy(backup_index, const.CSM_GLOBAL_INDEX, Conf.get_keys(backup_index))
         Conf.save(const.CSM_GLOBAL_INDEX)
 
-        # Restore csm/web/web-dist/.env after upgrade.
-        # Respecting userchanges as well as upgrade changes.
-        # if os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH) and \
-        #         os.path.exists(f"{backup_dirname}/.env"):
-        #     Conf.load("env_backup_index", f"properties://{backup_dirname}/.env")
-        #     Conf.load("env_upgrade_index", f"properties://{const.CSM_WEB_DIST_ENV_FILE_PATH}")
-        #     Conf.merge("env_backup_index", "env_upgrade_index")
-        #     Conf.copy("env_backup_index", "env_upgrade_index")
-        #     Conf.save("env_upgrade_index")
-
     def create(self):
         """
         This Function Creates the CSM Conf File on Required Location.
