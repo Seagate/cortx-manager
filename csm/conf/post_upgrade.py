@@ -65,7 +65,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self.validate_3rd_party_pkgs()
         self._config_user()
         self._configure_system_auto_restart()
-        self._configure_system_auto_restart()
         self._configure_service_user()
         self._configure_rsyslog()
         #Prepare functionality
@@ -79,6 +78,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._validate_consul_service()
         self._validate_es_service()
         self._configure_uds_keys()
+        self._configure_csm_web_keys()
         self._logrotate()
         self._configure_cron()
         for count in range(0, 10):
@@ -129,21 +129,12 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
 
     @staticmethod
     def __restore_backup_config(backup_dirname):
+        Log.info(f"Restoring backedup config data {backup_dirname}")
         backup_index = f"{const.CSM_GLOBAL_INDEX}_BACKUP"
         backup_url = f"yaml://{backup_dirname}/{const.CSM_CONF_FILE_NAME}"
         Conf.load(backup_index, backup_url)
         Conf.copy(backup_index, const.CSM_GLOBAL_INDEX, Conf.get_keys(backup_index))
         Conf.save(const.CSM_GLOBAL_INDEX)
-
-        # Restore csm/web/web-dist/.env after upgrade.
-        # Respecting userchanges as well as upgrade changes.
-        if os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH) and \
-                os.path.exists(f"{backup_dirname}/.env"):
-            Conf.load("env_backup_index", f"properties://{backup_dirname}/.env")
-            Conf.load("env_upgrade_index", f"properties://{const.CSM_WEB_DIST_ENV_FILE_PATH}")
-            Conf.merge("env_backup_index", "env_upgrade_index")
-            Conf.copy("env_backup_index", "env_upgrade_index")
-            Conf.save("env_upgrade_index")
 
     def create(self):
         """

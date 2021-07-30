@@ -1,0 +1,93 @@
+[
+    {
+        "field_id": "timestamp",
+        "label": "Timestamp",
+        "display_id": 201,
+        "display": true,
+        "sortable": true,
+        "filterable": false,
+        "value": {
+            "type": "date"
+        }
+    },
+    {
+        "field_id": "user",
+        "label": "User",
+        "display_id": 301,
+        "display": true,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "remote_ip",
+        "label": "Remote IP",
+        "display_id": 401,
+        "display": false,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "forwarded_for_ip",
+        "label": "Forwarded for IP",
+        "display_id": 501,
+        "display": true,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "method",
+        "label": "Method",
+        "display_id": 601,
+        "display": true,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "path",
+        "label": "Path",
+        "display_id": 701,
+        "display": true,
+        "sortable": false,
+        "filterable": false
+    },
+    {
+        "field_id": "user_agent",
+        "label": "User agent",
+        "display_id": 801,
+        "display": true,
+        "sortable": false,
+        "filterable": false
+    },
+    {
+        "field_id": "response_code",
+        "label": "Response code",
+        "display_id": 901,
+        "display": true,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "request_id",
+        "label": "Request ID",
+        "display_id": 1001,
+        "display": true,
+        "sortable": true,
+        "filterable": true
+    },
+    {
+        "field_id": "msg",
+        "label": "Message",
+        "display_id": 1101,
+        "display": false,
+        "sortable": false,
+        "filterable": false
+    },
+    {
+        "field_id": "payload",
+        "label": "Payload",
+        "display_id": 1201,
+        "display": true,
+        "sortable": false,
+        "filterable": false
+    }
+]
