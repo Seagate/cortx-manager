@@ -15,6 +15,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
+import os
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.providers.providers import Response
@@ -49,7 +50,6 @@ class Reset(Setup):
         self.disable_and_stop_service()
         self.directory_cleanup()
         await self.db_cleanup()
-        await self._unsupported_feature_entry_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):
@@ -76,16 +76,20 @@ class Reset(Setup):
 
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
+        log_files = os.listdir(Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'))
+        log_files = [os.path.join( Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'), file)
+                                 for file in log_files]
+
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
-            const.TMP_CSM,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
-        ]
+            const.TMP_CSM
+            ]
+        files_directory_list.extend(log_files)
 
-        for dir_path in files_directory_list:
-            Log.info(f"Deleting path :{dir_path}")
-            Setup._run_cmd(f"rm -rf {dir_path}")
+        for _path in files_directory_list:
+            Log.info(f"Deleting path :{_path}")
+            Setup._run_cmd(f"rm -rf {_path}")
 
     async def db_cleanup(self):
 
@@ -106,13 +110,6 @@ class Reset(Setup):
 
             Log.info(f"Deleting for collection:{collection} from {db}")
             await self.erase_index(collection, url, "delete")
-
-    async def _unsupported_feature_entry_cleanup(self):
-        collection = "config"
-        url = f"{self._es_db_url}{collection}/_delete_by_query"
-        payload = {"query": {"match": {"component_name": "csm"}}}
-        Log.info(f"Deleting for collection:{collection} from es_db")
-        await self.erase_index(collection, url, "post", payload)
 
     async def erase_index(self, collection, url, method, payload=None):
         Log.info(f"Url: {url}")
