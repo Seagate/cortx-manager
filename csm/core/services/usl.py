@@ -87,7 +87,7 @@ class UslService(ApplicationService):
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
-        self._device_uuid = self._get_device_uuid()
+        self._device_uuid = self._fetch_device_uuid()
         key = Cipher.generate_key(str(self._device_uuid), 'USL')
         secure_storage = SecureStorage(self._storage, key)
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
@@ -104,7 +104,10 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return str(appliance_name)
 
-    def _get_device_uuid(self) -> UUID:
+    async def get_device_uuid(self) -> UUID:
+        return self._device_uuid
+
+    def _fetch_device_uuid(self) -> UUID:
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
