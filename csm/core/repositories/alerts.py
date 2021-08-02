@@ -123,7 +123,7 @@ class AlertSimpleStorage(IAlertStorage):
     #         "severity": 1,
     #         "state": "fault_resolved",
     #         "extended_info": {
-    #             "resource_type": "fru",
+    #             "resource_type": "hw",
     #             "position": "Right",
     #             "durable-id": "psu_0.1",
     #             "other_details": {

@@ -17,7 +17,7 @@
                     "disks": {
                       "health": "",
                       "disks_info": {
-                        "enclosure:fru:disk-disk_00.00": {
+                        "enclosure:hw:disk-disk_00.00": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -25,7 +25,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.01": {
+                        "enclosure:hw:disk-disk_00.01": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -33,7 +33,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.02": {
+                        "enclosure:hw:disk-disk_00.02": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -41,7 +41,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.03": {
+                        "enclosure:hw:disk-disk_00.03": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -49,7 +49,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.04": {
+                        "enclosure:hw:disk-disk_00.04": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -57,7 +57,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.05": {
+                        "enclosure:hw:disk-disk_00.05": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -65,7 +65,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.06": {
+                        "enclosure:hw:disk-disk_00.06": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -73,7 +73,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.07": {
+                        "enclosure:hw:disk-disk_00.07": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -81,7 +81,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.08": {
+                        "enclosure:hw:disk-disk_00.08": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -89,7 +89,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.09": {
+                        "enclosure:hw:disk-disk_00.09": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -97,7 +97,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.10": {
+                        "enclosure:hw:disk-disk_00.10": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -105,7 +105,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.11": {
+                        "enclosure:hw:disk-disk_00.11": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -113,7 +113,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.12": {
+                        "enclosure:hw:disk-disk_00.12": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -121,7 +121,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.13": {
+                        "enclosure:hw:disk-disk_00.13": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -129,7 +129,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.14": {
+                        "enclosure:hw:disk-disk_00.14": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -137,7 +137,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.15": {
+                        "enclosure:hw:disk-disk_00.15": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -145,7 +145,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.16": {
+                        "enclosure:hw:disk-disk_00.16": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -153,7 +153,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.17": {
+                        "enclosure:hw:disk-disk_00.17": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -161,7 +161,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.18": {
+                        "enclosure:hw:disk-disk_00.18": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -169,7 +169,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.19": {
+                        "enclosure:hw:disk-disk_00.19": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -177,7 +177,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.20": {
+                        "enclosure:hw:disk-disk_00.20": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -185,7 +185,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.21": {
+                        "enclosure:hw:disk-disk_00.21": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -193,7 +193,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.22": {
+                        "enclosure:hw:disk-disk_00.22": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -201,7 +201,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.23": {
+                        "enclosure:hw:disk-disk_00.23": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -209,7 +209,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.24": {
+                        "enclosure:hw:disk-disk_00.24": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -217,7 +217,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.25": {
+                        "enclosure:hw:disk-disk_00.25": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -225,7 +225,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.26": {
+                        "enclosure:hw:disk-disk_00.26": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -233,7 +233,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.27": {
+                        "enclosure:hw:disk-disk_00.27": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -241,7 +241,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.28": {
+                        "enclosure:hw:disk-disk_00.28": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -249,7 +249,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.29": {
+                        "enclosure:hw:disk-disk_00.29": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -257,7 +257,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.30": {
+                        "enclosure:hw:disk-disk_00.30": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -265,7 +265,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.31": {
+                        "enclosure:hw:disk-disk_00.31": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -273,7 +273,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.32": {
+                        "enclosure:hw:disk-disk_00.32": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -281,7 +281,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.33": {
+                        "enclosure:hw:disk-disk_00.33": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -289,7 +289,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.34": {
+                        "enclosure:hw:disk-disk_00.34": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -297,7 +297,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.35": {
+                        "enclosure:hw:disk-disk_00.35": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -305,7 +305,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.36": {
+                        "enclosure:hw:disk-disk_00.36": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -313,7 +313,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.37": {
+                        "enclosure:hw:disk-disk_00.37": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -321,7 +321,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.38": {
+                        "enclosure:hw:disk-disk_00.38": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -329,7 +329,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.39": {
+                        "enclosure:hw:disk-disk_00.39": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -337,7 +337,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.40": {
+                        "enclosure:hw:disk-disk_00.40": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -345,7 +345,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.41": {
+                        "enclosure:hw:disk-disk_00.41": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -353,7 +353,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.42": {
+                        "enclosure:hw:disk-disk_00.42": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -361,7 +361,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.43": {
+                        "enclosure:hw:disk-disk_00.43": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -369,7 +369,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.44": {
+                        "enclosure:hw:disk-disk_00.44": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -377,7 +377,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.45": {
+                        "enclosure:hw:disk-disk_00.45": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -385,7 +385,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.46": {
+                        "enclosure:hw:disk-disk_00.46": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -393,7 +393,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.47": {
+                        "enclosure:hw:disk-disk_00.47": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -401,7 +401,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.48": {
+                        "enclosure:hw:disk-disk_00.48": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -409,7 +409,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.49": {
+                        "enclosure:hw:disk-disk_00.49": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -417,7 +417,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.50": {
+                        "enclosure:hw:disk-disk_00.50": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -425,7 +425,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.51": {
+                        "enclosure:hw:disk-disk_00.51": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -433,7 +433,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.52": {
+                        "enclosure:hw:disk-disk_00.52": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -441,7 +441,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.53": {
+                        "enclosure:hw:disk-disk_00.53": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -449,7 +449,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.54": {
+                        "enclosure:hw:disk-disk_00.54": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -457,7 +457,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.55": {
+                        "enclosure:hw:disk-disk_00.55": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -465,7 +465,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.56": {
+                        "enclosure:hw:disk-disk_00.56": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -473,7 +473,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.57": {
+                        "enclosure:hw:disk-disk_00.57": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -481,7 +481,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.58": {
+                        "enclosure:hw:disk-disk_00.58": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -489,7 +489,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.59": {
+                        "enclosure:hw:disk-disk_00.59": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -497,7 +497,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.60": {
+                        "enclosure:hw:disk-disk_00.60": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -505,7 +505,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.61": {
+                        "enclosure:hw:disk-disk_00.61": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -513,7 +513,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.62": {
+                        "enclosure:hw:disk-disk_00.62": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -521,7 +521,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.63": {
+                        "enclosure:hw:disk-disk_00.63": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -529,7 +529,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.64": {
+                        "enclosure:hw:disk-disk_00.64": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -537,7 +537,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.65": {
+                        "enclosure:hw:disk-disk_00.65": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -545,7 +545,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.66": {
+                        "enclosure:hw:disk-disk_00.66": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -553,7 +553,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.67": {
+                        "enclosure:hw:disk-disk_00.67": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -561,7 +561,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.68": {
+                        "enclosure:hw:disk-disk_00.68": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -569,7 +569,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.69": {
+                        "enclosure:hw:disk-disk_00.69": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -577,7 +577,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.70": {
+                        "enclosure:hw:disk-disk_00.70": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -585,7 +585,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.71": {
+                        "enclosure:hw:disk-disk_00.71": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -593,7 +593,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.72": {
+                        "enclosure:hw:disk-disk_00.72": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -601,7 +601,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.73": {
+                        "enclosure:hw:disk-disk_00.73": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -609,7 +609,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.74": {
+                        "enclosure:hw:disk-disk_00.74": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -617,7 +617,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.75": {
+                        "enclosure:hw:disk-disk_00.75": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -625,7 +625,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.76": {
+                        "enclosure:hw:disk-disk_00.76": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -633,7 +633,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.77": {
+                        "enclosure:hw:disk-disk_00.77": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -641,7 +641,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.78": {
+                        "enclosure:hw:disk-disk_00.78": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -649,7 +649,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.79": {
+                        "enclosure:hw:disk-disk_00.79": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -657,7 +657,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.80": {
+                        "enclosure:hw:disk-disk_00.80": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -665,7 +665,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.81": {
+                        "enclosure:hw:disk-disk_00.81": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -673,7 +673,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.82": {
+                        "enclosure:hw:disk-disk_00.82": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -681,7 +681,7 @@
                           "health": "OK",
                           "fetch_time": 1582302345
                         },
-                        "enclosure:fru:disk-disk_00.83": {
+                        "enclosure:hw:disk-disk_00.83": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -694,7 +694,7 @@
                     "psus": {
                       "health": "",
                       "psus_info": {
-                        "enclosure:fru:psu-psu_0.0": {
+                        "enclosure:hw:psu-psu_0.0": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -702,7 +702,7 @@
                           "health": "OK",
                           "fetch_time": 1582302351
                         },
-                        "enclosure:fru:psu-psu_0.1": {
+                        "enclosure:hw:psu-psu_0.1": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -715,7 +715,7 @@
                     "controllers": {
                       "health": "",
                       "controllers_info": {
-                        "enclosure:fru:controller-controller_a": {
+                        "enclosure:hw:controller-controller_a": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -723,7 +723,7 @@
                           "health": "OK",
                           "fetch_time": 1582302353
                         },
-                        "enclosure:fru:controller-controller_b": {
+                        "enclosure:hw:controller-controller_b": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -736,7 +736,7 @@
                     "fans": {
                       "health": "",
                       "fans_info": {
-                        "enclosure:fru:fan-fan_module_0.0": {
+                        "enclosure:hw:fan-fan_module_0.0": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -744,7 +744,7 @@
                           "health": "OK",
                           "fetch_time": 1582302353
                         },
-                        "enclosure:fru:fan-fan_module_0.1": {
+                        "enclosure:hw:fan-fan_module_0.1": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -752,7 +752,7 @@
                           "health": "OK",
                           "fetch_time": 1582302353
                         },
-                        "enclosure:fru:fan-fan_module_0.2": {
+                        "enclosure:hw:fan-fan_module_0.2": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -760,7 +760,7 @@
                           "health": "OK",
                           "fetch_time": 1582302353
                         },
-                        "enclosure:fru:fan-fan_module_0.3": {
+                        "enclosure:hw:fan-fan_module_0.3": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -768,7 +768,7 @@
                           "health": "OK",
                           "fetch_time": 1582302353
                         },
-                        "enclosure:fru:fan-fan_module_0.4": {
+                        "enclosure:hw:fan-fan_module_0.4": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -781,7 +781,7 @@
                     "sideplane_expander": {
                       "health": "",
                       "sideplane_info": {
-                        "enclosure:fru:sideplane-sideplane_0.D0.B": {
+                        "enclosure:hw:sideplane-sideplane_0.D0.B": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -789,7 +789,7 @@
                           "health": "OK",
                           "fetch_time": 1582302355
                         },
-                        "enclosure:fru:sideplane-sideplane_0.D0.A": {
+                        "enclosure:hw:sideplane-sideplane_0.D0.A": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -797,7 +797,7 @@
                           "health": "OK",
                           "fetch_time": 1582302355
                         },
-                        "enclosure:fru:sideplane-sideplane_0.D1.B": {
+                        "enclosure:hw:sideplane-sideplane_0.D1.B": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -805,7 +805,7 @@
                           "health": "OK",
                           "fetch_time": 1582302355
                         },
-                        "enclosure:fru:sideplane-sideplane_0.D1.A": {
+                        "enclosure:hw:sideplane-sideplane_0.D1.A": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1428,7 +1428,7 @@
               },
               "node:ssc-vm-c-115.colo.seagate.com": {
                 "health": "",
-                "hw": {
+                "fru": {
                   "health": "",
                   "fru": {
                     "health": "",
@@ -1439,7 +1439,7 @@
                     "psus": {
                       "health": "",
                       "psus_info": {
-                        "node:fru:psu-Power Supply #0xc5": {
+                        "node:hw:psu-Power Supply #0xc5": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1452,7 +1452,7 @@
                     "fans": {
                       "health": "",
                       "fans_info": {
-                        "node:fru:fan-FAN1": {
+                        "node:hw:fan-FAN1": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1460,7 +1460,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN2": {
+                        "node:hw:fan-FAN2": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1468,7 +1468,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN3": {
+                        "node:hw:fan-FAN3": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1476,7 +1476,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN4": {
+                        "node:hw:fan-FAN4": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1484,7 +1484,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN5": {
+                        "node:hw:fan-FAN5": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1492,7 +1492,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN6": {
+                        "node:hw:fan-FAN6": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1500,7 +1500,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN7": {
+                        "node:hw:fan-FAN7": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1508,7 +1508,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN8": {
+                        "node:hw:fan-FAN8": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1516,7 +1516,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-RSC FAN": {
+                        "node:hw:fan-RSC FAN": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1974,7 +1974,7 @@
               },
               "node:ssc-vm-c-116.colo.seagate.com": {
                 "health": "",
-                "hw": {
+                "fru": {
                   "health": "",
                   "fru": {
                     "health": "",
@@ -1985,7 +1985,7 @@
                     "psus": {
                       "health": "",
                       "psus_info": {
-                        "node:fru:psu-Power Supply #0xc5": {
+                        "node:hw:psu-Power Supply #0xc5": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -1998,7 +1998,7 @@
                     "fans": {
                       "health": "",
                       "fans_info": {
-                        "node:fru:fan-FAN1": {
+                        "node:hw:fan-FAN1": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2006,7 +2006,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN2": {
+                        "node:hw:fan-FAN2": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2014,7 +2014,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN3": {
+                        "node:hw:fan-FAN3": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2022,7 +2022,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN4": {
+                        "node:hw:fan-FAN4": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2030,7 +2030,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN5": {
+                        "node:hw:fan-FAN5": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2038,7 +2038,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN6": {
+                        "node:hw:fan-FAN6": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2046,7 +2046,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN7": {
+                        "node:hw:fan-FAN7": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2054,7 +2054,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-FAN8": {
+                        "node:hw:fan-FAN8": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",
@@ -2062,7 +2062,7 @@
                           "health": "NA",
                           "fetch_time": 1582302359
                         },
-                        "node:fru:fan-RSC FAN": {
+                        "node:hw:fan-RSC FAN": {
                           "alert_type": "NA",
                           "severity": "NA",
                           "alert_uuid": "NA",

@@ -677,12 +677,12 @@ HEALTH_SCHEMA_KEY = "HEALTH>health_schema"
 MINION_NODE1_ID = "srvnode-1"
 MINION_NODE2_ID = "srvnode-2"
 SAS_RESOURCE_TYPE = "node:interface:sas"
-ACTUATOR_REQUEST_LIST = ["enclosure:fru:sideplane", "enclosure:fru:disk",
-    "enclosure:fru:psu", "enclosure:fru:controller", "enclosure:fru:fan",
+ACTUATOR_REQUEST_LIST = ["enclosure:hw:sideplane", "enclosure:hw:disk",
+    "enclosure:hw:psu", "enclosure:hw:controller", "enclosure:hw:fan",
     "enclosure:cortx:logical_volume", "enclosure:interface:sas",
     "enclosure:sensor:current", "enclosure:sensor:temperature",
-    "enclosure:sensor:voltage", "node:sensor:temperature", "node:fru:disk",
-    "node:fru:psu", "node:fru:fan", "node:sensor:current", "node:sensor:voltage",
+    "enclosure:sensor:voltage", "node:sensor:temperature", "node:hw:disk",
+    "node:hw:psu", "node:hw:fan", "node:sensor:current", "node:sensor:voltage",
     "node:interface:sas", "node:interface:nw:cable"]
 PROVISIONER_PACKAGE_NOT_INIT = "Provisioner is not instantiated."
 
