@@ -123,6 +123,19 @@ class USLMgmtURLView(_View):
         return {'mgmt_url': mgmt_url}
 
 
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/public_ip')
+class USLPublicIPView(_View):
+    """
+    USL public IP view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        public_ip = await self._service.get_public_ip()
+        return {'public_ip': public_ip}
+
+
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
 @CsmView._app_routes.view("/usl/v2/udx_saas")
