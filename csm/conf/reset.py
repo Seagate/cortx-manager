@@ -48,6 +48,7 @@ class Reset(Setup):
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         self.disable_and_stop_service()
+        self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -76,20 +77,23 @@ class Reset(Setup):
 
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
-        log_files = os.listdir(Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'))
-        log_files = [os.path.join( Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'), file)
-                                 for file in log_files]
 
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
             const.TMP_CSM
             ]
-        files_directory_list.extend(log_files)
-
         for _path in files_directory_list:
             Log.info(f"Deleting path :{_path}")
             Setup._run_cmd(f"rm -rf {_path}")
+
+    def reset_logs(self):
+        Log.info("Reseting log files")
+        log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
+        log_files = [os.path.join( Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'), file)
+                                 for file in log_files]
+        for each_file in log_files:
+            Setup._run_cmd(f"truncate -s 0 {each_file}")
 
     async def db_cleanup(self):
 
@@ -109,18 +113,4 @@ class Reset(Setup):
                 url = f"{self._consul_db_url}{collection}?recurse"
 
             Log.info(f"Deleting for collection:{collection} from {db}")
-            await self.erase_index(collection, url, "delete")
-
-    async def erase_index(self, collection, url, method, payload=None):
-        Log.info(f"Url: {url}")
-        try:
-            response, headers, status = await Setup.request(url, method, payload)
-            if status != 200:
-                Log.error(f"Index {collection} Could Not Be Deleted.")
-                Log.error(f"Response --> {response}")
-                Log.error(f"Status Code--> {status}")
-                return
-        except Exception as e:
-            Log.warn(f"Failed at deleting for {collection}")
-            Log.warn(f"{e}")
-        Log.info(f"Index {collection} Deleted.")
+            await Setup.erase_index(collection, url, "delete")
