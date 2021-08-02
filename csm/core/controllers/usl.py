@@ -84,6 +84,19 @@ class _SecuredView(_View):
             raise web.HTTPUnauthorized()
 
 
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/friendly_name')
+class USLFriendlyNameView(_View):
+    """
+    USL friendly name view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        friendly_name = await self._service.get_friendly_name()
+        return {'friendly_name': friendly_name}
+
+
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
 @CsmView._app_routes.view("/usl/v2/udx_saas")
