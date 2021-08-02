@@ -25,7 +25,7 @@
           "position": "Right",
           "durable_id": "psu_0.1"
         },
-        "resource_type": "fru"
+        "resource_type": "hw"
       }
     }
   }
