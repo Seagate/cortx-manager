@@ -110,6 +110,19 @@ class USLDeviceUUIDView(_View):
         return {'device_uuid': str(device_uuid)}
 
 
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/mgmt_url')
+class USLMgmtURLView(_View):
+    """
+    USL management URL view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        mgmt_url = await self._service.get_mgmt_url()
+        return {'mgmt_url': mgmt_url}
+
+
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
 @CsmView._app_routes.view("/usl/v2/udx_saas")
