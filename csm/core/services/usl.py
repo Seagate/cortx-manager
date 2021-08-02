@@ -95,7 +95,7 @@ class UslService(ApplicationService):
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
         Log.info("USL Service initialized")
 
-    async def _get_system_friendly_name(self) -> str:
+    async def get_friendly_name(self) -> str:
         entries = await self._storage(ApplianceName).get(Query())
         appliance_name = next(iter(entries), None)
         if appliance_name is None:
@@ -130,7 +130,7 @@ class UslService(ApplicationService):
         return tags.get('udx', 'disabled') == 'enabled'
 
     async def _get_volume_name(self, bucket_name: str) -> str:
-        return await self._get_system_friendly_name() + ": " + bucket_name
+        return await self.get_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
@@ -165,7 +165,7 @@ class UslService(ApplicationService):
     async def _format_device_info(self) -> Device:
         device_uuid = self._device_uuid
         return Device.instantiate(
-            await self._get_system_friendly_name(),
+            await self.get_friendly_name(),
             '0000',
             str(device_uuid),
             'S3',
@@ -401,7 +401,7 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
-        friendly_name = await self._get_system_friendly_name()
+        friendly_name = await self.get_friendly_name()
         service_urls = self._get_service_urls()
         return {
             'model': 'CORTX',
