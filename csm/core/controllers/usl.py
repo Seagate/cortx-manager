@@ -97,6 +97,19 @@ class USLFriendlyNameView(_View):
         return {'friendly_name': friendly_name}
 
 
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/device_uuid')
+class USLDeviceUUIDView(_View):
+    """
+    USL device UUID view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        device_uuid = await self._service.get_device_uuid()
+        return {'device_uuid': str(device_uuid)}
+
+
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
 @CsmView._app_routes.view("/usl/v2/udx_saas")
