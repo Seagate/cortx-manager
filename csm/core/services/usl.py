@@ -110,6 +110,9 @@ class UslService(ApplicationService):
     async def get_mgmt_url(self) -> str:
         return ServiceUrls.get_mgmt_url()
 
+    async def get_public_ip(self) -> str:
+        return NetworkAddresses.get_node_public_data_ip_addr()
+
     def _fetch_device_uuid(self) -> UUID:
         """
         Returns the CORTX cluster ID as in CSM configuration file.
