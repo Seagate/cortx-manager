@@ -107,6 +107,9 @@ class UslService(ApplicationService):
     async def get_device_uuid(self) -> UUID:
         return self._device_uuid
 
+    async def get_mgmt_url(self) -> str:
+        return ServiceUrls.get_mgmt_url()
+
     def _fetch_device_uuid(self) -> UUID:
         """
         Returns the CORTX cluster ID as in CSM configuration file.
@@ -373,7 +376,7 @@ class UslService(ApplicationService):
         token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
         return {'registrationToken': token}
 
-    def _get_mgmt_url(self) -> Dict[str, str]:
+    def _get_service_url_mgmt_entry(self) -> Dict[str, str]:
         """
         Returns a management link to be provided to the UDS.
 
@@ -393,7 +396,7 @@ class UslService(ApplicationService):
         """
 
         service_urls = []
-        mgmt_url = self._get_mgmt_url()
+        mgmt_url = self._get_service_url_mgmt_entry()
         service_urls.append(mgmt_url)
         return service_urls
 
