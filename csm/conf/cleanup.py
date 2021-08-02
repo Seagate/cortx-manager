@@ -40,9 +40,21 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+        if command.options.get("pre-factory"):
+            self._remove_log_directory()
+            self._replace_csm_service_file()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _remove_log_directory(self):
+        Log.info(f"Deleting path :{Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')}")
+        Setup._run_cmd(f"rm -rf {Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')}")
+
+    def _replace_csm_service_file(self):
+        Log.info(f"Replace service file.")
+        Setup._run_cmd(f"cp -f {const.CSM_AGENT_SERVICE_FILE_SRC_PATH} /etc/systemd/system/")
+
 
     def files_directory_cleanup(self):
         files_directory_list = [
