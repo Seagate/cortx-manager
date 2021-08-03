@@ -89,11 +89,16 @@ class Reset(Setup):
 
     def reset_logs(self):
         Log.info("Reseting log files")
-        log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
-        log_files = [os.path.join( Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'), file)
-                                 for file in log_files]
-        for each_file in log_files:
-            Setup._run_cmd(f"truncate -s 0 {each_file}")
+        log_dir = Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+        csm_log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
+        all_log_files = os.listdir(log_dir)
+        for each_file in all_log_files:
+            if each_file in csm_log_files:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"truncate -s 0 {_file}")
+            else:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"rm -rf {each_file}")
 
     async def db_cleanup(self):
 
