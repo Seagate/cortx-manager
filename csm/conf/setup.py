@@ -185,7 +185,7 @@ class Setup:
         return csm_user_pass
 
     @staticmethod
-    async def _create_cluster_admin(self):
+    async def _create_cluster_admin(force_action=False):
         '''
         Create Cluster admin using CSM User managment.
         Username, Password, Email will be obtaineed from Confstore
@@ -212,13 +212,13 @@ class Setup:
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)
-        if (not self.force_action) and \
+        if (not force_action) and \
             (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
             Log.console("WARNING: Cortx cluster admin already created.\n"
                         "Please use '-f' option to create admin user forcefully.")
             return None
 
-        if self.force_action and await usr_mngr.get(cluster_admin_user):
+        if force_action and await usr_mngr.get(cluster_admin_user):
             Log.info(f"Removing current user: {cluster_admin_user}")
             await usr_mngr.delete(cluster_admin_user)
 

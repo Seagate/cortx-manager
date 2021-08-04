@@ -42,6 +42,7 @@ class Reset(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:

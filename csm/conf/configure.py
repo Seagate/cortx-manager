@@ -72,7 +72,7 @@ class Configure(Setup):
         self._configure_cron()
         self._configure_uds_keys()
         self._configure_csm_web_keys()
-        await Setup._create_cluster_admin()
+        await Setup._create_cluster_admin(self.force_action)
         try:
             for count in range(0, 10):
                 try:
