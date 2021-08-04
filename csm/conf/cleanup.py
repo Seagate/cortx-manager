@@ -23,7 +23,7 @@ from csm.conf.setup import CsmSetupError, Setup
 
 class Cleanup(Setup):
     """
-    Delete all the CSM generated files and folders
+    Delete all the CSM generated files,folders, Configs and Non user collected data.
     """
 
     def __init__(self):
@@ -42,23 +42,36 @@ class Cleanup(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         if command.options.get("pre-factory"):
-            self._remove_log_directory()
+            # Pre-Factory: Cleanup the system and take to 
+            #               pre-factory (Postinstall) stage
             self._replace_csm_service_file()
+            self._service_user_cleanup()
         await self._unsupported_feature_entry_cleanup()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def _remove_log_directory(self):
-        Log.info(f"Deleting path :{Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')}")
-        Setup._run_cmd(f"rm -rf {Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')}")
-
     def _replace_csm_service_file(self):
+        '''
+        Service file cleanup
+        '''
         Log.info(f"Replace service file.")
         Setup._run_cmd(f"cp -f {const.CSM_AGENT_SERVICE_FILE_SRC_PATH} /etc/systemd/system/")
 
+    def _service_user_cleanup(self):
+        '''
+        Remove service user if system deployed in dev mode.
+        '''
+        self._user = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}")
+        if Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_DEPLOYMENT_MODE) == const.DEV and \
+                    self._is_user_exist():
+            Log.info(f"Remove Service user: {self._user}")
+            Setup._run_cmd(f"userdel -f {self._user}")
 
     def files_directory_cleanup(self):
+        '''
+        Cleanup CSM config and Remove Log directory
+        '''
         files_directory_list = [
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
@@ -72,12 +85,18 @@ class Cleanup(Setup):
             Setup._run_cmd(f"rm -rf {dir_path}")
 
     def web_env_file_cleanup(self):
-       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
-                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
-       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+        '''
+        Web config (.env) Cleanup
+        '''
+        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+                                        f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
+        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
                                     f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
 
     async def _unsupported_feature_entry_cleanup(self):
+        '''
+        Remove CSM Unsupported features entries
+        '''
         Log.info("Unsupported feature cleanup")
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         _es_db_url = (f"http://localhost:{port}/")
