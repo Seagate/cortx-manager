@@ -112,6 +112,18 @@ class USLDeviceUUIDView(_View):
 
 # TODO confirm if endpoint can be public
 @CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/volumes')
+class USLVolumesView(_View):
+    """
+    USL management URL view
+    """
+
+    async def get(self) -> Dict[str, List[Dict[str, Any]]]:
+        raise web.HTTPNotImplemented
+
+
+# TODO confirm if endpoint can be public
+@CsmAuth.public
 @CsmView._app_routes.view('/api/v2/usl/mgmt_url')
 class USLMgmtURLView(_View):
     """
