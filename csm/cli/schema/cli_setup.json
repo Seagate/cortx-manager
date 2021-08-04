@@ -58,6 +58,34 @@
       }
     },
     {
+      "name": "prepare",
+      "description": "Perform prepare for CORTX CLI",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.conf.prepare",
+        "method": "execute",
+        "class": "Prepare",
+        "is_static": false
+      }
+    },
+    {
       "name": "config",
       "description": "Config CORTX CLI",
       "need_confirmation": false,
@@ -99,6 +127,13 @@
       "permissions_tag": "update",
       "args": [
         {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -110,6 +145,34 @@
         "target": "csm.cli.conf.reset",
         "method": "execute",
         "class": "Reset",
+        "is_static": false
+      }
+    },
+    {
+      "name": "cleanup",
+      "description": "Perform cleanup for CORTX CLI",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.cli.conf.cleanup",
+        "method": "execute",
+        "class": "Cleanup",
         "is_static": false
       }
     },
