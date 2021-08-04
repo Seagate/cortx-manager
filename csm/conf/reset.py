@@ -51,6 +51,7 @@ class Reset(Setup):
         self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
+        await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):

@@ -74,3 +74,14 @@ class Cleanup(Setup):
         payload = {"query": {"match": {"component_name": "csm"}}}
         Log.info(f"Deleting for collection:{collection} from es_db")
         await Setup.erase_index(collection, url, "post", payload)
+
+    async def cluster_admin_cleanup(self):
+        '''
+        Remove User collection from consuldb
+        '''
+        from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
+        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
+        collection = "user_collection"
+        url = f"http://localhost:{port}/v1/kv/{CONSUL_ROOT}/{collection}?recurse"
+        Log.info(f"Deleting for collection:{collection} from consul_db")
+        await Setup.erase_index(collection, url, "delete")
