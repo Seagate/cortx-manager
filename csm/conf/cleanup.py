@@ -42,7 +42,7 @@ class Cleanup(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         if command.options.get("pre-factory"):
-            # Pre-Factory: Cleanup the system and take to 
+            # Pre-Factory: Cleanup the system and take to
             #               pre-factory (Postinstall) stage
             self._replace_csm_service_file()
             self._service_user_cleanup()
