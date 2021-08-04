@@ -119,6 +119,33 @@ class USLVolumesView(_View):
     """
 
     async def get(self) -> Dict[str, List[Dict[str, Any]]]:
+
+        class MethodSchema(Schema):
+
+            device_uuid = fields.UUID(attribute='deviceUUID', data_key='deviceUUID', required=True)
+
+            class AccessParams(Schema):
+
+                class Credentials(Schema):
+
+                    access_key = fields.Str(
+                        attribute='accessKey', data_key='accessKey', required=True)
+                    secret_key = fields.Str(
+                        attribute='secretKey', data_key='secretKey', required=True)
+
+                credentials = fields.Nested(Credentials, required=True)
+
+            access_params = fields.Nested(
+                AccessParams, attribute='accessParams', data_key='accessParams', required=True)
+
+        try:
+            body = await self.request.json()
+            Log.debug(f'body: {body}')
+            body_params = MethodSchema().load(body)
+        except (JSONDecodeError, ValidationError) as e:
+            desc = 'Unable to validate payload with access parameters'
+            Log.error(f'{desc}: {e}')
+            raise CsmError(desc=desc)
         raise web.HTTPNotImplemented
 
 
