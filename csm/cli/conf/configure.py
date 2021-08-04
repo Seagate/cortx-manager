@@ -33,6 +33,7 @@ class Configure(Setup):
 
     def __init__(self):
         super(Configure, self).__init__()
+        Setup._copy_cli_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -45,8 +46,7 @@ class Configure(Setup):
         Log.info("Executing Config for CORTX CLI")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
-            self._set_deployment_mode()
+            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
             self.cli_create(command)
         except KvError as e:
             err_msg = f"Failed to load the configuration: {e}"
@@ -63,13 +63,6 @@ class Configure(Setup):
         """
         Create the CortxCli configuration file on the required location.
         """
-
-        os.makedirs(const.CORTXCLI_PATH, exist_ok=True)
-        os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
-        Setup._run_cmd(
-            f"setfacl -R -m u:{self._user}:rwx {const.CORTXCLI_PATH}")
-        Setup._run_cmd(
-            f"setfacl -R -m u:{self._user}:rwx {const.CORTXCLI_CONF_PATH}")
         Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                  f"{const.CORTXCLI_SECTION}>{const.CSM_AGENT_HOST_PARAM_NAME}" ,
                  command.options.get(const.ADDRESS_PARAM, "127.0.0.1"))
@@ -77,5 +70,3 @@ class Configure(Setup):
             Conf.set(const.CORTXCLI_GLOBAL_INDEX,
                      f"{const.DEPLOYMENT}>{const.MODE}", const.DEV)
         Conf.save(const.CORTXCLI_GLOBAL_INDEX)
-        Setup._run_cmd(
-            f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
