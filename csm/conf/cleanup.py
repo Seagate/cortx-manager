@@ -42,8 +42,7 @@ class Cleanup(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         if command.options.get("pre-factory"):
-            # Pre-Factory: Cleanup the system and take to
-            #               pre-factory (Postinstall) stage
+            # Pre-Factory: Cleanup system & take to pre-factory (Postinstall) stage
             self._replace_csm_service_file()
             self._service_user_cleanup()
         await self._unsupported_feature_entry_cleanup()
@@ -55,7 +54,7 @@ class Cleanup(Setup):
         '''
         Service file cleanup
         '''
-        Log.info(f"Replace service file.")
+        Log.info(f"Replacing service file.")
         Setup._run_cmd(f"cp -f {const.CSM_AGENT_SERVICE_FILE_SRC_PATH} /etc/systemd/system/")
 
     def _service_user_cleanup(self):
@@ -65,7 +64,7 @@ class Cleanup(Setup):
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}")
         if Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_DEPLOYMENT_MODE) == const.DEV and \
                     self._is_user_exist():
-            Log.info(f"Remove Service user: {self._user}")
+            Log.info(f"Removing Service user: {self._user}")
             Setup._run_cmd(f"userdel -f {self._user}")
 
     def files_directory_cleanup(self):
