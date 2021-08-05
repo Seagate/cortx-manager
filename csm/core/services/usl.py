@@ -18,6 +18,7 @@ import time
 
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
+from botocore.exceptions import ClientError as BotoClientError  # type: ignore
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -112,6 +113,38 @@ class UslService(ApplicationService):
 
     async def get_public_ip(self) -> str:
         return NetworkAddresses.get_node_public_data_ip_addr()
+
+    async def get_volumes(
+        self, device_uuid: UUID, access_key: str, secret_access_key: str
+    ) -> List[Dict[str, Any]]:
+        if device_uuid != self._device_uuid:
+            raise CsmNotFoundError(desc=f'Device {device_uuid} not found')
+        capacity_details = (
+            await StorageCapacityService(self._provisioner).get_capacity_details())
+        capacity_size = capacity_details[const.SIZE]
+        capacity_used = capacity_details[const.USED]
+        volumes = []
+        try:
+            s3_client = self._s3plugin.get_s3_client(
+                access_key, secret_access_key, CsmS3ConfigurationFactory.get_s3_connection_config())
+            for bucket in await s3_client.get_all_buckets():
+                if not await self._is_bucket_lyve_pilot_enabled(s3_client, bucket):
+                    continue
+                volume = {
+                    'name': await self._get_volume_name(bucket.name),
+                    'bucketName': bucket.name,
+                    'uuid': self._get_volume_uuid(bucket.name),
+                    'deviceUuid': self._device_uuid,
+                    'size': capacity_size,
+                    'used': capacity_used,
+                    'filesystem': 's3',
+                }
+                volumes.append(volume)
+        except BotoClientError as e:
+            reason = e.response['Error']['Message']
+            Log.error(f'Client error raised during S3 operation: {reason}')
+            raise InvalidRequest(reason) from e
+        return volumes
 
     def _fetch_device_uuid(self) -> UUID:
         """
