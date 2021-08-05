@@ -75,8 +75,8 @@ class Cleanup(Setup):
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
-            const.CSM_CONF_PATH,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
+            const.CSM_CONF_PATH
         ]
 
         for dir_path in files_directory_list:
