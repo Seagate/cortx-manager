@@ -146,7 +146,11 @@ class USLVolumesView(_View):
             desc = 'Unable to validate payload with access parameters'
             Log.error(f'{desc}: {e}')
             raise CsmError(desc=desc)
-        raise web.HTTPNotImplemented
+        device_uuid = body_params['deviceUUID']
+        access_key = body_params['accessParams']['credentials']['accessKey']
+        secret_access_key = body_params['accessParams']['credentials']['secretKey']
+        volumes = await self._service.get_volumes(device_uuid, access_key, secret_access_key)
+        return {'volumes': volumes}
 
 
 # TODO confirm if endpoint can be public
