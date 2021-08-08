@@ -314,11 +314,22 @@ STATUS_PARTIAL = 'Partial'
 HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
 # Cluster Operations
+ARGUMENTS_FORMAT_FLAT = 'flat'
+ARGUMENTS_FORMAT_NESTED = 'nested'
 PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
+PROCESS_CLUSTER_STATUS_REQ = 'process_cluster_status'
 CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
+CLUSTER_STATUS_ERR_MSG = 'Error getting cluster status.'
+ARG_NODE_ID = 'node_id'
 ARG_OPERATION = 'opertion'
+ARG_ARGUMENTS = 'arguments'
 ARG_FORCE = 'force'
 ARG_CHECK_CLUSTER = 'check_cluster'
+ARG_POWER_OFF = 'poweroff'
+ARG_STORAGE_OFF = 'storageoff'
+UNKNOWN_FIELD_ERR_MSG = 'Unknown field.'
+ARG_NOT_SUPPORTED_ERR_MSG = 'Not supported for specified operation.'
+ARG_BLANK_ERR_MSG = 'Missing data for required field.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
@@ -525,7 +536,7 @@ S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
-CLUSTER_OPERATIONS_SERVICE = "cluster_operations_service"
+CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -570,7 +581,7 @@ REPLACE_NODE_SERVICE = "replace_node"
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
-CLUSTER_OPERATIONS_PLUGIN = "cluster_operations"
+CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
