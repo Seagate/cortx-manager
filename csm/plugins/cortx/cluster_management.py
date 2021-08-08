@@ -23,7 +23,7 @@ from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 
 
-class ClusterOperationsPlugin(CsmPlugin):
+class ClusterManagementPlugin(CsmPlugin):
     """
     Communicates with HA via ha_framework to process operations
     on cluster.
@@ -33,32 +33,33 @@ class ClusterOperationsPlugin(CsmPlugin):
         super().__init__()
 
         self._ha = ha
-        self._executor = ThreadPoolExecutor(max_workers=1)
-        self._loop = asyncio.get_event_loop()
 
     def init(self, **kwargs):
         pass
 
+    @Log.trace_method(Log.DEBUG)
     def process_request(self, **kwargs):
         request = kwargs.get(const.PLUGIN_REQUEST, "")
 
         Log.debug(f"Cluster operations plugin process_request with arguments: {kwargs}")
-        if request == const.PROCESS_CLUSTER_OPERATION_REQ:
-            self._process_cluster_operation(kwargs)
+        process_request_resut = None
+        if request == const.PROCESS_CLUSTER_STATUS_REQ:
+            node_id = kwargs.get(const.ARG_NODE_ID, "")
+            process_request_resut = self._ha.get_cluster_status(node_id)
+        elif request == const.PROCESS_CLUSTER_OPERATION_REQ:
+            process_request_resut = self._process_cluster_operation(kwargs)
 
-        return {"status": "Succeeded"}
+        return process_request_resut
 
     def _process_cluster_operation(self, filters):
         """
         Operations on cluster.
         """
         resource = filters.get(const.ARG_RESOURCE, "")
-        resource_id = filters.get(const.ARG_RESOURCE_ID)
         operation = filters.get(const.ARG_OPERATION)
-        check_cluster = not filters.get(const.ARG_FORCE)
+        arguments = filters.get(const.ARG_ARGUMENTS)
 
-        self._loop.run_in_executor(self._executor,
-                                    partial(self._ha.process_cluster_operation,
-                                    resource, resource_id, operation,
-                                    check_cluster=check_cluster))
+        process_result = self._ha.process_cluster_operation(resource, operation,
+                                                            **arguments)
+        return process_result
 

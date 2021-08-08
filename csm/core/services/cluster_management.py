@@ -18,34 +18,48 @@ from csm.core.blogic import const
 from cortx.utils.log import Log
 
 
-class ClusterOperationsAppService(ApplicationService):
+class ClusterManagementAppService(ApplicationService):
     """
     Operations on cluster.
     """
 
     def __init__(self, plugin):
-        self._cluster_operations_plugin = plugin
+        self._cluster_management_plugin = plugin
 
-    async def request_operation(self, resource, resource_id, operation, **filters):
+    @Log.trace_method(Log.DEBUG)
+    async def get_cluster_status(self, node_id):
         """
         Operations on cluster.
         """
-        plugin_request_params = self._build_request_parameters(resource, resource_id, operation, filters)
-        Log.debug(f"Cluster operation {operation} on {resource} with filters: \
-                    {plugin_request_params}")
-
-        plugin_response = self._cluster_operations_plugin.process_request(**plugin_request_params)
+        request_params = dict()
+        request_params[const.PLUGIN_REQUEST] = const.PROCESS_CLUSTER_STATUS_REQ
+        request_params[const.ARG_NODE_ID] = node_id
+        Log.debug(f"ClusterOperationsAppService: Making plugin call with arguments: "
+                  f"{request_params}")
+        plugin_response = self._cluster_management_plugin.process_request(**request_params)
         return plugin_response
 
-    def _build_request_parameters(self, resource, resource_id, operation, filters):
+    @Log.trace_method(Log.DEBUG)
+    async def request_operation(self, resource, operation, **arguments):
+        """
+        Operations on cluster.
+        """
+        plugin_request_params = self._build_request_parameters(resource, operation, arguments)
+        Log.debug(f"Cluster operation {operation} on {resource} with arguments: \
+                    {plugin_request_params}")
+
+        plugin_response = self._cluster_management_plugin.process_request(**plugin_request_params)
+        return plugin_response
+
+    def _build_request_parameters(self, resource, operation, arguments):
         """
         Build request parameters based on the filters.
         """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.PROCESS_CLUSTER_OPERATION_REQ
         request_params[const.ARG_RESOURCE] = resource
-        request_params[const.ARG_RESOURCE_ID] = resource_id
         request_params[const.ARG_OPERATION] = operation
-        request_params[const.ARG_FORCE] = filters.get(const.ARG_FORCE, False)
+        request_params[const.ARG_ARGUMENTS] = arguments
 
         return request_params
+
