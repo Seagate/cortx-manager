@@ -87,7 +87,7 @@ class CsmAgent:
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
 
-        CsmAgent._configure_cluster_operations_service()
+        CsmAgent._configure_cluster_management_service()
 
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
@@ -189,12 +189,12 @@ class CsmAgent:
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(CortxHAFramework(),  provisioner, db)
 
     @staticmethod
-    def _configure_cluster_operations_service():
-        # Cluster Operations configuration
-        cluster_operations_plugin = import_plugin_module(const.CLUSTER_OPERATIONS_PLUGIN)
-        cluster_operations_plugin_obj = cluster_operations_plugin.ClusterOperationsPlugin(CortxHAFramework())
-        cluster_operations_service = ClusterOperationsAppService(cluster_operations_plugin_obj)
-        CsmRestApi._app[const.CLUSTER_OPERATIONS_SERVICE] = cluster_operations_service
+    def _configure_cluster_management_service():
+        # Cluster Management configuration
+        cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
+        cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(CortxHAFramework())
+        cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj)
+        CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
     def _daemonize():
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
                                         AlertMonitorService, AlertRepository
     from csm.core.services.health import HealthAppService
-    from csm.core.services.cluster_operations import ClusterOperationsAppService
+    from csm.core.services.cluster_management import ClusterManagementAppService
     from csm.core.services.stats import StatsAppService
     from csm.core.services.s3.iam_users import IamUsersService
     from csm.core.services.s3.accounts import S3AccountService

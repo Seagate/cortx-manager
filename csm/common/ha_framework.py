@@ -21,6 +21,7 @@ from importlib import import_module
 from csm.common.errors import CsmNotFoundError, InvalidRequest
 from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
+from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 from cortx.utils.cron import CronJob
 from csm.core.blogic import const
 
@@ -129,29 +130,51 @@ class CortxHAFramework(HAFramework):
 
         return parsed_system_health[const.OUTPUT_LITERAL]
 
-    def process_cluster_operation(self, element, id_, operation, **kwargs):
+    def get_cluster_status(self, node_id):
         if self._cluster_manager is None or \
             not hasattr(self._cluster_manager, "get_system_health"):
             self._init_cluster_manager()
 
-        self._validate_resource(element)
-        parsed_cluster_op_resp = None
+        cluster_status_resp = None
         try:
-            # TODO: Make the operation call
-            cluster_op_resp = '{"status": "Succeeded", "output": "offline", "error" : ""}'
+            # cluster_status_resp = self._cluster_manager.node_controller\
+            #                                         .check_cluster_feasibility(node_id)
             # TODO: Remove the statement below when delimiter issue is
             # fixed in cortx-utils.
             Conf.init(delim='>')
-            Log.debug(f"HA Framework - Cluster Operation: {cluster_op_resp}")
-            parsed_cluster_op_resp = JsonMessage(cluster_op_resp).load()
+            Log.debug(f"HA Framework - Get Cluster Status: {cluster_status_resp}")
         except Exception as e:
-            err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
+            err_msg = f"{const.CLUSTER_STATUS_ERR_MSG} : {e}"
             Log.error(err_msg)
             raise Exception(err_msg)
 
-        self._validate_cluster_operation_response(parsed_cluster_op_resp)
+        # return cluster_status_resp
+        return {
+            "status": "warning",
+            "msg": "Stopping the node will cause a loss of the quorum"
+        }
 
-        return parsed_cluster_op_resp[const.OUTPUT_LITERAL]
+    def process_cluster_operation(self, resource, operation, **arguments):
+        if self._cluster_manager is None or \
+            not hasattr(self._cluster_manager, "get_system_health"):
+            self._init_cluster_manager()
+
+        self._validate_resource(resource)
+        Log.debug(f"HA Framework - Cluster Operation: "
+                    f"Requesting {operation} operation on {resource} with "
+                    f"arguments {arguments}.")
+        ResourceOperationsFactory.get_operations_by_resource(resource)\
+                                    .get_operation(operation)\
+                                    .process(self._cluster_manager, **arguments)
+        # TODO: Remove the statement below when delimiter issue is
+        # fixed in cortx-utils.
+        Conf.init(delim='>')
+        cluster_op_resp = {
+            "message": f"{operation} request for {resource} is placed successfully."
+        }
+        Log.debug(f"HA Framework - Cluster Operation: {cluster_op_resp}")
+
+        return cluster_op_resp
 
     def _init_cluster_manager(self):
         Log.info("Initializing CortxClusterManager")
@@ -181,9 +204,6 @@ class CortxHAFramework(HAFramework):
 
         if system_health[const.STATUS_LITERAL] == const.STATUS_FAILED:
             raise InvalidRequest(system_health[const.ERROR_LITERAL])
-
-    def _validate_cluster_operation_response(self, cluster_op_resp):
-        pass
 
 
 class PcsHAFramework(HAFramework):
