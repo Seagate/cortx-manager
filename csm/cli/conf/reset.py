@@ -14,10 +14,13 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 
+import os
 from cortx.utils.log import Log
-from csm.conf.setup import Setup
+from csm.conf.setup import Setup, CsmSetupError
 from csm.core.providers.providers import Response
 from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.kv_store.error import KvError
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
@@ -34,5 +37,21 @@ class Reset(Setup):
         :param command:
         :return:
         """
-        Log.info("Executing Reset for CORTX CLI")
+        Log.info("Executing Reset for CORTX CLI Setup")
+        try:
+            Log.info("Loading Url into conf store.")
+            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
+        except KvError as e:
+            Log.error(f"Configuration Loading Failed {e}")
+            raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        self.reset_logs()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def reset_logs():
+        '''
+        Truncate size of cortxcli.log file to 0
+        '''
+        Log.info("Reseting log files")
+        _file = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
+                                        "cortxcli.log")
+        Setup._run_cmd(f"truncate -s 0 {_file}")

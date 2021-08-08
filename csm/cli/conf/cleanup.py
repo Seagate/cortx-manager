@@ -15,19 +15,22 @@
 
 
 from cortx.utils.log import Log
-from csm.conf.setup import Setup
+from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.kv_store.error import KvError
 
 
 class Cleanup(Setup):
     """
-    Init CORTX CLI
+    Delete all the CLI generated files and folders
     """
 
     def __init__(self):
         super(Cleanup, self).__init__()
+        Log.info("Triggering Cleanup for Cortxcli setup.")
 
     async def execute(self, command):
         """
@@ -35,6 +38,28 @@ class Cleanup(Setup):
         :param command: Command Object For CLI. :type: Command
         :return: 0 on success, RC != 0 otherwise.
         """
-
-        Log.info("Executing Cleanup for CORTX CLI")
+        Log.info("Executing Cleanup for CORTX CLI Setup")
+        try:
+            Log.info("Loading Url into conf store.")
+            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
+        except KvError as e:
+            Log.error(f"Configuration Loading Failed {e}")
+            raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        if command.options.get("pre-factory"):
+            # Placeholder for pre-factory cleanup.
+            Log.info("Execute pre-factory cleanup for cli setup")
+        self.files_directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+
+    def files_directory_cleanup(self):
+        '''
+        Remove CLI config and log directory
+        '''
+        files_directory_list = [
+            Conf.get(const.CORTXCLI_GLOBAL_INDEX, 'Log>log_path'),
+            const.CORTXCLI_CONF_PATH
+        ]
+        for dir_path in files_directory_list:
+            Log.info(f"Deleteing path :{dir_path}")
+            Setup._run_cmd(f"rm -rf {dir_path}")
