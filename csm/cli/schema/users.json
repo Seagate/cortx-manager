@@ -267,7 +267,6 @@
           "flag": "-r",
           "dest": "role",
           "type": "str",
-          "action": "append",
           "help": "Select an appropriate role for the user.\n Monitor provides viewing access. Manage provides editing access.",
           "choices": [
             "monitor",

@@ -15,6 +15,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
+import os
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.providers.providers import Response
@@ -47,9 +48,9 @@ class Reset(Setup):
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         self.disable_and_stop_service()
+        self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
-        await self._unsupported_feature_entry_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):
@@ -76,16 +77,28 @@ class Reset(Setup):
 
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
+
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
-            const.TMP_CSM,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
-        ]
+            const.TMP_CSM
+            ]
+        for _path in files_directory_list:
+            Log.info(f"Deleting path :{_path}")
+            Setup._run_cmd(f"rm -rf {_path}")
 
-        for dir_path in files_directory_list:
-            Log.info(f"Deleting path :{dir_path}")
-            Setup._run_cmd(f"rm -rf {dir_path}")
+    def reset_logs(self):
+        Log.info("Reseting log files")
+        log_dir = Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+        csm_log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
+        all_log_files = os.listdir(log_dir)
+        for each_file in all_log_files:
+            if each_file in csm_log_files:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"truncate -s 0 {_file}")
+            else:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"rm -rf {each_file}")
 
     async def db_cleanup(self):
 
@@ -105,25 +118,4 @@ class Reset(Setup):
                 url = f"{self._consul_db_url}{collection}?recurse"
 
             Log.info(f"Deleting for collection:{collection} from {db}")
-            await self.erase_index(collection, url, "delete")
-
-    async def _unsupported_feature_entry_cleanup(self):
-        collection = "config"
-        url = f"{self._es_db_url}{collection}/_delete_by_query"
-        payload = {"query": {"match": {"component_name": "csm"}}}
-        Log.info(f"Deleting for collection:{collection} from es_db")
-        await self.erase_index(collection, url, "post", payload)
-
-    async def erase_index(self, collection, url, method, payload=None):
-        Log.info(f"Url: {url}")
-        try:
-            response, headers, status = await Setup.request(url, method, payload)
-            if status != 200:
-                Log.error(f"Index {collection} Could Not Be Deleted.")
-                Log.error(f"Response --> {response}")
-                Log.error(f"Status Code--> {status}")
-                return
-        except Exception as e:
-            Log.warn(f"Failed at deleting for {collection}")
-            Log.warn(f"{e}")
-        Log.info(f"Index {collection} Deleted.")
+            await Setup.erase_index(collection, url, "delete")
