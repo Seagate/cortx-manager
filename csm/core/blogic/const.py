@@ -330,6 +330,8 @@ ARG_STORAGE_OFF = 'storageoff'
 UNKNOWN_FIELD_ERR_MSG = 'Unknown field.'
 ARG_NOT_SUPPORTED_ERR_MSG = 'Not supported for specified operation.'
 ARG_BLANK_ERR_MSG = 'Missing data for required field.'
+CLUSTER_STATUS_OK_MSG = 'Stopping the node will not bring the cluster offline.'
+CLUSTER_STATUS_WARN_MSG = 'Stopping the node will bring the cluster offline.'
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
