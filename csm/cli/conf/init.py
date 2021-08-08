@@ -14,11 +14,15 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 
+import os
 from cortx.utils.log import Log
-from csm.conf.setup import Setup
+from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.kv_store.error import KvError
+from cortx.utils.validator.error import VError
 
 
 class Init(Setup):
@@ -37,4 +41,35 @@ class Init(Setup):
         """
 
         Log.info("Executing Init for CORTX CLI")
+        try:
+            Log.info("Loading Url into conf store.")
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
+        except KvError as e:
+            Log.error(f"Configuration Loading Failed {e}")
+        self._prepare_and_validate_confstore_keys()
+        self._config_user_permission()
+
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+        })
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX,
+                                keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
+
+    def _config_user_permission(self):
+        """
+        Set User Permission
+        """
+        self._user = Conf.get(const.CONSUMER_INDEX,
+                                    self.conf_store_keys.get(const.KEY_CSM_USER))
+        Log.info("Set User Permission")
+        log_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX, "Log>log_path")
+        os.makedirs(log_path, exist_ok=True)
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
