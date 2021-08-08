@@ -94,6 +94,21 @@ class Setup:
             raise CsmSetupError(f"Connection to Db Failed. {e}")
 
     @staticmethod
+    async def erase_index(collection, url, method, payload=None):
+        Log.info(f"Url: {url}")
+        try:
+            response, headers, status = await Setup.request(url, method, payload)
+            if status != 200:
+                Log.error(f"Unable to delete collection: {collection}")
+                Log.error(f"Response: {response}")
+                Log.error(f"Status Code: {status}")
+                return None
+        except Exception as e:
+            Log.warn(f"Failed at deleting for {collection}")
+            Log.warn(f"{e}")
+        Log.info(f"Index {collection} Deleted.")
+
+    @staticmethod
     def _validate_conf_store_keys(index, keylist=None):
         if not keylist:
             raise CsmSetupError("Keylist should not be empty")
