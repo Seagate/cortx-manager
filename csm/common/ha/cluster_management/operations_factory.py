@@ -67,7 +67,7 @@ class ResourceOperationsFactory:
 
     @staticmethod
     def get_operations_by_resource(resource: str) -> ResourceOperations:
-        
+
         resourceOperations = None
 
         if resource == 'cluster':

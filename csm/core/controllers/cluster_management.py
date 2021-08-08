@@ -52,7 +52,7 @@ class ClusterOperationsView(CsmView):
         try:
             qp = qp_schema.load(self.request.rel_url.query, unknown=EXCLUDE)
             req_body = req_body_schema.load(await self.request.json(), unknown=INCLUDE)
-            
+
             operation = req_body['operation']
             if qp['arguments_format'] == const.ARGUMENTS_FORMAT_FLAT:
                 req_body.pop('operation')
@@ -82,7 +82,7 @@ class ClusterStatusView(CsmView):
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         """
-        API to get cluster status if node with {node_id} 
+        API to get cluster status if node with {node_id}
         is stopped or powered off.
         """
         node_id = self.request.match_info["node_id"]
