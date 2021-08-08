@@ -41,7 +41,7 @@ class S3AuditLogModel(CsmModel):
     cipher_suite = StringType(default="")
     error_code = StringType(default="")
     host_header = StringType(default="")
-    host_id = StringType(default="") 
+    host_id = StringType(default="")
     http_status = IntType(default=-1)
     key = StringType(default="")
     object_size = IntType(default=-1)
