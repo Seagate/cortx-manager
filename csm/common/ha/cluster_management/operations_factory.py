@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from abc import ABC, abstractmethod
-
 from csm.common.errors import InvalidRequest
 from csm.common.ha.cluster_management import operations
 
@@ -44,7 +43,6 @@ class ClusterOperations(ResourceOperations):
             raise InvalidRequest(f"Cluster does not support {operation} operation.")
 
         return clusterOperation
-
 
 
 class NodeOperations(ResourceOperations):
