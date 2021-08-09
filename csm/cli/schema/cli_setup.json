@@ -3,33 +3,6 @@
   "description": "CLI Setup Command",
   "sub_commands": [
     {
-      "name": "init",
-      "description": "Initialize CORTX CLI",
-      "need_confirmation": false,
-      "permissions_tag": "update",
-      "args": [
-        {
-          "flag": "--config",
-          "dest": "config_url",
-          "type": "str",
-          "help": "Config Store URL e.g <type>://<path>."
-        },
-        {
-          "flag": "args",
-          "default": [],
-          "suppress_help": true,
-          "nargs": "?"
-        }
-      ],
-      "comm": {
-        "type": "direct",
-        "target": "csm.cli.conf.init",
-        "method": "execute",
-        "class": "Init",
-        "is_static": false
-      }
-    },
-    {
       "name": "post_install",
       "description": "Perform post_install for CORTX CLI",
       "need_confirmation": false,
@@ -87,7 +60,7 @@
     },
     {
       "name": "config",
-      "description": "Config CORTX CLI",
+      "description": "Perform config for CORTX CLI",
       "need_confirmation": false,
       "permissions_tag": "update",
       "args": [
@@ -120,6 +93,33 @@
         "is_static": false
       }
     },
+    {
+        "name": "init",
+        "description": "Initialize CORTX CLI",
+        "need_confirmation": false,
+        "permissions_tag": "update",
+        "args": [
+          {
+            "flag": "--config",
+            "dest": "config_url",
+            "type": "str",
+            "help": "Config Store URL e.g <type>://<path>."
+          },
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?"
+          }
+        ],
+        "comm": {
+          "type": "direct",
+          "target": "csm.cli.conf.init",
+          "method": "execute",
+          "class": "Init",
+          "is_static": false
+        }
+      },
     {
       "name": "reset",
       "description": "Perform reset for CORTX CLI",
