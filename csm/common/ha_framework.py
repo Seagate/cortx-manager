@@ -137,8 +137,8 @@ class CortxHAFramework(HAFramework):
 
         cluster_status_resp = None
         try:
-            # cluster_status_resp = self._cluster_manager.node_controller\
-            #                                         .check_cluster_feasibility(node_id)
+            cluster_status_resp = self._cluster_manager.node_controller\
+                                                    .check_cluster_feasibility(node_id)
             # TODO: Remove the statement below when delimiter issue is
             # fixed in cortx-utils.
             Conf.init(delim='>')
@@ -148,11 +148,19 @@ class CortxHAFramework(HAFramework):
             Log.error(err_msg)
             raise Exception(err_msg)
 
-        # return cluster_status_resp
-        return {
-            "status": "warning",
-            "msg": "Stopping the node will cause a loss of the quorum"
-        }
+        result = None
+        if cluster_status_resp[const.STATUS_LITERAL] == const.STATUS_FAILED:
+            result = {
+                const.STATUS_LITERAL: const.WARNING,
+                const.MESSAGE_LITERAL: const.CLUSTER_STATUS_WARN_MSG
+            }
+        elif cluster_status_resp[const.STATUS_LITERAL] == const.STATUS_SUCCEEDED:
+            result = {
+                const.STATUS_LITERAL: const.OK,
+                const.MESSAGE_LITERAL: const.CLUSTER_STATUS_OK_MSG
+            }
+
+        return result
 
     def process_cluster_operation(self, resource, operation, **arguments):
         if self._cluster_manager is None or \

@@ -26,7 +26,12 @@ from cortx.utils.log import Log
 
 
 class Operation(ABC):
-
+    """
+    Base class that will be extended by all operation implementations.
+    Extending classes will have to provide implementation for
+    validate_arguments and execute methods.
+    The process method will call validate_arguments and execute methods in order.
+    """
     not_blank_validator = validate.Length(min=1, error=const.ARG_BLANK_ERR_MSG)
 
     def process(self, cluster_manager, **kwargs):
@@ -34,7 +39,6 @@ class Operation(ABC):
 
         executor = ThreadPoolExecutor(max_workers=1)
         loop = asyncio.get_event_loop()
-
         loop.run_in_executor(executor, partial(self.execute, cluster_manager, **kwargs))
 
     @abstractmethod
@@ -46,6 +50,10 @@ class Operation(ABC):
         pass
 
     def parse_errors(self, errors):
+        """
+        Parse the errors raised in validate_arguments method by
+        the extending classes.
+        """
         error_messages = []
         for each_key in errors.keys():
             if errors[each_key][0] == const.UNKNOWN_FIELD_ERR_MSG:
@@ -85,7 +93,9 @@ class NodeStartOperation(Operation):
 
 
 class NodeStopOperation(Operation):
-
+    """
+    Process stop operation on node with he arguments provided.
+    """
     def validate_arguments(self, **kwargs):
         fields_to_validate = {
             const.ARG_RESOURCE_ID: fields.Str(required=True,
@@ -102,16 +112,18 @@ class NodeStopOperation(Operation):
             const.ARG_CHECK_CLUSTER: not kwargs.get(const.ARG_FORCE, False)
         }
         Log.debug(f"NodeStopOperation on node with id {node_id} and args: {args}")
-        # try:
-        #     operation_result = cluster_manager.node_controller.stop(node_id, args)
-        #     Log.debug(f"NodePoweroffOperation result: {operation_result}")
-        # except Exception as e:
-        #     err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
-        #     Log.error(err_msg)
+        try:
+            operation_result = cluster_manager.node_controller.stop(node_id, args)
+            Log.debug(f"NodePoweroffOperation result: {operation_result}")
+        except Exception as e:
+            err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
+            Log.error(err_msg)
 
 
 class NodePoweroffOperation(Operation):
-
+    """
+    Process poweroff operation on node with he arguments provided.
+    """
     def validate_arguments(self, **kwargs):
         fields_to_validate = {
             const.ARG_RESOURCE_ID: fields.Str(required=True,
@@ -131,10 +143,10 @@ class NodePoweroffOperation(Operation):
             const.ARG_STORAGE_OFF: kwargs.get(const.ARG_STORAGE_OFF, False)
         }
         Log.debug(f"NodePoweroffOperation on node with id {node_id} and args: {args}")
-        # try:
-        #     operation_result = cluster_manager.node_controller.stop(node_id, args)
-        #     Log.debug(f"NodePoweroffOperation result: {operation_result}")
-        # except Exception as e:
-        #     err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
-        #     Log.error(err_msg)
+        try:
+            operation_result = cluster_manager.node_controller.stop(node_id, args)
+            Log.debug(f"NodePoweroffOperation result: {operation_result}")
+        except Exception as e:
+            err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
+            Log.error(err_msg)
 
