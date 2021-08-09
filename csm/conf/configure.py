@@ -15,6 +15,7 @@
 
 import os
 import time
+import ldap
 from cortx.utils.product_features import unsupported_features
 from csm.common.payload import Json, Text
 from ipaddress import ip_address
@@ -28,7 +29,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV
-
+from csm.common.process import SimpleProcess
 
 class Configure(Setup):
     """
@@ -62,20 +63,21 @@ class Configure(Setup):
         self._validate_es_service()
         self._set_deployment_mode()
         try:
-            self._configure_uds_keys()
-            self._configure_csm_web_keys()
-            self._logrotate()
-            self._configure_cron()
-            for count in range(0, 10):
-                try:
-                    await self._set_unsupported_feature_info()
-                    break
-                except Exception as e_:
-                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
-                    time.sleep(2**count)
+            self._configure_csm_ldap_schema()
+            # self._configure_uds_keys()
+            # self._configure_csm_web_keys()
+            # self._logrotate()
+            # self._configure_cron()
+            # for count in range(0, 10):
+            #     try:
+            #         await self._set_unsupported_feature_info()
+            #         break
+            #     except Exception as e_:
+            #         Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
+            #         time.sleep(2**count)
 
-            if not self._replacement_node_flag:
-                self.create()
+            # if not self._replacement_node_flag:
+            #     self.create()
         except Exception as e:
             import traceback
             err_msg = (f"csm_setup config command failed. Error: "
@@ -91,9 +93,10 @@ class Configure(Setup):
             const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
             const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
+            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+            const.KEY_ROOT_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
             })
-
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def _validate_consul_service(self):
@@ -257,3 +260,68 @@ class Configure(Setup):
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+
+    def _configure_csm_ldap_schema(self):
+        """
+        Configure openLdap for CORTX Users
+        """
+        Log.info("Openldap configuration started for Cortx users.")
+        _rootdnpassword = self._fetch_ldap_root_password()
+        if not _rootdnpassword:
+            raise CsmSetupError("Failed to fetch LDAP root user password.")
+
+        # Insert cortxuser schema
+        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF} -H ldapi:///')
+
+        # Initialize dc=csm,dc=seagate,dc=com
+        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,dc=seagate,dc=com -w {_rootdnpassword} -f {const.CORTXUSER_INIT_LDIF} -H ldapi:///')
+
+        # Setup necessary permissions
+        self._setup_ldap_permissions()
+        
+        # Create Cortx Account
+        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D cn=sgiamadmin,dc=seagate,dc=com -f {const.CORTXUSER_ACCOUNT_LDIF}')
+        Log.info("Openldap configuration completed for Cortx users.")
+
+    def _setup_ldap_permissions(self):
+        """
+        Setup necessary access permissions
+        """
+        #ToDo: Read base_dn from Conf Store once it is available
+        bind_base_dn = 'cn=sgiamadmin,dc=seagate,dc=com'
+        dn = 'olcDatabase={2}mdb,cn=config'
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,dc=seagate,dc=com" by dn.base="'+bind_base_dn+'" read by self')
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,dc=seagate,dc=com" by dn.base="'+bind_base_dn+'" write by self')
+
+    def _run_ldap_cmd(self, cmd):
+        """
+        Run command and throw error if cmd failed
+        """
+        try:
+            _err = ""
+            Log.info(f"Executing cmd: {cmd}")
+            _proc = SimpleProcess(cmd)
+            _output, _err, _rc = _proc.run(universal_newlines=True)
+            Log.info(f"Output: {_output}, \n Err:{_err}, \n RC:{_rc}")
+            #_rc = 68: dc=csm,dc=seagate,dc=com already exists
+            #_rc = 80: Cortxuser schema already exists
+            print("cmd---rc",cmd,_rc)
+            if _rc not in (0, 68, 80):
+                raise
+            return _output, _err, _rc
+        except Exception as e:
+            Log.error(f"Csm setup is failed Error: {e}, {_err}")
+            raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
+
+    def _modify_ldap_attribute(self, dn, attribute, value):
+        # Open a connection
+        ldap_conn = ldap.initialize("ldapi:///")
+        # Bind/authenticate with a user with apropriate rights to add objects
+        ldap_conn.sasl_non_interactive_bind_s('EXTERNAL')
+        mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
+        try:
+            ldap_conn.modify_s(dn, mod_attrs)
+        except:
+            Log.error('Error while modifying attribute- '+ attribute )
+            raise Exception('Error while modifying attribute' + attribute)
+        ldap_conn.unbind_s()

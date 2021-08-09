@@ -1,0 +1,48 @@
+# CORTX-CSM: CORTX Management web and CLI interface.
+# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# For any questions about this software or licensing,
+# please email opensource@seagate.com or cortx-questions@seagate.com.
+
+dn: cn=cortxuser,cn=schema,cn=config
+cn: cortxuser
+objectClass: olcSchemaConfig
+olcAttributeTypes: {30}( 1.3.6.1.4.99999.2.3.31 NAME 'userType' DESC 'Type o
+ f user i.e. csm, s3 or iam' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466
+ .115.121.1.15 )
+olcAttributeTypes: {31}( 1.3.6.1.4.99999.2.3.32 NAME 'userRole' DESC 'CORTX
+ Manager User roles i.e monitor, manager, admin' EQUALITY caseExactMatch SYN
+ TAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {32}( 1.3.6.1.4.99999.2.3.33 NAME 'alertNotification' DES
+ C 'True/False set by user' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.11
+ 5.121.1.7 )
+olcAttributeTypes: {33}( 1.3.6.1.4.99999.2.3.34 NAME 'updatedTime' DESC 'Upd
+ ated time' EQUALITY generalizedTimeMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.
+ 24 )
+olcAttributeTypes: {34}( 1.3.6.1.4.99999.2.3.35 NAME 'createdTime' DESC 'Cre
+ ated time' EQUALITY generalizedTimeMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.
+ 24 )
+olcAttributeTypes: {35}( 1.3.6.1.4.99999.2.3.36 NAME 'resetPassword' DESC 'f
+ lag for resetting password' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.1
+ 15.121.1.7 )
+olcAttributeTypes: {36}( 1.3.6.1.4.99999.2.3.37 NAME 'cortxAccountId' DESC '
+ Cortx Account ID' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1
+ .15 )
+olcAttributeTypes: {37}( 1.3.6.1.4.99999.2.3.38 NAME 'cortxUserId' DESC 'Cor
+ tx userID' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcObjectClasses: {20}( 1.3.6.1.4.99999.2.4.21 NAME 'CortxAccount' DESC 'Cor
+ tx Account' SUP top STRUCTURAL MUST ( o $ cortxAccountId $ mail) MAY ( user
+ Password ) )
+olcObjectClasses: {21}( 1.3.6.1.4.99999.2.4.22 NAME 'CortxUser' DESC 'CORTX
+ User Account' SUP top STRUCTURAL MUST ( cn $ userType $ userRole $ userPass
+ word $ mail $ updatedTime $ createdTime $ resetPassword $ uidNumber $ gidNu
+ mber) MAY ( alertNotification ) )

@@ -13,6 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import os
+import glob
+import ldap
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.core.blogic import const
@@ -40,8 +43,9 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        self.files_directory_cleanup()
-        self.web_env_file_cleanup()
+        # self.files_directory_cleanup()
+        # self.web_env_file_cleanup()
+        self.delete_ldap_config()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def files_directory_cleanup(self):
@@ -59,3 +63,42 @@ class Cleanup(Setup):
     def web_env_file_cleanup(self):
        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+
+    def delete_ldap_config(self):
+        filelist = glob.glob('/etc/openldap/slapd.d/cn=config/cn=schema/*cortxuser.ldif')
+        for schemafile in filelist:
+            try:
+                os.remove(schemafile)
+            except:
+                raise CsmSetupError("Failed to delete ldap configuration.")
+        self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
+        Setup._run_cmd('systemctl restart slapd')
+    
+    def _search_delete_permission_attr(self, dn, attr_to_delete):
+        conn = ldap.initialize("ldapi://")
+        conn.sasl_non_interactive_bind_s('EXTERNAL')
+        ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+        total = 0
+        # Below will count the entries
+        for result1,result2 in ldap_result_id:
+            if(result2):
+                for value in result2[attr_to_delete]:
+                    if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
+                        total = total + 1
+        count = 0
+        # Below will perform delete operation
+        while (count < total):
+            ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+            for result1,result2 in ldap_result_id:
+                if(result2):
+                    for value in result2[attr_to_delete]:
+                        if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
+                            mod_attrs = [( ldap.MOD_DELETE, attr_to_delete, value )]
+                            try:
+                                conn.modify_s(dn, mod_attrs)
+                                break
+                            except Exception as e:
+                                print(e)
+            count = count + 1
+        conn.unbind_s()   
+ 
