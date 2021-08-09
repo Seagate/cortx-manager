@@ -16,6 +16,7 @@
 import asyncio
 from aiohttp import ClientSession
 import boto3
+import json
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.config import Config as Boto3Config
@@ -28,8 +29,7 @@ from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 from http import HTTPStatus
 import xmltodict
 from cortx.utils.log import Log
-import json
-from csm.common.errors import CsmInternalError, CsmTypeError
+from csm.common.errors import CsmInternalError, CsmTypeError, CsmResourceNotAvailable
 from csm.core.blogic import const
 from csm.core.data.models.s3 import (S3ConnectionConfig, IamAccount, ExtendedIamAccount,
                                      IamLoginProfile, IamUser, IamUserListResponse,
@@ -99,6 +99,31 @@ class BaseClient:
         """
         return await self._loop.run_in_executor(self._executor, function)
 
+    async def http_request(
+        self, headers: Optional[Dict[str, str]], payload: Any, path: str, verb: str
+    ) -> Tuple[HTTPStatus, Optional[str]]:
+        """
+        Make HTTP request to S3 server.
+
+        :param headers: HTTP headers.
+        :param params: request body in JSON.
+        :param path: request URI.
+        :param verb: request method.
+        :returns: HTTP code and the response payload as a text.
+        """
+
+        Log.debug(f"Make HTTP request: headers {headers}, payload: {payload},"
+                  f" path {path}, verb {verb}")
+
+        # Let all the HTTP client exceptions propagate as is
+        async with ClientSession() as http_session:
+            async with http_session.request(method=verb, headers=headers, data=payload,
+                                            url=self._url + path, ssl=self._ssl_ctx,
+                                            timeout=const.TIMEOUT) as resp:
+                status = resp.status
+                body = await resp.text()
+                return status, body
+
     async def _arbitrary_request(
         self, action: str, params: Dict[str, Any], path: str, verb: str
     ) -> Tuple[HTTPStatus, Dict[str, Any]]:
@@ -120,22 +145,16 @@ class BaseClient:
         payload['Action'] = action
 
         if self._creds:
-            aws_request = AWSRequest(method=verb, url='/', data=payload, headers=headers)
+            aws_request = AWSRequest(method=verb, url=path, data=payload, headers=headers)
             SigV4Auth(
                 self._creds, self.__class__.resource, const.S3_DEFAULT_REGION).add_auth(aws_request)
             headers = dict(aws_request.headers)
-        # Let all the HTTP client exceptions propagate as is
-        async with ClientSession() as http_session:
-            async with http_session.request(method=verb, headers=headers, data=payload,
-                                            url=self._url, ssl=self._ssl_ctx,
-                                            timeout=const.TIMEOUT) as resp:
-                status = resp.status
-                body = await resp.text()
 
-                parsed_body = xmltodict.parse(
-                    body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
-                Log.debug(f'{self._host} responded with {status}')
-                return (status, parsed_body)
+        status, body = await self.http_request(headers, payload, path, verb)
+        Log.debug(f'{self._host} responded with {status}')
+        parsed_body = xmltodict.parse(
+            body, force_list=const.S3_RESP_LIST_ITEM) if body else {}
+        return (status, parsed_body)
 
     def _extract_element(
         self, path: Tuple[str], resp: Dict[str, Any], is_list: bool = False
@@ -753,7 +772,7 @@ class IamClient(BaseClient):
         """
 
         Log.info(f"Update access key {access_key_id} for user: {user_name}"
-                  f" with status {status}")
+                 f" with status {status}")
         params = {
             'AccessKeyId': access_key_id,
             'Status': status
@@ -813,7 +832,7 @@ class IamClient(BaseClient):
         """
 
         Log.info(f"List IAM user's {user_name} access keys. marker: {marker},"
-                  f" max_items: {max_items}")
+                 f" max_items: {max_items}")
         params = {}
         if user_name is not None:
             params[const.S3_PARAM_USER_NAME] = user_name
@@ -1142,3 +1161,27 @@ class S3Plugin:
         Log.debug(f"Get temp credentials: {account_name}, user_name:{user_name}")
         iamcli = IamClient('', '', connection_config, asyncio.get_event_loop())
         return await iamcli.get_tmp_creds(account_name, password, duration, user_name)
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_s3_audit_logs_schema(
+        self, connection_config: Optional[S3ConnectionConfig] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get S3 audit log schema from the S3 server.
+
+        :returns: JSON with audit log schema.
+        """
+
+        Log.debug('Get S3 audit log schema')
+        s3cli = S3Client('', '', connection_config)
+        headers = {'x-seagate-mgmt-api': "true"}
+        payload = {}
+        status, raw_schema = await s3cli.http_request(
+            headers, payload, '/s3/audit-log/schema', 'GET')
+        if status != HTTPStatus.OK:
+            raise CsmResourceNotAvailable(f'Failed to retrieve S3 audit log schema: {status}')
+        try:
+            schema = json.loads(raw_schema)
+        except json.JSONDecodeError as jde:
+            raise CsmResourceNotAvailable(f'Failed to parse S3 audit log schema: {jde}') from None
+        return schema

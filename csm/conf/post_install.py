@@ -133,6 +133,9 @@ class PostInstall(Setup):
         Accordingly.
         :return: None
         """
+        if not (Conf.get(const.CONSUMER_INDEX,
+                'systemd>csm>csm_agent>restart_on_failure') == 'true'):
+            return None
         Log.info("Configuring System Auto restart")
         is_auto_restart_required = list()
         if self._setup_info:
