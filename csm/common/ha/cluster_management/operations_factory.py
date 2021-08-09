@@ -20,36 +20,40 @@ from csm.common.ha.cluster_management import operations
 
 
 class ResourceOperations(ABC):
-
+    """
+    Base class that all operations factory classes wi.
+    """
     @abstractmethod
     def get_operation(self, operation: str) -> operations.Operation:
         raise Exception('get_operation not implemented in ResourceOperations class')
 
 
 class ClusterOperations(ResourceOperations):
-
+    """
+    Factory for Cluster operations.
+    """
     def get_operation(self, operation: str) -> operations.Operation:
 
         clusterOperation = None
-
         if operation == "start":
             clusterOperation = operations.ClusterStartOperation()
         elif operation == "stop":
             clusterOperation = operations.ClusterStopOperation()
 
         if clusterOperation is None:
-            raise InvalidRequest("Invalid operation")
+            raise InvalidRequest(f"Cluster does not support {operation} operation.")
 
         return clusterOperation
 
 
 
 class NodeOperations(ResourceOperations):
-
+    """
+    Factory for Node operations.
+    """
     def get_operation(self, operation: str) -> operations.Operation:
 
         nodeOperation = None
-
         if operation == "start":
             nodeOperation = operations.NodeStartOperation()
         elif operation == "stop":
@@ -58,18 +62,19 @@ class NodeOperations(ResourceOperations):
             nodeOperation = operations.NodePoweroffOperation()
 
         if nodeOperation is None:
-            raise InvalidRequest("Resource does not support the operation.")
+            raise InvalidRequest(f"Node does not support {operation} operation.")
 
         return nodeOperation
 
 
 class ResourceOperationsFactory:
-
+    """
+    Factory of operation factories.
+    """
     @staticmethod
     def get_operations_by_resource(resource: str) -> ResourceOperations:
 
         resourceOperations = None
-
         if resource == 'cluster':
             resourceOperations = ClusterOperations()
         elif resource == 'node':

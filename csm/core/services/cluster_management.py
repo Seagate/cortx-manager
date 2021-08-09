@@ -20,7 +20,7 @@ from cortx.utils.log import Log
 
 class ClusterManagementAppService(ApplicationService):
     """
-    Operations on cluster.
+    Manage operations on cluster and resources in it.
     """
 
     def __init__(self, plugin):
@@ -29,7 +29,8 @@ class ClusterManagementAppService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_status(self, node_id):
         """
-        Operations on cluster.
+        Get status of the cluster when node with id{node_i}
+        will be stopped or powered off.
         """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.PROCESS_CLUSTER_STATUS_REQ
@@ -42,24 +43,22 @@ class ClusterManagementAppService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def request_operation(self, resource, operation, **arguments):
         """
-        Operations on cluster.
+        Request operations on cluster and resources in it.
         """
         plugin_request_params = self._build_request_parameters(resource, operation, arguments)
         Log.debug(f"Cluster operation {operation} on {resource} with arguments: \
                     {plugin_request_params}")
-
         plugin_response = self._cluster_management_plugin.process_request(**plugin_request_params)
         return plugin_response
 
     def _build_request_parameters(self, resource, operation, arguments):
         """
-        Build request parameters based on the filters.
+        Build request parameters based on the arguments.
         """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.PROCESS_CLUSTER_OPERATION_REQ
         request_params[const.ARG_RESOURCE] = resource
         request_params[const.ARG_OPERATION] = operation
         request_params[const.ARG_ARGUMENTS] = arguments
-
         return request_params
 

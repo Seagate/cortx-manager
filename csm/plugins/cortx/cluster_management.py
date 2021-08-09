@@ -39,8 +39,10 @@ class ClusterManagementPlugin(CsmPlugin):
 
     @Log.trace_method(Log.DEBUG)
     def process_request(self, **kwargs):
+        """
+        Process the request for operations on cluster and resources in it.
+        """
         request = kwargs.get(const.PLUGIN_REQUEST, "")
-
         Log.debug(f"Cluster operations plugin process_request with arguments: {kwargs}")
         process_request_resut = None
         if request == const.PROCESS_CLUSTER_STATUS_REQ:
@@ -48,7 +50,6 @@ class ClusterManagementPlugin(CsmPlugin):
             process_request_resut = self._ha.get_cluster_status(node_id)
         elif request == const.PROCESS_CLUSTER_OPERATION_REQ:
             process_request_resut = self._process_cluster_operation(kwargs)
-
         return process_request_resut
 
     def _process_cluster_operation(self, filters):
@@ -58,7 +59,6 @@ class ClusterManagementPlugin(CsmPlugin):
         resource = filters.get(const.ARG_RESOURCE, "")
         operation = filters.get(const.ARG_OPERATION)
         arguments = filters.get(const.ARG_ARGUMENTS)
-
         process_result = self._ha.process_cluster_operation(resource, operation,
                                                             **arguments)
         return process_result
