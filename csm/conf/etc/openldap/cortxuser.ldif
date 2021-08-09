@@ -16,33 +16,36 @@
 dn: cn=cortxuser,cn=schema,cn=config
 cn: cortxuser
 objectClass: olcSchemaConfig
-olcAttributeTypes: {30}( 1.3.6.1.4.99999.2.3.31 NAME 'userType' DESC 'Type o
- f user i.e. csm, s3 or iam' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466
- .115.121.1.15 )
-olcAttributeTypes: {31}( 1.3.6.1.4.99999.2.3.32 NAME 'userRole' DESC 'CORTX
- Manager User roles i.e monitor, manager, admin' EQUALITY caseExactMatch SYN
- TAX 1.3.6.1.4.1.1466.115.121.1.15 )
-olcAttributeTypes: {32}( 1.3.6.1.4.99999.2.3.33 NAME 'alertNotification' DES
+olcAttributeTypes: {40}( 1.3.6.1.4.99999.2.3.41 NAME 'userType' DESC 'Type o
+ f user i.e. csm, s3 or iam' EQUALITY caseExactMatch SUBSTR caseIgnoreSubstr
+ ingsMatch ORDERING caseIgnoreOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.
+ 1.15 )
+olcAttributeTypes: {41}( 1.3.6.1.4.99999.2.3.42 NAME 'userRole' DESC 'CORTXM
+ anager User roles i.e monitor, manager, admin' EQUALITY caseExactMatch SUBS
+ TR caseIgnoreSubstringsMatch ORDERING caseIgnoreOrderingMatch SYNTAX 1.3.6.
+ 1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {42}( 1.3.6.1.4.99999.2.3.43 NAME 'alertNotification' DES
  C 'True/False set by user' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.11
  5.121.1.7 )
-olcAttributeTypes: {33}( 1.3.6.1.4.99999.2.3.34 NAME 'updatedTime' DESC 'Upd
- ated time' EQUALITY generalizedTimeMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.
- 24 )
-olcAttributeTypes: {34}( 1.3.6.1.4.99999.2.3.35 NAME 'createdTime' DESC 'Cre
- ated time' EQUALITY generalizedTimeMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.
- 24 )
-olcAttributeTypes: {35}( 1.3.6.1.4.99999.2.3.36 NAME 'resetPassword' DESC 'f
+olcAttributeTypes: {43}( 1.3.6.1.4.99999.2.3.44 NAME 'updatedTime' DESC 'Upd
+ ated time' EQUALITY generalizedTimeMatch ORDERING generalizedTimeOrderingMa
+ tch SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 )
+olcAttributeTypes: {44}( 1.3.6.1.4.99999.2.3.45 NAME 'createdTime' DESC 'Cre
+ ated time' EQUALITY generalizedTimeMatch ORDERING generalizedTimeOrderingMa
+ tch SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 )
+olcAttributeTypes: {45}( 1.3.6.1.4.99999.2.3.46 NAME 'resetPassword' DESC 'f
  lag for resetting password' EQUALITY booleanMatch SYNTAX 1.3.6.1.4.1.1466.1
  15.121.1.7 )
-olcAttributeTypes: {36}( 1.3.6.1.4.99999.2.3.37 NAME 'cortxAccountId' DESC '
+olcAttributeTypes: {46}( 1.3.6.1.4.99999.2.3.47 NAME 'cortxAccountId' DESC '
  Cortx Account ID' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1
  .15 )
-olcAttributeTypes: {37}( 1.3.6.1.4.99999.2.3.38 NAME 'cortxUserId' DESC 'Cor
- tx userID' EQUALITY caseExactMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {47}( 1.3.6.1.4.99999.2.3.48 NAME 'cortxUserId' DESC 'Cor
+ tx userID' EQUALITY caseExactMatch SUBSTR caseIgnoreSubstringsMatch ORDERIN
+ G caseIgnoreOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
 olcObjectClasses: {20}( 1.3.6.1.4.99999.2.4.21 NAME 'CortxAccount' DESC 'Cor
  tx Account' SUP top STRUCTURAL MUST ( o $ cortxAccountId $ mail) MAY ( user
  Password ) )
-olcObjectClasses: {21}( 1.3.6.1.4.99999.2.4.22 NAME 'CortxUser' DESC 'CORTX
- User Account' SUP top STRUCTURAL MUST ( cn $ userType $ userRole $ userPass
- word $ mail $ updatedTime $ createdTime $ resetPassword $ uidNumber $ gidNu
- mber) MAY ( alertNotification ) )
+olcObjectClasses: {21}( 1.3.6.1.4.99999.2.4.22 NAME 'CortxUser' DESC 'CORTXU
+ ser Account' SUP top STRUCTURAL MUST ( cortxUserId $ userType $ userRole $
+ userPassword $ mail $ updatedTime $ createdTime $ resetPassword $ uidNumber
+  $ gidNumber) MAY ( alertNotification ) )

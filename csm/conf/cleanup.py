@@ -78,7 +78,7 @@ class Cleanup(Setup):
             self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
         except Exception as e:
             Log.error(f"Failed to delete the ldap permission attributes: {e}")
-            raise CsmSetupError("Failed to delete ldap permission aatributes.")
+            raise CsmSetupError("Failed to delete ldap permission attributes.")
         #Restart slapd service
         Setup._run_cmd('systemctl restart slapd')
 
@@ -88,18 +88,18 @@ class Cleanup(Setup):
         ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
         total = 0
         # Below will count the entries
-        for result1,result2 in ldap_result_id:
-            if(result2):
-                for value in result2[attr_to_delete]:
+        for result_dn, olcAccess_dict in ldap_result_id:
+            if(olcAccess_dict):
+                for value in olcAccess_dict[attr_to_delete]:
                     if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
                         total = total + 1
         count = 0
         # Below will perform delete operation
         while (count < total):
             ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
-            for result1,result2 in ldap_result_id:
-                if(result2):
-                    for value in result2[attr_to_delete]:
+            for result_dn, olcAccess_dict in ldap_result_id:
+                if(olcAccess_dict):
+                    for value in olcAccess_dict[attr_to_delete]:
                         if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
                             mod_attrs = [( ldap.MOD_DELETE, attr_to_delete, value )]
                             try:
@@ -110,4 +110,3 @@ class Cleanup(Setup):
                                 raise
             count = count + 1
         conn.unbind_s()
- 
