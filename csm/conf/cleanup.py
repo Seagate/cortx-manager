@@ -45,7 +45,7 @@ class Cleanup(Setup):
             Log.error(f"Configuration Loading Failed {e}")
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
-        self.delete_ldap_config()
+        self.cleanup_ldap_config()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def files_directory_cleanup(self):
@@ -64,14 +64,22 @@ class Cleanup(Setup):
        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
 
-    def delete_ldap_config(self):
+    def cleanup_ldap_config(self):
+        #Delete cortxuser schema
         filelist = glob.glob('/etc/openldap/slapd.d/cn=config/cn=schema/*cortxuser.ldif')
         for schemafile in filelist:
             try:
                 os.remove(schemafile)
-            except:
-                raise CsmSetupError("Failed to delete ldap configuration.")
-        self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
+            except Exception as e:
+                Log.error(f"Failed to delete cortxuser schema: {e}")
+                raise CsmSetupError("Failed to delete cortxuser schema.")
+        #Delete permission attributes
+        try:
+            self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
+        except Exception as e:
+            Log.error(f"Failed to delete the ldap permission attributes: {e}")
+            raise CsmSetupError("Failed to delete ldap permission aatributes.")
+        #Restart slapd service
         Setup._run_cmd('systemctl restart slapd')
 
     def _search_delete_permission_attr(self, dn, attr_to_delete):
@@ -98,7 +106,8 @@ class Cleanup(Setup):
                                 conn.modify_s(dn, mod_attrs)
                                 break
                             except Exception as e:
-                                print(e)
+                                Log.error(f'Error while deleting attribute.{e}')
+                                raise
             count = count + 1
         conn.unbind_s()
  
