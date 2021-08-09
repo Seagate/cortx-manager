@@ -61,7 +61,6 @@ class Prepare(Setup):
         self._set_s3_ldap_credentials()
         self._set_db_host_addr()
         self._set_csm_credentials()
-        
         self.create()
 
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
