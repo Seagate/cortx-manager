@@ -17,9 +17,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from abc import ABC, abstractmethod
-
 from marshmallow import Schema, fields, validate
-
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
