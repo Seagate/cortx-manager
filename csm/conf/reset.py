@@ -162,7 +162,6 @@ class Reset(Setup):
             Log.info('Deletion of ldap data started.')
             self._connect_to_ldap_server()
             for entry in const.DELETE_LDAP_RECORDS:
-                Log.info(' deleting all entries from {entry} & its sub-ordinate tree')
                 try:
                     self._ldap_delete_recursive(self._ldap_conn, entry)
                 except ldap.NO_SUCH_OBJECT:
@@ -180,6 +179,7 @@ class Reset(Setup):
         """
         Delete all objects and its subordinate entries from ldap.
         """
+        Log.info(f'Deleting all entries from {base_dn}')
         l_search = ldap_conn.search_s(base_dn, ldap.SCOPE_ONELEVEL)
         for dn, _ in l_search:
             if not dn == base_dn:

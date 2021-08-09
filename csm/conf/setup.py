@@ -312,9 +312,7 @@ class Setup:
         """
         Establish connection to ldap server.
         """
-        from ldap import initialize
-        from ldap import VERSION3
-        from ldap import OPT_REFERRALS
+        from ldap import initialize, VERSION3, OPT_REFERRALS
 
         self._ldap_conn = initialize(const.LDAP_URL)
         self._ldap_conn.protocol_version = VERSION3
