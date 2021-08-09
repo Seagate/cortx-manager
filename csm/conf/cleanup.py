@@ -73,7 +73,7 @@ class Cleanup(Setup):
                 raise CsmSetupError("Failed to delete ldap configuration.")
         self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
         Setup._run_cmd('systemctl restart slapd')
-    
+
     def _search_delete_permission_attr(self, dn, attr_to_delete):
         conn = ldap.initialize("ldapi://")
         conn.sasl_non_interactive_bind_s('EXTERNAL')
@@ -100,5 +100,5 @@ class Cleanup(Setup):
                             except Exception as e:
                                 print(e)
             count = count + 1
-        conn.unbind_s()   
+        conn.unbind_s()
  

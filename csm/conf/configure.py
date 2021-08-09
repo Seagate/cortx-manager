@@ -63,11 +63,11 @@ class Configure(Setup):
         self._validate_es_service()
         self._set_deployment_mode()
         try:
-            self._configure_csm_ldap_schema()
             self._configure_uds_keys()
             self._configure_csm_web_keys()
             self._logrotate()
             self._configure_cron()
+            self._configure_csm_ldap_schema()
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -278,7 +278,7 @@ class Configure(Setup):
 
         # Setup necessary permissions
         self._setup_ldap_permissions()
-        
+
         # Create Cortx Account
         self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D cn=sgiamadmin,dc=seagate,dc=com -f {const.CORTXUSER_ACCOUNT_LDIF}')
         Log.info("Openldap configuration completed for Cortx users.")
