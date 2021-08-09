@@ -115,23 +115,23 @@ class DebugConf:
 class Security:
 
     @staticmethod
-    def decrypt_conf():
+    def decrypt_conf(index=const.CSM_GLOBAL_INDEX):
         """
         THis Method Will Decrypt all the Passwords in Config and Will Load the Same in CSM.
         :return:
         """
-        cluster_id = conf_store.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        cluster_id = conf_store.get(index, const.CLUSTER_ID_KEY)
         if not cluster_id:
             raise ClusterIdFetchError("Failed to get cluster id.")
         for each_key in const.DECRYPTION_KEYS:
-            cipher_key = Cipher.generate_key(cluster_id,
-                                             conf_store.get(const.CSM_GLOBAL_INDEX,
-                                             const.DECRYPTION_KEYS[each_key]))
-            encrypted_value = conf_store.get(const.CSM_GLOBAL_INDEX, each_key)
             try:
+                cipher_key = Cipher.generate_key(cluster_id,
+                                                conf_store.get(index,
+                                                const.DECRYPTION_KEYS[each_key]))
+                encrypted_value = conf_store.get(index, each_key)
                 decrypted_value = Cipher.decrypt(cipher_key,
                                                  encrypted_value.encode("utf-8"))
-                conf_store.set(const.CSM_GLOBAL_INDEX, each_key,
+                conf_store.set(index, each_key,
                         decrypted_value.decode("utf-8"))
             except CipherInvalidToken as error:
                 import traceback

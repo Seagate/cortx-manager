@@ -41,13 +41,14 @@ class Reset(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
+            Conf.load(const.DATABASE_CLI_INDEX, const.DATABASE_CLI_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         self.reset_logs()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def reset_logs():
+    def reset_logs(self):
         '''
         Truncate size of cortxcli.log file to 0
         '''
@@ -55,3 +56,15 @@ class Reset(Setup):
         _file = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
                                         "cortxcli.log")
         Setup._run_cmd(f"truncate -s 0 {_file}")
+
+    async def db_cleanup(self):
+
+        port = Conf.get(const.DATABASE_CLI_INDEX, 'databases>es_db>config>port')
+        self._es_db_url = (f"http://localhost:{port}/")
+        for each_model in Conf.get(const.DATABASE_CLI_INDEX, "models"):
+            if each_model.get('config').get('es_db'):
+                db = "es_db"
+                collection = f"{each_model.get('config').get('es_db').get('collection')}"
+                url = f"{self._es_db_url}{collection}"
+                Log.info(f"Deleting for collection:{collection} from {db}")
+                await Setup.erase_index(collection, url, "delete")

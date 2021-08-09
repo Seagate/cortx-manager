@@ -116,6 +116,7 @@ DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
 TEST_INDEX = 'TEST'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
+DATABASE_CLI_INDEX = 'CORTXCLI_DATABASE'
 USL_GLOBAL_INDEX = 'USL'
 
 # Cluster Inventory Related
@@ -142,6 +143,7 @@ COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
+DATABASE_CLI_CONF_URL = f"yaml://{DATABASE_CLI_CONF}"
 CSM_AGENT_SERVICE = "csm_agent.service"
 CSM_AGENT_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_AGENT_SERVICE}"
 CSM_WEB_SERVICE = "csm_web.service"
@@ -318,7 +320,7 @@ HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
 CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
-CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
+CLI_SETUP_FILE = '/home/731368/forked_repos/cortx-manager/csm/cli/schema/cli_setup.json'
 
 # Support Bundle
 SSH_USER_NAME = 'root'
@@ -600,7 +602,7 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
+dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
