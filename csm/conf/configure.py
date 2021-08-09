@@ -64,20 +64,20 @@ class Configure(Setup):
         self._set_deployment_mode()
         try:
             self._configure_csm_ldap_schema()
-            # self._configure_uds_keys()
-            # self._configure_csm_web_keys()
-            # self._logrotate()
-            # self._configure_cron()
-            # for count in range(0, 10):
-            #     try:
-            #         await self._set_unsupported_feature_info()
-            #         break
-            #     except Exception as e_:
-            #         Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
-            #         time.sleep(2**count)
+            self._configure_uds_keys()
+            self._configure_csm_web_keys()
+            self._logrotate()
+            self._configure_cron()
+            for count in range(0, 10):
+                try:
+                    await self._set_unsupported_feature_info()
+                    break
+                except Exception as e_:
+                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
+                    time.sleep(2**count)
 
-            # if not self._replacement_node_flag:
-            #     self.create()
+            if not self._replacement_node_flag:
+                self.create()
         except Exception as e:
             import traceback
             err_msg = (f"csm_setup config command failed. Error: "
@@ -305,7 +305,6 @@ class Configure(Setup):
             Log.info(f"Output: {_output}, \n Err:{_err}, \n RC:{_rc}")
             #_rc = 68: dc=csm,dc=seagate,dc=com already exists
             #_rc = 80: Cortxuser schema already exists
-            print("cmd---rc",cmd,_rc)
             if _rc not in (0, 68, 80):
                 raise
             return _output, _err, _rc

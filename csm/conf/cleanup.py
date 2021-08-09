@@ -43,8 +43,8 @@ class Cleanup(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        # self.files_directory_cleanup()
-        # self.web_env_file_cleanup()
+        self.files_directory_cleanup()
+        self.web_env_file_cleanup()
         self.delete_ldap_config()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
