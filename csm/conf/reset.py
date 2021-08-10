@@ -42,6 +42,7 @@ class Reset(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
@@ -51,6 +52,7 @@ class Reset(Setup):
         self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
+        await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):
