@@ -38,7 +38,7 @@ cli:
 
     cleanup:
         cmd: /opt/seagate/cortx/cli/bin/cli_setup cleanup
-        args: --config $URL
+        args: --config $URL [--pre-factory]
 
     reset:
         cmd: /opt/seagate/cortx/cli/bin/cli_setup reset
