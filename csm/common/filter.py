@@ -75,7 +75,7 @@ class Filter:
         nested_operations = 0
         filter_obj = []
         for key, value in query.items():
-            if (type(getattr(model, key))) is StringType:
+            if isinstance(getattr(model, key), StringType):
                 db_conditions.append(Compare(eval(f"model.{key}"), "like", value))
             else:
                 db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
