@@ -17,6 +17,7 @@ from cortx.utils.data.access.filters import Compare, And, Or
 from schematics.exceptions import ConversionError
 from csm.core.blogic.models import CsmModel
 from csm.common.errors import InvalidRequest
+from schematics.types import StringType
 import urllib.parse
 import re
 
@@ -74,7 +75,10 @@ class Filter:
         nested_operations = 0
         filter_obj = []
         for key, value in query.items():
-            db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
+            if (type(getattr(model, key))) is StringType:
+                db_conditions.append(Compare(eval(f"model.{key}"), "like", value))
+            else:
+                db_conditions.append(Compare(eval(f"model.{key}"), "=", value))
             if len(db_conditions) > 1:
                 filter_obj.clear()
                 if operations[nested_operations] == "AND":
