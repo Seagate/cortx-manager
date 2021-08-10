@@ -55,7 +55,8 @@ class Cleanup(Setup):
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
             const.CSM_CONF_PATH,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
+            '/tmp/csm/file_cache/'
         ]
 
         for dir_path in files_directory_list:

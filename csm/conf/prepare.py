@@ -124,6 +124,7 @@ class Prepare(Setup):
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
         return [data_nw_private_fqdn]
+
     def _get_es_hosts_info(self):
     	"""
         Obtains list of elasticsearch hosts ip running in a cluster
