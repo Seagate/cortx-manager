@@ -53,7 +53,7 @@ class Reset(Setup):
         Truncate size of cortxcli.log file to 0
         '''
         Log.info("Reseting log files")
-        _file = os.path.join(Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
+        _file = os.path.join(Conf.get(const.CORTXCLI_GLOBAL_INDEX, 'Log>log_path'),
                                         "cortxcli.log")
         Setup._run_cmd(f"truncate -s 0 {_file}")
 
