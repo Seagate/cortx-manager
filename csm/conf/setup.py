@@ -23,6 +23,7 @@ import shlex
 import json
 import aiohttp
 import ldap
+from ldap.ldapobject import SimpleLDAPObject
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from csm.common.payload import Yaml
@@ -281,7 +282,7 @@ class Setup:
             ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROOT_LDAP_SECRET])
             cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
             cipher_key = Cipher.generate_key(cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password_decryption_key"))
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         except KvError as error:
             Log.error(f"Failed to Fetch keys from Conf store. {error}")
             return None
@@ -327,6 +328,35 @@ class Setup:
         self._ldapuser = None
         self._ldappasswd = None
         self._ldap_conn = None
+
+    def _delete_ldap_data(self, base_dn):
+        """
+        Delete data entries from ldap.
+        """
+        try:
+            self._connect_to_ldap_server()
+            try:
+                self._ldap_delete_recursive(self._ldap_conn, base_dn)
+            except ldap.NO_SUCH_OBJECT:
+            # If no entries found in ldap for given dn
+                pass
+            self._disconnect_from_ldap()
+        except Exception as e:
+            if self._ldap_conn:
+                self._disconnect_from_ldap()
+            Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
+            raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
+
+    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, base_dn: str):
+        """
+        Delete all objects and its subordinate entries from ldap.
+        """
+        Log.info(f'Deleting all entries from {base_dn}')
+        l_search = ldap_conn.search_s(base_dn, ldap.SCOPE_ONELEVEL)
+        for dn, _ in l_search:
+            if not dn == base_dn:
+                self._ldap_delete_recursive(ldap_conn, dn)
+                ldap_conn.delete_s(dn)
 
     class Config:
         """

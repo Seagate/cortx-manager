@@ -306,7 +306,7 @@ class Configure(Setup):
             #_rc = 68: dc=csm,dc=seagate,dc=com already exists
             #_rc = 80: Cortxuser schema already exists
             if _rc not in (0, 68, 80):
-                raise
+                raise Exception(f'Ldap operation failed with code: {_rc}')
             return _output, _err, _rc
         except Exception as e:
             Log.error(f"Csm setup is failed Error: {e}, {_err}")

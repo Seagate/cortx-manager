@@ -15,8 +15,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
-import ldap
-from ldap.ldapobject import SimpleLDAPObject
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.providers.providers import Response
@@ -54,7 +52,7 @@ class Reset(Setup):
         self.directory_cleanup()
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
-        self._delete_csm_ldap_data()
+        self._delete_cortxusers_from_ldap()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -145,43 +143,14 @@ class Reset(Setup):
             Log.warn(f"{e}")
         Log.info(f"Index {collection} Deleted.")
 
-    def _delete_csm_ldap_data(self):
+    def _delete_cortxusers_from_ldap(self):
+        """
+        Delete all CortxUsers under CortxAccount
+        """
         self._ldapuser = self._fetch_ldap_root_user()
         self._ldappasswd = self._fetch_ldap_root_password()
         if not self._ldapuser:
             raise CsmSetupError("Failed to fetch LDAP root user")
         if not self._ldappasswd:
             raise CsmSetupError("Failed to fetch LDAP root user password")
-        self._delete_ldap_data()
-
-    def _delete_ldap_data(self):
-        """
-        Delete all cortx users data entries from ldap.
-        """
-        try:
-            Log.info('Deletion of ldap data started.')
-            self._connect_to_ldap_server()
-            for entry in const.DELETE_LDAP_RECORDS:
-                try:
-                    self._ldap_delete_recursive(self._ldap_conn, entry)
-                except ldap.NO_SUCH_OBJECT:
-                # If no entries found in ldap for given dn
-                    pass
-            self._disconnect_from_ldap()
-            Log.info('Deletion of ldap data completed successfully.')
-        except Exception as e:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-            Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
-            raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
-
-    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, base_dn: str):
-        """
-        Delete all objects and its subordinate entries from ldap.
-        """
-        Log.info(f'Deleting all entries from {base_dn}')
-        l_search = ldap_conn.search_s(base_dn, ldap.SCOPE_ONELEVEL)
-        for dn, _ in l_search:
-            if not dn == base_dn:
-                self._ldap_delete_recursive(ldap_conn, dn)
-                ldap_conn.delete_s(dn)
+        self._delete_ldap_data(const.CORTXUSERS_DN)
