@@ -46,6 +46,7 @@ class Reset(Setup):
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         self.reset_logs()
+        await self.db_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def reset_logs(self):
