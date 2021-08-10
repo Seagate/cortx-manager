@@ -13,24 +13,28 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-databases:
-    es_db:
-        import_path: "ElasticSearchDB"
-        config:
-            hosts: ["localhost"]
-            port: "9200"
-            login: ""
-            password: ""
-            replication: 1
-models:
--   import_path: "csm.core.blogic.models.support_bundle.SupportBundleModel"
-    database: "es_db"
-    config:
-        es_db:
-            collection: "supportbundle"
--   import_path: "csm.core.blogic.models.alerts.AlertModel"
-    database: "es_db"
-    config:
-        es_db:
-            collection: "alerts"
 
+from cortx.utils.log import Log
+from csm.conf.setup import Setup
+from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
+
+
+class Pre_Upgrade(Setup):
+    """
+    Pre_Upgrade CORTX CLI
+    """
+
+    def __init__(self):
+        super(Pre_Upgrade, self).__init__()
+
+    async def execute(self, command):
+        """
+        Execute CORTX CLI setup Pre_Upgrade Command
+        :param command: Command Object For CLI. :type: Command
+        :return: 0 on success, RC != 0 otherwise.
+        """
+
+        Log.info("Executing Pre_Upgrade for CORTX CLI")
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

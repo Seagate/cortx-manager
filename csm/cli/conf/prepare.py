@@ -13,55 +13,56 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-import crypt
+
 from cortx.utils.log import Log
-from ipaddress import ip_address
+from cortx.utils.validator.v_network import NetworkV
 from csm.conf.setup import Setup, CsmSetupError
+from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
-from csm.core.providers.providers import Response
-from csm.core.blogic import const
-from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.error import VError
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
 class Prepare(Setup):
     """
-    Reset csm Configuration.
+    Prepare CORTX CLI
+
+    Post install is used after just all rpms are install but
+    no service are started
     """
+
     def __init__(self):
         super(Prepare, self).__init__()
-        Log.info("Triggering csm_setup prepare")
-        self._replacement_node_flag = os.environ.get(
-            "REPLACEMENT_NODE") == "true"
-        if self._replacement_node_flag:
-            Log.info("REPLACEMENT_NODE flag is set")
-        Setup._copy_skeleton_configs()
+        Setup._copy_cli_skeleton_configs()
 
     async def execute(self, command):
         """
-        :param command:
-        :return:
+        Execute CORTX CLI setup Prepare Command
+
+        :param command: Command Object For CLI. :type: Command
+        :return: 0 on success, RC != 0 otherwise.
         """
+
+        Log.info("Executing Prepare for CORTX CLI")
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
+            Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
+            Conf.load(const.DATABASE_CLI_INDEX, const.DATABASE_CLI_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
-        self._set_secret_string_for_decryption()
         self._set_cluster_id()
-        self._set_db_host_addr()
-        self._set_fqdn_for_nodeid()
+        self._set_secret_string_for_decryption()
         self._set_s3_ldap_credentials()
-        self._set_password_to_csm_user()
-        if not self._replacement_node_flag:
-            self.create()
+        self._set_db_host_addr()
+        self._set_csm_credentials()
+        self.create()
+
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -75,9 +76,7 @@ class Prepare(Setup):
             const.KEY_S3_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
             const.KEY_S3_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
             const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-            const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
-            })
-
+            const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}",})
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
@@ -90,9 +89,9 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx"
         '''
         Log.info("Set decryption keys for CSM and S3")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
                     self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
                     self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
@@ -100,114 +99,71 @@ class Prepare(Setup):
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
-    def _set_fqdn_for_nodeid(self):
-        Log.info("Setting hostname to server node name")
-        server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
-        Log.debug(f"Server node information: {server_node_info}")
-        for machine_id, node_data in server_node_info.items():
-            hostname = node_data.get(const.HOSTNAME, const.NAME)
-            node_name = node_data.get(const.NAME)
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}>{node_name}",f"{hostname}")
-
-    def _get_consul_info(self):
+    def _get_es_hosts_info(self):
         """
-        Obtains list of consul host address
-        :return: list of ip where consule is running
+        Obtains list of elasticsearch hosts ip running in a cluster
+        :return: list of elasticsearch hosts ip running in a cluster
         """
         Log.info("Fetching data N/W info.")
-        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
+        server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
+        data_nw_private_fqdn_list = []
+        for machine_id, node_data in server_node_info.items():
+            data_nw_private_fqdn_list.append(node_data["network"]["data"]["private_fqdn"])
         try:
-            NetworkV().validate('connectivity', [data_nw_private_fqdn])
+            NetworkV().validate('connectivity', data_nw_private_fqdn_list)
         except VError as e:
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
-        return [data_nw_private_fqdn]
-
-    def _get_es_hosts_info(self):
-    	"""
-        Obtains list of elasticsearch hosts ip running in a cluster
-    	:return: list of elasticsearch hosts ip running in a cluster
-    	"""
-    	Log.info("Fetching data N/W info.")
-    	server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
-    	data_nw_private_fqdn_list = []
-    	for machine_id, node_data in server_node_info.items():
-            data_nw_private_fqdn_list.append(node_data["network"]["data"]["private_fqdn"])
-    	try:
-            NetworkV().validate('connectivity', data_nw_private_fqdn_list)
-    	except VError as e:
-            Log.error(f"Network Validation failed.{e}")
-            raise CsmSetupError(f"Network Validation failed.{e}")
-    	return data_nw_private_fqdn_list
+        return data_nw_private_fqdn_list
 
     def _set_db_host_addr(self):
         """
         Sets database hosts address in CSM config.
         :return:
         """
-        consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
         try:
-            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+            Conf.set(const.DATABASE_CLI_INDEX, 'databases>es_db>config>hosts', es_host)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
 
     def _set_s3_ldap_credentials(self):
-                # read username's and password's for S3 and RMQ
+        # read username's and password's for S3 and RMQ
         Log.info("Storing s3 credentials")
         open_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_S3_LDAP_USER])
         open_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_S3_LDAP_SECRET])
         # Edit Current Config File.
         if open_ldap_user and open_ldap_secret:
             Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_LOGIN}",
+            Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_LOGIN}",
                      open_ldap_user)
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
+            Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
                      open_ldap_secret)
 
-    def _set_password_to_csm_user(self):
-        if not self._is_user_exist():
-            raise CsmSetupError(f"{self._user} not created on system.")
-        Log.info("Fetch decrypted password.")
-        _password = self._fetch_csm_user_password(decrypt=True)
-        if not _password:
-            Log.error("CSM Password Not Available.")
-            raise CsmSetupError("CSM Password Not Available.")
-        _password = crypt.crypt(_password, "22")
-        Setup._run_cmd(f"usermod -p {_password} {self._user}")
-
-    def store_encrypted_password(self):
-        """
-        :return:
-        """
-        _paswd = self._fetch_csm_user_password()
-        if not _paswd:
-            raise CsmSetupError("CSM Password Not Found.")
-
+    def _set_csm_credentials(self):
         Log.info("CSM Credentials Copied to CSM Configuration.")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}",
-                 _paswd)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PASSWORD}",
-                 _paswd)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}",
-                 self._user)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
-                 self._user)
+        csm_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_USER])
+        csm_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_SECRET])
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}",
+                 csm_pass)
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PASSWORD}",
+                 csm_pass)
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}",
+                 csm_user)
+        Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
+                 csm_user)
 
     def create(self):
         """
         This Function Creates the CSM Conf File on Required Location.
         :return:
         """
-
         Log.info("Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+            Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
-        self.store_encrypted_password()
-        Conf.save(const.CSM_GLOBAL_INDEX)
-        Conf.save(const.DATABASE_INDEX)
+        Conf.save(const.CORTXCLI_GLOBAL_INDEX)
+        Conf.save(const.DATABASE_CLI_INDEX)

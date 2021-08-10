@@ -54,26 +54,25 @@ class Reset(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def disable_and_stop_service(self):
-        for each_service in [const.CSM_AGENT_SERVICE, const.CSM_WEB_SERVICE]:
-            try:
-                service_obj = Service(each_service)
-                if service_obj.is_enabled():
-                    Log.info(f"Disabling {each_service}")
-                    service_obj.disable()
-                if service_obj.get_state().state == 'active':
-                    Log.info(f"Stopping {each_service}")
-                    service_obj.stop()
+        try:
+            service_obj = Service(const.CSM_AGENT_SERVICE)
+            if service_obj.is_enabled():
+                Log.info(f"Disabling {const.CSM_AGENT_SERVICE}")
+                service_obj.disable()
+            if service_obj.get_state().state == 'active':
+                Log.info(f"Stopping {const.CSM_AGENT_SERVICE}")
+                service_obj.stop()
 
-                Log.info(f"Checking if {each_service} stopped.")
-                for count in range(0, 10):
-                    if not service_obj.get_state().state == 'active':
-                        break
-                    time.sleep(2**count)
-                if service_obj.get_state().state == 'active':
-                    Log.error(f"{each_service} still active")
-                    raise CsmSetupError(f"{each_service} still active")
-            except Exception as e:
-                Log.warn(f"{each_service} not available: {e}")
+            Log.info(f"Checking if {const.CSM_AGENT_SERVICE} stopped.")
+            for count in range(0, 10):
+                if not service_obj.get_state().state == 'active':
+                    break
+                time.sleep(2**count)
+            if service_obj.get_state().state == 'active':
+                Log.error(f"{const.CSM_AGENT_SERVICE} still active")
+                raise CsmSetupError(f"{const.CSM_AGENT_SERVICE} still active")
+        except Exception as e:
+            Log.warn(f"{const.CSM_AGENT_SERVICE} not available: {e}")
 
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
@@ -81,7 +80,7 @@ class Reset(Setup):
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
-            const.TMP_CSM
+            const.CSM_TMP_FILE_CACHE_DIR
             ]
         for _path in files_directory_list:
             Log.info(f"Deleting path :{_path}")
@@ -90,13 +89,13 @@ class Reset(Setup):
     def reset_logs(self):
         Log.info("Reseting log files")
         log_dir = Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
-        csm_log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
+        # Truncate size csm_agent.log file to 0
+        _file = os.path.join(log_dir, "csm_agent.log")
+        Setup._run_cmd(f"truncate -s 0 {_file}")
         all_log_files = os.listdir(log_dir)
         for each_file in all_log_files:
-            if each_file in csm_log_files:
-                _file = os.path.join(log_dir, each_file)
-                Setup._run_cmd(f"truncate -s 0 {_file}")
-            else:
+            if ".gz" in each_file:
+                # Remove older log.gz files.
                 _file = os.path.join(log_dir, each_file)
                 Setup._run_cmd(f"rm -rf {each_file}")
 
