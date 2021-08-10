@@ -40,7 +40,7 @@ class CliSetupCommand:
     def _validate(self):
         ''' Validate setup command '''
         if len(self._args) < 2:
-            raise Exception('Usage: cli_setup -h')
+            self._args.append("-h")
 
     def _get_command(self):
         ''' Parse cli setup command '''

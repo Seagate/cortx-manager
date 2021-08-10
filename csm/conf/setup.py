@@ -68,6 +68,11 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
 
     @staticmethod
+    def _copy_cli_skeleton_configs():
+        os.makedirs(const.CORTXCLI_CONF_PATH, exist_ok=True)
+        Setup._run_cmd(f"cp -rn {const.CORTXCLI_SOURCE_CONF_PATH} {const.ETC_PATH}")
+
+    @staticmethod
     async def request(url, method, json=None):
         """
         Call DB for Executing the Given API.

@@ -23,7 +23,7 @@ from csm.conf.setup import CsmSetupError, Setup
 
 class Cleanup(Setup):
     """
-    Delete all the CSM generated files and folders
+    Delete all the CSM generated files,folders, Configs and Non user collected data.
     """
 
     def __init__(self):
@@ -47,23 +47,21 @@ class Cleanup(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def files_directory_cleanup(self):
+        '''
+        Cleanup CSM config and Remove Log directory
+        '''
         files_directory_list = [
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
             const.CSM_CONF_PATH,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
+            '/tmp/csm/file_cache/'
         ]
 
         for dir_path in files_directory_list:
             Log.info(f"Deleteing path :{dir_path}")
             Setup._run_cmd(f"rm -rf {dir_path}")
-
-    def web_env_file_cleanup(self):
-       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
-                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
-       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
-                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
 
     async def _unsupported_feature_entry_cleanup(self):
         Log.info("Unsupported feature cleanup")

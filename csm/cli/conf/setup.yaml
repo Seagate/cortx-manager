@@ -1,4 +1,4 @@
-# CORTX-CSM: CORTX Management web and CLI interface.
+# CORTX-cli: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -12,6 +12,46 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
+
+cli:
+    post_install:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup post_install
+        args: --config $URL
+
+    prepare:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup prepare
+        args: --config $URL
+
+    config:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup config
+        args: --config $URL
+
+    init:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup init
+        args: --config $URL
+
+    test:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup test
+        args:
+            - -t <cli_PATH>/test/plans/self_test.pln
+            - -f <cli_PATH>/test/test_data/args.yaml
+
+    cleanup:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup cleanup
+        args: --config $URL [--pre-factory]
+
+    reset:
+        cmd: /opt/seagate/cortx/cli/bin/cli_setup reset
+        args: --config $URL
+
+    upgrade:
+      pre:
+          cmd: /opt/seagate/cortx/cli/bin/cli_setup pre_upgrade
+          args: --config $URL
+
+      post:
+          cmd: /opt/seagate/cortx/cli/bin/cli_setup post_upgrade
+          args: --config $URL
 
 support_bundle:
     - cortxcli csm_bundle_generate csm

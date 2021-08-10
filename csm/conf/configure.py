@@ -63,7 +63,6 @@ class Configure(Setup):
         self._set_deployment_mode()
         try:
             self._configure_uds_keys()
-            self._configure_csm_web_keys()
             self._logrotate()
             self._configure_cron()
             for count in range(0, 10):
@@ -191,19 +190,6 @@ class Configure(Setup):
         Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm uds config")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
-
-    def _configure_csm_web_keys(self):
-        Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
-        Log.info("Configuring CSM Web keys")
-        virtual_host = self._fetch_management_ip()
-        Log.info(f"Set MANAGEMENT_IP:{virtual_host} to csm web config")
-        file_data = Text(const.CSM_WEB_DIST_ENV_FILE_PATH)
-        data = file_data.load().split("\n")
-        for ele in data:
-            if "MANAGEMENT_IP" in ele:
-                data.remove(ele)
-        data.append(f"MANAGEMENT_IP={virtual_host}")
-        file_data.dump(("\n").join(data))
 
     async def _set_unsupported_feature_info(self):
         """

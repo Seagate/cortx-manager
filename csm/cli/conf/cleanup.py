@@ -14,58 +14,52 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 
-import os
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
-from csm.core.providers.providers import Response
 from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
-from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
-class Reset(Setup):
+class Cleanup(Setup):
     """
-    Reset CORTX CLI configuration
+    Delete all the CLI generated files and folders
     """
 
     def __init__(self):
-        super(Reset, self).__init__()
+        super(Cleanup, self).__init__()
+        Log.info("Triggering Cleanup for Cortxcli setup.")
 
     async def execute(self, command):
         """
-        :param command:
-        :return:
+        Execute CORTX CLI setup Cleanup Command
+        :param command: Command Object For CLI. :type: Command
+        :return: 0 on success, RC != 0 otherwise.
         """
-        Log.info("Executing Reset for CORTX CLI Setup")
+        Log.info("Executing Cleanup for CORTX CLI Setup")
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CLI_CONF_URL)
-            Conf.load(const.DATABASE_CLI_INDEX, const.DATABASE_CLI_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
-        self.reset_logs()
-        await self.db_cleanup()
+        if command.options.get("pre-factory"):
+            # Placeholder for pre-factory cleanup.
+            Log.info("Execute pre-factory cleanup for cli setup")
+        self.files_directory_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def reset_logs(self):
-        '''
-        Truncate size of cortxcli.log file to 0
-        '''
-        Log.info("Reseting log files")
-        _file = os.path.join(Conf.get(const.CORTXCLI_GLOBAL_INDEX, 'Log>log_path'),
-                                        "cortxcli.log")
-        Setup._run_cmd(f"truncate -s 0 {_file}")
 
-    async def db_cleanup(self):
-
-        port = Conf.get(const.DATABASE_CLI_INDEX, 'databases>es_db>config>port')
-        self._es_db_url = (f"http://localhost:{port}/")
-        for each_model in Conf.get(const.DATABASE_CLI_INDEX, "models"):
-            if each_model.get('config').get('es_db'):
-                db = "es_db"
-                collection = f"{each_model.get('config').get('es_db').get('collection')}"
-                url = f"{self._es_db_url}{collection}"
-                Log.info(f"Deleting for collection:{collection} from {db}")
-                await Setup.erase_index(collection, url, "delete")
+    def files_directory_cleanup(self):
+        '''
+        Remove CLI config and log directory
+        '''
+        files_directory_list = [
+            Conf.get(const.CORTXCLI_GLOBAL_INDEX, 'Log>log_path'),
+            const.CORTXCLI_CONF_PATH
+        ]
+        for dir_path in files_directory_list:
+            Log.info(f"Deleteing path :{dir_path}")
+            Setup._run_cmd(f"rm -rf {dir_path}")
