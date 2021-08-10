@@ -72,7 +72,7 @@ class Configure(Setup):
         self._configure_cron()
         self._configure_uds_keys()
         self._configure_csm_web_keys()
-        await self._create_cluster_admin()
+        await Setup._create_cluster_admin(self.force_action)
         try:
             for count in range(0, 10):
                 try:
@@ -269,37 +269,3 @@ class Configure(Setup):
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
-    async def _create_cluster_admin(self):
-        # TODO confstore keys can be changed.
-        Log.info("Creating cluster admin account")
-        cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>username",
-                                    const.DEFAULT_CLUSTER_ADMIN_USER)
-        cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>secret",
-                                    const.DEFAULT_CLUSTER_ADMIN_PASS)
-        cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>emailid",
-                                    const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-
-        UserNameValidator()(cluster_admin_user)
-        PasswordValidator()(cluster_admin_secret)
-
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
-        db = DataBaseProvider(conf)
-        usr_mngr = UserManager(db)
-        usr_service = CsmUserService(usr_mngr)
-        if (not self.force_action) and \
-            (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
-            Log.console("WARNING: Cortx cluster admin already created.\n"
-                        "Please use '-f' option to create admin user forcefully.")
-            return None
-
-        if self.force_action and await usr_mngr.get(cluster_admin_user):
-            Log.info(f"Removing current user: {cluster_admin_user}")
-            await usr_mngr.delete(cluster_admin_user)
-
-        Log.info(f"Creating cluster admin: {cluster_admin_user}")
-        await usr_service.create_cluster_admin(cluster_admin_user,
-                                                cluster_admin_secret,
-                                                cluster_admin_emailid)
