@@ -55,7 +55,7 @@ class Cleanup(Setup):
         self.conf_store_keys.update({
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
             const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-            const.KEY_ROOT_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
         })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -120,7 +120,7 @@ class Cleanup(Setup):
         ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
         olcAccess_list = ldap_result_id[0][1][attr_to_delete]
         # Count the number of records to be deleted.
-        total_records_to_delete = sum("dc=csm,dc=seagate,dc=com" in record.decode('UTF-8') 
+        total_records_to_delete = sum("dc=csm,dc=seagate,dc=com" in record.decode('UTF-8')
                                         for record in olcAccess_list)
         # Below will perform delete operation
         while (total_records_to_delete > 0):

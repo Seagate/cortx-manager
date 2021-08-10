@@ -769,7 +769,7 @@ KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
 KEY_ROOT_LDAP_USER = "openldap_root_user_key"
-KEY_ROOT_LDAP_SECRET = "openldap_root_scret_key"
+KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
