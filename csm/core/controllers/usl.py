@@ -84,6 +84,101 @@ class _SecuredView(_View):
             raise web.HTTPUnauthorized()
 
 
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/friendly_name')
+class USLFriendlyNameView(_View):
+    """
+    USL friendly name view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        friendly_name = await self._service.get_friendly_name()
+        return {'friendly_name': friendly_name}
+
+
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/device_uuid')
+class USLDeviceUUIDView(_View):
+    """
+    USL device UUID view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        device_uuid = await self._service.get_device_uuid()
+        return {'device_uuid': str(device_uuid)}
+
+
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/volumes')
+class USLVolumesView(_View):
+    """
+    USL management URL view
+    """
+
+    async def get(self) -> Dict[str, List[Dict[str, Any]]]:
+
+        class MethodSchema(Schema):
+
+            device_uuid = fields.UUID(attribute='deviceUUID', data_key='deviceUUID', required=True)
+
+            class AccessParams(Schema):
+
+                class Credentials(Schema):
+
+                    access_key = fields.Str(
+                        attribute='accessKey', data_key='accessKey', required=True)
+                    secret_key = fields.Str(
+                        attribute='secretKey', data_key='secretKey', required=True)
+
+                credentials = fields.Nested(Credentials, required=True)
+
+            access_params = fields.Nested(
+                AccessParams, attribute='accessParams', data_key='accessParams', required=True)
+
+        try:
+            body = await self.request.json()
+            Log.debug(f'body: {body}')
+            body_params = MethodSchema().load(body)
+        except (JSONDecodeError, ValidationError) as e:
+            desc = 'Unable to validate payload with access parameters'
+            Log.error(f'{desc}: {e}')
+            raise CsmError(desc=desc)
+        device_uuid = body_params['deviceUUID']
+        access_key = body_params['accessParams']['credentials']['accessKey']
+        secret_access_key = body_params['accessParams']['credentials']['secretKey']
+        volumes = await self._service.get_volumes(device_uuid, access_key, secret_access_key)
+        return {'volumes': volumes}
+
+
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/mgmt_url')
+class USLMgmtURLView(_View):
+    """
+    USL management URL view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        mgmt_url = await self._service.get_mgmt_url()
+        return {'mgmt_url': mgmt_url}
+
+
+# TODO confirm if endpoint can be public
+@CsmAuth.public
+@CsmView._app_routes.view('/api/v2/usl/public_ip')
+class USLPublicIPView(_View):
+    """
+    USL public IP view
+    """
+
+    async def get(self) -> Dict[str, str]:
+        public_ip = await self._service.get_public_ip()
+        return {'public_ip': public_ip}
+
+
 @Decorators.decorate_if(not Options.debug, _Proxy.on_loopback_only)
 @CsmView._app_routes.view("/usl/v1/saas")
 @CsmView._app_routes.view("/usl/v2/udx_saas")
