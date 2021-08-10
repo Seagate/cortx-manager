@@ -38,7 +38,7 @@ csm:
 
     cleanup:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup cleanup
-        args: --config $URL
+        args: --config $URL [--pre-factory]
 
     reset:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup reset

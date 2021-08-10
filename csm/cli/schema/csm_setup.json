@@ -399,6 +399,12 @@
             "help": "Config Store URL e.g <type>://<path>."
           },
           {
+            "flag": "--pre-factory",
+            "action": "store_true",
+            "default": false,
+            "help": "Perform pre-factory cleanup"
+          },
+          {
             "flag": "args",
             "default": [],
             "suppress_help": true,
