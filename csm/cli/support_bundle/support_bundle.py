@@ -42,8 +42,8 @@ class SupportBundle:
     def import_provisioner_plugin():
         """Import Plugin for Provisioner."""
         try:
-            params = {"username": Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY),
-                      "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")}
+            params = {"username": Conf.get(const.CORTXCLI_GLOBAL_INDEX, const.NON_ROOT_USER_KEY),
+                      "password": Conf.get(const.CORTXCLI_GLOBAL_INDEX, "CSM>password")}
             provisioner = import_module(
                 f"csm.plugins.{const.PLUGIN_DIR}.{const.PROVISIONER_PLUGIN}").ProvisionerPlugin(
                 **params)
@@ -62,9 +62,8 @@ class SupportBundle:
         Log.info("reading hostnames, node_list information")
         node_hostname_map = dict()
         mapping_dict = dict()
-        mapping_dict = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}")
+        mapping_dict = Conf.get(const.CORTXCLI_GLOBAL_INDEX, f"{const.MAINTENANCE}")
         node_hostname_map = mapping_dict.copy()
-        node_hostname_map.pop(const.SHUTDOWN_CRON_TIME)
         if not node_hostname_map:
             response_msg = {
                 "message": "Node list and hostname not found."}
@@ -137,7 +136,7 @@ class SupportBundle:
                 return Response(output = "Bundle Generation Failed.",
                                 rc = str(errno.ENOENT))
 
-        symlink_path = Conf.get(const.CSM_GLOBAL_INDEX,
+        symlink_path = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
                                 f"{const.SUPPORT_BUNDLE}>{const.SB_SYMLINK_PATH}")
         display_string_len = len(bundle_id) + 4
         response_msg = (
@@ -233,8 +232,7 @@ class SupportBundle:
         :param command: Csm_cli Command Object :type: command
         :return:
         """
-        support_bundle_config = Conf.get(const.CSM_GLOBAL_INDEX,
+        support_bundle_config = Conf.get(const.CORTXCLI_GLOBAL_INDEX,
                                          const.SUPPORT_BUNDLE)
         return Response(output = support_bundle_config,
                         rc = CSM_OPERATION_SUCESSFUL)
-

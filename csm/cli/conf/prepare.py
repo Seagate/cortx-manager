@@ -56,6 +56,7 @@ class Prepare(Setup):
 
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
+        self._set_fqdn_for_nodeid()
         self._set_cluster_id()
         self._set_secret_string_for_decryption()
         self._set_s3_ldap_credentials()
@@ -93,6 +94,15 @@ class Prepare(Setup):
                     self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
         Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
                     self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
+
+    def _set_fqdn_for_nodeid(self):
+        Log.info("Setting hostname to server node name")
+        server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
+        Log.debug(f"Server node information: {server_node_info}")
+        for machine_id, node_data in server_node_info.items():
+            hostname = node_data.get(const.HOSTNAME, const.NAME)
+            node_name = node_data.get(const.NAME)
+            Conf.set(const.CORTXCLI_GLOBAL_INDEX, f"{const.MAINTENANCE}>{node_name}",f"{hostname}")
 
     def _set_cluster_id(self):
         Log.info("Setting up cluster id")
