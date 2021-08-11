@@ -112,7 +112,7 @@ class NodeStopOperation(Operation):
         Log.debug(f"NodeStopOperation on node with id {node_id} and args: {args}")
         try:
             operation_result = cluster_manager.node_controller.stop(node_id, -1, **args)
-            Log.debug(f"NodePoweroffOperation result: {operation_result}")
+            Log.debug(f"NodeStopOperation result: {operation_result}")
         except Exception as e:
             err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
             Log.error(err_msg)
