@@ -137,16 +137,16 @@ class CortxHAFramework(HAFramework):
 
         cluster_status_resp = None
         try:
-            cluster_status_resp = self._cluster_manager.node_controller\
+            cluster_status_resp_json = self._cluster_manager.node_controller\
                                                     .check_cluster_feasibility(node_id)
             # TODO: Remove the statement below when delimiter issue is
             # fixed in cortx-utils.
             Conf.init(delim='>')
-            Log.debug(f"HA Framework - Get Cluster Status: {cluster_status_resp}")
+            Log.debug(f"HA Framework - Get Cluster Status: {cluster_status_resp_json}")
+            cluster_status_resp = JsonMessage(cluster_status_resp_json).load()
         except Exception as e:
-            err_msg = f"{const.CLUSTER_STATUS_ERR_MSG} : {e}"
-            Log.error(err_msg)
-            raise Exception(err_msg)
+            Log.error(f"{const.CLUSTER_STATUS_ERR_MSG} : {e}")
+            raise Exception(const.CLUSTER_STATUS_ERR_MSG)
 
         result = None
         if cluster_status_resp[const.STATUS_LITERAL] == const.STATUS_FAILED:
