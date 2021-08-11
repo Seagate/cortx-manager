@@ -768,6 +768,8 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+KEY_ROOT_LDAP_USER = "openldap_root_user_key"
+KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -775,3 +777,12 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
+
+#Openldap CSM Setup consts
+LDAP_USER = "cn={},dc=seagate,dc=com"
+LDAP_URL = "ldapi:///"
+CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
+CORTXUSER_INIT_LDIF = "{}/conf/etc/openldap/csm-ldap-init.ldif".format(CSM_PATH)
+CORTXUSER_ACCOUNT_LDIF = "{}/conf/etc/openldap/userAccount.ldif".format(CSM_PATH)
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,dc=seagate,dc=com"
+CORTXACCOUNTS_DN = "ou=accounts,dc=csm,dc=seagate,dc=com"

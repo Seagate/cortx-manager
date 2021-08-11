@@ -13,6 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import os
+import glob
+import ldap
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.core.blogic import const
@@ -20,6 +23,7 @@ from csm.core.providers.providers import Response
 from cortx.utils.kv_store.error import KvError
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.conf.setup import CsmSetupError, Setup
+from cortx.utils.validator.error import VError
 
 class Cleanup(Setup):
     """
@@ -37,12 +41,27 @@ class Cleanup(Setup):
         """
         try:
             Log.info("Loading configuration")
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+        self._prepare_and_validate_confstore_keys()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
+        self.cleanup_ldap_config()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
+            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+        })
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def files_directory_cleanup(self):
         files_directory_list = [
@@ -59,3 +78,63 @@ class Cleanup(Setup):
     def web_env_file_cleanup(self):
        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+
+    def cleanup_ldap_config(self):
+        """
+        Cleanup LDAP Configurations
+        """
+        #Delete CortxAccount from LDAP
+        self._delete_cortxaccount_from_ldap()
+        #Delete cortxuser schema
+        filelist = glob.glob('/etc/openldap/slapd.d/cn=config/cn=schema/*cortxuser.ldif')
+        for schemafile in filelist:
+            try:
+                os.remove(schemafile)
+            except Exception as e:
+                Log.error(f"Failed to delete cortxuser schema: {e}")
+                raise CsmSetupError("Failed to delete cortxuser schema.")
+        #Delete permission attributes
+        try:
+            self._search_delete_permission_attr("olcDatabase={2}mdb,cn=config", "olcAccess")
+        except Exception as e:
+            Log.error(f"Failed to delete the ldap permission attributes: {e}")
+            raise CsmSetupError("Failed to delete ldap permission attributes.")
+        #Restart slapd service
+        Setup._run_cmd('systemctl restart slapd')
+
+    def _delete_cortxaccount_from_ldap(self):
+        """
+        Delete CortxAccount from LDAP
+        """
+        self._ldapuser = self._fetch_ldap_root_user()
+        self._ldappasswd = self._fetch_ldap_root_password()
+        if not self._ldapuser:
+            raise CsmSetupError("Failed to fetch LDAP root user")
+        if not self._ldappasswd:
+            raise CsmSetupError("Failed to fetch LDAP root user password")
+        self._delete_ldap_data(const.CORTXACCOUNTS_DN)
+
+    def _search_delete_permission_attr(self, dn, attr_to_delete):
+        conn = ldap.initialize("ldapi://")
+        conn.sasl_non_interactive_bind_s('EXTERNAL')
+        ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+        olcAccess_list = ldap_result_id[0][1][attr_to_delete]
+        # Count the number of records to be deleted.
+        total_records_to_delete = sum("dc=csm,dc=seagate,dc=com" in record.decode('UTF-8')
+                                        for record in olcAccess_list)
+        # Below will perform delete operation
+        while (total_records_to_delete > 0):
+            ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+            for result_dn, olcAccess_dict in ldap_result_id:
+                if(olcAccess_dict):
+                    for value in olcAccess_dict[attr_to_delete]:
+                        if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
+                            mod_attrs = [( ldap.MOD_DELETE, attr_to_delete, value )]
+                            try:
+                                conn.modify_s(dn, mod_attrs)
+                                break
+                            except Exception as e:
+                                Log.error(f'Error while deleting attribute.{e}')
+                                raise
+            total_records_to_delete = total_records_to_delete - 1
+        conn.unbind_s()

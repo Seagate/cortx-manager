@@ -24,7 +24,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.service.service_handler import Service
 from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
-
+from cortx.utils.validator.error import VError
 
 class Reset(Setup):
     """
@@ -41,16 +41,31 @@ class Reset(Setup):
         """
         try:
             Log.info("Loading Url into conf store.")
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        self._prepare_and_validate_confstore_keys()
         self.disable_and_stop_service()
         self.directory_cleanup()
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
+        self._delete_cortxusers_from_ldap()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
+            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+        })
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def disable_and_stop_service(self):
         for each_service in [const.CSM_AGENT_SERVICE, const.CSM_WEB_SERVICE]:
@@ -127,3 +142,15 @@ class Reset(Setup):
             Log.warn(f"Failed at deleting for {collection}")
             Log.warn(f"{e}")
         Log.info(f"Index {collection} Deleted.")
+
+    def _delete_cortxusers_from_ldap(self):
+        """
+        Delete all CortxUsers under CortxAccount
+        """
+        self._ldapuser = self._fetch_ldap_root_user()
+        self._ldappasswd = self._fetch_ldap_root_password()
+        if not self._ldapuser:
+            raise CsmSetupError("Failed to fetch LDAP root user")
+        if not self._ldappasswd:
+            raise CsmSetupError("Failed to fetch LDAP root user password")
+        self._delete_ldap_data(const.CORTXUSERS_DN)
