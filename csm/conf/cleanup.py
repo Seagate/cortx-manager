@@ -43,7 +43,6 @@ class Cleanup(Setup):
             Log.error(f"Configuration Loading Failed {e}")
         await self._unsupported_feature_entry_cleanup()
         self.files_directory_cleanup()
-        self.web_env_file_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def files_directory_cleanup(self):
