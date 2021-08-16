@@ -208,9 +208,8 @@ class CsmUserService(ApplicationService):
     """
     Service that exposes csm user management actions from the csm core.
     """
-    def __init__(self, provisioner, user_mgr: UserManager):
+    def __init__(self, user_mgr: UserManager):
         self.user_mgr = user_mgr
-        self._provisioner = provisioner
 
     def _user_to_dict(self, user: User):
         """ Helper method to convert user model into a dictionary repreentation """
