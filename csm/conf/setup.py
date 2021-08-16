@@ -44,14 +44,6 @@ from cortx.utils.validator.v_confkeys import ConfKeysV
 client = None
 
 
-class InvalidPillarDataError(InvalidRequest):
-    pass
-
-
-class ProvisionerCliError(InvalidRequest):
-    pass
-
-
 class Setup:
     def __init__(self):
         self._user = None
@@ -232,22 +224,6 @@ class Setup:
             return True
         except KeyError as err:
             return False
-
-    @staticmethod
-    def get_data_from_provisioner_cli(method, output_format="json"):
-        try:
-            Log.info("Execute proviioner cli cmd: {method} ")
-            process = SimpleProcess(f"provisioner {method} --out={output_format}")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.error(f"Error in command execution : {e}")
-            raise ProvisionerCliError(f"Error in command execution : {e}")
-        if stderr:
-            raise ProvisionerCliError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[const.RET]
 
     def _check_if_dir_exist_remote_host(self, dir, host):
         try:
