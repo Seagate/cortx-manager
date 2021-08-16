@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import bcrypt
-from schematics.types import (StringType, DateTimeType, BooleanType)
+from schematics.types import (StringType, DateTimeType, BooleanType, IntType)
 from datetime import datetime, timezone
 from enum import Enum
 from csm.core.blogic import const
@@ -46,16 +46,18 @@ class User(CsmModel):
 
     user_id = StringType()
     user_type = StringType()
-    role = StringType()
-    password_hash = StringType()
-    email = StringType()
+    user_role = StringType()
+    userPassword = StringType()
+    mail = StringType()
     alert_notification = BooleanType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
+    uidNumber = IntType()
+    gidNumber = IntType()
 
     def update(self, new_values: dict):
         if 'password' in new_values:
-            self.password_hash = Passwd.hash(new_values['password'])
+            self.userPassword = Passwd.hash(new_values['password'])
             new_values.pop('password')
         for key in new_values:
             setattr(self, key, new_values[key])
@@ -64,14 +66,14 @@ class User(CsmModel):
 
     @staticmethod
     def instantiate_csm_user(
-        user_id, password, email="", role=const.CSM_MONITOR_ROLE, alert_notification=True
+        user_id, password, email, role=const.CSM_MONITOR_ROLE, alert_notification=True
     ):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
-        user.password_hash = Passwd.hash(password)
-        user.role = role
-        user.email = email
+        user.userPassword = Passwd.hash(password)
+        user.user_role = role
+        user.mail = email
         user.alert_notification = alert_notification
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
@@ -82,9 +84,9 @@ class User(CsmModel):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.S3AccountUser.value
-        user.password_hash = None
-        user.role = role
-        user.email = ""
+        user.userPassword = None
+        user.user_role = role
+        user.mail = ""
         user.alert_notification = True
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)

@@ -168,7 +168,7 @@ class LocalAuthPolicy(AuthPolicy):
     """ Local CSM user authentication policy """
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
-        if Passwd.verify(password, user.password_hash):
+        if Passwd.verify(password, user.userPassword):
             return LocalCredentials(user.user_id)
         return None
 
@@ -257,7 +257,7 @@ class LoginService:
             credentials = await self._auth_service.authenticate(user, password)
 
         if credentials:
-            permissions = await self._role_manager.calc_effective_permissions(user.role)
+            permissions = await self._role_manager.calc_effective_permissions(user.user_role)
             session = await self._session_manager.create(credentials, permissions)
             if session:
                 return session.session_id
