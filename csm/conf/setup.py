@@ -89,6 +89,21 @@ class Setup:
             raise CsmSetupError(f"Connection to Db Failed. {e}")
 
     @staticmethod
+    async def erase_index(collection, url, method, payload=None):
+        Log.info(f"Url: {url}")
+        try:
+            response, headers, status = await Setup.request(url, method, payload)
+            if status != 200:
+                Log.error(f"Unable to delete collection: {collection}")
+                Log.error(f"Response: {response}")
+                Log.error(f"Status Code: {status}")
+                return None
+        except Exception as e:
+            Log.warn(f"Failed at deleting for {collection}")
+            Log.warn(f"{e}")
+        Log.info(f"Index {collection} Deleted.")
+
+    @staticmethod
     def _validate_conf_store_keys(index, keylist=None):
         if not keylist:
             raise CsmSetupError("Keylist should not be empty")
@@ -168,6 +183,49 @@ class Setup:
                 Log.error(f"Decryption for CSM Failed. {error}")
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
         return csm_user_pass
+
+    @staticmethod
+    async def _create_cluster_admin(force_action=False):
+        '''
+        Create Cluster admin using CSM User managment.
+        Username, Password, Email will be obtaineed from Confstore
+        '''
+        from csm.core.services.users import CsmUserService, UserManager
+        from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+        from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+        # TODO confstore keys can be changed.
+        Log.info("Creating cluster admin account")
+        cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>username",
+                                    const.DEFAULT_CLUSTER_ADMIN_USER)
+        cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>secret",
+                                    const.DEFAULT_CLUSTER_ADMIN_PASS)
+        cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>cluster_credential>emailid",
+                                    const.DEFAULT_CLUSTER_ADMIN_EMAIL)
+
+        UserNameValidator()(cluster_admin_user)
+        PasswordValidator()(cluster_admin_secret)
+
+        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        db = DataBaseProvider(conf)
+        usr_mngr = UserManager(db)
+        usr_service = CsmUserService(usr_mngr)
+        if (not force_action) and \
+            (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
+            Log.console("WARNING: Cortx cluster admin already created.\n"
+                        "Please use '-f' option to create admin user forcefully.")
+            return None
+
+        if force_action and await usr_mngr.get(cluster_admin_user):
+            Log.info(f"Removing current user: {cluster_admin_user}")
+            await usr_mngr.delete(cluster_admin_user)
+
+        Log.info(f"Creating cluster admin: {cluster_admin_user}")
+        await usr_service.create_cluster_admin(cluster_admin_user,
+                                                cluster_admin_secret,
+                                                cluster_admin_emailid)
 
     def _is_user_exist(self):
         """

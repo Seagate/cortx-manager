@@ -38,14 +38,14 @@ class LoginView(CsmView):
         if not username or not password:
             raise InvalidRequest(message_args="Username or password is missing")
 
-        session_id = await self.request.app.login_service.login(username, password)
+        session_id, body = await self.request.app.login_service.login(username, password)
         Log.debug(f"Obtained session id for {username}")
         if not session_id:
             raise web.HTTPUnauthorized()
 
         Log.debug(f'User: {username} successfully logged in.')
         headers = { CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}' }
-        return CsmResponse(headers=headers)
+        return CsmResponse(body, headers=headers)
 
 
 @CsmView._app_routes.view("/api/v1/logout")
