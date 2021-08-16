@@ -15,26 +15,26 @@
     "message.sensor_response_type.host_id": "host_id",
     "message.sensor_response_type.info.description": "description"
   },
-  "enclosure:fru:fan": {
+  "enclosure:hw:fan": {
     "message.sensor_response_type.specific_info.location": "location",
     "message.sensor_response_type.specific_info.enclosure_id": "enclosure_id",
     "message.sensor_response_type.specific_info.fans": "events",
     "message.sensor_response_type.specific_info.name": "name"
   },
-  "enclosure:fru:controller": {
+  "enclosure:hw:controller": {
     "message.sensor_response_type.specific_info.serial_number": "serial_number"
   },
-  "enclosure:fru:disk": {
+  "enclosure:hw:disk": {
     "message.sensor_response_type.specific_info.location": "location",
     "message.sensor_response_type.specific_info.serial_number": "serial_number",
     "message.sensor_response_type.specific_info.size": "volume_size",
     "message.sensor_response_type.specific_info.slot": "disk_slot"
   },
-  "enclosure:fru:psu": {
+  "enclosure:hw:psu": {
     "message.sensor_response_type.specific_info.location": "location",
     "message.sensor_response_type.specific_info.enclosure_id": "enclosure_id"
   },
-  "enclosure:fru:sideplane": {
+  "enclosure:hw:sideplane": {
     "message.sensor_response_type.specific_info.location": "location",
     "message.sensor_response_type.specific_info.enclosure_id": "enclosure_id",
     "message.sensor_response_type.specific_info.unhealthy_components": "events",

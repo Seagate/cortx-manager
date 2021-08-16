@@ -39,9 +39,11 @@ class Cleanup(Setup):
         try:
             Log.info("Loading configuration")
             Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
+            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
         self.cortx_pam_cleanup()
+        await self._unsupported_feature_entry_cleanup()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -52,7 +54,8 @@ class Cleanup(Setup):
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
             const.CSM_CONF_PATH,
-            const.PAM_SO_PATH
+            const.PAM_SO_PATH,
+            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
         ]
 
         for dir_path in files_directory_list:
@@ -60,8 +63,10 @@ class Cleanup(Setup):
             Setup._run_cmd(f"rm -rf {dir_path}")
 
     def web_env_file_cleanup(self):
-       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
-       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl {const.CSM_WEB_DIST_ENV_FILE_PATH}")
+       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
+       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
 
     def cortx_pam_cleanup(self):
         Log.info(f"Replacing content of {const.PAM_PASS_AUTH_FILE_PATH} with {const.CORTX_PAM_PASS_AUTH_TMPL_PATH} ")
@@ -70,3 +75,13 @@ class Cleanup(Setup):
         tmpl_data = tmpl_data.replace('<ctrl-flag-1>','')
         tmpl_data = tmpl_data.replace('<module-1>','')
         Text(const.PAM_PASS_AUTH_FILE_PATH).dump(tmpl_data)
+
+    async def _unsupported_feature_entry_cleanup(self):
+        Log.info("Unsupported feature cleanup")
+        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
+        _es_db_url = (f"http://localhost:{port}/")
+        collection = "config"
+        url = f"{_es_db_url}{collection}/_delete_by_query"
+        payload = {"query": {"match": {"component_name": "csm"}}}
+        Log.info(f"Deleting for collection:{collection} from es_db")
+        await Setup.erase_index(collection, url, "post", payload)

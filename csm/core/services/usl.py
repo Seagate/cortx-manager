@@ -18,6 +18,7 @@ import time
 
 from aiohttp import ClientSession, TCPConnector
 from aiohttp import ClientError as HttpClientError
+from botocore.exceptions import ClientError as BotoClientError  # type: ignore
 from random import SystemRandom
 from marshmallow import ValidationError
 from marshmallow.validate import URL
@@ -87,7 +88,7 @@ class UslService(ApplicationService):
         self._s3plugin = s3_plugin
         self._provisioner = provisioner
         self._storage = storage
-        self._device_uuid = self._get_device_uuid()
+        self._device_uuid = self._fetch_device_uuid()
         key = Cipher.generate_key(str(self._device_uuid), 'USL')
         secure_storage = SecureStorage(self._storage, key)
         self._domain_certificate_manager = USLDomainCertificateManager(secure_storage)
@@ -95,7 +96,7 @@ class UslService(ApplicationService):
         self._api_key_dispatch = UslApiKeyDispatcher(self._storage)
         Log.info("USL Service initialized")
 
-    async def _get_system_friendly_name(self) -> str:
+    async def get_friendly_name(self) -> str:
         entries = await self._storage(ApplianceName).get(Query())
         appliance_name = next(iter(entries), None)
         if appliance_name is None:
@@ -104,7 +105,48 @@ class UslService(ApplicationService):
             raise CsmInternalError(desc=reason)
         return str(appliance_name)
 
-    def _get_device_uuid(self) -> UUID:
+    async def get_device_uuid(self) -> UUID:
+        return self._device_uuid
+
+    async def get_mgmt_url(self) -> str:
+        return ServiceUrls.get_mgmt_url()
+
+    async def get_public_ip(self) -> str:
+        return NetworkAddresses.get_node_public_data_ip_addr()
+
+    async def get_volumes(
+        self, device_uuid: UUID, access_key: str, secret_access_key: str
+    ) -> List[Dict[str, Any]]:
+        if device_uuid != self._device_uuid:
+            raise CsmNotFoundError(desc=f'Device {device_uuid} not found')
+        capacity_details = (
+            await StorageCapacityService(self._provisioner).get_capacity_details())
+        capacity_size = capacity_details[const.SIZE]
+        capacity_used = capacity_details[const.USED]
+        volumes = []
+        try:
+            s3_client = self._s3plugin.get_s3_client(
+                access_key, secret_access_key, CsmS3ConfigurationFactory.get_s3_connection_config())
+            for bucket in await s3_client.get_all_buckets():
+                if not await self._is_bucket_lyve_pilot_enabled(s3_client, bucket):
+                    continue
+                volume = {
+                    'name': await self._get_volume_name(bucket.name),
+                    'bucketName': bucket.name,
+                    'uuid': self._get_volume_uuid(bucket.name),
+                    'deviceUuid': self._device_uuid,
+                    'size': capacity_size,
+                    'used': capacity_used,
+                    'filesystem': 's3',
+                }
+                volumes.append(volume)
+        except BotoClientError as e:
+            reason = e.response['Error']['Message']
+            Log.error(f'Client error raised during S3 operation: {reason}')
+            raise InvalidRequest(reason) from e
+        return volumes
+
+    def _fetch_device_uuid(self) -> UUID:
         """
         Returns the CORTX cluster ID as in CSM configuration file.
         """
@@ -130,7 +172,7 @@ class UslService(ApplicationService):
         return tags.get('udx', 'disabled') == 'enabled'
 
     async def _get_volume_name(self, bucket_name: str) -> str:
-        return await self._get_system_friendly_name() + ": " + bucket_name
+        return await self.get_friendly_name() + ": " + bucket_name
 
     def _get_volume_uuid(self, bucket_name: str) -> UUID:
         """Generates the CORTX volume (bucket) UUID from CORTX device UUID and bucket name."""
@@ -165,7 +207,7 @@ class UslService(ApplicationService):
     async def _format_device_info(self) -> Device:
         device_uuid = self._device_uuid
         return Device.instantiate(
-            await self._get_system_friendly_name(),
+            await self.get_friendly_name(),
             '0000',
             str(device_uuid),
             'S3',
@@ -370,7 +412,7 @@ class UslService(ApplicationService):
         token = ''.join(SystemRandom().sample('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 12))
         return {'registrationToken': token}
 
-    def _get_mgmt_url(self) -> Dict[str, str]:
+    def _get_service_url_mgmt_entry(self) -> Dict[str, str]:
         """
         Returns a management link to be provided to the UDS.
 
@@ -390,7 +432,7 @@ class UslService(ApplicationService):
         """
 
         service_urls = []
-        mgmt_url = self._get_mgmt_url()
+        mgmt_url = self._get_service_url_mgmt_entry()
         service_urls.append(mgmt_url)
         return service_urls
 
@@ -401,7 +443,7 @@ class UslService(ApplicationService):
 
         :return: A dictionary containing system information.
         """
-        friendly_name = await self._get_system_friendly_name()
+        friendly_name = await self.get_friendly_name()
         service_urls = self._get_service_urls()
         return {
             'model': 'CORTX',
