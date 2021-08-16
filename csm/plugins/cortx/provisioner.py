@@ -57,20 +57,29 @@ class ProvisionerPlugin:
     PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
 
     def __init__(self, username=None, password=None):
+        self._username = username
+        self._password = password
+        self.provisioner = None
+
+    def _plug_in_provisioner(self) -> None:
+        """
+        Check if the provisioner client can be imported and set ups provisioner
+        if available.
+        """
+
+        if self.provisioner is not None:
+            return
         try:
             import provisioner
             self.provisioner = provisioner
-            Log.info("Provisioner plugin is loaded")
-
-            if username and password:
+            if self._username and self._password:
                 self.provisioner.auth_init(
-                    username=username,
-                    password=password,
-                    eauth="pam"
-                )
-        except Exception as error:
+                    username=self._username, password=self._password, eauth="pam")
+            Log.info("Provisioner plugin is loaded")
+        except Exception as e:
             self.provisioner = None
-            Log.error(f"Provisioner module not found : {error}")
+            Log.error(f"Failed to plug the provisioner in: {e}")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT) from None
 
     async def _await_nonasync(self, func):
         pool = ThreadPoolExecutor(max_workers=1)
@@ -85,8 +94,8 @@ class ProvisionerPlugin:
         :returns: a PackageInformation object
         :raises: PackageValidationError in case of an invalid package
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -112,8 +121,7 @@ class ProvisionerPlugin:
         :returns: Value which will later be used to poll for the status of the process
         """
 
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -158,8 +166,7 @@ class ProvisionerPlugin:
                 "file_path": file_path}
 
     async def trigger_firmware_update(self, fw_package_path):
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -178,8 +185,7 @@ class ProvisionerPlugin:
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -204,8 +210,7 @@ class ProvisionerPlugin:
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -231,8 +236,7 @@ class ProvisionerPlugin:
                 raise CsmInternalError(f'Failed to install certificate during provisioner '
                                        f'`set_ssl_certs` call: {e}')
 
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         return await self._await_nonasync(_command_handler)
 
@@ -253,8 +257,7 @@ class ProvisionerPlugin:
         """
         if not Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG):
             Log.debug("Network config is not present in in-memory.")
-            if not self.provisioner:
-                raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+            self._plug_in_provisioner()
 
             def _command_handler():
                 try:
@@ -276,8 +279,7 @@ class ProvisionerPlugin:
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
-        if not self.provisioner:
-            raise ClusterIdFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -310,8 +312,7 @@ class ProvisionerPlugin:
         :param network_data: Nerwork config dict
         :returns:
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -411,8 +412,7 @@ class ProvisionerPlugin:
         Fetch product version information from provisioner
         :returns: Dict having installed product version
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -434,8 +434,7 @@ class ProvisionerPlugin:
         :param: ssh_port: Port to connect to SSH :type: Int
         :return: Job ID for Node Replacement
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
         try:
             return self.provisioner.replace_node(node_id, hostname, ssh_port)
         except self.provisioner.errors.ProvisionerError as e:
@@ -452,8 +451,7 @@ class ProvisionerPlugin:
         :param target_node_id: Node_id for target node intended. :type: String
         :return:
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
         try:
             Log.debug(f"Invoking Provisioner command run with "
                       f"arguments --> cmd_name={const.CORTXCLI} "
