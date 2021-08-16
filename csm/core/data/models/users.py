@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import bcrypt
-from schematics.types import (StringType, DateTimeType, BooleanType, IntType)
+from schematics.types import (StringType, DateTimeType, BooleanType)
 from datetime import datetime, timezone
 from enum import Enum
 from csm.core.blogic import const
@@ -52,8 +52,6 @@ class User(CsmModel):
     alert_notification = BooleanType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
-    uidNumber = IntType()
-    gidNumber = IntType()
 
     def update(self, new_values: dict):
         if 'password' in new_values:
