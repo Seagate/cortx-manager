@@ -26,8 +26,6 @@ from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusR
 from csm.core.blogic.const import PILLAR_GET
 from json import JSONDecodeError
 from csm.common.payload import JsonMessage
-import provisioner
-import provisioner.freeze
 from cortx.utils.conf_store.conf_store import Conf
 
 
@@ -60,6 +58,7 @@ class ProvisionerPlugin:
 
     def __init__(self, username=None, password=None):
         try:
+            import provisioner
             self.provisioner = provisioner
             Log.info("Provisioner plugin is loaded")
 
