@@ -81,12 +81,11 @@ class UslService(ApplicationService):
     _native_certificate_manager: USLNativeCertificateManager
     _api_key_dispatch: UslApiKeyDispatcher
 
-    def __init__(self, s3_plugin, storage, provisioner) -> None:
+    def __init__(self, s3_plugin, storage) -> None:
         """
         Constructor.
         """
         self._s3plugin = s3_plugin
-        self._provisioner = provisioner
         self._storage = storage
         self._device_uuid = self._fetch_device_uuid()
         key = Cipher.generate_key(str(self._device_uuid), 'USL')
@@ -119,8 +118,7 @@ class UslService(ApplicationService):
     ) -> List[Dict[str, Any]]:
         if device_uuid != self._device_uuid:
             raise CsmNotFoundError(desc=f'Device {device_uuid} not found')
-        capacity_details = (
-            await StorageCapacityService(self._provisioner).get_capacity_details())
+        capacity_details = await StorageCapacityService().get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
         capacity_used = capacity_details[const.USED]
         volumes = []
@@ -183,7 +181,7 @@ class UslService(ApplicationService):
         volume_name = await self._get_volume_name(bucket_name)
         device_uuid = self._device_uuid
         volume_uuid = self._get_volume_uuid(bucket_name)
-        capacity_details = await StorageCapacityService(self._provisioner).get_capacity_details()
+        capacity_details = await StorageCapacityService().get_capacity_details()
         capacity_size = capacity_details[const.SIZE]
         capacity_used = capacity_details[const.USED]
         return Volume.instantiate(

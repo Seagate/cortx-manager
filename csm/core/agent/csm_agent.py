@@ -165,7 +165,7 @@ class CsmAgent:
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'), update_repo)
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(db, provisioner,
             security_service, system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
-        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
@@ -178,7 +178,7 @@ class CsmAgent:
             Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
             usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
             CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
-            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)
         except Exception as e:
             Log.warn(f"USL configuration not loaded: {e}")
 
