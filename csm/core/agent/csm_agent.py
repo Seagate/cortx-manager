@@ -57,6 +57,12 @@ class CsmAgent:
             db_config['databases']["es_db"]["config"]["replication"])
         db_config['databases']["consul_db"]["config"][const.PORT] = int(
             db_config['databases']["consul_db"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"][const.PORT] = int(
+            db_config['databases']["openldap"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN))
+        db_config['databases']["openldap"]["config"]["password"] = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 

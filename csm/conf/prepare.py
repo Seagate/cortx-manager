@@ -141,6 +141,20 @@ class Prepare(Setup):
             raise CsmSetupError(f"Network Validation failed.{e}")
     	return data_nw_private_fqdn_list
 
+    def _get_ldap_hosts_info(self):
+        """
+        Obtains list of ldap host address
+        :return: list of ip where ldap is running
+        """
+        Log.info("Fetching data N/W info.")
+        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
+        try:
+            NetworkV().validate('connectivity', [data_nw_private_fqdn])
+        except VError as e:
+            Log.error(f"Network Validation failed.{e}")
+            raise CsmSetupError(f"Network Validation failed.{e}")
+        return [data_nw_private_fqdn]
+
     def _set_db_host_addr(self):
         """
         Sets database hosts address in CSM config.
@@ -148,9 +162,11 @@ class Prepare(Setup):
         """
         consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
+        ldap_host = self._get_ldap_hosts_info()
         try:
             Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
             Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_host)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')

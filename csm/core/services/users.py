@@ -271,12 +271,6 @@ class CsmUserService(ApplicationService):
         """
         Fetches the list of existing users.
         """
-        user_list = await self.user_mgr.get_list(
-            offset or None,
-            limit or None,
-            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
-            role, username)
-
         field_mapping = {
             "id": "user_id",
             "username": "user_id",
@@ -288,6 +282,12 @@ class CsmUserService(ApplicationService):
 
         if sort_by and sort_by not in const.CSM_USER_SORTABLE_FIELDS:
             raise InvalidRequest("Cannot sort by the selected field", USERS_MSG_CANNOT_SORT)
+
+        user_list = await self.user_mgr.get_list(
+            offset or None,
+            limit or None,
+            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
+            role, username)
 
         return [self._user_to_dict(x) for x in user_list]
 
