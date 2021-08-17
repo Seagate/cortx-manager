@@ -9,6 +9,47 @@
             "permissions_tag": "create",
             "sub_commands": [
                 {
+                    "name": "start",
+                    "description": "Start the node.",
+                    "need_confirmation": false,
+                    "permissions_tag": "create",
+                    "args": [
+                        {
+                            "flag": "-o",
+                            "dest": "operation",
+                            "type": "str",
+                            "help": "",
+                            "default": "start",
+                            "suppress_help": true,
+                            "json": true
+                        },
+                        {
+                            "flag": "-i",
+                            "dest": "resource_id",
+                            "type": "str",
+                            "help": "Id of the node on which operation is to be performed.",
+                            "default": "",
+                            "json": true
+                        },
+                        {
+                            "flag": "args",
+                            "default": [],
+                            "suppress_help": true,
+                            "nargs": "?",
+                            "help": ""
+                        }
+                    ],
+                    "comm": {
+                        "type": "rest",
+                        "method": "post",
+                        "target": "/{version}/system/management/node?arguments_format=flat",
+                        "version": "v2"
+                    },
+                    "output": {
+                        "success": "Start operation request for node is placed successfully."
+                    }
+                },
+                {
                     "name": "stop",
                     "description": "Stop the node.",
                     "need_confirmation": false,
@@ -111,7 +152,7 @@
                         "version": "v2"
                     },
                     "output": {
-                        "success": "Stop operation request for node is placed successfully."
+                        "success": "Poweroff operation request for node is placed successfully."
                     }
                 }
             ]

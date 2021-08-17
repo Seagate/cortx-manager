@@ -82,12 +82,30 @@ class ClusterStopOperation(Operation):
 
 
 class NodeStartOperation(Operation):
-
+    """
+    Process start operation on node with he arguments provided.
+    """
     def validate_arguments(self, **kwargs):
-        pass
+        fields_to_validate = {
+            const.ARG_RESOURCE_ID: fields.Str(required=True,
+                                    validate=self.not_blank_validator)
+        }
+        ValidatorSchema = Schema.from_dict(fields_to_validate)
+        errors = ValidatorSchema().validate(kwargs)
+        self.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
-        pass
+        node_id = kwargs.get(const.ARG_RESOURCE_ID, "")
+        args = {
+            const.ARG_POWER_ON: True
+        }
+        Log.debug(f"NodeStartOperation on node with id {node_id} and args: {args}")
+        try:
+            operation_result = cluster_manager.node_controller.start(node_id, **args)
+            Log.debug(f"NodeStartOperation result: {operation_result}")
+        except Exception as e:
+            err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
+            Log.error(err_msg)
 
 
 class NodeStopOperation(Operation):

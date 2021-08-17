@@ -178,7 +178,7 @@ class CortxHAFramework(HAFramework):
         # fixed in cortx-utils.
         Conf.init(delim='>')
         cluster_op_resp = {
-            "message": f"{operation} request for {resource} is placed successfully."
+            "message": f"{operation.capitalize()} request for {resource} is placed successfully."
         }
         Log.debug(f"HA Framework - Cluster Operation: {cluster_op_resp}")
 
