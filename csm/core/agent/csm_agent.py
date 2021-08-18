@@ -180,6 +180,7 @@ class CsmAgent:
             CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
             CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
         except Exception as e:
+            CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
             Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
