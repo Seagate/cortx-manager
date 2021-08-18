@@ -22,8 +22,6 @@ from csm.common.errors import CsmInternalError, CsmError
 from typing import Callable, Dict, Any
 
 class StorageCapacityService(ApplicationService):
-    def __init__(self, provisioner):
-        self._provisioner = provisioner
     """
     Service for Get disk capacity details
     """
@@ -82,7 +80,7 @@ class StorageCapacityService(ApplicationService):
             int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit,round_off_value)
         formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit,round_off_value)
         formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
-                                                             int(capacity_info[const.FREE_SPACE])) / 
+                                                             int(capacity_info[const.FREE_SPACE])) /
                                                              int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
         formatted_output[const.UNIT] = unit
         return formatted_output

@@ -27,18 +27,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 t = unittest.TestCase()
 
-class MockProvisioner():
-
-    async def create_system_user(self, *args, **kwargs):
-        return True
-
 
 def init(args):
     conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
     db = DataBaseProvider(conf)
     usrmngr = UserManager(db)
-    provisioner = MockProvisioner()
-    user_service = CsmUserService(provisioner, usrmngr)
+    user_service = CsmUserService(usrmngr)
     loop = asyncio.get_event_loop()
     args['user_service'] = user_service
     args['loop'] = loop
