@@ -161,7 +161,7 @@ class CsmAgent:
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
 
-        user_service = CsmUserService(provisioner, user_manager)
+        user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)

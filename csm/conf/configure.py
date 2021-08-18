@@ -17,7 +17,7 @@ import os
 import time
 import ldap
 from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json, Text
+from csm.common.payload import Json, Text, Yaml
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -30,6 +30,11 @@ from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.v_consul import ConsulV
 from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from csm.common.process import SimpleProcess
+from csm.core.data.models.users import User
+from csm.core.services.users import CsmUserService, UserManager
+from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+
 
 class Configure(Setup):
     """
@@ -58,15 +63,19 @@ class Configure(Setup):
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+
+        self.force_action = command.options.get('f')
+        Log.info(f"Force flag: {self.force_action}")
         self._prepare_and_validate_confstore_keys()
         self._validate_consul_service()
         self._validate_es_service()
         self._set_deployment_mode()
+        self._logrotate()
+        self._configure_cron()
+        self._configure_uds_keys()
+        self._configure_csm_web_keys()
+        await Setup._create_cluster_admin(self.force_action)
         try:
-            self._configure_uds_keys()
-            self._configure_csm_web_keys()
-            self._logrotate()
-            self._configure_cron()
             self._configure_csm_ldap_schema()
             for count in range(0, 10):
                 try:
@@ -196,6 +205,9 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
 
     def _configure_csm_web_keys(self):
+        if not os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH):
+            Log.warn(f"{const.CSM_WEB_DIST_ENV_FILE_PATH} not exists.")
+            return None
         Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
         Log.info("Configuring CSM Web keys")
         virtual_host = self._fetch_management_ip()

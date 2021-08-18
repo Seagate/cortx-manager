@@ -49,6 +49,7 @@ class User(CsmModel):
     user_role = StringType()
     userPassword = StringType()
     mail = StringType()
+    reset_password = BooleanType()
     alert_notification = BooleanType()
     updated_time = DateTimeType()
     created_time = DateTimeType()
@@ -64,7 +65,7 @@ class User(CsmModel):
 
     @staticmethod
     def instantiate_csm_user(
-        user_id, password, email, role=const.CSM_MONITOR_ROLE, alert_notification=True
+        user_id, password, email="", role=const.CSM_MONITOR_ROLE, reset_password = False, alert_notification=True
     ):
         user = User()
         user.user_id = user_id
@@ -73,6 +74,7 @@ class User(CsmModel):
         user.user_role = role
         user.mail = email
         user.alert_notification = alert_notification
+        user.reset_password = reset_password
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
@@ -86,6 +88,7 @@ class User(CsmModel):
         user.user_role = role
         user.mail = ""
         user.alert_notification = True
+        user.reset_password = None
         user.created_time = datetime.now(timezone.utc)
         user.updated_time = datetime.now(timezone.utc)
         return user
