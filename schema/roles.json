@@ -41,7 +41,7 @@
             "stats": ["list"],
             "capacity": ["list"],
             "sysconfig": ["list"],
-            "users": ["list", "update"],
+            "users": ["list", "update", "delete"],
             "s3accounts": ["list"],
             "auditlog": ["list", "read"],
             "replace_node": ["list"],

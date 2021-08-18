@@ -41,6 +41,7 @@ class CsmUserPatchSchema(Schema):
     password = fields.Str(validate=[PasswordValidator()])
     role = fields.Str(validate=validate.OneOf(const.CSM_USER_ROLES))
     email = fields.Email()
+    reset_password = fields.Bool(required=False)
 
     """
     Validate PATCH body pre  marshamallow validation
@@ -123,7 +124,6 @@ class CsmUsersListView(CsmView):
     """
     POST REST implementation for creating a csm user
     """
-    @CsmAuth.public
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         Log.debug("Handling users post request.")

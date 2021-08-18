@@ -15,6 +15,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
+import os
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.providers.providers import Response
@@ -49,10 +50,12 @@ class Reset(Setup):
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         self._prepare_and_validate_confstore_keys()
         self.disable_and_stop_service()
+        self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
         self._delete_cortxusers_from_ldap()
+        await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -91,16 +94,28 @@ class Reset(Setup):
 
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
+
         files_directory_list = [
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
             Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
-            const.TMP_CSM,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
-        ]
+            const.TMP_CSM
+            ]
+        for _path in files_directory_list:
+            Log.info(f"Deleting path :{_path}")
+            Setup._run_cmd(f"rm -rf {_path}")
 
-        for dir_path in files_directory_list:
-            Log.info(f"Deleting path :{dir_path}")
-            Setup._run_cmd(f"rm -rf {dir_path}")
+    def reset_logs(self):
+        Log.info("Reseting log files")
+        log_dir = Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
+        csm_log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
+        all_log_files = os.listdir(log_dir)
+        for each_file in all_log_files:
+            if each_file in csm_log_files:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"truncate -s 0 {_file}")
+            else:
+                _file = os.path.join(log_dir, each_file)
+                Setup._run_cmd(f"rm -rf {each_file}")
 
     async def db_cleanup(self):
 
