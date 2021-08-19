@@ -49,6 +49,7 @@ class Setup:
         self._setup_info = dict()
         self._is_env_vm = False
         self._is_env_dev = False
+        self._is_syslog = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
 
@@ -123,6 +124,17 @@ class Setup:
         :return:
         """
         self._user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_USER])
+
+    def _fetch_key_value(self, key: str, default_value: any):
+        value = default_value
+        try:
+            self._validate_conf_store_keys(self.CONSUMER_INDEX,[key])
+            value = Conf.get(self.CONSUMER_INDEX, key)
+        except Exception as ve:
+            Log.error(f"{key} does not exist. Set default value as {default_value}: {ve}")
+
+        Log.info(f"Fetch {key}: {value}")
+        return value
 
     @staticmethod
     def _run_cmd(cmd):

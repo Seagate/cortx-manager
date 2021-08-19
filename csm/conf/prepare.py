@@ -60,6 +60,7 @@ class Prepare(Setup):
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
+        self._set_openldap_details()
         if not self._replacement_node_flag:
             self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -167,6 +168,18 @@ class Prepare(Setup):
                      open_ldap_user)
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
                      open_ldap_secret)
+
+    def _set_openldap_details(self):
+        # read openldap host and port and set it in csm config file
+        Log.info("Storing openldap details")
+        open_ldap_host = self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.HOST}", const.DEFAULT_LDAP_HOST)
+        open_ldap_port = self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.PORT}", const.DEFAULT_LDAP_PORT)
+        # Edit Current Config File.
+        Log.info("Open-Ldap host and port details")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CONF_OPENLDAP}>{const.LDAP_HOST}",
+                    open_ldap_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CONF_OPENLDAP}>{const.LDAP_PORT}",
+                    open_ldap_port)
 
     def _set_password_to_csm_user(self):
         if not self._is_user_exist():

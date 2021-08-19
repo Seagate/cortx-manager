@@ -64,8 +64,12 @@ class PostInstall(Setup):
             self._configure_system_auto_restart()
         self._configure_service_user()
         #TODO: Add check for rsyslog host and port in confstore
-        self._configure_rsyslog()
+        self._set_syslog_details()
+        if self._is_syslog:
+            self._configure_rsyslog()
         self._allow_access_to_pvt_ports()
+        if not self._replacement_node_flag:
+            self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _allow_access_to_pvt_ports(self):
@@ -172,6 +176,23 @@ class PostInstall(Setup):
         """
         Setup._update_csm_files("<USER>", self._user)
 
+    def _set_syslog_details(self):
+        # read openldap host and port and set it in csm config file
+        Log.info("Storing rsyslog details")
+        syslog_host = self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+            {const.SYSLOG}>{const.HOST}", "")
+        syslog_port = self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+            {const.SYSLOG}>{const.PORT}", "")
+        # Edit Current Config File.
+        if syslog_host and len(syslog_host) > 1:
+            Log.info("rsyslog host and port details")
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.LOG}>{const.SYSLOG_HOST}",
+                    syslog_host)
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.LOG}>{const.SYSLOG_PORT}",
+                    syslog_port)
+            self._is_syslog = True
+
+
     def _configure_rsyslog(self):
         """
         Configure rsyslog
@@ -187,3 +208,17 @@ class PostInstall(Setup):
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
             #raise CsmSetupError(msg)
+
+    def create(self):
+        """
+        This Function Creates the CSM Conf File on Required Location.
+        :return:
+        """
+
+        Log.info("Creating CSM Conf File on Required Location.")
+        if self._is_env_dev:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.DEV)
+        self.store_encrypted_password()
+        Conf.save(const.CSM_GLOBAL_INDEX)
+        Conf.save(const.DATABASE_INDEX)

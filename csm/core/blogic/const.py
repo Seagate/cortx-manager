@@ -473,6 +473,12 @@ SORTABLE_FIELDS = "sortable_fields"
 # Syslog constants
 LOG_LEVEL = "INFO"
 USL_POLLING_LOG = "usl_polling_log"
+DEFAULT_SYSLOG_HOST = "localhost"
+DEFAULT_SYSLOG_PORT = "514"
+SYSLOG = "syslog"
+LOG = "LOG"
+SYSLOG_HOST = "syslog_host"
+SYSLOG_PORT = "syslog_port"
 
 # Set network config
 NETWORK_CONFIG = 'NETWORK_CONFIG'
@@ -615,9 +621,14 @@ PASSWORD = 'password'
 SECRET = 'secret'
 IAM_ADMIN = 'iam_admin'
 OPENLDAP = 'openldap'
+DEFAULT_LDAP_HOST = "127.0.0.1"
+DEFAULT_LDAP_PORT = "389"
 SSPL = 'sspl:LOGGINGPROCESSOR'
+CONF_OPENLDAP = "OPENLDAP"
 LDAP_LOGIN = 'ldap_login'
 LDAP_PASSWORD = 'ldap_password'
+LDAP_HOST = 'ldap_host'
+LDAP_PORT = 'ldap_port'
 CLUSTER_ID = 'cluster_id'
 PROVISIONER = 'PROVISIONER'
 RET='ret'
