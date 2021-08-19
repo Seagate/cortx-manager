@@ -208,9 +208,8 @@ class CsmUserService(ApplicationService):
     """
     Service that exposes csm user management actions from the csm core.
     """
-    def __init__(self, provisioner, user_mgr: UserManager):
+    def __init__(self, user_mgr: UserManager):
         self.user_mgr = user_mgr
-        self._provisioner = provisioner
 
     def _user_to_dict(self, user: User):
         """ Helper method to convert user model into a dictionary repreentation """
@@ -220,6 +219,7 @@ class CsmUserService(ApplicationService):
             "user_type": user.user_type,
             "role": user.role,
             "email": user.email,
+            "reset_password": user.reset_password,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z',
             "alert_notification": user.alert_notification
@@ -243,11 +243,7 @@ class CsmUserService(ApplicationService):
         creator = await self.user_mgr.get(creator_id) if creator_id else None
         # Perform pre-creation checks for anonymous user
         if creator is None:
-            num_admins = await self.user_mgr.count_admins()
-            if role == const.CSM_SUPER_USER_ROLE and num_admins == 0:
-                Log.info("Anonymous user is creating the first CORTX admin")
-            else:
-                raise CsmPermissionDenied("Please, log in to create a user")
+            raise CsmPermissionDenied("Permission denied.")
         # ... and for logged in user
         else:
             if role == const.CSM_SUPER_USER_ROLE and creator.role != const.CSM_SUPER_USER_ROLE:
@@ -319,7 +315,7 @@ class CsmUserService(ApplicationService):
     async def _validate_user_update(
         self, user: User, loggedin_user: User,
         password: Optional[str], current_password: Optional[str],
-        role: Optional[str]
+        role: Optional[str], reset_password
     ) -> None:
         """
         Check the user update is possible.
@@ -365,7 +361,7 @@ class CsmUserService(ApplicationService):
                     raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
         # Enforce the password check for self-updating the user
-        if self_update:
+        if self_update and not reset_password:
             if current_password is None:
                 msg = 'The current password is missing'
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
@@ -385,10 +381,25 @@ class CsmUserService(ApplicationService):
         password = new_values.get(const.PASS, None)
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         role = new_values.get('role', None)
+        reset_password = new_values.get('reset_password', None)
 
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
-        await self._validate_user_update(user, loggedin_user, password, current_password, role)
+        await self._validate_user_update(user, loggedin_user, password, current_password, role, reset_password)
 
         user.update(new_values)
+        user.reset_password = True
         await self.user_mgr.save(user)
         return self._user_to_dict(user)
+
+    async def validate_cluster_admin_create(self, username):
+        return (await self.user_mgr.count_admins() > 0) or \
+                    (await self.user_mgr.get(username))
+
+    async def create_cluster_admin(self, username, password, emailid):
+        user = User.instantiate_csm_user(user_id=username,
+                                            password=password,
+                                            role=const.CSM_SUPER_USER_ROLE,
+                                            email=emailid,
+                                            alert_notification=True)
+        Log.debug(f"Creating user: \n{user.__dict__}")
+        await self.user_mgr.create(user)
