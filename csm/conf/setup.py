@@ -27,7 +27,7 @@ from cortx.utils.log import Log
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
-from csm.common.errors import CsmSetupError, InvalidRequest
+from csm.common.errors import CsmSetupError, InvalidRequest, ResourceExist
 # from csm.core.blogic.csm_ha import CsmResourceAgent
 # from csm.common.ha_framework import PcsHAFramework
 import traceback
@@ -40,14 +40,6 @@ from cortx.utils.validator.v_confkeys import ConfKeysV
 #     from salt import client
 # except ModuleNotFoundError:
 client = None
-
-
-class InvalidPillarDataError(InvalidRequest):
-    pass
-
-
-class ProvisionerCliError(InvalidRequest):
-    pass
 
 
 class Setup:
@@ -221,9 +213,12 @@ class Setup:
             await usr_mngr.delete(cluster_admin_user)
 
         Log.info(f"Creating cluster admin: {cluster_admin_user}")
-        await usr_service.create_cluster_admin(cluster_admin_user,
+        try:
+            await usr_service.create_cluster_admin(cluster_admin_user,
                                                 cluster_admin_secret,
                                                 cluster_admin_emailid)
+        except ResourceExist as ex:
+            Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
     def _is_user_exist(self):
         """
@@ -273,22 +268,6 @@ class Setup:
             return True
         except KeyError as err:
             return False
-
-    @staticmethod
-    def get_data_from_provisioner_cli(method, output_format="json"):
-        try:
-            Log.info("Execute proviioner cli cmd: {method} ")
-            process = SimpleProcess(f"provisioner {method} --out={output_format}")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.error(f"Error in command execution : {e}")
-            raise ProvisionerCliError(f"Error in command execution : {e}")
-        if stderr:
-            raise ProvisionerCliError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[const.RET]
 
     def _check_if_dir_exist_remote_host(self, dir, host):
         try:

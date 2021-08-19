@@ -55,6 +55,7 @@ from csm.core.controllers import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 import re
+from cortx.utils.errors import DataAccessError
 
 
 class CsmApi(ABC):
@@ -363,7 +364,10 @@ class CsmRestApi(CsmApi, ABC):
                 if request_body and request_body.get("password"):
                     del(request_body["password"])
             payload = json.dumps(request_body)
-            await CsmRestApi.check_for_unsupported_endpoint(request)
+            try:
+                await CsmRestApi.check_for_unsupported_endpoint(request)
+            except DataAccessError as e:
+                Log.warn(f"Exception: {e}")
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
