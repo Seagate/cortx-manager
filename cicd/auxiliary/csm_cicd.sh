@@ -34,7 +34,7 @@ groupadd haclient
 python3 -c "import provisioner; print(provisioner.__file__)"
 python3 -c "import sys; print(sys.path)"
 pip3 freeze
-chmod 777 -R /var/log/seagate
+chmod 777 -R /var/log/cortx
 cat /etc/machine-id
 
 csm_setup post_install --config json:///opt/seagate/cortx/csm/conf/csm.post_install.tmpl.1-node
@@ -55,8 +55,8 @@ csm_setup init --config json:///opt/seagate/cortx/csm/conf/csm.init.tmpl.3-node
 
 #systemctl status csm_agent
 
-[ -f /var/log/seagate/csm/csm_agent.log ] && {
-    cat /var/log/seagate/csm/csm_agent.log
+[ -f /var/log/cortx/csm/csm_agent.log ] && {
+    cat /var/log/cortx/csm/csm_agent.log
 } || {
     echo "Log init failed"
 }

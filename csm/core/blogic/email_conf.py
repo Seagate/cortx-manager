@@ -35,7 +35,7 @@ class EmailConfig(object):
     SSMTP_TEMPL       = "/etc/ssmtp/ssmtp.conf.tmpl"
     SSMTP_CONF        = "/etc/ssmtp/ssmtp.conf"
     SSMTP_REVALIASES  = "/etc/ssmtp/revaliases"
-    EMAIL_LIST_FILE   = "/etc/csm/email/email_list"
+    EMAIL_LIST_FILE   = "/etc/cortx/csm/email/email_list"
 
     def __init__(self):
         self._email_conf_dict = {
@@ -112,7 +112,7 @@ class EmailConfig(object):
 
     def subscribe(self, args):
         """
-        dumps dictionary to /etc/csm/email/email_list.
+        dumps dictionary to /etc/cortx/csm/email/email_list.
         """
         try:
             File = open(EmailConfig.EMAIL_LIST_FILE, "a")
@@ -136,7 +136,7 @@ class EmailConfig(object):
 
     def unsubscribe(self, args):
         """
-        dumps dictionary to /etc/csm/email/email_list.
+        dumps dictionary to /etc/cortx/csm/email/email_list.
         """
         try:
             File = open(EmailConfig.EMAIL_LIST_FILE, "r")

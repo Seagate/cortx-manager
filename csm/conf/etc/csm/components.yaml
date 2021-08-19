@@ -48,14 +48,14 @@ s3_server:
         - /opt/seagate/auth/resources/authserver.properties
         - /opt/seagate/s3/conf/s3config.yaml
         - /etc/sysconfig/s3server-*
-        - /var/log/seagate/s3/s3server*INFO*
+        - /var/log/cortx/s3/s3server*INFO*
 
-# s3 server logs are redirected to cmu to /var/log/seagate/<node>/s3/
+# s3 server logs are redirected to cmu to /var/log/cortx/<node>/s3/
 csm:
     commands:
 
     files:
-        - /var/log/seagate/*
+        - /var/log/cortx/*
 
 s3_cli:
     commands:

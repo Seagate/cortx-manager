@@ -30,8 +30,6 @@ from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, InvalidRequest
 # from csm.core.blogic.csm_ha import CsmResourceAgent
 # from csm.common.ha_framework import PcsHAFramework
-from csm.common.cluster import Cluster
-from csm.core.agent.api import CsmApi
 import traceback
 from csm.common.payload import Text
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken

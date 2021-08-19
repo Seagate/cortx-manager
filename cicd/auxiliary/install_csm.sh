@@ -29,10 +29,10 @@ fi
 
 remove_conf()
 {
-ls /etc/csm/
+ls /etc/cortx/csm/
 if [ $? -eq 0 ]; then
    echo "remving csm config files"
-   rm -rf /etc/csm
+   rm -rf /etc/cortx/csm
 else
    echo "no csm conf available"
 fi

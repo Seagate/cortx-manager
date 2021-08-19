@@ -147,12 +147,12 @@ class Usl:
         return _output, _err, _rc
 
     def _create_config_backup(self):
-        if os.path.exists("/etc/csm"):
+        if os.path.exists("/etc/cortx/csm"):
             Log.info("Creating backup for older csm configurations")
-            Usl._run_cmd(f"cp -r /etc/csm /etc/csm_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp")
+            Usl._run_cmd(f"cp -r /etc/cortx/csm /etc/cortx/csm_{str(datetime.now()).replace(' ','T').split('.')[0]}_bkp")
         else:
-            os.makedirs("/etc/csm", exist_ok=True)
-            Usl._run_cmd("cp -r /opt/seagate/cortx/csm/conf/etc/csm /etc/csm")
+            os.makedirs("/etc/cortx/csm", exist_ok=True)
+            Usl._run_cmd("cp -r /opt/seagate/cortx/csm/conf/etc/csm /etc/cortx/csm")
 
     def post_install(self):
         """ Performs post install operations. Raises exception on error """
@@ -245,8 +245,8 @@ class Usl:
         """
         Log.info("Creating CSM Conf File on Required Location.")
         Conf.save(Usl.USL_GLOBAL_INDEX)
-        os.makedirs("/etc/csm", exist_ok=True)
-        Usl._run_cmd(f"cp -rn {Usl.USL_CONF_PATH} /etc/csm/")
+        os.makedirs("/etc/cortx/csm", exist_ok=True)
+        Usl._run_cmd(f"cp -rn {Usl.USL_CONF_PATH} /etc/cortx/csm/")
 
     def _set_service_user(self):
         """

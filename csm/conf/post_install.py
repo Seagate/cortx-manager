@@ -17,7 +17,6 @@
 import crypt
 import os
 from cortx.utils.log import Log
-from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
@@ -64,6 +63,7 @@ class PostInstall(Setup):
         if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
             self._configure_system_auto_restart()
         self._configure_service_user()
+        #TODO: Add check for rsyslog host and port in confstore
         self._configure_rsyslog()
         self._allow_access_to_pvt_ports()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -186,4 +186,4 @@ class PostInstall(Setup):
         else:
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
-            raise CsmSetupError(msg)
+            #raise CsmSetupError(msg)

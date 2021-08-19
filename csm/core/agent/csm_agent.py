@@ -275,7 +275,6 @@ if __name__ == '__main__':
     from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
-    from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
     from csm.core.services.unsupported_features import UnsupportedFeaturesService

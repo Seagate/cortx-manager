@@ -17,14 +17,14 @@
 CSM_PATH = "/opt/seagate/cortx/csm"
 CORTXCLI_PATH = "/opt/seagate/cortx/cli"
 CSM_PIDFILE_PATH = "/var/run/csm"
-CSM_LOG_PATH = "/var/log/seagate/csm/"
+CSM_LOG_PATH = "/var/log/cortx/csm/"
 CSM_CLEANUP_LOG_FILE = "csm_cleanup"
 CSM_S3_SANITY_LOG_FILE = "csm_s3_sanity"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
-CSM_CONF_PATH = ETC_PATH + "/csm"
-CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
+CSM_CONF_PATH = ETC_PATH + "/cortx/csm"
+CORTXCLI_CONF_PATH = ETC_PATH + "/cortx/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
 CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
 CSM_SETUP_LOG_DIR = "/tmp"
@@ -36,7 +36,7 @@ DB_CONF_FILE_NAME = 'database.yaml'
 DB_SOURCE_CONF_FILE_URL = f'yaml://{CSM_PATH}/conf/etc/csm/{DB_CONF_FILE_NAME}'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
-PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
+PROVISIONER_LOG_FILE_PATH = "/var/log/cortx"
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
@@ -119,7 +119,7 @@ CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 USL_GLOBAL_INDEX = 'USL'
 
 # Cluster Inventory Related
-INVENTORY_FILE = '/etc/csm/cluster.conf'
+INVENTORY_FILE = '/etc/cortx/csm/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
 KEY_NODES = 'nodes'
@@ -130,18 +130,18 @@ TYPE_S3_SERVER = 'S3_SERVER'
 # Config
 CORTX = 'cortx'
 TMP_CSM = '/tmp/csm'
-CSM_ETC_DIR = '/etc/csm'
+CSM_ETC_DIR = '/etc/cortx/csm'
 TMP_CSM = '/tmp/csm'
-CSM_CONF = '/etc/csm/csm.conf'
-USL_CONF = '/etc/csm/usl.conf'
-CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
+CSM_CONF = '/etc/cortx/csm/csm.conf'
+USL_CONF = '/etc/cortx/csm/usl.conf'
+CORTXCLI_CONF = '/etc/cortx/cli/cortxcli.conf'
 CORTXCLI_SECTION = 'CORTXCLI'
-CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
+CSM_CLUSTER_CONF = '/etc/cortx/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
-COMPONENTS_CONF = '/etc/csm/components.yaml'
-DATABASE_CONF = '/etc/csm/database.yaml'
+COMPONENTS_CONF = '/etc/cortx/csm/components.yaml'
+DATABASE_CONF = '/etc/cortx/csm/database.yaml'
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
-DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
+DATABASE_CLI_CONF = '/etc/cortx/cli/database_cli.yaml'
 CSM_AGENT_SERVICE = "csm_agent.service"
 CSM_AGENT_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_AGENT_SERVICE}"
 CSM_WEB_SERVICE = "csm_web.service"
@@ -417,7 +417,7 @@ UDS_DOMAIN_PRIVATE_KEY_FILENAME = 'domain.key'
 UDS_DOMAIN_CERTIFICATE_FILENAME = 'domain.crt'
 
 # USL S3 configuration (CES2020 only!)
-USL_S3_CONF = '/etc/uds/uds_s3.toml'
+USL_S3_CONF = '/etc/cortx/uds/uds_s3.toml'
 # IAM User Related
 PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
                               "_", "+", "-", "=", "[", "]", "{", "}", "|", "'"]

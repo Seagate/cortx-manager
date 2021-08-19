@@ -38,7 +38,7 @@ exit 0
 
 %post
 # Use csm_setup cli for csm directory, permission services
-mkdir -p /etc/uds
+mkdir -p /etc/cortx/uds
 CSM_DIR=<CSM_PATH>
 CFG_DIR=$CSM_DIR/conf
 PRODUCT=<PRODUCT>
@@ -66,7 +66,7 @@ PRODUCT=<PRODUCT>
 }
 
 [ -f /etc/uds/uds_s3.toml ] || \
-    cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/uds/uds_s3.toml
+    cp -R $CFG_DIR/etc/uds/uds_s3.toml.sample /etc/cortx/uds/uds_s3.toml
 exit 0
 
 %preun

@@ -28,6 +28,6 @@ def test1(args={}):
 
 def test2(args={}):
     val = Conf.get(const.INVENTORY_FILE, const.DEFAULT_INVENTORY_FILE)
-    return True if val == '/etc/csm/cluster.yaml' else False
+    return True if val == '/etc/cortx/csm/cluster.yaml' else False
 
 test_list = [ test1, test2 ]
