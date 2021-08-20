@@ -55,7 +55,7 @@ class Reset(Setup):
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
         self._delete_cortxusers_from_ldap()
-        # await Setup._create_cluster_admin()
+        await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):

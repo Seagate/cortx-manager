@@ -198,6 +198,7 @@ class Setup:
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+        from csm.common.conf import Security
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
@@ -209,11 +210,19 @@ class Setup:
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>emailid",
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        Security.decrypt_conf()
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        conf['databases']["openldap"]["config"][const.PORT] = int(
+                    conf['databases']["openldap"]["config"][const.PORT])
+        conf['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        conf['databases']["openldap"]["config"]["password"] = Conf.get(
+                    const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)

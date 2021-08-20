@@ -149,12 +149,13 @@ class Prepare(Setup):
         :return: list of ip where ldap is running
         """
         Log.info("Fetching data N/W info.")
-        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
+        data_nw_private_fqdn = []
+        data_nw_private_fqdn.append(Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN]))
         #ToDo: Confstore key may change
         ldap_hosts = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>openldap>hosts",
                                     data_nw_private_fqdn)
-        return [ldap_hosts]
+        return ldap_hosts
 
     def _set_db_host_addr(self):
         """

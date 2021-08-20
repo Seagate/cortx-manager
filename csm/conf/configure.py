@@ -79,7 +79,7 @@ class Configure(Setup):
             # self._set_csm_user_collection_in_database_yaml()
             if not self._replacement_node_flag:
                 self.create()
-            # await Setup._create_cluster_admin(self.force_action)
+            await Setup._create_cluster_admin(self.force_action)
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
