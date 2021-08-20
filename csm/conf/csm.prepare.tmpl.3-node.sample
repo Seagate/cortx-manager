@@ -9,7 +9,13 @@
         "sgiam": {
           "user": "sgiamadmin",
           "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
-        }
+        },
+        "host": "127.0.0.1",
+        "port": "389"
+      },
+      "syslog": {
+        "host": "127.0.0.1",
+        "port": "514"
       }
     }
   },

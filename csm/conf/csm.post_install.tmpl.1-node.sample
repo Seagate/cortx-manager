@@ -1,8 +1,12 @@
-{
+conf json:///home/934748/git/forkrepo/cortx-manager/csm/conf/csm.post_install.tmpl.3-node set -d '=' 'cortx>software>syslog>host=127.0.0.1;cortx>software>syslog>port=514'{
   "cortx": {
     "software": {
       "csm": {
         "user": "cortxub"
+      },
+      "syslog": {
+        "host": "127.0.0.1",
+        "port": "514"
       }
     }
   },

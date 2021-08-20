@@ -9,7 +9,13 @@
         "sgiam": {
           "user": "sgiamadmin",
           "secret": "TMPL_SGIAM_SECRET_KEY"
-        }
+        },
+        "host": "127.0.0.1",
+        "port": "389"
+      },
+      "syslog": {
+        "host": "127.0.0.1",
+        "port": "514"
       }
     }
   },

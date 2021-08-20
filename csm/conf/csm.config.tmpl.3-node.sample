@@ -3,18 +3,42 @@
     "software": {
       "csm": {
         "user": "cortxub",
-        "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
+        "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg==",
+        "agent_protocol": "http",
+        "agent_host": "127.0.0.1",
+        "agent_port": "28101",
+        "web_protocol": "https",
+        "web_port": "443",
+        "log_level": "INFO",
+        "log_path": "/var/log/cortx/csm"
       },
       "openldap": {
         "sgiam": {
           "user": "sgiamadmin",
           "secret": "gAAAAABgZF7KOL5wqOwt_VpJ0B0tXHlsbfARqKldkiVtOeGpEjBq_Ws38qHHAo27zCPIKGSaXqSAgGXTzFJMZRTrXWWn6Pivsg=="
-        }
+        },
+        "host": "127.0.0.1",
+        "port": "389"
       },
-      "cluster_credential":{
+      "cluster_credential": {
         "username": "cortxadmin",
         "secret": "Cortxadmin@123",
-        "emailid":"cortxadmin@seagate.com"
+        "emailid": "cortxadmin@seagate.com"
+      },
+      "syslog": {
+        "host": "127.0.0.1",
+        "port": "514"
+      },
+      "security": {
+        "agent_ssl_path": "/etc/ssl/stx/stx.pem",
+        "web_ssl_path": "/etc/ssl/stx/stx.pem"
+      },
+      "s3": {
+        "service": {
+          "host": "127.0.0.1",
+          "iam_port": "9080",
+          "port": "80"
+        }
       }
     }
   },

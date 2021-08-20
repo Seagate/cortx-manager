@@ -3,6 +3,10 @@
     "software": {
       "csm": {
         "user": "cortxub"
+      },
+      "syslog": {
+        "host": "127.0.0.1",
+        "port": "514"
       }
     }
   },
