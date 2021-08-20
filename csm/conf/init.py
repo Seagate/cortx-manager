@@ -50,7 +50,8 @@ class Init(Setup):
         self._prepare_and_validate_confstore_keys()
         self._config_user_permission()
         #TODO: conf key check for systemd
-        self.ConfigServer.reload()
+        if Conf.get(const.CONSUMER_INDEX, f"{const.SYSTEMD}>{const.SYSTEMD_ENABLE}"):
+            self.ConfigServer.reload()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):

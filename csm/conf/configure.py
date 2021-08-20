@@ -72,6 +72,7 @@ class Configure(Setup):
         self._configure_cron()
         self._configure_uds_keys()
         self._configure_csm_web_keys()
+        self._configure_csm_agent_keys()
         await Setup._create_cluster_admin(self.force_action)
         try:
             for count in range(0, 4):
@@ -215,6 +216,47 @@ class Configure(Setup):
                 data.remove(ele)
         data.append(f"MANAGEMENT_IP={virtual_host}")
         file_data.dump(("\n").join(data))
+
+    def _configure_csm_agent_keys(self):
+        Log.info("Configuring CSM Agent keys")
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>ssl_path",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.SECURITY}>{const.AGENT_SSL_PATH}", ""))
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>protocol",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.AGENT_PROTOCOL}", const.HTTP))
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>host",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.AGENT_HOST}", const.LOCALHOST))
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>port",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.AGENT_PORT}", const.CSM_AGENT_PORT))
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>ssl_path",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.SECURITY}>{const.WEB_SSL_PATH}", ""))
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>protocol",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.WEB_PROTOCOL}", const.HTTPS))
+        virtual_host = self._fetch_management_ip()
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>host",virtual_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>port",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.WEB_PORT}", const.DEFAULT_WEB_PORT))
+        Conf.set(const.CSM_GLOBAL_INDEX, "Log>log_level",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.LOG_LEVEL_KEY}", const.LOG_LEVEL))
+        Conf.set(const.CSM_GLOBAL_INDEX, "Log>log_path",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.LOG_PATH_KEY}", const.CSM_LOG_PATH))
+        Conf.set(const.CSM_GLOBAL_INDEX, "S3>host",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.S3}>{const.SERVICE}>{const.HOST}", const.LOCALHOST))
+        Conf.set(const.CSM_GLOBAL_INDEX, "S3>s3_port",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.S3}>{const.SERVICE}>{const.PORT}", const.S3_DEFAULT_PORT))
+        Conf.set(const.CSM_GLOBAL_INDEX, "S3>iam_port",
+                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.S3}>{const.SERVICE}>{const.IAM_PORT}", const.S3_IAM_DEFAULT_PORT))
 
     async def _set_unsupported_feature_info(self):
         """

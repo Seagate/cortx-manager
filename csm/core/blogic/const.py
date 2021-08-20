@@ -41,6 +41,24 @@ PROVISIONER_LOG_FILE_PATH = "/var/log/cortx"
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
 CSM_SETUP_PASS = ":PASS"
+AGENT_PROTOCOL = "agent_protocol"
+AGENT_HOST = "agent_host"
+AGENT_PORT = "agent_port"
+WEB_PROTOCOL = "web_protocol"
+WEB_HOST = "web_host"
+WEB_PORT = "web_port"
+SECURITY = "security"
+AGENT_SSL_PATH = "agent_ssl_path"
+WEB_SSL_PATH = "web_ssl_path"
+LOG_LEVEL_KEY = "log_level"
+LOG_PATH_KEY = "log_path"
+IAM_PORT = "iam_port"
+SERVICE = "service"
+HTTP = "http"
+HTTPS = "https"
+DEFAULT_WEB_PORT = 443
+S3_DEFAULT_PORT = 80
+S3_IAM_DEFAULT_PORT = 9080
 
 # Commands
 CSM_SETUP_CMD = 'csm_setup'
@@ -73,7 +91,7 @@ RUNNING_NODES_STOP_TEXT = 'Versions'
 CSM_AGENT_HOST = "localhost"
 CSM_AGENT_HOST_PARAM_NAME = "csm_agent_host"
 ADDRESS_PARAM = "Address"
-CSM_AGENT_PORT = 8101
+CSM_AGENT_PORT = 28101
 CSM_AGENT_BASE_URL = "http://"
 TIMEOUT = 60
 
