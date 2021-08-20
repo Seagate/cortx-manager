@@ -74,9 +74,12 @@ class Configure(Setup):
         self._configure_cron()
         self._configure_uds_keys()
         self._configure_csm_web_keys()
-        await Setup._create_cluster_admin(self.force_action)
         try:
             self._configure_csm_ldap_schema()
+            # self._set_csm_user_collection_in_database_yaml()
+            if not self._replacement_node_flag:
+                self.create()
+            # await Setup._create_cluster_admin(self.force_action)
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -84,9 +87,6 @@ class Configure(Setup):
                 except Exception as e_:
                     Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
-
-            if not self._replacement_node_flag:
-                self.create()
         except Exception as e:
             import traceback
             err_msg = (f"csm_setup config command failed. Error: "
@@ -281,29 +281,32 @@ class Configure(Setup):
         _rootdnpassword = self._fetch_ldap_root_password()
         if not _rootdnpassword:
             raise CsmSetupError("Failed to fetch LDAP root user password.")
-
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
+        ldap_user = const.LDAP_USER.format(
+            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
         # Insert cortxuser schema
         self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF} -H ldapi:///')
 
         # Initialize dc=csm,dc=seagate,dc=com
-        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,dc=seagate,dc=com -w {_rootdnpassword} -f {const.CORTXUSER_INIT_LDIF} -H ldapi:///')
+        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CORTXUSER_INIT_LDIF} -H ldapi:///')
 
         # Setup necessary permissions
-        self._setup_ldap_permissions()
+        self._setup_ldap_permissions(base_dn, ldap_user)
 
         # Create Cortx Account
-        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D cn=sgiamadmin,dc=seagate,dc=com -f {const.CORTXUSER_ACCOUNT_LDIF}')
+        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CORTXUSER_ACCOUNT_LDIF}')
         Log.info("Openldap configuration completed for Cortx users.")
 
-    def _setup_ldap_permissions(self):
+    def _setup_ldap_permissions(self, base_dn, ldap_user):
         """
         Setup necessary access permissions
         """
-        #ToDo: Read base_dn from Conf Store once it is available
-        bind_base_dn = 'cn=sgiamadmin,dc=seagate,dc=com'
         dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,dc=seagate,dc=com" by dn.base="'+bind_base_dn+'" read by self')
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,dc=seagate,dc=com" by dn.base="'+bind_base_dn+'" write by self')
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
     def _run_ldap_cmd(self, cmd):
         """
@@ -336,3 +339,16 @@ class Configure(Setup):
             Log.error('Error while modifying attribute- '+ attribute )
             raise Exception('Error while modifying attribute' + attribute)
         ldap_conn.unbind_s()
+
+    def _set_csm_user_collection_in_database_yaml(self):
+        """
+        Sets collection for User model in database.yaml
+        :return:
+        """
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        models_list = Conf.get(const.DATABASE_INDEX,"models")
+        for record in models_list:
+            if record['import_path'] == 'csm.core.data.models.users.User':
+                record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(base_dn)
+        Conf.set(const.DATABASE_INDEX,"models",models_list)

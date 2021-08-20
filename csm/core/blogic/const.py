@@ -779,13 +779,21 @@ DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
 
 #Openldap CSM Setup consts
-LDAP_USER = "cn={},dc=seagate,dc=com"
+OPENLDAP_KEY = "OPENLDAP"
+BASE_DN_KEY = "base_dn"
+BIND_BASE_DN_KEY = "bind_base_dn"
+DEFAULT_BASE_DN = "dc=seagate,dc=com"
+DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
+LDAP_USER = "cn={0},{1}"
 LDAP_URL = "ldapi:///"
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
 CORTXUSER_INIT_LDIF = "{}/conf/etc/openldap/csm-ldap-init.ldif".format(CSM_PATH)
 CORTXUSER_ACCOUNT_LDIF = "{}/conf/etc/openldap/userAccount.ldif".format(CSM_PATH)
-CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,dc=seagate,dc=com"
-CORTXACCOUNTS_DN = "ou=accounts,dc=csm,dc=seagate,dc=com"
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
+CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CSM_DN = "dc=csm,{}"
+DEFAULT_OPENLDAP_PORT = "389"
+
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
 DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'

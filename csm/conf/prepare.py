@@ -57,9 +57,11 @@ class Prepare(Setup):
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_db_host_addr()
+        self._set_db_port_addr()
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
+        self._set_onpenldap_configs()
         if not self._replacement_node_flag:
             self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -148,12 +150,11 @@ class Prepare(Setup):
         """
         Log.info("Fetching data N/W info.")
         data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
-        try:
-            NetworkV().validate('connectivity', [data_nw_private_fqdn])
-        except VError as e:
-            Log.error(f"Network Validation failed.{e}")
-            raise CsmSetupError(f"Network Validation failed.{e}")
-        return [data_nw_private_fqdn]
+        #ToDo: Confstore key may change
+        ldap_hosts = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>hosts",
+                                    data_nw_private_fqdn)
+        return [ldap_hosts]
 
     def _set_db_host_addr(self):
         """
@@ -162,11 +163,11 @@ class Prepare(Setup):
         """
         consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
-        ldap_host = self._get_ldap_hosts_info()
+        ldap_hosts = self._get_ldap_hosts_info()
         try:
             Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
             Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
@@ -212,6 +213,47 @@ class Prepare(Setup):
                  self._user)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
                  self._user)
+
+    def _set_onpenldap_configs(self):
+        """
+        Sets openldap configuration in CSM config.
+        :return:
+        """
+        #ToDo: Confstore key may change
+        base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>base_dn",
+                                    const.DEFAULT_BASE_DN)
+        bind_base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>bind_base_dn",
+                                    const.DEFAULT_BIND_BASE_DN)
+        Log.info("Set base_dn and bind_base_dn for openldap")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}",
+                 base_dn)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}",
+                 bind_base_dn)
+
+    def _get_ldap_port_addr(self):
+        """
+        Obtains ldap port address
+        :return: port address where ldap is running
+        """
+        #ToDo: Confstore key may change
+        ldap_port = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>port",
+                                    const.DEFAULT_OPENLDAP_PORT)
+        return ldap_port
+
+    def _set_db_port_addr(self):
+        """
+        Sets database port address in database.yaml.
+        :return:
+        """
+        ldap_port = self._get_ldap_port_addr()
+        try:
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
+        except Exception as e:
+            Log.error(f'Unable to set port address: {e}')
+            raise CsmSetupError(f'Unable to set port address: {e}')
 
     def create(self):
         """

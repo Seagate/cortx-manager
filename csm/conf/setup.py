@@ -379,7 +379,9 @@ class Setup:
         self._ldap_conn = initialize(const.LDAP_URL)
         self._ldap_conn.protocol_version = VERSION3
         self._ldap_conn.set_option(OPT_REFERRALS, 0)
-        self._ldap_conn.simple_bind_s(const.LDAP_USER.format(self._ldapuser), self._ldappasswd)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                            f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        self._ldap_conn.simple_bind_s(const.LDAP_USER.format(self._ldapuser,base_dn), self._ldappasswd)
 
     def _disconnect_from_ldap(self):
         """

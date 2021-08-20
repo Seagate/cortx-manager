@@ -51,7 +51,7 @@ class Cleanup(Setup):
         await self._unsupported_feature_entry_cleanup()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
-        await self.cluster_admin_cleanup()
+        # await self.cluster_admin_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -118,7 +118,9 @@ class Cleanup(Setup):
             raise CsmSetupError("Failed to fetch LDAP root user")
         if not self._ldappasswd:
             raise CsmSetupError("Failed to fetch LDAP root user password")
-        self._delete_ldap_data(const.CORTXACCOUNTS_DN)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        self._delete_ldap_data(const.CORTXACCOUNTS_DN.format(base_dn))
 
     def _search_delete_permission_attr(self, dn, attr_to_delete):
         conn = ldap.initialize("ldapi://")

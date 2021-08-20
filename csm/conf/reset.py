@@ -55,7 +55,7 @@ class Reset(Setup):
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
         self._delete_cortxusers_from_ldap()
-        await Setup._create_cluster_admin()
+        # await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -129,7 +129,7 @@ class Reset(Setup):
                 db = "es_db"
                 collection = f"{each_model.get('config').get('es_db').get('collection')}"
                 url = f"{self._es_db_url}{collection}"
-            else:
+            if each_model.get('config').get('consul_db'):
                 db = "consul_db"
                 collection = f"{each_model.get('config').get('consul_db').get('collection')}"
                 url = f"{self._consul_db_url}{collection}?recurse"
@@ -168,4 +168,6 @@ class Reset(Setup):
             raise CsmSetupError("Failed to fetch LDAP root user")
         if not self._ldappasswd:
             raise CsmSetupError("Failed to fetch LDAP root user password")
-        self._delete_ldap_data(const.CORTXUSERS_DN)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        self._delete_ldap_data(const.CORTXUSERS_DN.format(base_dn))
