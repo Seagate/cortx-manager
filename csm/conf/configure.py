@@ -76,7 +76,7 @@ class Configure(Setup):
         self._configure_csm_web_keys()
         try:
             self._configure_csm_ldap_schema()
-            # self._set_csm_user_collection_in_database_yaml()
+            self._set_csm_user_collection_in_database_yaml()
             if not self._replacement_node_flag:
                 self.create()
             await Setup._create_cluster_admin(self.force_action)
