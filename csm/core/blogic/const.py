@@ -23,9 +23,11 @@ CSM_S3_SANITY_LOG_FILE = "csm_s3_sanity"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
+DEFAULT_CSM_CONF_PATH = "/etc/cortx"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+DB_SOURCE_CONF = "{}/conf/etc/csm/database.yaml".format(CSM_PATH)
 CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
 CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
@@ -316,7 +318,7 @@ HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
-CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
+CSM_SETUP_FILE = '/home/731368/forked_repos/cortx-manager/csm/cli/schema/csm_setup.json'
 CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
 
 # Support Bundle

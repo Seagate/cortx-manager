@@ -24,6 +24,9 @@ import json
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
+from cortx.utils.validator.error import VError
+from cortx.utils.validator.v_path import PathV
+from cortx.utils.validator.v_pkg import PkgV
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
@@ -51,13 +54,58 @@ class Setup:
         self._setup_info = dict()
         self._is_env_vm = False
         self._is_env_dev = False
-        const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
+        const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Conf.machine_id}"
         self.conf_store_keys = {}
+        self._set_csm_rpm_flag()
 
-    @staticmethod
-    def _copy_skeleton_configs():
-        os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF_PATH} {const.ETC_PATH}")
+    def _copy_skeleton_configs(self):
+        Log.info(f"Copying Csm config skeletons to {self.config_path}")
+        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF} {self.config_path}")
+        Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
+
+    def _set_csm_conf_path(self):
+        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>software>csm>conf_path",
+                                                     const.DEFAULT_CSM_CONF_PATH)
+        conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
+        if not os.path.exists(conf_path):
+            os.makedirs(conf_path, exist_ok=True)
+        Log.info(f"Setting Config saving path:{conf_path} from confstore")
+        return conf_path
+
+    def _set_csm_rpm_flag(self):
+        self._setup_rpm_map = {
+                            "csm_setup":"cortx-csm_agent",
+                            "csm_web_setup":"cortx-csm_web",
+                            "cli_setup":"cortx-cli"
+                        }
+        for each_name,each_rpm in self._setup_rpm_map.items():
+            try:
+                PkgV().validate("rpms", [each_rpm])
+                PathV().validate("exists" ,[f"link:/usr/bin/{each_name}"])
+                setattr(self, f"{each_name}_flag", True)
+                Log.info(f"{each_rpm} installed. Setting {each_name}_flag as True")
+            except VError as ve:
+                Log.warn(f"{each_rpm} not installed. Setting {each_name}_flag as False")
+                setattr(self, f"{each_name}_flag", False)
+
+    def execute_web_and_cli(self,config_url,service_name, phase_name='all'):
+
+        if phase_name == 'all':
+            phase_name = ["post_install", "prepare", "config", "init"]
+        else:
+            phase_name = [phase_name]
+
+        for each_phase in phase_name:
+            if self.csm_web_setup_flag and service_name in ['all',"csm_web"]:
+                # Csm_web_setup will internally execute cli_setup if CLI RPM installed
+                Log.info("Executing Csm-web-Setup")
+                Setup._run_cmd(f"csm_web_setup {each_phase} --config {config_url}")
+
+            if self.cli_setup_flag and service_name in ["all","cortxcli"] and \
+                                                service_name not in ["csm_web"]:
+                #Execute only cli-setup
+                Log.info("Executing Cli-Setup")
+                Setup._run_cmd(f"cli_setup {each_phase} --config {config_url}")
 
     @staticmethod
     async def request(url, method, json=None):
