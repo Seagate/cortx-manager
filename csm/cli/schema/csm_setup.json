@@ -207,6 +207,19 @@
             "help": "Config Store URL e.g <type>://<path>."
         },
         {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -299,6 +312,19 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -327,6 +353,19 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -353,6 +392,19 @@
             "type": "str",
             "help": "Config Store URL e.g <type>://<path>."
           },
+          {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
           {
             "flag": "args",
             "default": [],
