@@ -245,6 +245,13 @@
       "permissions_tag": "update",
       "args": [
         {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
           "flag": "-t",
           "default": "",
           "type": "str",
