@@ -41,6 +41,11 @@ class PostInstall(Setup):
     def __init__(self):
         """Instiatiate Post Install Class."""
         Log.info("Executing Post Installation for CSM.")
+        self._replacement_node_flag = os.environ.get(
+            "REPLACEMENT_NODE") == "true"
+        if self._replacement_node_flag:
+            Log.info("REPLACEMENT_NODE flag is set")
+        Setup._copy_skeleton_configs()
         super(PostInstall, self).__init__()
 
     async def execute(self, command):
