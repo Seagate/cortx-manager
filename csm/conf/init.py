@@ -92,7 +92,7 @@ class Init(Setup):
         Setup._run_cmd((f"setfacl -R -m u:{self._user}:rwx "
                         f"{const.CSM_TMP_FILE_CACHE_DIR}"))
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {log_path}")
-        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_CONF_PATH}")
+        Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {self.config_path}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.CSM_PIDFILE_PATH}")
         Setup._run_cmd(f"setfacl -R -m u:{self._user}:rwx {const.PROVISIONER_LOG_FILE_PATH}")
         # Setup._run_cmd(f"setfacl -R -b {const.CSM_USER_HOME}")

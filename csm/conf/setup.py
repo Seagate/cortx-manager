@@ -62,10 +62,11 @@ class Setup:
         Log.info(f"Copying Csm config skeletons to {self.config_path}")
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF} {self.config_path}")
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
+        Setup._run_cmd(f"cp -rn {const.INVENTORY_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
         conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>software>csm>conf_path",
-                                                     const.DEFAULT_CSM_CONF_PATH)
+                                                     const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
             os.makedirs(conf_path, exist_ok=True)
@@ -224,8 +225,7 @@ class Setup:
                 raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
         return csm_user_pass
 
-    @staticmethod
-    async def _create_cluster_admin(force_action=False):
+    async def _create_cluster_admin(self, force_action=False):
         '''
         Create Cluster admin using CSM User managment.
         Username, Password, Email will be obtaineed from Confstore
@@ -248,7 +248,7 @@ class Setup:
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
-        conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        conf = GeneralConfig(Yaml(f"{self.config_path}/{const.DB_CONF_FILE_NAME}").load())
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)

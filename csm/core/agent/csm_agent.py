@@ -36,7 +36,7 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
+        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CORTX_CONFIG_DIR}/{const.CSM_CONF_FILE_NAME}")
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
@@ -50,7 +50,7 @@ class CsmAgent:
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        db_config = Yaml(const.DATABASE_CONF).load()
+        db_config = Yaml(f"{const.CORTX_CONFIG_DIR}/{const.DB_CONF_FILE_NAME}").load()
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(
@@ -60,7 +60,7 @@ class CsmAgent:
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DATABASE_CONF}")
+        Conf.load(const.DATABASE_INDEX, f"yaml://{const.CORTX_CONFIG_DIR}/{const.DB_CONF_FILE_NAME}")
 
         #Remove all Old Shutdown Cron Jobs
         CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
