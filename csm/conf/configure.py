@@ -76,7 +76,7 @@ class Configure(Setup):
         self._configure_csm_web_keys()
         try:
             self._configure_csm_ldap_schema()
-            self._set_csm_user_collection_in_database_yaml()
+            self._set_user_collection()
             if not self._replacement_node_flag:
                 self.create()
             await Setup._create_cluster_admin(self.force_action)
@@ -119,7 +119,6 @@ class Configure(Setup):
         # Validation throws exception on failure
         for host in consul_hosts:
             ConsulV().validate('service', [host, port])
-        consul_hosts.remove(const.LOCALHOST)
 
     def _validate_es_service(self):
         Log.info("Getting elasticsearch status")
@@ -132,7 +131,6 @@ class Configure(Setup):
         # Validation throws exception on failure
         for host in es_hosts:
             ElasticsearchV().validate('service', [host, port])
-        es_hosts.remove(const.LOCALHOST)
 
     def create(self):
         """
@@ -350,7 +348,7 @@ class Configure(Setup):
             raise Exception('Error while modifying attribute' + attribute)
         ldap_conn.unbind_s()
 
-    def _set_csm_user_collection_in_database_yaml(self):
+    def _set_user_collection(self):
         """
         Sets collection for User model in database.yaml
         :return:

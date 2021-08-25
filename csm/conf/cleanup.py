@@ -119,7 +119,7 @@ class Cleanup(Setup):
             raise CsmSetupError("Failed to fetch LDAP root user password")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        self._delete_ldap_data(const.CORTXACCOUNTS_DN.format(base_dn))
+        self._delete_user_data(const.CORTXACCOUNTS_DN.format(base_dn))
 
     def _search_delete_permission_attr(self, dn, attr_to_delete):
         conn = ldap.initialize("ldapi://")

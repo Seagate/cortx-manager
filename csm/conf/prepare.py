@@ -57,11 +57,11 @@ class Prepare(Setup):
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_db_host_addr()
-        self._set_db_port_addr()
+        self._set_ldap_port()
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
-        self._set_onpenldap_configs()
+        self._set_ldap_params()
         if not self._replacement_node_flag:
             self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -148,14 +148,14 @@ class Prepare(Setup):
         Obtains list of ldap host address
         :return: list of ip where ldap is running
         """
-        Log.info("Fetching data N/W info.")
-        data_nw_private_fqdn = []
-        data_nw_private_fqdn.append(Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN]))
+        Log.info("Fetching ldap hosts info.")
         #ToDo: Confstore key may change
-        ldap_hosts = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>openldap>hosts",
-                                    data_nw_private_fqdn)
-        return ldap_hosts
+        ldap_endpoints = Conf.get(const.CONSUMER_INDEX, "cortx>software>openldap>hosts", None)
+        if ldap_endpoints:
+            return ldap_endpoints
+        Log.info("Fetching data N/W info.")
+        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
+        return [data_nw_private_fqdn]
 
     def _set_db_host_addr(self):
         """
@@ -215,7 +215,7 @@ class Prepare(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
                  self._user)
 
-    def _set_onpenldap_configs(self):
+    def _set_ldap_params(self):
         """
         Sets openldap configuration in CSM config.
         :return:
@@ -244,17 +244,17 @@ class Prepare(Setup):
                                     const.DEFAULT_OPENLDAP_PORT)
         return ldap_port
 
-    def _set_db_port_addr(self):
+    def _set_ldap_port(self):
         """
-        Sets database port address in database.yaml.
+        Sets ldap port address in database.yaml.
         :return:
         """
         ldap_port = self._get_ldap_port_addr()
         try:
             Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
         except Exception as e:
-            Log.error(f'Unable to set port address: {e}')
-            raise CsmSetupError(f'Unable to set port address: {e}')
+            Log.error(f'Unable to set ldap port: {e}')
+            raise CsmSetupError(f'Unable to set ldap port: {e}')
 
     def create(self):
         """

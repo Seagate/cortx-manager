@@ -165,9 +165,9 @@ class Reset(Setup):
         self._ldapuser = self._fetch_ldap_root_user()
         self._ldappasswd = self._fetch_ldap_root_password()
         if not self._ldapuser:
-            raise CsmSetupError("Failed to fetch LDAP root user")
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
         if not self._ldappasswd:
-            raise CsmSetupError("Failed to fetch LDAP root user password")
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        self._delete_ldap_data(const.CORTXUSERS_DN.format(base_dn))
+        self._delete_user_data(const.CORTXUSERS_DN.format(base_dn))

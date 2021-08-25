@@ -401,7 +401,7 @@ class Setup:
         self._ldappasswd = None
         self._ldap_conn = None
 
-    def _delete_ldap_data(self, base_dn):
+    def _delete_user_data(self, base_dn):
         """
         Delete data entries from ldap.
         """
