@@ -786,13 +786,17 @@ DEFAULT_BASE_DN = "dc=seagate,dc=com"
 DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
 LDAP_USER = "cn={0},{1}"
 LDAP_URL = "ldapi:///"
+CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
+CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
-CORTXUSER_INIT_LDIF = "{}/conf/etc/openldap/csm-ldap-init.ldif".format(CSM_PATH)
-CORTXUSER_ACCOUNT_LDIF = "{}/conf/etc/openldap/userAccount.ldif".format(CSM_PATH)
+CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
+CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
 CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
 CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
+CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'

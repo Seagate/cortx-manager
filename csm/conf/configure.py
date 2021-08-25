@@ -119,6 +119,7 @@ class Configure(Setup):
         # Validation throws exception on failure
         for host in consul_hosts:
             ConsulV().validate('service', [host, port])
+        consul_hosts.remove(const.LOCALHOST)
 
     def _validate_es_service(self):
         Log.info("Getting elasticsearch status")
@@ -131,6 +132,7 @@ class Configure(Setup):
         # Validation throws exception on failure
         for host in es_hosts:
             ElasticsearchV().validate('service', [host, port])
+        es_hosts.remove(const.LOCALHOST)
 
     def create(self):
         """
@@ -291,13 +293,21 @@ class Configure(Setup):
         self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF} -H ldapi:///')
 
         # Initialize dc=csm,dc=seagate,dc=com
-        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CORTXUSER_INIT_LDIF} -H ldapi:///')
+        Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
+        tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
+        tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
+        Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
+        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH} -H ldapi:///')
 
         # Setup necessary permissions
         self._setup_ldap_permissions(base_dn, ldap_user)
 
         # Create Cortx Account
-        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CORTXUSER_ACCOUNT_LDIF}')
+        Log.info(f"Updating base dn in {const.CORTXUSER_ACCOUNT_LDIF}")
+        tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
+        tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
+        Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
+        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CSM_LDAP_ACC_FILE_PATH}')
         Log.info("Openldap configuration completed for Cortx users.")
 
     def _setup_ldap_permissions(self, base_dn, ldap_user):
