@@ -29,6 +29,13 @@ databases:
             port: "8500"
             login: ""
             password: ""
+    openldap:
+        import_path: "OpenLdap"
+        config:
+            hosts: ["127.0.0.1"]
+            port: "389"
+            login: ""
+            password: ""
 models:
 -   import_path: "csm.core.blogic.models.alerts.AlertModel"
     database: "es_db"
@@ -41,10 +48,10 @@ models:
         es_db:
             collection: "alerts-history"
 -   import_path: "csm.core.data.models.users.User"
-    database: "consul_db"
+    database: "openldap"
     config:
-        consul_db:
-            collection: "user_collection"
+        openldap:
+            collection: "o=userAccount,ou=accounts,dc=csm,dc=seagate,dc=com"
 -   import_path: "csm.core.data.models.system_config.SystemConfigSettings"
     database: "consul_db"
     config:

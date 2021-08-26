@@ -25,7 +25,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.service.service_handler import Service
 from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
-
+from cortx.utils.validator.error import VError
 
 class Reset(Setup):
     """
@@ -48,12 +48,27 @@ class Reset(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        self._prepare_and_validate_confstore_keys()
         self.disable_and_stop_service()
         self.reset_logs()
         self.directory_cleanup()
         await self.db_cleanup()
+        await self._unsupported_feature_entry_cleanup()
+        self._delete_cortxusers_from_ldap()
         await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+    def _prepare_and_validate_confstore_keys(self):
+        self.conf_store_keys.update({
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
+            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+        })
+        try:
+            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+        except VError as ve:
+            Log.error(f"Key not found in Conf Store: {ve}")
+            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def disable_and_stop_service(self):
         for each_service in [const.CSM_AGENT_SERVICE, const.CSM_WEB_SERVICE]:
@@ -114,10 +129,46 @@ class Reset(Setup):
                 db = "es_db"
                 collection = f"{each_model.get('config').get('es_db').get('collection')}"
                 url = f"{self._es_db_url}{collection}"
-            else:
+            if each_model.get('config').get('consul_db'):
                 db = "consul_db"
                 collection = f"{each_model.get('config').get('consul_db').get('collection')}"
                 url = f"{self._consul_db_url}{collection}?recurse"
 
             Log.info(f"Deleting for collection:{collection} from {db}")
-            await Setup.erase_index(collection, url, "delete")
+            await self.erase_index(collection, url, "delete")
+
+    async def _unsupported_feature_entry_cleanup(self):
+        collection = "config"
+        url = f"{self._es_db_url}{collection}/_delete_by_query"
+        payload = {"query": {"match": {"component_name": "csm"}}}
+        Log.info(f"Deleting for collection:{collection} from es_db")
+        await self.erase_index(collection, url, "post", payload)
+
+    async def erase_index(self, collection, url, method, payload=None):
+        Log.info(f"Url: {url}")
+        try:
+            response, headers, status = await Setup.request(url, method, payload)
+            if status != 200:
+                Log.error(f"Index {collection} Could Not Be Deleted.")
+                Log.error(f"Response --> {response}")
+                Log.error(f"Status Code--> {status}")
+                return
+        except Exception as e:
+            Log.warn(f"Failed at deleting for {collection}")
+            Log.warn(f"{e}")
+        Log.info(f"Index {collection} Deleted.")
+
+    def _delete_cortxusers_from_ldap(self):
+        """
+        Delete all CortxUsers under CortxAccount
+        """
+        _ldapuser = self._fetch_ldap_root_user()
+        _ldappasswd = self._fetch_ldap_root_password()
+        if not _ldapuser:
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
+        if not _ldappasswd:
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
+        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXUSERS_DN.format(base_dn))
