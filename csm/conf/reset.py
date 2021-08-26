@@ -162,12 +162,13 @@ class Reset(Setup):
         """
         Delete all CortxUsers under CortxAccount
         """
-        self._ldapuser = self._fetch_ldap_root_user()
-        self._ldappasswd = self._fetch_ldap_root_password()
-        if not self._ldapuser:
+        _ldapuser = self._fetch_ldap_root_user()
+        _ldappasswd = self._fetch_ldap_root_password()
+        if not _ldapuser:
             raise CsmSetupError("Failed to fetch credentials for ldap operations")
-        if not self._ldappasswd:
+        if not _ldappasswd:
             raise CsmSetupError("Failed to fetch credentials for ldap operations")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        self._delete_user_data(const.CORTXUSERS_DN.format(base_dn))
+        bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
+        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXUSERS_DN.format(base_dn))

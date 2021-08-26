@@ -785,7 +785,6 @@ BIND_BASE_DN_KEY = "bind_base_dn"
 DEFAULT_BASE_DN = "dc=seagate,dc=com"
 DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
 LDAP_USER = "cn={0},{1}"
-LDAP_URL = "ldapi:///"
 CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
 CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)

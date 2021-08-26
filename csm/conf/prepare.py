@@ -15,6 +15,7 @@
 
 import os
 import crypt
+import socket
 from cortx.utils.log import Log
 from ipaddress import ip_address
 from csm.conf.setup import Setup, CsmSetupError
@@ -155,7 +156,8 @@ class Prepare(Setup):
             return ldap_endpoints
         Log.info("Fetching data N/W info.")
         data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
-        return [data_nw_private_fqdn]
+        resolved_ip = socket.gethostbyname(data_nw_private_fqdn)
+        return [resolved_ip]
 
     def _set_db_host_addr(self):
         """

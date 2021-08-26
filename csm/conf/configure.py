@@ -287,15 +287,18 @@ class Configure(Setup):
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
             Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        ldap_url = Setup._get_ldap_url()
         # Insert cortxuser schema
-        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF} -H ldapi:///')
+        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
+        -H {ldap_url}')
 
         # Initialize dc=csm,dc=seagate,dc=com
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
-        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH} -H ldapi:///')
+        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH}\
+        -H {ldap_url}')
 
         # Setup necessary permissions
         self._setup_ldap_permissions(base_dn, ldap_user)
@@ -305,7 +308,8 @@ class Configure(Setup):
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CSM_LDAP_ACC_FILE_PATH}')
+        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CSM_LDAP_ACC_FILE_PATH}\
+        -H {ldap_url}')
         Log.info("Openldap configuration completed for Cortx users.")
 
     def _setup_ldap_permissions(self, base_dn, ldap_user):
@@ -336,17 +340,18 @@ class Configure(Setup):
             raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
 
     def _modify_ldap_attribute(self, dn, attribute, value):
-        # Open a connection
-        ldap_conn = ldap.initialize("ldapi:///")
-        # Bind/authenticate with a user with apropriate rights to add objects
-        ldap_conn.sasl_non_interactive_bind_s('EXTERNAL')
-        mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
+        _bind_dn = "cn=admin,cn=config"
+        _ldappasswd = self._fetch_ldap_root_password()
         try:
-            ldap_conn.modify_s(dn, mod_attrs)
-        except:
+            self._connect_to_ldap_server(_bind_dn, _ldappasswd)
+            mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
+            self._ldap_conn.modify_s(dn, mod_attrs)
+            self._disconnect_from_ldap()
+        except Exception as e:
+            if self._ldap_conn:
+                self._disconnect_from_ldap()
             Log.error('Error while modifying attribute- '+ attribute )
             raise Exception('Error while modifying attribute' + attribute)
-        ldap_conn.unbind_s()
 
     def _set_user_collection(self):
         """

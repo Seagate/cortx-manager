@@ -63,8 +63,6 @@ class Setup:
         self._is_env_dev = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
-        self._ldapuser = None
-        self._ldappasswd = None
         self._ldap_conn = None
 
     @staticmethod
@@ -379,36 +377,32 @@ class Setup:
             return None
         return ldap_root_user
 
-    def _connect_to_ldap_server(self):
+    def _connect_to_ldap_server(self, bind_dn, ldappasswd):
         """
         Establish connection to ldap server.
         """
         from ldap import initialize, VERSION3, OPT_REFERRALS
-
-        self._ldap_conn = initialize(const.LDAP_URL)
+        ldap_url = Setup._get_ldap_url()
+        self._ldap_conn = initialize(ldap_url)
         self._ldap_conn.protocol_version = VERSION3
         self._ldap_conn.set_option(OPT_REFERRALS, 0)
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                            f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        self._ldap_conn.simple_bind_s(const.LDAP_USER.format(self._ldapuser,base_dn), self._ldappasswd)
+        self._ldap_conn.simple_bind_s(bind_dn, ldappasswd)
 
     def _disconnect_from_ldap(self):
         """
         Disconnects from ldap.
         """
         self._ldap_conn.unbind_s()
-        self._ldapuser = None
-        self._ldappasswd = None
         self._ldap_conn = None
 
-    def _delete_user_data(self, base_dn):
+    def _delete_user_data(self, bind_dn, ldappasswd, users_dn):
         """
         Delete data entries from ldap.
         """
         try:
-            self._connect_to_ldap_server()
+            self._connect_to_ldap_server(bind_dn, ldappasswd)
             try:
-                self._ldap_delete_recursive(self._ldap_conn, base_dn)
+                self._ldap_delete_recursive(self._ldap_conn, users_dn)
             except ldap.NO_SUCH_OBJECT:
             # If no entries found in ldap for given dn
                 pass
@@ -419,16 +413,28 @@ class Setup:
             Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
             raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
 
-    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, base_dn: str):
+    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, users_dn: str):
         """
         Delete all objects and its subordinate entries from ldap.
         """
-        Log.info(f'Deleting all entries from {base_dn}')
-        l_search = ldap_conn.search_s(base_dn, ldap.SCOPE_ONELEVEL)
+        Log.info(f'Deleting all entries from {users_dn}')
+        l_search = ldap_conn.search_s(users_dn, ldap.SCOPE_ONELEVEL)
         for dn, _ in l_search:
-            if not dn == base_dn:
+            if not dn == users_dn:
                 self._ldap_delete_recursive(ldap_conn, dn)
                 ldap_conn.delete_s(dn)
+    @staticmethod
+    def _get_ldap_url():
+        """
+        Return ldap url
+        ldap endpoint and port will be read from database conf
+        """
+        ldap_endpoint = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>hosts')
+        if isinstance(ldap_endpoint, list):
+            ldap_endpoint = ldap_endpoint[0]
+        ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
+        ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
+        return ldap_url
 
     class Config:
         """
