@@ -425,8 +425,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = [
-    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
+CSM_USER_SORTABLE_FIELDS = ['user_id', 'username', 'email', 'user_type', 'role', 'created_time',
+                            'updated_time', 'mail', 'user_role']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -779,13 +779,24 @@ DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
 
 #Openldap CSM Setup consts
-LDAP_USER = "cn={},dc=seagate,dc=com"
-LDAP_URL = "ldapi:///"
+OPENLDAP_KEY = "OPENLDAP"
+BASE_DN_KEY = "base_dn"
+BIND_BASE_DN_KEY = "bind_base_dn"
+DEFAULT_BASE_DN = "dc=seagate,dc=com"
+DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
+LDAP_USER = "cn={0},{1}"
+CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
+CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
-CORTXUSER_INIT_LDIF = "{}/conf/etc/openldap/csm-ldap-init.ldif".format(CSM_PATH)
-CORTXUSER_ACCOUNT_LDIF = "{}/conf/etc/openldap/userAccount.ldif".format(CSM_PATH)
-CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,dc=seagate,dc=com"
-CORTXACCOUNTS_DN = "ou=accounts,dc=csm,dc=seagate,dc=com"
+CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
+CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
+CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CSM_DN = "dc=csm,{}"
+DEFAULT_OPENLDAP_PORT = "389"
+CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
+
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
 DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'

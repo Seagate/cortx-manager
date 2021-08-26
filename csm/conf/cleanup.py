@@ -51,7 +51,6 @@ class Cleanup(Setup):
         await self._unsupported_feature_entry_cleanup()
         self.files_directory_cleanup()
         self.web_env_file_cleanup()
-        await self.cluster_admin_cleanup()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
@@ -92,6 +91,7 @@ class Cleanup(Setup):
         #Delete CortxAccount from LDAP
         self._delete_cortxaccount_from_ldap()
         #Delete cortxuser schema
+        #ToDo: Add a validation based upon environment from confstore
         filelist = glob.glob('/etc/openldap/slapd.d/cn=config/cn=schema/*cortxuser.ldif')
         for schemafile in filelist:
             try:
@@ -106,44 +106,55 @@ class Cleanup(Setup):
             Log.error(f"Failed to delete the ldap permission attributes: {e}")
             raise CsmSetupError("Failed to delete ldap permission attributes.")
         #Restart slapd service
+        #ToDo: Add a validation based upon environment from confstore
         Setup._run_cmd('systemctl restart slapd')
 
     def _delete_cortxaccount_from_ldap(self):
         """
         Delete CortxAccount from LDAP
         """
-        self._ldapuser = self._fetch_ldap_root_user()
-        self._ldappasswd = self._fetch_ldap_root_password()
-        if not self._ldapuser:
+        _ldapuser = self._fetch_ldap_root_user()
+        _ldappasswd = self._fetch_ldap_root_password()
+        if not _ldapuser:
             raise CsmSetupError("Failed to fetch LDAP root user")
-        if not self._ldappasswd:
+        if not _ldappasswd:
             raise CsmSetupError("Failed to fetch LDAP root user password")
-        self._delete_ldap_data(const.CORTXACCOUNTS_DN)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
+        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXACCOUNTS_DN.format(base_dn))
 
     def _search_delete_permission_attr(self, dn, attr_to_delete):
-        conn = ldap.initialize("ldapi://")
-        conn.sasl_non_interactive_bind_s('EXTERNAL')
-        ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        _bind_dn = "cn=admin,cn=config"
+        _ldappasswd = self._fetch_ldap_root_password()
+        try:
+            self._connect_to_ldap_server(_bind_dn, _ldappasswd)
+        except Exception as e:
+            Log.error(f'ERROR: LDAP connection failed, error: {str(e)}')
+            raise CsmSetupError(f'ERROR: LDAP connection failed, error: {str(e)}')
+        ldap_result_id = self._ldap_conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
         olcAccess_list = ldap_result_id[0][1][attr_to_delete]
         # Count the number of records to be deleted.
-        total_records_to_delete = sum("dc=csm,dc=seagate,dc=com" in record.decode('UTF-8')
+        total_records_to_delete = sum("dc=csm,"+base_dn in record.decode('UTF-8')
                                         for record in olcAccess_list)
         # Below will perform delete operation
         while (total_records_to_delete > 0):
-            ldap_result_id = conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
+            ldap_result_id = self._ldap_conn.search_s(dn, ldap.SCOPE_BASE, None, [attr_to_delete])
             for result_dn, olcAccess_dict in ldap_result_id:
                 if(olcAccess_dict):
                     for value in olcAccess_dict[attr_to_delete]:
-                        if(value and (('dc=csm,dc=seagate,dc=com' in value.decode('UTF-8')))):
+                        if(value and (("dc=csm,"+base_dn in value.decode('UTF-8')))):
                             mod_attrs = [( ldap.MOD_DELETE, attr_to_delete, value )]
                             try:
-                                conn.modify_s(dn, mod_attrs)
+                                self._ldap_conn.modify_s(dn, mod_attrs)
                                 break
                             except Exception as e:
                                 Log.error(f'Error while deleting attribute.{e}')
                                 raise
             total_records_to_delete = total_records_to_delete - 1
-        conn.unbind_s()
+        self._disconnect_from_ldap()
 
     async def _unsupported_feature_entry_cleanup(self):
         Log.info("Unsupported feature cleanup")
@@ -154,14 +165,3 @@ class Cleanup(Setup):
         payload = {"query": {"match": {"component_name": "csm"}}}
         Log.info(f"Deleting for collection:{collection} from es_db")
         await Setup.erase_index(collection, url, "post", payload)
-
-    async def cluster_admin_cleanup(self):
-        '''
-        Remove User collection from consuldb
-        '''
-        from cortx.utils.data.db.consul_db.storage import CONSUL_ROOT
-        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
-        collection = "user_collection"
-        url = f"http://localhost:{port}/v1/kv/{CONSUL_ROOT}/{collection}?recurse"
-        Log.info(f"Deleting for collection:{collection} from consul_db")
-        await Setup.erase_index(collection, url, "delete")

@@ -129,7 +129,7 @@ class Reset(Setup):
                 db = "es_db"
                 collection = f"{each_model.get('config').get('es_db').get('collection')}"
                 url = f"{self._es_db_url}{collection}"
-            else:
+            if each_model.get('config').get('consul_db'):
                 db = "consul_db"
                 collection = f"{each_model.get('config').get('consul_db').get('collection')}"
                 url = f"{self._consul_db_url}{collection}?recurse"
@@ -162,10 +162,13 @@ class Reset(Setup):
         """
         Delete all CortxUsers under CortxAccount
         """
-        self._ldapuser = self._fetch_ldap_root_user()
-        self._ldappasswd = self._fetch_ldap_root_password()
-        if not self._ldapuser:
-            raise CsmSetupError("Failed to fetch LDAP root user")
-        if not self._ldappasswd:
-            raise CsmSetupError("Failed to fetch LDAP root user password")
-        self._delete_ldap_data(const.CORTXUSERS_DN)
+        _ldapuser = self._fetch_ldap_root_user()
+        _ldappasswd = self._fetch_ldap_root_password()
+        if not _ldapuser:
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
+        if not _ldappasswd:
+            raise CsmSetupError("Failed to fetch credentials for ldap operations")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
+        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXUSERS_DN.format(base_dn))

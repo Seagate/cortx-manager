@@ -29,7 +29,7 @@ from cortx.utils.log import Log
 from csm.common.payload import Yaml
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
-from csm.common.errors import CsmSetupError, InvalidRequest
+from csm.common.errors import CsmSetupError, InvalidRequest, ResourceExist
 # from csm.core.blogic.csm_ha import CsmResourceAgent
 # from csm.common.ha_framework import PcsHAFramework
 from csm.common.cluster import Cluster
@@ -63,8 +63,6 @@ class Setup:
         self._is_env_dev = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
-        self._ldapuser = None
-        self._ldappasswd = None
         self._ldap_conn = None
 
     @staticmethod
@@ -198,6 +196,7 @@ class Setup:
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+        from csm.common.conf import Security
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
@@ -209,11 +208,19 @@ class Setup:
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>emailid",
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        Security.decrypt_conf()
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        conf['databases']["openldap"]["config"][const.PORT] = int(
+                    conf['databases']["openldap"]["config"][const.PORT])
+        conf['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        conf['databases']["openldap"]["config"]["password"] = Conf.get(
+                    const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)
@@ -228,9 +235,12 @@ class Setup:
             await usr_mngr.delete(cluster_admin_user)
 
         Log.info(f"Creating cluster admin: {cluster_admin_user}")
-        await usr_service.create_cluster_admin(cluster_admin_user,
+        try:
+            await usr_service.create_cluster_admin(cluster_admin_user,
                                                 cluster_admin_secret,
                                                 cluster_admin_emailid)
+        except ResourceExist as ex:
+            Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
     def _is_user_exist(self):
         """
@@ -367,34 +377,32 @@ class Setup:
             return None
         return ldap_root_user
 
-    def _connect_to_ldap_server(self):
+    def _connect_to_ldap_server(self, bind_dn, ldappasswd):
         """
         Establish connection to ldap server.
         """
         from ldap import initialize, VERSION3, OPT_REFERRALS
-
-        self._ldap_conn = initialize(const.LDAP_URL)
+        ldap_url = Setup._get_ldap_url()
+        self._ldap_conn = initialize(ldap_url)
         self._ldap_conn.protocol_version = VERSION3
         self._ldap_conn.set_option(OPT_REFERRALS, 0)
-        self._ldap_conn.simple_bind_s(const.LDAP_USER.format(self._ldapuser), self._ldappasswd)
+        self._ldap_conn.simple_bind_s(bind_dn, ldappasswd)
 
     def _disconnect_from_ldap(self):
         """
         Disconnects from ldap.
         """
         self._ldap_conn.unbind_s()
-        self._ldapuser = None
-        self._ldappasswd = None
         self._ldap_conn = None
 
-    def _delete_ldap_data(self, base_dn):
+    def _delete_user_data(self, bind_dn, ldappasswd, users_dn):
         """
         Delete data entries from ldap.
         """
         try:
-            self._connect_to_ldap_server()
+            self._connect_to_ldap_server(bind_dn, ldappasswd)
             try:
-                self._ldap_delete_recursive(self._ldap_conn, base_dn)
+                self._ldap_delete_recursive(self._ldap_conn, users_dn)
             except ldap.NO_SUCH_OBJECT:
             # If no entries found in ldap for given dn
                 pass
@@ -405,16 +413,28 @@ class Setup:
             Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
             raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
 
-    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, base_dn: str):
+    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, users_dn: str):
         """
         Delete all objects and its subordinate entries from ldap.
         """
-        Log.info(f'Deleting all entries from {base_dn}')
-        l_search = ldap_conn.search_s(base_dn, ldap.SCOPE_ONELEVEL)
+        Log.info(f'Deleting all entries from {users_dn}')
+        l_search = ldap_conn.search_s(users_dn, ldap.SCOPE_ONELEVEL)
         for dn, _ in l_search:
-            if not dn == base_dn:
+            if not dn == users_dn:
                 self._ldap_delete_recursive(ldap_conn, dn)
                 ldap_conn.delete_s(dn)
+    @staticmethod
+    def _get_ldap_url():
+        """
+        Return ldap url
+        ldap endpoint and port will be read from database conf
+        """
+        ldap_endpoint = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>hosts')
+        if isinstance(ldap_endpoint, list):
+            ldap_endpoint = ldap_endpoint[0]
+        ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
+        ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
+        return ldap_url
 
     class Config:
         """
