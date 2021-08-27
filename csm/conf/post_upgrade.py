@@ -75,8 +75,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
         #Configure functionality
-        self._validate_consul_service()
-        self._validate_es_service()
         self._configure_uds_keys()
         self._configure_csm_web_keys()
         self._logrotate()
