@@ -37,7 +37,8 @@
         "alerts",
         "uds",
         "elasticsearch",
-        "ha"
+        "ha",
+        "utils"
       ],
       "nargs": "+",
       "help": "Specific Component for Support Bundle to be Generated."
@@ -52,7 +53,7 @@
   ],
   "comm": {
     "type": "direct",
-    "target": "csm.cli.support_bundle",
+    "target": "cortx.utils.support_framework",
     "method": "init",
     "class": "ComponentsBundle",
     "is_static": true

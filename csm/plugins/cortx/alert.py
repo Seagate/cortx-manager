@@ -239,7 +239,7 @@ class AlertPlugin(CsmPlugin):
                 res_split = resource_type.split(':')
                 """
                 Here resource type can be of following forms -
-                1. enclosure:fru:disk, node:os:disk_space, node:interface:nw:cable etc
+                1. enclosure:hw:disk, node:os:disk_space, node:interface:nw:cable etc
                     and the hierarchy may increase in future.
                 2. enclosure, iem
                 Hence splitting the above by colon(:) and assingning the last element from the split
