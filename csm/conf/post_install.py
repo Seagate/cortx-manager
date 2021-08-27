@@ -58,6 +58,7 @@ class PostInstall(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
+            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -224,6 +225,4 @@ class PostInstall(Setup):
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
-        self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
-        Conf.save(const.DATABASE_INDEX)
