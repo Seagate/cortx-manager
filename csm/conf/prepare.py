@@ -39,7 +39,6 @@ class Prepare(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
-        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -49,10 +48,21 @@ class Prepare(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
+            self.config_path = self._set_csm_conf_path()
+            self._copy_skeleton_configs()
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+            Conf.load(const.DATABASE_INDEX,
+                        f"yaml://{self.config_path}/{const.DB_CONF_FILE_NAME}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+
+        service_name = command.options.get("service")
+        self.execute_web_and_cli(command.options.get("config_url"), service_name,
+                                                 command.sub_command_name)
+        if service_name not in ["all", "csm_agent"]:
+            return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         self._set_secret_string_for_decryption()
