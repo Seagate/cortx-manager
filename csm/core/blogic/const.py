@@ -428,8 +428,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = [
-    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
+CSM_USER_SORTABLE_FIELDS = ['user_id', 'username', 'email', 'user_type', 'role', 'created_time',
+                            'updated_time', 'mail', 'user_role']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -771,6 +771,8 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+KEY_ROOT_LDAP_USER = "openldap_root_user_key"
+KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -778,6 +780,25 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
+
+#Openldap CSM Setup consts
+OPENLDAP_KEY = "OPENLDAP"
+BASE_DN_KEY = "base_dn"
+BIND_BASE_DN_KEY = "bind_base_dn"
+DEFAULT_BASE_DN = "dc=seagate,dc=com"
+DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
+LDAP_USER = "cn={0},{1}"
+CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
+CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
+CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
+CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
+CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
+CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CSM_DN = "dc=csm,{}"
+DEFAULT_OPENLDAP_PORT = "389"
+CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'

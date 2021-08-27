@@ -40,6 +40,8 @@ class CsmAgent:
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
                syslog_port= int(syslog_port) if syslog_port else None,
@@ -57,6 +59,12 @@ class CsmAgent:
             db_config['databases']["es_db"]["config"]["replication"])
         db_config['databases']["consul_db"]["config"][const.PORT] = int(
             db_config['databases']["consul_db"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"][const.PORT] = int(
+            db_config['databases']["openldap"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        db_config['databases']["openldap"]["config"]["password"] = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 

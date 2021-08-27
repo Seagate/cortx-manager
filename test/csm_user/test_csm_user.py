@@ -43,8 +43,8 @@ def test_csm_user_create(args):
     user_service = args.get('user_service')
     data = {'user_id': 'csm_test_manage_user',
             'password': 'Csmuser@123',
-            'role': 'manage',
-            'email': 'csm@test.com',
+            'user_role': 'manage',
+            'mail': 'csm@test.com',
             'alert_notification': True}
 
     # Better replace with local dict storage to avoid this
@@ -59,8 +59,8 @@ def test_csm_user_create(args):
     assert 'updated_time' in user
     assert 'created_time' in user
     assert user['username'] == data['user_id']
-    assert user['role'] == data['role']
-    assert user['email'] == data['email']
+    assert user['user_role'] == data['user_role']
+    assert user['mail'] == data['mail']
     assert user['alert_notification'] == data['alert_notification']
 
 
@@ -104,19 +104,19 @@ def test_csm_user_update_roles(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'role': 'monitor',
+    data = {'user_role': 'monitor',
             'current_password': 'Csmuser@123'}
 
     # Initial roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['role'] == 'manage'
+    assert user['user_role'] == 'manage'
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New roles set
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['role'] == 'monitor'
+    assert user['user_role'] == 'monitor'
 
 
 def test_csm_user_update_email(args):
@@ -124,19 +124,19 @@ def test_csm_user_update_email(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'email': 'csmnew@test.com' ,
+    data = {'mail': 'csmnew@test.com' ,
             'current_password': 'Csmuser@123'}
 
     # Initial email
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['email'] == 'csm@test.com'
+    assert user['mail'] == 'csm@test.com'
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New email
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['email'] == 'csmnew@test.com'
+    assert user['mail'] == 'csmnew@test.com'
 
 
 def test_csm_user_update_alert_notification(args):
