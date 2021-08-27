@@ -22,6 +22,8 @@ import errno
 import shlex
 import json
 import aiohttp
+import ldap
+from ldap.ldapobject import SimpleLDAPObject
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from csm.common.payload import Yaml
@@ -44,14 +46,6 @@ from cortx.utils.validator.v_confkeys import ConfKeysV
 client = None
 
 
-class InvalidPillarDataError(InvalidRequest):
-    pass
-
-
-class ProvisionerCliError(InvalidRequest):
-    pass
-
-
 class Setup:
     def __init__(self):
         self._user = None
@@ -61,6 +55,7 @@ class Setup:
         self._is_env_dev = False
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Setup._get_machine_id()}"
         self.conf_store_keys = {}
+        self._ldap_conn = None
 
     @staticmethod
     def _copy_skeleton_configs():
@@ -193,6 +188,7 @@ class Setup:
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
+        from csm.common.conf import Security
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
@@ -204,11 +200,19 @@ class Setup:
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
                                     "cortx>software>cluster_credential>emailid",
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        Security.decrypt_conf()
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(const.DATABASE_CONF).load())
+        conf['databases']["openldap"]["config"][const.PORT] = int(
+                    conf['databases']["openldap"]["config"][const.PORT])
+        conf['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        conf['databases']["openldap"]["config"]["password"] = Conf.get(
+                    const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)
@@ -279,22 +283,6 @@ class Setup:
         except KeyError as err:
             return False
 
-    @staticmethod
-    def get_data_from_provisioner_cli(method, output_format="json"):
-        try:
-            Log.info("Execute proviioner cli cmd: {method} ")
-            process = SimpleProcess(f"provisioner {method} --out={output_format}")
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.error(f"Error in command execution : {e}")
-            raise ProvisionerCliError(f"Error in command execution : {e}")
-        if stderr:
-            raise ProvisionerCliError(stderr)
-        res = stdout.decode('utf-8')
-        if rc == 0 and res != "":
-            result = json.loads(res)
-            return result[const.RET]
-
     def _check_if_dir_exist_remote_host(self, dir, host):
         try:
             process = SimpleProcess("ssh "+ host +" ls "+ dir)
@@ -332,6 +320,97 @@ class Setup:
         Setup._run_cmd("rm -rf " + bundle_path)
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
+    def _fetch_ldap_root_password(self):
+        Log.info("Fetching LDAP root user password from Conf Store.")
+        try:
+            ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROOT_LDAP_SCRET])
+            cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
+            cipher_key = Cipher.generate_key(cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+        except KvError as error:
+            Log.error(f"Failed to Fetch keys from Conf store. {error}")
+            return None
+        except Exception as e:
+            Log.error(f"{e}")
+            return None
+        try:
+            ldap_root_decrypted_value = Cipher.decrypt(cipher_key,
+                                                ldap_root_secret.encode("utf-8"))
+            return ldap_root_decrypted_value.decode('utf-8')
+        except CipherInvalidToken as error:
+            Log.error(f"Decryption for LDAP root user password Failed. {error}")
+            raise CipherInvalidToken(f"Decryption for LDAP root user password Failed. {error}")
+
+    def _fetch_ldap_root_user(self):
+        Log.info("Fetching LDAP root user from Conf Store.")
+        try:
+            ldap_root_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROOT_LDAP_USER])
+        except KvError as error:
+            Log.error(f"Failed to Fetch keys from Conf store. {error}")
+            return None
+        except Exception as e:
+            Log.error(f"{e}")
+            return None
+        return ldap_root_user
+
+    def _connect_to_ldap_server(self, bind_dn, ldappasswd):
+        """
+        Establish connection to ldap server.
+        """
+        from ldap import initialize, VERSION3, OPT_REFERRALS
+        ldap_url = Setup._get_ldap_url()
+        self._ldap_conn = initialize(ldap_url)
+        self._ldap_conn.protocol_version = VERSION3
+        self._ldap_conn.set_option(OPT_REFERRALS, 0)
+        self._ldap_conn.simple_bind_s(bind_dn, ldappasswd)
+
+    def _disconnect_from_ldap(self):
+        """
+        Disconnects from ldap.
+        """
+        self._ldap_conn.unbind_s()
+        self._ldap_conn = None
+
+    def _delete_user_data(self, bind_dn, ldappasswd, users_dn):
+        """
+        Delete data entries from ldap.
+        """
+        try:
+            self._connect_to_ldap_server(bind_dn, ldappasswd)
+            try:
+                self._ldap_delete_recursive(self._ldap_conn, users_dn)
+            except ldap.NO_SUCH_OBJECT:
+            # If no entries found in ldap for given dn
+                pass
+            self._disconnect_from_ldap()
+        except Exception as e:
+            if self._ldap_conn:
+                self._disconnect_from_ldap()
+            Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
+            raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
+
+    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, users_dn: str):
+        """
+        Delete all objects and its subordinate entries from ldap.
+        """
+        Log.info(f'Deleting all entries from {users_dn}')
+        l_search = ldap_conn.search_s(users_dn, ldap.SCOPE_ONELEVEL)
+        for dn, _ in l_search:
+            if not dn == users_dn:
+                self._ldap_delete_recursive(ldap_conn, dn)
+                ldap_conn.delete_s(dn)
+    @staticmethod
+    def _get_ldap_url():
+        """
+        Return ldap url
+        ldap endpoint and port will be read from database conf
+        """
+        ldap_endpoint = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>hosts')
+        if isinstance(ldap_endpoint, list):
+            ldap_endpoint = ldap_endpoint[0]
+        ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
+        ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
+        return ldap_url
 
     class Config:
         """

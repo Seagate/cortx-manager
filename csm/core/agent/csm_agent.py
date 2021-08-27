@@ -40,6 +40,8 @@ class CsmAgent:
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
                syslog_port= int(syslog_port) if syslog_port else None,
@@ -57,6 +59,12 @@ class CsmAgent:
             db_config['databases']["es_db"]["config"]["replication"])
         db_config['databases']["consul_db"]["config"][const.PORT] = int(
             db_config['databases']["consul_db"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"][const.PORT] = int(
+            db_config['databases']["openldap"]["config"][const.PORT])
+        db_config['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
+            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        db_config['databases']["openldap"]["config"]["password"] = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
@@ -165,7 +173,7 @@ class CsmAgent:
                 Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'), update_repo)
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(db, provisioner,
             security_service, system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
-        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(provisioner)
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
 
         CsmRestApi._app[const.SECURITY_SERVICE] = security_service
         CsmRestApi._app[const.PRODUCT_VERSION_SERVICE] = ProductVersionService(provisioner)
@@ -178,8 +186,9 @@ class CsmAgent:
             Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
             usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
             CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
-            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db, provisioner)
+            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)
         except Exception as e:
+            CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
             Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance

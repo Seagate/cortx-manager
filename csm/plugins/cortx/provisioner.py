@@ -23,28 +23,30 @@ from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.data.models.upgrade import (PackageInformation, ProvisionerStatusResponse,
                                           ProvisionerCommandStatus)
-from csm.core.blogic.const import PILLAR_GET
 from json import JSONDecodeError
 from csm.common.payload import JsonMessage
-import provisioner
-import provisioner.freeze
 from cortx.utils.conf_store.conf_store import Conf
 
 
 class PackageValidationError(InvalidRequest):
     pass
 
+
 class NetworkConfigFetchError(InvalidRequest):
     pass
+
 
 class ClusterIdFetchError(InvalidRequest):
     pass
 
+
 class CreateCsmUserError(InvalidRequest):
     pass
 
+
 class ProductVersionFetchError(InvalidRequest):
     pass
+
 
 # TODO: create a separate module for provisioner-related models
 NetworkConfiguirationResponse = namedtuple('NetworkConfiguirationResponse', 'mgmt_vip cluster_ip')
@@ -59,19 +61,29 @@ class ProvisionerPlugin:
     PRVSNR_NETWORK_PARAM_CIP = 'network/cluster_ip'
 
     def __init__(self, username=None, password=None):
-        try:
-            self.provisioner = provisioner
-            Log.info("Provisioner plugin is loaded")
+        self._username = username
+        self._password = password
+        self.provisioner = None
 
-            if username and password:
+    def _plug_in_provisioner(self) -> None:
+        """
+        Check if the provisioner client can be imported and set ups provisioner
+        if available.
+        """
+
+        if self.provisioner is not None:
+            return
+        try:
+            import provisioner
+            self.provisioner = provisioner
+            if self._username and self._password:
                 self.provisioner.auth_init(
-                    username=username,
-                    password=password,
-                    eauth="pam"
-                )
-        except Exception as error:
+                    username=self._username, password=self._password, eauth="pam")
+            Log.info("Provisioner plugin is loaded")
+        except Exception as e:
             self.provisioner = None
-            Log.error(f"Provisioner module not found : {error}")
+            Log.error(f"Failed to plug the provisioner in: {e}")
+            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT) from None
 
     async def _await_nonasync(self, func):
         pool = ThreadPoolExecutor(max_workers=1)
@@ -86,8 +98,8 @@ class ProvisionerPlugin:
         :returns: a PackageInformation object
         :raises: PackageValidationError in case of an invalid package
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -113,14 +125,14 @@ class ProvisionerPlugin:
         :returns: Value which will later be used to poll for the status of the process
         """
 
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
                 # Generating the version here as at the moment we cannot infer it from the package
                 # version = self._generate_random_version()
-                self.provisioner.set_swupdate_repo(os.path.splitext(os.path.basename(path))[0], path)
+                self.provisioner.set_swupdate_repo(
+                    os.path.splitext(os.path.basename(path))[0], path)
                 return self.provisioner.sw_update(nowait=True)
             except Exception as e:
                 Log.exception(e)
@@ -133,21 +145,23 @@ class ProvisionerPlugin:
         Polls Provisioner for the status of a software and firmware update process
         """
         def _command_handler():
-            # TODO: separately handle the case when the problem is related to the communication to the provisioner
+            # TODO: separately handle the case when the problem is related to
+            # communication with the provisioner
             try:
                 self.provisioner.get_result(query_id)
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Success)
             except self.provisioner.errors.PrvsnrCmdNotFinishedError as not_finished_err:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.InProgress, str(not_finished_err))
+                return ProvisionerStatusResponse(
+                    ProvisionerCommandStatus.InProgress, str(not_finished_err))
             except self.provisioner.errors.PrvsnrCmdNotFoundError as not_found_err:
-                return ProvisionerStatusResponse(ProvisionerCommandStatus.NotFound, str(not_found_err))
+                return ProvisionerStatusResponse(
+                    ProvisionerCommandStatus.NotFound, str(not_found_err))
             except self.provisioner.errors.SaltCmdResultError as res_err:
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(res_err))
             except self.provisioner.errors.ProvisionerError as pe:
                 return ProvisionerStatusResponse(ProvisionerCommandStatus.Failure, str(pe))
 
         return await self._await_nonasync(_command_handler)
-
 
     def _generate_random_version(self):
         return datetime.datetime.now().strftime("%Y.%m.%d.%H.%M")
@@ -159,12 +173,11 @@ class ProvisionerPlugin:
                 "file_path": file_path}
 
     async def trigger_firmware_update(self, fw_package_path):
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
-                return self.provisioner.fw_update(source = fw_package_path, nowait = True)
+                return self.provisioner.fw_update(source=fw_package_path, nowait=True)
             except Exception as e:
                 Log.exception(e)
                 raise CsmInternalError('Failed to start the firmware update process.')
@@ -179,17 +192,17 @@ class ProvisionerPlugin:
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
-                if (ntp_data.get(const.NTP_SERVER_ADDRESS, None) and
-                        ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)):
+                ntp_server_addr = ntp_data.get(const.NTP_SERVER_ADDRESS, None)
+                ntp_timezone_offset = ntp_data.get(const.NTP_TIMEZONE_OFFSET, None)
+                if ntp_server_addr and ntp_timezone_offset:
                     if self.provisioner:
                         Log.debug("Handling provisioner's set ntp api request")
-                        self.provisioner.set_ntp(server=ntp_data[const.NTP_SERVER_ADDRESS],
-                                    timezone=ntp_data[const.NTP_TIMEZONE_OFFSET].split()[-1])
+                        self.provisioner.set_ntp(server=ntp_server_addr,
+                                                 timezone=ntp_timezone_offset.split()[-1])
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Provisioner api error : {error}")
                 raise PackageValidationError(f"Provisioner package failed: {error}")
@@ -205,12 +218,11 @@ class ProvisionerPlugin:
         :returns:
         """
         # TODO: Exception handling as per provisioner's api response
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
-                if ( username and password ):
+                if username and password:
                     Log.debug("Handling provisioner's create user api request")
                     self.provisioner.create_user(uname=username, passwd=password)
             except self.provisioner.errors.ProvisionerError as error:
@@ -232,8 +244,7 @@ class ProvisionerPlugin:
                 raise CsmInternalError(f'Failed to install certificate during provisioner '
                                        f'`set_ssl_certs` call: {e}')
 
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         return await self._await_nonasync(_command_handler)
 
@@ -254,12 +265,12 @@ class ProvisionerPlugin:
         """
         if not Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG):
             Log.debug("Network config is not present in in-memory.")
-            if not self.provisioner:
-                raise NetworkConfigFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+            self._plug_in_provisioner()
 
             def _command_handler():
                 try:
-                    response = self.provisioner.get_params(self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
+                    response = self.provisioner.get_params(
+                        self.PRVSNR_NETWORK_PARAM_VIP, self.PRVSNR_NETWORK_PARAM_CIP)
                     # The IPs are same for each node, so we can take any of them
                     for node, params in response.items():
                         return NetworkConfiguirationResponse(
@@ -271,14 +282,13 @@ class ProvisionerPlugin:
                     raise NetworkConfigFetchError(f"Failed to fetch Network Configuration: {error}")
             network_config = await self._await_nonasync(_command_handler)
             Conf.set(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG, network_config)
-            Log.debug(f"Netowrk config fetched from provisioner, set in in-memory: {network_config}")
+            Log.debug(f"Network config fetched from provisioner, set in-memory: {network_config}")
 
         return Conf.get(const.CSM_GLOBAL_INDEX, const.NETWORK_CONFIG)
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_id(self):
-        if not self.provisioner:
-            raise ClusterIdFetchError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -311,8 +321,7 @@ class ProvisionerPlugin:
         :param network_data: Nerwork config dict
         :returns:
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
@@ -357,49 +366,54 @@ class ProvisionerPlugin:
                 Log.debug("Handling provisioner's set network api request")
                 if config_type == const.SYSTEM_CONFIG:
                     if data_nw_dhcp:
-                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
-                                cluster_ip=cluster_ip_address,
-                                primary_data_ip=self.provisioner.UNDEFINED,
-                                primary_data_netmask=self.provisioner.UNDEFINED,
-                                primary_data_gateway=self.provisioner.UNDEFINED,
-                                secondary_data_ip=self.provisioner.UNDEFINED,
-                                secondary_data_netmask=self.provisioner.UNDEFINED,
-                                secondary_data_gateway=self.provisioner.UNDEFINED,
-                                dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                        self.provisioner.set_network(
+                            mgmt_vip=mgmt_vip_address,
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=self.provisioner.UNDEFINED,
+                            primary_data_netmask=self.provisioner.UNDEFINED,
+                            primary_data_gateway=self.provisioner.UNDEFINED,
+                            secondary_data_ip=self.provisioner.UNDEFINED,
+                            secondary_data_netmask=self.provisioner.UNDEFINED,
+                            secondary_data_gateway=self.provisioner.UNDEFINED,
+                            dns_servers=dns_servers_list,
+                            search_domains=search_domains_list)
                     else:
-                        self.provisioner.set_network(mgmt_vip=mgmt_vip_address,
-                                cluster_ip=cluster_ip_address,
-                                primary_data_ip=primary_data_ip_address,
-                                primary_data_netmask=primary_data_netmask_address,
-                                primary_data_gateway=primary_data_gateway_address,
-                                secondary_data_ip=secondary_data_ip_address,
-                                secondary_data_netmask=secondary_data_netmask_address,
-                                secondary_data_gateway=secondary_data_gateway_address,
-                                dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                        self.provisioner.set_network(
+                            mgmt_vip=mgmt_vip_address,
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=primary_data_ip_address,
+                            primary_data_netmask=primary_data_netmask_address,
+                            primary_data_gateway=primary_data_gateway_address,
+                            secondary_data_ip=secondary_data_ip_address,
+                            secondary_data_netmask=secondary_data_netmask_address,
+                            secondary_data_gateway=secondary_data_gateway_address,
+                            dns_servers=dns_servers_list,
+                            search_domains=search_domains_list)
                 if config_type == const.MANAGEMENT_NETWORK:
                     self.provisioner.set_network(mgmt_vip=mgmt_vip_address)
                 if config_type == const.DATA_NETWORK:
                     if data_nw_dhcp:
-                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
-                                primary_data_ip=self.provisioner.UNDEFINED,
-                                primary_data_netmask=self.provisioner.UNDEFINED,
-                                primary_data_gateway=self.provisioner.UNDEFINED,
-                                secondary_data_ip=self.provisioner.UNDEFINED,
-                                secondary_data_netmask=self.provisioner.UNDEFINED,
-                                secondary_data_gateway=self.provisioner.UNDEFINED)
+                        self.provisioner.set_network(
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=self.provisioner.UNDEFINED,
+                            primary_data_netmask=self.provisioner.UNDEFINED,
+                            primary_data_gateway=self.provisioner.UNDEFINED,
+                            secondary_data_ip=self.provisioner.UNDEFINED,
+                            secondary_data_netmask=self.provisioner.UNDEFINED,
+                            secondary_data_gateway=self.provisioner.UNDEFINED)
                     else:
-                        self.provisioner.set_network(cluster_ip=cluster_ip_address,
-                                primary_data_ip=primary_data_ip_address,
-                                primary_data_netmask=primary_data_netmask_address,
-                                primary_data_gateway=primary_data_gateway_address,
-                                secondary_data_ip=secondary_data_ip_address,
-                                secondary_data_netmask=secondary_data_netmask_address,
-                                secondary_data_gateway=secondary_data_gateway_address)
+                        self.provisioner.set_network(
+                            cluster_ip=cluster_ip_address,
+                            primary_data_ip=primary_data_ip_address,
+                            primary_data_netmask=primary_data_netmask_address,
+                            primary_data_gateway=primary_data_gateway_address,
+                            secondary_data_ip=secondary_data_ip_address,
+                            secondary_data_netmask=secondary_data_netmask_address,
+                            secondary_data_gateway=secondary_data_gateway_address)
                 if config_type == const.DNS_NETWORK:
-                    self.provisioner.set_network(dns_servers=dns_servers_list,
-                                search_domains=search_domains_list)
+                    self.provisioner.set_network(
+                        dns_servers=dns_servers_list,
+                        search_domains=search_domains_list)
             except self.provisioner.errors.ProvisionerError as e:
                 Log.error(f"Provisioner api error : {e}")
                 raise PackageValidationError(f"Provisioner package failed: {e}")
@@ -412,14 +426,14 @@ class ProvisionerPlugin:
         Fetch product version information from provisioner
         :returns: Dict having installed product version
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
 
         def _command_handler():
             try:
                 return JsonMessage(self.provisioner.get_release_version()).load()
             except JSONDecodeError as jde:
-                raise ProductVersionFetchError("Product version response missing or invalid json")
+                raise ProductVersionFetchError(
+                    f"Product version response missing or invalid json {jde}")
             except self.provisioner.errors.ProvisionerError as error:
                 Log.error(f"Failed to get release version : {error}")
                 raise ProductVersionFetchError(f"Failed to fetch product version: {error}")
@@ -435,8 +449,7 @@ class ProvisionerPlugin:
         :param: ssh_port: Port to connect to SSH :type: Int
         :return: Job ID for Node Replacement
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
         try:
             return self.provisioner.replace_node(node_id, hostname, ssh_port)
         except self.provisioner.errors.ProvisionerError as e:
@@ -453,15 +466,15 @@ class ProvisionerPlugin:
         :param target_node_id: Node_id for target node intended. :type: String
         :return:
         """
-        if not self.provisioner:
-            raise PackageValidationError(const.PROVISIONER_PACKAGE_NOT_INIT)
+        self._plug_in_provisioner()
         try:
             Log.debug(f"Invoking Provisioner command run with "
                       f"arguments --> cmd_name={const.CORTXCLI} "
                       f"cmd_args={repr(command_args)} "
                       f"targets={target_node_id}")
-            return self.provisioner.cmd_run(cmd_name=const.CORTXCLI,
-                cmd_args=str(command_args), targets=target_node_id, nowait=True)
+            return self.provisioner.cmd_run(
+                cmd_name=const.CORTXCLI, cmd_args=str(command_args), targets=target_node_id,
+                nowait=True)
         except self.provisioner.errors.ProvisionerError as e:
             Log.error(f"Command Execution error: {e}")
             raise PackageValidationError(f"Command Execution error: {e}")
