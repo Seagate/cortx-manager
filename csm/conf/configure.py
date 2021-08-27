@@ -67,8 +67,6 @@ class Configure(Setup):
         self.force_action = command.options.get('f')
         Log.info(f"Force flag: {self.force_action}")
         self._prepare_and_validate_confstore_keys()
-        self._validate_consul_service()
-        self._validate_es_service()
         self._set_deployment_mode()
         self._logrotate()
         self._configure_cron()
@@ -107,30 +105,6 @@ class Configure(Setup):
             const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
             })
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
-
-    def _validate_consul_service(self):
-        Log.info("Getting consul status")
-        # get host and port of consul database from conf
-        consul_hosts = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>hosts')
-        if not consul_hosts: raise CsmSetupError("Consul host not available.")
-        consul_hosts.append(const.LOCALHOST)
-        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
-        if not port: raise CsmSetupError("Consul port not available.")
-        # Validation throws exception on failure
-        for host in consul_hosts:
-            ConsulV().validate('service', [host, port])
-
-    def _validate_es_service(self):
-        Log.info("Getting elasticsearch status")
-        # get host and port of consul database from conf
-        es_hosts = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>hosts')
-        if not es_hosts: raise CsmSetupError("Elasticsearch host not available.")
-        es_hosts.append(const.LOCALHOST)
-        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
-        if not port: raise CsmSetupError("Elasticsearch port not available.")
-        # Validation throws exception on failure
-        for host in es_hosts:
-            ElasticsearchV().validate('service', [host, port])
 
     def create(self):
         """
