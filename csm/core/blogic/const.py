@@ -146,8 +146,10 @@ DATABASE_CONF = '/etc/csm/database.yaml'
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE = "csm_agent.service"
+CSM_AGENT_SERVICE_SRC_PATH = f"{CSM_PATH}/conf/service/{CSM_AGENT_SERVICE}"
 CSM_AGENT_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_AGENT_SERVICE}"
 CSM_WEB_SERVICE = "csm_web.service"
+CSM_WEB_SERVICE_SRC_PATH = f"{CSM_PATH}/conf/service/{CSM_WEB_SERVICE}"
 CSM_WEB_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_WEB_SERVICE}"
 CSM_WEB_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/.env"
 CSM_WEB_DIST_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/web-dist/.env"
@@ -637,6 +639,7 @@ DEV = 'dev'
 VM = 'VM'
 VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
+ENV_TYPE_KEY = 'cortx>common>environment_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',

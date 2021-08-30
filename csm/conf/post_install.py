@@ -63,6 +63,7 @@ class PostInstall(Setup):
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
+        self._copy_systemd_configuration()
         self._config_user()
         if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
             self._configure_system_auto_restart()
@@ -164,7 +165,7 @@ class PostInstall(Setup):
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                       "Failure")
-            Setup._update_csm_files("#< RESTART_OPTION >",
+            Setup._update_systemd_conf("#< RESTART_OPTION >",
                                        "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
@@ -173,7 +174,7 @@ class PostInstall(Setup):
         Configures the Service user in CSM service files.
         :return:
         """
-        Setup._update_csm_files("<USER>", self._user)
+        Setup._update_systemd_conf("<USER>", self._user)
 
     def _configure_rsyslog(self):
         """
