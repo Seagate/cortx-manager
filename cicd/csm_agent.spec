@@ -56,8 +56,6 @@ PRODUCT=<PRODUCT>
 
     ln -sf $CSM_DIR/lib/csm_cleanup /usr/bin/csm_cleanup
     ln -sf $CSM_DIR/lib/csm_cleanup $CSM_DIR/bin/csm_cleanup
-
-    cp -f $CFG_DIR/service/csm_agent.service /etc/systemd/system/csm_agent.service
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -71,19 +69,23 @@ exit 0
 
 %preun
 [ $1 -eq 1 ] && exit 0
-systemctl disable csm_agent
-systemctl stop csm_agent
+[ -f /etc/systemd/system/csm_agent.service ] && {
+    systemctl disable csm_agent
+    systemctl stop csm_agent
+}
 
 %postun
 [ $1 -eq 1 ] && exit 0
-rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
 rm -f /usr/bin/csm_setup 2> /dev/null;
 rm -f /usr/bin/usl_setup 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;
 rm -rf <CSM_PATH>/bin/ 2> /dev/null;
-systemctl daemon-reload
+[ -f /etc/systemd/system/csm_agent.service ] && {
+    rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
+    systemctl daemon-reload
+}
 exit 0
 
 %clean
