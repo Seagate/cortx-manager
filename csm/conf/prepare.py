@@ -15,6 +15,7 @@
 
 import os
 import crypt
+import socket
 from cortx.utils.log import Log
 from ipaddress import ip_address
 from csm.conf.setup import Setup, CsmSetupError
@@ -38,7 +39,6 @@ class Prepare(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
-        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -48,18 +48,31 @@ class Prepare(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
+            self.config_path = self._set_csm_conf_path()
+            self._copy_skeleton_configs()
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+            Conf.load(const.DATABASE_INDEX,
+                        f"yaml://{self.config_path}/{const.DB_CONF_FILE_NAME}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
+
+        service_name = command.options.get("service")
+        self.execute_web_and_cli(command.options.get("config_url"), service_name,
+                                                 command.sub_command_name)
+        if service_name not in ["all", "csm_agent"]:
+            return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_db_host_addr()
+        self._set_ldap_port()
         self._set_fqdn_for_nodeid()
         self._set_s3_ldap_credentials()
         self._set_password_to_csm_user()
+        self._set_ldap_params()
         if not self._replacement_node_flag:
             self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -142,6 +155,21 @@ class Prepare(Setup):
             raise CsmSetupError(f"Network Validation failed.{e}")
     	return data_nw_private_fqdn_list
 
+    def _get_ldap_hosts_info(self):
+        """
+        Obtains list of ldap host address
+        :return: list of ip where ldap is running
+        """
+        Log.info("Fetching ldap hosts info.")
+        #ToDo: Confstore key may change
+        ldap_endpoints = Conf.get(const.CONSUMER_INDEX, "cortx>software>openldap>hosts", None)
+        if ldap_endpoints:
+            return ldap_endpoints
+        Log.info("Fetching data N/W info.")
+        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
+        resolved_ip = socket.gethostbyname(data_nw_private_fqdn)
+        return [resolved_ip]
+
     def _set_db_host_addr(self):
         """
         Sets database hosts address in CSM config.
@@ -149,9 +177,11 @@ class Prepare(Setup):
         """
         consul_host = self._get_consul_info()
         es_host = self._get_es_hosts_info()
+        ldap_hosts = self._get_ldap_hosts_info()
         try:
             Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
             Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
@@ -197,6 +227,47 @@ class Prepare(Setup):
                  self._user)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
                  self._user)
+
+    def _set_ldap_params(self):
+        """
+        Sets openldap configuration in CSM config.
+        :return:
+        """
+        #ToDo: Confstore key may change
+        base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>base_dn",
+                                    const.DEFAULT_BASE_DN)
+        bind_base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>bind_base_dn",
+                                    const.DEFAULT_BIND_BASE_DN)
+        Log.info("Set base_dn and bind_base_dn for openldap")
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}",
+                 base_dn)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}",
+                 bind_base_dn)
+
+    def _get_ldap_port_addr(self):
+        """
+        Obtains ldap port address
+        :return: port address where ldap is running
+        """
+        #ToDo: Confstore key may change
+        ldap_port = Conf.get(const.CONSUMER_INDEX,
+                                    "cortx>software>openldap>port",
+                                    const.DEFAULT_OPENLDAP_PORT)
+        return ldap_port
+
+    def _set_ldap_port(self):
+        """
+        Sets ldap port address in database.yaml.
+        :return:
+        """
+        ldap_port = self._get_ldap_port_addr()
+        try:
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
+        except Exception as e:
+            Log.error(f'Unable to set ldap port: {e}')
+            raise CsmSetupError(f'Unable to set ldap port: {e}')
 
     def create(self):
         """

@@ -53,8 +53,9 @@ from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
 from cortx.utils.data.access import Query
-from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+from cortx.utils.data.db.db_provider import DataAccessError
 import re
+from cortx.utils.errors import DataAccessError
 
 
 class CsmApi(ABC):
@@ -363,7 +364,10 @@ class CsmRestApi(CsmApi, ABC):
                 if request_body and request_body.get("password"):
                     del(request_body["password"])
             payload = json.dumps(request_body)
-            await CsmRestApi.check_for_unsupported_endpoint(request)
+            try:
+                await CsmRestApi.check_for_unsupported_endpoint(request)
+            except DataAccessError as e:
+                Log.warn(f"Exception: {e}")
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
@@ -396,6 +400,10 @@ class CsmRestApi(CsmApi, ABC):
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             raise e
+        except DataAccessError as e:
+            Log.error(f"Failed to access the database: {e}")
+            resp = CsmRestApi.error_response(e, request=request, request_id=request_id)
+            return CsmRestApi.json_response(resp, status=503)
         except InvalidRequest as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)

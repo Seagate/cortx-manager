@@ -23,9 +23,13 @@ CSM_S3_SANITY_LOG_FILE = "csm_s3_sanity"
 CSM_SOURCE_CONF_PATH = "{}/conf/etc/csm/".format(CSM_PATH)
 CORTXCLI_SOURCE_CONF_PATH = "{}/conf/etc/cli".format(CORTXCLI_PATH)
 ETC_PATH = "/etc"
+CORTX_CONFIG_DIR = "/etc/cortx"
+DEFAULT_CSM_CONF_PATH = CORTX_CONFIG_DIR+ "/csm"
 CSM_CONF_PATH = ETC_PATH + "/csm"
 CORTXCLI_CONF_PATH = ETC_PATH + "/cli"
 CSM_SOURCE_CONF = "{}/conf/etc/csm/csm.conf".format(CSM_PATH)
+DB_SOURCE_CONF = "{}/conf/etc/csm/database.yaml".format(CSM_PATH)
+INVENTORY_SOURCE_CONF = "{}/conf/etc/csm/cluster.conf".format(CSM_PATH)
 CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
 CSM_SETUP_LOG_DIR = "/tmp/csm/setup_logs/"
 CSM_CONF_FILE_NAME = 'csm.conf'
@@ -120,7 +124,7 @@ DATABASE_CLI_INDEX = 'CORTXCLI_DATABASE'
 USL_GLOBAL_INDEX = 'USL'
 
 # Cluster Inventory Related
-INVENTORY_FILE = '/etc/csm/cluster.conf'
+INVENTORY_FILE = DEFAULT_CSM_CONF_PATH + '/cluster.conf'
 KEY_COMPONENTS = 'sw_components'
 ADMIN_USER = 'admin_user'
 KEY_NODES = 'nodes'
@@ -137,7 +141,6 @@ CSM_CONF = '/etc/csm/csm.conf'
 USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
 CORTXCLI_SECTION = 'CORTXCLI'
-CSM_CLUSTER_CONF = '/etc/csm/cluster.conf'
 CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.yaml'
@@ -428,8 +431,8 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 # CSM Users
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
-CSM_USER_SORTABLE_FIELDS = [
-    'user_id', 'username', 'email', 'user_type', 'role', 'created_time', 'updated_time']
+CSM_USER_SORTABLE_FIELDS = ['user_id', 'username', 'email', 'user_type', 'role', 'created_time',
+                            'updated_time', 'mail', 'user_role']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -771,6 +774,8 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+KEY_ROOT_LDAP_USER = "openldap_root_user_key"
+KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -778,6 +783,25 @@ DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
+
+#Openldap CSM Setup consts
+OPENLDAP_KEY = "OPENLDAP"
+BASE_DN_KEY = "base_dn"
+BIND_BASE_DN_KEY = "bind_base_dn"
+DEFAULT_BASE_DN = "dc=seagate,dc=com"
+DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
+LDAP_USER = "cn={0},{1}"
+CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
+CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
+CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
+CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
+CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
+CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CSM_DN = "dc=csm,{}"
+DEFAULT_OPENLDAP_PORT = "389"
+CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'

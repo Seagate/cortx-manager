@@ -93,7 +93,7 @@ class UserManager:
             query = query.order_by(getattr(User, sort.field), sort.order)
 
         if role:
-            query_filters.append(Compare(User.role, 'like', role))
+            query_filters.append(Compare(User.user_role, 'like', role))
 
         if username:
             query_filters.append(Compare(User.user_id, 'like', username))
@@ -108,7 +108,7 @@ class UserManager:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
         user_list = await self.storage(User).get(query)
-        return [user.email for user in user_list]
+        return [user.mail for user in user_list]
 
     async def count(self):
         return await self.storage(User).count(None)
@@ -127,7 +127,7 @@ class UserManager:
 
         :returns: number of CORTX admin users.
         """
-        fltr = Compare(User.role, '=', const.CSM_SUPER_USER_ROLE)
+        fltr = Compare(User.user_role, '=', const.CSM_SUPER_USER_ROLE)
         return await self.storage(User).count(fltr)
 
 
@@ -217,8 +217,8 @@ class CsmUserService(ApplicationService):
             "id": user.user_id,
             "username": user.user_id,
             "user_type": user.user_type,
-            "role": user.role,
-            "email": user.email,
+            "role": user.user_role,
+            "email": user.mail,
             "reset_password": user.reset_password,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z',
@@ -226,7 +226,7 @@ class CsmUserService(ApplicationService):
         }
 
     async def create_user(
-        self, user_id: str, password: str, role: str, creator_id: Optional[str], **kwargs
+        self, user_id: str, password: str, role: str, creator_id: Optional[str], email: str
     ) -> dict:
         """
         Handles the csm user creation
@@ -246,11 +246,10 @@ class CsmUserService(ApplicationService):
             raise CsmPermissionDenied("Permission denied.")
         # ... and for logged in user
         else:
-            if role == const.CSM_SUPER_USER_ROLE and creator.role != const.CSM_SUPER_USER_ROLE:
+            if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:
                 raise CsmPermissionDenied("Only admin user can create other admin users")
 
-        user = User.instantiate_csm_user(user_id, password, role=role, alert_notification=True)
-        user.update(kwargs)
+        user = User.instantiate_csm_user(user_id, password, email, role, alert_notification=True)
         await self.user_mgr.create(user)
         return self._user_to_dict(user)
 
@@ -268,21 +267,23 @@ class CsmUserService(ApplicationService):
         """
         Fetches the list of existing users.
         """
-        user_list = await self.user_mgr.get_list(
-            offset or None,
-            limit or None,
-            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
-            role, username)
-
         field_mapping = {
             "id": "user_id",
-            "username": "user_id"
+            "username": "user_id",
+            "email":"mail",
+            "role":"user_role"
         }
         if sort_by in field_mapping:
             sort_by = field_mapping[sort_by]
 
         if sort_by and sort_by not in const.CSM_USER_SORTABLE_FIELDS:
             raise InvalidRequest("Cannot sort by the selected field", USERS_MSG_CANNOT_SORT)
+
+        user_list = await self.user_mgr.get_list(
+            offset or None,
+            limit or None,
+            SortBy(sort_by, SortOrder.ASC if sort_dir == "asc" else SortOrder.DESC),
+            role, username)
 
         return [self._user_to_dict(x) for x in user_list]
 
@@ -298,13 +299,13 @@ class CsmUserService(ApplicationService):
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
-        if user.role == const.CSM_SUPER_USER_ROLE:
+        if user.user_role == const.CSM_SUPER_USER_ROLE:
             num_admins = await self.user_mgr.count_admins()
             if num_admins == 1:
                 raise CsmPermissionDenied(
                     "Cannot delete the last admin user", USERS_MSG_PERMISSION_DENIED, user_id)
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
-        if loggedin_user.role != const.CSM_SUPER_USER_ROLE:
+        if loggedin_user.user_role != const.CSM_SUPER_USER_ROLE:
             if user_id.lower() != loggedin_user_id.lower():
                 raise CsmPermissionDenied("Normal user cannot delete other user",
                                           USERS_MSG_PERMISSION_DENIED, user_id)
@@ -329,8 +330,8 @@ class CsmUserService(ApplicationService):
         :param role: the new role value.
         :returns: None.
         """
-        user_role = user.role
-        loggedin_user_role = loggedin_user.role
+        user_role = user.user_role
+        loggedin_user_role = loggedin_user.user_role
         self_update = user.user_id == loggedin_user.user_id
 
         if password:
@@ -365,7 +366,7 @@ class CsmUserService(ApplicationService):
             if current_password is None:
                 msg = 'The current password is missing'
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
-            if not Passwd.verify(current_password, user.password_hash):
+            if not Passwd.verify(current_password, user.userPassword):
                 msg = 'The current password is not valid'
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
@@ -380,7 +381,7 @@ class CsmUserService(ApplicationService):
 
         password = new_values.get(const.PASS, None)
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
-        role = new_values.get('role', None)
+        role = new_values.get('user_role', None)
         reset_password = new_values.get('reset_password', None)
 
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
