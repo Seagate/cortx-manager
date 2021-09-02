@@ -17,12 +17,10 @@
 import crypt
 import os
 from cortx.utils.log import Log
-from cortx.utils.product_features import unsupported_features
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
 from cortx.utils.validator.v_pkg import PkgV
-from csm.common.payload import Json
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
@@ -54,9 +52,14 @@ class PostInstall(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
+            self.config_path = self._set_csm_conf_path()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+        service_name = command.options.get("service")
+        self.execute_web_and_cli(command.options.get("config_url"),service_name,command.sub_command_name)
+        if service_name not in ["all", "csm_agent"]:
+            return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()
         self.validate_3rd_party_pkgs()

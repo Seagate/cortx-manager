@@ -49,7 +49,6 @@ class Configure(Setup):
             "REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
-        Setup._copy_skeleton_configs()
 
     async def execute(self, command):
         """
@@ -59,16 +58,22 @@ class Configure(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            Conf.load(const.CSM_GLOBAL_INDEX, const.CSM_CONF_URL)
-            Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
+            self.config_path = self._set_csm_conf_path()
+            self._copy_skeleton_configs()
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                    f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+            Conf.load(const.DATABASE_INDEX,
+                    f"yaml://{self.config_path}/{const.DB_CONF_FILE_NAME}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
 
         self.force_action = command.options.get('f')
         Log.info(f"Force flag: {self.force_action}")
+        service_name = command.options.get("service")
+        self.execute_web_and_cli(command.options.get("config_url"),service_name,command.sub_command_name)
+        if service_name not in ["all", "csm_agent"]:
+            return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._validate_consul_service()
-        self._validate_es_service()
         self._set_deployment_mode()
         self._logrotate()
         self._configure_cron()
@@ -107,30 +112,6 @@ class Configure(Setup):
             const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
             })
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
-
-    def _validate_consul_service(self):
-        Log.info("Getting consul status")
-        # get host and port of consul database from conf
-        consul_hosts = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>hosts')
-        if not consul_hosts: raise CsmSetupError("Consul host not available.")
-        consul_hosts.append(const.LOCALHOST)
-        port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
-        if not port: raise CsmSetupError("Consul port not available.")
-        # Validation throws exception on failure
-        for host in consul_hosts:
-            ConsulV().validate('service', [host, port])
-
-    def _validate_es_service(self):
-        Log.info("Getting elasticsearch status")
-        # get host and port of consul database from conf
-        es_hosts = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>hosts')
-        if not es_hosts: raise CsmSetupError("Elasticsearch host not available.")
-        es_hosts.append(const.LOCALHOST)
-        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
-        if not port: raise CsmSetupError("Elasticsearch port not available.")
-        # Validation throws exception on failure
-        for host in es_hosts:
-            ElasticsearchV().validate('service', [host, port])
 
     def create(self):
         """

@@ -3,63 +3,6 @@
   "description": "CSM Setup Command",
   "sub_commands": [
     {
-      "name": "init",
-      "description": "Initialize CSM",
-      "need_confirmation": false,
-      "permissions_tag": "update",
-      "args": [
-        {
-          "flag": "--config",
-          "dest": "config_url",
-          "type": "str",
-          "help": "Config Store URL e.g <type>://<path>."
-        },
-        {
-          "flag": "-p",
-          "dest": "Product",
-          "help": "Product name",
-          "default": "cortx",
-          "type": "str",
-          "choices": [
-            "cortx"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "-f",
-          "action": "store_true",
-          "default": false,
-          "help": "force"
-        },
-        {
-          "flag": "-c",
-          "dest": "Component",
-          "help": "Component name",
-          "default": "all",
-          "type": "str",
-          "choices": [
-            "backend",
-            "frontend",
-            "all"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "args",
-          "default": [],
-          "suppress_help": true,
-          "nargs": "?"
-        }
-      ],
-      "comm": {
-        "type": "direct",
-        "target": "csm.conf.init",
-        "method": "execute",
-        "class": "Init",
-        "is_static": false
-      }
-    },
-    {
       "name": "post_install",
       "description": "Perform post_install for csm",
       "need_confirmation": false,
@@ -69,32 +12,20 @@
           "flag": "--config",
           "dest": "config_url",
           "type": "str",
-          "required": true,
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-          "flag": "-p",
-          "dest": "Product",
-          "help": "Product name",
-          "default": "cortx",
-          "type": "str",
-          "choices": [
-            "cortx"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "-c",
-          "dest": "Component",
-          "help": "Component name",
-          "default": "all",
-          "type": "str",
-          "choices": [
-            "backend",
-            "frontend",
-            "all"
-          ],
-          "nargs": "?"
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
         },
         {
           "flag": "-f",
@@ -131,28 +62,17 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-          "flag": "-p",
-          "dest": "Product",
-          "help": "Product name",
-          "default": "cortx",
-          "type": "str",
-          "choices": [
-            "cortx"
-          ],
-          "nargs": "?"
-        },
-        {
-          "flag": "-c",
-          "dest": "Component",
-          "help": "Component name",
-          "default": "all",
-          "type": "str",
-          "choices": [
-            "backend",
-            "frontend",
-            "all"
-          ],
-          "nargs": "?"
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
         },
         {
           "flag": "-f",
@@ -189,15 +109,17 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-          "flag": "-p",
-          "dest": "Product",
-          "help": "Product name",
-          "default": "cortx",
-          "type": "str",
-          "choices": [
-            "cortx"
-          ],
-          "nargs": "?"
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
         },
         {
           "flag": "-f",
@@ -210,19 +132,6 @@
           "action": "store_true",
           "default": false,
           "help": "config for dev mode"
-        },
-        {
-          "flag": "-c",
-          "dest": "Component",
-          "help": "Component name",
-          "default": "all",
-          "type": "str",
-          "choices": [
-            "backend",
-            "frontend",
-            "all"
-          ],
-          "nargs": "?"
         },
         {
           "flag": "args",
@@ -240,6 +149,52 @@
       }
     },
     {
+        "name": "init",
+        "description": "Initialize CSM",
+        "need_confirmation": false,
+        "permissions_tag": "update",
+        "args": [
+          {
+            "flag": "--config",
+            "dest": "config_url",
+            "type": "str",
+            "help": "Config Store URL e.g <type>://<path>."
+          },
+          {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+          {
+            "flag": "-f",
+            "action": "store_true",
+            "default": false,
+            "help": "force"
+          },
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?"
+          }
+        ],
+        "comm": {
+          "type": "direct",
+          "target": "csm.conf.init",
+          "method": "execute",
+          "class": "Init",
+          "is_static": false
+        }
+    },
+    {
       "name": "reset",
       "description": "Perform reset for csm",
       "need_confirmation": false,
@@ -250,6 +205,19 @@
             "dest": "config_url",
             "type": "str",
             "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
         },
         {
           "flag": "args",
@@ -344,6 +312,19 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+        {
           "flag": "args",
           "default": [],
           "suppress_help": true,
@@ -370,6 +351,19 @@
           "type": "str",
           "required": true,
           "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
         },
         {
           "flag": "args",
@@ -405,6 +399,19 @@
             "help": "Perform pre-factory cleanup"
           },
           {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+                "csm_agent",
+                "csm_web",
+                "cortxcli",
+                "all"
+            ],
+            "nargs": "?"
+        },
+          {
             "flag": "args",
             "default": [],
             "suppress_help": true,
@@ -418,6 +425,53 @@
           "class": "Cleanup",
           "is_static": false
         }
-    }
+    },
+    {
+        "name": "service",
+        "description": "Executes mini-provisioning phases for csm services",
+        "need_confirmation": false,
+        "permissions_tag": "update",
+        "args": [
+          {
+            "flag": "--config",
+            "dest": "config_url",
+            "type": "str",
+            "required": true,
+            "help": "Config Store URL e.g <type>://<path>."
+          },
+          {
+            "flag": "--service",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "choices": [
+              "csm_agent",
+              "csm_web",
+              "cortxcli",
+              "all"
+            ],
+            "nargs": "?"
+          },
+          {
+            "flag": "-f",
+            "action": "store_true",
+            "default": false,
+            "help": "force"
+          },
+          {
+            "flag": "args",
+            "default": [],
+            "suppress_help": true,
+            "nargs": "?"
+          }
+        ],
+        "comm": {
+          "type": "direct",
+          "target": "csm.conf.setup_service",
+          "method": "execute",
+          "class": "Setup_Service",
+          "is_static": false
+        }
+      }
   ]
 }
