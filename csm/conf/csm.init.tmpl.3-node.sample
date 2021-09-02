@@ -10,7 +10,7 @@
         "web_protocol": "https",
         "web_port": "443",
         "log_level": "INFO",
-        "log_path": "/var/log/cortx/csm"
+        "log_path": "/var/log/cortx"
       },
       "openldap": {
         "sgiam": {

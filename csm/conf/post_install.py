@@ -210,6 +210,20 @@ class PostInstall(Setup):
         os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
         if os.path.exists(const.RSYSLOG_DIR):
             Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
+            csm_setup_log_path = self._get_log_path_from_conf_store + "/csm_setup.log"
+            csm_agent_log_path = self._get_log_path_from_conf_store + "/csm_agent.log"
+            cortxcli_log_path = self._get_log_path_from_conf_store + "/cortxcli.log"
+
+            rsys_log_conf = Text(const.RSYSLOG_PATH).load()
+            if not rsys_log_conf:
+                Log.warn(f"File {const.CSM_LOGROTATE_DEST} not updated.")
+            else:
+                updated_data = rsys_log_conf.replace("<CSM_AGENT_LOG_PATH>",
+                                csm_agent_log_path).replace("<CSM_SETUP_LOG_PATH>",
+                                csm_setup_log_path).replace("<CORTXCLI_LOG_PATH>",
+                                cortxcli_log_path)
+                Text(const.CSM_LOGROTATE_DEST).dump(updated_data)
+
             Log.info("Restarting rsyslog service")
             service_obj = Service('rsyslog.service')
             service_obj.restart()

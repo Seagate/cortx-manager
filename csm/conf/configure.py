@@ -154,6 +154,15 @@ class Configure(Setup):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
+
+            csm_agent_log_conf_data = Text(const.CSM_LOGROTATE_DEST).load()
+            if not csm_agent_log_conf_data:
+                Log.warn(f"File {const.CSM_LOGROTATE_DEST} not updated.")
+            else:
+                updated_data = csm_agent_log_conf_data.replace("<CSM_AGENT_LOG_PATH>",
+                                                   self._get_log_path_from_conf_store())
+                Text(const.CSM_LOGROTATE_DEST).dump(updated_data)
+
             if (self._setup_info and self._setup_info[
                 const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
@@ -231,9 +240,8 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, "Log>log_level",
                 self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
                     {const.CSM_COMPONENT_NAME}>{const.LOG_LEVEL_KEY}", const.LOG_LEVEL))
-        Conf.set(const.CSM_GLOBAL_INDEX, "Log>log_path",
-                self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
-                    {const.CSM_COMPONENT_NAME}>{const.LOG_PATH_KEY}", const.CSM_LOG_PATH))
+        log_path = self._get_log_path_from_conf_store()
+        Conf.set(const.CSM_GLOBAL_INDEX, "Log>log_path", log_path)
         Conf.set(const.CSM_GLOBAL_INDEX, "S3>host",
                 self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
                     {const.S3}>{const.SERVICE}>{const.HOST}", const.LOCALHOST))

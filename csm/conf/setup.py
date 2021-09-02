@@ -188,6 +188,13 @@ class Setup:
         Log.info(f"Fetch {key}: {value}")
         return value
 
+    def _get_log_path_from_conf_store(self):
+        log_path = self._fetch_key_value(f"{const.CORTX}>{const.SOFTWARE}> \
+                    {const.CSM_COMPONENT_NAME}>{const.LOG_PATH_KEY}", const.CSM_LOG_PATH)
+        if log_path and log_path.find(const.CSM_COMPONENT_NAME) == -1:
+            log_path = log_path + f"/{const.CSM_COMPONENT_NAME}/"
+        return log_path
+
     @staticmethod
     def _run_cmd(cmd):
         """
