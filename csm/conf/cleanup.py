@@ -88,7 +88,6 @@ class Cleanup(Setup):
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
-
     def files_directory_cleanup(self):
         '''
         Cleanup CSM config and Remove Log directory
