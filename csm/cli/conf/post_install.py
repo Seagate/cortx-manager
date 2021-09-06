@@ -15,7 +15,6 @@
 
 
 import os
-
 from cortx.utils.service.service_handler import Service
 from csm.common.payload import Text
 from cortx.utils.log import Log
