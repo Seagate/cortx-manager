@@ -273,12 +273,17 @@ class TimelionProvider(TimeSeriesProvider):
         elif total_sample != "":
             try:
                 interval = str(int(diff_sec / int(total_sample))) + 's'
-            except (ValueError, ZeroDivisionError):
+            except (ValueError, ZeroDivisionError, TypeError):
                 raise InvalidRequest("'total_sample' should be integer and greater than zero")
         elif interval != "":
-            interval = str(int(interval)) + 's'
-        else:
-            raise CsmInternalError("Unable to parse interval")
+            try:
+                interval = int(interval)
+                if interval < 1:
+                    raise InvalidRequest("'interval' should be integer and greater than zero")
+                else:
+                    interval = str(int(interval)) + 's'
+            except (ValueError, TypeError):
+                raise InvalidRequest("'interval' should be integer and greater than zero")
         return interval, duration_t, from_t
 
     async def _update_index(self, metric, from_t, duration_t):
