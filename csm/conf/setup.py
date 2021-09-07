@@ -592,15 +592,37 @@ class Setup:
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                              "Failure")
-            Setup._update_csm_files("#< RESTART_OPTION >",
+            Setup._update_systemd_conf("#< RESTART_OPTION >",
                                       "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
-    def _update_csm_files(key, value):
+    def _is_use_systemd() -> bool:
+        """
+        Check if systemd should be used for the current set up.
+
+        :returns: True if systemd should be used.
+        """
+
+        env_type = Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE_KEY, None)
+        return env_type in [const.HW, const.VM]
+
+    @staticmethod
+    def _copy_systemd_configuration():
+        if not Setup._is_use_systemd():
+            Log.warn('SystemD is not used in this environment and will not be set up')
+            return
+        Setup._run_cmd(f"cp {const.CSM_AGENT_SERVICE_SRC_PATH} {const.CSM_AGENT_SERVICE_FILE_PATH}")
+        Setup._run_cmd(f"cp {const.CSM_WEB_SERVICE_SRC_PATH} {const.CSM_WEB_SERVICE_FILE_PATH}")
+
+    @staticmethod
+    def _update_systemd_conf(key, value):
         """
         Update CSM Files Depending on Job Type of Setup.
         """
+        if Setup._is_use_systemd():
+            Log.warn('SystemD is not used in this environment and will not be updated')
+            return
         Log.info(f"Update file for {key}:{value}")
         for each_file in const.CSM_FILES:
             service_file_data = Text(each_file).load()
