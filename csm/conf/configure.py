@@ -69,9 +69,9 @@ class Configure(Setup):
 
         self.force_action = command.options.get('f')
         Log.info(f"Force flag: {self.force_action}")
-        service_name = command.options.get("service")
+        service_name = command.options.get("services")
         self.execute_web_and_cli(command.options.get("config_url"),service_name,command.sub_command_name)
-        if service_name not in ["all", "csm_agent"]:
+        if service_name not in ["all", "agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
         self._set_deployment_mode()

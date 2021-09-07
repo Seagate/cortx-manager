@@ -57,10 +57,10 @@ class Prepare(Setup):
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
 
-        service_name = command.options.get("service")
+        service_name = command.options.get("services")
         self.execute_web_and_cli(command.options.get("config_url"), service_name,
                                                  command.sub_command_name)
-        if service_name not in ["all", "csm_agent"]:
+        if service_name not in ["all", "agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
         self._prepare_and_validate_confstore_keys()

@@ -15,14 +15,14 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -62,14 +62,14 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -109,14 +109,14 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -161,14 +161,14 @@
             "help": "Config Store URL e.g <type>://<path>."
           },
           {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -207,14 +207,14 @@
             "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -312,14 +312,14 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -353,14 +353,14 @@
           "help": "Config Store URL e.g <type>://<path>."
         },
         {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -393,14 +393,14 @@
             "help": "Config Store URL e.g <type>://<path>."
           },
           {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-                "csm_agent",
-                "csm_web",
-                "cortxcli",
+                "agent",
+                "web",
+                "cli",
                 "all"
             ],
             "nargs": "?"
@@ -434,14 +434,14 @@
             "help": "Config Store URL e.g <type>://<path>."
           },
           {
-            "flag": "--service",
+            "flag": "--services",
             "help": "Run csm-service miniprovisioning",
             "default": "all",
             "type": "str",
             "choices": [
-              "csm_agent",
-              "csm_web",
-              "cortxcli",
+              "agent",
+              "web",
+              "cli",
               "all"
             ],
             "nargs": "?"

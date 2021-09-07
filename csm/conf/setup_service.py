@@ -42,9 +42,9 @@ class Setup_Service(Setup):
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
-        service_name = command.options.get("service")
+        service_name = command.options.get("services")
         config_url = command.options.get("config_url")
-        if service_name in ["all", "csm_agent"]:
+        if service_name in ["all", "agent"]:
             #Execute only csm-setup
             for each_phase in ["post_install", "prepare", "config", "init"]:
                 Log.info(f"Executing Csm-Setup -> {each_phase} phase")
