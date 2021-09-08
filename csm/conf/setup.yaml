@@ -16,19 +16,19 @@
 csm:
     post_install:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup post_install
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     prepare:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup prepare
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     config:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup config
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     init:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup init
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     test:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup test
@@ -38,20 +38,20 @@ csm:
 
     cleanup:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup cleanup
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     reset:
         cmd: /opt/seagate/cortx/csm/bin/csm_setup reset
-        args: --config $URL [--service $service_name]
+        args: --config $URL
 
     upgrade:
       pre:
           cmd: /opt/seagate/cortx/csm/bin/csm_setup pre_upgrade
-          args: --config $URL [--service $service_name]
+          args: --config $URL
 
       post:
           cmd: /opt/seagate/cortx/csm/bin/csm_setup post_upgrade
-          args: --config $URL [--service $service_name]
+          args: --config $URL
 
 usl:
     post_install:
