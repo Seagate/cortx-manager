@@ -144,6 +144,7 @@ DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 DATABASE_CLI_CONF = '/etc/cli/database_cli.yaml'
 CSM_AGENT_SERVICE = "csm_agent.service"
 CSM_AGENT_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_AGENT_SERVICE}"
+CSM_AGENT_SERVICE_FILE_SRC_PATH = f"{CSM_PATH}/conf/service/{CSM_AGENT_SERVICE}"
 CSM_WEB_SERVICE = "csm_web.service"
 CSM_WEB_SERVICE_FILE_PATH = f"/etc/systemd/system/{CSM_WEB_SERVICE}"
 CSM_WEB_ENV_FILE_PATH = f"{BASE_DIR}/csm/web/.env"
