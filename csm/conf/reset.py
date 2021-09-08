@@ -29,7 +29,7 @@ from cortx.utils.validator.error import VError
 
 class Reset(Setup):
     """
-    Reset Csm User Data.
+    Reset csm Configuration.
     """
     def __init__(self):
         super(Reset, self).__init__()
@@ -71,9 +71,6 @@ class Reset(Setup):
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def disable_and_stop_service(self):
-        '''
-        Stop and Disable CSM services
-        '''
         for each_service in [const.CSM_AGENT_SERVICE, const.CSM_WEB_SERVICE]:
             try:
                 service_obj = Service(each_service)
@@ -96,9 +93,6 @@ class Reset(Setup):
                 Log.warn(f"{each_service} not available: {e}")
 
     def directory_cleanup(self):
-        '''
-        Remove CSM Data directories
-        '''
         Log.info("Deleting files and folders")
 
         files_directory_list = [
@@ -111,27 +105,20 @@ class Reset(Setup):
             Setup._run_cmd(f"rm -rf {_path}")
 
     def reset_logs(self):
-        '''
-        Reset CSM logs. Removal will be part of Cleanup
-        '''
         Log.info("Reseting log files")
         log_dir = Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
         csm_log_files = ["csm_agent.log", "csm_middleware.log", "cortxcli.log"]
         all_log_files = os.listdir(log_dir)
         for each_file in all_log_files:
             if each_file in csm_log_files:
-                # Reseting current log files
                 _file = os.path.join(log_dir, each_file)
                 Setup._run_cmd(f"truncate -s 0 {_file}")
             else:
-                # Remove other files.i.e. older log tar.gz files etc
                 _file = os.path.join(log_dir, each_file)
                 Setup._run_cmd(f"rm -rf {each_file}")
 
     async def db_cleanup(self):
-        '''
-        Remove User created ES and Consul data
-        '''
+
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         self._es_db_url = (f"http://localhost:{port}/")
         port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')

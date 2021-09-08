@@ -27,7 +27,7 @@ from cortx.utils.validator.error import VError
 
 class Cleanup(Setup):
     """
-    Delete all the CSM generated files,folders, Configs and Non user collected data.
+    Delete all the CSM generated files and folders
     """
 
     def __init__(self):
@@ -89,15 +89,12 @@ class Cleanup(Setup):
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def files_directory_cleanup(self):
-        '''
-        Cleanup CSM config and Remove Log directory
-        '''
         files_directory_list = [
             const.RSYSLOG_PATH,
             const.CSM_LOGROTATE_DEST,
             const.DEST_CRON_PATH,
-            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path'),
-            const.CSM_CONF_PATH
+            const.CSM_CONF_PATH,
+            Conf.get(const.CSM_GLOBAL_INDEX, 'Log>log_path')
         ]
 
         for dir_path in files_directory_list:
@@ -105,12 +102,9 @@ class Cleanup(Setup):
             Setup._run_cmd(f"rm -rf {dir_path}")
 
     def web_env_file_cleanup(self):
-        '''
-        Web config (.env) Cleanup
-        '''
-        Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
-                                        f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
-        Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+       Log.info(f"Replacing {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
+                                    f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
+       Setup._run_cmd(f"cp -f {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl " \
                                     f"{const.CSM_WEB_DIST_ENV_FILE_PATH}")
 
     def cleanup_ldap_config(self):
@@ -186,9 +180,6 @@ class Cleanup(Setup):
         self._disconnect_from_ldap()
 
     async def _unsupported_feature_entry_cleanup(self):
-        '''
-        Remove CSM Unsupported features entries
-        '''
         Log.info("Unsupported feature cleanup")
         port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
         _es_db_url = (f"http://localhost:{port}/")
