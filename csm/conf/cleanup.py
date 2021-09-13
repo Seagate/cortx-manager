@@ -41,7 +41,7 @@ class Cleanup(Setup):
             Conf.load(const.DATABASE_INDEX, const.DATABASE_CONF_URL)
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        if command.options.get("pre-factory"):
+        if command.options.get("pre_factory"):
             # Pre-Factory: Cleanup system & take to pre-factory (Postinstall) stage
             self._replace_csm_service_file()
             self._service_user_cleanup()
