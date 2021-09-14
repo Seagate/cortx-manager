@@ -245,10 +245,11 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
+    if not Options.start:
+        os._exit(1)
     from csm.common.conf import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
-    from csm.common.payload import Yaml
-    from csm.common.payload import Payload, Json, JsonMessage, Dict
+    from csm.common.payload import Yaml, Json
     from csm.common.template import Template
     from csm.core.blogic import const
     from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
@@ -268,23 +269,20 @@ if __name__ == '__main__':
     from csm.core.services.hotfix_update import HotfixApplicationService
     from csm.core.repositories.update_status import UpdateStatusRepository
     from csm.core.email.email_queue import EmailSenderQueue
-    from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
     from csm.core.services.onboarding import OnboardingConfigService
     from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
 
     from csm.common.timeseries import TimelionProvider
     from csm.common.conf import Security
-    from csm.common.ha_framework import CortxHAFramework, PcsHAFramework
+    from csm.common.ha_framework import CortxHAFramework
     from cortx.utils.cron import CronJob
     from csm.core.services.maintenance import MaintenanceAppService
-    from cortx.utils.data.db.elasticsearch_db.storage import ElasticSearchDB
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
     from csm.core.services.audit_log import  AuditLogManager, AuditService
     from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
-    from cortx.utils.security.cipher import Cipher, CipherInvalidToken
     from csm.core.services.version import ProductVersionService
     from csm.core.services.appliance_info import ApplianceInfoService
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
