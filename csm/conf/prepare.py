@@ -258,7 +258,7 @@ class Prepare(Setup):
 
     def _set_ldap_port(self):
         """
-        Sets ldap port address in database.yaml.
+        Sets ldap port address in database.conf.
         :return:
         """
         ldap_port = self._get_ldap_port_addr()

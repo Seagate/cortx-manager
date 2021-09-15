@@ -84,7 +84,7 @@ class Configure(Setup):
             self._set_user_collection()
             if not self._replacement_node_flag:
                 self.create()
-            await Setup._create_cluster_admin(self.force_action)
+            await self._create_cluster_admin(self.force_action)
             for count in range(0, 10):
                 try:
                     await self._set_unsupported_feature_info()
@@ -336,7 +336,7 @@ class Configure(Setup):
 
     def _set_user_collection(self):
         """
-        Sets collection for User model in database.yaml
+        Sets collection for User model in database.conf
         :return:
         """
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
