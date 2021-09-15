@@ -36,7 +36,7 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CORTX_CONFIG_DIR}/{const.CSM_CONF_FILE_NAME}")
+        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.CSM_CONF_FILE_NAME}")
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
@@ -52,7 +52,7 @@ class CsmAgent:
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        db_config = Yaml(f"{const.CORTX_CONFIG_DIR}/{const.DB_CONF_FILE_NAME}").load()
+        db_config = Yaml(f"{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}").load()
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(
@@ -68,7 +68,7 @@ class CsmAgent:
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        Conf.load(const.DATABASE_INDEX, f"yaml://{const.CORTX_CONFIG_DIR}/{const.DB_CONF_FILE_NAME}")
+        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}")
 
         #Remove all Old Shutdown Cron Jobs
         CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
@@ -238,14 +238,26 @@ class CsmAgent:
         Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")
 
+    @staticmethod
+    def usage(prog: str):
+        """ Print usage instructions """
+
+        sys.stderr.write(
+            f"usage: {prog} [-h] {{start}} [--debug]\n"
+            f"where:\n"
+            f"start   Start csm_agent\n"
+            f"--debug   Enter debug mode\n")
+
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
+    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..','..'))
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    if not Options.start:
+    if not Options.start or len(sys.argv) < 2 or "-h" in sys.argv:
+        CsmAgent.usage(sys.argv[0])
         os._exit(1)
     from csm.common.conf import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
