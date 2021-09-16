@@ -807,3 +807,8 @@ CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
 DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'
 DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
+
+# Aiohttp-apispec constants
+MATCH_INFO_SCHEMA = 'match_info'
+QUERYSTRING_SCHEMA = 'querystring'
+JSON_SCHEMA = 'json'

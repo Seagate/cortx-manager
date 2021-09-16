@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from aiohttp_apispec import docs, querystring_schema, json_schema
 import json
 from marshmallow import Schema, fields, validate, pre_load, post_load
 from marshmallow.exceptions import ValidationError
@@ -108,22 +109,34 @@ class CsmUsersListView(CsmView):
     """
     GET REST implementation for fetching csm users
     """
+    @docs(
+        tags=["users"],
+        summary="Get the list of users",
+        responses={
+            200: {'description': 'Ok, users list'},
+            401: {'description': 'Unauthorized'}
+        }
+    )
+    @querystring_schema(CsmGetUsersSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling csm users fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
-        csm_schema = CsmGetUsersSchema()
-        try:
-            request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
-        except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid parameter for user", str(val_err))
-        users = await self._service.get_user_list(**request_data)
+        users = await self._service.get_user_list(**self.request[const.QUERYSTRING_SCHEMA])
         return {'users': users}
 
     """
     POST REST implementation for creating a csm user
     """
+    @docs(
+        tags=["users"],
+        summary="Create a new user",
+        responses={
+            201: {'description': 'Ok, users is created'},
+            401: {'description': 'Unauthorized'}
+        }
+    )
+    @json_schema(CsmUserCreateSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         Log.debug("Handling users post request.")
@@ -131,23 +144,15 @@ class CsmUsersListView(CsmView):
         creator = self.request.session.credentials.user_id if self.request.session else None
         Log.debug(f"User ID {creator}")
 
-        try:
-            schema = CsmUserCreateSchema()
-            user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing: {jde}")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
-
         await self.check_max_user_limit()
 
         s3_account = await self.request.app["s3_account_service"].get_account(
-            user_body['user_id'])
+            self.request[const.JSON_SCHEMA]['user_id'])
         if s3_account is not None:
             raise InvalidRequest("S3 account with same name as passed CSM username already exists")
 
-        user_body['creator_id'] = creator
-        response = await self._service.create_user(**user_body)
+        self.request[const.JSON_SCHEMA]['creator_id'] = creator
+        response = await self._service.create_user(**self.request[const.JSON_SCHEMA])
         return CsmResponse(response, const.STATUS_CREATED)
 
 
@@ -162,6 +167,14 @@ class CsmUsersView(CsmView):
     """
     GET REST implementation for csm account get request
     """
+    @docs(
+        tags=["users"],
+        summary="Get the single CSM user",
+        responses={
+            200: {'description': 'Ok, user description'},
+            401: {'description': 'Unauthorized'}
+        }
+    )
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         Log.debug(f"Handling get csm account request."
@@ -172,6 +185,14 @@ class CsmUsersView(CsmView):
     """
     DELETE REST implementation for csm account delete request
     """
+    @docs(
+        tags=["users"],
+        summary="Delete the user",
+        responses={
+            200: {'description': 'Ok, users is deleted'},
+            401: {'description': 'Unauthorized'}
+        }
+    )
     @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
         Log.debug(f"Handling delete csm account request."
@@ -188,21 +209,20 @@ class CsmUsersView(CsmView):
     """
     PATCH implementation for creating a csm user
     """
+    @docs(
+        tags=["users"],
+        summary="Update the CSM user",
+        responses={
+            201: {'description': 'Ok, users is updated'},
+            401: {'description': 'Unauthorized'}
+        }
+    )
+    @json_schema(CsmUserPatchSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def patch(self):
         Log.debug(f"Handling users patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
-
-        try:
-            schema = CsmUserPatchSchema()
-            user_body = schema.load(await self.request.json(), partial=True,
-                                    unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing {jde}")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request body: {val_err}")
-
-        resp = await self._service.update_user(user_id, user_body,
+        resp = await self._service.update_user(user_id, self.request[const.JSON_SCHEMA],
                                                self.request.session.credentials.user_id)
         return resp

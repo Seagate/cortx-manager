@@ -25,6 +25,7 @@ from concurrent.futures import CancelledError as ConcurrentCancelledError
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
+from aiohttp_apispec import setup_aiohttp_apispec, validation_middleware
 from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
@@ -107,7 +108,8 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._wsclients = WeakSet()
 
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers,
+            middlewares=[validation_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
@@ -214,6 +216,8 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     async def _is_public(request):
+        if "/api/docs" in str(request.rel_url):
+            return True
         handler = await CsmRestApi._resolve_handler(request)
         return CsmView.is_public(handler, request.method)
 
@@ -440,6 +444,13 @@ class CsmRestApi(CsmApi, ABC):
         else:
             ssl_context = None
 
+        setup_aiohttp_apispec(
+            app=CsmRestApi._app,
+            title="CORTX Manager",
+            version="v2",
+            url="/api/docs/swagger.json",
+            swagger_path="/api/docs",
+        )
         web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
     @staticmethod
