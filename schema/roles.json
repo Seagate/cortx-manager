@@ -15,7 +15,8 @@
             "security": ["read", "update"],
             "lyve_pilot": ["list", "update"],
             "replace_node": ["create", "list"],
-            "health": ["list"]
+            "health": ["list"],
+            "cluster_management": ["create", "list"]
         }
     },
     "manage":{
@@ -30,8 +31,8 @@
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
             "health": ["list"],
-            "security": ["read"]
-
+            "security": ["read"],
+			"cluster_management": ["create", "list"]
         }
     },
     "monitor": {
