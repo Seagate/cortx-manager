@@ -65,7 +65,6 @@ class Setup:
         Log.info(f"Copying Csm config skeletons to {self.config_path}")
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF} {self.config_path}")
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
-        Setup._run_cmd(f"cp -rn {const.INVENTORY_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
         conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>software>csm>conf_path",
@@ -102,13 +101,13 @@ class Setup:
         for each_phase in phase_name:
             if self.csm_web_setup_flag and service_name in ['all',"csm_web"]:
                 # Csm_web_setup will internally execute cli_setup if CLI RPM installed
-                Log.info("Executing Csm-web-Setup")
+                Log.info("~~~Executing Csm-web-Setup~~~")
                 Setup._run_cmd(f"csm_web_setup {each_phase} --config {config_url}")
 
             if self.cli_setup_flag and service_name in ["all","cortxcli"] and \
                                                 service_name not in ["csm_web"]:
                 #Execute only cli-setup
-                Log.info("Executing Cli-Setup")
+                Log.info("~~~Executing Cli-Setup~~~")
                 Setup._run_cmd(f"cli_setup {each_phase} --config {config_url}")
 
     @staticmethod
@@ -501,22 +500,6 @@ class Setup:
             Log.info("Reset config")
             os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
             Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
-
-    # TODO: Need to remove unused code after proper testing.
-    # def _config_cluster(self, args):
-    #     """
-    #     Instantiation of csm cluster with resources
-    #     Create csm user
-    #     """
-    #     Log.info("Instantiation of csm cluster with resources")
-    #     self._csm_resources = Conf.get(const.CSM_GLOBAL_INDEX, "HA>resources")
-    #     self._csm_ra = {
-    #         "csm_resource_agent": CsmResourceAgent(self._csm_resources)
-    #     }
-    #     self._ha_framework = PcsHAFramework(self._csm_ra)
-    #     self._cluster = Cluster(const.INVENTORY_FILE, self._ha_framework)
-    #     self._cluster.init(args['f'])
-    #     CsmApi.set_cluster(self._cluster)
 
     def _log_cleanup(self):
         """
