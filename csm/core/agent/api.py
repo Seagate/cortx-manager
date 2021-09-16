@@ -66,12 +66,7 @@ class CsmApi(ABC):
     @staticmethod
     def init():
         """ API server initialization. Validates and Loads configuration """
-
-        # Validate configuration files are present
-        inventory_file = const.INVENTORY_FILE
-        if not os.path.isfile(inventory_file):
-            raise CsmError(errno.ENOENT,
-                           'cluster config file %s does not exist' % inventory_file)
+        pass
 
     @staticmethod
     def get_cluster():

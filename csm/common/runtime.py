@@ -22,7 +22,9 @@ class Options:
     """
 
     debug = False
+    start = False
 
     @classmethod
     def parse(cls, args: List[str]) -> None:
         cls.debug = '--debug' in args
+        cls.start = 'start' in args
