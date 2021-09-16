@@ -875,3 +875,7 @@ LOG_PATH = 'Log>log_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
 S3_AUTH_USER_CONF = 'S3>ldap_login'
 S3_AUTH_SECRET_CONF = 'S3>ldap_password'
+# Aiohttp-apispec constants
+MATCH_INFO_SCHEMA = 'match_info'
+QUERYSTRING_SCHEMA = 'querystring'
+JSON_SCHEMA = 'json'
