@@ -59,6 +59,7 @@ class Setup:
         self._ldap_conn = None
         const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Conf.machine_id}"
         self.conf_store_keys = {}
+        self._set_csm_rpm_flag()
 
     def _copy_skeleton_configs(self):
         Log.info(f"Copying Csm config skeletons to {self.config_path}")
@@ -66,7 +67,7 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
-        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>common>storage>confi",
+        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>software>csm>conf_path",
                                                      const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
@@ -74,40 +75,40 @@ class Setup:
         Log.info(f"Setting Config saving path:{conf_path} from confstore")
         return conf_path
 
-    def execute_web_and_cli(self,config_url,  service_list, phase_name):
+    def _set_csm_rpm_flag(self):
         self._setup_rpm_map = {
-                            "agent":"cortx-csm_agent",
-                            "web":"cortx-csm_web",
-                            "cli":"cortx-cli"
+                            "csm_setup":"cortx-csm_agent",
+                            "csm_web_setup":"cortx-csm_web",
+                            "cli_setup":"cortx-cli"
                         }
-
-        if "web" in service_list:
-            Log.info("~~~Validate Web rpm and Csm-web-Setup executable~~~")
-            # Csm_web_setup will internally execute cli_setup if CLI RPM installed
+        for each_name,each_rpm in self._setup_rpm_map.items():
             try:
-                PkgV().validate("rpms", [self._setup_rpm_map.get("web")])
-                PathV().validate("exists" ,[f"link:/usr/bin/csm_web_setup"])
-                Log.info(f"{self._setup_rpm_map.get('web')} installed")
+                PkgV().validate("rpms", [each_rpm])
+                PathV().validate("exists" ,[f"link:/usr/bin/{each_name}"])
+                setattr(self, f"{each_name}_flag", True)
+                Log.info(f"{each_rpm} installed. Setting {each_name}_flag as True")
             except VError as ve:
-                Log.warn(f"{self._setup_rpm_map.get('web')} not installed")
-                raise CsmSetupError(f"{self._setup_rpm_map.get('web')} not installed.")
+                Log.warn(f"{each_rpm} not installed. Setting {each_name}_flag as False")
+                setattr(self, f"{each_name}_flag", False)
 
-            Log.info("~~~Executing Csm-web-Setup~~~")
-            Setup._run_cmd(f"csm_web_setup {phase_name} --config {config_url}")
+    def execute_web_and_cli(self,config_url,service_name, phase_name='all'):
 
-        if "cli" in service_list and "web" not in service_list:
-            #Execute only cli-setup
-            Log.info("~~~Validate Cli rpm and Cli-Setup executable~~~")
-            try:
-                PkgV().validate("rpms", [self._setup_rpm_map.get("cli")])
-                PathV().validate("exists" ,[f"link:/usr/bin/cli_setup"])
-                Log.info(f"{self._setup_rpm_map.get('cli')} installed")
-            except VError as ve:
-                Log.warn(f"{self._setup_rpm_map.get('cli')} not installed")
-                raise CsmSetupError(f"{self._setup_rpm_map.get('cli')} not installed.")
+        if phase_name == 'all':
+            phase_name = ["post_install", "prepare", "config", "init"]
+        else:
+            phase_name = [phase_name]
 
-            Log.info("~~~Executing Cli-Setup~~~")
-            Setup._run_cmd(f"cli_setup {phase_name} --config {config_url}")
+        for each_phase in phase_name:
+            if self.csm_web_setup_flag and service_name in ['all',"csm_web"]:
+                # Csm_web_setup will internally execute cli_setup if CLI RPM installed
+                Log.info("~~~Executing Csm-web-Setup~~~")
+                Setup._run_cmd(f"csm_web_setup {each_phase} --config {config_url}")
+
+            if self.cli_setup_flag and service_name in ["all","cortxcli"] and \
+                                                service_name not in ["csm_web"]:
+                #Execute only cli-setup
+                Log.info("~~~Executing Cli-Setup~~~")
+                Setup._run_cmd(f"cli_setup {each_phase} --config {config_url}")
 
     @staticmethod
     async def request(url, method, json=None):
