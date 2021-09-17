@@ -57,7 +57,7 @@ class Setup:
         self._is_env_vm = False
         self._is_env_dev = False
         self._ldap_conn = None
-        const.SERVER_NODE_INFO = f"{const.SERVER_NODE}>{Conf.machine_id}"
+        self.machine_id = Conf.machine_id
         self.conf_store_keys = {}
         self._set_csm_rpm_flag()
 
@@ -67,8 +67,7 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
-        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>software>csm>conf_path",
-                                                     const.CORTX_CONFIG_DIR)
+        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>common>storage>config", const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
             os.makedirs(conf_path, exist_ok=True)
@@ -239,16 +238,16 @@ class Setup:
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>username",
+                                    const.CSM_AGENT_MGMT_ADMIN_KEY,
                                     const.DEFAULT_CLUSTER_ADMIN_USER)
         cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>secret",
+                                    const.CSM_AGENT_MGMT_SECRET_KEY,
                                     const.DEFAULT_CLUSTER_ADMIN_PASS)
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>cluster_credential>emailid",
+                                    const.CSM_AGENT_EMAIL_KEY,
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+                                    const.OPENLDAP_BASEDN_KEY)
         Security.decrypt_conf()
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
@@ -460,6 +459,28 @@ class Setup:
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
 
+    def _parse_endpoints(self, url):
+        # TODO: remove commets
+        #url = "ldap://oldap-server.cortx-cluster.lyve-cloud.com:389"
+        #parsed_url = urlparse(url)
+        #protocol = parsed_url.scheme
+        #host = parsed_url.hostname
+        #port = parsed_url.port
+        #return protocol, host, port
+        if "://"in url:
+            protocol, endpoint = url.split("://")
+        else:
+            protocol = ''
+            endpoint = url
+        host, port = endpoint.split(":")
+        return protocol, host, port
+
+    def _get_log_path_from_conf_store(self):
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY, const.CSM_LOG_PATH)
+        if log_path and log_path.find(const.CSM_COMPONENT_NAME) == -1:
+            log_path = log_path + f"/{const.CSM_COMPONENT_NAME}/"
+        return log_path
+
     class Config:
         """
         Action for csm config
@@ -580,7 +601,7 @@ class Setup:
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
-    def _is_use_systemd() -> bool:
+    def is_not_K8S() -> bool:
         """
         Check if systemd should be used for the current set up.
 
@@ -592,7 +613,7 @@ class Setup:
 
     @staticmethod
     def _copy_systemd_configuration():
-        if not Setup._is_use_systemd():
+        if not Setup.is_not_K8S():
             Log.warn('SystemD is not used in this environment and will not be set up')
             return
         Setup._run_cmd(f"cp {const.CSM_AGENT_SERVICE_SRC_PATH} {const.CSM_AGENT_SERVICE_FILE_PATH}")
@@ -603,7 +624,7 @@ class Setup:
         """
         Update CSM Files Depending on Job Type of Setup.
         """
-        if Setup._is_use_systemd():
+        if Setup.is_not_K8S():
             Log.warn('SystemD is not used in this environment and will not be updated')
             return
         Log.info(f"Update file for {key}:{value}")
@@ -648,3 +669,6 @@ class CsmSetup(Setup):
         except Exception as e:
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
+
+        
+    

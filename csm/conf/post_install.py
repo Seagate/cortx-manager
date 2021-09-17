@@ -61,15 +61,17 @@ class PostInstall(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._set_deployment_mode()
+        #TODO: Confirm its usage add it back if neccessary
         self.validate_3rd_party_pkgs()
-        self._copy_systemd_configuration()
-        self._config_user()
-        if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
-            self._configure_system_auto_restart()
-        self._configure_service_user()
-        self._configure_rsyslog()
-        self._allow_access_to_pvt_ports()
+        if Setup.is_not_K8S():
+            self._set_deployment_mode()
+            self._copy_systemd_configuration()
+            self._config_user()
+            if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
+                self._configure_system_auto_restart()
+            self._configure_service_user()
+            self._configure_rsyslog()
+            self._allow_access_to_pvt_ports()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _allow_access_to_pvt_ports(self):
@@ -77,12 +79,18 @@ class PostInstall(Setup):
         Setup._run_cmd("setcap CAP_NET_BIND_SERVICE=+ep /opt/nodejs/node-v12.13.0-linux-x64/bin/node")
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
-            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-            })
+        if Setup.is_not_K8S():
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO: f"{const.SERVER_NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
+                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+                })
+        else:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}"
+                })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:

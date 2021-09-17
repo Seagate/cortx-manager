@@ -74,18 +74,19 @@ class Configure(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._set_deployment_mode()
-        self._logrotate()
-        self._configure_cron()
-        self._configure_uds_keys()
-        self._configure_csm_web_keys()
+        if Setup.is_not_K8S():
+            self._set_deployment_mode()
+            self._logrotate()
+            self._configure_cron()
+            self._configure_uds_keys()
+            self._configure_csm_web_keys()
         try:
-            self._configure_csm_ldap_schema()
-            self._set_user_collection()
-            if not self._replacement_node_flag:
-                self.create()
+            # TODO: Remove commets after open ldap configurations
+            #self._configure_csm_ldap_schema()
+            #self._set_user_collection()
+            self.create()
             await self._create_cluster_admin(self.force_action)
-            for count in range(0, 10):
+            for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
                     break
@@ -101,16 +102,27 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
-            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
-            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
-            })
+        if Setup.is_not_K8S():
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
+                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+                const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE}>{self.machine_id}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
+                const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+                const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+                })
+        else:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
+                # TODO: confirm following keys:
+                const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.KEY_ROOT_LDAP_USER: f"{const.OPENLDAP_ADMIN_KEY}",
+                const.KEY_ROOT_LDAP_SCRET: f"{const.OPENLDAP_SECRET_KEY}"
+                })
+
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def create(self):
@@ -152,6 +164,13 @@ class Configure(Setup):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
+            csm_agent_log_conf_data = Text(const.CSM_LOGROTATE_DEST).load()
+            if not csm_agent_log_conf_data:
+                Log.warn(f"File {const.CSM_LOGROTATE_DEST} not updated.")
+            else:
+                updated_data = csm_agent_log_conf_data.replace("<CSM_AGENT_LOG_PATH>",
+                                                   self._get_log_path_from_conf_store())
+                Text(const.CSM_LOGROTATE_DEST).dump(updated_data)
             if (self._setup_info and self._setup_info[
                 const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'

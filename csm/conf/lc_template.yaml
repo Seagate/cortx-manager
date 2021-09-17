@@ -1,0 +1,50 @@
+cortx: 
+  common: 
+    environment_type: K8s
+    product_release: LC
+    security: 
+      device_certificate: /etc/ssl/stx/stx.pem
+      domain_certificate: /etc/ssl/stx/stx.pem
+      ssl_certificate: /etc/ssl/stx/stx.pem
+    storage: 
+      config: /etc/cortx
+      log: /share/var/log/cortx
+      misc: /var/data/cortx
+      shared: /share
+  csm: 
+    agent: 
+      endpoints: 
+        - "https://csm.seagate.com:8081"
+    auth_admin: authadmin
+    auth_secret: gAAAAABf_
+    email_address: cortx@seagate.com
+    mgmt_secret: Cortxadmin@123
+    mgmt_admin: cortxadmin
+  external: 
+    consul: 
+      admin: admin
+      endpoints: 
+        - "consul-server1.cortx-cluster.lyve-cloud.com:8500"
+      secret: gAAAAABf
+    openldap: 
+      admin: admin
+      base_dn: "dc=seagate,dc=com"
+      endpoints: 
+        - "ldap://oldap-server.cortx-cluster.lyve-cloud.com:389"
+        - "ssl://oldap-server.cortx-cluster.lyve-cloud.com:636"
+      secret: gAAAAABf
+  s3: 
+    auth:
+      admin:"sgiamadmin"
+      secret:"gAAAAABf_"
+    data: 
+      endpoints: 
+        - "http://s3.seagate.com:80"
+        - "https://s3.seagate.com:443"
+    iam: 
+      endpoints: 
+        - "https://s3-iam.seagate.com:9443"
+node: 
+  da254784545844dc8ce3aec085ee5da4: 
+    cluster_id: bae4b468-565d-49df-9495-a43a5d89babc
+    hostname: pod-1.colo.seagate.com
