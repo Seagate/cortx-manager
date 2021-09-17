@@ -49,9 +49,19 @@ class Init(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-        service_name = command.options.get("service")
-        self.execute_web_and_cli(command.options.get("config_url"),service_name,command.sub_command_name)
-        if service_name not in ["all", "csm_agent"]:
+            raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+
+        services = command.options.get("services")
+        if ',' in services:
+            services = services.split(",")
+        elif 'all' in services:
+            services = ["agent", "web", "cli"]
+        else:
+            services=[services]
+        self.execute_web_and_cli(command.options.get("config_url"),
+                                    services,
+                                    command.sub_command_name)
+        if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
         self._config_user_permission()
