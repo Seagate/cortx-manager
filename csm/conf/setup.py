@@ -66,7 +66,7 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
-        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>common>storage>confi",
+        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>common>storage>config",
                                                      const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
