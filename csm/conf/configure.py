@@ -74,18 +74,21 @@ class Configure(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        if Setup.is_not_K8S():
+        if not Setup.is_k8s_env:
             self._set_deployment_mode()
             self._logrotate()
             self._configure_cron()
             self._configure_uds_keys()
             self._configure_csm_web_keys()
+        else:
+            self.set_s3_info()
+
         try:
             # TODO: Remove commets after open ldap configurations
             #self._configure_csm_ldap_schema()
             #self._set_user_collection()
             self.create()
-            await self._create_cluster_admin(self.force_action)
+            #await self._create_cluster_admin(self.force_action)
             for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
@@ -102,7 +105,7 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        if Setup.is_not_K8S():
+        if not Setup.is_k8s_env:
             self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
@@ -117,10 +120,13 @@ class Configure(Setup):
             self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
-                # TODO: confirm following keys:
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.KEY_ROOT_LDAP_USER: f"{const.OPENLDAP_ADMIN_KEY}",
-                const.KEY_ROOT_LDAP_SCRET: f"{const.OPENLDAP_SECRET_KEY}"
+                const.KEY_ROOT_LDAP_SCRET: f"{const.OPENLDAP_SECRET_KEY}",
+                const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
+                const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
+                const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
+                const.S3_AUTH_SECRET: f"{const.S3_AUTH_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -137,6 +143,30 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
+
+    def set_s3_info(self):
+        """
+        This Function will set s3  related configurations.
+        :return:
+        """
+        iam_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_IAM_ENDPOINTS_KEY)
+        iam_protocol, iam_host, iam_port = self._parse_endpoints(iam_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_ENDPOINT, iam_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_HOST, iam_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PORT, iam_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL, iam_protocol)
+
+        data_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_DATA_ENDPOINTS_KEY)
+        data_protocol, data_host, data_port = self._parse_endpoints(data_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_ENDPOINT, data_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_HOST, data_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PORT, data_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PROTOCOL, data_protocol)
+
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
 
     def _configure_cron(self):
         """

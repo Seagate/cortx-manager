@@ -25,18 +25,17 @@ cortx:
       admin: admin
       endpoints: 
         - "consul-server1.cortx-cluster.lyve-cloud.com:8500"
-      secret: gAAAAABf
+      secret: gAAAAABhRKPVezLDg1keNLElvxxuC1uLBlpTCHkub6IE4KKjVW5m3nkns1prkzqTNE9FAv9I-R31BeJwTvksQVrMXAVUIjC10Q==
     openldap: 
       admin: admin
       base_dn: "dc=seagate,dc=com"
       endpoints: 
-        - "ldap://oldap-server.cortx-cluster.lyve-cloud.com:389"
+        - "ldap://localhost:389"
         - "ssl://oldap-server.cortx-cluster.lyve-cloud.com:636"
-      secret: gAAAAABf
+      secret: gAAAAABhRKPVezLDg1keNLElvxxuC1uLBlpTCHkub6IE4KKjVW5m3nkns1prkzqTNE9FAv9I-R31BeJwTvksQVrMXAVUIjC10Q==
   s3: 
-    auth:
-      admin:"sgiamadmin"
-      secret:"gAAAAABf_"
+    auth_admin: admin
+    auth_secret: gAAAAABhRKPVezLDg1keNLElvxxuC1uLBlpTCHkub6IE4KKjVW5m3nkns1prkzqTNE9FAv9I-R31BeJwTvksQVrMXAVUIjC10Q==
     data: 
       endpoints: 
         - "http://s3.seagate.com:80"
@@ -44,6 +43,7 @@ cortx:
     iam: 
       endpoints: 
         - "https://s3-iam.seagate.com:9443"
+    
 node: 
   da254784545844dc8ce3aec085ee5da4: 
     cluster_id: bae4b468-565d-49df-9495-a43a5d89babc

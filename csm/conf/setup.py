@@ -153,7 +153,7 @@ class Setup:
             raise CsmSetupError("Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
-
+    
     def _set_deployment_mode(self):
         """
         This Method will set a deployment Mode according to env_type.
@@ -459,14 +459,7 @@ class Setup:
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
 
-    def _parse_endpoints(self, url):
-        # TODO: remove commets
-        #url = "ldap://oldap-server.cortx-cluster.lyve-cloud.com:389"
-        #parsed_url = urlparse(url)
-        #protocol = parsed_url.scheme
-        #host = parsed_url.hostname
-        #port = parsed_url.port
-        #return protocol, host, port
+    def _parse_endpoints(self, url):   
         if "://"in url:
             protocol, endpoint = url.split("://")
         else:
@@ -601,19 +594,18 @@ class Setup:
             Setup._run_cmd("systemctl daemon-reload")
 
     @staticmethod
-    def is_not_K8S() -> bool:
+    def is_k8s_env() -> bool:
         """
         Check if systemd should be used for the current set up.
 
         :returns: True if systemd should be used.
         """
-
         env_type = Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE_KEY, None)
-        return env_type in [const.HW, const.VM]
+        return env_type == const.K8S
 
     @staticmethod
     def _copy_systemd_configuration():
-        if not Setup.is_not_K8S():
+        if Setup.is_k8s_env:
             Log.warn('SystemD is not used in this environment and will not be set up')
             return
         Setup._run_cmd(f"cp {const.CSM_AGENT_SERVICE_SRC_PATH} {const.CSM_AGENT_SERVICE_FILE_PATH}")
@@ -624,7 +616,7 @@ class Setup:
         """
         Update CSM Files Depending on Job Type of Setup.
         """
-        if Setup.is_not_K8S():
+        if Setup.is_k8s_env:
             Log.warn('SystemD is not used in this environment and will not be updated')
             return
         Log.info(f"Update file for {key}:{value}")
@@ -636,7 +628,7 @@ class Setup:
             data = service_file_data.replace(key, value)
             Text(each_file).dump(data)
 
-# TODO: Devide changes in backend and frontend
+# TODO: Divide changes in backend and frontend
 # TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
     def __init__(self):

@@ -54,14 +54,14 @@ class Init(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        if Setup.is_not_K8S():
+        if not Setup.is_k8s_env:
             self._config_user_permission()
             self.ConfigServer.reload()
-           
+
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        if Setup.is_not_K8S():
+        if not Setup.is_k8s_env:
             self.conf_store_keys.update({
                 const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
             })
