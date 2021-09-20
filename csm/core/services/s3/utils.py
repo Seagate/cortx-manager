@@ -66,9 +66,9 @@ class IamRootClient(IamClient):
     """
 
     def __init__(self):
-        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3)
+        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF)
         # TODO: Password should be taken as input and not read from conf file directly.
-        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
+        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF)
         iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
         super().__init__(ldap_login, ldap_password, iam_conf)
 

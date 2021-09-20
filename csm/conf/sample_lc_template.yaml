@@ -1,0 +1,50 @@
+cortx:
+  common:
+    environment_type: K8s
+    product_release: LC
+    security:
+      device_certificate: /etc/ssl/stx/stx.pem
+      domain_certificate: /etc/ssl/stx/stx.pem
+      ssl_certificate: /etc/ssl/stx/stx.pem
+    storage:
+      config: /root/cortx
+      log: /root/log/cortx
+      misc: /var/data/cortx
+      shared: /share
+  csm:
+    agent:
+      endpoints:
+        - "https://csm.seagate.com:8081"
+    auth_admin: authadmin
+    auth_secret: gAAAAABf_
+    email_address: cortx@seagate.com
+    mgmt_secret: Cortxadmin@123
+    mgmt_admin: cortxk8s
+  external:
+    consul:
+      admin: admin
+      endpoints:
+        - 192.168.83.5:8500
+      secret: gAAAAABhRKPVezLDg1keNLElvxxuC1uLBlpTCHkub6IE4KKjVW5m3nkns1prkzqTNE9FAv9I-R31BeJwTvksQVrMXAVUIjC10Q==
+    openldap:
+      admin: admin
+      base_dn: "dc=seagate,dc=com"
+      endpoints:
+        - "ldap://10.230.245.245:389"
+        - "ssl://oldap-server.cortx-cluster.lyve-cloud.com:636"
+      secret: gAAAAABhCsBHBwsKXtBUikgfcu1qMAXO2r5l3OiQMrYtoBCEkFIZogGorB9Cr1P0DqslvFZpwzGqM0W9eBw09hTYOANi1VyOgw==
+  s3:
+    auth_admin: sgiamadmin
+    auth_secret: gAAAAABhCsBHBwsKXtBUikgfcu1qMAXO2r5l3OiQMrYtoBCEkFIZogGorB9Cr1P0DqslvFZpwzGqM0W9eBw09hTYOANi1VyOgw==
+    data:
+      endpoints:
+        - "http://10.230.245.245:80"
+        - "https://s3.seagate.com:443"
+    iam:
+      endpoints:
+        - "https://10.230.245.245:9443"
+
+node:
+  da254784545844dc8ce3aec085ee5da4:
+    cluster_id: 1ecb55ab-f51a-498d-8f21-117caa16434c
+    hostname: pod-1.colo.seagate.com

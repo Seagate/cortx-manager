@@ -78,11 +78,10 @@ class Configure(Setup):
             self.set_s3_info()
 
         try:
-            # TODO: Remove commets after open ldap configurations
             self._configure_csm_ldap_schema()
             self._set_user_collection()
             self.create()
-            #await self._create_cluster_admin(self.force_action)
+            await self._create_cluster_admin(self.force_action)
             for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
