@@ -153,7 +153,7 @@ class Setup:
             raise CsmSetupError("Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
-    
+
     def _set_deployment_mode(self):
         """
         This Method will set a deployment Mode according to env_type.
@@ -459,13 +459,14 @@ class Setup:
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
 
-    def _parse_endpoints(self, url):   
+    def _parse_endpoints(self, url):
         if "://"in url:
             protocol, endpoint = url.split("://")
         else:
             protocol = ''
             endpoint = url
         host, port = endpoint.split(":")
+        Log.info(f"Parsing endpoint url:{url} as protocol:{protocol}, host:{host}, port:{port}")
         return protocol, host, port
 
     def _get_log_path_from_conf_store(self):
@@ -662,5 +663,3 @@ class CsmSetup(Setup):
             Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
             raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
 
-        
-    

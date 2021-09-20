@@ -17,7 +17,7 @@ import os
 import time
 import ldap
 from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json, Text, Yaml
+from csm.common.payload import Json, Text
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -27,13 +27,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
-from cortx.utils.validator.v_consul import ConsulV
-from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from csm.common.process import SimpleProcess
-from csm.core.data.models.users import User
-from csm.core.services.users import CsmUserService, UserManager
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 
 
 class Configure(Setup):
@@ -85,8 +79,8 @@ class Configure(Setup):
 
         try:
             # TODO: Remove commets after open ldap configurations
-            #self._configure_csm_ldap_schema()
-            #self._set_user_collection()
+            self._configure_csm_ldap_schema()
+            self._set_user_collection()
             self.create()
             #await self._create_cluster_admin(self.force_action)
             for count in range(0, 4):
@@ -149,6 +143,7 @@ class Configure(Setup):
         This Function will set s3  related configurations.
         :return:
         """
+        Log.info("Setting S3 configurations in csm config")
         iam_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_IAM_ENDPOINTS_KEY)
         iam_protocol, iam_host, iam_port = self._parse_endpoints(iam_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_ENDPOINT, iam_endpoint)

@@ -56,7 +56,7 @@ class PostInstall(Setup):
             self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
                         f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
-            
+
             self.is_k8s_env = Setup.is_k8s_env()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -121,10 +121,12 @@ class PostInstall(Setup):
         ssl_certificate = Conf.get(const.CONSUMER_INDEX, const.SSL_CERTIFICATE_KEY)
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate)
+        Log.info(f"Setting ssl certificate path: {ssl_certificate}")
 
     def set_logpath(self):
         log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
+        Log.info(f"Setting log path: {log_path}")
 
     def fetch_python_pkgs(self):
         try:

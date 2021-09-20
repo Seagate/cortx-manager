@@ -26,7 +26,6 @@ from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.error import VError
-#from urllib.parse import urlparse
 
 
 class Prepare(Setup):
@@ -163,6 +162,7 @@ class Prepare(Setup):
             #TODO: HOW TO USE SECRET?
             # endpoints = [consul-server1.cortx-cluster.lyve-cloud.com:<port>, consul-server2.cortx-cluster.lyve-cloud.com:<port>]
         protocol, host, port = self._parse_endpoints(endpoint)
+        Log.info(f"Fetching consul endpoint : {endpoint}")
         return protocol, [host], port, secret, endpoint
 
     def _get_es_hosts_info(self):
@@ -214,6 +214,7 @@ class Prepare(Setup):
             consul_host = self._get_consul_info()
         else:
             protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
+            consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
             if  not Setup.is_k8s_env:
                 Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
@@ -224,6 +225,7 @@ class Prepare(Setup):
                 Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
                 Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>port', consul_port)
                 Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>password', secret)
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>login', consul_login)
                 Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
                 Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
 
@@ -233,7 +235,7 @@ class Prepare(Setup):
 
     def _set_s3_ldap_credentials(self):
         # read username's and password's for S3 and RMQ
-        Log.info("Storing s3 credentials")
+        Log.info("Storing S3 credentials")
         open_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_USER])
         open_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_SECRET])
         # Edit Current Config File.
@@ -290,6 +292,9 @@ class Prepare(Setup):
                  bind_base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_admin_secret)
+        Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', ldap_admin_user)
+        Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', ldap_admin_secret)
+
 
     def create(self):
         """
