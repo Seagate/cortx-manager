@@ -15,6 +15,6 @@
 
 dn: o=userAccount,ou=accounts,dc=csm,<base-dn>
 o: userAccount
-cortxAccountId: userAccount1
+cortxAccountId: cortxUserAccount
 objectclass: CortxAccount
-mail: userAccount1@seagate.com
+mail: cortxUserAccount@seagate.com
