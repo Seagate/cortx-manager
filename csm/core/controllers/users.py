@@ -40,7 +40,7 @@ class CsmUserPatchSchema(Schema):
     current_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
     user_role = fields.Str(data_key='role',validate=validate.OneOf(const.CSM_USER_ROLES))
-    mail = fields.Email(data_key='email')
+    email_address = fields.Email(data_key='email')
     reset_password = fields.Bool(required=False)
 
     """

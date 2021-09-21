@@ -64,19 +64,22 @@ class Init(Setup):
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._config_user_permission()
-        self.ConfigServer.reload()
+        if not Setup.is_k8s_env:
+            self._config_user_permission()
+            self.ConfigServer.reload()
+
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-        })
-        try:
-            Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
-        except VError as ve:
-            Log.error(f"Key not found in Conf Store: {ve}")
-            raise CsmSetupError(f"Key not found in Conf Store: {ve}")
+        if not Setup.is_k8s_env:
+            self.conf_store_keys.update({
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+            })
+            try:
+                Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
+            except VError as ve:
+                Log.error(f"Key not found in Conf Store: {ve}")
+                raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def _config_user_permission(self, reset=False):
         """

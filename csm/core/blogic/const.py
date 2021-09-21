@@ -168,7 +168,6 @@ CSM_S3_ACCOUNT_ROLE = 's3'
 CSM_USER_ROLES = [CSM_SUPER_USER_ROLE, CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
-DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
 # cron dir
@@ -431,7 +430,7 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
 CSM_USER_SORTABLE_FIELDS = ['user_id', 'username', 'email', 'user_type', 'role', 'created_time',
-                            'updated_time', 'mail', 'user_role']
+                            'updated_time', 'email_address', 'user_role']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -595,7 +594,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 DECRYPTION_KEYS = {
     "S3>ldap_password": "S3>password_decryption_key",
-    "CSM>password": "CSM>password_decryption_key"
+    "CSM>password": "CSM>password_decryption_key",
+    "OPENLDAP>csm_ldap_user_password": "CSM>password_decryption_key"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
@@ -768,14 +768,14 @@ KEY_ENCLOSURE_ID = "enclosure_id_key"
 KEY_CLUSTER_ID = "cluster_id_key"
 KEY_CSM_USER = "csm_user_key"
 KEY_CSM_SECRET = "csm_secret_key"
-KEY_S3_LDAP_USER = "openldap_s3_user_key"
-KEY_S3_LDAP_SECRET = "openldap_s3_secret_key"
+KEY_CSM_LDAP_USER = "openldap_csm_user_key"
+KEY_CSM_LDAP_SECRET = "openldap_csm_secret_key"
 KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
 KEY_ROOT_LDAP_USER = "openldap_root_user_key"
-KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
+KEY_ROOT_LDAP_SECRET = "openldap_root_secret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -793,6 +793,8 @@ DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
 LDAP_USER = "cn={0},{1}"
 CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
 CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
+CSM_LDAP_ADMIN_FILE_NAME = "csm-admin.ldif"
+CSM_LDAP_ADMIN_USER_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ADMIN_FILE_NAME)
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
 CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
 CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
@@ -801,9 +803,75 @@ CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
 CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ADMIN_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ADMIN_FILE_NAME)
 CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
 DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'
 DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
+
+# LC keys
+ENV_TYPE = "env_type"
+ENV_TYPE_KEY = "cortx>common>environment_type"
+PRODUCT_REALESE = 'product_release'
+PRODUCT_REALESE_KEY = 'cortx>common>product_release'
+OPENLDAP_ENDPOINTS = 'openldap_endpoints'
+OPENLDAP_ENDPOINTS_KEY = 'cortx>external>openldap>endpoints[0]'
+OPENLDAP_ROOT_ADMIN = 'openldap_root_admin'
+OPENLDAP_ROOT_ADMIN_KEY = 'cortx>external>openldap>admin'
+OPENLDAP_ROOT_SECRET = 'openldap_root_secret'
+OPENLDAP_ROOT_SECRET_KEY = 'cortx>external>openldap>secret'
+OPENLDAP_BASEDN = 'openldap_base_dn'
+OPENLDAP_BASEDN_KEY = 'cortx>external>openldap>base_dn'
+CONSUL_ENDPOINTS = 'consul_endpoints'
+CONSUL_ENDPOINTS_KEY = 'cortx>external>consul>endpoints[0]'
+CONSUL_ADMIN = 'consul_admin'
+CONSUL_ADMIN_KEY = 'cortx>external>consul>admin'
+CONSUL_SECRET = 'consul_secret'
+CONSUL_SECRET_KEY = 'cortx>external>consul>secret'
+SSL_CERTIFICATE = 'ssl_certificate'
+SSL_CERTIFICATE_KEY = 'cortx>common>security>ssl_certificate'
+DOMAIN_CERTIFICATE = 'domain_certificate'
+DOMAIN_CERTIFICATE_KEY = 'cortx>common>security>domain_certificate'
+DEVICE_CERTIFICATE = 'device_certificate'
+DEVICE_CERTIFICATE_KEY = 'cortx>common>security>device_certificate'
+S3_IAM_ENDPOINTS = 's3_iam_endoints'
+S3_IAM_ENDPOINTS_KEY = 'cortx>s3>iam>endpoints[0]'
+S3_DATA_ENDPOINT = 's3_data_endpoints'
+S3_DATA_ENDPOINTS_KEY = 'cortx>s3>data>endpoints[0]'
+S3_AUTH_ADMIN = 's3_auth_admin'
+S3_AUTH_ADMIN_KEY = 'cortx>s3>auth_admin'
+S3_AUTH_SECRET = 's3_auth_secret'
+S3_AUTH_SECRET_KEY = 'cortx>s3>auth_secret'
+CSM_AGENT_ENDPOINTS = 'csm_agent_endpoints'
+CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints'
+CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
+CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
+CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
+CSM_AGENT_AUTH_ADMIN_KEY = 'cortx>csm>auth_admin'
+CSM_AGENT_AUTH_SECRET_KEY = 'cortx>csm>auth_secret'
+CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
+CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
+
+# keys for conf file setup
+K8S = "K8s"
+S3_DATA_ENDPOINT = 'S3>data>endpoints'
+S3_DATA_HOST= 'S3>data>host'
+S3_DATA_PORT = 'S3>data>port'
+S3_DATA_PROTOCOL = 'S3>data>protocol'
+IAM_ENDPOINT = 'S3>iam>endpoints'
+IAM_HOST= 'S3>iam>host'
+IAM_PORT = 'S3>iam>port'
+IAM_PROTOCOL = 'S3>iam>protocol'
+LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
+LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
+OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
+OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
+KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
+KEY_LOGPATH = 'key_logpath'
+SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
+LOG_PATH = 'Log>log_path'
+PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
+S3_AUTH_USER_CONF = 'S3>ldap_login'
+S3_AUTH_SECRET_CONF = 'S3>ldap_password'

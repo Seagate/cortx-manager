@@ -53,6 +53,11 @@ class PostInstall(Setup):
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             self.config_path = self._set_csm_conf_path()
+            self._copy_skeleton_configs()
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+
+            self.is_k8s_env = Setup.is_k8s_env()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -69,15 +74,21 @@ class PostInstall(Setup):
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._set_deployment_mode()
-        self.validate_3rd_party_pkgs()
-        self._copy_systemd_configuration()
-        self._config_user()
-        if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
-            self._configure_system_auto_restart()
-        self._configure_service_user()
-        self._configure_rsyslog()
-        self._allow_access_to_pvt_ports()
+        if not Setup.is_k8s_env:
+            self.validate_3rd_party_pkgs()
+            self._set_deployment_mode()
+            self._copy_systemd_configuration()
+            self._config_user()
+            if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
+                self._configure_system_auto_restart()
+            self._configure_service_user()
+            self._configure_rsyslog()
+            self._allow_access_to_pvt_ports()
+        else:
+            self.set_ssl_certificate()
+            self.set_logpath()
+            self.set_env_type()
+        self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _allow_access_to_pvt_ports(self):
@@ -85,12 +96,20 @@ class PostInstall(Setup):
         Setup._run_cmd("setcap CAP_NET_BIND_SERVICE=+ep /opt/nodejs/node-v12.13.0-linux-x64/bin/node")
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
-            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-            })
+        if not Setup.is_k8s_env:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO: f"{const.SERVER_NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
+                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
+                })
+        else:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
+                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
+                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
+                })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
@@ -106,6 +125,23 @@ class PostInstall(Setup):
         except VError as ve:
             Log.error(f"Failed at package Validation: {ve}")
             raise CsmSetupError(f"Failed at package Validation: {ve}")
+
+    def set_ssl_certificate(self):
+        ssl_certificate = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate)
+        Log.info(f"Setting ssl certificate path: {ssl_certificate}")
+
+    def set_logpath(self):
+        log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
+        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
+        Log.info(f"Setting log path: {log_path}")
+
+    def set_env_type(self):
+        env_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", env_type)
+        Log.info(f"Setting env_type: {env_type}")
+
 
     def fetch_python_pkgs(self):
         try:
@@ -199,3 +235,15 @@ class PostInstall(Setup):
             msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
             Log.error(msg)
             raise CsmSetupError(msg)
+
+    def create(self):
+        """
+        This Function Creates the CSM Conf File on Required Location.
+        :return:
+        """
+
+        Log.info("Creating CSM Conf File on Required Location.")
+        if self._is_env_dev:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.DEV)
+        Conf.save(const.CSM_GLOBAL_INDEX)

@@ -44,7 +44,7 @@ def test_csm_user_create(args):
     data = {'user_id': 'csm_test_manage_user',
             'password': 'Csmuser@123',
             'user_role': 'manage',
-            'mail': 'csm@test.com',
+            'email_address': 'csm@test.com',
             'alert_notification': True}
 
     # Better replace with local dict storage to avoid this
@@ -60,7 +60,7 @@ def test_csm_user_create(args):
     assert 'created_time' in user
     assert user['username'] == data['user_id']
     assert user['user_role'] == data['user_role']
-    assert user['mail'] == data['mail']
+    assert user['email_address'] == data['email_address']
     assert user['alert_notification'] == data['alert_notification']
 
 
@@ -124,19 +124,19 @@ def test_csm_user_update_email(args):
     user_service = args.get('user_service')
 
     user_id = args.get('user').get('id')
-    data = {'mail': 'csmnew@test.com' ,
+    data = {'email_address': 'csmnew@test.com' ,
             'current_password': 'Csmuser@123'}
 
     # Initial email
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['mail'] == 'csm@test.com'
+    assert user['email_address'] == 'csm@test.com'
 
     loop.run_until_complete(
         user_service.update_user(user_id, data, 'csm_test_user'))
 
     # New email
     user = loop.run_until_complete(user_service.get_user(user_id))
-    assert user['mail'] == 'csmnew@test.com'
+    assert user['email_address'] == 'csmnew@test.com'
 
 
 def test_csm_user_update_alert_notification(args):
