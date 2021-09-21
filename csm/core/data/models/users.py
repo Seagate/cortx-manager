@@ -47,7 +47,7 @@ class User(CsmModel):
     user_id = StringType()
     user_type = StringType()
     user_role = StringType()
-    userPassword = StringType()
+    user_password = StringType()
     email_address = StringType()
     reset_password = BooleanType()
     alert_notification = BooleanType()
@@ -56,7 +56,7 @@ class User(CsmModel):
 
     def update(self, new_values: dict):
         if 'password' in new_values:
-            self.userPassword = Passwd.hash(new_values['password'])
+            self.user_password= Passwd.hash(new_values['password'])
             new_values.pop('password')
         for key in new_values:
             setattr(self, key, new_values[key])
@@ -70,7 +70,7 @@ class User(CsmModel):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.CsmUser.value
-        user.userPassword = Passwd.hash(password)
+        user.user_password = Passwd.hash(password)
         user.user_role = role
         user.email_address = email
         user.alert_notification = alert_notification
@@ -84,7 +84,7 @@ class User(CsmModel):
         user = User()
         user.user_id = user_id
         user.user_type = UserType.S3AccountUser.value
-        user.userPassword = None
+        user.user_password = None
         user.user_role = role
         user.email_address = ""
         user.alert_notification = True

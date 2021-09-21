@@ -246,7 +246,6 @@ class Prepare(Setup):
             Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
             Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER, csm_ldap_user)
             Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET, csm_ldap_secret)
-            #cn=authadmin,dc=seagate,dc=com
             Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', f"cn={csm_ldap_user},{base_dn}")
             Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', csm_ldap_secret)
 

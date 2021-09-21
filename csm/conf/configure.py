@@ -345,7 +345,6 @@ class Configure(Setup):
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(dn, 'olcAccess', '{0}to attrs=userPassword by self write by dn.base="'+ldap_user+'" write by anonymous auth by * none')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
