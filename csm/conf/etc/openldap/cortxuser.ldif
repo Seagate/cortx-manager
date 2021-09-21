@@ -43,12 +43,13 @@ olcAttributeTypes: {47}( 1.3.6.1.4.99999.2.3.48 NAME 'user-id' DESC 'Cortx u
  serID' EQUALITY caseExactMatch SUBSTR caseIgnoreSubstringsMatch ORDERING ca
  seIgnoreOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
 olcAttributeTypes: {48}( 1.3.6.1.4.99999.2.3.49 NAME 'email-address' DESC 'C
- ortx userID' EQUALITY caseExactMatch SUBSTR caseIgnoreSubstringsMatch ORDER
- ING caseIgnoreOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+ ortx user email address' EQUALITY caseExactMatch SUBSTR caseIgnoreSubstring
+ sMatch ORDERING caseIgnoreOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.1
+ 5 )
 olcObjectClasses: {20}( 1.3.6.1.4.99999.2.4.21 NAME 'CortxAccount' DESC 'Cor
  tx Account' SUP top STRUCTURAL MUST ( o $ cortxAccountId $ mail) MAY ( user
  Password ) )
 olcObjectClasses: {21}( 1.3.6.1.4.99999.2.4.22 NAME 'User' DESC 'CORTXUser A
- ccount' SUP top STRUCTURAL MUST ( user-id $ user-type $ user-role $userPass
- word $ alert-notification $ updated-time $ created-time ) MAY (  reset-pass
- word $ uidNumber $ gidNumber $ email-address) )
+ ccount' SUP top STRUCTURAL MUST ( user-id $ user-type $ user-role $ userPas
+ sword $ alert-notification $ updated-time $ created-time ) MAY (  reset-pas
+ sword $ uidNumber $ gidNumber $ email-address) )
