@@ -248,17 +248,16 @@ class Setup:
                                     const.DEFAULT_CLUSTER_ADMIN_EMAIL)
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     const.OPENLDAP_BASEDN_KEY)
-        Security.decrypt_conf()
+        ldap_csm_admin_secret = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>password")
+        #Security.decrypt_conf()
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(f"{self.config_path}/{const.DB_CONF_FILE_NAME}").load())
         conf['databases']["openldap"]["config"][const.PORT] = int(
                     conf['databases']["openldap"]["config"][const.PORT])
-        conf['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
-                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
-        conf['databases']["openldap"]["config"]["password"] = Conf.get(
-                    const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
+        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>login")
+        conf['databases']["openldap"]["config"]["password"] = self._fetch_ldap_password(ldap_csm_admin_secret)
 
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
@@ -367,10 +366,10 @@ class Setup:
         Setup._run_cmd("rm -rf " + bundle_path)
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
-    def _fetch_ldap_root_password(self):
+    def _fetch_ldap_password(self, ldap_secret):
         Log.info("Fetching LDAP root user password from Conf Store.")
         try:
-            ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROOT_LDAP_SCRET])
+
             cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
             cipher_key = Cipher.generate_key(cluster_id,
                         Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
@@ -382,7 +381,7 @@ class Setup:
             return None
         try:
             ldap_root_decrypted_value = Cipher.decrypt(cipher_key,
-                                                ldap_root_secret.encode("utf-8"))
+                                                ldap_secret.encode("utf-8"))
             return ldap_root_decrypted_value.decode('utf-8')
         except CipherInvalidToken as error:
             Log.error(f"Decryption for LDAP root user password Failed. {error}")
@@ -406,6 +405,7 @@ class Setup:
         """
         from ldap import initialize, VERSION3, OPT_REFERRALS
         ldap_url = Setup._get_ldap_url()
+        Log.info("Setting up Ldap connection")
         self._ldap_conn = initialize(ldap_url)
         self._ldap_conn.protocol_version = VERSION3
         self._ldap_conn.set_option(OPT_REFERRALS, 0)
@@ -415,6 +415,7 @@ class Setup:
         """
         Disconnects from ldap.
         """
+        Log.info("Closing Ldap connection")
         self._ldap_conn.unbind_s()
         self._ldap_conn = None
 

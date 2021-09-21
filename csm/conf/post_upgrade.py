@@ -72,7 +72,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._set_cluster_id()
         self._set_db_host_addr()
         self._set_fqdn_for_nodeid()
-        self._set_s3_ldap_credentials()
+        self._set_csm_ldap_credentials()
         self._set_password_to_csm_user()
         #Configure functionality
         self._configure_uds_keys()

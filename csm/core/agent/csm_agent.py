@@ -53,6 +53,7 @@ class CsmAgent:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = Yaml(f"{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}").load()
+        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}")
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(
@@ -61,14 +62,13 @@ class CsmAgent:
             db_config['databases']["consul_db"]["config"][const.PORT])
         db_config['databases']["openldap"]["config"][const.PORT] = int(
             db_config['databases']["openldap"]["config"][const.PORT])
-        db_config['databases']["openldap"]["config"]["login"] = const.LDAP_USER.format(
-            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>login")
         db_config['databases']["openldap"]["config"]["password"] = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.S3_LDAP_PASSWORD)
+            const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}")
+
 
         #Remove all Old Shutdown Cron Jobs
         CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
@@ -231,11 +231,14 @@ class CsmAgent:
 
         if not Options.debug:
             CsmAgent._daemonize()
-        CsmAgent.alert_monitor.start()
+        env_type =  Conf.get(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}")
+        if not (env_type == "K8s"):
+             CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
-        CsmAgent.alert_monitor.stop()
-        Log.info("Finished stopping alert monitor service")
+        if not (env_type == "K8s"):
+            CsmAgent.alert_monitor.stop()
+            Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")
 
     @staticmethod

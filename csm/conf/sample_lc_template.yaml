@@ -7,7 +7,7 @@ cortx:
       domain_certificate: /etc/ssl/stx/stx.pem
       ssl_certificate: /etc/ssl/stx/stx.pem
     storage:
-      config: /root/cortx
+      config: /etc/cortx
       log: /root/log/cortx
       misc: /var/data/cortx
       shared: /share
@@ -16,7 +16,7 @@ cortx:
       endpoints:
         - "https://csm.seagate.com:8081"
     auth_admin: authadmin
-    auth_secret: gAAAAABf_
+    auth_secret: gAAAAABhKGEbFyDWfazsCz1v0i_iZd50WWva3wuYn2BPxVl3AYxAAslht5Ij4MFuHFO25KYcbmWfhiHxwwoRN25nQh5OwIYY1A==
     email_address: cortx@seagate.com
     mgmt_secret: Cortxadmin@123
     mgmt_admin: cortxk8s
@@ -24,27 +24,27 @@ cortx:
     consul:
       admin: admin
       endpoints:
-        - 192.168.83.5:8500
+        - 127.0.0.1:8500
       secret: gAAAAABhRKPVezLDg1keNLElvxxuC1uLBlpTCHkub6IE4KKjVW5m3nkns1prkzqTNE9FAv9I-R31BeJwTvksQVrMXAVUIjC10Q==
     openldap:
       admin: admin
       base_dn: "dc=seagate,dc=com"
       endpoints:
-        - "ldap://10.230.245.245:389"
+        - "ldap://10.230.242.251:389"
         - "ssl://oldap-server.cortx-cluster.lyve-cloud.com:636"
-      secret: gAAAAABhCsBHBwsKXtBUikgfcu1qMAXO2r5l3OiQMrYtoBCEkFIZogGorB9Cr1P0DqslvFZpwzGqM0W9eBw09hTYOANi1VyOgw==
+      secret: gAAAAABhKGEam7GD1_6PGrbtJsi5bOK3V9aDuBWNyafumJiXH081vFaseirUA-vahrAyoWA53SsA1roPGlmDbU3NGPqE5_rJ6Q==
   s3:
     auth_admin: sgiamadmin
-    auth_secret: gAAAAABhCsBHBwsKXtBUikgfcu1qMAXO2r5l3OiQMrYtoBCEkFIZogGorB9Cr1P0DqslvFZpwzGqM0W9eBw09hTYOANi1VyOgw==
+    auth_secret: gAAAAABhKGEbFyDWfazsCz1v0i_iZd50WWva3wuYn2BPxVl3AYxAAslht5Ij4MFuHFO25KYcbmWfhiHxwwoRN25nQh5OwIYY1A==
     data:
       endpoints:
-        - "http://10.230.245.245:80"
+        - "http://10.230.242.251:80"
         - "https://s3.seagate.com:443"
     iam:
       endpoints:
-        - "https://10.230.245.245:9443"
+        - "https://10.230.242.251:9443"
 
 node:
   da254784545844dc8ce3aec085ee5da4:
-    cluster_id: 1ecb55ab-f51a-498d-8f21-117caa16434c
+    cluster_id: 8088db56-85ba-456b-9b7c-5798f192c605
     hostname: pod-1.colo.seagate.com

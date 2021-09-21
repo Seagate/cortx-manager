@@ -48,7 +48,7 @@ class User(CsmModel):
     user_type = StringType()
     user_role = StringType()
     userPassword = StringType()
-    mail = StringType()
+    email_address = StringType()
     reset_password = BooleanType()
     alert_notification = BooleanType()
     updated_time = DateTimeType()
@@ -72,7 +72,7 @@ class User(CsmModel):
         user.user_type = UserType.CsmUser.value
         user.userPassword = Passwd.hash(password)
         user.user_role = role
-        user.mail = email
+        user.email_address = email
         user.alert_notification = alert_notification
         user.reset_password = reset_password
         user.created_time = datetime.now(timezone.utc)
@@ -86,7 +86,7 @@ class User(CsmModel):
         user.user_type = UserType.S3AccountUser.value
         user.userPassword = None
         user.user_role = role
-        user.mail = ""
+        user.email_address = ""
         user.alert_notification = True
         user.reset_password = None
         user.created_time = datetime.now(timezone.utc)

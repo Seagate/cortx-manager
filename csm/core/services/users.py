@@ -108,7 +108,7 @@ class UserManager:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
         user_list = await self.storage(User).get(query)
-        return [user.mail for user in user_list]
+        return [user.email_address for user in user_list]
 
     async def count(self):
         return await self.storage(User).count(None)
@@ -218,7 +218,7 @@ class CsmUserService(ApplicationService):
             "username": user.user_id,
             "user_type": user.user_type,
             "role": user.user_role,
-            "email": user.mail,
+            "email": user.email_address,
             "reset_password": user.reset_password,
             "created_time": user.created_time.isoformat() + 'Z',
             "updated_time": user.updated_time.isoformat() + 'Z',
@@ -270,7 +270,7 @@ class CsmUserService(ApplicationService):
         field_mapping = {
             "id": "user_id",
             "username": "user_id",
-            "email":"mail",
+            "email":"email_address",
             "role":"user_role"
         }
         if sort_by in field_mapping:

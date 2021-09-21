@@ -71,7 +71,7 @@ class Prepare(Setup):
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_db_host_addr()
-        self._set_s3_ldap_credentials()
+        self._set_csm_ldap_credentials()
         self._set_ldap_params()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -102,8 +102,8 @@ class Prepare(Setup):
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
                 const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
                 const.OPENLDAP_ENDPOINTS:f"{const.OPENLDAP_ENDPOINTS_KEY}",
-                const.OPENLDAP_ADMIN:f"{const.OPENLDAP_ADMIN_KEY}",
-                const.OPENLDAP_SECRET:f"{const.OPENLDAP_SECRET_KEY}",
+                const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
                 const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}"
                 })
         try:
@@ -190,7 +190,7 @@ class Prepare(Setup):
         Log.info("Fetching ldap hosts info.")
         #ToDo: Confstore key may change
         if Setup.is_k8s_env:
-            ldap_endpoints = Conf.get(const.CONSUMER_INDEX, const.OPENLDAP_ENDPOINTS_KEY)
+            ldap_endpoints = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ENDPOINTS])
             if ldap_endpoints:
                 Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
                 protocol, host, port = self._parse_endpoints(ldap_endpoints)
@@ -233,16 +233,22 @@ class Prepare(Setup):
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
 
-    def _set_s3_ldap_credentials(self):
+    def _set_csm_ldap_credentials(self):
         # read username's and password's for S3 and RMQ
         Log.info("Storing S3 credentials")
-        open_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_USER])
-        open_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_SECRET])
+        base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    self.conf_store_keys[const.OPENLDAP_BASEDN],
+                                    const.DEFAULT_BASE_DN)
+        csm_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_USER])
+        csm_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_SECRET])
         # Edit Current Config File.
-        if open_ldap_user and open_ldap_secret:
+        if csm_ldap_user and csm_ldap_secret:
             Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
-            Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_AUTH_USER, open_ldap_user)
-            Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_AUTH_SECRET, open_ldap_secret)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER, csm_ldap_user)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET, csm_ldap_secret)
+            #cn=authadmin,dc=seagate,dc=com
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', f"cn={csm_ldap_user},{base_dn}")
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', csm_ldap_secret)
 
     def _set_password_to_csm_user(self):
         if not self._is_user_exist():
@@ -280,21 +286,18 @@ class Prepare(Setup):
         :return:
         """
         base_dn = Conf.get(const.CONSUMER_INDEX,
-                                    const.OPENLDAP_BASEDN_KEY,
+                                    self.conf_store_keys[const.OPENLDAP_BASEDN],
                                     const.DEFAULT_BASE_DN)
-        ldap_admin_user = Conf.get(const.CONSUMER_INDEX, const.OPENLDAP_ADMIN_KEY, 'admin')
-        ldap_admin_secret = Conf.get(const.CONSUMER_INDEX, const.OPENLDAP_SECRET_KEY)
-        bind_base_dn = f"cn={ldap_admin_user},{base_dn}"
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        bind_base_dn = f"cn={ldap_root_admin_user},{base_dn}"
         Log.info(f"Set base_dn:{base_dn} and bind_base_dn:{bind_base_dn} for openldap")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}",
                  base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}",
                  bind_base_dn)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_admin_user)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_admin_secret)
-        Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', ldap_admin_user)
-        Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', ldap_admin_secret)
-
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_root_admin_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
 
     def create(self):
         """

@@ -430,7 +430,7 @@ PASSWORD_SPECIAL_CHARACTER = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 CSM_USER_NAME_MIN_LEN = 3
 CSM_USER_NAME_MAX_LEN = 64
 CSM_USER_SORTABLE_FIELDS = ['user_id', 'username', 'email', 'user_type', 'role', 'created_time',
-                            'updated_time', 'mail', 'user_role']
+                            'updated_time', 'email_address', 'user_role']
 CSM_USER_DEFAULT_TIMEOUT = 0
 CSM_USER_DEFAULT_LANGUAGE = 'English'
 CSM_USER_DEFAULT_TEMPERATURE = 'celcius'
@@ -594,7 +594,8 @@ USAGE_PERCENTAGE = 'usage_percentage'
 # Keys for  Description
 DECRYPTION_KEYS = {
     "S3>ldap_password": "S3>password_decryption_key",
-    "CSM>password": "CSM>password_decryption_key"
+    "CSM>password": "CSM>password_decryption_key",
+    "OPENLDAP>csm_ldap_user_password": "CSM>password_decryption_key"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
@@ -774,7 +775,7 @@ KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
 KEY_ROOT_LDAP_USER = "openldap_root_user_key"
-KEY_ROOT_LDAP_SCRET = "openldap_root_scret_key"
+KEY_ROOT_LDAP_SECRET = "openldap_root_secret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -792,6 +793,8 @@ DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
 LDAP_USER = "cn={0},{1}"
 CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
 CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
+CSM_LDAP_ADMIN_FILE_NAME = "csm-admin.ldif"
+CSM_LDAP_ADMIN_USER_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ADMIN_FILE_NAME)
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
 CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
 CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
@@ -800,6 +803,7 @@ CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
 CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ADMIN_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ADMIN_FILE_NAME)
 CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
@@ -814,10 +818,10 @@ PRODUCT_REALESE = 'product_release'
 PRODUCT_REALESE_KEY = 'cortx>common>product_release'
 OPENLDAP_ENDPOINTS = 'openldap_endpoints'
 OPENLDAP_ENDPOINTS_KEY = 'cortx>external>openldap>endpoints[0]'
-OPENLDAP_ADMIN = 'openldap_admin'
-OPENLDAP_ADMIN_KEY = 'cortx>external>openldap>admin'
-OPENLDAP_SECRET = 'openldap_secret'
-OPENLDAP_SECRET_KEY = 'cortx>external>openldap>secret'
+OPENLDAP_ROOT_ADMIN = 'openldap_root_admin'
+OPENLDAP_ROOT_ADMIN_KEY = 'cortx>external>openldap>admin'
+OPENLDAP_ROOT_SECRET = 'openldap_root_secret'
+OPENLDAP_ROOT_SECRET_KEY = 'cortx>external>openldap>secret'
 OPENLDAP_BASEDN = 'openldap_base_dn'
 OPENLDAP_BASEDN_KEY = 'cortx>external>openldap>base_dn'
 CONSUL_ENDPOINTS = 'consul_endpoints'
@@ -860,10 +864,10 @@ IAM_ENDPOINT = 'S3>iam>endpoints'
 IAM_HOST= 'S3>iam>host'
 IAM_PORT = 'S3>iam>port'
 IAM_PROTOCOL = 'S3>iam>protocol'
-OPEN_LDAP_AUTH_USER = 'OPENLDAP>ldap_login'
-OPEN_LDAP_AUTH_SECRET = 'OPENLDAP>ldap_password'
-OPEN_LDAP_ADMIN_USER = 'OPENLDAP>admin_login'
-OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>admin_password'
+LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
+LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
+OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
+OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
 SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'

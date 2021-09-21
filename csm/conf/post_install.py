@@ -66,8 +66,8 @@ class PostInstall(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self.validate_3rd_party_pkgs()
         if not Setup.is_k8s_env:
+            self.validate_3rd_party_pkgs()
             self._set_deployment_mode()
             self._copy_systemd_configuration()
             self._config_user()
@@ -79,6 +79,7 @@ class PostInstall(Setup):
         else:
             self.set_ssl_certificate()
             self.set_logpath()
+            self.set_env_type()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -118,15 +119,21 @@ class PostInstall(Setup):
             raise CsmSetupError(f"Failed at package Validation: {ve}")
 
     def set_ssl_certificate(self):
-        ssl_certificate = Conf.get(const.CONSUMER_INDEX, const.SSL_CERTIFICATE_KEY)
+        ssl_certificate = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate)
         Log.info(f"Setting ssl certificate path: {ssl_certificate}")
 
     def set_logpath(self):
-        log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
+        log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
         Log.info(f"Setting log path: {log_path}")
+
+    def set_env_type(self):
+        env_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", env_type)
+        Log.info(f"Setting env_type: {env_type}")
+
 
     def fetch_python_pkgs(self):
         try:

@@ -76,6 +76,7 @@ class Configure(Setup):
             self._configure_csm_web_keys()
         else:
             self.set_s3_info()
+            self._create_csm_ldap_user()
 
         try:
             self._configure_csm_ldap_schema()
@@ -107,18 +108,18 @@ class Configure(Setup):
                 const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
                 const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-                const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+                const.KEY_ROOT_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
                 })
         else:
             self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.KEY_ROOT_LDAP_USER: f"{const.OPENLDAP_ADMIN_KEY}",
-                const.KEY_ROOT_LDAP_SCRET: f"{const.OPENLDAP_SECRET_KEY}",
                 const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
                 const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
                 const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
                 const.S3_AUTH_SECRET: f"{const.S3_AUTH_SECRET_KEY}"
                 })
 
@@ -302,7 +303,8 @@ class Configure(Setup):
         Configure openLdap for CORTX Users
         """
         Log.info("Openldap configuration started for Cortx users.")
-        _rootdnpassword = self._fetch_ldap_root_password()
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
         if not _rootdnpassword:
             raise CsmSetupError("Failed to fetch LDAP root user password.")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -310,10 +312,11 @@ class Configure(Setup):
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
-            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+            Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
         ldap_url = Setup._get_ldap_url()
         # Insert cortxuser schema
-        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        self._run_ldap_cmd(f'ldapadd -x -D cn={ldap_root_admin_user},cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
         -H {ldap_url}')
 
         # Initialize dc=csm,dc=seagate,dc=com
@@ -341,8 +344,35 @@ class Configure(Setup):
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to attrs=userPassword by self write by dn.base="'+ldap_user+'" write by anonymous auth by * none')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
+        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to * by dn.base="'+ldap_user+'" write by self write by * none')
+
+    def _create_csm_ldap_user(self):
+        """
+        Create CSM ldap user
+        """
+        Log.info("Creating csm ldap user.")
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
+        ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
+        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
+        csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
+        _output, _err, _rc = self._run_ldap_cmd(f'slappasswd -s {csm_admin_ldap_password}')
+        csm_admin_ldap_password = _output.split('\n')[0]
+        ldap_url = Setup._get_ldap_url()
+        tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
+        tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
+        tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
+        tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
+        Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
+        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_ADMIN_FILE_PATH}\
+        -H {ldap_url}')
 
     def _run_ldap_cmd(self, cmd):
         """
@@ -363,19 +393,29 @@ class Configure(Setup):
             Log.error(f"Csm setup is failed Error: {e}, {_err}")
             raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
 
+
     def _modify_ldap_attribute(self, dn, attribute, value):
-        _bind_dn = "cn=admin,cn=config"
-        _ldappasswd = self._fetch_ldap_root_password()
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        _bind_dn = f"cn={ldap_root_admin_user},cn=config"
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _ldappasswd= self._fetch_ldap_password(ldap_root_secret)
         try:
             self._connect_to_ldap_server(_bind_dn, _ldappasswd)
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
+            Log.info(f"Modifying attribute permissions: {mod_attrs}")
             self._ldap_conn.modify_s(dn, mod_attrs)
             self._disconnect_from_ldap()
         except Exception as e:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-            Log.error('Error while modifying attribute- '+ attribute )
-            raise Exception('Error while modifying attribute' + attribute)
+            if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
+                import pdb;pdb.set_trace()
+                Log.warn(f"Exception: {e}")
+                if self._ldap_conn:
+                    self._disconnect_from_ldap()
+            else:
+                if self._ldap_conn:
+                    self._disconnect_from_ldap()
+                Log.error('Error while modifying attribute- '+ attribute )
+                raise Exception('Error while modifying attribute' + attribute)
 
     def _set_user_collection(self):
         """
