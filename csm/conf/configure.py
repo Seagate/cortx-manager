@@ -76,7 +76,6 @@ class Configure(Setup):
             self._configure_csm_web_keys()
         else:
             self.set_s3_info()
-            self._create_csm_ldap_user()
 
         try:
             self._configure_csm_ldap_schema()
@@ -327,6 +326,8 @@ class Configure(Setup):
         self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH}\
         -H {ldap_url}')
 
+	    # Create CSM admin user in LDAP
+        self._create_csm_ldap_user()
         # Setup necessary permissions
         self._setup_ldap_permissions(base_dn, ldap_user)
 
@@ -344,7 +345,7 @@ class Configure(Setup):
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to attrs=userPassword by self write by dn.base="'+ldap_user+'" write by anonymous auth by * none')
+        self._modify_ldap_attribute(dn, 'olcAccess', '{0}to attrs=userPassword by self write by dn.base="'+ldap_user+'" write by anonymous auth by * none')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
@@ -406,7 +407,6 @@ class Configure(Setup):
             self._disconnect_from_ldap()
         except Exception as e:
             if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
-                import pdb;pdb.set_trace()
                 Log.warn(f"Exception: {e}")
                 if self._ldap_conn:
                     self._disconnect_from_ldap()
