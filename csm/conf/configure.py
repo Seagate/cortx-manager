@@ -17,7 +17,7 @@ import os
 import time
 import ldap
 from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json, Text, Yaml
+from csm.common.payload import Json, Text
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -27,13 +27,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
-from cortx.utils.validator.v_consul import ConsulV
-from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from csm.common.process import SimpleProcess
-from csm.core.data.models.users import User
-from csm.core.services.users import CsmUserService, UserManager
-from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 
 
 class Configure(Setup):
@@ -74,18 +68,21 @@ class Configure(Setup):
         if service_name not in ["all", "csm_agent"]:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        self._set_deployment_mode()
-        self._logrotate()
-        self._configure_cron()
-        self._configure_uds_keys()
-        self._configure_csm_web_keys()
+        if not Setup.is_k8s_env:
+            self._set_deployment_mode()
+            self._logrotate()
+            self._configure_cron()
+            self._configure_uds_keys()
+            self._configure_csm_web_keys()
+        else:
+            self.set_s3_info()
+
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
-            if not self._replacement_node_flag:
-                self.create()
+            self.create()
             await self._create_cluster_admin(self.force_action)
-            for count in range(0, 10):
+            for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
                     break
@@ -101,16 +98,30 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
-            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
-            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
-            })
+        if not Setup.is_k8s_env:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
+                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+                const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE}>{self.machine_id}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
+                const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
+                const.KEY_ROOT_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+                })
+        else:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
+                const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
+                const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
+                const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
+                const.S3_AUTH_SECRET: f"{const.S3_AUTH_SECRET_KEY}"
+                })
+
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
 
     def create(self):
@@ -125,6 +136,31 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
+
+    def set_s3_info(self):
+        """
+        This Function will set s3  related configurations.
+        :return:
+        """
+        Log.info("Setting S3 configurations in csm config")
+        iam_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_IAM_ENDPOINTS_KEY)
+        iam_protocol, iam_host, iam_port = self._parse_endpoints(iam_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_ENDPOINT, iam_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_HOST, iam_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PORT, iam_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL, iam_protocol)
+
+        data_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_DATA_ENDPOINTS_KEY)
+        data_protocol, data_host, data_port = self._parse_endpoints(data_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_ENDPOINT, data_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_HOST, data_host)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PORT, data_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PROTOCOL, data_protocol)
+
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
 
     def _configure_cron(self):
         """
@@ -152,6 +188,13 @@ class Configure(Setup):
             Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
         if os.path.exists(const.LOGROTATE_DIR_DEST):
             Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
+            csm_agent_log_conf_data = Text(const.CSM_LOGROTATE_DEST).load()
+            if not csm_agent_log_conf_data:
+                Log.warn(f"File {const.CSM_LOGROTATE_DEST} not updated.")
+            else:
+                updated_data = csm_agent_log_conf_data.replace("<CSM_AGENT_LOG_PATH>",
+                                                   self._get_log_path_from_conf_store())
+                Text(const.CSM_LOGROTATE_DEST).dump(updated_data)
             if (self._setup_info and self._setup_info[
                 const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
                 sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
@@ -259,7 +302,8 @@ class Configure(Setup):
         Configure openLdap for CORTX Users
         """
         Log.info("Openldap configuration started for Cortx users.")
-        _rootdnpassword = self._fetch_ldap_root_password()
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
         if not _rootdnpassword:
             raise CsmSetupError("Failed to fetch LDAP root user password.")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -267,10 +311,11 @@ class Configure(Setup):
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
-            Conf.get(const.CSM_GLOBAL_INDEX, const.S3_LDAP_LOGIN),base_dn)
+            Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
         ldap_url = Setup._get_ldap_url()
         # Insert cortxuser schema
-        self._run_ldap_cmd(f'ldapadd -x -D cn=admin,cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        self._run_ldap_cmd(f'ldapadd -x -D cn={ldap_root_admin_user},cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
         -H {ldap_url}')
 
         # Initialize dc=csm,dc=seagate,dc=com
@@ -281,6 +326,8 @@ class Configure(Setup):
         self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH}\
         -H {ldap_url}')
 
+	    # Create CSM admin user in LDAP
+        self._create_csm_ldap_user()
         # Setup necessary permissions
         self._setup_ldap_permissions(base_dn, ldap_user)
 
@@ -301,6 +348,31 @@ class Configure(Setup):
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
+    def _create_csm_ldap_user(self):
+        """
+        Create CSM ldap user
+        """
+        Log.info("Creating csm ldap user.")
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
+        ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
+        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
+        csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
+        _output, _err, _rc = self._run_ldap_cmd(f'slappasswd -s {csm_admin_ldap_password}')
+        csm_admin_ldap_password = _output.split('\n')[0]
+        ldap_url = Setup._get_ldap_url()
+        tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
+        tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
+        tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
+        tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
+        Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
+        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_ADMIN_FILE_PATH}\
+        -H {ldap_url}')
+
     def _run_ldap_cmd(self, cmd):
         """
         Run command and throw error if cmd failed
@@ -320,19 +392,28 @@ class Configure(Setup):
             Log.error(f"Csm setup is failed Error: {e}, {_err}")
             raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
 
+
     def _modify_ldap_attribute(self, dn, attribute, value):
-        _bind_dn = "cn=admin,cn=config"
-        _ldappasswd = self._fetch_ldap_root_password()
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        _bind_dn = f"cn={ldap_root_admin_user},cn=config"
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        _ldappasswd= self._fetch_ldap_password(ldap_root_secret)
         try:
             self._connect_to_ldap_server(_bind_dn, _ldappasswd)
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
+            Log.info(f"Modifying attribute permissions: {mod_attrs}")
             self._ldap_conn.modify_s(dn, mod_attrs)
             self._disconnect_from_ldap()
         except Exception as e:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-            Log.error('Error while modifying attribute- '+ attribute )
-            raise Exception('Error while modifying attribute' + attribute)
+            if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
+                Log.warn(f"Exception: {e}")
+                if self._ldap_conn:
+                    self._disconnect_from_ldap()
+            else:
+                if self._ldap_conn:
+                    self._disconnect_from_ldap()
+                Log.error('Error while modifying attribute- '+ attribute )
+                raise Exception('Error while modifying attribute' + attribute)
 
     def _set_user_collection(self):
         """

@@ -44,7 +44,7 @@ def test_csm_admin_user_create(args):
     data = {'user_id': 'csm_test_user',
             'password': 'Csmuser@123',
             'user_role': 'admin',
-            'mail': 'admin@test.com',
+            'email_address': 'admin@test.com',
             'alert_notification': True}
 
     # Better replace with local dict storage to avoid this
@@ -60,7 +60,7 @@ def test_csm_admin_user_create(args):
     assert 'created_time' in user
     assert user['username'] == data['user_id']
     assert user['user_role'] == data['user_role']
-    assert user['mail'] == data['mail']
+    assert user['email_address'] == data['email_address']
     assert user['alert_notification'] == data['alert_notification']
 
 

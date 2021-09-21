@@ -64,33 +64,48 @@ class Prepare(Setup):
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
         self._prepare_and_validate_confstore_keys()
-        self._set_deployment_mode()
+        if not Setup.is_k8s_env:
+            self._set_deployment_mode()
+            self._set_fqdn_for_nodeid()
+            self._set_password_to_csm_user()
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_db_host_addr()
-        self._set_ldap_port()
-        self._set_fqdn_for_nodeid()
-        self._set_s3_ldap_credentials()
-        self._set_password_to_csm_user()
+        self._set_csm_ldap_credentials()
         self._set_ldap_params()
-        if not self._replacement_node_flag:
-            self.create()
+        self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        self.conf_store_keys.update({
-            const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE_INFO}",
-            const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE_INFO}>{const.TYPE}",
-            const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE_INFO}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-            const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
-            const.KEY_HOSTNAME:f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}",
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
-            const.KEY_S3_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
-            const.KEY_S3_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
-            const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-            const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
-            })
-
+        if not Setup.is_k8s_env:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f">{const.TYPE}",
+                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
+                const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE}>{self.machine_id}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
+                const.KEY_HOSTNAME:f"{const.SERVER_NODE}>{self.machine_id}>{const.HOSTNAME}",
+                const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.KEY_CSM_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
+                const.KEY_CSM_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
+                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
+                const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
+                })
+        else:
+            self.conf_store_keys.update({
+                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
+                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
+                const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
+                const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                # TODO: confirm following keys: add csm user and secret using L123
+                const.KEY_CSM_LDAP_USER:f"{const.CSM_AGENT_AUTH_ADMIN_KEY}",
+                const.KEY_CSM_LDAP_SECRET:f"{const.CSM_AGENT_AUTH_SECRET_KEY}",
+                const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
+                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
+                const.OPENLDAP_ENDPOINTS:f"{const.OPENLDAP_ENDPOINTS_KEY}",
+                const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
+                const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
+                const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}"
+                })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
@@ -103,10 +118,11 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx"
         '''
         Log.info("Set decryption keys for CSM and S3")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
-                    self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
+        if not Setup.is_k8s_env:
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
+                        self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
-                    self.conf_store_keys[const.KEY_S3_LDAP_SECRET].split('>')[0])
+                    self.conf_store_keys[const.KEY_CSM_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
         Log.info("Setting up cluster id")
@@ -137,6 +153,18 @@ class Prepare(Setup):
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
         return [data_nw_private_fqdn]
+
+    def _get_consul_config(self):
+        endpoint = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
+        secret =  Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_SECRET_KEY])
+        if not endpoint:
+            raise CsmSetupError("Endpoints not found")
+            #TODO: HOW TO USE SECRET?
+            # endpoints = [consul-server1.cortx-cluster.lyve-cloud.com:<port>, consul-server2.cortx-cluster.lyve-cloud.com:<port>]
+        protocol, host, port = self._parse_endpoints(endpoint)
+        Log.info(f"Fetching consul endpoint : {endpoint}")
+        return protocol, [host], port, secret, endpoint
+
     def _get_es_hosts_info(self):
     	"""
         Obtains list of elasticsearch hosts ip running in a cluster
@@ -161,45 +189,69 @@ class Prepare(Setup):
         """
         Log.info("Fetching ldap hosts info.")
         #ToDo: Confstore key may change
-        ldap_endpoints = Conf.get(const.CONSUMER_INDEX, "cortx>software>openldap>hosts", None)
-        if ldap_endpoints:
-            return ldap_endpoints
+        if Setup.is_k8s_env:
+            ldap_endpoints = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ENDPOINTS])
+            if ldap_endpoints:
+                Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
+                protocol, host, port = self._parse_endpoints(ldap_endpoints)
+                resolved_ip = socket.gethostbyname(host)
+                return [resolved_ip], port
+            else:
+                raise CsmSetupError("LDAP endpoints not found.")
         Log.info("Fetching data N/W info.")
         data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
         resolved_ip = socket.gethostbyname(data_nw_private_fqdn)
-        return [resolved_ip]
+        return [resolved_ip], const.DEFAULT_OPENLDAP_PORT
 
     def _set_db_host_addr(self):
         """
         Sets database hosts address in CSM config.
         :return:
         """
-        consul_host = self._get_consul_info()
-        es_host = self._get_es_hosts_info()
-        ldap_hosts = self._get_ldap_hosts_info()
+        ldap_hosts, ldap_port = self._get_ldap_hosts_info()
+        if  not Setup.is_k8s_env:
+            es_host = self._get_es_hosts_info()
+            consul_host = self._get_consul_info()
+        else:
+            protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
+            consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
-            Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
+            if  not Setup.is_k8s_env:
+                Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
+                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
+            else:
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>port', consul_port)
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>password', secret)
+                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>login', consul_login)
+                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
+                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
+
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
 
-    def _set_s3_ldap_credentials(self):
-                # read username's and password's for S3 and RMQ
-        Log.info("Storing s3 credentials")
-        open_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_S3_LDAP_USER])
-        open_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_S3_LDAP_SECRET])
+    def _set_csm_ldap_credentials(self):
+        # read username's and password's for S3 and RMQ
+        Log.info("Storing S3 credentials")
+        base_dn = Conf.get(const.CONSUMER_INDEX,
+                                    self.conf_store_keys[const.OPENLDAP_BASEDN],
+                                    const.DEFAULT_BASE_DN)
+        csm_ldap_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_USER])
+        csm_ldap_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_LDAP_SECRET])
         # Edit Current Config File.
-        if open_ldap_user and open_ldap_secret:
+        if csm_ldap_user and csm_ldap_secret:
             Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_LOGIN}",
-                     open_ldap_user)
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>{const.LDAP_PASSWORD}",
-                     open_ldap_secret)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER, csm_ldap_user)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET, csm_ldap_secret)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', f"cn={csm_ldap_user},{base_dn}")
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', csm_ldap_secret)
 
     def _set_password_to_csm_user(self):
         if not self._is_user_exist():
+
             raise CsmSetupError(f"{self._user} not created on system.")
         Log.info("Fetch decrypted password.")
         _password = self._fetch_csm_user_password(decrypt=True)
@@ -232,41 +284,19 @@ class Prepare(Setup):
         Sets openldap configuration in CSM config.
         :return:
         """
-        #ToDo: Confstore key may change
         base_dn = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>openldap>base_dn",
+                                    self.conf_store_keys[const.OPENLDAP_BASEDN],
                                     const.DEFAULT_BASE_DN)
-        bind_base_dn = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>openldap>bind_base_dn",
-                                    const.DEFAULT_BIND_BASE_DN)
-        Log.info("Set base_dn and bind_base_dn for openldap")
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        bind_base_dn = f"cn={ldap_root_admin_user},{base_dn}"
+        Log.info(f"Set base_dn:{base_dn} and bind_base_dn:{bind_base_dn} for openldap")
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}",
                  base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}",
                  bind_base_dn)
-
-    def _get_ldap_port_addr(self):
-        """
-        Obtains ldap port address
-        :return: port address where ldap is running
-        """
-        #ToDo: Confstore key may change
-        ldap_port = Conf.get(const.CONSUMER_INDEX,
-                                    "cortx>software>openldap>port",
-                                    const.DEFAULT_OPENLDAP_PORT)
-        return ldap_port
-
-    def _set_ldap_port(self):
-        """
-        Sets ldap port address in database.conf.
-        :return:
-        """
-        ldap_port = self._get_ldap_port_addr()
-        try:
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
-        except Exception as e:
-            Log.error(f'Unable to set ldap port: {e}')
-            raise CsmSetupError(f'Unable to set ldap port: {e}')
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_root_admin_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
 
     def create(self):
         """
@@ -278,6 +308,5 @@ class Prepare(Setup):
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
-        self.store_encrypted_password()
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
