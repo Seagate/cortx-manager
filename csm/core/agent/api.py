@@ -216,7 +216,7 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     async def _is_public(request):
-        if "/api/docs" in str(request.rel_url):
+        if const.SWAGGER_JSON_URL in request.rel_url.path:
             return True
         handler = await CsmRestApi._resolve_handler(request)
         return CsmView.is_public(handler, request.method)
@@ -448,7 +448,7 @@ class CsmRestApi(CsmApi, ABC):
             app=CsmRestApi._app,
             title="CORTX Manager",
             version="v2",
-            url="/api/docs/swagger.json",
+            url=const.SWAGGER_JSON_URL,
         )
         web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
