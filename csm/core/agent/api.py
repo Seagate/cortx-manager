@@ -449,7 +449,6 @@ class CsmRestApi(CsmApi, ABC):
             title="CORTX Manager",
             version="v2",
             url="/api/docs/swagger.json",
-            swagger_path="/api/docs",
         )
         web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
