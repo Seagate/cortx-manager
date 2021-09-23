@@ -330,8 +330,10 @@ class Configure(Setup):
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
-        Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
+        csm_ldap_init_file_path = f'{self.config_path}/{const.CSM_LDAP_INIT_FILE_NAME}'
+        Text(csm_ldap_init_file_path).dump(tmpl_init_data)
+        self._perform_ldif_parsing(csm_ldap_init_file_path, bind_base_dn, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {csm_ldap_init_file_path}')
 
 	    # Create CSM admin user in LDAP
         self._create_csm_ldap_user()
@@ -342,8 +344,10 @@ class Configure(Setup):
         Log.info(f"Updating base dn in {const.CORTXUSER_ACCOUNT_LDIF}")
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
-        Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, _rootdnpassword)
+        csm_ldap_acc_file_path = f'{self.config_path}/{const.CSM_LDAP_ACC_FILE_NAME}'
+        Text(csm_ldap_acc_file_path).dump(tmpl_useracc_data)
+        self._perform_ldif_parsing(csm_ldap_acc_file_path, ldap_user, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {csm_ldap_acc_file_path}')
         Log.info("Openldap configuration completed for Cortx users.")
 
     def _setup_ldap_permissions(self, base_dn, ldap_user):
@@ -372,8 +376,10 @@ class Configure(Setup):
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
-        Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
+        csm_ldap_admin_file_path = f'{self.config_path}/{const.CSM_LDAP_ADMIN_FILE_NAME}'
+        Text(csm_ldap_admin_file_path).dump(tmpl_init_data)
+        self._perform_ldif_parsing(csm_ldap_admin_file_path, bind_base_dn, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {csm_ldap_admin_file_path}')
 
     def _modify_ldap_attribute(self, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')

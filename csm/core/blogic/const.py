@@ -802,9 +802,6 @@ CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
 CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
-CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_INIT_FILE_NAME)
-CSM_LDAP_ADMIN_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ADMIN_FILE_NAME)
-CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(CSM_CONF_PATH, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
