@@ -311,6 +311,8 @@ class Configure(Setup):
         """
         Configure openLdap for CORTX Users
         """
+        if not os.path.exists(const.TMP_CSM):
+            os.mkdir(const.TMP_CSM)
         Log.info("Openldap configuration started for Cortx users.")
         ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
         _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
@@ -332,6 +334,7 @@ class Configure(Setup):
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
         self._perform_ldif_parsing(const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_INIT_FILE_PATH}')
 
 	    # Create CSM admin user in LDAP
         self._create_csm_ldap_user()
@@ -344,6 +347,7 @@ class Configure(Setup):
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
         self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ACC_FILE_PATH}')
         Log.info("Openldap configuration completed for Cortx users.")
 
     def _setup_ldap_permissions(self, base_dn, ldap_user):
@@ -374,6 +378,7 @@ class Configure(Setup):
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
         Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
         self._perform_ldif_parsing(const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
+        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ADMIN_FILE_PATH}')
 
     def _modify_ldap_attribute(self, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
