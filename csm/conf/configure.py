@@ -322,7 +322,6 @@ class Configure(Setup):
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
             Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
-        ldap_url = Setup._get_ldap_url()
         # Insert cortxuser schema
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
         self._perform_ldif_parsing(const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
@@ -369,33 +368,12 @@ class Configure(Setup):
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
-        ldap_url = Setup._get_ldap_url()
         tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
         Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
         self._perform_ldif_parsing(const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
-
-    def _run_ldap_cmd(self, cmd):
-        """
-        Run command and throw error if cmd failed
-        """
-        try:
-            _err = ""
-            Log.info(f"Executing cmd: {cmd}")
-            _proc = SimpleProcess(cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            Log.info(f"Output: {_output}, \n Err:{_err}, \n RC:{_rc}")
-            #_rc = 68: dc=csm,dc=seagate,dc=com already exists
-            #_rc = 80: Cortxuser schema already exists
-            if _rc not in (0, 68, 80):
-                raise Exception(f'Ldap operation failed with code: {_rc}')
-            return _output, _err, _rc
-        except Exception as e:
-            Log.error(f"Csm setup is failed Error: {e}, {_err}")
-            raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
-
 
     def _modify_ldap_attribute(self, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
