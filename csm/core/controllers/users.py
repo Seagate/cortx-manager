@@ -19,6 +19,7 @@ from marshmallow import Schema, fields, validate, pre_load, post_load
 from marshmallow.exceptions import ValidationError
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
+from csm.core.blogic.apidoc import default_api_response
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator
 from cortx.utils.log import Log
@@ -110,12 +111,9 @@ class CsmUsersListView(CsmView):
     GET REST implementation for fetching csm users
     """
     @docs(
-        tags=["users"],
-        summary="Get the list of users",
-        responses={
-            200: {'description': 'Ok, users list'},
-            401: {'description': 'Unauthorized'}
-        }
+        tags=["CSM user"],
+        summary="Get list of CSM users",
+        responses=default_api_response(200, 400, 401, 403, 499, 500)
     )
     @querystring_schema(CsmGetUsersSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
@@ -129,12 +127,11 @@ class CsmUsersListView(CsmView):
     POST REST implementation for creating a csm user
     """
     @docs(
-        tags=["users"],
-        summary="Create a new user",
-        responses={
-            201: {'description': 'Ok, users is created'},
-            401: {'description': 'Unauthorized'}
-        }
+        tags=["Admin user", "CSM user"],
+        summary="Create a new CSM user",
+        description="Users with the admin role are able to create any other CSM users. "
+                    "Users with the manage role are able to create manage and monitor users.",
+        responses=default_api_response(201, 400, 401, 422, 499, 500)
     )
     @json_schema(CsmUserCreateSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
@@ -168,12 +165,9 @@ class CsmUsersView(CsmView):
     GET REST implementation for csm account get request
     """
     @docs(
-        tags=["users"],
+        tags=["CSM user"],
         summary="Get the single CSM user",
-        responses={
-            200: {'description': 'Ok, user description'},
-            401: {'description': 'Unauthorized'}
-        }
+        responses=default_api_response(200, 400, 401, 403, 404, 499, 500)
     )
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
@@ -186,12 +180,12 @@ class CsmUsersView(CsmView):
     DELETE REST implementation for csm account delete request
     """
     @docs(
-        tags=["users"],
-        summary="Delete the user",
-        responses={
-            200: {'description': 'Ok, users is deleted'},
-            401: {'description': 'Unauthorized'}
-        }
+        tags=["CSM user"],
+        summary="Delete the CSM user",
+        description="Admin user is able to delete anyone. "
+                    "Other users are only able to delete themselves. "
+                    "The last admin user can not be deleted.",
+        responses=default_api_response(200, 400, 401, 404)
     )
     @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
@@ -210,12 +204,14 @@ class CsmUsersView(CsmView):
     PATCH implementation for creating a csm user
     """
     @docs(
-        tags=["users"],
+        tags=["CSM user"],
         summary="Update the CSM user",
-        responses={
-            201: {'description': 'Ok, users is updated'},
-            401: {'description': 'Unauthorized'}
-        }
+        description="In general, admin user is able to update anyone, "
+                    "manage user - self and monitor, monitor user - only self. "
+                    "Additional rules are applied for changing the password and the role: "
+                    "manage user is not able to change the self role. "
+                    "The current_password should be provided if the user updates self.",
+        responses=default_api_response(200, 400, 401, 403, 404)
     )
     @json_schema(CsmUserPatchSchema())
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
