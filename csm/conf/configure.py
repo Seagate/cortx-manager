@@ -28,6 +28,7 @@ from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.process import SimpleProcess
+from ldif import LDIFRecordList
 
 
 class Configure(Setup):
@@ -321,19 +322,16 @@ class Configure(Setup):
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
             Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
-        ldap_url = Setup._get_ldap_url()
         # Insert cortxuser schema
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
-        self._run_ldap_cmd(f'ldapadd -x -D cn={ldap_root_admin_user},cn=config -w {_rootdnpassword} -f {const.CORTXUSER_SCHEMA_LDIF}\
-        -H {ldap_url}')
+        self._perform_ldif_parsing(const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
 
         # Initialize dc=csm,dc=seagate,dc=com
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
-        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_INIT_FILE_PATH}\
-        -H {ldap_url}')
+        self._perform_ldif_parsing(const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
 
 	    # Create CSM admin user in LDAP
         self._create_csm_ldap_user()
@@ -345,8 +343,7 @@ class Configure(Setup):
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._run_ldap_cmd(f'ldapadd -w {_rootdnpassword} -x -D {ldap_user} -f {const.CSM_LDAP_ACC_FILE_PATH}\
-        -H {ldap_url}')
+        self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, _rootdnpassword)
         Log.info("Openldap configuration completed for Cortx users.")
 
     def _setup_ldap_permissions(self, base_dn, ldap_user):
@@ -371,36 +368,12 @@ class Configure(Setup):
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
-        _output, _err, _rc = self._run_ldap_cmd(f'slappasswd -s {csm_admin_ldap_password}')
-        csm_admin_ldap_password = _output.split('\n')[0]
-        ldap_url = Setup._get_ldap_url()
         tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
         Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
-        self._run_ldap_cmd(f'ldapadd -x -D {bind_base_dn} -w {_rootdnpassword} -f {const.CSM_LDAP_ADMIN_FILE_PATH}\
-        -H {ldap_url}')
-
-    def _run_ldap_cmd(self, cmd):
-        """
-        Run command and throw error if cmd failed
-        """
-        try:
-            _err = ""
-            Log.info(f"Executing cmd: {cmd}")
-            _proc = SimpleProcess(cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            Log.info(f"Output: {_output}, \n Err:{_err}, \n RC:{_rc}")
-            #_rc = 68: dc=csm,dc=seagate,dc=com already exists
-            #_rc = 80: Cortxuser schema already exists
-            if _rc not in (0, 68, 80):
-                raise Exception(f'Ldap operation failed with code: {_rc}')
-            return _output, _err, _rc
-        except Exception as e:
-            Log.error(f"Csm setup is failed Error: {e}, {_err}")
-            raise CsmSetupError(f"Csm setup is failed Error: {e}, {_err}")
-
+        self._perform_ldif_parsing(const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
 
     def _modify_ldap_attribute(self, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
@@ -412,17 +385,41 @@ class Configure(Setup):
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
             Log.info(f"Modifying attribute permissions: {mod_attrs}")
             self._ldap_conn.modify_s(dn, mod_attrs)
-            self._disconnect_from_ldap()
         except Exception as e:
             if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
-                Log.warn(f"Exception: {e}")
-                if self._ldap_conn:
-                    self._disconnect_from_ldap()
+                Log.warn(f"Exception: Type or Value already exists: {e}")
             else:
-                if self._ldap_conn:
-                    self._disconnect_from_ldap()
                 Log.error('Error while modifying attribute- '+ attribute )
                 raise Exception('Error while modifying attribute' + attribute)
+        finally:
+            if self._ldap_conn:
+                self._disconnect_from_ldap()
+
+    def _perform_ldif_parsing(self, filename, binddn, rootpassword):
+        parser = LDIFRecordList(open(filename, 'r'))
+        parser.parse()
+        for dn, entry in parser.all_records:
+            add_record = list(entry.items())
+            self._add_attribute(binddn, dn, add_record, rootpassword)
+
+    def _add_attribute(self, binddn, dn, record, pwd):
+        try:
+            self._connect_to_ldap_server(binddn, pwd)
+            self._ldap_conn.add_s(dn, record)
+        except Exception as e:
+            if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
+                Log.warn(f"Exception:Type already exist: {e}")
+            elif isinstance(e, ldap.OTHER):
+                Log.warn(f"Exception:Attribute  Error: {e}")
+            elif isinstance(e, ldap.ALREADY_EXISTS):
+                Log.warn(f"Exception: Resource already Exist: {e}")
+            else:
+                Log.error('Error while adding attribute')
+                raise Exception('Error while adding attribute')
+        finally:
+            if self._ldap_conn:
+                self._disconnect_from_ldap()
+
 
     def _set_user_collection(self):
         """
