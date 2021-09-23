@@ -135,7 +135,6 @@ TYPE_S3_SERVER = 'S3_SERVER'
 CORTX = 'cortx'
 TMP_CSM = '/tmp/csm'
 CSM_ETC_DIR = '/etc/csm'
-TMP_CSM = '/tmp/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
@@ -802,6 +801,9 @@ CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
 CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
+CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_INIT_FILE_NAME)
+CSM_LDAP_ADMIN_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_ADMIN_FILE_NAME)
+CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_ACC_FILE_NAME)
 
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
