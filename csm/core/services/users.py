@@ -366,7 +366,7 @@ class CsmUserService(ApplicationService):
             if current_password is None:
                 msg = 'The current password is missing'
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
-            if not Passwd.verify(current_password, user.userPassword):
+            if not Passwd.verify(current_password, user.user_password):
                 msg = 'The current password is not valid'
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
