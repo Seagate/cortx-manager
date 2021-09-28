@@ -232,11 +232,11 @@ class CsmAgent:
         if not Options.debug:
             CsmAgent._daemonize()
         env_type =  Conf.get(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}")
-        if not (env_type == "K8s"):
+        if not (env_type == const.K8S):
              CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Started stopping csm agent")
-        if not (env_type == "K8s"):
+        if not (env_type == const.K8S):
             CsmAgent.alert_monitor.stop()
             Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")

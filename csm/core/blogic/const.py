@@ -638,7 +638,7 @@ DEV = 'dev'
 VM = 'VM'
 VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
-ENV_TYPE_KEY = 'cortx>common>environment_type'
+ENV_TYPE_KEY = 'cortx>common>setup_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -812,7 +812,7 @@ DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 
 # LC keys
 ENV_TYPE = "env_type"
-ENV_TYPE_KEY = "cortx>common>environment_type"
+ENV_TYPE_KEY = "cortx>common>setup_type"
 PRODUCT_REALESE = 'product_release'
 PRODUCT_REALESE_KEY = 'cortx>common>product_release'
 OPENLDAP_ENDPOINTS = 'openldap_endpoints'
@@ -854,7 +854,7 @@ CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
 CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 
 # keys for conf file setup
-K8S = "K8s"
+K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
 S3_DATA_HOST= 'S3>data>host'
 S3_DATA_PORT = 'S3>data>port'

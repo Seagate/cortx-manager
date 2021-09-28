@@ -314,7 +314,7 @@ class Configure(Setup):
         if not os.path.exists(const.TMP_CSM):
             os.mkdir(const.TMP_CSM)
         Log.info("Openldap configuration started for Cortx users.")
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
         if not _rootdnpassword:
             raise CsmSetupError("Failed to fetch LDAP root user password.")
@@ -363,7 +363,7 @@ class Configure(Setup):
         Create CSM ldap user
         """
         Log.info("Creating csm ldap user.")
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
@@ -383,7 +383,7 @@ class Configure(Setup):
     def _modify_ldap_attribute(self, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
         _bind_dn = f"cn={ldap_root_admin_user},cn=config"
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _ldappasswd= self._fetch_ldap_password(ldap_root_secret)
         try:
             self._connect_to_ldap_server(_bind_dn, _ldappasswd)
