@@ -238,26 +238,35 @@ class Setup:
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_ADMIN_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_USER)
+                                    const.CSM_AGENT_MGMT_ADMIN_KEY)
         cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_SECRET_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_PASS)
+                                    const.CSM_AGENT_MGMT_SECRET_KEY)
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_EMAIL_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    const.OPENLDAP_BASEDN_KEY)
+                                    const.CSM_AGENT_EMAIL_KEY)
+        if not (cluster_admin_user or cluster_admin_secret or cluster_admin_emailid):
+            raise CsmSetupError("Cluster admin details  not obtainer from confstore")
+        Log.info("Set Cortx admin credentials in config")
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
+        cluster_admin_secret = self._decrypt_secret(cluster_admin_secret, self.cluster_id,
+                                                Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        "S3>password_decryption_key"))
         ldap_csm_admin_secret = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>password")
-        #Security.decrypt_conf()
+
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(f"{self.config_path}/{const.DB_CONF_FILE_NAME}").load())
         conf['databases']["openldap"]["config"][const.PORT] = int(
                     conf['databases']["openldap"]["config"][const.PORT])
-        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>login")
-        conf['databases']["openldap"]["config"]["password"] = self._fetch_ldap_password(ldap_csm_admin_secret)
+        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX,
+                                             "databases>openldap>config>login")
+        conf['databases']["openldap"]["config"]["password"] = \
+                            self._decrypt_secret(ldap_csm_admin_secret,
+                                                self.cluster_id,
+                                                Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        "S3>password_decryption_key"))
 
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
@@ -366,13 +375,10 @@ class Setup:
         Setup._run_cmd("rm -rf " + bundle_path)
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
-    def _fetch_ldap_password(self, ldap_secret):
+    def _decrypt_secret(self, secret, cluster_id, decryption_key):
         Log.info("Fetching LDAP root user password from Conf Store.")
         try:
-
-            cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-            cipher_key = Cipher.generate_key(cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+            cipher_key = Cipher.generate_key(cluster_id,decryption_key)
         except KvError as error:
             Log.error(f"Failed to Fetch keys from Conf store. {error}")
             return None
@@ -381,7 +387,7 @@ class Setup:
             return None
         try:
             ldap_root_decrypted_value = Cipher.decrypt(cipher_key,
-                                                ldap_secret.encode("utf-8"))
+                                                secret.encode("utf-8"))
             return ldap_root_decrypted_value.decode('utf-8')
         except CipherInvalidToken as error:
             Log.error(f"Decryption for LDAP root user password Failed. {error}")

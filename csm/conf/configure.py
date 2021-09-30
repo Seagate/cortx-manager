@@ -85,13 +85,13 @@ class Configure(Setup):
             self._configure_uds_keys()
             self._configure_csm_web_keys()
         else:
+            self.cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
             self.set_s3_info()
-
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
-            self.create()
             await self._create_cluster_admin(self.force_action)
+            self.create()
             for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
@@ -315,7 +315,8 @@ class Configure(Setup):
             os.mkdir(const.TMP_CSM)
         Log.info("Openldap configuration started for Cortx users.")
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
+        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         if not _rootdnpassword:
             raise CsmSetupError("Failed to fetch LDAP root user password.")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -364,14 +365,16 @@ class Configure(Setup):
         """
         Log.info("Creating csm ldap user.")
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
+        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
-        csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
+        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
@@ -384,7 +387,8 @@ class Configure(Setup):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
         _bind_dn = f"cn={ldap_root_admin_user},cn=config"
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _ldappasswd= self._fetch_ldap_password(ldap_root_secret)
+        _ldappasswd= self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         try:
             self._connect_to_ldap_server(_bind_dn, _ldappasswd)
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
