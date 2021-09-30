@@ -251,16 +251,6 @@ class CsmAgent:
             Log.info("Finished stopping alert monitor service")
         Log.info("Finished stopping csm agent")
 
-    @staticmethod
-    def usage(prog: str):
-        """ Print usage instructions """
-
-        sys.stderr.write(
-            f"usage: {prog} [-h] {{start}} [--debug]\n"
-            f"where:\n"
-            f"start   Start csm_agent\n"
-            f"--debug   Enter debug mode\n")
-
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
@@ -269,9 +259,6 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
-    if not Options.start or len(sys.argv) < 2 or "-h" in sys.argv:
-        CsmAgent.usage(sys.argv[0])
-        os._exit(1)
     from csm.common.conf import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import Yaml, Json
