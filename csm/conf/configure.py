@@ -85,7 +85,9 @@ class Configure(Setup):
             self._configure_uds_keys()
             self._configure_csm_web_keys()
         else:
-            self.cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
+            self.cluster_id = Conf.get(const.CONSUMER_INDEX,
+                            self.conf_store_keys[const.KEY_CLUSTER_ID])
+            self.set_csm_endpoint()
             self.set_s3_info()
         try:
             self._configure_csm_ldap_schema()
@@ -126,6 +128,7 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
                 const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
+                const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
                 const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
@@ -146,6 +149,18 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
+
+    def set_csm_endpoint(self):
+        Log.info("Setting csm endpoint in csm config")
+        csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
+        csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
+        # Not considering Hostname. Bydefault 0.0.0.0 used
+        # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
+        if csm_protocol == 'http':
+            Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'true')
+        Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
     def set_s3_info(self):
         """
