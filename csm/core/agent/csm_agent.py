@@ -36,24 +36,34 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.CSM_CONF_FILE_NAME}")
+        if Options.config:
+                Conf.load(const.CONSUMER_INDEX, Options.config)
+                conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
+                csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
+                if not os.path.exists(os.path.join(csm_config_dir, const.CSM_CONF_FILE_NAME)) or \
+                    not os.path.exists(os.path.join(csm_config_dir, const.DB_CONF_FILE_NAME)):
+                    raise Exception(f"Configurations not available at {csm_config_dir}")
+        else:
+            csm_config_dir = const.DEFAULT_CSM_CONF_PATH
+
+        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
                syslog_port= int(syslog_port) if syslog_port else None,
                backup_count= int(backup_count) if backup_count else None,
                file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-               level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
+               level="DEBUG" if Options.debug \
+                            else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        db_config = Yaml(f"{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}").load()
-        Conf.load(const.DATABASE_INDEX, f"yaml://{const.DEFAULT_CSM_CONF_PATH}/{const.DB_CONF_FILE_NAME}")
+        db_config = Yaml(f"{csm_config_dir}/{const.DB_CONF_FILE_NAME}").load()
+        Conf.load(const.DATABASE_INDEX, f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(
@@ -229,7 +239,7 @@ class CsmAgent:
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_AGENT>port')
 
-        if not Options.debug:
+        if Options.daemonize:
             CsmAgent._daemonize()
         env_type =  Conf.get(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}")
         if not (env_type == const.K8S):

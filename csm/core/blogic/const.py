@@ -813,6 +813,7 @@ DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 # LC keys
 ENV_TYPE = "env_type"
 ENV_TYPE_KEY = "cortx>common>setup_type"
+CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
 PRODUCT_REALESE = 'product_release'
 PRODUCT_REALESE_KEY = 'cortx>common>product_release'
 OPENLDAP_ENDPOINTS = 'openldap_endpoints'
@@ -874,6 +875,6 @@ LOG_PATH = 'Log>log_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
 S3_AUTH_USER_CONF = 'S3>ldap_login'
 S3_AUTH_SECRET_CONF = 'S3>ldap_password'
-CLUSTER_ADMIN_USER = 'cluster_admin>user'
-CLUSTER_ADMIN_SECRET = 'cluster_admin>secret'
-CLUSTER_ADMIN_EMAIL = 'cluster_admin>email'
+CLUSTER_ADMIN_USER = 'CLUSTER_ADMIN>user'
+CLUSTER_ADMIN_SECRET = 'CLUSTER_ADMIN>secret'
+CLUSTER_ADMIN_EMAIL = 'CLUSTER_ADMIN>email'
