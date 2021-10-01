@@ -157,8 +157,8 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
-        if csm_protocol == 'http':
-            Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'true')
+        if csm_protocol == 'https':
+            Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'false')
         Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
