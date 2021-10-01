@@ -203,8 +203,7 @@ class Prepare(Setup):
             if ldap_endpoints:
                 Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
                 protocol, host, port = self._parse_endpoints(ldap_endpoints)
-                resolved_ip = socket.gethostbyname(host)
-                return [resolved_ip], port
+                return [host], port
             else:
                 raise CsmSetupError("LDAP endpoints not found.")
         Log.info("Fetching data N/W info.")
