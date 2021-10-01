@@ -134,7 +134,7 @@ class PostInstall(Setup):
 
     def set_logpath(self):
         log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, f"{log_path}/csm")
         Log.info(f"Setting log path: {log_path}")
 
     def set_env_type(self):
