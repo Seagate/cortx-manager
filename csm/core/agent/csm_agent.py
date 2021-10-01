@@ -47,7 +47,7 @@ class CsmAgent:
                syslog_port= int(syslog_port) if syslog_port else None,
                backup_count= int(backup_count) if backup_count else None,
                file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
-               log_path= Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
                level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
