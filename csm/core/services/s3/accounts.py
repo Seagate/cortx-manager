@@ -44,7 +44,8 @@ class S3AccountService(S3BaseService):
         self._s3_root_client = IamRootClient()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['password'])
-    async def create_account(self, account_name: str, account_email: str, password: str) -> Dict:
+    async def create_account(self, account_name: str, account_email: str, password: str,\
+                                access_key: str, secret_key: str) -> Dict:
         """
         S3 account creation
         :param account_name:
@@ -53,7 +54,8 @@ class S3AccountService(S3BaseService):
         :returns: a dictionary describing the newly created S3 account. Exception otherwise.
         """
         Log.debug(f"Creating s3 account. account_name: {account_name}")
-        account = await self._s3_root_client.create_account(account_name, account_email)
+        account = await self._s3_root_client.create_account(account_name, account_email,\
+                                                                access_key, secret_key)
         if isinstance(account, IamError):
             self._handle_error(account, args={'account_name': account_name})
 
