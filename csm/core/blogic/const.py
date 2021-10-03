@@ -638,7 +638,7 @@ DEV = 'dev'
 VM = 'VM'
 VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
-ENV_TYPE_KEY = 'cortx>common>environment_type'
+ENV_TYPE_KEY = 'cortx>common>setup_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -812,7 +812,8 @@ DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 
 # LC keys
 ENV_TYPE = "env_type"
-ENV_TYPE_KEY = "cortx>common>environment_type"
+ENV_TYPE_KEY = "cortx>common>setup_type"
+CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
 PRODUCT_REALESE = 'product_release'
 PRODUCT_REALESE_KEY = 'cortx>common>product_release'
 OPENLDAP_ENDPOINTS = 'openldap_endpoints'
@@ -844,7 +845,7 @@ S3_AUTH_ADMIN_KEY = 'cortx>s3>auth_admin'
 S3_AUTH_SECRET = 's3_auth_secret'
 S3_AUTH_SECRET_KEY = 'cortx>s3>auth_secret'
 CSM_AGENT_ENDPOINTS = 'csm_agent_endpoints'
-CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints'
+CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints[0]'
 CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
 CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
@@ -854,7 +855,7 @@ CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
 CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 
 # keys for conf file setup
-K8S = "K8s"
+K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
 S3_DATA_HOST= 'S3>data>host'
 S3_DATA_PORT = 'S3>data>port'
@@ -870,7 +871,15 @@ OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
 SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
+HTTPS_PORT = "HTTPS>port"
 LOG_PATH = 'Log>log_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
 S3_AUTH_USER_CONF = 'S3>ldap_login'
 S3_AUTH_SECRET_CONF = 'S3>ldap_password'
+CLUSTER_ADMIN_USER = 'CLUSTER_ADMIN>user'
+CLUSTER_ADMIN_SECRET = 'CLUSTER_ADMIN>secret'
+CLUSTER_ADMIN_EMAIL = 'CLUSTER_ADMIN>email'
+AGENT_ENDPOINTS = 'CSM_SERVICE>CSM_AGENT>endpoints'
+AGENT_HOST = 'CSM_SERVICE>CSM_AGENT>host'
+AGENT_PORT = 'CSM_SERVICE>CSM_AGENT>port'
+AGENT_BASE_URL = 'CSM_SERVICE>CSM_AGENT>base_url'
