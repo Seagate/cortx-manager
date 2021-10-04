@@ -363,7 +363,8 @@ class CsmRestApi(CsmApi, ABC):
                 if request_body:
                     for key in list(request_body.keys()):
                         if key.lower().find("password".lower()) > -1 or \
-                            key.lower().find("passwd".lower()) > -1:
+                            key.lower().find("passwd".lower()) > -1 or \
+                            key.lower().find("secret".lower()) > -1    :
                             del(request_body[key])
             payload = json.dumps(request_body)
             await CsmRestApi.check_for_unsupported_endpoint(request)
