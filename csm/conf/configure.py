@@ -332,8 +332,11 @@ class Configure(Setup):
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
                     Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
-        if not _rootdnpassword:
-            raise CsmSetupError("Failed to fetch LDAP root user password.")
+        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
+        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+        if not (_rootdnpassword or csm_admin_ldap_password):
+            raise CsmSetupError("Failed to fetch LDAP password.")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -362,7 +365,7 @@ class Configure(Setup):
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, _rootdnpassword)
+        self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, csm_admin_ldap_password)
         Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ACC_FILE_PATH}')
         Log.info("Openldap configuration completed for Cortx users.")
 
@@ -371,7 +374,6 @@ class Configure(Setup):
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to attrs=userPassword by self write by dn.base="'+ldap_user+'" write by anonymous auth by * none')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
         self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
@@ -420,12 +422,12 @@ class Configure(Setup):
             if self._ldap_conn:
                 self._disconnect_from_ldap()
 
-    def _perform_ldif_parsing(self, filename, binddn, rootpassword):
+    def _perform_ldif_parsing(self, filename, binddn, pwd):
         parser = LDIFRecordList(open(filename, 'r'))
         parser.parse()
         for dn, entry in parser.all_records:
             add_record = list(entry.items())
-            self._add_attribute(binddn, dn, add_record, rootpassword)
+            self._add_attribute(binddn, dn, add_record, pwd)
 
     def _add_attribute(self, binddn, dn, record, pwd):
         try:
