@@ -132,7 +132,7 @@ class PostInstall(Setup):
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
         csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
-            Log.warn(f"SSL certificate not found at: {ssl_certificate_path}")
+            Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}")
             Log.info(f"Generating self signed ssl certificate")
             try:
                 SSL.dump_ssl_cert_key(ssl_certificate_path, const.DNS_LIST)
