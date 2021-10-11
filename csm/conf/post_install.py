@@ -17,6 +17,7 @@
 import crypt
 import os
 from cortx.utils.log import Log
+from cortx.utils.security.ssl_cert import SSL
 from cortx.utils.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
@@ -127,10 +128,21 @@ class PostInstall(Setup):
             raise CsmSetupError(f"Failed at package Validation: {ve}")
 
     def set_ssl_certificate(self):
-        ssl_certificate = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate)
-        Log.info(f"Setting ssl certificate path: {ssl_certificate}")
+        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
+        csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
+        if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
+            Log.warn(f"SSL certificate not found at: {ssl_certificate_path}")
+            Log.info(f"Generating self signed ssl certificate")
+            try:
+                SSL.dump_ssl_cert_key(ssl_certificate_path, const.DNS_LIST)
+            except Exception as e:
+                Log.error(f"Failed to generate self signed ssl certificate: {e}")
+                raise CsmSetupError("Failed to generate self signed ssl certificate")
+            Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
+        Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
         log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
