@@ -21,7 +21,7 @@ from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundEr
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.validators import PasswordValidator, UserNameValidator, AccessKeyValidator
-from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.s3.base import S3BaseView, S3AuthenticatedView
 
 
@@ -88,7 +88,8 @@ class S3AccountsListView(S3BaseView):
         except CsmNotFoundError:
             # Ok, no CSM user has been found, now we can create an S3 account
             with self._guard_service():
-                return await self._service.create_account(**account_body)
+                response = await self._service.create_account(**account_body)
+                return CsmResponse(response, const.STATUS_CREATED)
         else:
             raise InvalidRequest("CSM user with same username already exists. S3 account name cannot be similar to an existing CSM user name")
 
