@@ -1,4 +1,4 @@
-# To create node port service for accessing csm-agent.
+# Node-port service for accessing csm-agent.
 apiVersion: v1
 kind: Service
 metadata:

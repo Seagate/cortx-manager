@@ -1,3 +1,4 @@
+# Internal service for s3 related operations:
 # Make sure that lable for all storage-node pod must be same.
 # We can add lables to storage-node pods using following commands
 # $ kubectl label pods storage-node1 name=storage-node
