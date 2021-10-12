@@ -17,6 +17,7 @@ import os
 import time
 import ldap
 from cortx.utils.product_features import unsupported_features
+from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json, Text
 from ipaddress import ip_address
 from cortx.utils.log import Log
@@ -101,6 +102,9 @@ class Configure(Setup):
                 except Exception as e_:
                     Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
+        except ValidationError as ve:
+            Log.error(f"Validation Error: {ve}")
+            raise CsmSetupError(f"Validation Error: {ve}")
         except Exception as e:
             import traceback
             err_msg = (f"csm_setup config command failed. Error: "
