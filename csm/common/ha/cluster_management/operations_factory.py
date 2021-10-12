@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from abc import ABC, abstractmethod
+from csm.core.blogic import const
 from csm.common.errors import InvalidRequest
 from csm.common.ha.cluster_management import operations
 
@@ -38,6 +39,8 @@ class ClusterOperations(ResourceOperations):
             clusterOperation = operations.ClusterStartOperation()
         elif operation == "stop":
             clusterOperation = operations.ClusterStopOperation()
+        elif operation == const.ShUTDOWN_SIGNAL:
+            clusterOperation = operations.ClusterShutdownSignal()
 
         if clusterOperation is None:
             raise InvalidRequest(f"Cluster does not support {operation} operation.")
