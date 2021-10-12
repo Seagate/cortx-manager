@@ -1,8 +1,15 @@
+# Make sure that lable for all storage-node pod must be same.
+# We can add lables to storage-node pods using following commands
+# $ kubectl label pods storage-node1 name=storage-node
+# $ kubectl label pods storage-node2 name=storage-node
+# $ kubectl label pods storage-node3 name=storage-node
 apiVersion: v1
 kind: Service
 metadata:
   name: cortx-io-svc
 spec:
+  selector:
+    name: storage-node
   ports:
     - name: port80
       protocol: TCP
