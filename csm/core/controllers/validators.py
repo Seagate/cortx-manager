@@ -53,6 +53,18 @@ class UserNameValidator(Validator):
                 "Must be between 4-56 Characters")
 
 
+class AccessKeyValidator(Validator):
+    """
+    Validator Class for access_key field in CSM
+    """
+
+    def __call__(self, value):
+        if not re.search(r"^[a-zA-Z0-9_]{16,128}$", value):
+            raise ValidationError(
+                "Access key can only contain Alphanumeric and _ .Length "
+                "Must be between 16-128 Characters")
+
+
 
 class CommentsValidator(Validator):
     """
