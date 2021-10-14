@@ -90,7 +90,15 @@ class Configure(Setup):
             self.set_csm_endpoint()
             self.set_s3_info()
         try:
-            self._configure_csm_ldap_schema()
+            # Retry incase configuring ldap for csm fails
+            for count in range(0, 5):
+                try:
+                    self._configure_csm_ldap_schema()
+                    break
+                except Exception as exp:
+                    Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {exp}")
+                    time.sleep(2**count)
+
             self._set_user_collection()
             await self._create_cluster_admin(self.force_action)
             self.create()
