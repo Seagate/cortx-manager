@@ -90,15 +90,7 @@ class Configure(Setup):
             self.set_csm_endpoint()
             self.set_s3_info()
         try:
-            # Retry incase configuring ldap for csm fails
-            for count in range(0, 5):
-                try:
-                    self._configure_csm_ldap_schema()
-                    break
-                except Exception as exp:
-                    Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {exp}")
-                    time.sleep(2**count)
-
+            self._configure_csm_ldap_schema()
             self._set_user_collection()
             await self._create_cluster_admin(self.force_action)
             self.create()
@@ -360,20 +352,26 @@ class Configure(Setup):
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
 
         for each_server_url in Setup._get_ldap_server_url():
-            # Insert cortxuser schema
-            Log.info(f"Inserting Cortxuser schema to server: {each_server_url}")
-            self._perform_ldif_parsing(each_server_url, const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
+            for count in range(0, 4):
+                try:
+                    # Insert cortxuser schema
+                    Log.info(f"Inserting Cortxuser schema to server: {each_server_url}")
+                    self._perform_ldif_parsing(each_server_url, const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
 
-            # Initialize dc=csm,dc=seagate,dc=com
-            Log.info(f"Initializing dc=csm,dc=seagate,dc=com to server: {each_server_url}")
-            self._perform_ldif_parsing(each_server_url, const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
+                    # Initialize dc=csm,dc=seagate,dc=com
+                    Log.info(f"Initializing dc=csm,dc=seagate,dc=com to server: {each_server_url}")
+                    self._perform_ldif_parsing(each_server_url, const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
 
-            # Create CSM admin user in LDAP
-            Log.info(f"Creating CSM ldap admin user to server: {each_server_url}")
-            self._create_csm_ldap_user(each_server_url)
-            # Setup necessary permissions
-            Log.info(f"Setup necessary permissions to {ldap_user} on server: {each_server_url}")
-            self._setup_ldap_permissions(each_server_url, base_dn, ldap_user)
+                    # Create CSM admin user in LDAP
+                    Log.info(f"Creating CSM ldap admin user to server: {each_server_url}")
+                    self._create_csm_ldap_user(each_server_url)
+                    # Setup necessary permissions
+                    Log.info(f"Setup necessary permissions to {ldap_user} on server: {each_server_url}")
+                    self._setup_ldap_permissions(each_server_url, base_dn, ldap_user)
+                    break
+                except Exception as e_:
+                    Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {e_}")
+                    time.sleep(2**count)
 
         Setup._run_cmd(f'rm -rf {const.CSM_LDAP_INIT_FILE_PATH}')
 
