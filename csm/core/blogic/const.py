@@ -733,6 +733,7 @@ SERIAL_NUMBER = "serial_number"
 VERSION = "version"
 SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
 CERT_DETAILS = "cert_details"
+DNS_LIST = [u'*.seagate.com', u'localhost', u'*.localhost']
 
 # MEssage Bus
 PRODUCER_ID = 'producer_id'
