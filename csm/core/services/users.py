@@ -16,7 +16,7 @@
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
 from enum import Enum, auto
-from typing import List, Optional
+from typing import Dict, List, Optional
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.common.queries import SortBy
@@ -314,9 +314,7 @@ class CsmUserService(ApplicationService):
         return {"message": "User Deleted Successfully."}
 
     async def _validate_user_update(
-        self, user: User, loggedin_user: User,
-        password: Optional[str], current_password: Optional[str],
-        role: Optional[str], reset_password
+        self, user: User, loggedin_user: User, new_values: Dict
     ) -> None:
         """
         Check the user update is possible.
@@ -325,20 +323,25 @@ class CsmUserService(ApplicationService):
         otherwise pass.
         :param user: user to be updated.
         :param loggedin_user: user who triggered the update.
-        :param password: the new password value.
-        :param current_password: user's current password.
-        :param role: the new role value.
+        :param new_values: dict with updated user fields.
         :returns: None.
         """
         user_role = user.user_role
         loggedin_user_role = loggedin_user.user_role
         self_update = user.user_id == loggedin_user.user_id
 
-        if password:
-            allowed = CSM_USER_PASSWD_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
-            if not allowed:
+        password = new_values.get(const.PASS, None)
+        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
+        role = new_values.get('role', None)
+        reset_password = new_values.get('reset_password', None)
+
+        allowed = CSM_USER_PASSWD_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
+        if not allowed:
+            if password:
                 msg = f'{loggedin_user.user_id} can not update the password for {user.user_id}'
-                raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
+            else:
+                msg = f'{loggedin_user.user_id} can not update {user.user_id}'
+            raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
         if role:
             allowed = CSM_USER_ROLE_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
@@ -385,7 +388,7 @@ class CsmUserService(ApplicationService):
         reset_password = new_values.get('reset_password', None)
 
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
-        await self._validate_user_update(user, loggedin_user, password, current_password, role, reset_password)
+        await self._validate_user_update(user, loggedin_user, new_values)
 
         user.update(new_values)
         user.reset_password = True
