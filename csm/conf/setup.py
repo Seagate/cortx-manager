@@ -405,12 +405,11 @@ class Setup:
             return None
         return ldap_root_user
 
-    def _connect_to_ldap_server(self, bind_dn, ldappasswd):
+    def _connect_to_ldap_server(self, ldap_url, bind_dn, ldappasswd):
         """
         Establish connection to ldap server.
         """
         from ldap import initialize, VERSION3, OPT_REFERRALS
-        ldap_url = Setup._get_ldap_url()
         Log.info("Setting up Ldap connection")
         self._ldap_conn = initialize(ldap_url)
         self._ldap_conn.protocol_version = VERSION3
@@ -430,7 +429,7 @@ class Setup:
         Delete data entries from ldap.
         """
         try:
-            self._connect_to_ldap_server(bind_dn, ldappasswd)
+            self._connect_to_ldap_server(Setup._get_ldap_url(), bind_dn, ldappasswd)
             try:
                 self._ldap_delete_recursive(self._ldap_conn, users_dn)
             except ldap.NO_SUCH_OBJECT:
@@ -465,6 +464,13 @@ class Setup:
         ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
+
+    @staticmethod
+    def _get_ldap_server_url():
+        ldap_servers_list = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS)
+        ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
+        ldap_server_url_list = [f"ldap://{each_server}:{ldap_port}/" for each_server in ldap_servers_list]
+        return ldap_server_url_list
 
     def _parse_endpoints(self, url):
         if "://"in url:
