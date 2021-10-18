@@ -138,10 +138,9 @@ class PostInstall(Setup):
                 ssl_cert_configs = {"country" : "IN", "state" : "MH", "locality" : "Pune",
                                     "organization" : "Seagate Technology", "CN" : "seagate.com"}
                 ssl_cert = Certificate.factory('ssl')
-                ssl_cert_obj = ssl_cert(cert_path = ssl_certificate_path, dns_list = const.DNS_LIST, 
+                ssl_cert_obj = ssl_cert(cert_path = ssl_certificate_path, dns_list = const.DNS_LIST,
                                             **ssl_cert_configs)
                 ssl_cert_obj.generate()
-                print('CSM')
             except Exception as e:
                 Log.error(f"Failed to generate self signed ssl certificate: {e}")
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
