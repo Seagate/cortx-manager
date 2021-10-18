@@ -164,6 +164,7 @@ class Configure(Setup):
         if csm_protocol == 'https':
             Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'false')
         Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
     def set_s3_info(self):
