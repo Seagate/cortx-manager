@@ -14,14 +14,14 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates_schema
 from marshmallow.exceptions import ValidationError
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest, CsmPermissionDenied, CsmNotFoundError
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
-from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.validators import PasswordValidator, UserNameValidator, AccessKeyValidator
+from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.s3.base import S3BaseView, S3AuthenticatedView
 
 
@@ -30,6 +30,15 @@ class S3AccountCreationSchema(Schema):
     account_name = fields.Str(required=True, validate=[UserNameValidator()])
     account_email = fields.Email(required=True)
     password = fields.Str(required=True, validate=[PasswordValidator()])
+    access_key = fields.Str(default=None, missing=None, validate=[AccessKeyValidator()])
+    secret_key = fields.Str(default=None, missing=None,\
+                                validate=validate.Length(min=8, max=40))
+
+    @validates_schema
+    def validate_access_secret_keys(self, data, **kwargs):
+        if (data.get("access_key") is not None or data.get("secret_key") is not None) and \
+            (data.get("access_key") is None or data.get("secret_key") is None):
+            raise ValidationError("Either access_key or secret_key is not provided.")
 
 
 class S3AccountPatchSchema(Schema):
@@ -79,7 +88,8 @@ class S3AccountsListView(S3BaseView):
         except CsmNotFoundError:
             # Ok, no CSM user has been found, now we can create an S3 account
             with self._guard_service():
-                return await self._service.create_account(**account_body)
+                response = await self._service.create_account(**account_body)
+                return CsmResponse(response, const.STATUS_CREATED)
         else:
             raise InvalidRequest("CSM user with same username already exists. S3 account name cannot be similar to an existing CSM user name")
 

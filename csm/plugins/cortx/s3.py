@@ -295,7 +295,8 @@ class IamClient(BaseClient):
 
     @Log.trace_method(Log.DEBUG)
     async def create_account(
-        self, account_name: str, account_email: str
+        self, account_name: str, account_email: str,\
+        access_key: str, secret_key: str
     ) -> Union[ExtendedIamAccount, IamError]:
         """
         Create IAM account.
@@ -306,6 +307,8 @@ class IamClient(BaseClient):
 
         :param account_name: account's name.
         :param account_email: account's email.
+        :param access_key: user provided account's access_key.
+        :param secret_key: user provided account's secret_key.
         :returns: ExtendedIamAccount in case of success, IamError otherwise
         """
 
@@ -315,6 +318,10 @@ class IamClient(BaseClient):
             'AccountName': account_name,
             'Email': account_email
         }
+
+        if access_key is not None and secret_key is not None:
+            params['AccessKey'] = access_key
+            params['SecretKey'] = secret_key
 
         (code, body) = await self._arbitrary_request('CreateAccount', params, '/', 'POST')
         Log.debug(f"Create account profile status: {code}")
