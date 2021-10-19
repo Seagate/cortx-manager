@@ -42,6 +42,8 @@ class CsmS3ConfigurationFactory:
             const.CSM_GLOBAL_INDEX, const.IAM_PORT)
         iam_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
                                                          const.S3_MAX_RETRIES_NUM)
+        if Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL) == 'https':
+            iam_connection_config.use_ssl = True
         return iam_connection_config
 
     @staticmethod
@@ -57,6 +59,8 @@ class CsmS3ConfigurationFactory:
             const.CSM_GLOBAL_INDEX, const.S3_DATA_PORT)
         s3_connection_config.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX,
                                                         const.S3_MAX_RETRIES_NUM)
+        if Conf.get(const.CSM_GLOBAL_INDEX, const.S3_DATA_PROTOCOL) == 'https':
+            s3_connection_config.use_ssl = True
         return s3_connection_config
 
 
