@@ -108,7 +108,7 @@ class CSMBundle:
 
 class GenerateCsmBundle:
     '''
-    Wrapper class for CSMBundle.
+    Csm support bundle generation class
     '''
     @staticmethod
     def generate_bundle(args):
@@ -131,7 +131,6 @@ if __name__ == '__main__':
                     help='Bundle-id',
                     default=f'SB_csm_{datetime.now().strftime("%d%m%Y_%H-%M-%S")}')
     parser.add_argument('-c','--config',dest='config_url', help='Confstore URL eg:<type>://<path>')
-    parser.add_argument('-m','--message',dest='message', help='Comment', default='')
     parser.add_argument('-s','--services',dest='services', help='Run csm-service support-bundle', default='agent')
     parser.add_argument('-t','--target',dest='target', help='Target path to save support-bundle', default='/tmp/')
     args = vars(parser.parse_args())
