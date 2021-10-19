@@ -321,6 +321,7 @@ ARGUMENTS_FORMAT_FLAT = 'flat'
 ARGUMENTS_FORMAT_NESTED = 'nested'
 PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
 PROCESS_CLUSTER_STATUS_REQ = 'process_cluster_status'
+ShUTDOWN_SIGNAL = 'shutdown_signal'
 CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
 CLUSTER_STATUS_ERR_MSG = 'Error getting cluster status.'
 ARG_NODE_ID = 'node_id'
@@ -337,6 +338,7 @@ ARG_BLANK_ERR_MSG = 'Missing data for required field.'
 CLUSTER_STATUS_OK_MSG = 'Stopping the node will not bring the cluster offline.'
 CLUSTER_STATUS_WARN_MSG = 'Stopping the node will bring the cluster offline.'
 MESSAGE_LITERAL = 'message'
+ADMIN_ONLY_OPERATIONS = [ShUTDOWN_SIGNAL]
 
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
