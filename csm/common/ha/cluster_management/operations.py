@@ -81,6 +81,15 @@ class ClusterStopOperation(Operation):
         pass
 
 
+class ClusterShutdownSignal(Operation):
+
+    def validate_arguments(self, **kwargs):
+        pass
+
+    def execute(self, cluster_manager, **kwargs):
+        pass
+
+
 class NodeStartOperation(Operation):
     """
     Process start operation on node with he arguments provided.

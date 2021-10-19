@@ -15,7 +15,7 @@
 
 from marshmallow import Schema, fields, INCLUDE, EXCLUDE, ValidationError
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
@@ -38,6 +38,20 @@ class ClusterOperationsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
+
+    @staticmethod
+    def _validate_operation(resource: str, operation: str, role: str) -> None:
+        """
+        Check if the provided operation is allowed for the provided role.
+
+        :param resource: the resource under the operation.
+        :param operation: the requested operation.
+        :param role: current user's role.
+        :returns: None.
+        """
+        if operation in const.ADMIN_ONLY_OPERATIONS and role != const.CSM_SUPER_USER_ROLE:
+            msg = f"Operation '{operation}' can not be performed by the user with role: '{role}'"
+            raise CsmPermissionDenied(msg)
 
     @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.CREATE}})
     async def post(self):
@@ -65,6 +79,8 @@ class ClusterOperationsView(CsmView):
                         f"user_id: {self.request.session.credentials.user_id}")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        ClusterOperationsView._validate_operation(
+            resource, operation, self.request.session.get_user_role())
         operation_req_result = await self.cluster_management_service\
                                             .request_operation(resource, operation,
                                                 **operation_arguments)
