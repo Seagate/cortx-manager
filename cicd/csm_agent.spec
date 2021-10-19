@@ -56,6 +56,9 @@ PRODUCT=<PRODUCT>
 
     ln -sf $CSM_DIR/lib/csm_cleanup /usr/bin/csm_cleanup
     ln -sf $CSM_DIR/lib/csm_cleanup $CSM_DIR/bin/csm_cleanup
+
+    ln -sf $CSM_DIR/lib/csm_bundle_generate /usr/bin/csm_bundle_generate
+    ln -sf $CSM_DIR/lib/csm_bundle_generate $CSM_DIR/bin/csm_bundle_generate
 }
 
 [ -d "${CSM_DIR}/test" ] && {
@@ -81,6 +84,7 @@ rm -f /usr/bin/usl_setup 2> /dev/null;
 rm -f /usr/bin/csm_agent 2> /dev/null;
 rm -f /usr/bin/csm_test 2> /dev/null;
 rm -f /usr/bin/csm_cleanup 2> /dev/null;
+rm -f /usr/bin/csm_bundle_generate 2> /dev/null;
 rm -rf <CSM_PATH>/bin/ 2> /dev/null;
 [ -f /etc/systemd/system/csm_agent.service ] && {
     rm -f /etc/systemd/system/csm_agent.service 2> /dev/null;
