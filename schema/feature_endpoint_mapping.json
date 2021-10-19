@@ -60,7 +60,7 @@
     ]
   },
   "/api/*/system/management/*": {
-    "feature_name": "cluster_management​",
+    "feature_name": "cluster_management",
     "dependent_on": [
       "ha"
     ]
