@@ -1,0 +1,2 @@
+s1 = '"fs_free_seg": 34632850768, "fs_total_seg": 34634275104, "fs_free_disk": 1288481783808, "fs_avail_disk": 1288481783808, "fs_total_disk": 1288490188800, "fs_svc_total": 12, "fs_svc_replied": 12'
+s1.split(',',)
