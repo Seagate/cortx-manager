@@ -276,7 +276,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
-    cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
+    # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
     cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
     cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
