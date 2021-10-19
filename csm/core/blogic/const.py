@@ -734,6 +734,8 @@ VERSION = "version"
 SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
 CERT_DETAILS = "cert_details"
 DNS_LIST = [u'*.seagate.com', u'localhost', u'*.localhost']
+SSL_CERT_CONFIGS = {"country" : "IN", "state" : "MH", "locality" : "Pune",
+                    "organization" : "Seagate Technology", "CN" : "seagate.com"}
 
 # MEssage Bus
 PRODUCER_ID = 'producer_id'
