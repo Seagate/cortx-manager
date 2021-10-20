@@ -177,7 +177,7 @@ class LocalAuthPolicy(AuthPolicy):
     """ Local CSM user authentication policy """
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
-        if Passwd.verify(password, user.password_hash):
+        if Passwd.verify(password, user.user_password):
             return LocalCredentials(user.user_id, user.role)
         return None
 
