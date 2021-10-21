@@ -178,7 +178,7 @@ class LocalAuthPolicy(AuthPolicy):
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         if Passwd.verify(password, user.user_password):
-            return LocalCredentials(user.user_id, user.role)
+            return LocalCredentials(user.user_id, user.user_role)
         return None
 
 
