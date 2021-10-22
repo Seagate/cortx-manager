@@ -19,6 +19,7 @@ import yaml
 import asyncio
 import json
 import traceback
+import signal
 import ssl
 import time
 from concurrent.futures import CancelledError as ConcurrentCancelledError
@@ -97,6 +98,7 @@ class CsmApi(ABC):
 class CsmRestApi(CsmApi, ABC):
     """ REST Interface to communicate with CSM """
 
+    __is_shutting_down = False
     __unsupported_features = None
 
     @staticmethod
@@ -348,6 +350,8 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     @web.middleware
     async def rest_middleware(request, handler):
+        if CsmRestApi.__is_shutting_down:
+            return CsmRestApi.json_response("CSM agent is shutting down", status=503)
         try:
             request_id = int(time.time())
             request_body = dict(request.rel_url.query) if request.rel_url.query else {}
@@ -433,6 +437,50 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
 
     @staticmethod
+    async def _shut_down(loop, site, server=None):
+        CsmRestApi.__is_shutting_down = True
+        if server is not None:
+            original_connections = server.connections.copy()
+            for c in original_connections:
+                while c in server.connections:
+                    await asyncio.sleep(1)
+        for task in asyncio.Task.all_tasks():
+            if task != asyncio.Task.current_task():
+                task.cancel()
+        await site.stop()
+        loop.stop()
+
+    @staticmethod
+    async def _handle_sigint(loop, site):
+        Log.info('Received SIGINT, shutting down')
+        await CsmRestApi._shut_down(loop, site)
+
+    @staticmethod
+    async def _handle_sigterm(loop, site, server):
+        Log.info('Received SIGTERM, shutting down')
+        await CsmRestApi._shut_down(loop, site, server)
+
+    @staticmethod
+    def _run_server(app, host=None, port=None, ssl_context=None, access_log=None):
+        loop = asyncio.get_event_loop()
+        runner = web.AppRunner(app, access_log=access_log)
+        loop.run_until_complete(runner.setup())
+        site = web.TCPSite(runner, host=host, port=port, ssl_context=ssl_context)
+        loop.run_until_complete(site.start())
+        handlers = {
+            signal.SIGINT: lambda: CsmRestApi._handle_sigint(loop, site),
+            signal.SIGTERM: lambda: CsmRestApi._handle_sigterm(loop, site, runner.server),
+        }
+        for k, v in handlers.items():
+            loop.add_signal_handler(k, lambda v=v: asyncio.ensure_future(v())),
+        print(f'======== CSM agent is running on {site.name} ========')
+        print('(Press CTRL+C to quit)', flush=True)
+        try:
+            loop.run_forever()
+        finally:
+            loop.close()
+
+    @staticmethod
     def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
         if not debug_conf.http_enabled:
             port = https_conf.port
@@ -444,8 +492,8 @@ class CsmRestApi(CsmApi, ABC):
             ssl_context.load_cert_chain(https_conf.certificate_path, https_conf.private_key_path)
         else:
             ssl_context = None
-
-        web.run_app(CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
+        CsmRestApi._run_server(
+            CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
     @staticmethod
     async def process_request(request):
