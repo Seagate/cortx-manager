@@ -17,6 +17,7 @@ import os
 import time
 import ldap
 from cortx.utils.product_features import unsupported_features
+from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json, Text
 from ipaddress import ip_address
 from cortx.utils.log import Log
@@ -85,13 +86,15 @@ class Configure(Setup):
             self._configure_uds_keys()
             self._configure_csm_web_keys()
         else:
+            self.cluster_id = Conf.get(const.CONSUMER_INDEX,
+                            self.conf_store_keys[const.KEY_CLUSTER_ID])
+            self.set_csm_endpoint()
             self.set_s3_info()
-
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
-            self.create()
             await self._create_cluster_admin(self.force_action)
+            self.create()
             for count in range(0, 4):
                 try:
                     await self._set_unsupported_feature_info()
@@ -99,6 +102,9 @@ class Configure(Setup):
                 except Exception as e_:
                     Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
+        except ValidationError as ve:
+            Log.error(f"Validation Error: {ve}")
+            raise CsmSetupError(f"Validation Error: {ve}")
         except Exception as e:
             import traceback
             err_msg = (f"csm_setup config command failed. Error: "
@@ -126,6 +132,7 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
                 const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
+                const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
                 const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
@@ -146,6 +153,19 @@ class Configure(Setup):
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
+
+    def set_csm_endpoint(self):
+        Log.info("Setting csm endpoint in csm config")
+        csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
+        csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
+        # Not considering Hostname. Bydefault 0.0.0.0 used
+        # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
+        if csm_protocol == 'https':
+            Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'false')
+        Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
     def set_s3_info(self):
         """
@@ -314,79 +334,101 @@ class Configure(Setup):
         if not os.path.exists(const.TMP_CSM):
             os.mkdir(const.TMP_CSM)
         Log.info("Openldap configuration started for Cortx users.")
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
-        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
-        if not _rootdnpassword:
-            raise CsmSetupError("Failed to fetch LDAP root user password.")
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
+        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
+        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+        if not (_rootdnpassword or csm_admin_ldap_password):
+            raise CsmSetupError("Failed to fetch LDAP password.")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = const.LDAP_USER.format(
             Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
-        # Insert cortxuser schema
-        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
-        self._perform_ldif_parsing(const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
 
-        # Initialize dc=csm,dc=seagate,dc=com
+        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
-        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_INIT_FILE_PATH}')
 
-	    # Create CSM admin user in LDAP
-        self._create_csm_ldap_user()
-        # Setup necessary permissions
-        self._setup_ldap_permissions(base_dn, ldap_user)
+        for each_server_url in Setup._get_ldap_server_url():
+            for count in range(0, 4):
+                try:
+                    # Insert cortxuser schema
+                    Log.info(f"Inserting Cortxuser schema to server: {each_server_url}")
+                    self._perform_ldif_parsing(each_server_url, const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
+
+                    # Initialize dc=csm,dc=seagate,dc=com
+                    Log.info(f"Initializing dc=csm,dc=seagate,dc=com to server: {each_server_url}")
+                    self._perform_ldif_parsing(each_server_url, const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
+
+                    # Create CSM admin user in LDAP
+                    Log.info(f"Creating CSM ldap admin user to server: {each_server_url}")
+                    self._create_csm_ldap_user(each_server_url)
+                    # Setup necessary permissions
+                    Log.info(f"Setup necessary permissions to {ldap_user} on server: {each_server_url}")
+                    self._setup_ldap_permissions(each_server_url, base_dn, ldap_user)
+                    break
+                except Exception as e_:
+                    Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {e_}")
+                    time.sleep(2**count)
+
+        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_INIT_FILE_PATH}')
 
         # Create Cortx Account
         Log.info(f"Updating base dn in {const.CORTXUSER_ACCOUNT_LDIF}")
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_ACC_FILE_PATH, ldap_user, _rootdnpassword)
+        self._perform_ldif_parsing(Setup._get_ldap_url(), const.CSM_LDAP_ACC_FILE_PATH, ldap_user, csm_admin_ldap_password)
         Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ACC_FILE_PATH}')
         Log.info("Openldap configuration completed for Cortx users.")
 
-    def _setup_ldap_permissions(self, base_dn, ldap_user):
+    def _setup_ldap_permissions(self, ldap_url, base_dn, ldap_user):
         """
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
-        self._modify_ldap_attribute(dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
+        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
+        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
-    def _create_csm_ldap_user(self):
+    def _create_csm_ldap_user(self, ldap_url):
         """
         Create CSM ldap user
         """
         Log.info("Creating csm ldap user.")
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
-        _rootdnpassword = self._fetch_ldap_password(ldap_root_secret)
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
+        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
-        csm_admin_ldap_password = self._fetch_ldap_password(csm_ldap_secret)
+        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
+                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
         Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
-        self._perform_ldif_parsing(const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
+        self._perform_ldif_parsing(ldap_url, const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
         Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ADMIN_FILE_PATH}')
 
-    def _modify_ldap_attribute(self, dn, attribute, value):
+    def _modify_ldap_attribute(self, ldap_url, dn, attribute, value):
         ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
         _bind_dn = f"cn={ldap_root_admin_user},cn=config"
-        ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
-        _ldappasswd= self._fetch_ldap_password(ldap_root_secret)
+        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
+        _ldappasswd= self._decrypt_secret(ldap_root_secret,self.cluster_id,
+                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
         try:
-            self._connect_to_ldap_server(_bind_dn, _ldappasswd)
+            self._connect_to_ldap_server(ldap_url, _bind_dn, _ldappasswd)
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
             Log.info(f"Modifying attribute permissions: {mod_attrs}")
             self._ldap_conn.modify_s(dn, mod_attrs)
@@ -400,16 +442,16 @@ class Configure(Setup):
             if self._ldap_conn:
                 self._disconnect_from_ldap()
 
-    def _perform_ldif_parsing(self, filename, binddn, rootpassword):
+    def _perform_ldif_parsing(self, ldap_url, filename, binddn, pwd):
         parser = LDIFRecordList(open(filename, 'r'))
         parser.parse()
         for dn, entry in parser.all_records:
             add_record = list(entry.items())
-            self._add_attribute(binddn, dn, add_record, rootpassword)
+            self._add_attribute(ldap_url, binddn, dn, add_record, pwd)
 
-    def _add_attribute(self, binddn, dn, record, pwd):
+    def _add_attribute(self, ldap_url, binddn, dn, record, pwd):
         try:
-            self._connect_to_ldap_server(binddn, pwd)
+            self._connect_to_ldap_server(ldap_url, binddn, pwd)
             self._ldap_conn.add_s(dn, record)
         except Exception as e:
             if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):

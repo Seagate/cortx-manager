@@ -1,0 +1,14 @@
+# Node-port service for accessing csm-agent.
+apiVersion: v1
+kind: Service
+metadata:
+  name: csm-agent
+  labels:
+    app: control-node
+spec:
+  type: NodePort
+  ports:
+  - port: 8081
+    nodePort: 32102
+  selector:
+    app: control-node

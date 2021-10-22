@@ -18,6 +18,7 @@ import crypt
 import os
 from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
+from cortx.utils.security.certificate import Certificate
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
 from cortx.utils.validator.v_pkg import PkgV
@@ -27,6 +28,7 @@ from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from csm.common.payload import Text
 from cortx.utils.service.service_handler import Service
+from cortx.utils.errors import SSLCertificateError
 
 class PostInstall(Setup):
     """
@@ -127,14 +129,28 @@ class PostInstall(Setup):
             raise CsmSetupError(f"Failed at package Validation: {ve}")
 
     def set_ssl_certificate(self):
-        ssl_certificate = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate)
-        Log.info(f"Setting ssl certificate path: {ssl_certificate}")
+        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        csm_protocol, csm_host, csm_port = self._parse_endpoints(
+            Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
+        if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
+            Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
+                    Generating self signed ssl certificate")
+            try:
+                ssl_cert_configs = const.SSL_CERT_CONFIGS
+                ssl_cert_obj = Certificate.init('ssl')
+                ssl_cert_obj.generate(cert_path = ssl_certificate_path, dns_list = const.DNS_LIST,
+                                            **ssl_cert_configs)
+            except SSLCertificateError as e:
+                Log.error(f"Failed to generate self signed ssl certificate: {e}")
+                raise CsmSetupError("Failed to generate self signed ssl certificate")
+            Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
+        Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
         log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, f"{log_path}/csm")
         Log.info(f"Setting log path: {log_path}")
 
     def set_env_type(self):

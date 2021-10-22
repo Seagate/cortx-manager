@@ -34,11 +34,11 @@
             "provisioner",
             "os",
             "health_map",
-            "manifest",
             "alerts",
             "uds",
             "elasticsearch",
-            "ha"
+            "ha",
+            "utils"
           ],
           "nargs": "+",
           "help": "Generate Bundle for Specific components defined."
@@ -53,8 +53,8 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.cli.support_bundle",
-        "method": "bundle_generate",
+        "target": "cortx.utils.support_framework",
+        "method": "_generate_bundle",
         "class": "SupportBundle",
         "is_static": true
       }
@@ -92,8 +92,8 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.cli.support_bundle",
-        "method": "bundle_status",
+        "target": "cortx.utils.support_framework",
+        "method": "_get_bundle_status",
         "class": "SupportBundle",
         "is_static": true
       },

@@ -1,0 +1,34 @@
+# Internal service for s3 related operations:
+# Make sure that lable for all storage-node pod must be same.
+# We can add lables to storage-node pods using following commands
+# $ kubectl label pods storage-node1 name=storage-node
+# $ kubectl label pods storage-node2 name=storage-node
+# $ kubectl label pods storage-node3 name=storage-node
+apiVersion: v1
+kind: Service
+metadata:
+  name: cortx-io-svc
+spec:
+  selector:
+    name: storage-node
+  ports:
+    - name: port80
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: port443
+      protocol: TCP
+      port: 443
+      targetPort: 443
+    - name: port9080
+      protocol: TCP
+      port: 9080
+      targetPort: 9080
+    - name: port9443
+      protocol: TCP
+      port: 9443
+      targetPort: 9443
+    - name: port28049
+      protocol: TCP
+      port: 28049
+      targetPort: 28049

@@ -316,6 +316,30 @@ STATUS_FAILED = 'Failed'
 STATUS_PARTIAL = 'Partial'
 HEALTH_FETCH_ERR_MSG = 'Error fetching health from ha.'
 
+# Cluster Operations
+ARGUMENTS_FORMAT_FLAT = 'flat'
+ARGUMENTS_FORMAT_NESTED = 'nested'
+PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
+PROCESS_CLUSTER_STATUS_REQ = 'process_cluster_status'
+ShUTDOWN_SIGNAL = 'shutdown_signal'
+CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
+CLUSTER_STATUS_ERR_MSG = 'Error getting cluster status.'
+ARG_NODE_ID = 'node_id'
+ARG_OPERATION = 'operation'
+ARG_ARGUMENTS = 'arguments'
+ARG_FORCE = 'force'
+ARG_CHECK_CLUSTER = 'check_cluster'
+ARG_POWER_OFF = 'poweroff'
+ARG_STORAGE_OFF = 'storageoff'
+ARG_POWER_ON = 'poweron'
+UNKNOWN_FIELD_ERR_MSG = 'Unknown field.'
+ARG_NOT_SUPPORTED_ERR_MSG = 'Not supported for specified operation.'
+ARG_BLANK_ERR_MSG = 'Missing data for required field.'
+CLUSTER_STATUS_OK_MSG = 'Stopping the node will not bring the cluster offline.'
+CLUSTER_STATUS_WARN_MSG = 'Stopping the node will bring the cluster offline.'
+MESSAGE_LITERAL = 'message'
+ADMIN_ONLY_OPERATIONS = [ShUTDOWN_SIGNAL]
+
 # CSM Schema Path
 ALERT_MAPPING_TABLE = '{}/schema/alert_mapping_table.json'.format(CSM_PATH)
 HEALTH_MAPPING_TABLE = '{}/schema/csm_health_schema.json'.format(CSM_PATH)
@@ -521,6 +545,7 @@ S3_SERVER_INFO_SERVICE = 's3_server_info_service'
 APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
+CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -565,6 +590,7 @@ REPLACE_NODE_SERVICE = "replace_node"
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
+CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
@@ -638,7 +664,7 @@ DEV = 'dev'
 VM = 'VM'
 VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
-ENV_TYPE_KEY = 'cortx>common>environment_type'
+ENV_TYPE_KEY = 'cortx>common>setup_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -733,6 +759,9 @@ SERIAL_NUMBER = "serial_number"
 VERSION = "version"
 SIGNATURE_ALGORITHM_OID = "signature_algorithm_oid"
 CERT_DETAILS = "cert_details"
+DNS_LIST = [u'*.seagate.com', u'localhost', u'*.localhost']
+SSL_CERT_CONFIGS = {"country" : "IN", "state" : "MH", "locality" : "Pune",
+                    "organization" : "Seagate Technology", "CN" : "seagate.com"}
 
 # MEssage Bus
 PRODUCER_ID = 'producer_id'
@@ -812,11 +841,14 @@ DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 
 # LC keys
 ENV_TYPE = "env_type"
-ENV_TYPE_KEY = "cortx>common>environment_type"
+ENV_TYPE_KEY = "cortx>common>setup_type"
+CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
 PRODUCT_REALESE = 'product_release'
 PRODUCT_REALESE_KEY = 'cortx>common>product_release'
 OPENLDAP_ENDPOINTS = 'openldap_endpoints'
 OPENLDAP_ENDPOINTS_KEY = 'cortx>external>openldap>endpoints[0]'
+OPENLDAP_SERVERS = 'openldap_servers'
+OPENLDAP_SERVERS_KEY = 'cortx>external>openldap>servers'
 OPENLDAP_ROOT_ADMIN = 'openldap_root_admin'
 OPENLDAP_ROOT_ADMIN_KEY = 'cortx>external>openldap>admin'
 OPENLDAP_ROOT_SECRET = 'openldap_root_secret'
@@ -844,7 +876,7 @@ S3_AUTH_ADMIN_KEY = 'cortx>s3>auth_admin'
 S3_AUTH_SECRET = 's3_auth_secret'
 S3_AUTH_SECRET_KEY = 'cortx>s3>auth_secret'
 CSM_AGENT_ENDPOINTS = 'csm_agent_endpoints'
-CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints'
+CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints[0]'
 CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
 CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
@@ -854,7 +886,7 @@ CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
 CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 
 # keys for conf file setup
-K8S = "K8s"
+K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
 S3_DATA_HOST= 'S3>data>host'
 S3_DATA_PORT = 'S3>data>port'
@@ -867,10 +899,19 @@ LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
 LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
 OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
 OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
+OPEN_LDAP_SERVERS = 'OPENLDAP>servers'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
 SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
+HTTPS_PORT = "HTTPS>port"
 LOG_PATH = 'Log>log_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
 S3_AUTH_USER_CONF = 'S3>ldap_login'
 S3_AUTH_SECRET_CONF = 'S3>ldap_password'
+CLUSTER_ADMIN_USER = 'CLUSTER_ADMIN>user'
+CLUSTER_ADMIN_SECRET = 'CLUSTER_ADMIN>secret'
+CLUSTER_ADMIN_EMAIL = 'CLUSTER_ADMIN>email'
+AGENT_ENDPOINTS = 'CSM_SERVICE>CSM_AGENT>endpoints'
+AGENT_HOST = 'CSM_SERVICE>CSM_AGENT>host'
+AGENT_PORT = 'CSM_SERVICE>CSM_AGENT>port'
+AGENT_BASE_URL = 'CSM_SERVICE>CSM_AGENT>base_url'

@@ -360,8 +360,13 @@ class CsmRestApi(CsmApi, ABC):
                     request_body = await request.json()
                 except Exception as e:
                     request_body = {}
-                if request_body and request_body.get("password"):
-                    del(request_body["password"])
+                if request_body:
+                    for key in list(request_body.keys()):
+                        lower_key = key.lower()
+                        if lower_key.find("password") > -1 or \
+                            lower_key.find("passwd") > -1 or \
+                            lower_key.find("secret") > -1    :
+                            del(request_body[key])
             payload = json.dumps(request_body)
             try:
                 await CsmRestApi.check_for_unsupported_endpoint(request)

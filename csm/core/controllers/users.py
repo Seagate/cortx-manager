@@ -135,7 +135,7 @@ class CsmUsersListView(CsmView):
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing: {jde}")
+            raise InvalidRequest(message_args=f"Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
@@ -199,7 +199,7 @@ class CsmUsersView(CsmView):
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
         except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing {jde}")
+            raise InvalidRequest(message_args=f"Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 

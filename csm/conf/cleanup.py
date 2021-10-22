@@ -130,7 +130,7 @@ class Cleanup(Setup):
         _bind_dn = "cn=admin,cn=config"
         _ldappasswd = self._fetch_ldap_root_password()
         try:
-            self._connect_to_ldap_server(_bind_dn, _ldappasswd)
+            self._connect_to_ldap_server(Setup._get_ldap_url(), _bind_dn, _ldappasswd)
         except Exception as e:
             Log.error(f'ERROR: LDAP connection failed, error: {str(e)}')
             raise CsmSetupError(f'ERROR: LDAP connection failed, error: {str(e)}')

@@ -47,8 +47,13 @@ class SessionCredentials:
 class LocalCredentials(SessionCredentials):
     """ CSM local user specific session credentials - empty """
 
-    def __init__(self, user_id: str) -> None:
+    def __init__(self, user_id: str, user_role: str) -> None:
         super().__init__(user_id)
+        self._user_role = user_role
+
+    @property
+    def user_role(self) -> str:
+        return self._user_role
 
 
 class LdapCredentials(SessionCredentials):
@@ -116,6 +121,10 @@ class Session:
     def permissions(self) -> PermissionSet:
         return self._permissions
 
+    def get_user_role(self) -> Optional[str]:
+        creds = self._credentials
+        return creds.user_role if isinstance(creds, LocalCredentials) else None
+
 
 class SessionManager:
     """ Session management class """
@@ -169,7 +178,7 @@ class LocalAuthPolicy(AuthPolicy):
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         if Passwd.verify(password, user.user_password):
-            return LocalCredentials(user.user_id)
+            return LocalCredentials(user.user_id, user.user_role)
         return None
 
 

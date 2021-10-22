@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import argparse
 from typing import List
 
 
@@ -23,8 +24,22 @@ class Options:
 
     debug = False
     start = False
+    daemonize = False
+    conf_store = False
 
     @classmethod
     def parse(cls, args: List[str]) -> None:
-        cls.debug = '--debug' in args
-        cls.start = 'start' in args
+        parser = argparse.ArgumentParser(description='')
+        parser.add_argument('start', help='Start CSM Agent')
+        parser.add_argument('-c','--config', help='Confstore URL eg:<type>://<path>', default='')
+        parser.add_argument('--debug', help='Start CSM Agent in Debug mode',
+                                        action='store_true',
+                                        default=False)
+        parser.add_argument('--daemonize', help='Start CSM Agent in Demonize mode',
+                                        action='store_true',
+                                        default=False)
+        opts = vars(parser.parse_args())
+        cls.debug = opts["debug"]
+        cls.start = opts['start'] == 'start'
+        cls.daemonize = opts['daemonize']
+        cls.config = opts['config']

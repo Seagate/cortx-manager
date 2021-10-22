@@ -226,6 +226,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     cp -f "$BASE_DIR/csm/conf/csm_setup.py" "$DIST/csm/lib/csm_setup"
     cp -f "$BASE_DIR/csm/conf/usl_setup.py" "$DIST/csm/lib/usl_setup"
     cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
+    cp -f "$BASE_DIR/csm/cli/support_bundle/csm_bundle_generate.py" "$DIST/csm/lib/csm_bundle_generate"
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
     chmod +x "$DIST/csm/lib/"*
     cd "$TMPDIR"
@@ -275,7 +276,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
-    cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
+    # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
     cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
     cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
@@ -283,7 +284,7 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
 
     # Copy executables files
     cp -f "$BASE_DIR/csm/cli/cortxcli.py" "$DIST/cli/lib/cortxcli"
-    chmod +x "$DIST/cli/lib/"*    
+    chmod +x "$DIST/cli/lib/"*
     cd "$TMPDIR"
 
     cp -f "$BASE_DIR/csm/cli/conf/cli_setup.py" "$DIST/cli/lib/cli_setup"

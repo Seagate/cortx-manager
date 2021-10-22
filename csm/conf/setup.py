@@ -66,7 +66,7 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
     def _set_csm_conf_path(self):
-        conf_path = Conf.get(const.CONSUMER_INDEX, "cortx>common>storage>config",
+        conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY,
                                                      const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
@@ -238,26 +238,35 @@ class Setup:
         # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_ADMIN_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_USER)
+                                    const.CSM_AGENT_MGMT_ADMIN_KEY)
         cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_SECRET_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_PASS)
+                                    const.CSM_AGENT_MGMT_SECRET_KEY)
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_EMAIL_KEY,
-                                    const.DEFAULT_CLUSTER_ADMIN_EMAIL)
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    const.OPENLDAP_BASEDN_KEY)
+                                    const.CSM_AGENT_EMAIL_KEY)
+        if not (cluster_admin_user or cluster_admin_secret or cluster_admin_emailid):
+            raise CsmSetupError("Cluster admin details  not obtainer from confstore")
+        Log.info("Set Cortx admin credentials in config")
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
+        cluster_admin_secret = self._decrypt_secret(cluster_admin_secret, self.cluster_id,
+                                                Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        "S3>password_decryption_key"))
         ldap_csm_admin_secret = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>password")
-        #Security.decrypt_conf()
+
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
         conf = GeneralConfig(Yaml(f"{self.config_path}/{const.DB_CONF_FILE_NAME}").load())
         conf['databases']["openldap"]["config"][const.PORT] = int(
                     conf['databases']["openldap"]["config"][const.PORT])
-        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>login")
-        conf['databases']["openldap"]["config"]["password"] = self._fetch_ldap_password(ldap_csm_admin_secret)
+        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX,
+                                             "databases>openldap>config>login")
+        conf['databases']["openldap"]["config"]["password"] = \
+                            self._decrypt_secret(ldap_csm_admin_secret,
+                                                self.cluster_id,
+                                                Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        "S3>password_decryption_key"))
 
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
@@ -366,13 +375,10 @@ class Setup:
         Setup._run_cmd("rm -rf " + bundle_path)
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
-    def _fetch_ldap_password(self, ldap_secret):
+    def _decrypt_secret(self, secret, cluster_id, decryption_key):
         Log.info("Fetching LDAP root user password from Conf Store.")
         try:
-
-            cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-            cipher_key = Cipher.generate_key(cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+            cipher_key = Cipher.generate_key(cluster_id,decryption_key)
         except KvError as error:
             Log.error(f"Failed to Fetch keys from Conf store. {error}")
             return None
@@ -381,7 +387,7 @@ class Setup:
             return None
         try:
             ldap_root_decrypted_value = Cipher.decrypt(cipher_key,
-                                                ldap_secret.encode("utf-8"))
+                                                secret.encode("utf-8"))
             return ldap_root_decrypted_value.decode('utf-8')
         except CipherInvalidToken as error:
             Log.error(f"Decryption for LDAP root user password Failed. {error}")
@@ -399,12 +405,11 @@ class Setup:
             return None
         return ldap_root_user
 
-    def _connect_to_ldap_server(self, bind_dn, ldappasswd):
+    def _connect_to_ldap_server(self, ldap_url, bind_dn, ldappasswd):
         """
         Establish connection to ldap server.
         """
         from ldap import initialize, VERSION3, OPT_REFERRALS
-        ldap_url = Setup._get_ldap_url()
         Log.info("Setting up Ldap connection")
         self._ldap_conn = initialize(ldap_url)
         self._ldap_conn.protocol_version = VERSION3
@@ -424,7 +429,7 @@ class Setup:
         Delete data entries from ldap.
         """
         try:
-            self._connect_to_ldap_server(bind_dn, ldappasswd)
+            self._connect_to_ldap_server(Setup._get_ldap_url(), bind_dn, ldappasswd)
             try:
                 self._ldap_delete_recursive(self._ldap_conn, users_dn)
             except ldap.NO_SUCH_OBJECT:
@@ -459,6 +464,13 @@ class Setup:
         ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
+
+    @staticmethod
+    def _get_ldap_server_url():
+        ldap_servers_list = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS)
+        ldap_port = Conf.get(const.DATABASE_INDEX, 'databases>openldap>config>port')
+        ldap_server_url_list = [f"ldap://{each_server}:{ldap_port}/" for each_server in ldap_servers_list]
+        return ldap_server_url_list
 
     def _parse_endpoints(self, url):
         if "://"in url:

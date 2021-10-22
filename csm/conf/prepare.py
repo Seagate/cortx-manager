@@ -79,6 +79,7 @@ class Prepare(Setup):
             self._set_password_to_csm_user()
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
+        self._set_ldap_servers()
         self._set_db_host_addr()
         self._set_csm_ldap_credentials()
         self._set_ldap_params()
@@ -111,6 +112,7 @@ class Prepare(Setup):
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
                 const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
                 const.OPENLDAP_ENDPOINTS:f"{const.OPENLDAP_ENDPOINTS_KEY}",
+                const.OPENLDAP_SERVERS:f"{const.OPENLDAP_SERVERS_KEY}",
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
                 const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}"
@@ -203,14 +205,18 @@ class Prepare(Setup):
             if ldap_endpoints:
                 Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
                 protocol, host, port = self._parse_endpoints(ldap_endpoints)
-                resolved_ip = socket.gethostbyname(host)
-                return [resolved_ip], port
+                # resolved_ip = socket.gethostbyname(host)
+                return [host], port
             else:
                 raise CsmSetupError("LDAP endpoints not found.")
         Log.info("Fetching data N/W info.")
         data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
         resolved_ip = socket.gethostbyname(data_nw_private_fqdn)
         return [resolved_ip], const.DEFAULT_OPENLDAP_PORT
+
+    def _set_ldap_servers(self):
+        ldap_servers = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_SERVERS])
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS, ldap_servers)
 
     def _set_db_host_addr(self):
         """

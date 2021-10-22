@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -15,6 +17,12 @@
 
 import os
 import errno
+import argparse
+import sys
+import pathlib
+sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..','..'))
 from csm.core.blogic import const
 from csm.common.payload import Yaml, Tar, Json
 from cortx.utils.conf_store.conf_store import Conf
@@ -26,7 +34,6 @@ from csm.core.services.alerts import AlertRepository
 class CSMBundle:
     """
     ThiS Class generates the Support Bundle for Component CSM.
-
     Currently Included Files in CSM Support Bundle:-
     1) cortxcli.log -- Logs for CLI .
     2) csm_agent.log -- Logs for CSM Backend Agent.
@@ -97,4 +104,34 @@ class CSMBundle:
             Log.error(f"Error occured while fetching alerts: {ex}")
             alerts = [{"Error": "Internal error: Could not fetch alerts."}]
         return alerts
-        
+
+class GenerateCsmBundle:
+    '''
+    Csm support bundle generation class
+    '''
+    @staticmethod
+    def generate_bundle(args):
+        Conf.load(const.CONSUMER_INDEX, args['config_url'])
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
+        csm_log_path = os.path.join(log_path,'csm')
+        bundle_id = args['bundle_id']
+        target_path = args ['target']
+        services = args['services'] #Not making any use of service option for now
+        target_path = os.path.join(target_path, bundle_id)
+        os.makedirs(target_path,exist_ok=True)
+        tar_file_name = os.path.join(target_path, f"{bundle_id}.tar.gz")
+        Tar(tar_file_name).dump([csm_log_path])
+
+if __name__ == '__main__':
+    from datetime import datetime
+    parser = argparse.ArgumentParser(description='CSM Component Bundle Generate')
+    parser.add_argument('-b','--bundle_id',
+                    dest='bundle_id',
+                    help='Bundle-id',
+                    default=f'SB_csm_{datetime.now().strftime("%d%m%Y_%H-%M-%S")}')
+    parser.add_argument('-c','--config',dest='config_url', help='Confstore URL eg:<type>://<path>')
+    parser.add_argument('-s','--services',dest='services', help='Run csm-service support-bundle', default='agent')
+    parser.add_argument('-t','--target',dest='target', help='Target path to save support-bundle', default='/tmp/')
+    args = vars(parser.parse_args())
+
+    GenerateCsmBundle.generate_bundle(args)

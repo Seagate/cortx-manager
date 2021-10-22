@@ -1,0 +1,195 @@
+{
+    "name": "cluster_management",
+    "description": "Manage cluster resources.",
+    "sub_commands": [
+        {
+            "name": "node",
+            "description": "Manage operations on node.",
+            "need_confirmation": false,
+            "permissions_tag": "create",
+            "sub_commands": [
+                {
+                    "name": "start",
+                    "description": "Start the node.",
+                    "need_confirmation": false,
+                    "permissions_tag": "create",
+                    "args": [
+                        {
+                            "flag": "-o",
+                            "dest": "operation",
+                            "type": "str",
+                            "help": "",
+                            "default": "start",
+                            "suppress_help": true,
+                            "json": true
+                        },
+                        {
+                            "flag": "-i",
+                            "dest": "resource_id",
+                            "type": "str",
+                            "help": "Id of the node on which operation is to be performed.",
+                            "default": "",
+                            "json": true
+                        },
+                        {
+                            "flag": "args",
+                            "default": [],
+                            "suppress_help": true,
+                            "nargs": "?",
+                            "help": ""
+                        }
+                    ],
+                    "comm": {
+                        "type": "rest",
+                        "method": "post",
+                        "target": "/{version}/system/management/node?arguments_format=flat",
+                        "version": "v2"
+                    },
+                    "output": {
+                        "success": "Start operation request for node is placed successfully."
+                    }
+                },
+                {
+                    "name": "stop",
+                    "description": "Stop the node.",
+                    "need_confirmation": false,
+                    "permissions_tag": "create",
+                    "args": [
+                        {
+                            "flag": "-o",
+                            "dest": "operation",
+                            "type": "str",
+                            "help": "",
+                            "default": "stop",
+                            "suppress_help": true,
+                            "json": true
+                        },
+                        {
+                            "flag": "-i",
+                            "dest": "resource_id",
+                            "type": "str",
+                            "help": "Id of the node on which operation is to be performed.",
+                            "default": "",
+                            "json": true
+                        },
+                        {
+                            "flag": "-f",
+                            "dest": "force",
+                            "type": "bool",
+                            "help": "Force the operation on node.",
+                            "default": false,
+                            "json": true
+                        },
+                        {
+                            "flag": "args",
+                            "default": [],
+                            "suppress_help": true,
+                            "nargs": "?",
+                            "help": ""
+                        }
+                    ],
+                    "comm": {
+                        "type": "rest",
+                        "method": "post",
+                        "target": "/{version}/system/management/node?arguments_format=flat",
+                        "version": "v2"
+                    },
+                    "output": {
+                        "success": "Stop operation request for node is placed successfully."
+                    }
+                },
+                {
+                    "name": "poweroff",
+                    "description": "Power off the node.",
+                    "need_confirmation": false,
+                    "permissions_tag": "create",
+                    "args": [
+                        {
+                            "flag": "-o",
+                            "dest": "operation",
+                            "type": "str",
+                            "help": "",
+                            "default": "poweroff",
+                            "suppress_help": true,
+                            "json": true
+                        },
+                        {
+                            "flag": "-i",
+                            "dest": "resource_id",
+                            "type": "str",
+                            "help": "Id of the node on which operation is to be performed.",
+                            "default": "",
+                            "json": true
+                        },
+                        {
+                            "flag": "-s",
+                            "dest": "storageoff",
+                            "type": "bool",
+                            "help": "Poweroff storage.",
+                            "default": false,
+                            "json": true
+                        },
+                        {
+                            "flag": "-f",
+                            "dest": "force",
+                            "type": "bool",
+                            "help": "Force the operation on node.",
+                            "default": false,
+                            "json": true
+                        },
+                        {
+                            "flag": "args",
+                            "default": [],
+                            "suppress_help": true,
+                            "nargs": "?",
+                            "help": ""
+                        }
+                    ],
+                    "comm": {
+                        "type": "rest",
+                        "method": "post",
+                        "target": "/{version}/system/management/node?arguments_format=flat",
+                        "version": "v2"
+                    },
+                    "output": {
+                        "success": "Poweroff operation request for node is placed successfully."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "cluster",
+            "description": "Manage operations on cluster.",
+            "need_confirmation": false,
+            "permissions_tag": "create",
+            "sub_commands": [
+                {
+                    "name": "status",
+                    "description": "Status of cluster due to stopping or poweringoff the node.",
+                    "need_confirmation": false,
+                    "permissions_tag": "create",
+                    "args": [
+                        {
+                            "flag": "node_id",
+                            "type": "str",
+                            "help": "Id of the node for which cluster status is to be checked."
+                        },
+                        {
+                            "flag": "args",
+                            "default": [],
+                            "suppress_help": true,
+                            "nargs": "?",
+                            "help": ""
+                        }
+                    ],
+                    "comm": {
+                        "type": "rest",
+                        "method": "get",
+                        "target": "/{version}/system/management/cluster_status/{node_id}",
+                        "version": "v2"
+                    }
+                }
+            ]
+        }
+    ]
+}

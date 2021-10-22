@@ -1,6 +1,6 @@
 cortx:
   common:
-    environment_type: K8s
+    environment_type: K8
     product_release: LC
     security:
       device_certificate: /etc/cortx/solution/ssl/stx.pem

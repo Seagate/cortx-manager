@@ -121,6 +121,7 @@ class IamTempCredentials:
 class IamErrors(Enum):
     """ Enum with error responses """
     EntityAlreadyExists = 'EntityAlreadyExists'
+    AccessKeyAlreadyExists = 'AccessKeyAlreadyExists'
     OperationNotSupported = 'OperationNotSupported'
     InvalidAccessKeyId = 'InvalidAccessKeyId'
     InvalidParameterValue = 'InvalidParameterValue'

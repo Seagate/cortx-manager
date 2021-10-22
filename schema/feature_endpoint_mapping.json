@@ -59,6 +59,12 @@
       "ha"
     ]
   },
+  "/api/*/system/management/*": {
+    "feature_name": "cluster_management",
+    "dependent_on": [
+      "ha"
+    ]
+  },
   "/api/*/update/hotfix/status": {
     "feature_name": "sw_update",
     "dependent_on": [
