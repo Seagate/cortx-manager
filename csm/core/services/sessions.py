@@ -200,6 +200,8 @@ class S3AuthPolicy(AuthPolicy):
         cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_HOST)
         cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PORT)
         cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
+        if Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL) == 'https':
+            cfg.use_ssl = True
 
         Log.debug(f'Authenticating {user.user_id}'
                   f' with S3 IAM server {cfg.host}:{cfg.port}')
