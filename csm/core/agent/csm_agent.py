@@ -50,18 +50,17 @@ class CsmAgent:
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
-
+        log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
+        console_output = True if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true" \
+                            else False
         Log.init("csm_agent",
                syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
                syslog_port= int(syslog_port) if syslog_port else None,
                backup_count= int(backup_count) if backup_count else None,
                file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-               level="DEBUG" if Options.debug \
-                            else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"),
-               console_output=True
-                        if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true"
-                        else False)
+               level=log_level, console_output=console_output)
+
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
