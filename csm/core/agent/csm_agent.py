@@ -58,7 +58,10 @@ class CsmAgent:
                file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
                level="DEBUG" if Options.debug \
-                            else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"))
+                            else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"),
+               console_output=True
+                        if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true"
+                        else False)
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
@@ -81,7 +84,7 @@ class CsmAgent:
 
 
         #Remove all Old Shutdown Cron Jobs
-        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
+#        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
         #todo: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
