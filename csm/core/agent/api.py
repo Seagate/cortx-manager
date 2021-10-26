@@ -26,6 +26,7 @@ from concurrent.futures import CancelledError as ConcurrentCancelledError
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
+from aiohttp.client_exceptions import ServerDisconnectedError
 from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
@@ -422,6 +423,8 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
         except CsmNotImplemented as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=501)
+        except ServerDisconnectedError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=503)
         except CsmGatewayTimeout as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=504)
         except CsmServiceConflict as e:
