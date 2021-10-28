@@ -423,8 +423,6 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
         except CsmNotImplemented as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=501)
-        except ServerDisconnectedError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=503)
         except CsmGatewayTimeout as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=504)
         except CsmServiceConflict as e:
@@ -435,6 +433,8 @@ class CsmRestApi(CsmApi, ABC):
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request = request, request_id = request_id), status=422)
+        except ServerDisconnectedError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=503)
         except Exception as e:
             Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
