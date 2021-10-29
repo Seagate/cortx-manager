@@ -25,8 +25,8 @@ from cortx.utils.kv_store.kv_store_collection import ConsulKvPayload
 
 class FileStore(BaseStore):
     _identifier = 'file'
-    def __init__(self, store_loc, store_path, delim='>'):
-        super(FileStore, self).__init__(store_loc, store_path, delim)
+    def __init__(self, store_loc, store_path):
+        super(FileStore, self).__init__(store_loc, store_path)
         if not os.path.exists(self._store_path):
             with open(self._store_path, 'w+') as f:
                 pass
@@ -40,7 +40,7 @@ class FileStore(BaseStore):
             f.write(str(s1))
             f.write("\n")
 
-    def search(self, filter):
+    def search(self, search_filter):
         '''
         Search data from File
         '''
@@ -50,8 +50,8 @@ class FileStore(BaseStore):
 
 class ConsulStore(BaseStore):
     _identifier = 'consul'
-    def __init__(self, store_loc, store_path, delim='>'):
-        super(ConsulStore,self).__init__(store_loc, store_path, delim)
+    def __init__(self, store_loc, store_path):
+        super(ConsulStore,self).__init__(store_loc, store_path)
         if store_loc:
             if ':' in store_loc:
                 host, port = store_loc.split(':')
@@ -82,10 +82,9 @@ class LogStoreFactory:
 
     def __init__(self):
         """ Initializing LogStoreFactory """
-        pass
 
     @staticmethod
-    def get_instance(store_url: str, delim='>'):
+    def get_instance(store_url: str):
         """ Obtain instance of KvStore for given file_type """
 
         url_spec = urlparse(store_url)
@@ -99,6 +98,5 @@ class LogStoreFactory:
         storage = inspect.getmembers(sys.modules[__name__],inspect.isclass)
         for name, cls in storage:
             if hasattr(cls, '_identifier') and store_type == cls._identifier:
-                LogStoreFactory._stores[store_url] = cls(store_loc, store_path,
-                                                        delim)
+                LogStoreFactory._stores[store_url] = cls(store_loc, store_path)
                 return LogStoreFactory._stores[store_url]
