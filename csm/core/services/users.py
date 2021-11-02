@@ -362,7 +362,7 @@ class CsmUserService(ApplicationService):
                 # Prohibit raising role to admin for other users
                 if role == const.CSM_SUPER_USER_ROLE:
                     msg = 'Can not update role to admin'
-                    raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
+                    raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
         # Enforce the password check for self-updating the user
         if self_update and not reset_password:
@@ -371,7 +371,7 @@ class CsmUserService(ApplicationService):
                 raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
             if not Passwd.verify(current_password, user.user_password):
                 msg = 'The current password is not valid'
-                raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
+                raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
     async def update_user(self, user_id: str, new_values: dict, loggedin_user_id: str) -> dict:
         """
