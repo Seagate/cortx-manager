@@ -22,11 +22,11 @@ import traceback
 import signal
 import ssl
 import time
-from concurrent.futures import CancelledError as ConcurrentCancelledError
+from concurrent.futures import CancelledError as ConcurrentCancelledError, TimeoutError as ConcurrentTimeoutError
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
-from aiohttp.client_exceptions import ServerDisconnectedError
+from aiohttp.client_exceptions import ServerDisconnectedError, ClientConnectorError
 from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
@@ -433,7 +433,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request = request, request_id = request_id), status=422)
-        except ServerDisconnectedError as e:
+        except (ServerDisconnectedError, ClientConnectorError, ConcurrentTimeoutError) as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=503)
         except Exception as e:
             Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
