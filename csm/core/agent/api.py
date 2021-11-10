@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import base64
 import errno
 import yaml
 import asyncio
@@ -21,6 +22,7 @@ import json
 import traceback
 import ssl
 import time
+import uuid
 from concurrent.futures import CancelledError as ConcurrentCancelledError
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
@@ -129,7 +131,7 @@ class CsmRestApi(CsmApi, ABC):
         return 'debug' in request.rel_url.query
 
     @staticmethod
-    def generate_audit_log_string(request, **kwargs):
+    def generate_audit_log_string(request, request_id: uuid.UUID, **kwargs):
         if (getattr(request, "session", None) is not None
                 and getattr(request.session, "credentials", None) is not None):
             user = request.session.credentials.user_id
@@ -152,26 +154,27 @@ class CsmRestApi(CsmApi, ABC):
             'path': path,
             'user_agent': user_agent,
             'response_code': kwargs.get("response_code", ""),
-            'request_id': kwargs.get("request_id", int(time.time())),
+            'request_id': str(request_id),
             'payload': kwargs.get("payload", "")
         }
         return json.dumps(entry)
 
     @staticmethod
-    def process_audit_log(request, **kwargs):
+    def process_audit_log(request, request_id: uuid.UUID, **kwargs):
         url = request.path
         if (not request.app[const.USL_POLLING_LOG]
                 and url.startswith('/usl/')
                 and not url.endswith('/registerDevice')):
             return
-        entry = CsmRestApi.generate_audit_log_string(request, **kwargs)
+        entry = CsmRestApi.generate_audit_log_string(request, request_id, **kwargs)
         Log.audit(f'{entry}')
 
     @staticmethod
-    def error_response(err: Exception, **kwargs) -> dict:
+    def error_response(err: Exception, request_id: uuid.UUID, **kwargs) -> dict:
         resp = {
-            "error_code": None,
             "message": None,
+            "error_code": None,
+            "request_id": str(request_id),
         }
 
         request = kwargs.get("request")
@@ -192,9 +195,33 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
-        CsmRestApi.process_audit_log(request, response_code=resp['error_code'], \
-                request_id = kwargs.get("request_id", int(time.time())), payload=kwargs.get("payload"))
+        error_details = kwargs.get("error_details")
+        if error_details is not None:
+            resp["error_details"] = error_details
+        CsmRestApi.process_audit_log(
+            request,
+            request_id=request_id,
+            response_code=resp['error_code'],
+            payload=kwargs.get("payload"),
+        )
         return resp
+
+    @staticmethod
+    def _json_to_url(json: str) -> str:
+        data = json.encode('utf-8')
+        b64_data = base64.b64encode(data).decode('utf-8')
+        return f'data:application/json;base64,{b64_data}'
+
+    @staticmethod
+    def _error_to_uuid5(method: str, endpoint: str, exception: Exception) -> uuid.UUID:
+        d = {
+            'method': method,
+            'endpoint': endpoint,
+            'exception': repr(type(exception)),
+        }
+        j = json.dumps(d, sort_keys=True)
+        url = CsmRestApi._json_to_url(j)
+        return uuid.uuid5(uuid.NAMESPACE_URL, url)
 
     @staticmethod
     def json_serializer(*args, **kwargs):
@@ -353,7 +380,8 @@ class CsmRestApi(CsmApi, ABC):
     @web.middleware
     async def rest_middleware(request, handler):
         try:
-            request_id = int(time.time())
+            request_id = uuid.uuid4()
+            request_timestamp = int(1000 * time.time())
             request_body = dict(request.rel_url.query) if request.rel_url.query else {}
             if not request_body and request.content_length and request.content_length > 0:
                 try:
@@ -426,8 +454,22 @@ class CsmRestApi(CsmApi, ABC):
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request = request, request_id = request_id), status=422)
         except Exception as e:
-            Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
+            new_exception = CsmInternalError(desc='a general internal failure has occurred')
+            correlation_id = CsmRestApi._error_to_uuid5(
+                method=request.method, endpoint=request.path, exception=e)
+            log_msg = (f'Unhandled exception caught\n'
+                f'Request ID: {request_id} @ {request_timestamp}\n'
+                f'Correlation ID: {correlation_id}\n'
+                f'Method: {request.method} {request.path}\n')
+            error_details = {
+                'correlation_id': correlation_id,
+                'timestamp': request_timestamp,
+                'is_reportable': True,
+            }
+            Log.critical(log_msg, exc_info=True)
+            error_response = CsmRestApi.error_response(
+                new_exception, request=request, request_id=request_id, error_details=error_details)
+            return CsmRestApi.json_response(error_response, status=500)
 
     @staticmethod
     def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
