@@ -195,7 +195,7 @@ if [ "$DEV" == true ]; then
 else
     pip3 install --upgrade pip
     # add cortx-py-utils below
-    yum install -y cortx-py-utils 
+    yum localinstall -y /mnt/bigstorage/releases/cortx/github/integration-custom-ci/centos-7.9.2009/custom-build-2463/cortx_iso/cortx-py-utils-2.0.0-5_9f14f77.noarch.rpm
     yum install -y python36-cortx-prvsnr
 fi
 
