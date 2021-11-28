@@ -826,8 +826,8 @@ CSM_LDAP_ADMIN_USER_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
 CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
 CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
-CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
-CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc={0},dc=csm,{1}"
+CORTXACCOUNTS_DN = "ou=accounts,dc={0},dc=csm,{1}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
 CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_INIT_FILE_NAME)
