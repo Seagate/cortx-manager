@@ -343,7 +343,7 @@ class Configure(Setup):
         if not (_rootdnpassword or csm_admin_ldap_password):
             raise CsmSetupError("Failed to fetch LDAP password.")
         csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>csm_schema_version")
+                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -355,7 +355,7 @@ class Configure(Setup):
 
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
-        tmpl_init_data = tmpl_init_data.replace('<version>',f"dc={csm_schema_version}")
+        tmpl_init_data = tmpl_init_data.replace('<version>',f"{csm_schema_version}")
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
 
@@ -386,7 +386,7 @@ class Configure(Setup):
         # Create Cortx Account
         Log.info(f"Updating base dn in {const.CORTXUSER_ACCOUNT_LDIF}")
         tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
-        tmpl_useracc_data = tmpl_useracc_data.replace('<version>',f"dc={csm_schema_version}")
+        tmpl_useracc_data = tmpl_useracc_data.replace('<version>',csm_schema_version)
         tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
         Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
         self._perform_ldif_parsing(Setup._get_ldap_url(), const.CSM_LDAP_ACC_FILE_PATH, ldap_user, csm_admin_ldap_password)
@@ -480,9 +480,10 @@ class Configure(Setup):
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>csm_schema_version")
+                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
         models_list = Conf.get(const.DATABASE_INDEX,"models")
         for record in models_list:
             if record['import_path'] == 'csm.core.data.models.users.User':
                 record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(csm_schema_version,base_dn)
         Conf.set(const.DATABASE_INDEX,"models",models_list)
+        Conf.save(const.DATABASE_INDEX)

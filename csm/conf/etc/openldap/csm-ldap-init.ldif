@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-dn: <version>,dc=csm,<base-dn>
+dn: dc=csm,<base-dn>
 dc: csm
 o: csm
 description: CORTX User directory.
@@ -21,6 +21,14 @@ objectclass: top
 objectclass: dcObject
 objectclass: organization
 
-dn: ou=accounts,<version>,dc=csm,<base-dn>
+dn: dc=<version>,dc=csm,<base-dn>
+dc: <version>
+o: <version>
+description: CORTX User version <version> directory.
+objectclass: top
+objectclass: dcObject
+objectclass: organization
+
+dn: ou=accounts,dc=<version>,dc=csm,<base-dn>
 ou: accounts
 objectclass: organizationalunit

@@ -121,8 +121,11 @@ class Cleanup(Setup):
             raise CsmSetupError("Failed to fetch LDAP root user password")
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+
+        csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
+                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
         bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
-        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXACCOUNTS_DN.format(base_dn))
+        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXACCOUNTS_DN.format(csm_schema_version, base_dn))
 
     def _search_delete_permission_attr(self, dn, attr_to_delete):
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
