@@ -155,7 +155,8 @@ class StatsAppService(ApplicationService):
         return output
 
     async def get_test_metrics(self):
-        file = open('/root/metrics.txt',mode='r')
+        # TODO: Read metrics from massage-bus
+        file = open('/opt/seagate/cortx/csm/templates/metrics.txt',mode='r')
         all_of_it = file.read()
         file.close()
         return web.Response(text=all_of_it)
