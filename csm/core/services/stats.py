@@ -155,7 +155,6 @@ class StatsAppService(ApplicationService):
         return output
 
     async def get_test_metrics(self):
-        #return web.Response(text='Hello!! You are learning, dont feel afraid! Keep going!!')
         #read content fron static file. 
         file = open('/root/metrics.txt',mode='r')
         all_of_it = file.read()
