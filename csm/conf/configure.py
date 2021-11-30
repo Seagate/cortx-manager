@@ -393,13 +393,13 @@ class Configure(Setup):
         Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ACC_FILE_PATH}')
         Log.info("Openldap configuration completed for Cortx users.")
 
-    def _setup_ldap_permissions(self, ldap_url, base_dn, ldap_user,csm_schema_version):
+    def _setup_ldap_permissions(self, ldap_url, base_dn, ldap_user):
         """
         Setup necessary access permissions
         """
         dn = 'olcDatabase={2}mdb,cn=config'
         self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
-        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="ou=accounts,dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
+        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
 
     def _create_csm_ldap_user(self, ldap_url):
         """
