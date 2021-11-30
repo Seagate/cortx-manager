@@ -375,7 +375,7 @@ class Configure(Setup):
                     self._create_csm_ldap_user(each_server_url)
                     # Setup necessary permissions
                     Log.info(f"Setup necessary permissions to {ldap_user} on server: {each_server_url}")
-                    self._setup_ldap_permissions(each_server_url, base_dn, ldap_user,csm_schema_version)
+                    self._setup_ldap_permissions(each_server_url, base_dn, ldap_user)
                     break
                 except Exception as e_:
                     Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {e_}")
