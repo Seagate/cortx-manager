@@ -50,6 +50,7 @@ class CsmAgent:
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
+        telementary_auth = Conf.get(const.CSM_GLOBAL_INDEX, const.TELEMENTRY_AUTH)
         log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
         console_output = True if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true" \
                             else False

@@ -27,6 +27,8 @@ from typing import Dict
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
+from aiohttp import web
+from prometheus_client import ProcessCollector
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -151,3 +153,11 @@ class StatsAppService(ApplicationService):
         output["metrics"] = data_list
         Log.debug(f"Stats Request Output: {output}")
         return output
+
+    async def get_test_metrics(self):
+        #return web.Response(text='Hello!! You are learning, dont feel afraid! Keep going!!')
+        #read content fron static file. 
+        file = open('/root/metrics.txt',mode='r')
+        all_of_it = file.read()
+        file.close()
+        return web.Response(text=all_of_it)
