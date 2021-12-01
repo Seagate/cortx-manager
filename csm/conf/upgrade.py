@@ -21,7 +21,7 @@ from csm.conf.setup import Setup
 
 class Upgrade(Setup):
     """
-    Perform preinstall operations for csm
+    Perform upgrade operations for csm
     """
     def __init__(self):
         super(Upgrade, self).__init__()
