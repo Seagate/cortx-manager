@@ -304,6 +304,41 @@
       }
     },
     {
+      "name": "upgrade",
+      "description": "Perform upgrade opertions for csm",
+      "need_confirmation": false,
+      "permissions_tag": "update",
+      "args": [
+        {
+          "flag": "--config",
+          "dest": "config_url",
+          "type": "str",
+          "required": true,
+          "help": "Config Store URL e.g <type>://<path>."
+        },
+        {
+            "flag": "--services",
+            "help": "Run csm-service miniprovisioning",
+            "default": "all",
+            "type": "str",
+            "nargs": "?"
+        },
+        {
+          "flag": "args",
+          "default": [],
+          "suppress_help": true,
+          "nargs": "?"
+        }
+      ],
+      "comm": {
+        "type": "direct",
+        "target": "csm.conf.upgrade",
+        "method": "execute",
+        "class": "Upgrade",
+        "is_static": false
+      }
+    },
+    {
       "name": "post_upgrade",
       "description": "Perform post_upgrade for csm",
       "need_confirmation": false,
