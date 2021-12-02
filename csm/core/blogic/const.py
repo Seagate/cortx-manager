@@ -826,8 +826,8 @@ CSM_LDAP_ADMIN_USER_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP
 CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
 CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
 CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
-CORTXUSERS_DN = "o=userAccount,ou=accounts,dc=csm,{}"
-CORTXACCOUNTS_DN = "ou=accounts,dc=csm,{}"
+CORTXUSERS_DN = "o=userAccount,ou=accounts,dc={0},dc=csm,{1}"
+CORTXACCOUNTS_DN = "ou=accounts,dc={0},dc=csm,{1}"
 CSM_DN = "dc=csm,{}"
 DEFAULT_OPENLDAP_PORT = "389"
 CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_INIT_FILE_NAME)
@@ -897,6 +897,7 @@ IAM_PORT = 'S3>iam>port'
 IAM_PROTOCOL = 'S3>iam>protocol'
 LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
 LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
+LDAP_AUTH_CSM_SCHEMA_VERSION = 'OPENLDAP>csm_schema_version'
 OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
 OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
 OPEN_LDAP_SERVERS = 'OPENLDAP>servers'

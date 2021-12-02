@@ -21,6 +21,14 @@ objectclass: top
 objectclass: dcObject
 objectclass: organization
 
-dn: ou=accounts,dc=csm,<base-dn>
+dn: dc=<version>,dc=csm,<base-dn>
+dc: <version>
+o: <version>
+description: CORTX User version <version> directory.
+objectclass: top
+objectclass: dcObject
+objectclass: organization
+
+dn: ou=accounts,dc=<version>,dc=csm,<base-dn>
 ou: accounts
 objectclass: organizationalunit
