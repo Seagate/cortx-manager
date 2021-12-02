@@ -191,8 +191,9 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
-        CsmRestApi.process_audit_log(request, response_code=resp['error_code'], \
-                request_id = kwargs.get("request_id", int(time.time())), payload=kwargs.get("payload"))
+        #EOS-25913: Commenting the audit log generation till new option is discussed.
+        #CsmRestApi.process_audit_log(request, response_code=resp['error_code'], \
+        #        request_id = kwargs.get("request_id", int(time.time())), payload=kwargs.get("payload"))
         return resp
 
     @staticmethod
@@ -380,8 +381,9 @@ class CsmRestApi(CsmApi, ABC):
                 return file_resp
 
             if isinstance(resp, web.StreamResponse):
-                CsmRestApi.process_audit_log(request, response_code = resp.status, \
-                    request_id = request_id, payload=payload)
+                #EOS-25913: Commenting the audit log generation till new option is discussed.
+                #CsmRestApi.process_audit_log(request, response_code = resp.status, \
+                #    request_id = request_id, payload=payload)
                 return resp
 
             status = 200
@@ -392,8 +394,9 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            CsmRestApi.process_audit_log(request, response_code = status, \
-                request_id = request_id, payload=payload)
+            #EOS-25913: Commenting the audit log generation till new option is discussed.
+            #CsmRestApi.process_audit_log(request, response_code = status, \
+            #    request_id = request_id, payload=payload)
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
