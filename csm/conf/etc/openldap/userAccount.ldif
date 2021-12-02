@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-dn: o=userAccount,ou=accounts,dc=csm,<base-dn>
+dn: o=userAccount,ou=accounts,dc=<version>,dc=csm,<base-dn>
 o: userAccount
 cortxAccountId: cortxUserAccount
 objectclass: CortxAccount
