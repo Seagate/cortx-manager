@@ -30,6 +30,7 @@ class CsmAuth:
     TYPE = 'Bearer'
     UNAUTH = {'WWW-Authenticate': TYPE}
     ATTR_PUBLIC = '_csm_auth_public_'
+    ATTR_HYBRID = '_csm_auth_hybrid_'
     ATTR_PERMISSIONS = '_csm_auth_permissions_'
 
     @classmethod
@@ -38,8 +39,17 @@ class CsmAuth:
         return handler
 
     @classmethod
+    def hybrid(cls, handler):
+        setattr(handler, cls.ATTR_HYBRID, True)
+        return handler
+
+    @classmethod
     def is_public(cls, handler):
         return getattr(handler, cls.ATTR_PUBLIC, False)
+
+    @classmethod
+    def is_hybrid(cls, handler):
+        return getattr(handler, cls.ATTR_HYBRID, False)
 
     @classmethod
     def permissions(cls, permissions):
@@ -114,6 +124,18 @@ class CsmView(web.View):
             if CsmAuth.is_public(method_handler):
                 return True
         return CsmAuth.is_public(handler)
+
+    @classmethod
+    def is_hybrid(cls, handler, method):
+        ''' Check whether a particular method of the CsmView subclass has
+            the 'public' attribute. If not then check whether the handler
+            itself has the 'public' attribute '''
+
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            if CsmAuth.is_hybrid(method_handler):
+                return True
+        return CsmAuth.is_hybrid(handler)
 
     @classmethod
     def get_permissions(cls, handler, method):

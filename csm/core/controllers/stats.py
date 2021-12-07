@@ -113,7 +113,7 @@ class StatsPanelListView(CsmView):
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()
 
-@CsmAuth.public
+@CsmAuth.hybrid
 @CsmView._app_routes.view("/api/v2/metrics/stats/perf")
 class MetricsView(CsmView):
     def __init__(self, request):
