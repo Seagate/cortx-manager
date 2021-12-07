@@ -127,10 +127,6 @@ class CsmView(web.View):
 
     @classmethod
     def is_hybrid(cls, handler, method):
-        ''' Check whether a particular method of the CsmView subclass has
-            the 'public' attribute. If not then check whether the handler
-            itself has the 'public' attribute '''
-
         method_handler = cls._get_method_handler(handler, method)
         if method_handler is not None:
             if CsmAuth.is_hybrid(method_handler):
