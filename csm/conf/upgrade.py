@@ -1,5 +1,5 @@
 # CORTX-CSM: CORTX Management web and CLI interface.
-# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -13,8 +13,20 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-dn: o=userAccount,ou=accounts,dc=<version>,dc=csm,<base-dn>
-o: userAccount
-cortxAccountId: cortxUserAccount
-objectclass: CortxAccount
-mail: cortxUserAccount@seagate.com
+from csm.core.providers.providers import Response
+from csm.core.blogic import const
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.log import Log
+from csm.conf.setup import Setup
+
+class Upgrade(Setup):
+    """
+    Perform upgrade operations for csm
+    """
+    def __init__(self):
+        super(Upgrade, self).__init__()
+
+    async def execute(self, command):
+        Log.info("Perform upgrade for csm_setup")
+        # TODO: Implement upgrade logic
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
