@@ -117,8 +117,8 @@ class Prepare(Setup):
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
                 const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}",
-                "perf_stat_msg_type":"cortx>csm>metrics>stats>message_type",
-                "perf_stat_msg_retention_period": "cortx>csm>metrics>stats>retention_period"
+                const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
+                const.METRICS_PERF_STATS_RETENTION_PERIOD:const.METRICS_PERF_STATS_RETENTION_PERIOD_KEY
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -317,11 +317,11 @@ class Prepare(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
 
     def _set_msgbus_perf_stat_info(self):
-        msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["perf_stat_msg_type"])
-        retention_period = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["perf_stat_msg_retention_period"])
+        msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
+        retention_period = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_RETENTION_PERIOD])
         Log.info(f"Set message_type:{msg_type} and retention_period:{retention_period} for perf_stat")
-        Conf.set(const.CSM_GLOBAL_INDEX, 'MESSAGEBUS>PRODUCER>STATS>perf>message_type', msg_type)
-        Conf.set(const.CSM_GLOBAL_INDEX, 'MESSAGEBUS>PRODUCER>STATS>perf>retention_period', retention_period)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_MSG_TYPE, msg_type)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_RETENTION_PERIOD, retention_period)
 
     def create(self):
         """

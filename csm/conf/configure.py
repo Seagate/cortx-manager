@@ -491,9 +491,10 @@ class Configure(Setup):
         Conf.save(const.DATABASE_INDEX)
 
     def _create_perf_stat_topic(self):
-        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,'MESSAGEBUS>ADMIN>admin_id'))
-        message_type = Conf.get(const.CSM_GLOBAL_INDEX,'MESSAGEBUS>PRODUCER>STATS>perf>message_type')
-        partitions = Conf.get(const.CSM_GLOBAL_INDEX,'MESSAGEBUS>PRODUCER>STATS>perf>partitions')
+        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+        message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
+        partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
+        retention_period = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD)
         if not message_type in mb_admin.list_message_types():
             Log.info(f"Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)

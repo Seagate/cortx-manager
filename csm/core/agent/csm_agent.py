@@ -24,7 +24,6 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
-from csm.common.comm import MessageBusComm
 
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
@@ -124,8 +123,9 @@ class CsmAgent:
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
 
-        #Message Bus instance
+        #Message Bus instance creation
         CsmRestApi._app["comm_client"] = MessageBusComm()
+
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
@@ -319,6 +319,8 @@ if __name__ == '__main__':
     from csm.core.services.appliance_info import ApplianceInfoService
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
+    from csm.common.comm import MessageBusComm
+
     try:
         # try:
         #     from salt import client

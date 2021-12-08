@@ -159,13 +159,11 @@ class StatsAppService(ApplicationService):
         Log.debug(f"Stats Request Output: {output}")
         return output
 
-    def stop_msg_bus(self):
-        Log.info("Stopping MessageBus")
-        self.metrics_client.stop()
-
-    async def post_perf_metrics_to_msg_bus(self, message):
+    async def post_perf_metrics_to_msg_bus(self, messages):
         try:
-            self.metrics_client.send(message)
+            Log.info(f"Publish {len(messages)} messages:{messages} to message bus")
+            self.metrics_client.send(messages)
+            return {"response":f"{len(messages)} messages published successfully."}
         except Exception as e:
             Log.error(f"Error occured while sending message to message bus:{e}")
             raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
