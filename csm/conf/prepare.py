@@ -80,6 +80,7 @@ class Prepare(Setup):
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_ldap_servers()
+        self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
         self._set_csm_ldap_credentials()
         self._set_ldap_params()
@@ -115,7 +116,9 @@ class Prepare(Setup):
                 const.OPENLDAP_SERVERS:f"{const.OPENLDAP_SERVERS_KEY}",
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
-                const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}"
+                const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}",
+                "perf_stat_msg_type":"cortx>csm>metrics>stats>message_type",
+                "perf_stat_msg_retention_period": "cortx>csm>metrics>stats>retention_period"
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -312,6 +315,13 @@ class Prepare(Setup):
                  bind_base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_root_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
+
+    def _set_msgbus_perf_stat_info(self):
+        msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["perf_stat_msg_type"])
+        retention_period = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys["perf_stat_msg_retention_period"])
+        Log.info(f"Set message_type:{msg_type} and retention_period:{retention_period} for perf_stat")
+        Conf.set(const.CSM_GLOBAL_INDEX, 'MESSAGEBUS>PRODUCER>STATS>perf>message_type', msg_type)
+        Conf.set(const.CSM_GLOBAL_INDEX, 'MESSAGEBUS>PRODUCER>STATS>perf>retention_period', retention_period)
 
     def create(self):
         """

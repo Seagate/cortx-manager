@@ -24,6 +24,8 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
+from csm.common.comm import MessageBusComm
+
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -122,10 +124,13 @@ class CsmAgent:
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
 
+        #Message Bus instance
+        CsmRestApi._app["comm_client"] = MessageBusComm()
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
-        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
+        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider,
+                                                CsmRestApi._app["comm_client"])
 
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
@@ -261,6 +266,8 @@ class CsmAgent:
         if not (env_type == const.K8S):
             CsmAgent.alert_monitor.stop()
             Log.info("Finished stopping alert monitor service")
+        Log.info("Stopping Message Bus client")
+        CsmRestApi._app["comm_client"].stop()
         Log.info("Finished stopping csm agent")
 
 

@@ -20,13 +20,12 @@
 
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
-import asyncio
-import re
-from datetime import datetime, timedelta
 from typing import Dict
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.core.blogic import const
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -35,8 +34,16 @@ class StatsAppService(ApplicationService):
     Provides operations on stats without involving the domain specifics
     """
 
-    def __init__(self, stats_provider):
+    def __init__(self, stats_provider, metrics_client):
         self._stats_provider = stats_provider
+        self.metrics_client = metrics_client
+        self.metrics_client.init(type=const.PRODUCER,
+                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                "MESSAGEBUS>PRODUCER>STATS>perf>producer_id"),
+                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                "MESSAGEBUS>PRODUCER>STATS>perf>message_type"),
+                            method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                "MESSAGEBUS>PRODUCER>STATS>perf>method"))
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
@@ -151,3 +158,14 @@ class StatsAppService(ApplicationService):
         output["metrics"] = data_list
         Log.debug(f"Stats Request Output: {output}")
         return output
+
+    def stop_msg_bus(self):
+        Log.info("Stopping MessageBus")
+        self.metrics_client.stop()
+
+    async def post_perf_metrics_to_msg_bus(self, message):
+        try:
+            self.metrics_client.send(message)
+        except Exception as e:
+            Log.error(f"Error occured while sending message to message bus:{e}")
+            raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
