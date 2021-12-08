@@ -23,6 +23,7 @@ import os
 
 from aiohttp import web
 from csm.core.services.permissions import PermissionSet
+from csm.core.blogic import const
 
 
 class CsmAuth:
@@ -32,6 +33,9 @@ class CsmAuth:
     ATTR_PUBLIC = '_csm_auth_public_'
     ATTR_HYBRID = '_csm_auth_hybrid_'
     ATTR_PERMISSIONS = '_csm_auth_permissions_'
+    # ADD all hybrid api's here with required keys, use hybrid decorator
+    # TODO: make it dynamic by adding required key as param to hybrid decorator.
+    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.PUBLIC_AUTH}
 
     @classmethod
     def public(cls, handler):

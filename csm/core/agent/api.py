@@ -318,13 +318,21 @@ class CsmRestApi(CsmApi, ABC):
         return session
 
     @staticmethod
+    def _retrieve_config(request):
+        path = request.path
+        method =  request.method
+        key = method + ":" + path
+        conf_key = CsmAuth.HYBRID_APIS[key]
+        return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
     @web.middleware
     async def session_middleware(request, handler):
         session = None
         is_public = await CsmRestApi._is_public(request)
         is_hybrid = await CsmRestApi._is_hybrid(request)
         if is_hybrid:
-            conf_key = Conf.get(const.CSM_GLOBAL_INDEX, "STATS>PROVIDER>telemetryAuth")
+            conf_key = CsmRestApi._retrieve_config(request)
             if conf_key == "true" or conf_key == "True":
                 is_public = True
             else:
