@@ -39,11 +39,11 @@ class StatsAppService(ApplicationService):
         self.metrics_client = metrics_client
         self.metrics_client.init(type=const.PRODUCER,
                             producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                "MESSAGEBUS>PRODUCER>STATS>perf>producer_id"),
+                                                const.MSG_BUS_PERF_STAT_PRODUCER_ID),
                             message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                "MESSAGEBUS>PRODUCER>STATS>perf>message_type"),
+                                                const.MSG_BUS_PERF_STAT_MSG_TYPE),
                             method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                "MESSAGEBUS>PRODUCER>STATS>perf>method"))
+                                                const.MSG_BUS_PERF_STAT_METHOD))
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
