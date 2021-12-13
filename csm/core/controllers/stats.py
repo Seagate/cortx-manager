@@ -121,5 +121,5 @@ class MetricsView(CsmView):
         self._service = self.request.app["stat_service"]
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
-        Log.debug(f"Handling Metrics")
+        Log.debug(f"Handling get request for performance stats")
         return await self._service.get_perf_metrics()
