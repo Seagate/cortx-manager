@@ -333,7 +333,7 @@ class CsmRestApi(CsmApi, ABC):
         is_hybrid = await CsmRestApi._is_hybrid(request)
         if is_hybrid:
             conf_key = CsmRestApi._retrieve_config(request)
-            if conf_key == "true" or conf_key == "True":
+            if conf_key == "disable" or conf_key == "Disable":
                 is_public = True
             else:
                 is_public = False
