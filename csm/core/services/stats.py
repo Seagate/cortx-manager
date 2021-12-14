@@ -182,7 +182,7 @@ class StatsAppService(ApplicationService):
         StatsAppService.BUFFER = []
         self.metrics_client.recv(self._stats_callback, is_blocking=False)
         return StatsAppService.BUFFER
-    
+        
     def stop_msg_bus(self):
         Log.info("Stopping Messagebus")
         self.metrics_client.stop()
