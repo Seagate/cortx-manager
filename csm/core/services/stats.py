@@ -159,6 +159,10 @@ class StatsAppService(ApplicationService):
         Log.debug(f"Stats Request Output: {output}")
         return output
 
+    def stop_msg_bus(self):
+        Log.info("Stopping Messagebus")
+        self.metrics_client.stop()
+
     async def post_perf_metrics_to_msg_bus(self, messages):
         try:
             Log.info(f"Publish {len(messages)} messages:{messages} to message bus")
