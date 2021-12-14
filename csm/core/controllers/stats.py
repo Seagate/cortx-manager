@@ -13,11 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import json
+from marshmallow import fields, validate
+from marshmallow.exceptions import ValidationError
+from marshmallow.schema import Schema
+from csm.common.errors import InvalidRequest
 from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.common.permission_names import Resource, Action
 
-
+class MatricsSchemaValidator(Schema):
+    messages = fields.List(fields.Str(), allow_none=False,
+            validate=validate.Length(min=1, error='Message list cannot be empty.') )
 
 #@atomic
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
@@ -112,3 +119,20 @@ class StatsPanelListView(CsmView):
         else:
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()
+
+@CsmView._app_routes.view("/api/v2/metrics/stats/perf")
+class MetricsView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app["stat_service"]
+    @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
+    async def post(self):
+        Log.debug(f"Handling Per Metrics post api request")
+        try:
+            schema = MatricsSchemaValidator()
+            user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+        except json.decoder.JSONDecodeError as jde:
+            raise InvalidRequest(message_args=f"Request body missing")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"Invalid request body: {val_err}")
+        return await self._service.post_perf_metrics_to_msg_bus(user_body["messages"])
