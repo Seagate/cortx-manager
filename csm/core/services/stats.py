@@ -48,8 +48,7 @@ class StatsAppService(ApplicationService):
                     consumer_group='csm_group', consumer_message_types=["perf_stat"],
                     auto_ack=False, offset="latest")
         self.convertor_type = const.STATS_CONVERTOR
-        self.convertor = Convertor.init_convertor(self.convertor_type)
-
+        self.convertor = Convertor(self.convertor_type)
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
@@ -166,7 +165,7 @@ class StatsAppService(ApplicationService):
         return output
 
     def _convertor(self, message):
-        converted_message = self.convertor.convertor(message)
+        converted_message = self.convertor.convert_data(message)
         return converted_message
 
     def _stats_callback(self, message):
