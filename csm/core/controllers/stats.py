@@ -120,6 +120,7 @@ class StatsPanelListView(CsmView):
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()
 
+@CsmAuth.hybrid
 @CsmView._app_routes.view("/api/v2/metrics/stats/perf")
 class MetricsView(CsmView):
     def __init__(self, request):
@@ -136,3 +137,7 @@ class MetricsView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.post_perf_metrics_to_msg_bus(user_body["messages"])
+
+    async def get(self):
+        Log.debug(f"Handling get request for performance stats")
+        return await self._service.get_perf_metrics()
