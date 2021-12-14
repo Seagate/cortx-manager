@@ -415,6 +415,31 @@ class MessageBusComm(Comm):
                     continue
         else:
             Log.error("Message Bus Consumer not initialized.")
+            
+    def recv_non_blocking(self, callback_fn=None, message=None):
+        """
+        Receives messages from message bus without blocking
+        :param callback_fn: This is the callback method on which we will
+        receive messages from message bus.
+        """
+        if self.consumer:
+            buffer = []
+            while True:
+                try:
+                    if self.is_running:
+                        message = self.consumer.receive(self.recv_timeout)
+                        if message:
+                            decoded_message = message.decode('utf-8')
+                            Log.debug(f"Received Message: {decoded_message}")
+                            mssg = callback_fn(decoded_message)
+                            buffer.append(mssg)
+                        else:
+                            return buffer
+                except MessageBusError as ex:
+                    Log.error(f"Message consuming failed. {ex}")
+                    continue
+        else:
+            Log.error("Message Bus Consumer not initialized.")
 
     def acknowledge(self):
         """ Acknowledge the read messages. """

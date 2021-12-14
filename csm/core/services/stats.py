@@ -28,6 +28,10 @@ from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
 from aiohttp import web
+from csm.common.comm import MessageBusComm
+from csm.plugins.cortx.convertor import Convertor
+from csm.core.blogic import const
+
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -38,6 +42,14 @@ class StatsAppService(ApplicationService):
 
     def __init__(self, stats_provider):
         self._stats_provider = stats_provider
+        self.metrics_client = MessageBusComm()
+        if self.metrics_client:
+                self.metrics_client.init(type='consumer', consumer_id='csm',
+                    consumer_group='csm_group', consumer_message_types=["perf_stat"],
+                    auto_ack=False, offset="latest")
+        self.convertor_type = const.STATS_CONVERTOR
+        self.convertor = Convertor.init_convertor(self.convertor_type)
+
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
@@ -153,9 +165,18 @@ class StatsAppService(ApplicationService):
         Log.debug(f"Stats Request Output: {output}")
         return output
 
+    def _convertor(self, message):
+        converted_message = self.convertor.convertor(message)
+        return converted_message
+
+    def _stats_callback(self, message):
+        # TODO: aggregation()
+        converted_message = self._convertor(message)
+        return converted_message
+
     async def get_perf_metrics(self):
-        # TODO: Read metrics from massage-bus
-        file = open('/opt/seagate/cortx/csm/templates/metrics.txt',mode='r')
-        all_of_it = file.read()
-        file.close()
-        return web.Response(text=all_of_it)
+        """Fetch metrics from message bus and expose it in required format"""
+        buffer = []
+        buffer = self.metrics_client.recv_non_blocking(self._stats_callback)
+        return buffer
+        #TODO: Add temporary buffer
