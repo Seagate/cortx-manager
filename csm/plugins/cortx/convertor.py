@@ -29,7 +29,6 @@ class Statsd:
     """
     Convert metrics/stats into statsd format
     """
-    
     def __init__(self):
         pass
 
