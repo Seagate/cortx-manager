@@ -30,6 +30,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.process import SimpleProcess
 from ldif import LDIFRecordList
+from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 
 
 class Configure(Setup):
@@ -90,6 +91,7 @@ class Configure(Setup):
                             self.conf_store_keys[const.KEY_CLUSTER_ID])
             self.set_csm_endpoint()
             self.set_s3_info()
+            self._create_perf_stat_topic()
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
@@ -487,3 +489,17 @@ class Configure(Setup):
                 record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(csm_schema_version,base_dn)
         Conf.set(const.DATABASE_INDEX,"models",models_list)
         Conf.save(const.DATABASE_INDEX)
+
+    def _create_perf_stat_topic(self):
+        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        MessageBus.init(message_server_endpoints)
+        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+        message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
+        partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
+        #TODO: Retention size integration to be done in next sprint
+        # retention_size = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE)
+        if not message_type in mb_admin.list_message_types():
+            Log.info(f"Registering message_type:{message_type}")
+            mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
+        else:
+            Log.info(f"message_type:{message_type} already exists.")

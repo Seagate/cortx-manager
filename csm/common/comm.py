@@ -30,7 +30,7 @@ import json
 from abc import ABC, ABCMeta, abstractmethod
 from functools import partial
 import random
-from cortx.utils.message_bus import MessageProducer, MessageConsumer
+from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
 from cortx.utils.message_bus.error import MessageBusError
 
 class Channel(metaclass=ABCMeta):
@@ -42,28 +42,28 @@ class Channel(metaclass=ABCMeta):
 
     @abstractmethod
     def connect(self):
-        raise Exception('connect not implemented in Channel class') 
+        raise Exception('connect not implemented in Channel class')
 
     @abstractmethod
     def disconnect(self):
-        raise Exception('disconnect not implemented in Channel class') 
+        raise Exception('disconnect not implemented in Channel class')
 
     @abstractmethod
     def send(self, message):
-        raise Exception('send not implemented in Channel class') 
+        raise Exception('send not implemented in Channel class')
 
     @abstractmethod
     def send_file(self, local_file, remote_file):
-        raise Exception('send_file not implemented in Channel class') 
+        raise Exception('send_file not implemented in Channel class')
 
     @abstractmethod
     def recv(self, message=None):
-        raise Exception('recv not implemented in Channel class') 
-    
+        raise Exception('recv not implemented in Channel class')
+
     @abstractmethod
     def recv_file(self, remote_file, local_file):
-        raise Exception('recv_file not implemented in Channel class') 
-    
+        raise Exception('recv_file not implemented in Channel class')
+
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
 
@@ -270,19 +270,19 @@ class Comm(metaclass=ABCMeta):
     """ Abstract class to represent a comm channel """
     @abstractmethod
     def init(self):
-        raise Exception('init not implemented in Comm class') 
+        raise Exception('init not implemented in Comm class')
 
     @abstractmethod
     def connect(self):
-        raise Exception('connect not implemented in Comm class') 
+        raise Exception('connect not implemented in Comm class')
 
     @abstractmethod
     def disconnect(self):
-        raise Exception('disconnect not implemented in Comm class') 
+        raise Exception('disconnect not implemented in Comm class')
 
     @abstractmethod
     def send(self, message, **kwargs):
-        raise Exception('send not implemented in Comm class') 
+        raise Exception('send not implemented in Comm class')
 
     @abstractmethod
     def recv(self, callback_fn=None, message=None, **kwargs):
@@ -290,7 +290,7 @@ class Comm(metaclass=ABCMeta):
  
     @abstractmethod
     def acknowledge(self):
-        raise Exception('acknowledge not implemented in Comm class') 
+        raise Exception('acknowledge not implemented in Comm class')
 
 class MessageBusComm(Comm):
     """
@@ -298,7 +298,7 @@ class MessageBusComm(Comm):
     send or receive messages across any component on a node to any other
     component on the other nodes
     """
-    def __init__(self):
+    def __init__(self, message_server_endpoints):
         Comm.__init__(self)
         self.message_callback = None
         self.producer_id = None
@@ -309,6 +309,7 @@ class MessageBusComm(Comm):
         self.producer = None
         self.consumer = None
         self.recv_timeout = 0.5
+        self.initialize_message_bus(message_server_endpoints)
 
     def init(self, **kwargs):
         """
@@ -348,6 +349,11 @@ class MessageBusComm(Comm):
             self._initialize_producer()
         elif self.type == const.CONSUMER:
             self._initialize_consumer()
+
+    def initialize_message_bus(self, message_server_endpoints):
+        """ Initializing Messagebus server """
+        Log.info(f"Initializing Messagebus server with endpoints:{message_server_endpoints}")
+        MessageBus.init(message_server_endpoints)
 
     def _initialize_producer(self):
         """ Initializing Producer """

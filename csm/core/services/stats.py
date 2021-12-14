@@ -20,10 +20,8 @@
 
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
-import asyncio
-import re
-from datetime import datetime, timedelta
 from typing import Dict
+from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
@@ -32,7 +30,6 @@ from csm.common.comm import MessageBusComm
 from csm.plugins.cortx.convertor import Convertor
 from csm.core.blogic import const
 
-
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
 class StatsAppService(ApplicationService):
@@ -40,9 +37,16 @@ class StatsAppService(ApplicationService):
     Provides operations on stats without involving the domain specifics
     """
     BUFFER = []
-    def __init__(self, stats_provider):
+    def __init__(self, stats_provider, metrics_client):
         self._stats_provider = stats_provider
-        self.metrics_client = MessageBusComm()
+        self.metrics_client = metrics_client
+        self.metrics_client.init(type=const.PRODUCER,
+                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_PRODUCER_ID),
+                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_MSG_TYPE),
+                            method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_METHOD))
         if self.metrics_client:
                 self.metrics_client.init(type='consumer', consumer_id='csm',
                     consumer_group='csm_group', consumer_message_types=["perf_stat"],
@@ -178,3 +182,16 @@ class StatsAppService(ApplicationService):
         StatsAppService.BUFFER = []
         self.metrics_client.recv(self._stats_callback, is_blocking=False)
         return StatsAppService.BUFFER
+        
+    def stop_msg_bus(self):
+        Log.info("Stopping Messagebus")
+        self.metrics_client.stop()
+
+    async def post_perf_metrics_to_msg_bus(self, messages):
+        try:
+            Log.info(f"Publish {len(messages)} messages:{messages} to message bus")
+            self.metrics_client.send(messages)
+            return {"response":f"{len(messages)} messages published successfully."}
+        except Exception as e:
+            Log.error(f"Error occured while sending message to message bus:{e}")
+            raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
