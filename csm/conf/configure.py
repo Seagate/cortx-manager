@@ -54,12 +54,13 @@ class Configure(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.config_path = self._set_csm_conf_path()
-            self._copy_skeleton_configs()
+            protocols, consul_host, consul_port, secret, endpoints = self._get_consul_path()
+
+            # self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
-                    f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+                        f"consul://{consul_host[0]}:{consul_port}")
             Conf.load(const.DATABASE_INDEX,
-                    f"yaml://{self.config_path}/{const.DB_CONF_FILE_NAME}")
+                        f"consul://{consul_host[0]}:{consul_port}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -149,7 +150,7 @@ class Configure(Setup):
 
         Log.info("Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE,
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
@@ -162,7 +163,7 @@ class Configure(Setup):
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
         if csm_protocol == 'https':
-            Conf.set(const.CSM_GLOBAL_INDEX, 'DEBUG>http_enabled', 'false')
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEBUG_MODE, 'false')
         Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
@@ -336,22 +337,20 @@ class Configure(Setup):
         Log.info("Openldap configuration started for Cortx users.")
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
         if not (_rootdnpassword or csm_admin_ldap_password):
             raise CsmSetupError("Failed to fetch LDAP password.")
         csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
                                     const.LDAP_AUTH_CSM_SCHEMA_VERSION)
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
+        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BIND_BASE_DN)
         ldap_user = const.LDAP_USER.format(
             Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
 
-        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
+        ldap_root_admin_user = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, 'admin')
 
         Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
         tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
@@ -408,7 +407,7 @@ class Configure(Setup):
         Log.info("Creating csm ldap user.")
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
         base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
                                     f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
         bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
@@ -416,7 +415,7 @@ class Configure(Setup):
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
         tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
         tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
         tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
@@ -430,7 +429,7 @@ class Configure(Setup):
         _bind_dn = f"cn={ldap_root_admin_user},cn=config"
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _ldappasswd= self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
+                    Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
         try:
             self._connect_to_ldap_server(ldap_url, _bind_dn, _ldappasswd)
             mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]

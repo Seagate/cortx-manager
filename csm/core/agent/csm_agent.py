@@ -253,7 +253,7 @@ class CsmAgent:
 
         if Options.daemonize:
             CsmAgent._daemonize()
-        env_type =  Conf.get(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}")
+        env_type =  Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE)
         if not (env_type == const.K8S):
              CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
