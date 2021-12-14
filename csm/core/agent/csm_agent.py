@@ -128,7 +128,7 @@ class CsmAgent:
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider,
                                             MessageBusComm(Conf.get(const.CONSUMER_INDEX,
-                                                    const.KAFKA_ENDPOINTS)))
+                                                    const.KAFKA_ENDPOINTS), unblock_consumer=True))
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()

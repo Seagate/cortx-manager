@@ -286,8 +286,8 @@ class Comm(metaclass=ABCMeta):
 
     @abstractmethod
     def recv(self, callback_fn=None, message=None, **kwargs):
-        raise Exception('recv not implemented in Comm class') 
- 
+        raise Exception('recv not implemented in Comm class')
+    
     @abstractmethod
     def acknowledge(self):
         raise Exception('acknowledge not implemented in Comm class')
@@ -298,7 +298,7 @@ class MessageBusComm(Comm):
     send or receive messages across any component on a node to any other
     component on the other nodes
     """
-    def __init__(self, message_server_endpoints):
+    def __init__(self, message_server_endpoints, unblock_consumer=False):
         Comm.__init__(self)
         self.message_callback = None
         self.producer_id = None
@@ -309,6 +309,7 @@ class MessageBusComm(Comm):
         self.producer = None
         self.consumer = None
         self.recv_timeout = 0.5
+        self.unblock_consumer = unblock_consumer
         self.initialize_message_bus(message_server_endpoints)
 
     def init(self, **kwargs):
@@ -393,8 +394,8 @@ class MessageBusComm(Comm):
                 self.producer = None
         else:
             Log.error("Message Bus Producer not initialized.")
-
-    def recv(self, callback_fn=None, message=None, is_blocking=True):
+    
+    def recv(self, callback_fn=None, message=None):
         """
         Receives messages from message bus
         :param callback_fn: This is the callback method on which we will
@@ -410,7 +411,7 @@ class MessageBusComm(Comm):
                             Log.debug(f"Received Message: {decoded_message}")
                             callback_fn(decoded_message)
                         else:
-                            if not is_blocking:
+                            if self.unblock_consumer:
                                 break
                             #For non-blocking calls.
                             time.sleep(1)
