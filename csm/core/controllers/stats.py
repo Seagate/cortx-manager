@@ -112,3 +112,14 @@ class StatsPanelListView(CsmView):
         else:
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()
+
+@CsmAuth.hybrid
+@CsmView._app_routes.view("/api/v2/metrics/stats/perf")
+class MetricsView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app["stat_service"]
+    @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
+    async def get(self):
+        Log.debug(f"Handling get request for performance stats")
+        return await self._service.get_perf_metrics()
