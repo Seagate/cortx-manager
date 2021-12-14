@@ -388,7 +388,7 @@ class MessageBusComm(Comm):
         else:
             Log.error("Message Bus Producer not initialized.")
 
-    def recv(self, callback_fn=None, message=None):
+    def recv(self, callback_fn=None, message=None, is_blocking=True):
         """
         Receives messages from message bus
         :param callback_fn: This is the callback method on which we will
@@ -404,37 +404,14 @@ class MessageBusComm(Comm):
                             Log.debug(f"Received Message: {decoded_message}")
                             callback_fn(decoded_message)
                         else:
+                            if not is_blocking:
+                                break
                             #For non-blocking calls.
                             time.sleep(1)
                     else:
                         #Stop called need to break
                         self.consumer = None
                         break
-                except MessageBusError as ex:
-                    Log.error(f"Message consuming failed. {ex}")
-                    continue
-        else:
-            Log.error("Message Bus Consumer not initialized.")
-            
-    def recv_non_blocking(self, callback_fn=None, message=None):
-        """
-        Receives messages from message bus without blocking
-        :param callback_fn: This is the callback method on which we will
-        receive messages from message bus.
-        """
-        if self.consumer:
-            buffer = []
-            while True:
-                try:
-                    if self.is_running:
-                        message = self.consumer.receive(self.recv_timeout)
-                        if message:
-                            decoded_message = message.decode('utf-8')
-                            Log.debug(f"Received Message: {decoded_message}")
-                            mssg = callback_fn(decoded_message)
-                            buffer.append(mssg)
-                        else:
-                            return buffer
                 except MessageBusError as ex:
                     Log.error(f"Message consuming failed. {ex}")
                     continue

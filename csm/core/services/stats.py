@@ -39,7 +39,7 @@ class StatsAppService(ApplicationService):
     """
     Provides operations on stats without involving the domain specifics
     """
-
+    BUFFER = []
     def __init__(self, stats_provider):
         self._stats_provider = stats_provider
         self.metrics_client = MessageBusComm()
@@ -172,11 +172,10 @@ class StatsAppService(ApplicationService):
     def _stats_callback(self, message):
         # TODO: aggregation()
         converted_message = self._convertor(message)
-        return converted_message
+        StatsAppService.BUFFER.append(converted_message)
 
     async def get_perf_metrics(self):
         """Fetch metrics from message bus and expose it in required format"""
-        buffer = []
-        buffer = self.metrics_client.recv_non_blocking(self._stats_callback)
-        return buffer
-        #TODO: Add temporary buffer
+        StatsAppService.BUFFER = []
+        self.metrics_client.recv(self._stats_callback, is_blocking=False)
+        return StatsAppService.BUFFER
