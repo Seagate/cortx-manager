@@ -15,14 +15,14 @@ class Prometheus:
         Log.debug(f"Converting to prometheus format: {message}")
         message = "health_check_request_count:1|c"
         splitted_mssg = re.split("\|", message)
-        messg, type = splitted_mssg[0], splitted_mssg[1]
-        if type == "c" or  type == "g":
+        messg, mssg_type = splitted_mssg[0], splitted_mssg[1]
+        if mssg_type == "c" or  mssg_type == "g":
             message =  re.sub(":", " ", messg)
-        elif type == "ms":
+        elif mssg_type == "ms":
             pass
             #TODO: timer is not supported in prometheus
         else:
-            raise InvalidRequest("Invalid type of stats/metric detected %s" %type)
+            raise InvalidRequest("Invalid type of stats/metric detected %s" %mssg_type)
         return message
 
 class Statsd:
