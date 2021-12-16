@@ -394,7 +394,7 @@ class MessageBusComm(Comm):
                 self.producer = None
         else:
             Log.error("Message Bus Producer not initialized.")
-    
+
     def recv(self, callback_fn=None, message=None):
         """
         Receives messages from message bus
