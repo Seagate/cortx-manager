@@ -180,9 +180,9 @@ class StatsAppService(ApplicationService):
     async def get_perf_metrics(self):
         """Fetch metrics from message bus and expose it in required format"""
         StatsAppService.BUFFER = []
-        self.metrics_client.recv(self._stats_callback, is_blocking=False)
+        self.metrics_client.recv(self._stats_callback)
         return StatsAppService.BUFFER
-        
+
     def stop_msg_bus(self):
         Log.info("Stopping Messagebus")
         self.metrics_client.stop()

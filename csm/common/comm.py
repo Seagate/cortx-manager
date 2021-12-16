@@ -285,9 +285,9 @@ class Comm(metaclass=ABCMeta):
         raise Exception('send not implemented in Comm class')
 
     @abstractmethod
-    def recv(self, callback_fn=None, message=None, **kwargs):
+    def recv(self, callback_fn=None, message=None):
         raise Exception('recv not implemented in Comm class')
-        
+
     @abstractmethod
     def acknowledge(self):
         raise Exception('acknowledge not implemented in Comm class')
