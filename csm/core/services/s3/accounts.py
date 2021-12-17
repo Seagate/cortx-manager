@@ -13,6 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
+
 from typing import Dict
 
 from csm.core.blogic import const
@@ -58,6 +60,8 @@ class S3AccountService(S3BaseService):
                                                                 access_key, secret_key)
         if isinstance(account, IamError):
             self._handle_error(account, args={'account_name': account_name})
+
+        time.sleep(3)
 
         account_client = self._s3plugin.get_iam_client(account.access_key_id,
             account.secret_key_id, CsmS3ConfigurationFactory.get_iam_connection_config())
