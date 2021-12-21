@@ -262,11 +262,11 @@ class Setup:
 
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
-        Conf.load('db_dict_index','dict:{}')
-        Conf.copy(const.DATABASE_INDEX,'db_dict_index')
+        Conf.load(const.DB_DICT_INDEX,'dict:{}')
+        Conf.copy(const.DATABASE_INDEX,const.DB_DICT_INDEX)
         db_config_dict = {
-            'databases':Conf.get('db_dict_index','databases'),
-            'models': Conf.get('db_dict_index','models')
+            'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
+            'models': Conf.get(const.DB_DICT_INDEX,'models')
         }
         del db_config_dict["databases"]["consul_db"]["config"]["hosts_count"]
         del db_config_dict["databases"]["openldap"]["config"]["hosts_count"]

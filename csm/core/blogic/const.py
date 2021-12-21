@@ -124,6 +124,8 @@ CONSUMER_INDEX = 'CONSUMER'
 TEST_INDEX = 'TEST'
 CORTXCLI_GLOBAL_INDEX = 'CORTXCLI'
 USL_GLOBAL_INDEX = 'USL'
+CSM_DICT_INDEX = 'CSM_DICT_INDEX'
+DB_DICT_INDEX = 'DB_DICT_INDEX'
 
 # Cluster Inventory Related
 INVENTORY_FILE = DEFAULT_CSM_CONF_PATH + '/cluster.conf'
@@ -927,7 +929,8 @@ CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
 S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
-
+CSM_UPDATE_HOTFIX_PATH = 'UPDATE>hotfix_store_path'
+CSM_UPDATE_FIRMWARE_PATH = 'UPDATE>firmware_store_path'
 #keys for database models
 DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
