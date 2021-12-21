@@ -23,6 +23,7 @@ import os
 
 from aiohttp import web
 from csm.core.services.permissions import PermissionSet
+from csm.core.blogic import const
 
 
 class CsmAuth:
@@ -30,7 +31,11 @@ class CsmAuth:
     TYPE = 'Bearer'
     UNAUTH = {'WWW-Authenticate': TYPE}
     ATTR_PUBLIC = '_csm_auth_public_'
+    ATTR_HYBRID = '_csm_auth_hybrid_'
     ATTR_PERMISSIONS = '_csm_auth_permissions_'
+    # ADD all hybrid api's here with required keys, use hybrid decorator
+    # TODO: make it dynamic by adding required key as param to hybrid decorator.
+    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH}
 
     @classmethod
     def public(cls, handler):
@@ -38,8 +43,17 @@ class CsmAuth:
         return handler
 
     @classmethod
+    def hybrid(cls, handler):
+        setattr(handler, cls.ATTR_HYBRID, True)
+        return handler
+
+    @classmethod
     def is_public(cls, handler):
         return getattr(handler, cls.ATTR_PUBLIC, False)
+
+    @classmethod
+    def is_hybrid(cls, handler):
+        return getattr(handler, cls.ATTR_HYBRID, False)
 
     @classmethod
     def permissions(cls, permissions):
@@ -114,6 +128,14 @@ class CsmView(web.View):
             if CsmAuth.is_public(method_handler):
                 return True
         return CsmAuth.is_public(handler)
+
+    @classmethod
+    def is_hybrid(cls, handler, method):
+        method_handler = cls._get_method_handler(handler, method)
+        if method_handler is not None:
+            if CsmAuth.is_hybrid(method_handler):
+                return True
+        return CsmAuth.is_hybrid(handler)
 
     @classmethod
     def get_permissions(cls, handler, method):

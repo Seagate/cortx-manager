@@ -221,6 +221,11 @@ class CsmRestApi(CsmApi, ABC):
         handler = await CsmRestApi._resolve_handler(request)
         return CsmView.is_public(handler, request.method)
 
+    @staticmethod
+    async def _is_hybrid(request):
+        handler = await CsmRestApi._resolve_handler(request)
+        return CsmView.is_hybrid(handler, request.method)
+
     @classmethod
     async def _get_permissions(cls, request):
         handler = await CsmRestApi._resolve_handler(request)
@@ -313,10 +318,25 @@ class CsmRestApi(CsmApi, ABC):
         return session
 
     @staticmethod
+    def _retrieve_config(request):
+        path = request.path
+        method =  request.method
+        key = method + ":" + path
+        conf_key = CsmAuth.HYBRID_APIS[key]
+        return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
     @web.middleware
     async def session_middleware(request, handler):
         session = None
         is_public = await CsmRestApi._is_public(request)
+        is_hybrid = await CsmRestApi._is_hybrid(request)
+        if is_hybrid:
+            conf_key = CsmRestApi._retrieve_config(request)
+            if conf_key == "disable" or conf_key == "Disable":
+                is_public = True
+            else:
+                is_public = False
         Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
         try:
             session_id = CsmRestApi._extract_bearer(request.headers)
