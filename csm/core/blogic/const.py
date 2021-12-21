@@ -38,7 +38,7 @@ CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
                           f'{CORTXCLI_CONF_FILE_NAME}')
 DB_CONF_FILE_NAME = 'database.conf'
 DB_SOURCE_CONF_FILE_URL = f'yaml://{CSM_PATH}/conf/etc/csm/{DB_CONF_FILE_NAME}'
-CONSUL_CONFIG_BASE = 'cortx/configurations/csm/'
+CONSUL_CONFIG_BASE = 'csm/'
 CSM_CONF_BASE = CONSUL_CONFIG_BASE + 'csm.conf/'
 DATABASE_CONF_BASE = CONSUL_CONFIG_BASE + 'database.conf/'
 PLUGIN_DIR = 'cortx'
@@ -625,7 +625,7 @@ DECRYPTION_KEYS = {
     "CSM>password": "CSM>password_decryption_key",
     "OPENLDAP>csm_ldap_user_password": "CSM>password_decryption_key"
 }
-CLUSTER_ID_KEY = CSM_CONF_BASE+"PROVISIONER>cluster_id"
+CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
 ENCLOSURE_ID = "enclosure_id"
 SOFTWARE = "software"
@@ -891,54 +891,25 @@ CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 # keys for csm.conf file setup
 
 K8S = "K8"
-S3_DATA_ENDPOINT = CSM_CONF_BASE+'S3>data>endpoints'
-S3_DATA_HOST= CSM_CONF_BASE+'S3>data>host'
-S3_DATA_PORT = CSM_CONF_BASE+'S3>data>port'
-S3_DATA_PROTOCOL = CSM_CONF_BASE+'S3>data>protocol'
-IAM_ENDPOINT = CSM_CONF_BASE+'S3>iam>endpoints'
-IAM_HOST= CSM_CONF_BASE+'S3>iam>host'
-IAM_PORT = CSM_CONF_BASE+'S3>iam>port'
-IAM_PROTOCOL = CSM_CONF_BASE+'S3>iam>protocol'
-LDAP_AUTH_CSM_USER = CSM_CONF_BASE+'OPENLDAP>csm_ldap_user_login'
-LDAP_AUTH_CSM_SECRET = CSM_CONF_BASE+'OPENLDAP>csm_ldap_user_password'
-LDAP_AUTH_CSM_SCHEMA_VERSION = CSM_CONF_BASE+'OPENLDAP>csm_schema_version'
-OPEN_LDAP_ADMIN_USER = CSM_CONF_BASE+'OPENLDAP>root_ldap_login'
-OPEN_LDAP_ADMIN_SECRET = CSM_CONF_BASE+'OPENLDAP>root_ldap_password'
-OPEN_LDAP_SERVERS = CSM_CONF_BASE+'OPENLDAP>servers'
-OPEN_LDAP_SERVERS_COUNT = CSM_CONF_BASE+'OPENLDAP>servers_count'
-OPEN_LDAP_BASE_DN = CSM_CONF_BASE+'OPENLDAP>base_dn'
-OPEN_LDAP_BIND_BASE_DN = CSM_CONF_BASE+'OPENLDAP>bind_base_dn'
+S3_DATA_ENDPOINT = 'S3>data>endpoints'
+S3_DATA_HOST= 'S3>data>host'
+S3_DATA_PORT = 'S3>data>port'
+S3_DATA_PROTOCOL = 'S3>data>protocol'
+IAM_ENDPOINT = 'S3>iam>endpoints'
+IAM_HOST = 'S3>iam>host'
+IAM_PORT = 'S3>iam>port'
+IAM_PROTOCOL = 'S3>iam>protocol'
+LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
+LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
+LDAP_AUTH_CSM_SCHEMA_VERSION = 'OPENLDAP>csm_schema_version'
+OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
+OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
+OPEN_LDAP_SERVERS = 'OPENLDAP>servers'
+OPEN_LDAP_SERVERS_COUNT = 'OPENLDAP>servers_count'
+OPEN_LDAP_BASE_DN = 'OPENLDAP>base_dn'
+OPEN_LDAP_BIND_BASE_DN = 'OPENLDAP>bind_base_dn'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
-SSL_CERTIFICATE_PATH = CSM_CONF_BASE+'HTTPS>certificate_path'
-HTTPS_PORT = CSM_CONF_BASE+"HTTPS>port"
-LOG_PATH = CSM_CONF_BASE+'Log>log_path'
-PRIVATE_KEY_PATH_CONF = CSM_CONF_BASE+'HTTPS>private_key_path'
-S3_AUTH_USER_CONF = CSM_CONF_BASE+'S3>ldap_login'
-S3_AUTH_SECRET_CONF = CSM_CONF_BASE+'S3>ldap_password'
-CLUSTER_ADMIN_USER = CSM_CONF_BASE+'CLUSTER_ADMIN>user'
-CLUSTER_ADMIN_SECRET = CSM_CONF_BASE+'CLUSTER_ADMIN>secret'
-CLUSTER_ADMIN_EMAIL = CSM_CONF_BASE+'CLUSTER_ADMIN>email'
-AGENT_ENDPOINTS = CSM_CONF_BASE+'CSM_SERVICE>CSM_AGENT>endpoints'
-AGENT_HOST = CSM_CONF_BASE+'CSM_SERVICE>CSM_AGENT>host'
-AGENT_PORT = CSM_CONF_BASE+'CSM_SERVICE>CSM_AGENT>port'
-AGENT_BASE_URL = CSM_CONF_BASE+'CSM_SERVICE>CSM_AGENT>base_url'
-CSM_PASSWORD_DECRYPTION_KEY = CSM_CONF_BASE+"CSM>password_decryption_key"
-S3_PASSWORD_DECRYPTION_KEY = CSM_CONF_BASE+"S3>password_decryption_key"
-CSM_DEPLOYMENT_MODE = CSM_CONF_BASE+'DEPLOYMENT>mode'
-CSM_DEBUG_MODE = CSM_CONF_BASE+'DEBUG>http_enabled'
-
-#keys for database.conf file setup
-DB_CONSUL_CONFIG_HOST = DATABASE_CONF_BASE+'databases>consul_db>config>hosts'
-DB_CONSUL_CONFIG_HOST_COUNT = DATABASE_CONF_BASE+'databases>consul_db>config>hosts_count'
-DB_CONSUL_CONFIG_PORT = DATABASE_CONF_BASE+'databases>consul_db>config>port'
-DB_CONSUL_CONFIG_PASSWORD = DATABASE_CONF_BASE+'databases>consul_db>config>password'
-DB_CONSUL_CONFIG_LOGIN = DATABASE_CONF_BASE+'databases>consul_db>config>login'
-DB_OPENLDAP_CONFIG_HOSTS = DATABASE_CONF_BASE+'databases>openldap>config>hosts'
-DB_OPENLDAP_CONFIG_HOSTS_COUNT = DATABASE_CONF_BASE+'databases>openldap>config>hosts_count'
-DB_OPENLDAP_CONFIG_PORT = DATABASE_CONF_BASE+'databases>openldap>config>port'
-DB_OPENLDAP_CONFIG_LOGIN = DATABASE_CONF_BASE+'databases>openldap>config>login'
-DB_OPENLDAP_CONFIG_PASSWORD = DATABASE_CONF_BASE+'databases>openldap>config>password'
 SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
 HTTPS_PORT = "HTTPS>port"
 LOG_PATH = 'Log>log_path'
@@ -952,4 +923,24 @@ AGENT_ENDPOINTS = 'CSM_SERVICE>CSM_AGENT>endpoints'
 AGENT_HOST = 'CSM_SERVICE>CSM_AGENT>host'
 AGENT_PORT = 'CSM_SERVICE>CSM_AGENT>port'
 AGENT_BASE_URL = 'CSM_SERVICE>CSM_AGENT>base_url'
-AUTH = 'STATS>auth'
+CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
+S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
+CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
+CSM_DEBUG_MODE = 'DEBUG>http_enabled'
+
+#keys for database models
+DB_MODELS_COUNT = 'models_count'
+DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
+DB_MODELS_DATABASE_NAME = 'models[{0}]>database'
+DB_MODELS_COLLECTION_NAME = 'models[{0}]>config>{1}>collection'
+#keys for database.conf file setup
+DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
+DB_CONSUL_CONFIG_HOST_COUNT = 'databases>consul_db>config>hosts_count'
+DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
+DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
+DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+DB_OPENLDAP_CONFIG_HOSTS = 'databases>openldap>config>hosts'
+DB_OPENLDAP_CONFIG_HOSTS_COUNT = 'databases>openldap>config>hosts_count'
+DB_OPENLDAP_CONFIG_PORT = 'databases>openldap>config>port'
+DB_OPENLDAP_CONFIG_LOGIN = 'databases>openldap>config>login'
+DB_OPENLDAP_CONFIG_PASSWORD = 'databases>openldap>config>password'

@@ -44,9 +44,9 @@ class Init(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.config_path = self._set_csm_conf_path()
-            self._copy_skeleton_configs()
-            Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
+            protocols, consul_host, consul_port, secret, endpoints = self._get_consul_path()
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")

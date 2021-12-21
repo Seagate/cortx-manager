@@ -59,9 +59,9 @@ class PostInstall(Setup):
 
             # self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
             Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
             self._copy_base_configs()
 
             self.is_k8s_env = Setup.is_k8s_env()

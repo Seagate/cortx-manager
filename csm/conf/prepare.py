@@ -52,9 +52,9 @@ class Prepare(Setup):
 
             # self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
             Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -180,21 +180,21 @@ class Prepare(Setup):
                 return protocol, [host], port, secret, each_endpoint
 
     def _get_es_hosts_info(self):
-    	"""
+        """
         Obtains list of elasticsearch hosts ip running in a cluster
-    	:return: list of elasticsearch hosts ip running in a cluster
-    	"""
-    	Log.info("Fetching data N/W info.")
-    	server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
-    	data_nw_private_fqdn_list = []
-    	for machine_id, node_data in server_node_info.items():
+        :return: list of elasticsearch hosts ip running in a cluster
+        """
+        Log.info("Fetching data N/W info.")
+        server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
+        data_nw_private_fqdn_list = []
+        for machine_id, node_data in server_node_info.items():
             data_nw_private_fqdn_list.append(node_data["network"]["data"]["private_fqdn"])
-    	try:
+        try:
             NetworkV().validate('connectivity', data_nw_private_fqdn_list)
-    	except VError as e:
+        except VError as e:
             Log.error(f"Network Validation failed.{e}")
             raise CsmSetupError(f"Network Validation failed.{e}")
-    	return data_nw_private_fqdn_list
+        return data_nw_private_fqdn_list
 
     def _get_ldap_hosts_info(self):
         """
@@ -220,9 +220,9 @@ class Prepare(Setup):
     def _set_ldap_servers(self):
         ldap_servers = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_SERVERS])
         ldap_servers_count = len(ldap_servers)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS_COUNT, ldap_servers_count)
+        Conf.set(const.DATABASE_INDEX, const.OPEN_LDAP_SERVERS_COUNT, str(ldap_servers_count))
         for each_server_count in range(ldap_servers_count):
-            Conf.set(const.CSM_GLOBAL_INDEX,
+            Conf.set(const.DATABASE_INDEX,
                     f'{const.OPEN_LDAP_SERVERS}[{each_server_count}]',
                     eval(f'{ldap_servers}[{each_server_count}]'))
 
@@ -246,7 +246,7 @@ class Prepare(Setup):
                 Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
             else:
                 consul_servers_count = len(consul_host)
-                Conf.set(const.CSM_GLOBAL_INDEX, const.DB_CONSUL_CONFIG_HOST_COUNT, consul_servers_count)
+                Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_HOST_COUNT, str(consul_servers_count))
                 for each_consul_host in range(consul_servers_count):
                     Conf.set(const.DATABASE_INDEX,
                             f'{const.DB_CONSUL_CONFIG_HOST}[{each_consul_host}]',
@@ -255,7 +255,7 @@ class Prepare(Setup):
                 Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
                 Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
                 ldap_hosts_count = len(ldap_hosts)
-                Conf.set(const.CSM_GLOBAL_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS_COUNT, ldap_hosts_count)
+                Conf.set(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS_COUNT, str(ldap_hosts_count))
                 for each_ldap_host in range(ldap_hosts_count):
                     Conf.set(const.DATABASE_INDEX,
                             f'{const.DB_OPENLDAP_CONFIG_HOSTS}[{each_ldap_host}]',

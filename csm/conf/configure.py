@@ -58,9 +58,9 @@ class Configure(Setup):
 
             # self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
             Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -408,10 +408,8 @@ class Configure(Setup):
         ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
         _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
                         Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
+        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BIND_BASE_DN)
         ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
         csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
@@ -476,13 +474,19 @@ class Configure(Setup):
         Sets collection for User model in database.conf
         :return:
         """
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
+        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
         csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
                                     const.LDAP_AUTH_CSM_SCHEMA_VERSION)
-        models_list = Conf.get(const.DATABASE_INDEX,"models")
-        for record in models_list:
-            if record['import_path'] == 'csm.core.data.models.users.User':
-                record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(csm_schema_version,base_dn)
-        Conf.set(const.DATABASE_INDEX,"models",models_list)
-        Conf.save(const.DATABASE_INDEX)
+        for each_count in range(int(Conf.get(const.DATABASE_INDEX,const.DB_MODELS_COUNT))):
+
+            database_name = Conf.get(const.DATABASE_INDEX,
+                                        const.DB_MODELS_DATABASE_NAME.format(each_count))
+
+            if Conf.get(const.DATABASE_INDEX,
+                        const.DB_MODELS_IMPORT_PATH.format(each_count)) \
+                                            == 'csm.core.data.models.users.User':
+                Conf.set(const.DATABASE_INDEX,
+                        const.DB_MODELS_COLLECTION_NAME.format(each_count,
+                                                                database_name),
+                        const.CORTXUSERS_DN.format(csm_schema_version,base_dn))
+                break

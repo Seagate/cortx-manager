@@ -59,11 +59,8 @@ class Setup:
         Log.info(f"Copying Csm config skeletons to Consul")
         Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
         Conf.load("DATABASE_SOURCE_CONF_INDEX",f"yaml://{const.DB_SOURCE_CONF}")
-
-        for each_key in Conf.get_keys('CSM_SOURCE_CONF_INDEX'):
-            Setup.set_config(const.CSM_GLOBAL_INDEX, each_key, Conf.get('CSM_SOURCE_CONF_INDEX',each_key))
-        for each_key in Conf.get_keys('DATABASE_SOURCE_CONF_INDEX'):
-            Setup.set_config(const.DATABASE_INDEX, each_key, Conf.get('DATABASE_SOURCE_CONF_INDEX',each_key))
+        Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
+        Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
 
     def _set_csm_conf_path(self):
         conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY,
@@ -75,8 +72,8 @@ class Setup:
         return conf_path
 
     def _get_consul_path(self):
-        endpoint_list = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
-        secret =  Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_SECRET_KEY])
+        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
+        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         if not endpoint_list:
             raise CsmSetupError("Endpoints not found")
         for each_endpoint in endpoint_list:
@@ -245,8 +242,6 @@ class Setup:
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-        from csm.common.conf import Security
-        # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
                                     const.CSM_AGENT_MGMT_ADMIN_KEY)
@@ -258,8 +253,8 @@ class Setup:
             raise CsmSetupError("Cluster admin details  not obtainer from confstore")
         Log.info("Set Cortx admin credentials in config")
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
-        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
-        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET, cluster_admin_secret)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL, cluster_admin_emailid)
         cluster_admin_secret = self._decrypt_secret(cluster_admin_secret, self.cluster_id,
                                                 Conf.get(const.CSM_GLOBAL_INDEX,
                                                         const.S3_PASSWORD_DECRYPTION_KEY))
@@ -267,12 +262,19 @@ class Setup:
 
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
-
-        conf = GeneralConfig(Yaml(f"{self.config_path}/{const.DB_CONF_FILE_NAME}").load())
+        Conf.load('db_dict_index','dict:{}')
+        Conf.copy(const.DATABASE_INDEX,'db_dict_index')
+        db_config_dict = {
+            'databases':Conf.get('db_dict_index','databases'),
+            'models': Conf.get('db_dict_index','models')
+        }
+        del db_config_dict["databases"]["consul_db"]["config"]["hosts_count"]
+        del db_config_dict["databases"]["openldap"]["config"]["hosts_count"]
+        conf = GeneralConfig(db_config_dict)
         conf['databases']["openldap"]["config"][const.PORT] = int(
                     conf['databases']["openldap"]["config"][const.PORT])
         conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX,
-                                             "databases>openldap>config>login")
+                                             const.DB_OPENLDAP_CONFIG_LOGIN)
         conf['databases']["openldap"]["config"]["password"] = \
                             self._decrypt_secret(ldap_csm_admin_secret,
                                                 self.cluster_id,
@@ -469,9 +471,10 @@ class Setup:
         Return ldap url
         ldap endpoint and port will be read from database conf
         """
-        ldap_endpoint = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS)
-        if isinstance(ldap_endpoint, list):
-            ldap_endpoint = ldap_endpoint[0]
+        ldap_hosts_count = int(Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS_COUNT))
+        for each_ldap_host in range(ldap_hosts_count):
+            ldap_endpoint = Conf.get(const.DATABASE_INDEX,
+                        f'{const.DB_OPENLDAP_CONFIG_HOSTS}[{each_ldap_host}]')
         ldap_port = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PORT)
         ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
         return ldap_url
@@ -480,8 +483,8 @@ class Setup:
     def _get_ldap_server_url():
         ldap_server_url_list = []
         ldap_port = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PORT)
-        for each_count in range(Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS_COUNT)):
-            ldap_server = Conf.get(const.CSM_GLOBAL_INDEX, f'{const.OPEN_LDAP_SERVERS}[{each_count}]')
+        for each_count in range(int(Conf.get(const.DATABASE_INDEX, const.OPEN_LDAP_SERVERS_COUNT))):
+            ldap_server = Conf.get(const.DATABASE_INDEX, f'{const.OPEN_LDAP_SERVERS}[{each_count}]')
             ldap_server_url_list.append(f"ldap://{ldap_server}:{ldap_port}/")
         return ldap_server_url_list
 
@@ -629,22 +632,6 @@ class Setup:
         """
         env_type = Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE_KEY, None)
         return env_type == const.K8S
-
-    @staticmethod
-    def set_config(index, key, value):
-        if index == const.CSM_GLOBAL_INDEX:
-            key = const.CSM_CONF_BASE+key
-        elif index == const.DATABASE_INDEX:
-            key = const.DATABASE_CONF_BASE+key
-        return Conf.set(index,key,value)
-
-    @staticmethod
-    def get_config(index, key):
-        if index == const.CSM_GLOBAL_INDEX:
-            key = const.CSM_CONF_BASE+key
-        elif index == const.DATABASE_CONF:
-            key = const.DATABASE_CONF_BASE+key
-        return Conf.get(index,key)
 
     @staticmethod
     def _copy_systemd_configuration():
