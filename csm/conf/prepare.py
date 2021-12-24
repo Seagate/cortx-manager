@@ -80,7 +80,8 @@ class Prepare(Setup):
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_ldap_servers()
-        self._set_msgbus_perf_stat_info()
+        # TODO: set configurations of perf stats once keys are available in conf-store.
+        # self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
         self._set_csm_ldap_credentials()
         self._set_ldap_params()
@@ -117,8 +118,9 @@ class Prepare(Setup):
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
                 const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}",
-                const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
-                const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
+                # TODO: validate following keys once available in conf-store
+                #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
+                #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
