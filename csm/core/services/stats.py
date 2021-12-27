@@ -40,17 +40,25 @@ class StatsAppService(ApplicationService):
     def __init__(self, stats_provider, metrics_client):
         self._stats_provider = stats_provider
         self.metrics_client = metrics_client
-        self.metrics_client.init(type=const.PRODUCER,
+        if self.metrics_client:
+                self.metrics_client.init(type=const.PRODUCER,
                             producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_PRODUCER_ID),
                             message_type=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_MSG_TYPE),
                             method=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_METHOD))
-        if self.metrics_client:
-                self.metrics_client.init(type='consumer', consumer_id='csm',
-                    consumer_group='csm_group', consumer_message_types=["perf_stat"],
-                    auto_ack=False, offset="latest")
+                self.metrics_client.init(type=const.CONSUMER, 
+                            consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_ID),
+                            consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP), 
+                            consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_MSSG_TYPE)],
+                            auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_AUTO_ACK), 
+                            offset=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_OFFSET))
         self.convertor_type = const.STATS_CONVERTOR
         self.convertor = Convertor(self.convertor_type)
 
@@ -173,15 +181,31 @@ class StatsAppService(ApplicationService):
         return converted_message
 
     def _stats_callback(self, message):
-        # TODO: aggregation()
-        converted_message = self._convertor(message)
-        StatsAppService.BUFFER.append(converted_message)
+        # TODO: call self._convertor(message) for conversion of metric
+        #converted_message = self._convertor(message)
+        #StatsAppService.BUFFER.append(converted_message)
+        StatsAppService.BUFFER.append(message)
+
+    def _parse_metrics(self, messages):
+        metrics = ""
+        for metric in StatsAppService.BUFFER:
+            # Add new line while parsing if metrics are not read from a static file
+            metrics += str(metric)
+        return web.Response(text=metrics)
 
     async def get_perf_metrics(self):
-        """Fetch metrics from message bus and expose it in required format"""
+        """ get performace stat metrics"""
         StatsAppService.BUFFER = []
+        # Read from a static file and publish to msassage bus
+        with open("/opt/seagate/cortx/csm/templates/metrics.txt", "r") as fp:
+            while True:
+                line = fp.readline()
+                if not line:
+                    break
+                self.metrics_client.send([line])
+        # Receive metrics from msassage bus
         self.metrics_client.recv(self._stats_callback)
-        return StatsAppService.BUFFER
+        return self._parse_metrics(StatsAppService.BUFFER)
 
     def stop_msg_bus(self):
         Log.info("Stopping Messagebus")
