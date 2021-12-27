@@ -28,12 +28,12 @@ from cortx.utils.conf_store.conf_store import Conf
 INVALID_REQUEST_PARAMETERS = "invalid request parameter"
 
 
-class CsmUserCreateSchema(Schema):
-    user_id = fields.Str(data_key='username', required=True,
-                         validate=[UserNameValidator()])
-    password = fields.Str(required=True, validate=[PasswordValidator()])
-    email = fields.Email(required=True)
-    role = fields.Str(required=True, validate=validate.OneOf(const.CSM_USER_ROLES))
+    class CsmUserCreateSchema(Schema):
+        user_id = fields.Str(data_key='username', required=True,
+                            validate=[UserNameValidator()])
+        password = fields.Str(required=True, validate=[PasswordValidator()])
+        email = fields.Email(required=True)
+        role = fields.Str(required=True, validate=validate.OneOf(const.CSM_USER_ROLES))
 
 
 class CsmUserPatchSchema(Schema):
@@ -100,7 +100,7 @@ class CsmUsersListView(CsmView):
         self._service_dispatch = {}
 
     async def check_max_user_limit(self):
-        max_users_allowed = Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED)
+        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
         existing_users_count = await self._service.get_user_count()
         if existing_users_count >= max_users_allowed:
             raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
