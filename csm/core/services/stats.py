@@ -48,15 +48,15 @@ class StatsAppService(ApplicationService):
                                                 const.MSG_BUS_PERF_STAT_MSG_TYPE),
                             method=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_METHOD))
-                self.metrics_client.init(type=const.CONSUMER, 
+                self.metrics_client.init(type=const.CONSUMER,
                             consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_CONSUMER_ID),
                             consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP), 
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
                             consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_MSSG_TYPE)],
                             auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_AUTO_ACK), 
+                                                const.MSG_BUS_PERF_STAT_AUTO_ACK),
                             offset=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_OFFSET))
         self.convertor_type = const.STATS_CONVERTOR
