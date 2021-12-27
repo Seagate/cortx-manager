@@ -193,6 +193,10 @@ class StatsAppService(ApplicationService):
             metrics += str(metric)
         return web.Response(text=metrics)
 
+    def _send_metric(self, message):
+        # Push metric to message bus
+        self.metrics_client.send([message])
+
     async def get_perf_metrics(self):
         """ get performace stat metrics"""
         StatsAppService.BUFFER = []
@@ -202,7 +206,7 @@ class StatsAppService(ApplicationService):
                 line = fp.readline()
                 if not line:
                     break
-                self.metrics_client.send([line])
+                self._send_metric(line)
         # Receive metrics from msassage bus
         self.metrics_client.recv(self._stats_callback)
         return self._parse_metrics(StatsAppService.BUFFER)

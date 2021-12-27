@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, InvalidRequest
 import re
