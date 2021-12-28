@@ -188,9 +188,12 @@ class StatsAppService(ApplicationService):
 
     def _parse_metrics(self, messages):
         metrics = ""
-        for metric in StatsAppService.BUFFER:
+        for metric in messages:
             # Add new line while parsing if metrics are not read from a static file
-            metrics += str(metric)
+            metric = str(metric)
+            if not ("\n" in metric):
+                metric = metric + "\n"
+            metrics += metric
         return web.Response(text=metrics)
 
     def _send_metric(self, message):
