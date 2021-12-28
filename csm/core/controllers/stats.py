@@ -127,6 +127,9 @@ class MetricsView(CsmView):
         super().__init__(request)
         self._service = self.request.app["stat_service"]
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
+    async def get(self):
+        Log.debug(f"Handling get request for performance stats")
+        return await self._service.get_perf_metrics()
     async def post(self):
         Log.debug(f"Handling Per Metrics post api request")
         try:
@@ -137,7 +140,3 @@ class MetricsView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.post_perf_metrics_to_msg_bus(user_body["messages"])
-
-    async def get(self):
-        Log.debug(f"Handling get request for performance stats")
-        return await self._service.get_perf_metrics()

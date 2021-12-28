@@ -25,8 +25,10 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import Service, ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
-from csm.core.blogic import const
 from aiohttp import web
+from csm.common.comm import MessageBusComm
+from csm.plugins.cortx.convertor import Convertor
+from csm.core.blogic import const
 
 STATS_DATA_MSG_NOT_FOUND = "stats_not_found"
 
@@ -34,17 +36,31 @@ class StatsAppService(ApplicationService):
     """
     Provides operations on stats without involving the domain specifics
     """
-
+    BUFFER = []
     def __init__(self, stats_provider, metrics_client):
         self._stats_provider = stats_provider
         self.metrics_client = metrics_client
-        self.metrics_client.init(type=const.PRODUCER,
+        if self.metrics_client:
+                self.metrics_client.init(type=const.PRODUCER,
                             producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_PRODUCER_ID),
                             message_type=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_MSG_TYPE),
                             method=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_PERF_STAT_METHOD))
+                self.metrics_client.init(type=const.CONSUMER,
+                            consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_ID),
+                            consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
+                            consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_MSSG_TYPE)],
+                            auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_AUTO_ACK),
+                            offset=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_OFFSET))
+        self.convertor_type = const.STATS_CONVERTOR
+        self.convertor = Convertor(self.convertor_type)
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
@@ -160,6 +176,44 @@ class StatsAppService(ApplicationService):
         Log.debug(f"Stats Request Output: {output}")
         return output
 
+    def _convertor(self, message):
+        converted_message = self.convertor.convert_data(message)
+        return converted_message
+
+    def _stats_callback(self, message):
+        # TODO: call self._convertor(message) for conversion of metric
+        #converted_message = self._convertor(message)
+        #StatsAppService.BUFFER.append(converted_message)
+        StatsAppService.BUFFER.append(message)
+
+    def _parse_metrics(self, messages):
+        metrics = ""
+        for metric in messages:
+            # Add new line while parsing if metrics are not read from a static file
+            metric = str(metric)
+            if not ("\n" in metric):
+                metric = metric + "\n"
+            metrics += metric
+        return web.Response(text=metrics)
+
+    def _send_metric(self, message):
+        # Push metric to message bus
+        self.metrics_client.send([message])
+
+    async def get_perf_metrics(self):
+        """ get performace stat metrics"""
+        StatsAppService.BUFFER = []
+        # Read from a static file and publish to msassage bus
+        with open("/opt/seagate/cortx/csm/templates/metrics.txt", "r") as fp:
+            while True:
+                line = fp.readline()
+                if not line:
+                    break
+                self._send_metric(line)
+        # Receive metrics from msassage bus
+        self.metrics_client.recv(self._stats_callback)
+        return self._parse_metrics(StatsAppService.BUFFER)
+
     def stop_msg_bus(self):
         Log.info("Stopping Messagebus")
         self.metrics_client.stop()
@@ -172,10 +226,3 @@ class StatsAppService(ApplicationService):
         except Exception as e:
             Log.error(f"Error occured while sending message to message bus:{e}")
             raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
-
-    async def get_perf_metrics(self):
-        # TODO: Read metrics from massage-bus
-        file = open('/opt/seagate/cortx/csm/templates/metrics.txt',mode='r')
-        all_of_it = file.read()
-        file.close()
-        return web.Response(text=all_of_it)
