@@ -496,10 +496,13 @@ class Configure(Setup):
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
         partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
-        #TODO: Retention size integration to be done in next sprint
-        # retention_size = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE)
+        retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
+        retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
         if not message_type in mb_admin.list_message_types():
             Log.info(f"Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
+            mb_admin.set_message_type_expire(message_type,
+                                            expire_time_ms=retention_period,
+                                            data_limit_bytes=retention_size)
         else:
             Log.info(f"message_type:{message_type} already exists.")
