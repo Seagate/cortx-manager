@@ -28,12 +28,12 @@ from cortx.utils.conf_store.conf_store import Conf
 INVALID_REQUEST_PARAMETERS = "invalid request parameter"
 
 
-    class CsmUserCreateSchema(Schema):
-        user_id = fields.Str(data_key='username', required=True,
-                            validate=[UserNameValidator()])
-        password = fields.Str(required=True, validate=[PasswordValidator()])
-        email = fields.Email(required=True)
-        role = fields.Str(required=True, validate=validate.OneOf(const.CSM_USER_ROLES))
+class CsmUserCreateSchema(Schema):
+    user_id = fields.Str(data_key='username', required=True,
+                        validate=[UserNameValidator()])
+    password = fields.Str(required=True, validate=[PasswordValidator()])
+    email = fields.Email(required=True)
+    role = fields.Str(required=True, validate=validate.OneOf(const.CSM_USER_ROLES))
 
 
 class CsmUserPatchSchema(Schema):
