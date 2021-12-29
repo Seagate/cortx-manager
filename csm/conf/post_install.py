@@ -54,15 +54,10 @@ class PostInstall(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
-            # self.config_path = self._set_csm_conf_path()
-            protocols, consul_host, consul_port, secret, endpoints = self._get_consul_path()
-
-            # self._copy_skeleton_configs()
+            self.config_path = self._set_csm_conf_path()
+            self._copy_skeleton_configs()
             Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
-            Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
-            self._copy_base_configs()
+                        f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
 
             self.is_k8s_env = Setup.is_k8s_env()
         except KvError as e:
@@ -160,7 +155,7 @@ class PostInstall(Setup):
 
     def set_env_type(self):
         env_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE, env_type)
+        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", env_type)
         Log.info(f"Setting env_type: {env_type}")
 
 
@@ -265,5 +260,6 @@ class PostInstall(Setup):
 
         Log.info("Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
-            Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE,const.DEV)
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+                     const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)

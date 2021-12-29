@@ -31,7 +31,7 @@ class Options:
     def parse(cls, args: List[str]) -> None:
         parser = argparse.ArgumentParser(description='')
         parser.add_argument('start', help='Start CSM Agent')
-        parser.add_argument('-c','--config', help='Confstore URL eg: <type>://<path>')
+        parser.add_argument('-c','--config', help='Confstore URL eg:<type>://<path>', default='')
         parser.add_argument('--debug', help='Start CSM Agent in Debug mode',
                                         action='store_true',
                                         default=False)
