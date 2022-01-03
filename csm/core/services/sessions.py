@@ -260,12 +260,13 @@ class LoginService:
         if user:
             credentials = await self._auth_service.authenticate(user, password)
 
-        if not credentials:
-            # TODO: Try to search Customer LDAP or S3 account
-            # and create corresponding user record if found.
-            Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
-            user = User.instantiate_s3_account_user(user_id)
-            credentials = await self._auth_service.authenticate(user, password)
+        # TODO: Commenting S3 login mechanism. Uncomment to support it again in future
+        # if not credentials:
+        #     # TODO: Try to search Customer LDAP or S3 account
+        #     # and create corresponding user record if found.
+        #     Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
+        #     user = User.instantiate_s3_account_user(user_id)
+        #     credentials = await self._auth_service.authenticate(user, password)
 
         if credentials:
             permissions = await self._role_manager.calc_effective_permissions(user.user_role)

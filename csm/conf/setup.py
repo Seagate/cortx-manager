@@ -618,14 +618,6 @@ class Setup:
         return env_type == const.K8S
 
     @staticmethod
-    def _copy_systemd_configuration():
-        if Setup.is_k8s_env:
-            Log.warn('SystemD is not used in this environment and will not be set up')
-            return
-        Setup._run_cmd(f"cp {const.CSM_AGENT_SERVICE_SRC_PATH} {const.CSM_AGENT_SERVICE_FILE_PATH}")
-        Setup._run_cmd(f"cp {const.CSM_WEB_SERVICE_SRC_PATH} {const.CSM_WEB_SERVICE_FILE_PATH}")
-
-    @staticmethod
     def _update_systemd_conf(key, value):
         """
         Update CSM Files Depending on Job Type of Setup.
