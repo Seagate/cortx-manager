@@ -159,7 +159,11 @@ class GenerateCsmBundle:
 
     @staticmethod
     def __clear_tmp_files(path):
-        """ Clean temporary files created by the support bundle """
+        """
+        Clean temporary files created by the support bundle
+        :param path: Directory path
+        :return: None
+        """
         shutil.rmtree(path, ignore_errors = True)
 
 if __name__ == '__main__':
