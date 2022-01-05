@@ -360,6 +360,7 @@ SB_BUNDLE_PATH = "bundle_path"
 SB_SYMLINK_PATH = "symlink_path"
 ROOT_PRIVILEGES_MSG = "Command requires root privileges"
 PERMISSION_ERROR_MSG = "Failed to cleanup {path} due to insufficient permissions"
+TEMP_DIR = '/tmp'
 
 # CSM Stats Related
 AGGREGATION_RULE = '{}/schema/stats_aggregation_rule.json'.format(CSM_PATH)

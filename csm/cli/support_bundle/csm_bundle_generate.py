@@ -113,8 +113,7 @@ class GenerateCsmBundle:
     '''
     @staticmethod
     def generate_bundle(args):
-        component = 'csm'
-        tmp_dir = '/tmp/cortx/'
+        component = const.CSM_COMPONENT_NAME
         Conf.load(const.CONSUMER_INDEX, args['config_url'])
         log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
         csm_log_path = os.path.join(log_path, component)
@@ -122,16 +121,16 @@ class GenerateCsmBundle:
         target_path = args ['target']
         duration = args['duration']
         size_limit = args['size_limit']
-        services = args['services'] #Not making any use of service option for now
-        binlogs = args['binlogs'] #Not making any use of binlogs option for now
-        coredumps = args['coredumps'] #Not making any use of coredumps option for now
-        stacktrace = args['stacktrace'] #Not making any use of stacktrace option for now
+        # services = args['services'] #Not making any use of service option for now
+        # binlogs = args['binlogs'] #Not making any use of binlogs option for now
+        # coredumps = args['coredumps'] #Not making any use of coredumps option for now
+        # stacktrace = args['stacktrace'] #Not making any use of stacktrace option for now
         target_path = os.path.join(target_path, component)
         os.makedirs(target_path,exist_ok=True)
 
-        csm_size_filtered_logs_dir = os.path.join(tmp_dir, f"{component}_logs_size")
+        csm_size_filtered_logs_dir = os.path.join(const.TEMP_DIR, f"{component}_logs_size")
         os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
-        csm_time_filtered_logs_dir = os.path.join(tmp_dir, f"{component}_logs_size_time")
+        csm_time_filtered_logs_dir = os.path.join(const.TEMP_DIR, f"{component}_logs_size_time")
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
         FilterLog.limit_size(csm_log_path, csm_size_filtered_logs_dir, size_limit, component)
         FilterLog.limit_time(csm_size_filtered_logs_dir, csm_time_filtered_logs_dir, duration, component)
