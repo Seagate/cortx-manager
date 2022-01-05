@@ -130,9 +130,11 @@ class GenerateCsmBundle:
 
         csm_size_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
             f"{const.CSM_COMPONENT_NAME}_logs_size")
+        GenerateCsmBundle.__clear_tmp_files(csm_size_filtered_logs_dir)
         os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
         csm_time_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
             f"{const.CSM_COMPONENT_NAME}_logs_size_time")
+        GenerateCsmBundle.__clear_tmp_files(csm_time_filtered_logs_dir)
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
         FilterLog.limit_size(csm_log_path, csm_size_filtered_logs_dir,
             size_limit, const.CSM_COMPONENT_NAME)
@@ -141,8 +143,8 @@ class GenerateCsmBundle:
 
         tar_file_name = os.path.join(target_path, f"{bundle_id}.tar.gz")
         Tar(tar_file_name).dump([csm_time_filtered_logs_dir])
-        shutil.rmtree(csm_size_filtered_logs_dir, ignore_errors = True)
-        shutil.rmtree(csm_time_filtered_logs_dir, ignore_errors = True)
+        GenerateCsmBundle.__clear_tmp_files(csm_size_filtered_logs_dir)
+        GenerateCsmBundle.__clear_tmp_files(csm_time_filtered_logs_dir)
 
     @staticmethod
     def str2bool(value):
@@ -154,6 +156,11 @@ class GenerateCsmBundle:
             return False
         else:
             raise argparse.ArgumentTypeError('Boolean value expected.')
+
+    @staticmethod
+    def __clear_tmp_files(path):
+        """ Clean temporary files created by the support bundle """
+        shutil.rmtree(path, ignore_errors = True)
 
 if __name__ == '__main__':
     from datetime import datetime
