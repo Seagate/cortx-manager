@@ -20,6 +20,7 @@ import errno
 import argparse
 import sys
 import pathlib
+import shutil
 sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
 sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
 sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..','..'))
@@ -30,6 +31,7 @@ from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.core.services.alerts import AlertRepository
+from cortx.utils.support_framework.log_filters import FilterLog
 
 class CSMBundle:
     """
@@ -111,16 +113,44 @@ class GenerateCsmBundle:
     '''
     @staticmethod
     def generate_bundle(args):
+        component = 'csm'
+        tmp_dir = '/tmp/cortx/'
         Conf.load(const.CONSUMER_INDEX, args['config_url'])
         log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
-        csm_log_path = os.path.join(log_path,'csm')
+        csm_log_path = os.path.join(log_path, component)
         bundle_id = args['bundle_id']
         target_path = args ['target']
+        duration = args['duration']
+        size_limit = args['size_limit']
         services = args['services'] #Not making any use of service option for now
-        target_path = os.path.join(target_path, bundle_id)
+        binlogs = args['binlogs'] #Not making any use of binlogs option for now
+        coredumps = args['coredumps'] #Not making any use of coredumps option for now
+        stacktrace = args['stacktrace'] #Not making any use of stacktrace option for now
+        target_path = os.path.join(target_path, component)
         os.makedirs(target_path,exist_ok=True)
+
+        csm_size_filtered_logs_dir = os.path.join(tmp_dir, f"{component}_logs_size")
+        os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
+        csm_time_filtered_logs_dir = os.path.join(tmp_dir, f"{component}_logs_size_time")
+        os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
+        FilterLog.limit_size(csm_log_path, csm_size_filtered_logs_dir, size_limit, component)
+        FilterLog.limit_time(csm_size_filtered_logs_dir, csm_time_filtered_logs_dir, duration, component)
+
         tar_file_name = os.path.join(target_path, f"{bundle_id}.tar.gz")
-        Tar(tar_file_name).dump([csm_log_path])
+        Tar(tar_file_name).dump([csm_time_filtered_logs_dir])
+        shutil.rmtree(csm_size_filtered_logs_dir, ignore_errors = True)
+        shutil.rmtree(csm_time_filtered_logs_dir, ignore_errors = True)
+
+    @staticmethod
+    def str2bool(value):
+        if isinstance(value, bool):
+            return value
+        if value.lower() in ('true'):
+            return True
+        elif value.lower() in ('false'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == '__main__':
     from datetime import datetime
@@ -129,9 +159,22 @@ if __name__ == '__main__':
                     dest='bundle_id',
                     help='Bundle-id',
                     default=f'SB_csm_{datetime.now().strftime("%d%m%Y_%H-%M-%S")}')
-    parser.add_argument('-c','--config',dest='config_url', help='Confstore URL eg:<type>://<path>')
-    parser.add_argument('-s','--services',dest='services', help='Run csm-service support-bundle', default='agent')
-    parser.add_argument('-t','--target',dest='target', help='Target path to save support-bundle', default='/tmp/')
+    parser.add_argument('-c','--config', dest='config_url',
+        help='Confstore URL eg:<type>://<path>')
+    parser.add_argument('-s','--services', dest='services',
+        help='Run csm-service support-bundle', default='agent')
+    parser.add_argument('-t','--target', dest='target',
+        help='Target path to save support-bundle', default='/tmp/')
+    parser.add_argument('-d', '--duration', default='P5D', dest='duration',
+        help="Duration - duration for which log should be captured, Default - P5D")
+    parser.add_argument('--size_limit', default='500MB', dest='size_limit',
+        help="Size Limit - Support Bundle size limit per node, Default - 500MB")
+    parser.add_argument('--binlogs', type=GenerateCsmBundle.str2bool, default=False, dest='binlogs',
+        help="Include/Exclude Binary Logs, Default = False")
+    parser.add_argument('--coredumps', type=GenerateCsmBundle.str2bool, default=False, dest='coredumps',
+        help="Include/Exclude Coredumps, Default = False")
+    parser.add_argument('--stacktrace', type=GenerateCsmBundle.str2bool, default=False, dest='stacktrace',
+        help="Include/Exclude stacktrace, Default = False")
     args = vars(parser.parse_args())
 
     GenerateCsmBundle.generate_bundle(args)
