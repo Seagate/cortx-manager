@@ -113,10 +113,10 @@ class GenerateCsmBundle:
     '''
     @staticmethod
     def generate_bundle(args):
-        component = const.CSM_COMPONENT_NAME
+
         Conf.load(const.CONSUMER_INDEX, args['config_url'])
         log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY)
-        csm_log_path = os.path.join(log_path, component)
+        csm_log_path = os.path.join(log_path, const.CSM_COMPONENT_NAME)
         bundle_id = args['bundle_id']
         target_path = args ['target']
         duration = args['duration']
@@ -125,15 +125,19 @@ class GenerateCsmBundle:
         # binlogs = args['binlogs'] #Not making any use of binlogs option for now
         # coredumps = args['coredumps'] #Not making any use of coredumps option for now
         # stacktrace = args['stacktrace'] #Not making any use of stacktrace option for now
-        target_path = os.path.join(target_path, component)
+        target_path = os.path.join(target_path, const.CSM_COMPONENT_NAME)
         os.makedirs(target_path,exist_ok=True)
 
-        csm_size_filtered_logs_dir = os.path.join(const.TEMP_DIR, f"{component}_logs_size")
+        csm_size_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
+            f"{const.CSM_COMPONENT_NAME}_logs_size")
         os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
-        csm_time_filtered_logs_dir = os.path.join(const.TEMP_DIR, f"{component}_logs_size_time")
+        csm_time_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
+            f"{const.CSM_COMPONENT_NAME}_logs_size_time")
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
-        FilterLog.limit_size(csm_log_path, csm_size_filtered_logs_dir, size_limit, component)
-        FilterLog.limit_time(csm_size_filtered_logs_dir, csm_time_filtered_logs_dir, duration, component)
+        FilterLog.limit_size(csm_log_path, csm_size_filtered_logs_dir,
+            size_limit, const.CSM_COMPONENT_NAME)
+        FilterLog.limit_time(csm_size_filtered_logs_dir, csm_time_filtered_logs_dir,
+            duration, const.CSM_COMPONENT_NAME)
 
         tar_file_name = os.path.join(target_path, f"{bundle_id}.tar.gz")
         Tar(tar_file_name).dump([csm_time_filtered_logs_dir])
@@ -163,7 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('-s','--services', dest='services',
         help='Run csm-service support-bundle', default='agent')
     parser.add_argument('-t','--target', dest='target',
-        help='Target path to save support-bundle', default='/tmp/')
+        help='Target path to save support-bundle', default=const.TEMP_DIR)
     parser.add_argument('-d', '--duration', default='P5D', dest='duration',
         help="Duration - duration for which log should be captured, Default - P5D")
     parser.add_argument('--size_limit', default='500MB', dest='size_limit',
