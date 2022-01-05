@@ -167,7 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('-s','--services', dest='services',
         help='Run csm-service support-bundle', default='agent')
     parser.add_argument('-t','--target', dest='target',
-        help='Target path to save support-bundle', default=const.TEMP_DIR)
+        help='Target path to save support-bundle', default=const.CSM_SETUP_LOG_DIR)
     parser.add_argument('-d', '--duration', default='P5D', dest='duration',
         help="Duration - duration for which log should be captured, Default - P5D")
     parser.add_argument('--size_limit', default='500MB', dest='size_limit',
