@@ -30,6 +30,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.process import SimpleProcess
 from ldif import LDIFRecordList
+from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 
 
 class Configure(Setup):
@@ -387,3 +388,20 @@ class Configure(Setup):
                 record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(csm_schema_version,base_dn)
         Conf.set(const.DATABASE_INDEX,"models",models_list)
         Conf.save(const.DATABASE_INDEX)
+
+    def _create_perf_stat_topic(self):
+        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        MessageBus.init(message_server_endpoints)
+        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+        message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
+        partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
+        retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
+        retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
+        if not message_type in mb_admin.list_message_types():
+            Log.info(f"Registering message_type:{message_type}")
+            mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
+            mb_admin.set_message_type_expire(message_type,
+                                            expire_time_ms=retention_period,
+                                            data_limit_bytes=retention_size)
+        else:
+            Log.info(f"message_type:{message_type} already exists.")

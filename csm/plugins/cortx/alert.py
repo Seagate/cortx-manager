@@ -110,7 +110,7 @@ class AlertPlugin(CsmPlugin):
     def __init__(self):
         super().__init__()
         try:
-            self.comm_client = MessageBusComm()
+            self.comm_client = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS))
             self.monitor_callback = None
             self.mapping_dict = Json(const.ALERT_MAPPING_TABLE).load()
             self.decision_maker_service = DecisionMakerService()
