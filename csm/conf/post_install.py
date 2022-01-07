@@ -59,7 +59,6 @@ class PostInstall(Setup):
             Conf.load(const.CSM_GLOBAL_INDEX,
                         f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
 
-            self.is_k8s_env = Setup.is_k8s_env()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -76,37 +75,14 @@ class PostInstall(Setup):
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        if not Setup.is_k8s_env:
-            self.validate_3rd_party_pkgs()
-            self._set_deployment_mode()
-            self._copy_systemd_configuration()
-            self._config_user()
-            if Conf.get(const.CONSUMER_INDEX, 'systemd>csm>csm_agent>restart_on_failure') == 'true':
-                self._configure_system_auto_restart()
-            self._configure_service_user()
-            self._configure_rsyslog()
-            self._allow_access_to_pvt_ports()
-        else:
-            self.set_ssl_certificate()
-            self.set_logpath()
-            self.set_env_type()
+        self.set_ssl_certificate()
+        self.set_logpath()
+        self.set_env_type()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
-    def _allow_access_to_pvt_ports(self):
-        Log.info("Binding low ports to start a service as non-root")
-        Setup._run_cmd("setcap CAP_NET_BIND_SERVICE=+ep /opt/nodejs/node-v12.13.0-linux-x64/bin/node")
-
     def _prepare_and_validate_confstore_keys(self):
-        if not Setup.is_k8s_env:
-            self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO: f"{const.SERVER_NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
-                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}"
-                })
-        else:
-            self.conf_store_keys.update({
+        self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
@@ -117,16 +93,6 @@ class PostInstall(Setup):
         except VError as ve:
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
-
-    def validate_3rd_party_pkgs(self):
-        try:
-            Log.info("Validating dependent rpms")
-            PkgV().validate("rpms", const.dependent_rpms)
-            Log.info("Valdating  3rd party Python Packages")
-            PkgV().validate("pip3s", self.fetch_python_pkgs())
-        except VError as ve:
-            Log.error(f"Failed at package Validation: {ve}")
-            raise CsmSetupError(f"Failed at package Validation: {ve}")
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
@@ -157,100 +123,6 @@ class PostInstall(Setup):
         env_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", env_type)
         Log.info(f"Setting env_type: {env_type}")
-
-
-    def fetch_python_pkgs(self):
-        try:
-            pkgs_data = Text(const.python_pkgs_req_path).load()
-            return {ele.split("==")[0]:ele.split("==")[1] for ele in pkgs_data.splitlines()}
-        except Exception as e:
-            Log.error(f"Failed to fetch python packages: {e}")
-            raise CsmSetupError("Failed to fetch python packages")
-
-    def _config_user(self, reset=False):
-        """
-        Check user already exist and create if not exist
-        If reset true then delete user
-        """
-        if not self._is_user_exist():
-            Log.info("Creating CSM User without password.")
-            Setup._run_cmd((f"useradd -M {self._user}"))
-            Log.info("Adding CSM User to Wheel Group.")
-            Setup._run_cmd(f"usermod -aG wheel {self._user}")
-            Log.info("Enabling nologin for CSM user.")
-            Setup._run_cmd(f"usermod -s /sbin/nologin {self._user}")
-            if not self._is_user_exist():
-                Log.error("Csm User Creation Failed.")
-                raise CsmSetupError(f"Unable to create {self._user} user")
-        else:
-            Log.info(f"User {self._user} already exist")
-
-        if self._is_user_exist() and Setup._is_group_exist(
-                const.HA_CLIENT_GROUP):
-            Log.info(f"Add Csm User: {self._user} to HA-Client Group.")
-            Setup._run_cmd(
-                f"usermod -a -G {const.HA_CLIENT_GROUP} {self._user}")
-
-    def _configure_system_auto_restart(self):
-        """
-        Check's System Installation Type an dUpdate the Service File
-        Accordingly.
-        :return: None
-        """
-        if not (Conf.get(const.CONSUMER_INDEX,
-                'systemd>csm>csm_agent>restart_on_failure') == 'true'):
-            return None
-        Log.info("Configuring System Auto restart")
-        is_auto_restart_required = list()
-        if self._setup_info:
-            for each_key in self._setup_info:
-                comparison_data = const.EDGE_INSTALL_TYPE.get(each_key,
-                                                              None)
-                # Check Key Exists:
-                if comparison_data is None:
-                    Log.warn(f"Edge Installation missing key {each_key}")
-                    continue
-                if isinstance(comparison_data, list):
-                    if self._setup_info[each_key] in comparison_data:
-                        is_auto_restart_required.append(False)
-                    else:
-                        is_auto_restart_required.append(True)
-                elif self._setup_info[each_key] == comparison_data:
-                    is_auto_restart_required.append(False)
-                else:
-                    is_auto_restart_required.append(True)
-        else:
-            Log.warn("Setup info does not exist.")
-            is_auto_restart_required.append(True)
-        if any(is_auto_restart_required):
-            Log.debug("Updating All setup file for Auto Restart on "
-                      "Failure")
-            Setup._update_systemd_conf("#< RESTART_OPTION >",
-                                       "Restart=on-failure")
-            Setup._run_cmd("systemctl daemon-reload")
-
-    def _configure_service_user(self):
-        """
-        Configures the Service user in CSM service files.
-        :return:
-        """
-        Setup._update_systemd_conf("<USER>", self._user)
-
-    def _configure_rsyslog(self):
-        """
-        Configure rsyslog
-        """
-        Log.info("Configuring rsyslog")
-        os.makedirs(const.RSYSLOG_DIR, exist_ok=True)
-        if os.path.exists(const.RSYSLOG_DIR):
-            Setup._run_cmd(f"cp -f {const.SOURCE_RSYSLOG_PATH} {const.RSYSLOG_PATH}")
-            Log.info("Restarting rsyslog service")
-            service_obj = Service('rsyslog.service')
-            service_obj.restart()
-        else:
-            msg = f"rsyslog failed. {const.RSYSLOG_DIR} directory missing."
-            Log.error(msg)
-            raise CsmSetupError(msg)
 
     def create(self):
         """
