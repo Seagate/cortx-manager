@@ -85,6 +85,7 @@ class Configure(Setup):
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
         self.set_csm_endpoint()
         self.set_s3_info()
+        self._create_perf_stat_topic()
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
