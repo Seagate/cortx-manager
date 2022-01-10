@@ -24,6 +24,7 @@ from aiohttp import web
 from importlib import import_module
 import pathlib
 
+
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """ Import product-specific plugin module by the plugin name """
@@ -125,8 +126,9 @@ class CsmAgent:
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
-        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
-
+        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider,
+                                            MessageBusComm(Conf.get(const.CONSUMER_INDEX,
+                                                    const.KAFKA_ENDPOINTS), unblock_consumer=True))
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
@@ -261,6 +263,8 @@ class CsmAgent:
         if not (env_type == const.K8S):
             CsmAgent.alert_monitor.stop()
             Log.info("Finished stopping alert monitor service")
+        Log.info("Stopping Message Bus client")
+        CsmRestApi._app["stat_service"].stop_msg_bus()
         Log.info("Finished stopping csm agent")
 
 
@@ -312,6 +316,8 @@ if __name__ == '__main__':
     from csm.core.services.appliance_info import ApplianceInfoService
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
+    from csm.common.comm import MessageBusComm
+
     try:
         # try:
         #     from salt import client

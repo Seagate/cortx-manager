@@ -73,13 +73,11 @@ class Prepare(Setup):
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
         self._prepare_and_validate_confstore_keys()
-        if not Setup.is_k8s_env:
-            self._set_deployment_mode()
-            self._set_fqdn_for_nodeid()
-            self._set_password_to_csm_user()
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
         self._set_ldap_servers()
+        # TODO: set configurations of perf stats once keys are available in conf-store.
+        # self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
         self._set_csm_ldap_credentials()
         self._set_ldap_params()
@@ -87,21 +85,7 @@ class Prepare(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        if not Setup.is_k8s_env:
-            self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f">{const.TYPE}",
-                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-                const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE}>{self.machine_id}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
-                const.KEY_HOSTNAME:f"{const.SERVER_NODE}>{self.machine_id}>{const.HOSTNAME}",
-                const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.KEY_CSM_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
-                const.KEY_CSM_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
-                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-                const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}"
-                })
-        else:
-            self.conf_store_keys.update({
+        self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
@@ -115,7 +99,10 @@ class Prepare(Setup):
                 const.OPENLDAP_SERVERS:f"{const.OPENLDAP_SERVERS_KEY}",
                 const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
                 const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
-                const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}"
+                const.OPENLDAP_BASEDN:f"{const.OPENLDAP_BASEDN_KEY}",
+                # TODO: validate following keys once available in conf-store
+                #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
+                #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -129,9 +116,7 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx"
         '''
         Log.info("Set decryption keys for CSM and S3")
-        if not Setup.is_k8s_env:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>password_decryption_key",
-                        self.conf_store_keys[const.KEY_CSM_SECRET].split('>')[0])
+
         Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
                     self.conf_store_keys[const.KEY_CSM_LDAP_SECRET].split('>')[0])
 
@@ -141,29 +126,6 @@ class Prepare(Setup):
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
-
-    def _set_fqdn_for_nodeid(self):
-        Log.info("Setting hostname to server node name")
-        server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
-        Log.debug(f"Server node information: {server_node_info}")
-        for machine_id, node_data in server_node_info.items():
-            hostname = node_data.get(const.HOSTNAME, const.NAME)
-            node_name = node_data.get(const.NAME)
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.MAINTENANCE}>{node_name}",f"{hostname}")
-
-    def _get_consul_info(self):
-        """
-        Obtains list of consul host address
-        :return: list of ip where consule is running
-        """
-        Log.info("Fetching data N/W info.")
-        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
-        try:
-            NetworkV().validate('connectivity', [data_nw_private_fqdn])
-        except VError as e:
-            Log.error(f"Network Validation failed.{e}")
-            raise CsmSetupError(f"Network Validation failed.{e}")
-        return [data_nw_private_fqdn]
 
     def _get_consul_config(self):
         endpoint = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
@@ -176,43 +138,20 @@ class Prepare(Setup):
         Log.info(f"Fetching consul endpoint : {endpoint}")
         return protocol, [host], port, secret, endpoint
 
-    def _get_es_hosts_info(self):
-    	"""
-        Obtains list of elasticsearch hosts ip running in a cluster
-    	:return: list of elasticsearch hosts ip running in a cluster
-    	"""
-    	Log.info("Fetching data N/W info.")
-    	server_node_info = Conf.get(const.CONSUMER_INDEX, const.SERVER_NODE)
-    	data_nw_private_fqdn_list = []
-    	for machine_id, node_data in server_node_info.items():
-            data_nw_private_fqdn_list.append(node_data["network"]["data"]["private_fqdn"])
-    	try:
-            NetworkV().validate('connectivity', data_nw_private_fqdn_list)
-    	except VError as e:
-            Log.error(f"Network Validation failed.{e}")
-            raise CsmSetupError(f"Network Validation failed.{e}")
-    	return data_nw_private_fqdn_list
-
     def _get_ldap_hosts_info(self):
         """
         Obtains list of ldap host address
         :return: list of ip where ldap is running
         """
         Log.info("Fetching ldap hosts info.")
-        #ToDo: Confstore key may change
-        if Setup.is_k8s_env:
-            ldap_endpoints = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ENDPOINTS])
-            if ldap_endpoints:
-                Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
-                protocol, host, port = self._parse_endpoints(ldap_endpoints)
-                # resolved_ip = socket.gethostbyname(host)
-                return [host], port
-            else:
-                raise CsmSetupError("LDAP endpoints not found.")
-        Log.info("Fetching data N/W info.")
-        data_nw_private_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PRIVATE_FQDN])
-        resolved_ip = socket.gethostbyname(data_nw_private_fqdn)
-        return [resolved_ip], const.DEFAULT_OPENLDAP_PORT
+        ldap_endpoints = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ENDPOINTS])
+        if ldap_endpoints:
+            Log.info(f"Fetching ldap endpoint.{ldap_endpoints}")
+            protocol, host, port = self._parse_endpoints(ldap_endpoints)
+            # resolved_ip = socket.gethostbyname(host)
+            return [host], port
+        else:
+            raise CsmSetupError("LDAP endpoints not found.")
 
     def _set_ldap_servers(self):
         ldap_servers = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_SERVERS])
@@ -224,26 +163,15 @@ class Prepare(Setup):
         :return:
         """
         ldap_hosts, ldap_port = self._get_ldap_hosts_info()
-        if  not Setup.is_k8s_env:
-            es_host = self._get_es_hosts_info()
-            consul_host = self._get_consul_info()
-        else:
-            protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
-            consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
+        protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
+        consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
-            if  not Setup.is_k8s_env:
-                Conf.set(const.DATABASE_INDEX, 'databases>es_db>config>hosts', es_host)
-                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
-                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
-                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
-            else:
-                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
-                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>port', consul_port)
-                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>password', secret)
-                Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>login', consul_login)
-                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
-                Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
-
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>port', consul_port)
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>password', secret)
+            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>login', consul_login)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
+            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
@@ -264,17 +192,6 @@ class Prepare(Setup):
             Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', f"cn={csm_ldap_user},{base_dn}")
             Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', csm_ldap_secret)
 
-    def _set_password_to_csm_user(self):
-        if not self._is_user_exist():
-
-            raise CsmSetupError(f"{self._user} not created on system.")
-        Log.info("Fetch decrypted password.")
-        _password = self._fetch_csm_user_password(decrypt=True)
-        if not _password:
-            Log.error("CSM Password Not Available.")
-            raise CsmSetupError("CSM Password Not Available.")
-        _password = crypt.crypt(_password, "22")
-        Setup._run_cmd(f"usermod -p {_password} {self._user}")
 
     def store_encrypted_password(self):
         """
@@ -312,6 +229,13 @@ class Prepare(Setup):
                  bind_base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_root_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
+
+    def _set_msgbus_perf_stat_info(self):
+        msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
+        retention_size = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_RETENTION_SIZE])
+        Log.info(f"Set message_type:{msg_type} and retention_size:{retention_size} for perf_stat")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_MSG_TYPE, msg_type)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_RETENTION_SIZE, retention_size)
 
     def create(self):
         """

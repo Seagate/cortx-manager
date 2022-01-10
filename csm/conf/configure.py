@@ -30,6 +30,7 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.process import SimpleProcess
 from ldif import LDIFRecordList
+from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 
 
 class Configure(Setup):
@@ -79,17 +80,11 @@ class Configure(Setup):
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-        if not Setup.is_k8s_env:
-            self._set_deployment_mode()
-            self._logrotate()
-            self._configure_cron()
-            self._configure_uds_keys()
-            self._configure_csm_web_keys()
-        else:
-            self.cluster_id = Conf.get(const.CONSUMER_INDEX,
-                            self.conf_store_keys[const.KEY_CLUSTER_ID])
-            self.set_csm_endpoint()
-            self.set_s3_info()
+
+        self.cluster_id = Conf.get(const.CONSUMER_INDEX,
+                        self.conf_store_keys[const.KEY_CLUSTER_ID])
+        self.set_csm_endpoint()
+        self.set_s3_info()
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
@@ -114,19 +109,7 @@ class Configure(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        if not Setup.is_k8s_env:
-            self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO:f"{const.SERVER_NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.SERVER_NODE}>{self.machine_id}>{const.TYPE}",
-                const.KEY_ENCLOSURE_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.STORAGE}>{const.ENCLOSURE_ID}",
-                const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE}>{self.machine_id}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
-                const.KEY_CSM_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.USER}",
-                const.KEY_CLUSTER_ID:f"{const.SERVER_NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-                const.KEY_ROOT_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
-                })
-        else:
-            self.conf_store_keys.update({
+        self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
@@ -191,88 +174,6 @@ class Configure(Setup):
         s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
-
-    def _configure_cron(self):
-        """
-        Configure common rsyslog and logrotate
-        Also cleanup statsd
-        """
-        if os.path.exists(const.CRON_DIR):
-            Setup._run_cmd(f"cp -f {const.SOURCE_CRON_PATH} {const.DEST_CRON_PATH}")
-            if self._setup_info and self._setup_info[
-                const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL:
-                sed_script = f'\
-                    s/\\(.*es_cleanup.*-d\\s\\+\\)[0-9]\\+/\\1{const.ES_CLEANUP_PERIOD_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.DEST_CRON_PATH}"
-                Setup._run_cmd(sed_cmd)
-        else:
-            raise CsmSetupError(f"cron failed. {const.CRON_DIR} dir missing.")
-
-    def _logrotate(self):
-        """
-        Configure logrotate
-        """
-        Log.info("Configuring logrotate.")
-        source_logrotate_conf = const.SOURCE_LOGROTATE_PATH
-        if not os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd(f"mkdir -p {const.LOGROTATE_DIR_DEST}")
-        if os.path.exists(const.LOGROTATE_DIR_DEST):
-            Setup._run_cmd(f"cp -f {source_logrotate_conf} {const.CSM_LOGROTATE_DEST}")
-            csm_agent_log_conf_data = Text(const.CSM_LOGROTATE_DEST).load()
-            if not csm_agent_log_conf_data:
-                Log.warn(f"File {const.CSM_LOGROTATE_DEST} not updated.")
-            else:
-                updated_data = csm_agent_log_conf_data.replace("<CSM_AGENT_LOG_PATH>",
-                                                   self._get_log_path_from_conf_store())
-                Text(const.CSM_LOGROTATE_DEST).dump(updated_data)
-            if (self._setup_info and self._setup_info[
-                const.STORAGE_TYPE] == const.STORAGE_TYPE_VIRTUAL):
-                sed_script = f's/\\(.*rotate\\s\\+\\)[0-9]\\+/\\1{const.LOGROTATE_AMOUNT_VIRTUAL}/'
-                sed_cmd = f"sed -i -e {sed_script} {const.CSM_LOGROTATE_DEST}"
-                Setup._run_cmd(sed_cmd)
-            Setup._run_cmd(f"chmod 644 {const.CSM_LOGROTATE_DEST}")
-        else:
-            err_msg = f"logrotate failed. {const.LOGROTATE_DIR_DEST} dir missing."
-            Log.error(err_msg)
-            raise CsmSetupError(err_msg)
-
-    def _fetch_management_ip(self):
-        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-        virtual_host_key = f"{const.CLUSTER}>{cluster_id}>{const.NETWORK}>{const.MANAGEMENT}>{const.VIRTUAL_HOST}"
-        self._validate_conf_store_keys(const.CONSUMER_INDEX,[virtual_host_key])
-        virtual_host = Conf.get(const.CONSUMER_INDEX, virtual_host_key)
-        Log.info(f"Fetch Virtual host: {virtual_host}")
-        return virtual_host
-
-    def _configure_uds_keys(self):
-        Log.info("Configuring UDS keys")
-        virtual_host = self._fetch_management_ip()
-        data_nw_public_fqdn = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_DATA_NW_PUBLIC_FQDN] )
-        Log.debug(f"Validating connectivity for data_nw_public_fqdn:{data_nw_public_fqdn}")
-        try:
-            NetworkV().validate('connectivity', [data_nw_public_fqdn])
-        except Exception as e:
-            Log.error(f"Network Validation failed. {e}")
-            raise CsmSetupError("Network Validation failed.")
-        Log.info(f"Set virtual_host:{virtual_host}, data_nw_public_fqdn:{data_nw_public_fqdn} to csm uds config")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.VIRTUAL_HOST}", virtual_host)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PUBLIC_DATA_DOMAIN_NAME}", data_nw_public_fqdn)
-
-    def _configure_csm_web_keys(self):
-        if not os.path.exists(const.CSM_WEB_DIST_ENV_FILE_PATH):
-            Log.warn(f"{const.CSM_WEB_DIST_ENV_FILE_PATH} not exists.")
-            return None
-        Setup._run_cmd(f"cp {const.CSM_WEB_DIST_ENV_FILE_PATH} {const.CSM_WEB_DIST_ENV_FILE_PATH}_tmpl")
-        Log.info("Configuring CSM Web keys")
-        virtual_host = self._fetch_management_ip()
-        Log.info(f"Set MANAGEMENT_IP:{virtual_host} to csm web config")
-        file_data = Text(const.CSM_WEB_DIST_ENV_FILE_PATH)
-        data = file_data.load().split("\n")
-        for ele in data:
-            if "MANAGEMENT_IP" in ele:
-                data.remove(ele)
-        data.append(f"MANAGEMENT_IP={virtual_host}")
-        file_data.dump(("\n").join(data))
 
     async def _set_unsupported_feature_info(self):
         """
@@ -487,3 +388,20 @@ class Configure(Setup):
                 record['config']['openldap']['collection'] = const.CORTXUSERS_DN.format(csm_schema_version,base_dn)
         Conf.set(const.DATABASE_INDEX,"models",models_list)
         Conf.save(const.DATABASE_INDEX)
+
+    def _create_perf_stat_topic(self):
+        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        MessageBus.init(message_server_endpoints)
+        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+        message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
+        partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
+        retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
+        retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
+        if not message_type in mb_admin.list_message_types():
+            Log.info(f"Registering message_type:{message_type}")
+            mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
+            mb_admin.set_message_type_expire(message_type,
+                                            expire_time_ms=retention_period,
+                                            data_limit_bytes=retention_size)
+        else:
+            Log.info(f"message_type:{message_type} already exists.")
