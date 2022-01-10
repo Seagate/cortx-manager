@@ -94,13 +94,13 @@ class StorageCapacityService(ApplicationService):
         async with session.request(url=url, method=method) as resp:
             return await resp.json(), resp.status
 
-    async def get_cluster_data(self, filter=None):
-        #TODO: Use filter for filtering out the data, once integrated in hctl api
+    async def get_cluster_data(self, data_filter=None):
+        #TODO: Use data_filter for filtering out the data, once integrated in hctl api
         url = Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT) + \
             Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_CLUSTER_API)
         method = const.GET
-        if filter:
-            url = url+filter
+        if data_filter:
+            url = url+data_filter
         Log.info(f"Request {url} for cluster data")
         async with aiohttp.ClientSession() as session:
             try:
