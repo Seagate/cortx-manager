@@ -19,7 +19,7 @@ from functools import partial
 from abc import ABC, abstractmethod
 from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
 import json
 
@@ -90,7 +90,11 @@ class ClusterShutdownSignal(Operation):
         mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         message = {"start_cluster_shutdown": 1}
         messages = [json.dumps(message)]
-        mssg_bus_obj.send(messages)
+        try:
+            mssg_bus_obj.send(messages)
+        except Exception as e:
+            Log.error(f"Error occured while sending message to message bus:{e}")
+            raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
 
 class NodeStartOperation(Operation):
     """

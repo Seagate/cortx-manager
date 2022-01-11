@@ -52,7 +52,7 @@ class ClusterManagementPlugin(CsmPlugin):
             process_request_resut = self._ha.get_cluster_status(node_id)
         elif request == const.PROCESS_CLUSTER_OPERATION_REQ:
             if operation == const.ShUTDOWN_SIGNAL:
-                self._process_shutdown_signal(kwargs)
+                process_request_resut = self._process_shutdown_signal(kwargs)
             else:
                 process_request_resut = self._process_cluster_operation(kwargs)
         return process_request_resut
@@ -73,4 +73,9 @@ class ClusterManagementPlugin(CsmPlugin):
         operation = kwargs.get(const.ARG_OPERATION, "")
         ResourceOperationsFactory.get_operations_by_resource(resource)\
                                     .get_operation(operation)\
-                                    .process(None, kwargs)
+                                    .process(None, **kwargs)
+        cluster_op_resp = {
+            "message": "Shutdown signal processed successfully."
+        }
+        Log.debug(f"Cluster Operation: {cluster_op_resp}")
+        return cluster_op_resp
