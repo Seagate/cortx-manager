@@ -85,7 +85,7 @@ class Configure(Setup):
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
         self.set_csm_endpoint()
         self.set_s3_info()
-        self._create_perf_stat_topic()
+        self.create_topics()
         try:
             self._configure_csm_ldap_schema()
             self._set_user_collection()
@@ -390,10 +390,7 @@ class Configure(Setup):
         Conf.set(const.DATABASE_INDEX,"models",models_list)
         Conf.save(const.DATABASE_INDEX)
 
-    def _create_perf_stat_topic(self):
-        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
-        MessageBus.init(message_server_endpoints)
-        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+    def _create_perf_stat_topic(self, mb_admin):
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
         partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS)
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
@@ -406,3 +403,24 @@ class Configure(Setup):
                                             data_limit_bytes=retention_size)
         else:
             Log.info(f"message_type:{message_type} already exists.")
+    
+    def _create_cluster_stop_topic(self, mb_admin):
+        message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_MSG_TYPE)
+        partitions = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS)
+        retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
+        retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD))
+        if not message_type in mb_admin.list_message_types():
+            Log.info(f"Registering message_type:{message_type}")
+            mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
+            mb_admin.set_message_type_expire(message_type,
+                                            expire_time_ms=retention_period,
+                                            data_limit_bytes=retention_size)
+    def create_topics(self):
+        """
+        Create required messagebus topics for csm.
+        """
+        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        MessageBus.init(message_server_endpoints)
+        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+        self._create_perf_stat_topic(mb_admin)
+        self._create_cluster_stop_topic(mb_admin)

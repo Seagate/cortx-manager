@@ -21,7 +21,7 @@ from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest
 from cortx.utils.log import Log
-
+import json
 
 class Operation(ABC):
     """
@@ -87,8 +87,10 @@ class ClusterShutdownSignal(Operation):
         pass
 
     def execute(self, cluster_manager, **kwargs):
-        pass
-
+        mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
+        message = {"start_cluster_shutdown": 1}
+        messages = [json.dumps(message)]
+        mssg_bus_obj.send(messages)
 
 class NodeStartOperation(Operation):
     """

@@ -21,7 +21,7 @@ from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-
+from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 
 class ClusterManagementPlugin(CsmPlugin):
     """
@@ -43,13 +43,18 @@ class ClusterManagementPlugin(CsmPlugin):
         Process the request for operations on cluster and resources in it.
         """
         request = kwargs.get(const.PLUGIN_REQUEST, "")
+        operation = kwargs.get(const.ARG_OPERATION, "")
+
         Log.debug(f"Cluster operations plugin process_request with arguments: {kwargs}")
         process_request_resut = None
         if request == const.PROCESS_CLUSTER_STATUS_REQ:
             node_id = kwargs.get(const.ARG_NODE_ID, "")
             process_request_resut = self._ha.get_cluster_status(node_id)
         elif request == const.PROCESS_CLUSTER_OPERATION_REQ:
-            process_request_resut = self._process_cluster_operation(kwargs)
+            if operation == const.ShUTDOWN_SIGNAL:
+                self._process_shutdown_signal(kwargs)
+            else:
+                process_request_resut = self._process_cluster_operation(kwargs)
         return process_request_resut
 
     def _process_cluster_operation(self, filters):
@@ -63,3 +68,9 @@ class ClusterManagementPlugin(CsmPlugin):
                                                             **arguments)
         return process_result
 
+    def _process_shutdown_signal(self, kwargs):
+        resource = kwargs.get(const.ARG_RESOURCE, "")
+        operation = kwargs.get(const.ARG_OPERATION, "")
+        ResourceOperationsFactory.get_operations_by_resource(resource)\
+                                    .get_operation(operation)\
+                                    .process(None, kwargs)
