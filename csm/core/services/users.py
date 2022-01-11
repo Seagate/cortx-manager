@@ -364,11 +364,8 @@ class CsmUserService(ApplicationService):
                     msg = 'Can not update role to admin'
                     raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
 
-        # Enforce the password check for self-updating the user
-        if self_update and not reset_password:
-            if current_password is None:
-                msg = 'The current password is missing'
-                raise InvalidRequest(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
+        # Removed the password check for self-updating the user
+        if self_update and current_password:
             if not Passwd.verify(current_password, user.user_password):
                 msg = 'The current password is not valid'
                 raise CsmPermissionDenied(msg, USERS_MSG_UPDATE_NOT_ALLOWED)
