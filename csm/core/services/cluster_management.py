@@ -24,10 +24,10 @@ class ClusterManagementAppService(ApplicationService):
     Manage operations on cluster and resources in it.
     """
 
-    def __init__(self, plugin, message_bus_comm):
+    def __init__(self, plugin, message_bus_obj):
         self._cluster_management_plugin = plugin
-        self.message_bus_comm = message_bus_comm
-        self.message_bus_comm.init(type=const.PRODUCER,
+        self.message_bus_obj = message_bus_obj
+        self.message_bus_obj.init(type=const.PRODUCER,
                             producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
                             message_type=Conf.get(const.CSM_GLOBAL_INDEX,
@@ -70,6 +70,6 @@ class ClusterManagementAppService(ApplicationService):
         request_params[const.ARG_OPERATION] = operation
         request_params[const.ARG_ARGUMENTS] = arguments
         if operation == const.ShUTDOWN_SIGNAL:
-            request_params[const.ARG_MSG_OBJ] = self.message_bus_comm
+            request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
         return request_params
 
