@@ -55,5 +55,7 @@ class CapacityManagementView(CsmView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
+        #TODO: Accept path parameter from URL to get filtered data as per paramter.
+        # Integration ticket to be taken in Sprint-60.
         Log.info("Handling GET implementation for getting cluster staus data")
         return await self._service.get_cluster_data()
