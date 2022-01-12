@@ -75,7 +75,7 @@ class ClusterManagementPlugin(CsmPlugin):
                                     .get_operation(operation)\
                                     .execute(None, **kwargs)
         cluster_op_resp = {
-            "message": "Shutdown signal processed successfully."
+            "message": "Shutdown signal sent successfully."
         }
         Log.debug(f"Cluster Operation: {cluster_op_resp}")
         return cluster_op_resp
