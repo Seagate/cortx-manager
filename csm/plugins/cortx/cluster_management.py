@@ -73,7 +73,7 @@ class ClusterManagementPlugin(CsmPlugin):
         operation = kwargs.get(const.ARG_OPERATION, "")
         ResourceOperationsFactory.get_operations_by_resource(resource)\
                                     .get_operation(operation)\
-                                    .process(None, **kwargs)
+                                    .execute(None, **kwargs)
         cluster_op_resp = {
             "message": "Shutdown signal processed successfully."
         }

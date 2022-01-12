@@ -21,7 +21,6 @@ from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
-import json
 
 class Operation(ABC):
     """
@@ -89,12 +88,11 @@ class ClusterShutdownSignal(Operation):
     def execute(self, cluster_manager, **kwargs):
         mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         message = {"start_cluster_shutdown": 1}
-        messages = [json.dumps(message)]
         try:
-            mssg_bus_obj.send(messages)
+            mssg_bus_obj.send([str(message)])
         except Exception as e:
-            Log.error(f"Error occured while sending message to message bus:{e}")
-            raise CsmInternalError(f"Error occured while sending message to message bus:{e}")
+            Log.error(f"Error while sending shutdown signal:{e}")
+            raise CsmInternalError(f"Error while sending shutdown signal:{e}")
 
 class NodeStartOperation(Operation):
     """
