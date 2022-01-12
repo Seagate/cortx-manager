@@ -19,9 +19,8 @@ from functools import partial
 from abc import ABC, abstractmethod
 from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
-
 
 class Operation(ABC):
     """
@@ -87,8 +86,13 @@ class ClusterShutdownSignal(Operation):
         pass
 
     def execute(self, cluster_manager, **kwargs):
-        pass
-
+        mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
+        message = {"start_cluster_shutdown": 1}
+        try:
+            mssg_bus_obj.send([str(message)])
+        except Exception as e:
+            Log.error(f"Error while sending shutdown signal:{e}")
+            raise CsmInternalError(f"Error while sending shutdown signal:{e}")
 
 class NodeStartOperation(Operation):
     """
