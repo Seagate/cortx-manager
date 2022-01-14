@@ -107,8 +107,10 @@ class CsmAgent:
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
+        message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, \
+                                    const.KAFKA_ENDPOINTS), unblock_consumer=True)
 
-        CsmAgent._configure_cluster_management_service()
+        CsmAgent._configure_cluster_management_service(message_bus_obj)
 
         http_notifications = AlertHttpNotifyService()
         pm = import_plugin_module(const.ALERT_PLUGIN)
@@ -127,7 +129,7 @@ class CsmAgent:
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
         CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider,
-                                            MessageBusComm(Conf.get(const.CONSUMER_INDEX,
+                                           MessageBusComm(Conf.get(const.CONSUMER_INDEX,
                                                     const.KAFKA_ENDPOINTS), unblock_consumer=True))
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
@@ -212,11 +214,11 @@ class CsmAgent:
         CsmRestApi._app[const.MAINTENANCE_SERVICE] = MaintenanceAppService(CortxHAFramework(),  provisioner, db)
 
     @staticmethod
-    def _configure_cluster_management_service():
+    def _configure_cluster_management_service(message_bus_obj):
         # Cluster Management configuration
         cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
         cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(CortxHAFramework())
-        cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj)
+        cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj, message_bus_obj)
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
