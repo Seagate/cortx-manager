@@ -115,15 +115,17 @@ class Prepare(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
     def _get_consul_config(self):
-        endpoint = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
+        endpoint_list = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
         secret =  Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_SECRET_KEY])
-        if not endpoint:
+        if not endpoint_list:
             raise CsmSetupError("Endpoints not found")
             #TODO: HOW TO USE SECRET?
             # endpoints = [consul-server1.cortx-cluster.lyve-cloud.com:<port>, consul-server2.cortx-cluster.lyve-cloud.com:<port>]
-        protocol, host, port = self._parse_endpoints(endpoint)
-        Log.info(f"Fetching consul endpoint : {endpoint}")
-        return protocol, [host], port, secret, endpoint
+        for each_endpoint in endpoint_list:
+            if 'http' in each_endpoint:
+                protocol, host, port = self._parse_endpoints(each_endpoint)
+                Log.info(f"Fetching consul endpoint : {each_endpoint}")
+                return protocol, [host], port, secret, each_endpoint
 
     def _set_db_host_addr(self):
         """
