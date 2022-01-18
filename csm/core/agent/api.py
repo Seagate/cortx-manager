@@ -118,6 +118,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
+        ApiRoutes.add_swagger_ui_routes(CsmRestApi._app.router)
 
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)

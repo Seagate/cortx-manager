@@ -964,5 +964,9 @@ PERSISTENT          = 'persistent'
 
 # Swagger UI
 SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)
+SWAGGER_UI_INDEX_HTML = '{}/index.html'.format(SWAGGER_UI_DIST)
+SWAGGER_JSON = '{}/swagger.json'.format(SWAGGER_UI_DIST)
 SWAGGER_UI_URL = '/api/doc'
+SWAGGER_JSON_URL = '/api/doc/swagger.json'
+SWAGGER_UI_STATICS_URL = '/api/static'
 

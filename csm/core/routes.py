@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from csm.core.blogic import const
+from aiohttp import web
 
 class ApiRoutes:
     @staticmethod
@@ -21,5 +22,17 @@ class ApiRoutes:
         router.add_get("/ws", ws_handler)
 
     @staticmethod
+    def _serve_swagger_ui(request):
+       with open(const.SWAGGER_UI_INDEX_HTML, 'r') as f:
+        return web.Response(text=f.read(), content_type='text/html')
+
+    @staticmethod
+    def _serve_swagger_json(request):
+      with open(const.SWAGGER_JSON, 'r') as f:
+        return web.Response(text=f.read(), content_type='application/json')
+
+    @staticmethod
     def add_swagger_ui_routes(router):
-      router.add_static(const.SWAGGER_UI_URL, const.SWAGGER_UI_DIST)
+      router.add_get(const.SWAGGER_UI_URL, ApiRoutes._serve_swagger_ui)
+      router.add_get(const.SWAGGER_JSON_URL, ApiRoutes._serve_swagger_json)
+      router.add_static(const.SWAGGER_UI_STATICS_URL, const.SWAGGER_UI_DIST)
