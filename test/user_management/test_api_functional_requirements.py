@@ -20,9 +20,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from unittest import TestCase, main as unittest_main
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+import ssl
 
 
-_AGENT_URL = 'http://localhost:28101'
+_AGENT_URL = 'https://localhost:8081'
 _DEFAULT_ADMIN_USERNAME = 'cortxadmin'
 _DEFAULT_ADMIN_PASSWORD = 'Cortxadmin@123'
 
@@ -84,10 +85,13 @@ class CSMSession:
         body: Optional[Any] = None,
         headers: Optional[Dict[str, str]] = None,
     ) -> HTTPResponse:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
         url = f'{self.__url}/{endpoint}'
         data, headers = self.__generate_post_content(body)
         request = Request(url, method=method, data=data, headers=headers)
-        response = urlopen(request)
+        response = urlopen(request, context=ctx)
         assert isinstance(response, HTTPResponse)
         return response
 
@@ -336,14 +340,15 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status), HTTPStatus.OK)
 
-    def test_010_change_email_of_admin_user_as_manage_user_ok(self):
-        with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session:
-            username = 'test_admin0'
-            new_email = {
-                'email': f'{username}_by_manage@cortx-examples.seagate.com',
-            }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
-            self.assertEqual(HTTPStatus(resp.status), HTTPStatus.OK)
+    def test_010_change_email_of_admin_user_as_manage_user_fail(self):
+        with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session, \
+            self.assertRaises(HTTPError) as cm:
+                username = 'test_admin0'
+                new_email = {
+                    'email': f'{username}_by_manage@cortx-examples.seagate.com',
+                }
+                session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+        self.assertEqual(HTTPStatus(cm.exception.status), HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_manage_user_as_manage_user_ok(self):
         with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session:
