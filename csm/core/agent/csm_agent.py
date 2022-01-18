@@ -20,6 +20,7 @@ import os
 import glob
 import traceback
 import json
+from tracemalloc import Statistic
 from aiohttp import web
 from importlib import import_module
 import pathlib
@@ -37,17 +38,11 @@ class CsmAgent:
 
     @staticmethod
     def init():
-        if Options.config:
-                Conf.load(const.CONSUMER_INDEX, Options.config)
-                conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
-                csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
-                if not os.path.exists(os.path.join(csm_config_dir, const.CSM_CONF_FILE_NAME)) or \
-                    not os.path.exists(os.path.join(csm_config_dir, const.DB_CONF_FILE_NAME)):
-                    raise Exception(f"Configurations not available at {csm_config_dir}")
-        else:
-            csm_config_dir = const.DEFAULT_CSM_CONF_PATH
-
-        Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
+        CsmAgent.load_csm_config_indices()
+        Conf.load(const.DB_DICT_INDEX,'dict:{}')
+        Conf.load(const.CSM_DICT_INDEX,'dict:{}')
+        Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
+        Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
@@ -65,8 +60,12 @@ class CsmAgent:
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        db_config = Yaml(f"{csm_config_dir}/{const.DB_CONF_FILE_NAME}").load()
-        Conf.load(const.DATABASE_INDEX, f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
+        db_config = {
+            'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
+            'models': Conf.get(const.DB_DICT_INDEX,'models')
+        }
+        del db_config["databases"]["consul_db"]["config"]["hosts_count"]
+        del db_config["databases"]["openldap"]["config"]["hosts_count"]
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(
@@ -75,7 +74,7 @@ class CsmAgent:
             db_config['databases']["consul_db"]["config"][const.PORT])
         db_config['databases']["openldap"]["config"][const.PORT] = int(
             db_config['databases']["openldap"]["config"][const.PORT])
-        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, "databases>openldap>config>login")
+        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_LOGIN)
         db_config['databases']["openldap"]["config"]["password"] = Conf.get(
             const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         conf = GeneralConfig(db_config)
@@ -186,9 +185,9 @@ class CsmAgent:
         update_repo = UpdateStatusRepository(db)
         security_service = SecurityService(db, provisioner)
         CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'), provisioner, update_repo)
+            Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_UPDATE_HOTFIX_PATH), provisioner, update_repo)
         CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
-                Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'), update_repo)
+                Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_UPDATE_FIRMWARE_PATH), update_repo)
         CsmRestApi._app[const.SYSTEM_CONFIG_SERVICE] = SystemConfigAppService(db, provisioner,
             security_service, system_config_mgr, Template.from_file(const.CSM_SMTP_TEST_EMAIL_TEMPLATE_REL))
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
@@ -222,6 +221,53 @@ class CsmAgent:
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
+    def _get_consul_config():
+        def _parse_endpoints(url):
+            if "://"in url:
+                protocol, endpoint = url.split("://")
+            else:
+                protocol = ''
+                endpoint = url
+            host, port = endpoint.split(":")
+            return protocol, host, port
+
+        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
+        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
+        if not endpoint_list:
+            raise CsmError("Consul Endpoints not found")
+        for each_endpoint in endpoint_list:
+            if 'http' in each_endpoint:
+                protocol, host, port = _parse_endpoints(each_endpoint)
+                return protocol, [host], port, secret, each_endpoint
+
+    @staticmethod
+    def load_csm_config_indices():
+        set_config_flag = False
+        Conf.load(const.CONSUMER_INDEX, Options.config)
+        protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
+        if consul_host and consul_port:
+            try:
+                ConsulV(consul_host,consul_port)
+                Log.info("Setting CSM configuration to consul")
+                Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
+                Conf.load(const.DATABASE_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                set_config_flag = True
+            except VError as ve:
+                Log.error(f" Failed to validate consul host: {ve}")
+
+        if not set_config_flag:
+            conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
+            csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
+            Log.info(f"Setting CSM configuration to local storage: {csm_config_dir}")
+            Conf.load(const.CSM_GLOBAL_INDEX,
+                    f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
+            Conf.load(const.DATABASE_INDEX,
+                    f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
+            set_config_flag = True
+
+    @staticmethod
     def _daemonize():
         """ Change process into background service """
         if not os.path.isdir("/var/run/csm/"):
@@ -251,13 +297,13 @@ class CsmAgent:
 
     @staticmethod
     def run():
-        https_conf = ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "HTTPS"))
-        debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_GLOBAL_INDEX, "DEBUG")))
-        port = Conf.get(const.CSM_GLOBAL_INDEX, 'CSM_SERVICE>CSM_AGENT>port')
+        https_conf = ConfSection(Conf.get(const.CSM_DICT_INDEX, "HTTPS"))
+        debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_DICT_INDEX, "DEBUG")))
+        port = Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_PORT)
 
         if Options.daemonize:
             CsmAgent._daemonize()
-        env_type =  Conf.get(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}")
+        env_type =  Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE)
         if not (env_type == const.K8S):
              CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
@@ -307,6 +353,8 @@ if __name__ == '__main__':
     from csm.common.conf import Security
     from csm.common.ha_framework import CortxHAFramework
     from cortx.utils.cron import CronJob
+    from cortx.utils.validator.v_consul import ConsulV
+    from cortx.utils.validator.error import VError
     from csm.core.services.maintenance import MaintenanceAppService
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager

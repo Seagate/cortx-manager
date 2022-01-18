@@ -48,12 +48,7 @@ class Prepare(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.config_path = self._set_csm_conf_path()
-            self._copy_skeleton_configs()
-            Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"yaml://{self.config_path}/{const.CSM_CONF_FILE_NAME}")
-            Conf.load(const.DATABASE_INDEX,
-                        f"yaml://{self.config_path}/{const.DB_CONF_FILE_NAME}")
+            self.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -117,7 +112,7 @@ class Prepare(Setup):
         '''
         Log.info("Set decryption keys for CSM and S3")
 
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.S3}>password_decryption_key",
+        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY,
                     self.conf_store_keys[const.KEY_CSM_LDAP_SECRET].split('>')[0])
 
     def _set_cluster_id(self):
@@ -127,16 +122,6 @@ class Prepare(Setup):
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
-    def _get_consul_config(self):
-        endpoint = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY])
-        secret =  Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.CONSUL_SECRET_KEY])
-        if not endpoint:
-            raise CsmSetupError("Endpoints not found")
-            #TODO: HOW TO USE SECRET?
-            # endpoints = [consul-server1.cortx-cluster.lyve-cloud.com:<port>, consul-server2.cortx-cluster.lyve-cloud.com:<port>]
-        protocol, host, port = self._parse_endpoints(endpoint)
-        Log.info(f"Fetching consul endpoint : {endpoint}")
-        return protocol, [host], port, secret, endpoint
 
     def _get_ldap_hosts_info(self):
         """
@@ -155,7 +140,12 @@ class Prepare(Setup):
 
     def _set_ldap_servers(self):
         ldap_servers = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_SERVERS])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_SERVERS, ldap_servers)
+        ldap_servers_count = len(ldap_servers)
+        Conf.set(const.DATABASE_INDEX, const.OPEN_LDAP_SERVERS_COUNT, str(ldap_servers_count))
+        for each_server_count in range(ldap_servers_count):
+            Conf.set(const.DATABASE_INDEX,
+                    f'{const.OPEN_LDAP_SERVERS}[{each_server_count}]',
+                    eval(f'{ldap_servers}[{each_server_count}]'))
 
     def _set_db_host_addr(self):
         """
@@ -166,12 +156,22 @@ class Prepare(Setup):
         protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>hosts', consul_host)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>port', consul_port)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>password', secret)
-            Conf.set(const.DATABASE_INDEX, 'databases>consul_db>config>login', consul_login)
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>hosts', ldap_hosts)
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>port', ldap_port)
+            consul_servers_count = len(consul_host)
+            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_HOST_COUNT, str(consul_servers_count))
+            for each_consul_host in range(consul_servers_count):
+                Conf.set(const.DATABASE_INDEX,
+                        f'{const.DB_CONSUL_CONFIG_HOST}[{each_consul_host}]',
+                        eval(f'{consul_host}[{each_consul_host}]'))
+            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
+            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
+            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
+            ldap_hosts_count = len(ldap_hosts)
+            Conf.set(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS_COUNT, str(ldap_hosts_count))
+            for each_ldap_host in range(ldap_hosts_count):
+                Conf.set(const.DATABASE_INDEX,
+                        f'{const.DB_OPENLDAP_CONFIG_HOSTS}[{each_ldap_host}]',
+                        eval(f'{ldap_hosts}[{each_ldap_host}]'))
+            Conf.set(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PORT, ldap_port)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
@@ -189,8 +189,8 @@ class Prepare(Setup):
             Log.info("Open-Ldap Credentials Copied to CSM Configuration.")
             Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER, csm_ldap_user)
             Conf.set(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET, csm_ldap_secret)
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>login', f"cn={csm_ldap_user},{base_dn}")
-            Conf.set(const.DATABASE_INDEX, 'databases>openldap>config>password', csm_ldap_secret)
+            Conf.set(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_LOGIN, f"cn={csm_ldap_user},{base_dn}")
+            Conf.set(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PASSWORD, csm_ldap_secret)
 
 
     def store_encrypted_password(self):
@@ -223,10 +223,8 @@ class Prepare(Setup):
         ldap_root_secret = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_SECRET])
         bind_base_dn = f"cn={ldap_root_admin_user},{base_dn}"
         Log.info(f"Set base_dn:{base_dn} and bind_base_dn:{bind_base_dn} for openldap")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}",
-                 base_dn)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.OPENLDAP_KEY}>{const.BIND_BASE_DN_KEY}",
-                 bind_base_dn)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_BASE_DN,base_dn)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_BIND_BASE_DN, bind_base_dn)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, ldap_root_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET, ldap_root_secret)
 
@@ -245,7 +243,7 @@ class Prepare(Setup):
 
         Log.info("Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE,
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
