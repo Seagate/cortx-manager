@@ -961,3 +961,8 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# Swagger UI
+SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)
+SWAGGER_UI_URL = '/api/doc'
+

@@ -13,7 +13,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from csm.core.blogic import const
+
 class ApiRoutes:
     @staticmethod
     def add_websocket_routes(router, ws_handler):
         router.add_get("/ws", ws_handler)
+
+    @staticmethod
+    def add_swagger_ui_routes(router):
+      router.add_static(const.SWAGGER_UI_URL, const.SWAGGER_UI_DIST)
