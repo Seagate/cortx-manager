@@ -179,6 +179,9 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     async def _is_public(request):
+        path = request.url.path
+        if path.startswith(const.SWAGGER_UI_URL) or path.startswith(const.SWAGGER_UI_STATICS_URL):
+            return True
         handler = await CsmRestApi._resolve_handler(request)
         return CsmView.is_public(handler, request.method)
 
