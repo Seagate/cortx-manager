@@ -64,20 +64,22 @@ class Setup:
         return conf_path
 
     def _get_consul_config(self):
+        protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         for each_endpoint in endpoint_list:
             if 'http' in each_endpoint:
                 protocol, host, port = self._parse_endpoints(each_endpoint)
                 Log.info(f"Fetching consul endpoint : {each_endpoint}")
-                return protocol, host, port, secret, each_endpoint
+                break
+        return protocol, host, port, secret, each_endpoint
 
     def load_csm_config_indices(self):
         set_config_flag = False
         protocol, consul_host, consul_port, secret, endpoint = self._get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV(consul_host,consul_port)
+                ConsulV().validate_service_status(consul_host,consul_port)
                 Log.info("Setting CSM configuration to consul")
                 Conf.load(const.CSM_GLOBAL_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")

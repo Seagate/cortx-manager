@@ -19,8 +19,6 @@ import sys
 import os
 import glob
 import traceback
-import json
-from tracemalloc import Statistic
 from aiohttp import web
 from importlib import import_module
 import pathlib
@@ -74,7 +72,8 @@ class CsmAgent:
             db_config['databases']["consul_db"]["config"][const.PORT])
         db_config['databases']["openldap"]["config"][const.PORT] = int(
             db_config['databases']["openldap"]["config"][const.PORT])
-        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_LOGIN)
+        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, \
+                                                const.DB_OPENLDAP_CONFIG_LOGIN)
         db_config['databases']["openldap"]["config"]["password"] = Conf.get(
             const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         conf = GeneralConfig(db_config)
@@ -230,15 +229,14 @@ class CsmAgent:
                 endpoint = url
             host, port = endpoint.split(":")
             return protocol, host, port
-
+        protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        if not endpoint_list:
-            raise CsmError("Consul Endpoints not found")
         for each_endpoint in endpoint_list:
             if 'http' in each_endpoint:
                 protocol, host, port = _parse_endpoints(each_endpoint)
-                return protocol, [host], port, secret, each_endpoint
+                break
+        return protocol, host, port, secret, each_endpoint
 
     @staticmethod
     def load_csm_config_indices():
@@ -247,20 +245,18 @@ class CsmAgent:
         protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV(consul_host,consul_port)
-                Log.info("Setting CSM configuration to consul")
+                ConsulV().validate_service_status(consul_host[0],consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
-                Log.error(f" Failed to validate consul host: {ve}")
+                pass
 
         if not set_config_flag:
             conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
             csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
-            Log.info(f"Setting CSM configuration to local storage: {csm_config_dir}")
             Conf.load(const.CSM_GLOBAL_INDEX,
                     f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
             Conf.load(const.DATABASE_INDEX,

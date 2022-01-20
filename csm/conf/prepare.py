@@ -156,13 +156,14 @@ class Prepare(Setup):
         protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
-            consul_servers_count = len(consul_host)
+            consul_servers_count = len([consul_host])
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_HOST_COUNT, str(consul_servers_count))
             for each_consul_host in range(consul_servers_count):
                 Conf.set(const.DATABASE_INDEX,
                         f'{const.DB_CONSUL_CONFIG_HOST}[{each_consul_host}]',
                         eval(f'{consul_host}[{each_consul_host}]'))
-            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
+            if consul_port:
+                Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
             ldap_hosts_count = len(ldap_hosts)
