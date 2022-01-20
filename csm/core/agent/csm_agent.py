@@ -37,8 +37,8 @@ class CsmAgent:
     @staticmethod
     def init():
         CsmAgent.load_csm_config_indices()
-        Conf.load(const.DB_DICT_INDEX,'dict:{}')
-        Conf.load(const.CSM_DICT_INDEX,'dict:{}')
+        Conf.load(const.DB_DICT_INDEX,'dict:{"k":"v"}')
+        Conf.load(const.CSM_DICT_INDEX,'dict:{"k":"v"}')
         Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
         Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
         syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")

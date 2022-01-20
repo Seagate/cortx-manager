@@ -161,7 +161,7 @@ class Prepare(Setup):
             for each_consul_host in range(consul_servers_count):
                 Conf.set(const.DATABASE_INDEX,
                         f'{const.DB_CONSUL_CONFIG_HOST}[{each_consul_host}]',
-                        eval(f'{consul_host}[{each_consul_host}]'))
+                        f'{consul_host}[{each_consul_host}]')
             if consul_port:
                 Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)

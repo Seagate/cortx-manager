@@ -288,7 +288,7 @@ class Setup:
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
-        Conf.load(const.DB_DICT_INDEX,'dict:{}')
+        Conf.load(const.DB_DICT_INDEX,'dict:{"k":"v"}')
         Conf.copy(const.DATABASE_INDEX,const.DB_DICT_INDEX)
         db_config_dict = {
             'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
