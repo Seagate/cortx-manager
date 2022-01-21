@@ -245,11 +245,11 @@ class CsmAgent:
         protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV().validate_service_status(consul_host[0],consul_port)
+                ConsulV().validate_service_status(consul_host,consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}/{const.CSM_CONF_BASE}")
+                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host[0]}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
                 pass
