@@ -70,12 +70,9 @@ class Prepare(Setup):
         self._prepare_and_validate_confstore_keys()
         self._set_secret_string_for_decryption()
         self._set_cluster_id()
-        self._set_ldap_servers()
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
-        self._set_csm_ldap_credentials()
-        self._set_ldap_params()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
