@@ -70,16 +70,8 @@ class CsmAgent:
             db_config['databases']["es_db"]["config"]["replication"])
         db_config['databases']["consul_db"]["config"][const.PORT] = int(
             db_config['databases']["consul_db"]["config"][const.PORT])
-        db_config['databases']["openldap"]["config"][const.PORT] = int(
-            db_config['databases']["openldap"]["config"][const.PORT])
-        db_config['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX, \
-                                                const.DB_OPENLDAP_CONFIG_LOGIN)
-        db_config['databases']["openldap"]["config"]["password"] = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
-
-
 
         #Remove all Old Shutdown Cron Jobs
         CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
