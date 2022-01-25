@@ -80,7 +80,7 @@ class Configure(Setup):
         self.set_s3_info()
         self.create_topics()
         try:
-            await self._create_cluster_admin(self.force_action)
+            # await self._create_cluster_admin(self.force_action)
             self.create()
             for count in range(0, 4):
                 try:
