@@ -35,7 +35,8 @@ class CsmAuth:
     ATTR_PERMISSIONS = '_csm_auth_permissions_'
     # ADD all hybrid api's here with required keys, use hybrid decorator
     # TODO: make it dynamic by adding required key as param to hybrid decorator.
-    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH}
+    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH,
+                    "GET:/api/v2/cluster/status": const.CAPACITY_MANAGMENT_AUTH}}
 
     @classmethod
     def public(cls, handler):
@@ -160,7 +161,7 @@ class CsmView(web.View):
             res = asyncio.shield(func(*arg, **kw))
             return res
         return wrapper
-    
+
     def validate_get(self):
         pass
 

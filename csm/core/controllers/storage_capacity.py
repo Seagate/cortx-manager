@@ -40,3 +40,21 @@ class StorageCapacityView(CsmView):
         if (not unit.upper() in const.UNIT_LIST) and (not unit.upper()==const.DEFAULT_CAPACITY_UNIT):
             raise InvalidRequest(f"Invalid unit. Please enter units from {','.join(const.UNIT_LIST)}. Default unit is:{const.DEFAULT_CAPACITY_UNIT}")
         return await self._service.get_capacity_details(unit=unit, round_off_value=round_off_value)
+
+@CsmAuth.hybrid
+@CsmView._app_routes.view("/api/v2/cluster/status")
+class CapacityManagementView(CsmView):
+    """
+    GET REST API view implementation for getting cluster status
+    """
+    def __init__(self, request):
+        super(CapacityManagementView, self).__init__(request)
+        self._service = self.request.app[const.STORAGE_CAPACITY_SERVICE]
+
+    @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        #TODO: Accept path parameter from URL to get filtered data as per paramter.
+        # Integration ticket to be taken in Sprint-60.
+        Log.info("Handling GET implementation for getting cluster staus data")
+        return await self._service.get_cluster_data()
