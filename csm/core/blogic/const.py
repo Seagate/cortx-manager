@@ -920,7 +920,6 @@ DB_MODELS_DATABASE_NAME = 'models[{0}]>database'
 DB_MODELS_COLLECTION_NAME = 'models[{0}]>config>{1}>collection'
 #keys for database.conf file setup
 DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
-DB_CONSUL_CONFIG_HOST_COUNT = 'databases>consul_db>config>hosts_count'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'

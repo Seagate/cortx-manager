@@ -288,7 +288,6 @@ class Setup:
             'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
             'models': Conf.get(const.DB_DICT_INDEX,'models')
         }
-        del db_config_dict["databases"]["consul_db"]["config"]["hosts_count"]
         conf = GeneralConfig(db_config_dict)
         conf['databases']["consul_db"]["config"][const.PORT] = int(
                     conf['databases']["consul_db"]["config"][const.PORT])

@@ -62,7 +62,6 @@ class CsmAgent:
             'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
             'models': Conf.get(const.DB_DICT_INDEX,'models')
         }
-        del db_config["databases"]["consul_db"]["config"]["hosts_count"]
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
         db_config['databases']["es_db"]["config"]["replication"] = int(

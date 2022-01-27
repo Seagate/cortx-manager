@@ -119,13 +119,10 @@ class Prepare(Setup):
         protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
-            consul_servers_count = len([consul_host])
-            Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_HOST_COUNT, str(consul_servers_count))
-            for each_consul_host in range(consul_servers_count):
+            if consul_host and consul_port:
                 Conf.set(const.DATABASE_INDEX,
-                        f'{const.DB_CONSUL_CONFIG_HOST}[{each_consul_host}]',
-                        f'{consul_host}[{each_consul_host}]')
-            if consul_port:
+                        f'{const.DB_CONSUL_CONFIG_HOST}[{0}]',
+                        consul_host)
                 Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
