@@ -366,7 +366,7 @@ class CsmRestApi(CsmApi, ABC):
     @web.middleware
     async def set_secure_headers(request, handler):
         resp = await handler(request)
-        SecureHeaders(csp=True).aiohttp(resp)
+        SecureHeaders(csp=True,server=True).aiohttp(resp)
         return resp
 
     @staticmethod
