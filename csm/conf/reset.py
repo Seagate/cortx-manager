@@ -54,15 +54,12 @@ class Reset(Setup):
         self.directory_cleanup()
         await self.db_cleanup()
         await self._unsupported_feature_entry_cleanup()
-        self._delete_cortxusers_from_ldap()
         await Setup._create_cluster_admin()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
-            const.KEY_ROOT_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.USER}",
-            const.KEY_ROOT_LDAP_SCRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.ROOT}>{const.SECRET}"
+            const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}"
         })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -157,20 +154,3 @@ class Reset(Setup):
             Log.warn(f"Failed at deleting for {collection}")
             Log.warn(f"{e}")
         Log.info(f"Index {collection} Deleted.")
-
-    def _delete_cortxusers_from_ldap(self):
-        """
-        Delete all CortxUsers under CortxAccount
-        """
-        _ldapuser = self._fetch_ldap_root_user()
-        _ldappasswd = self._fetch_ldap_root_password()
-        if not _ldapuser:
-            raise CsmSetupError("Failed to fetch credentials for ldap operations")
-        if not _ldappasswd:
-            raise CsmSetupError("Failed to fetch credentials for ldap operations")
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    f"{const.OPENLDAP_KEY}>{const.BASE_DN_KEY}")
-        csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
-        bind_dn = const.LDAP_USER.format(_ldapuser,base_dn)
-        self._delete_user_data(bind_dn, _ldappasswd, const.CORTXUSERS_DN.format(csm_schema_version, base_dn))
