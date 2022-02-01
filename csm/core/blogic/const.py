@@ -559,6 +559,7 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+RGW_S3_USERS_SERVICE = "rgw_s3_users_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -923,3 +924,16 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+
+#RGW- Create Users API
+UID = 'uid'
+DISPLAY_NAME = 'display-name'
+EMAIL = 'email'
+KEY_TYPE = 'key-type'
+ACCESS_KEY = 'access-key'
+SECRETE_KEY = 'secret-key'
+USER_CAPS = 'user-caps'
+GENERATE_KEY = 'generate-key'
+MAX_BUCKETS = 'max-buckets'
+SUSPENDED = 'suspended'
+TENANT = 'tenant'

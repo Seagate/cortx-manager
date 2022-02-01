@@ -165,6 +165,9 @@ class CsmAgent:
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
 
+        # RGW plugin
+        CsmRestApi._app[const.RGW_S3_USERS_SERVICE] = RgwUsersService()
+
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
@@ -353,6 +356,7 @@ if __name__ == '__main__':
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
+    from csm.core.services.rgw.s3.users import RgwUsersService
 
     try:
         # try:

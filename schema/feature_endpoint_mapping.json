@@ -262,5 +262,17 @@
   "/usl/*/system/network/interfaces": {
     "feature_name": "lyve_pilot",
     "dependent_on": []
+  },
+  "/api/*/s3/users": {
+    "feature_name": "rgw_s3_users",
+    "dependent_on": [
+      "rgw_s3"
+    ]
+  },
+  "/api/*/s3/users/*": {
+    "feature_name": "rgw_s3_users",
+    "dependent_on": [
+      "rgw_s3"
+    ]
   }
 }
