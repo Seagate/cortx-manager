@@ -142,12 +142,10 @@ class GenerateCsmBundle:
             f"{const.CSM_COMPONENT_NAME}_logs_")
         GenerateCsmBundle.__clear_tmp_files(csm_size_filtered_logs_dir)
         os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
-        
         csm_time_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
             f"{const.CSM_COMPONENT_NAME}_logs_")
         GenerateCsmBundle.__clear_tmp_files(csm_time_filtered_logs_dir)
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
-
         FilterLog.limit_time(csm_log_path, csm_time_filtered_logs_dir,
             GenerateCsmBundle.duration, const.CSM_COMPONENT_NAME)
 
