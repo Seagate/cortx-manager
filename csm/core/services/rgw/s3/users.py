@@ -19,9 +19,11 @@ from cortx.utils.log import Log
 
 class RgwUsersService(ApplicationService):
     """RGW user management service class."""
+
     def __init__(self, plugin):
         """
-        Initializes RGW plugin and Connection config
+        Initializes RGW plugin and Connection config.
+
         :param plugin: RGW plugin object
         :returns: None
         """
@@ -32,6 +34,7 @@ class RgwUsersService(ApplicationService):
     async def create_user(self, **user_body):
         """
         This Method will create a new RGW User.
+
         :param **user_body: User body kwargs
         """
         Log.debug(f"Creating RGW user by uid = {user_body.get('uid')}")

@@ -15,5 +15,6 @@
 
 class RgwConnectionConfig:
     """Configuration options for RGW connection."""
+
     host: str
     port: int

@@ -2,7 +2,8 @@
 # For now adding stub
 
 class RGWPlugin:
-    """RGWPlugin class"""
+    """RGWPlugin class."""
+
     def __init__(self):
-        """RGW Plugin Init"""
+        """RGW Plugin Init."""
         pass

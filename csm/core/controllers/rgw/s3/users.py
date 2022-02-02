@@ -40,7 +40,8 @@ class RgwUserCreateSchema(Schema):
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class RgwUserListView(CsmView):
     """
-    RGW User List View for REST API implementation:
+    RGW User List View for REST API implementation.
+
     PUT: Create a new user
     """
 
