@@ -144,7 +144,7 @@ class GenerateCsmBundle:
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
         FilterLog.limit_time(csm_log_path, csm_time_filtered_logs_dir,
             GenerateCsmBundle.duration, const.CSM_COMPONENT_NAME)
-        # Create directory to keep filtered logs 
+        # Create directory to keep filtered logs
         csm_size_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
             f"{const.CSM_COMPONENT_NAME}_logs")
         GenerateCsmBundle.__clear_tmp_files(csm_size_filtered_logs_dir)
@@ -152,7 +152,7 @@ class GenerateCsmBundle:
         # Apply Size filter on Time Filtered CSM Logs
         FilterLog.limit_size(csm_time_filtered_logs_dir, csm_size_filtered_logs_dir,
             GenerateCsmBundle.size_limit, const.CSM_COMPONENT_NAME)
-        # Create tar file name with bundle id 
+        # Create tar file name with bundle id
         tar_file_name = os.path.join(target_path, f"{GenerateCsmBundle.bundle_id}.tar.gz")
         # Tar Directory of filtered logs
         Tar(tar_file_name).dump([csm_size_filtered_logs_dir])
