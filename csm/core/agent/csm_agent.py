@@ -214,6 +214,7 @@ class CsmAgent:
 
     @staticmethod
     def _configure_rgw_s3_users_service():
+        # ToDo: Replace the keys with consts
         auth_user =  Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user')
         auth_user_access_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key')
         auth_user_secrete_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key')
