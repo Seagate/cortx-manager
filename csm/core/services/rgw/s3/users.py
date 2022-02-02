@@ -15,14 +15,27 @@
 
 from csm.common.services import ApplicationService
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
+from cortx.utils.log import Log
 
 class RgwUsersService(ApplicationService):
-
+    """
+    RGW user management service
+    """
     def __init__(self, plugin):
         self._rgw_plugin = plugin
         self._rgw_connection_config = CsmRgwConfigurationFactory.get_rgw_connection_config()
     
+    @Log.trace_method(Log.INFO)
     async def create_user(self, **user_body):
-        # To Do: confirm the function name of the plugin ???
-        plugin_response = self._rgw_plugin.process_request(**user_body)
+        """
+        This Method will create a new RGW User.
+        :param **user_body: User body kwargs
+        """
+        Log.debug(f"Creating RGW user by uid = {user_body.get('uid')}")
+        # To Do: confirm the function name exposed by plugin
+        # For now adding try except
+        try:
+            plugin_response = self._rgw_plugin.create_user(**user_body)
+        except Exception as e:
+            plugin_response = e
         return plugin_response

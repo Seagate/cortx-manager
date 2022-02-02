@@ -22,7 +22,10 @@ from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers.validators import ValidationErrorFormatter
 
-class UserCreateSchema(Schema):
+class RgwUserCreateSchema(Schema):
+    """
+    RGW user create schema validation class
+    """
     uid = fields.Str(data_key='uid', required=True)
     display_name = fields.Str(data_key='display-name', required=True)
     email = fields.Str(data_key='email', missing=None)
@@ -37,20 +40,27 @@ class UserCreateSchema(Schema):
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class RgwUserListView(CsmView):
+    """
+    RGW User List View for REST API implementation:
+    PUT: Create a new user
+    """
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.RGW_S3_USERS_SERVICE]
 
-
     @CsmAuth.permissions({Resource.RGW_S3_USERS: {Action.CREATE}})
+    @Log.trace_method(Log.INFO, exclude_args=['access-key', 'secret-key'])
     async def put(self):
         """
-        POST REST implementation for creating a rgw s3 user
+        PUT REST implementation for creating a new rgw user
         """
-        Log.debug("Handling users post request.")
+        Log.debug(f"Handling rgw create user PUT request"
+                  f" user_id: {self.request.session.credentials.user_id}")
         try:
-            schema = UserCreateSchema()
+            schema = RgwUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            Log.debug(f"Handling rgw create user PUT request"
+                  f" request body: {user_body}")
         except json.decoder.JSONDecodeError as jde:
             raise InvalidRequest(message_args=f"Request body missing")
         except ValidationError as val_err:

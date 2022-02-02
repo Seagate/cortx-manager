@@ -215,11 +215,12 @@ class CsmAgent:
     @staticmethod
     def _configure_rgw_s3_users_service():
         # ToDo: Replace the keys with consts
-        auth_user =  Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user')
-        auth_user_access_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key')
-        auth_user_secrete_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key')
+        auth_user =  Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', None)
+        auth_user_access_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', None)
+        auth_user_secrete_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', None)
         rgw_plugin = import_plugin_module(const.RGW_PLUGIN)
-        rgw_plugin_obj = rgw_plugin.RGWPlugin()
+        rgw_plugin_obj = rgw_plugin.RGWPlugin(
+            auth_user, auth_user_access_key, auth_user_secrete_key)
         CsmRestApi._app[const.RGW_S3_USERS_SERVICE] = RgwUsersService(rgw_plugin_obj)
 
     @staticmethod
