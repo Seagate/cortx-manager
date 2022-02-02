@@ -35,15 +35,15 @@ class UserCreateSchema(Schema):
     suspended = fields.Bool(data_key='suspended', default=False)
     tenant = fields.Str(data_key='tenant', missing=None)
 
-@CsmView._app_routes.view("/api/v2/s3/users")
-class UserListView(CsmView):
+@CsmView._app_routes.view("/api/v2/s3/iam/users")
+class RgwUserListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.RGW_S3_USERS_SERVICE]
 
 
     @CsmAuth.permissions({Resource.RGW_S3_USERS: {Action.CREATE}})
-    async def post(self):
+    async def put(self):
         """
         POST REST implementation for creating a rgw s3 user
         """

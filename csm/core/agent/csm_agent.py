@@ -165,8 +165,8 @@ class CsmAgent:
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
 
-        # RGW plugin
-        CsmRestApi._app[const.RGW_S3_USERS_SERVICE] = RgwUsersService()
+        # RGW
+        CsmAgent._configure_rgw_s3_users_service()
 
         # audit log download api
         audit_mngr = AuditLogManager(db)
@@ -211,6 +211,15 @@ class CsmAgent:
         cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(CortxHAFramework())
         cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj, message_bus_obj)
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
+
+    @staticmethod
+    def _configure_rgw_s3_users_service():
+        auth_user =  Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user')
+        auth_user_access_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key')
+        auth_user_secrete_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key')
+        rgw_plugin = import_plugin_module(const.RGW_PLUGIN)
+        rgw_plugin_obj = rgw_plugin.RGWPlugin()
+        CsmRestApi._app[const.RGW_S3_USERS_SERVICE] = RgwUsersService(rgw_plugin_obj)
 
     @staticmethod
     def _get_consul_config():

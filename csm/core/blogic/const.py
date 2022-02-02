@@ -608,6 +608,7 @@ CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
+RGW_PLUGIN = "rgw"
 
 # REST METHODS
 POST = "POST"
@@ -924,16 +925,3 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
-
-#RGW- Create Users API
-UID = 'uid'
-DISPLAY_NAME = 'display-name'
-EMAIL = 'email'
-KEY_TYPE = 'key-type'
-ACCESS_KEY = 'access-key'
-SECRETE_KEY = 'secret-key'
-USER_CAPS = 'user-caps'
-GENERATE_KEY = 'generate-key'
-MAX_BUCKETS = 'max-buckets'
-SUSPENDED = 'suspended'
-TENANT = 'tenant'
