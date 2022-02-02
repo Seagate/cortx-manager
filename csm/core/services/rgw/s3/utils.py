@@ -13,22 +13,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.core.blogic import const
-from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.log import Log
 from csm.core.data.models.rgw import RgwConnectionConfig
 
-
 class CsmRgwConfigurationFactory:
-    """
-    Factory for the most common CSM RGW connections configurations
-    """
+    """Factory for the most common CSM RGW connections configurations."""
 
     @staticmethod
     def get_rgw_connection_config():
-        """
-        Creates a configuration for RGW connection
-        """
+        """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
         # ToDo: Read host port values from csm configuration
         rgw_connection_config.host = 'ssc-vm-g4-rhev4-0355.colo.seagate.com'

@@ -14,8 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 class RgwConnectionConfig:
-    """
-    Configuration options for RGW connection
-    """
+    """Configuration options for RGW connection."""
     host: str
     port: int

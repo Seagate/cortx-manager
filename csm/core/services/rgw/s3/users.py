@@ -18,10 +18,13 @@ from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from cortx.utils.log import Log
 
 class RgwUsersService(ApplicationService):
-    """
-    RGW user management service
-    """
+    """RGW user management service class."""
     def __init__(self, plugin):
+        """
+        Initializes RGW plugin and Connection config
+        :param plugin: RGW plugin object
+        :returns: None
+        """
         self._rgw_plugin = plugin
         self._rgw_connection_config = CsmRgwConfigurationFactory.get_rgw_connection_config()
     
