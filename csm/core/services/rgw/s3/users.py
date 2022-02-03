@@ -15,7 +15,6 @@
 
 from cortx.utils.log import Log
 from csm.core.blogic import const
-from csm.common.services import ApplicationService
 from csm.core.data.models.rgw import RgwError
 from csm.core.services.rgw.s3.utils import S3BaseService
 
@@ -26,7 +25,7 @@ class S3IAMUserService(S3BaseService):
         """
         Initializes s3_iam_plugin.
 
-        :param plugin: s3_iam_plugin plugin object
+        :param plugin: s3_iam_plugin object
         :returns: None
         """
         self._s3_iam_plugin = plugin

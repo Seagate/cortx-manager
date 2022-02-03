@@ -16,7 +16,6 @@
 from typing import Any, Dict
 from http import HTTPStatus
 
-from csm.core.data.models.rgw import RgwConnectionConfig
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from cortx.utils.log import Log
 

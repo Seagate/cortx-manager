@@ -24,7 +24,7 @@ class RgwConnectionConfig:
     auth_user_secret_key: str
 
 class RgwErrors(Enum):
-    """Enum with error responses"""
+    """Enum with error responses."""
 
     UserExists = "UserExists"
     InvalidAccessKey = "InvalidAccessKey"

@@ -40,10 +40,10 @@ class CsmRgwConfigurationFactory:
         return rgw_connection_config
 
 class S3ServiceError(Exception):
-    """S3 service error class"""
+    """S3 service error class."""
 
     def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
-        """S3ServiceError init"""
+        """S3ServiceError init."""
         self.status = status
         self.code = code
         self.message = message
@@ -51,7 +51,7 @@ class S3ServiceError(Exception):
 
 class S3BaseService(ApplicationService):
     def _handle_error(self, error, args: Optional[Any] = None):
-        """A helper method for raising exceptions on S3 related errors"""
+        """A helper method for raising exceptions on S3 related errors."""
 
         if isinstance(error, RgwError):
             raise S3ServiceError(error.http_status,

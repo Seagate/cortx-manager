@@ -926,5 +926,5 @@ DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 
-# RGW S3 API 
+# RGW S3 API
 CREATE_USER_OPERATION = 'CREATE_USER' 
