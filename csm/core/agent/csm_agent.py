@@ -165,8 +165,8 @@ class CsmAgent:
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
 
-        # RGW
-        CsmAgent._configure_rgw_s3_users_service()
+        # RGW S3 IAM user service
+        CsmAgent._configure_rgw_s3_iam_users_service()
 
         # audit log download api
         audit_mngr = AuditLogManager(db)
@@ -213,15 +213,10 @@ class CsmAgent:
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
-    def _configure_rgw_s3_users_service():
-        # ToDo: Replace the keys with consts
-        auth_user =  Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', None)
-        auth_user_access_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', None)
-        auth_user_secrete_key = Conf.get(const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', None)
-        rgw_plugin = import_plugin_module(const.RGW_PLUGIN)
-        rgw_plugin_obj = rgw_plugin.RGWPlugin(
-            auth_user, auth_user_access_key, auth_user_secrete_key)
-        CsmRestApi._app[const.RGW_S3_USERS_SERVICE] = RgwUsersService(rgw_plugin_obj)
+    def _configure_rgw_s3_iam_users_service():
+        s3_iam_plugin = import_plugin_module(const.RGW_PLUGIN)
+        s3_iam_plugin_obj = s3_iam_plugin.RGWPlugin()
+        CsmRestApi._app[const.RGW_S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_iam_plugin_obj)
 
     @staticmethod
     def _get_consul_config():
@@ -367,7 +362,7 @@ if __name__ == '__main__':
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
-    from csm.core.services.rgw.s3.users import RgwUsersService
+    from csm.core.services.rgw.s3.users import S3IAMUserService
 
     try:
         # try:

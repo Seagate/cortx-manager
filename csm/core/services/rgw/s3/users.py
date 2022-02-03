@@ -13,35 +13,34 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.services import ApplicationService
-from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from cortx.utils.log import Log
+from csm.core.blogic import const
+from csm.common.services import ApplicationService
+from csm.core.data.models.rgw import RgwError
+from csm.core.services.rgw.s3.utils import S3BaseService
 
-class RgwUsersService(ApplicationService):
-    """RGW user management service class."""
+class S3IAMUserService(S3BaseService):
+    """S3 IAM user management service class."""
 
     def __init__(self, plugin):
         """
-        Initializes RGW plugin and Connection config.
+        Initializes s3_iam_plugin.
 
-        :param plugin: RGW plugin object
+        :param plugin: s3_iam_plugin plugin object
         :returns: None
         """
-        self._rgw_plugin = plugin
-        self._rgw_connection_config = CsmRgwConfigurationFactory.get_rgw_connection_config()
-    
+        self._s3_iam_plugin = plugin
+
     @Log.trace_method(Log.INFO)
     async def create_user(self, **user_body):
         """
-        This Method will create a new RGW User.
+        This method will create a new S3 IAM user.
 
         :param **user_body: User body kwargs
         """
-        Log.debug(f"Creating RGW user by uid = {user_body.get('uid')}")
-        # To Do: confirm the function name exposed by plugin
-        # For now adding try except
-        try:
-            plugin_response = self._rgw_plugin.create_user(**user_body)
-        except Exception as e:
-            plugin_response = e
+        uid = user_body.get('uid')
+        Log.debug(f"Creating S3 IAM user by uid = {uid}")
+        plugin_response = self._s3_iam_plugin.execute(const.CREATE_USER_OPERATION, **user_body)
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response, args={'uid': uid})
         return plugin_response

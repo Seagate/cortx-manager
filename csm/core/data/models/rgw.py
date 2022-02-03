@@ -13,8 +13,30 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from enum import Enum
 class RgwConnectionConfig:
     """Configuration options for RGW connection."""
 
     host: str
     port: int
+    auth_user: str
+    auth_user_access_key: str
+    auth_user_secret_key: str
+
+class RgwErrors(Enum):
+    """Enum with error responses"""
+
+    UserExists = "UserExists"
+    InvalidAccessKey = "InvalidAccessKey"
+    InvalidKeyType = "InvalidKeyType"
+    InvalidSecretKey = "InvalidSecretKey"
+    KeyExists = "KeyExists"
+    EmailExists = "EmailExists"
+    InvalidCapability = "InvalidCapability"
+
+class RgwError:
+    """Class that describes a non-successful result"""
+
+    http_status: int
+    error_code: RgwErrors
+    error_message: str

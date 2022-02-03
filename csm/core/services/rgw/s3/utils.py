@@ -13,7 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from typing import Any, Optional
 from csm.core.data.models.rgw import RgwConnectionConfig
+from csm.common.services import ApplicationService
+from csm.core.data.models.rgw import RgwError
+from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
 
 class CsmRgwConfigurationFactory:
     """Factory for the most common CSM RGW connections configurations."""
@@ -23,6 +28,33 @@ class CsmRgwConfigurationFactory:
         """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
         # ToDo: Read host port values from csm configuration
-        rgw_connection_config.host = 'ssc-vm-g4-rhev4-0355.colo.seagate.com'
+        rgw_connection_config.host = 'ssc-vm-g2-rhev4-2931.colo.seagate.com'
         rgw_connection_config.port = 8000
+        # ToDo: Replace the keys with consts
+        rgw_connection_config.auth_user = Conf.get(
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', 'demo-user')
+        rgw_connection_config.auth_user_access_key = Conf.get(
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', 'E8GJBPSVE5NUOB7JN8UH')
+        rgw_connection_config.auth_user_secret_key = Conf.get(
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', 'vNhyJXZ68V24azCwp3R7VQpRe06pmRP5aRTLKfAY')
         return rgw_connection_config
+
+class S3ServiceError(Exception):
+    """S3 service error class"""
+
+    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
+        """S3ServiceError init"""
+        self.status = status
+        self.code = code
+        self.message = message
+        self.message_args = args
+
+class S3BaseService(ApplicationService):
+    def _handle_error(self, error, args: Optional[Any] = None):
+        """A helper method for raising exceptions on S3 related errors"""
+
+        if isinstance(error, RgwError):
+            raise S3ServiceError(error.http_status,
+                                 error.error_code.value,
+                                 error.error_message,
+                                 args)

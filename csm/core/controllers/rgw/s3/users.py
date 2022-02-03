@@ -22,8 +22,8 @@ from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth
 from csm.core.controllers.validators import ValidationErrorFormatter
 
-class RgwUserCreateSchema(Schema):
-    """RGW user create schema validation class."""
+class UserCreateSchema(Schema):
+    """S3 IAM User create schema validation class."""
 
     uid = fields.Str(data_key='uid', required=True)
     display_name = fields.Str(data_key='display-name', required=True)
@@ -38,30 +38,30 @@ class RgwUserCreateSchema(Schema):
     tenant = fields.Str(data_key='tenant', missing=None)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
-class RgwUserListView(CsmView):
+class S3IAMUserListView(CsmView):
     """
-    RGW User List View for REST API implementation.
+    S3 IAM User List View for REST API implementation.
 
     PUT: Create a new user
     """
 
     def __init__(self, request):
-        """RGW User List View Init."""
+        """S3 IAM User List View Init."""
         super().__init__(request)
-        self._service = self.request.app[const.RGW_S3_USERS_SERVICE]
+        self._service = self.request.app[const.RGW_S3_IAM_USERS_SERVICE]
 
-    @CsmAuth.permissions({Resource.RGW_S3_USERS: {Action.CREATE}})
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.INFO, exclude_args=['access-key', 'secret-key'])
     async def put(self):
         """
-        PUT REST implementation for creating a new rgw user.
+        PUT REST implementation for creating a new s3 iam user.
         """
-        Log.debug(f"Handling rgw create user PUT request"
+        Log.debug(f"Handling create s3 iam user PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
-            schema = RgwUserCreateSchema()
+            schema = UserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-            Log.debug(f"Handling rgw create user PUT request"
+            Log.debug(f"Handling create s3 iam user PUT request"
                   f" request body: {user_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body missing")

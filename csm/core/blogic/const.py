@@ -559,7 +559,7 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
-RGW_S3_USERS_SERVICE = "rgw_s3_users_service"
+RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -925,3 +925,6 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+
+# RGW S3 API 
+CREATE_USER_OPERATION = 'CREATE_USER' 
