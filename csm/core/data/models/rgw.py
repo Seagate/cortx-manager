@@ -26,13 +26,20 @@ class RgwConnectionConfig:
 class RgwErrors(Enum):
     """Enum with error responses."""
 
-    UserExists = "UserExists"
-    InvalidAccessKey = "InvalidAccessKey"
-    InvalidKeyType = "InvalidKeyType"
-    InvalidSecretKey = "InvalidSecretKey"
-    KeyExists = "KeyExists"
-    EmailExists = "EmailExists"
-    InvalidCapability = "InvalidCapability"
+     # Standard error responses
+    AccessDenied = "Access denied."
+    InternalError = "Internal server error."
+    NoSuchUser = "User does not exist."
+    NoSuchBucket = "Bucket does not exist."
+    NoSuchKey = "No such access key."
+    # Create user error responses
+    UserAlreadyExists = "Attempt to create existing user."
+    InvalidAccessKey = "Invalid access key specified."
+    InvalidKeyType = "Invalid key type specified."
+    InvalidSecretKey = "Invalid secret key specified."
+    KeyExists = "Provided access key exists and belongs to another user."
+    EmailExists = "Provided email address exists."
+    InvalidCapability = "Attempt to grant invalid admin capability."
 
 class RgwError:
     """Class that describes a non-successful result"""

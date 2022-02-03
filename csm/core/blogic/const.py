@@ -926,5 +926,18 @@ DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 
-# RGW S3 API
-CREATE_USER_OPERATION = 'CREATE_USER' 
+# RGW AdminOps
+CREATE_USER_OPERATION = 'CREATE_USER'
+
+# RGW AdminOps- create-user
+UID = 'uid'
+DISPLAY_NAME = 'display-name'
+EMAIL = 'email'
+KEY_TYPE = 'key-type'
+ACCESS_KEY = 'access-key'
+SECRET_KEY = 'secret-key'
+USER_CAPS = 'user-caps'
+GENERATE_KEY = 'generate-key'
+MAX_BUCKETS = 'max-buckets'
+SUSPENDED = 'suspended'
+TENANT = 'tenant'

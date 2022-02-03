@@ -30,16 +30,16 @@ class S3IAMUserService(S3BaseService):
         """
         self._s3_iam_plugin = plugin
 
-    @Log.trace_method(Log.INFO)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def create_user(self, **user_body):
         """
         This method will create a new S3 IAM user.
 
         :param **user_body: User body kwargs
         """
-        uid = user_body.get('uid')
+        uid = user_body.get(const.UID)
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
-        plugin_response = self._s3_iam_plugin.execute(const.CREATE_USER_OPERATION, **user_body)
+        plugin_response = await self._s3_iam_plugin.execute(const.CREATE_USER_OPERATION, **user_body)
         if isinstance(plugin_response, RgwError):
-            self._handle_error(plugin_response, args={'uid': uid})
+            self._handle_error(plugin_response, args={const.UID: uid})
         return plugin_response

@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, ValidationError
+from marshmallow import Schema, fields, ValidationError, validate, validates_schema
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
@@ -25,17 +25,25 @@ from csm.core.controllers.validators import ValidationErrorFormatter
 class UserCreateSchema(Schema):
     """S3 IAM User create schema validation class."""
 
-    uid = fields.Str(data_key='uid', required=True)
-    display_name = fields.Str(data_key='display-name', required=True)
-    email = fields.Str(data_key='email', missing=None)
-    key_type = fields.Str(data_key='key-type', missing=None)
-    access_key = fields.Str(data_key='access-key', missing=None)
-    secrete_key = fields.Str(data_key='secrete-key', missing=None)
-    user_caps = fields.Str(data_key='user-caps', missing=None)
-    generate_key = fields.Bool(data_key='generate-key', default=True)
-    max_buckets = fields.Int(data_key='max-buckets', default=1000)
-    suspended = fields.Bool(data_key='suspended', default=False)
-    tenant = fields.Str(data_key='tenant', missing=None)
+    uid = fields.Str(data_key=const.UID, required=True)
+    display_name = fields.Str(data_key=const.DISPLAY_NAME, required=True)
+    email = fields.Email(data_key=const.EMAIL, missing=None)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
+    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
+    tenant = fields.Str(data_key=const.TENANT, missing=None)
+
+    @validates_schema
+    def validate_empty_values(self, data, **kwargs):
+        """This method invalidates the empty strings"""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"{key}: Can not be empty")
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(CsmView):
@@ -51,7 +59,7 @@ class S3IAMUserListView(CsmView):
         self._service = self.request.app[const.RGW_S3_IAM_USERS_SERVICE]
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
-    @Log.trace_method(Log.INFO, exclude_args=['access-key', 'secret-key'])
+    @Log.trace_method(Log.DEBUG)
     async def put(self):
         """
         PUT REST implementation for creating a new s3 iam user.
@@ -64,7 +72,7 @@ class S3IAMUserListView(CsmView):
             Log.debug(f"Handling create s3 iam user PUT request"
                   f" request body: {user_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         response = await self._service.create_user(**user_body)

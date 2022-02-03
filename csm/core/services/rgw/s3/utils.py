@@ -31,8 +31,9 @@ class CsmRgwConfigurationFactory:
         rgw_connection_config.host = 'ssc-vm-g2-rhev4-2931.colo.seagate.com'
         rgw_connection_config.port = 8000
         # ToDo: Replace the keys with consts
+        # ToDo: auth_user should be hardcoded to admin
         rgw_connection_config.auth_user = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', 'demo-user')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', 'admin')
         rgw_connection_config.auth_user_access_key = Conf.get(
             const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', 'E8GJBPSVE5NUOB7JN8UH')
         rgw_connection_config.auth_user_secret_key = Conf.get(
