@@ -39,8 +39,8 @@ class UserCreateSchema(Schema):
     tenant = fields.Str(data_key=const.TENANT, missing=None)
 
     @validates_schema
-    def validate_empty_values(self, data, **kwargs):
-        """This method invalidates the empty strings"""
+    def invalidate_empty_values(self, data, **kwargs):
+        """This method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
                 raise ValidationError(f"{key}: Can not be empty")

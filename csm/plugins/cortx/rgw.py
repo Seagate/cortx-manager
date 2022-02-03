@@ -28,7 +28,7 @@ class RGWPlugin:
         Initialize RGW plugin
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
-        self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key, 
+        self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port)
         self._admin_uid = config.auth_user
         Log.info(f"RGW admin uid: {self._admin_uid}")
