@@ -34,7 +34,7 @@ class CsmS3ConfigurationFactory:
         """
         Creates a configuration for S3 IAM connection
         """
-
+        # Following Keys deprecated 
         iam_connection_config = S3ConnectionConfig()
         iam_connection_config.host = Conf.get(
             const.CSM_GLOBAL_INDEX, const.IAM_HOST)
@@ -51,7 +51,7 @@ class CsmS3ConfigurationFactory:
         """
         Creates a configuration for S3 connection
         """
-
+        # Following Keys deprecated 
         Log.debug("Get s3 connection config")
         s3_connection_config = S3ConnectionConfig()
         s3_connection_config.host = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_DATA_HOST)
@@ -70,11 +70,11 @@ class IamRootClient(IamClient):
     """
 
     def __init__(self):
-        ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF)
-        # TODO: Password should be taken as input and not read from conf file directly.
-        ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF)
+        # Following code clean task will be taken in future story
+        #ldap_login = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF)
+        #ldap_password = Conf.get(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF)
         iam_conf = CsmS3ConfigurationFactory.get_iam_connection_config()
-        super().__init__(ldap_login, ldap_password, iam_conf)
+        super().__init__(None, None, iam_conf)
 
 
 class S3ServiceError(Exception):

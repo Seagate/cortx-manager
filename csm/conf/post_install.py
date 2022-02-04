@@ -82,7 +82,6 @@ class PostInstall(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
                 const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
                 })
@@ -116,11 +115,6 @@ class PostInstall(Setup):
         log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, f"{log_path}/csm")
         Log.info(f"Setting log path: {log_path}")
-
-    def set_env_type(self):
-        env_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}", env_type)
-        Log.info(f"Setting env_type: {env_type}")
 
     def create(self):
         """

@@ -79,7 +79,6 @@ class Prepare(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
