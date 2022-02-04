@@ -41,5 +41,5 @@ class S3IAMUserService(S3BaseService):
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
         plugin_response = await self._s3_iam_plugin.execute(const.CREATE_USER_OPERATION, **user_body)
         if isinstance(plugin_response, RgwError):
-            self._handle_error(plugin_response, args={const.UID: uid})
+            self._handle_error(plugin_response)
         return plugin_response

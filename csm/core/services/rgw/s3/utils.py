@@ -28,23 +28,24 @@ class CsmRgwConfigurationFactory:
         """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
         # ToDo: Read host port values from csm configuration
-        rgw_connection_config.host = 'ssc-vm-g2-rhev4-2931.colo.seagate.com'
+        rgw_connection_config.host = Conf.get(
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>endpoints[0]', 'ssc-vm-g2-rhev4-2931.colo.seagate.com')
         rgw_connection_config.port = 8000
         # ToDo: Replace the keys with consts
-        # ToDo: auth_user should be hardcoded to admin
+        # ToDo: Remove default values once keys are available in conf store
         rgw_connection_config.auth_user = Conf.get(
             const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', 'admin')
         rgw_connection_config.auth_user_access_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', 'E8GJBPSVE5NUOB7JN8UH')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', 'B1CST5WI1L4M3MZE2PXR')
         rgw_connection_config.auth_user_secret_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', 'vNhyJXZ68V24azCwp3R7VQpRe06pmRP5aRTLKfAY')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', '20ZVy47eBlkkHDiJnEcWOCfeZmJDGhHj3DGlODOn')
         return rgw_connection_config
 
 class S3ServiceError(Exception):
     """S3 service error class."""
 
     def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
-        """S3ServiceError init."""
+        """S3 Service Error init."""
         self.status = status
         self.code = code
         self.message = message
@@ -56,6 +57,6 @@ class S3BaseService(ApplicationService):
 
         if isinstance(error, RgwError):
             raise S3ServiceError(error.http_status,
-                                 error.error_code.value,
+                                 error.error_code.name,
                                  error.error_message,
                                  args)

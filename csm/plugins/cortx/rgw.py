@@ -18,6 +18,7 @@ from json import loads
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from cortx.utils.log import Log
+from csm.core.blogic import const
 from cortx.utils.rgwadmin import RGWAdminClient
 
 
@@ -30,11 +31,10 @@ class RGWPlugin:
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port)
-        self._admin_uid = config.auth_user
-        Log.info(f"RGW admin uid: {self._admin_uid}")
+        Log.info(f"RGW admin uid: {const.ADMIN_UID}")
         self._api_operations = {
             'CREATE_USER': {
-                'ENDPOINT': f"/{self._admin_uid}/user",
+                'ENDPOINT': f"/{const.ADMIN_UID}/user",
                 'METHOD': "PUT",
                 'REQUEST_BODY_SCHEMA': {
                     'uid': 'uid',
@@ -69,7 +69,7 @@ class RGWPlugin:
         for key, value in request_body_schema.items():
             if kwargs.get(key, None) is not None:
                 request_body[value] = kwargs.get(key, None)
-        Log.info(f"RGW Plugin - request body: {request_body}")
+        Log.debug(f"RGW Plugin - request body: {request_body}")
         return request_body
 
     @Log.trace_method(Log.DEBUG)

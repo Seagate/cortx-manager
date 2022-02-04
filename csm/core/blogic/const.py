@@ -928,6 +928,7 @@ DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 
 # RGW AdminOps
 CREATE_USER_OPERATION = 'CREATE_USER'
+ADMIN_UID = 'admin'
 
 # RGW AdminOps- create-user
 UID = 'uid'

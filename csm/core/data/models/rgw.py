@@ -34,7 +34,7 @@ class RgwErrors(Enum):
     NoSuchKey = "No such access key."
     # Create user error responses
     UserAlreadyExists = "Attempt to create existing user."
-    InvalidAccessKey = "Invalid access key specified."
+    InvalidAccessKeyId = "Invalid access key specified."
     InvalidKeyType = "Invalid key type specified."
     InvalidSecretKey = "Invalid secret key specified."
     KeyExists = "Provided access key exists and belongs to another user."

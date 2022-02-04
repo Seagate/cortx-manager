@@ -19,8 +19,9 @@ from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
-from csm.core.controllers.view import CsmView, CsmAuth
+from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
+from csm.core.controllers.rgw.s3.base import S3BaseView
 
 class UserCreateSchema(Schema):
     """S3 IAM User create schema validation class."""
@@ -46,7 +47,7 @@ class UserCreateSchema(Schema):
                 raise ValidationError(f"{key}: Can not be empty")
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
-class S3IAMUserListView(CsmView):
+class S3IAMUserListView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
 
@@ -75,5 +76,6 @@ class S3IAMUserListView(CsmView):
             raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._service.create_user(**user_body)
-        return response
+        with self._guard_service():
+            response = await self._service.create_user(**user_body)
+            return CsmResponse(response)
