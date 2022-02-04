@@ -197,7 +197,7 @@ class S3AuthPolicy(AuthPolicy):
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
         cfg = S3ConnectionConfig()
-        # Following keys deprecated
+        # Following keys are deprecated
         cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_HOST)
         cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PORT)
         cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
