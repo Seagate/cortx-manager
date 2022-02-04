@@ -102,6 +102,8 @@ class Prepare(Setup):
 
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY,
                     self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
+        Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
+                    self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
 
     def _set_cluster_id(self):
         Log.info("Setting up cluster id")

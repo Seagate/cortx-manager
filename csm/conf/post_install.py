@@ -75,7 +75,6 @@ class PostInstall(Setup):
         self._prepare_and_validate_confstore_keys()
         self.set_ssl_certificate()
         self.set_logpath()
-        self.set_env_type()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 

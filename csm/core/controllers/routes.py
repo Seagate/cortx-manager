@@ -26,10 +26,10 @@ from .hotfix_update import CsmHotfixUploadView
 from .firmware_update import (FirmwarePackageUploadView, FirmwareUpdateView,
                               FirmwarePackageAvailibility)
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-from csm.core.controllers.s3.access_keys import S3AccessKeysListView, S3AccessKeysView  # noqa: F401
-from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
-from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
-from csm.core.controllers.s3.server_info import S3ServerInfoView
+#from csm.core.controllers.s3.access_keys import S3AccessKeysListView, S3AccessKeysView  # noqa: F401
+#from csm.core.controllers.s3.iam_users import IamUserView,  IamUserListView
+#from csm.core.controllers.s3.buckets import S3BucketListView, S3BucketView, S3BucketPolicyView
+#from csm.core.controllers.s3.server_info import S3ServerInfoView
 from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
                                            SecurityUploadView, SecurityDetailsView)
 from csm.core.controllers.maintenance import MaintenanceView

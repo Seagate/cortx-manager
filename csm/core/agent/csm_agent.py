@@ -166,7 +166,6 @@ class CsmAgent:
         CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
         CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
         
-
         # audit log download api
         audit_mngr = AuditLogManager(db)
         CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
