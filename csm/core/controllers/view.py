@@ -36,7 +36,7 @@ class CsmAuth:
     # ADD all hybrid api's here with required keys, use hybrid decorator
     # TODO: make it dynamic by adding required key as param to hybrid decorator.
     HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH,
-                    "GET:/api/v2/cluster/status": const.CAPACITY_MANAGMENT_AUTH}}
+                    "GET:/api/v2/cluster/status": const.CAPACITY_MANAGMENT_AUTH}
 
     @classmethod
     def public(cls, handler):
