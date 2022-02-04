@@ -923,3 +923,7 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+# Degraded byte count
+CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
+CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
+CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api' 
