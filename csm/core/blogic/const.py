@@ -929,6 +929,7 @@ DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 # RGW AdminOps
 CREATE_USER_OPERATION = 'CREATE_USER'
 ADMIN_UID = 'admin'
+RGW_CLIENT_ERROR_MSG = 'Can not process the request'
 
 # RGW AdminOps- create-user
 UID = 'uid'

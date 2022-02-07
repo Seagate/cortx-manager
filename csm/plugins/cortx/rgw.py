@@ -17,9 +17,11 @@ from typing import Any
 from json import loads
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
+from csm.common.errors import CsmInternalError
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.rgwadmin import RGWAdminClient
+from cortx.utils.rgwadmin import RGWAdminClientException
 
 
 class RGWPlugin:
@@ -74,11 +76,15 @@ class RGWPlugin:
 
     @Log.trace_method(Log.DEBUG)
     async def _process(self, api_operation, request_body) -> Any:
-        (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
-        response_body = loads(body)
-        if code != api_operation['SUCCESS_CODE']:
-            return self._create_error(code, response_body)
-        return response_body
+        try:
+            (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
+            response_body = loads(body)
+            if code != api_operation['SUCCESS_CODE']:
+                return self._create_error(code, response_body)
+            return response_body
+        except RGWAdminClientException as e:
+            Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {e}')
+            raise CsmInternalError(const.RGW_CLIENT_ERROR_MSG)
 
     def _create_error(self, status: int, body: dict) -> Any:
         """
