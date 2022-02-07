@@ -26,18 +26,18 @@ from csm.core.controllers.rgw.s3.base import S3BaseView
 class UserCreateSchema(Schema):
     """S3 IAM User create schema validation class."""
 
-    uid = fields.Str(data_key=const.UID, required=True)
-    display_name = fields.Str(data_key=const.DISPLAY_NAME, required=True)
-    email = fields.Email(data_key=const.EMAIL, missing=None)
-    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
+    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, required=True)
+    email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
                     validate=validate.OneOf(['s3']))
-    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
-    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
-    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
-    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
-    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
-    tenant = fields.Str(data_key=const.TENANT, missing=None)
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
+    tenant = fields.Str(data_key=const.RGW_JSON_TENANT, missing=None)
 
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):

@@ -37,7 +37,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **user_body: User body kwargs
         """
-        uid = user_body.get(const.UID)
+        uid = user_body.get(const.RGW_JSON_UID)
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
         plugin_response = await self._s3_iam_plugin.execute(const.CREATE_USER_OPERATION, **user_body)
         if isinstance(plugin_response, RgwError):
