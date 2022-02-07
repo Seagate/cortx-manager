@@ -28,18 +28,38 @@ class CsmRgwConfigurationFactory:
         """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
         # ToDo: Read host port values from csm configuration
-        rgw_connection_config.host = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>endpoints[0]', 'ssc-vm-g2-rhev4-2931.colo.seagate.com')
-        rgw_connection_config.port = 8000
+        rgw_endpoint = Conf.get(
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>endpoints[0]', 'http://ssc-vm-g2-rhev4-2931.colo.seagate.com:8000')
+        protocol, host, port = CsmRgwConfigurationFactory._parse_endpoints(rgw_endpoint)
+        rgw_connection_config.host = host
+        rgw_connection_config.port = int(port)
         # ToDo: Replace the keys with consts
         # ToDo: Remove default values once keys are available in conf store
         rgw_connection_config.auth_user = Conf.get(
             const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_user', 'admin')
         rgw_connection_config.auth_user_access_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', 'B1CST5WI1L4M3MZE2PXR')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_access_key', '2MD238LPYANND2TWGXOO')
         rgw_connection_config.auth_user_secret_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', '20ZVy47eBlkkHDiJnEcWOCfeZmJDGhHj3DGlODOn')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>admin_secret_key', 'OmDxiWKLpOwz4SneVYrtIG8qfDW1Q8BvsfXY9HKy')
         return rgw_connection_config
+
+    @staticmethod
+    def _parse_endpoints(url):
+        """
+        Parse RGW endpoint.
+
+        :returns protocol: RGW connection protocol
+        :returns host: RGW connection host
+        :returns port: RGW connection port
+
+        """
+        if "://"in url:
+            protocol, endpoint = url.split("://")
+        else:
+            protocol = ''
+            endpoint = url
+        host, port = endpoint.split(":")
+        return protocol, host, port
 
 class S3ServiceError(Exception):
     """S3 service error class."""

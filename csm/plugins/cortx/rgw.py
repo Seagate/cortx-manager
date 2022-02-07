@@ -82,8 +82,8 @@ class RGWPlugin:
             if code != api_operation['SUCCESS_CODE']:
                 return self._create_error(code, response_body)
             return response_body
-        except RGWAdminClientException as e:
-            Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {e}')
+        except RGWAdminClientException as rgwe:
+            Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {rgwe}')
             raise CsmInternalError(const.RGW_CLIENT_ERROR_MSG)
 
     def _create_error(self, status: int, body: dict) -> Any:
