@@ -18,6 +18,7 @@ from json import loads
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from csm.common.errors import CsmInternalError
+from csm.common.payload import Json
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.rgwadmin import RGWAdminClient
@@ -33,27 +34,7 @@ class RGWPlugin:
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port)
-        Log.info(f"RGW admin uid: {const.ADMIN_UID}")
-        self._api_operations = {
-            'CREATE_USER': {
-                'ENDPOINT': f"/{const.ADMIN_UID}/user",
-                'METHOD': "PUT",
-                'REQUEST_BODY_SCHEMA': {
-                    'uid': 'uid',
-                    'display_name': 'display-name',
-                    'email': 'email',
-                    'key_type': 'key-type',
-                    'access_key': 'access-key',
-                    'secret_key': 'secret-key',
-                    'user_caps': 'user-caps',
-                    'generate_key': 'generate-key',
-                    'max_buckets': 'max-buckets',
-                    'suspended': 'suspended',
-                    'tenant': 'tenant'
-                },
-                'SUCCESS_CODE': 200
-            }
-        }
+        self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG)
     async def execute(self, operation, **kwargs) -> Any:
