@@ -824,7 +824,6 @@ DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 
 # cluster.conf keys
 ENV_TYPE = "env_type"
-ENV_TYPE_KEY = "cortx>common>setup_type"
 CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
 KAFKA_ENDPOINTS = 'cortx>external>kafka>endpoints'
 CONSUL_ENDPOINTS = 'consul_endpoints'

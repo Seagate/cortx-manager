@@ -34,7 +34,7 @@ class CsmS3ConfigurationFactory:
         """
         Creates a configuration for S3 IAM connection
         """
-        # Following Keys are deprecated 
+        # Following Keys are deprecated
         iam_connection_config = S3ConnectionConfig()
         iam_connection_config.host = Conf.get(
             const.CSM_GLOBAL_INDEX, const.IAM_HOST)

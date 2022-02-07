@@ -156,7 +156,7 @@ class CsmAgent:
             provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
-        
+   
         # TODO: Story has been taken for unsupported services
         #  The following commented lines will be removed by above story
         # S3 Plugin creation
@@ -199,7 +199,7 @@ class CsmAgent:
         #     CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)    #NOT USING
         # except Exception as e:
         #     CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
-        #     Log.warn(f"USL configuration not loaded: {e}")    
+        #     Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
@@ -298,7 +298,7 @@ class CsmAgent:
      
         #CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
-        #Log.info("Started stopping csm agent")        
+        #Log.info("Started stopping csm agent")
         #CsmAgent.alert_monitor.stop()
         #Log.info("Finished stopping alert monitor service")
         Log.info("Stopping Message Bus client")
