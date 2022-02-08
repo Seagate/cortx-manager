@@ -546,25 +546,16 @@ class Setup:
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                              "Failure")
-            Setup._update_systemd_conf("#< RESTART_OPTION >",
-                                      "Restart=on-failure")
+            # Related keys deprecated
+            # Setup._update_systemd_conf("#< RESTART_OPTION >",
+            #                          "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
-
-    @staticmethod
-    def is_k8s_env() -> bool:
-        """
-        Check if systemd should be used for the current set up.
-
-        :returns: True if systemd should be used.
-        """
-        env_type = Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE_KEY, None)
-        return env_type == const.K8S
-
     @staticmethod
     def _update_systemd_conf(key, value):
         """
         Update CSM Files Depending on Job Type of Setup.
         """
+        # TODO: Need to clean up this code removed method is_k8s_env:
         if Setup.is_k8s_env:
             Log.warn('SystemD is not used in this environment and will not be updated')
             return

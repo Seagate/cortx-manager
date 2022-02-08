@@ -15,8 +15,8 @@
 
 from .routes import CsmRoutes
 from .users import CsmUsersListView, CsmUsersView
-from .s3.iam_users import IamUserListView, IamUserView
-from .s3.accounts import S3AccountsListView, S3AccountsView
+# from .s3.iam_users import IamUserListView, IamUserView
+# from .s3.accounts import S3AccountsListView, S3AccountsView
 from .alerts.alerts import AlertsView, AlertsListView
 from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
 from .health import ResourcesHealthView
