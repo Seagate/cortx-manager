@@ -559,6 +559,7 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -607,6 +608,7 @@ CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
+RGW_PLUGIN = "rgw"
 
 # REST METHODS
 POST = "POST"
@@ -923,3 +925,21 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+
+# RGW AdminOps
+RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
+CREATE_USER_OPERATION = 'CREATE_USER'
+RGW_CLIENT_ERROR_MSG = 'Can not process the request'
+
+# RGW AdminOps- create-user
+RGW_JSON_UID = 'uid'
+RGW_JSON_DISPLAY_NAME = 'display-name'
+RGW_JSON_EMAIL = 'email'
+RGW_JSON_KEY_TYPE = 'key-type'
+RGW_JSON_ACCESS_KEY = 'access-key'
+RGW_JSON_SECRET_KEY = 'secret-key'
+RGW_JSON_USER_CAPS = 'user-caps'
+RGW_JSON_GENERATE_KEY = 'generate-key'
+RGW_JSON_MAX_BUCKETS = 'max-buckets'
+RGW_JSON_SUSPENDED = 'suspended'
+RGW_JSON_TENANT = 'tenant'
