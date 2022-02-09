@@ -43,3 +43,31 @@ class S3IAMUserService(S3BaseService):
         if isinstance(plugin_response, RgwError):
             self._handle_error(plugin_response)
         return plugin_response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_user(self, **request_body):
+        """
+        Method to get existing S3 IAM user.
+
+        :param **request_body: Request body kwargs
+        """
+        uid = request_body.get(const.RGW_JSON_UID)
+        Log.debug(f"Fetching S3 IAM user by uid = {uid}")
+        plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_OPERATION, **request_body)
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response)
+        return plugin_response
+
+    @Log.trace_method(Log.DEBUG)
+    async def delete_user(self, **request_body):
+        """
+        Method to delete existing S3 IAM user.
+
+        :param **request_body: Request body kwargs
+        """
+        uid = request_body.get(const.RGW_JSON_UID)
+        Log.debug(f"Deleting S3 IAM user by uid = {uid}")
+        plugin_response = await self._s3_iam_plugin.execute(const.DELETE_USER_OPERATION, **request_body)
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response)
+        return plugin_response

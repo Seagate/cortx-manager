@@ -23,7 +23,17 @@ from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.core.controllers.rgw.s3.base import S3BaseView
 
-class UserCreateSchema(Schema):
+class S3IAMusersBaseSchema(Schema):
+    """Base Class for S3 IAM User Schema Validation"""
+
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """This method invalidates the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"{key}: Can not be empty")
+
+class UserCreateSchema(S3IAMusersBaseSchema):
     """S3 IAM User create schema validation class."""
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
@@ -39,12 +49,16 @@ class UserCreateSchema(Schema):
     suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
     tenant = fields.Str(data_key=const.RGW_JSON_TENANT, missing=None)
 
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """This method invalidates the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"{key}: Can not be empty")
+class UserGetSchema(S3IAMusersBaseSchema):
+    """S3 IAM User get schema validation class."""
+
+    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
+
+class UserDeleteSchema(S3IAMusersBaseSchema):
+    """S3 IAM User delete schema validation class."""
+
+    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
+    purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
@@ -78,4 +92,46 @@ class S3IAMUserListView(S3BaseView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
             response = await self._service.create_user(**user_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        """
+        GET REST implementation for fetching existing s3 iam user.
+        """
+        Log.debug(f"Handling get s3 iam user GET request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = UserGetSchema()
+            request_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            Log.debug(f"Handling get s3 iam user GET request"
+                  f" request body: {request_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.get_user(**request_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.DELETE}})
+    @Log.trace_method(Log.DEBUG)
+    async def delete(self):
+        """
+        DELETE REST implementation for deleting existing s3 iam user.
+        """
+        Log.debug(f"Handling delete s3 iam user DELETE request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = UserDeleteSchema()
+            request_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            Log.debug(f"Handling create s3 iam user DELETE request"
+                  f" request body: {request_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.delete_user(**request_body)
             return CsmResponse(response)
