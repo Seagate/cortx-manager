@@ -69,3 +69,14 @@ class S3IAMUserService(S3BaseService):
         uid = request_body.get(const.RGW_JSON_UID)
         Log.debug(f"Deleting S3 IAM user by uid = {uid}")
         return await self.execute_request(const.DELETE_USER_OPERATION, **request_body)
+
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
+    async def add_access_key(self, **add_access_key_body):
+        """
+        This method will create a new S3 IAM user.
+
+        :param **add_access_key_body: User body kwargs
+        """
+        uid = add_access_key_body.get(const.RGW_JSON_UID)
+        Log.debug(f"Creating S3 IAM user by uid = {uid}")
+        return await self.execute_request(const.ADD_ACCESS_KEY_OPERATION, **request_body)

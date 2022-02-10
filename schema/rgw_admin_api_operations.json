@@ -33,5 +33,18 @@
             "purge_data":"purge-data"
         },
         "SUCCESS_CODE": 200
+    },
+    "ADD_ACCESS_KEY": {
+        "ENDPOINT": "/admin/user?key",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "subuser": "subuser",
+            "key_type": "key-type",
+            "access_key": "access-key",
+            "secret_key": "secret-key",
+            "generate_key": "generate-key"
+        },
+        "SUCCESS_CODE": 200
     }
 }

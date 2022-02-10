@@ -54,6 +54,25 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
+class AddAccessKeySchema(Schema):
+    """S3 Add Access Key schema validation class."""
+
+    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
+    subuser = fields.Str(data_key=const.RGW_JSON_SUBUSER, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """This method invalidates the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"{key}: Can not be empty")
+
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
@@ -138,4 +157,36 @@ class S3IAMUserView(S3BaseView):
                 f" path params/request body: {request_body}")
         with self._guard_service():
             response = await self._service.delete_user(**request_body)
+            return CsmResponse(response)
+
+@CsmView._app_routes.view("/api/v2/s3/iam/users/keys")
+class AccessKeyListView(S3BaseView):
+    """
+    S3 IAM User List View for REST API implementation.
+
+    PUT: Add/Create access key
+    """
+    def __init__(self, request):
+        """S3 IAM User List View Init."""
+        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+    
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def put(self):
+        """
+        PUT REST implementation for creating a new s3 iam user.
+        """
+        Log.debug(f"Handling Add access key PUT request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = AddAccessKeySchema()
+            add_access_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            Log.debug(f"Handling create s3 iam user PUT request"
+                  f" request body: {add_access_key_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.add_access_key(**add_access_key_body)
             return CsmResponse(response)
