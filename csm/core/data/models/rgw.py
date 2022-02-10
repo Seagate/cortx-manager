@@ -26,7 +26,7 @@ class RgwConnectionConfig:
 class RgwErrors(Enum):
     """Enum with error responses."""
 
-     # Standard error responses
+    # Standard error responses
     AccessDenied = "Access denied."
     InternalError = "Internal server error."
     NoSuchUser = "User does not exist."
