@@ -47,7 +47,7 @@ class UserCreateSchema(Schema):
                 raise ValidationError(f"{key}: Can not be empty")
 
 class CreateKeySchema(Schema):
-    """S3 Add Access Key."""
+    """S3 Create/Add Access Key schema validation class."""
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
@@ -65,7 +65,7 @@ class CreateKeySchema(Schema):
                 raise ValidationError(f"{key}: Can not be empty")
 
 class RemoveKeySchema(Schema):
-    """S3 Remove Key ."""
+    """S3 Remove Key schema validation class."""
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
     uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
@@ -115,13 +115,14 @@ class S3IAMUserListView(S3BaseView):
 @CsmView._app_routes.view("/api/v2/s3/iam/users/keys")
 class S3IAMUserKeyView(S3BaseView):
     """
-    S3 IAM User List View for REST API implementation.
+    S3 IAM User Key View for REST API implementation.
 
     PUT: Add/Create access key
+    DELETE: Remove access key
     """
 
     def __init__(self, request):
-        """S3 IAM User List View Init."""
+        """S3 IAM User Key View Init."""
         super().__init__(request)
         self._service = self.request.app[const.RGW_S3_IAM_USERS_SERVICE]
 
@@ -129,14 +130,14 @@ class S3IAMUserKeyView(S3BaseView):
     @Log.trace_method(Log.DEBUG)
     async def put(self):
         """
-        PUT REST implementation for creating a new s3 iam user.
+        PUT REST implementation to create/add access key for iam user.
         """
         Log.debug(f"Handling Add access key PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = CreateKeySchema()
             create_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-            Log.debug(f"Handling create s3 iam user PUT request"
+            Log.debug(f"Handling Add access key PUT request"
                   f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Invalid Request Body")
@@ -157,12 +158,12 @@ class S3IAMUserKeyView(S3BaseView):
         try:
             schema = RemoveKeySchema()
             remove_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-            Log.debug(f"Handling Remove s3 iam user DELETE request"
+            Log.debug(f"Handling Remove access key DELETE request"
                   f" request body: {remove_key_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
-            response = await self._service.create_key(**remove_key_body)
+            response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
