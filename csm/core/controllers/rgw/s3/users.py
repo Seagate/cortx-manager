@@ -58,7 +58,6 @@ class CreateKeySchema(Schema):
     """S3 Add Access Key schema validation class."""
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-    subuser = fields.Str(data_key=const.RGW_JSON_SUBUSER, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
                     validate=validate.OneOf(['s3']))
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
@@ -77,7 +76,6 @@ class RemoveKeySchema(Schema):
     """S3 Remove Key ."""
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
     uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
-    subuser = fields.Str(data_key=const.RGW_JSON_SUBUSER, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
                     validate=validate.OneOf(['s3']))
     
@@ -175,7 +173,7 @@ class S3IAMUserView(S3BaseView):
             return CsmResponse(response)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users/keys")
-class AccessKeyListView(S3BaseView):
+class S3IAMUserKeyView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
 
