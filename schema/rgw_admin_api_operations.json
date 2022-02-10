@@ -17,7 +17,6 @@
         },
         "SUCCESS_CODE": 200
     },
-
     "GET_USER": {
         "ENDPOINT": "/admin/user",
         "METHOD": "GET",
@@ -26,7 +25,6 @@
         },
         "SUCCESS_CODE": 200
     },
-
     "DELETE_USER": {
         "ENDPOINT": "/admin/user",
         "METHOD": "DELETE",
