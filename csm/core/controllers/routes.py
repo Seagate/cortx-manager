@@ -39,7 +39,7 @@ from csm.core.controllers.cluster_management import ClusterOperationsView, Clust
 from csm.core.controllers.appliance_info import ApplianceInfoView
 from csm.core.controllers.unsupported_features import UnsupportedFeaturesView
 from csm.core.controllers.system_status import SystemStatusView, SystemStatusAllView
-from csm.core.controllers.rgw.s3.users import S3IAMUserListView
+from csm.core.controllers.rgw.s3.users import S3IAMUserListView, AccessKeyListView
 
 
 class CsmRoutes():
