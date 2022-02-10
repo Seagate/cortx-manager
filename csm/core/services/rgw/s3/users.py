@@ -73,13 +73,13 @@ class S3IAMUserService(S3BaseService):
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def create_key(self, **create_key_body):
         """
-        This method will add access key to S3 IAM user.
+        This method will add/create access key to S3 IAM user.
 
         :param **create_key_body: User body kwargs
         """
         uid = create_key_body.get(const.RGW_JSON_UID)
-        Log.debug(f"Creating S3 IAM user by uid = {uid}")
-        return await self.execute_request(const.CREATE_KEY_OPERATION, **request_body)
+        Log.debug(f"Creating Key for S3 IAM user by uid = {uid}")
+        return await self.execute_request(const.CREATE_KEY_OPERATION, **create_key_body)
 
         
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
@@ -90,6 +90,5 @@ class S3IAMUserService(S3BaseService):
         :param **remove_key_body: User body kwargs
         """
         uid = remove_key_body.get(const.RGW_JSON_UID)
-        Log.debug(f"Creating S3 IAM user by uid = {uid}")
-        return await self.execute_request(const.REMOVE_KEY_OPERATION, **request_body)
-
+        Log.debug(f"Removing key for S3 IAM user by uid = {uid}")
+        return await self.execute_request(const.REMOVE_KEY_OPERATION, **remove_key_body)
