@@ -17,7 +17,7 @@
         },
         "SUCCESS_CODE": 200
     },
-    "ADD_ACCESS_KEY": {
+    "CREATE_KEY": {
         "ENDPOINT": "/admin/user?key",
         "METHOD": "PUT",
         "REQUEST_BODY_SCHEMA": {
@@ -27,6 +27,17 @@
             "access_key": "access-key",
             "secret_key": "secret-key",
             "generate_key": "generate-key"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "REMOVE_KEY": {
+        "ENDPOINT": "/admin/user?key",
+        "METHOD": "DELETE",
+        "REQUEST_BODY_SCHEMA": {
+            "access_key": "access-key",
+            "uid": "uid",
+            "subuser": "subuser",
+            "key_type": "key-type"
         },
         "SUCCESS_CODE": 200
     }

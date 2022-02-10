@@ -930,7 +930,8 @@ DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
 CREATE_USER_OPERATION = 'CREATE_USER'
 RGW_CLIENT_ERROR_MSG = 'Can not process the request'
-ADD_ACCESS_KEY_OPERATION = 'ADD_ACCESS_KEY'
+CREATE_KEY_OPERATION = 'CREATE_KEY'
+REMOVE_KEY_OPERATION = 'REMOVE_KEY'
 
 # RGW AdminOps- create-user
 RGW_JSON_UID = 'uid'

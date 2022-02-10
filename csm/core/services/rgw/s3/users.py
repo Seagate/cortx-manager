@@ -45,15 +45,29 @@ class S3IAMUserService(S3BaseService):
         return plugin_response
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
-    async def add_access_key(self, **add_access_key_body):
+    async def create_key(self, **create_key_body):
         """
-        This method will create a new S3 IAM user.
+        This method will add access key to S3 IAM user.
 
-        :param **add_access_key_body: User body kwargs
+        :param **create_key_body: User body kwargs
         """
-        uid = add_access_key_body.get(const.RGW_JSON_UID)
+        uid = create_key_body.get(const.RGW_JSON_UID)
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
-        plugin_response = await self._s3_iam_plugin.execute(const.ADD_ACCESS_KEY_OPERATION, **add_access_key_body)
+        plugin_response = await self._s3_iam_plugin.execute(const.CREATE_KEY_OPERATION, **create_key_body)
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response)
+        return plugin_response
+        
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
+    async def remove_key(self, **remove_key_body):
+        """
+        This method will remove access key to S3 IAM user.
+
+        :param **remove_key_body: User body kwargs
+        """
+        uid = remove_key_body.get(const.RGW_JSON_UID)
+        Log.debug(f"Creating S3 IAM user by uid = {uid}")
+        plugin_response = await self._s3_iam_plugin.execute(const.REMOVE_KEY_OPERATION, **remove_key_body)
         if isinstance(plugin_response, RgwError):
             self._handle_error(plugin_response)
         return plugin_response
