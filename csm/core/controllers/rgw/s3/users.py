@@ -54,7 +54,7 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
-class AddAccessKeySchema(Schema):
+class CreateKeySchema(Schema):
     """S3 Add Access Key schema validation class."""
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
@@ -65,6 +65,21 @@ class AddAccessKeySchema(Schema):
     secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
     user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
     generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """This method invalidates the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"{key}: Can not be empty")
+
+class RemoveKeySchema(Schema):
+    """S3 Remove Key ."""
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
+    uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
+    subuser = fields.Str(data_key=const.RGW_JSON_SUBUSER, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
     
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):
@@ -179,14 +194,35 @@ class AccessKeyListView(S3BaseView):
         Log.debug(f"Handling Add access key PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
-            schema = AddAccessKeySchema()
-            add_access_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            schema = CreateKeySchema()
+            create_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
             Log.debug(f"Handling create s3 iam user PUT request"
-                  f" request body: {add_access_key_body}")
+                  f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
-            response = await self._service.add_access_key(**add_access_key_body)
+            response = await self._service.create_key(**create_key_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.DELETE}})
+    @Log.trace_method(Log.DEBUG)
+    async def delete(self):
+        """
+        DELETE REST implementation to remove access key of user.
+        """
+        Log.debug(f"Handling Remove access key DELETE request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = RemoveKeySchema()
+            remove_key_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            Log.debug(f"Handling Remove s3 iam user DELETE request"
+                  f" request body: {remove_key_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
