@@ -56,7 +56,7 @@ class CreateKeySchema(Schema):
     secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
     user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
     generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
-    
+
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):
         """This method invalidates the empty strings."""
@@ -66,6 +66,7 @@ class CreateKeySchema(Schema):
 
 class RemoveKeySchema(Schema):
     """S3 Remove Key schema validation class."""
+    
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
     uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
