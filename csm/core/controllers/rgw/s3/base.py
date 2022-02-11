@@ -22,9 +22,10 @@ S3_SERVICE_ERROR = 0x3000
 class S3BaseView(CsmView):
     """Simple base class for any S3 view which works with one service."""
 
-    def __init__(self, request):
+    def __init__(self, request, service_name):
         """S3 Base View init."""
         super().__init__(request)
+        self._service = self.request.app[service_name]
 
     @contextmanager
     def _guard_service(self):

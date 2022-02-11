@@ -65,21 +65,20 @@ class S3IAMUserListView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
 
-    PUT: Create a new user
+    POST: Create a new user
     """
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.RGW_S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.DEBUG)
-    async def put(self):
+    async def post(self):
         """
-        PUT REST implementation for creating a new s3 iam user.
+        POST REST implementation for creating a new s3 iam user.
         """
-        Log.debug(f"Handling create s3 iam user PUT request"
+        Log.debug(f"Handling create s3 iam user POST request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = UserCreateSchema()
@@ -94,6 +93,19 @@ class S3IAMUserListView(S3BaseView):
             response = await self._service.create_user(**user_body)
             return CsmResponse(response)
 
+@CsmView._app_routes.view("/api/v2/s3/iam/users/{uid}")
+class S3IAMUserView(S3BaseView):
+    """
+    S3 IAM User View for REST API implementation.
+
+    GET: Get a existing IAM user
+    DELETE: Delete a existing IAM user
+    """
+
+    def __init__(self, request):
+        """S3 IAM User List View Init."""
+        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
@@ -102,9 +114,10 @@ class S3IAMUserListView(S3BaseView):
         """
         Log.debug(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.RGW_JSON_UID]
         try:
             schema = UserGetSchema()
-            request_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            request_body = schema.load({const.RGW_JSON_UID: uid}, unknown='EXCLUDE')
             Log.debug(f"Handling get s3 iam user GET request"
                   f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
@@ -123,9 +136,12 @@ class S3IAMUserListView(S3BaseView):
         """
         Log.debug(f"Handling delete s3 iam user DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.RGW_JSON_UID]
+        path_params_dict = {const.RGW_JSON_UID: uid}
+        request_body_params_dict = await self.request.json()
         try:
             schema = UserDeleteSchema()
-            request_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            request_body = schema.load({**path_params_dict, **request_body_params_dict}, unknown='EXCLUDE')
             Log.debug(f"Handling create s3 iam user DELETE request"
                   f" request body: {request_body}")
         except json.decoder.JSONDecodeError:

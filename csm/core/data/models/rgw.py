@@ -32,6 +32,7 @@ class RgwErrors(Enum):
     NoSuchUser = "User does not exist."
     NoSuchBucket = "Bucket does not exist."
     NoSuchKey = "No such access key."
+    SignatureDoesNotMatch = "Signature Does Not Match"
     # Create user error responses
     UserAlreadyExists = "Attempt to create existing user."
     InvalidAccessKeyId = "Invalid access key specified."
