@@ -49,15 +49,9 @@ class UserCreateSchema(S3IAMusersBaseSchema):
     suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
     tenant = fields.Str(data_key=const.RGW_JSON_TENANT, missing=None)
 
-class UserGetSchema(S3IAMusersBaseSchema):
-    """S3 IAM User get schema validation class."""
-
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-
 class UserDeleteSchema(S3IAMusersBaseSchema):
     """S3 IAM User delete schema validation class."""
 
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
@@ -115,17 +109,11 @@ class S3IAMUserView(S3BaseView):
         Log.debug(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
-        try:
-            schema = UserGetSchema()
-            request_body = schema.load({const.RGW_JSON_UID: uid}, unknown='EXCLUDE')
-            Log.debug(f"Handling get s3 iam user GET request"
-                  f" request body: {request_body}")
-        except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        path_params_dict = {const.RGW_JSON_UID: uid}
+        Log.debug(f"Handling s3 iam user GET request"
+                f" with path param: {uid}")
         with self._guard_service():
-            response = await self._service.get_user(**request_body)
+            response = await self._service.get_user(**path_params_dict)
             return CsmResponse(response)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.DELETE}})
@@ -138,16 +126,16 @@ class S3IAMUserView(S3BaseView):
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
-        request_body_params_dict = await self.request.json()
         try:
             schema = UserDeleteSchema()
-            request_body = schema.load({**path_params_dict, **request_body_params_dict}, unknown='EXCLUDE')
-            Log.debug(f"Handling create s3 iam user DELETE request"
-                  f" request body: {request_body}")
+            request_body_params_dict = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            request_body_params_dict = {}
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        request_body = {**path_params_dict, **request_body_params_dict}
+        Log.debug(f"Handling s3 iam user DELETE request"
+                f" path params/request body: {request_body}")
         with self._guard_service():
             response = await self._service.delete_user(**request_body)
             return CsmResponse(response)
