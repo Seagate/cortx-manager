@@ -1,0 +1,20 @@
+{
+    "CREATE_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "display_name": "display-name",
+            "email": "email",
+            "key_type": "key-type",
+            "access_key": "access-key",
+            "secret_key": "secret-key",
+            "user_caps": "user-caps",
+            "generate_key": "generate-key",
+            "max_buckets": "max-buckets",
+            "suspended": "suspended",
+            "tenant": "tenant"
+        },
+        "SUCCESS_CODE": 200
+    }
+}

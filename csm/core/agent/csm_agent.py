@@ -160,6 +160,7 @@ class CsmAgent:
         # TODO: Story has been taken for unsupported services
         #  The following commented lines will be removed by above story
         # S3 Plugin creation
+        
         #s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
         # CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3)
         # CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3)
@@ -170,6 +171,11 @@ class CsmAgent:
         # # audit log download api
         # audit_mngr = AuditLogManager(db)
         # CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
+
+
+        # RGW S3 IAM user service
+        CsmAgent._configure_rgw_s3_iam_users_service()
+        
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
@@ -212,6 +218,12 @@ class CsmAgent:
         cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(CortxHAFramework())
         cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj, message_bus_obj)
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
+
+    @staticmethod
+    def _configure_rgw_s3_iam_users_service():
+        s3_iam_plugin = import_plugin_module(const.RGW_PLUGIN)
+        s3_iam_plugin_obj = s3_iam_plugin.RGWPlugin()
+        CsmRestApi._app[const.RGW_S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_iam_plugin_obj)
 
     @staticmethod
     def _get_consul_config():
@@ -357,6 +369,7 @@ if __name__ == '__main__':
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
+    from csm.core.services.rgw.s3.users import S3IAMUserService
 
     try:
         # try:
