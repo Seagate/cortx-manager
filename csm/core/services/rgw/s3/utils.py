@@ -29,7 +29,7 @@ class CsmRgwConfigurationFactory:
         rgw_connection_config = RgwConnectionConfig()
         # ToDo: Read host port values from csm configuration
         rgw_endpoint = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>iam>endpoints[0]')
+            const.CSM_GLOBAL_INDEX, 'RGW>s3>endpoints[0]')
         protocol, host, port = CsmRgwConfigurationFactory._parse_endpoints(rgw_endpoint)
         rgw_connection_config.host = host
         rgw_connection_config.port = int(port)
