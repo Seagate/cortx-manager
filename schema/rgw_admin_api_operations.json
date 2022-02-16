@@ -16,5 +16,22 @@
             "tenant": "tenant"
         },
         "SUCCESS_CODE": 200
+    },
+    "GET_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "DELETE_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "DELETE",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "purge_data":"purge-data"
+        },
+        "SUCCESS_CODE": 200
     }
 }

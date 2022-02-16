@@ -39,11 +39,7 @@ class RGWPlugin:
     @Log.trace_method(Log.DEBUG)
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
-
-        request_body = None
-        if api_operation['METHOD'] != 'GET':
-            request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
-
+        request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
         return await self._process(api_operation, request_body)
 
     @Log.trace_method(Log.DEBUG)
@@ -59,7 +55,7 @@ class RGWPlugin:
     async def _process(self, api_operation, request_body) -> Any:
         try:
             (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
-            response_body = loads(body)
+            response_body = loads(body) if body else {}
             if code != api_operation['SUCCESS_CODE']:
                 return self._create_error(code, response_body)
             return response_body

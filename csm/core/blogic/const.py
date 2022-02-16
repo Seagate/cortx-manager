@@ -929,17 +929,22 @@ DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 # RGW AdminOps
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
 CREATE_USER_OPERATION = 'CREATE_USER'
+GET_USER_OPERATION = 'GET_USER'
+DELETE_USER_OPERATION = 'DELETE_USER'
 RGW_CLIENT_ERROR_MSG = 'Can not process the request'
 
 # RGW AdminOps- create-user
 RGW_JSON_UID = 'uid'
-RGW_JSON_DISPLAY_NAME = 'display-name'
+RGW_JSON_DISPLAY_NAME = 'display_name'
 RGW_JSON_EMAIL = 'email'
-RGW_JSON_KEY_TYPE = 'key-type'
-RGW_JSON_ACCESS_KEY = 'access-key'
-RGW_JSON_SECRET_KEY = 'secret-key'
-RGW_JSON_USER_CAPS = 'user-caps'
-RGW_JSON_GENERATE_KEY = 'generate-key'
-RGW_JSON_MAX_BUCKETS = 'max-buckets'
+RGW_JSON_KEY_TYPE = 'key_type'
+RGW_JSON_ACCESS_KEY = 'access_key'
+RGW_JSON_SECRET_KEY = 'secret_key'
+RGW_JSON_USER_CAPS = 'user_caps'
+RGW_JSON_GENERATE_KEY = 'generate_key'
+RGW_JSON_MAX_BUCKETS = 'max_buckets'
 RGW_JSON_SUSPENDED = 'suspended'
 RGW_JSON_TENANT = 'tenant'
+
+# RGW AdminOps- remove-user
+RGW_JSON_PURGE_DATA = 'purge_data'
