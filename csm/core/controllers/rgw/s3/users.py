@@ -76,7 +76,7 @@ class RemoveKeySchema(S3IAMusersBaseSchema):
     uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
                     validate=validate.OneOf(['s3']))
-    
+
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
@@ -217,4 +217,3 @@ class S3IAMUserKeyView(S3BaseView):
         with self._guard_service():
             response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
-
