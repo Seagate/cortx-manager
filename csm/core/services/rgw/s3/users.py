@@ -80,7 +80,7 @@ class S3IAMUserService(S3BaseService):
         uid = create_key_body.get(const.RGW_JSON_UID)
         Log.debug(f"Creating Key for S3 IAM user by uid = {uid}")
         return await self.execute_request(const.CREATE_KEY_OPERATION, **create_key_body)
-        
+
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def remove_key(self, **remove_key_body):
         """
