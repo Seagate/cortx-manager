@@ -54,6 +54,29 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
+class CreateKeySchema(S3IAMusersBaseSchema):
+    """
+    S3 Create/Add Access Key schema validation class.
+    """
+
+    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+
+class RemoveKeySchema(S3IAMusersBaseSchema):
+    """
+    S3 Remove Key schema validation class.
+    """
+
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
+    uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
+
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
@@ -138,4 +161,59 @@ class S3IAMUserView(S3BaseView):
                 f" path params/request body: {request_body}")
         with self._guard_service():
             response = await self._service.delete_user(**request_body)
+            return CsmResponse(response)
+
+@CsmView._app_routes.view("/api/v2/s3/iam/keys")
+class S3IAMUserKeyView(S3BaseView):
+    """
+    S3 IAM User Key View for REST API implementation.
+
+    PUT: Add/Create access key
+    DELETE: Remove access key
+    """
+
+    def __init__(self, request):
+        """S3 IAM User Key View Init."""
+        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def put(self):
+        """
+        PUT REST implementation to create/add access key for iam user.
+        """
+        Log.debug(f"Handling Add access key PUT request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = CreateKeySchema()
+            create_key_body = schema.load(await self.request.json())
+            Log.debug(f"Handling Add access key PUT request"
+                  f" request body: {create_key_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.create_key(**create_key_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.DELETE}})
+    @Log.trace_method(Log.DEBUG)
+    async def delete(self):
+        """
+        DELETE REST implementation to remove access key of user.
+        """
+        Log.debug(f"Handling Remove access key DELETE request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = RemoveKeySchema()
+            remove_key_body = schema.load(await self.request.json())
+            Log.debug(f"Handling Remove access key DELETE request"
+                  f" request body: {remove_key_body}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
