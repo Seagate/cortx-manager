@@ -16,6 +16,7 @@
 import sys, os
 import time
 import requests
+#Removed pika
 import pika
 import random
 

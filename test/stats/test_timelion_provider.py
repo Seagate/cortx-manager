@@ -17,6 +17,8 @@ import sys, os
 import time
 import traceback
 import asyncio
+# Package statsd removed from csm
+# Todo: Code clean up will be covered in future sprint
 from statsd import StatsClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))

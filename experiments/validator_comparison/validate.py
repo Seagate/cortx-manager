@@ -33,7 +33,7 @@
  ****************************************************************************
 """
 
-
+# Removed jsonschema package
 import jsonschema
 import json
 import timeit

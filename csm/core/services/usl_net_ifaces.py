@@ -1,7 +1,7 @@
 from ipaddress import ip_address
 from typing import Any, Dict, Optional
+# Removed package netifaces from csm
 from netifaces import AF_LINK, AF_INET, ifaddresses, interfaces
-
 from csm.core.data.models.usl import NetIface
 
 

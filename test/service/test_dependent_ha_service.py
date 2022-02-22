@@ -18,6 +18,8 @@ import time
 import json
 import requests
 import random
+# Package statsd removed from csm
+# Todo: Code clean up will be covered in future sprint
 from statsd import StatsClient
 import provisioner
 import traceback

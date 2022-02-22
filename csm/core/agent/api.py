@@ -50,7 +50,7 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
-from csm.core.services.usl import UslService
+#from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes

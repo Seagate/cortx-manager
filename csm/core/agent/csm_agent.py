@@ -187,15 +187,17 @@ class CsmAgent:
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
         # USL Service
-        try:
-            Log.info("Load USL Configurations")
-            Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
-            usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
-            CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
-            CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)
-        except Exception as e:
-            CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
-            Log.warn(f"USL configuration not loaded: {e}")
+        # Removed python package netifaces from csm.
+        # Following service will be deprecated after code clean up task
+        #try:
+            #Log.info("Load USL Configurations")
+            #Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
+            #usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
+            #CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
+            #CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)
+        #except Exception as e:
+            #CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
+            #Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
@@ -324,7 +326,7 @@ if __name__ == '__main__':
     from csm.core.services.s3.buckets import S3BucketService
     from csm.core.services.s3.access_keys import S3AccessKeysService
     from csm.core.services.s3.server_info import S3ServerInfoService
-    from csm.core.services.usl import UslService
+    #from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
