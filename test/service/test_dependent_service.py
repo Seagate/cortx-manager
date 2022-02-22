@@ -16,7 +16,8 @@
 import sys, os
 import time
 import requests
-#Removed pika
+# Package pika removed from csm
+# Todo: Code clean up will be covered in future sprint
 import pika
 import random
 

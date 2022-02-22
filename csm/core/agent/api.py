@@ -50,6 +50,8 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
+# Package netifaces required by usl is removed from csm.
+# Todo: Code clean up will be covered in future sprint
 #from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth

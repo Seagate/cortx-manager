@@ -326,6 +326,8 @@ if __name__ == '__main__':
     from csm.core.services.s3.buckets import S3BucketService
     from csm.core.services.s3.access_keys import S3AccessKeysService
     from csm.core.services.s3.server_info import S3ServerInfoService
+    # Package netifaces required by usl is removed from csm
+    # Todo: Code clean up will be covered in future sprint
     #from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager

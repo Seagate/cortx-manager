@@ -19,6 +19,7 @@ import json
 import requests
 import random
 # Package statsd removed from csm
+# Following test is not valid.
 # Todo: Code clean up will be covered in future sprint
 from statsd import StatsClient
 import provisioner
