@@ -76,7 +76,7 @@ class S3IAMUserListView(S3BaseView):
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = UserCreateSchema()
-            user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
+            user_body = schema.load(await self.request.json())
             Log.debug(f"Handling create s3 iam user PUT request"
                   f" request body: {user_body}")
         except json.decoder.JSONDecodeError:
@@ -85,7 +85,7 @@ class S3IAMUserListView(S3BaseView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
             response = await self._service.create_user(**user_body)
-            return CsmResponse(response)
+            return CsmResponse(response, const.STATUS_CREATED)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users/{uid}")
 class S3IAMUserView(S3BaseView):
@@ -128,7 +128,7 @@ class S3IAMUserView(S3BaseView):
         path_params_dict = {const.RGW_JSON_UID: uid}
         try:
             schema = UserDeleteSchema()
-            request_body_params_dict = schema.load(await self.request.json(), unknown='EXCLUDE')
+            request_body_params_dict = schema.load(await self.request.json())
         except json.decoder.JSONDecodeError:
             request_body_params_dict = {}
         except ValidationError as val_err:
