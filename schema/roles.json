@@ -49,7 +49,8 @@
             "auditlog": ["list", "read"],
             "replace_node": ["list"],
             "health": ["list"],
-            "security": ["read"]
+            "security": ["read"],
+            "s3_iam_users": ["list"]
         }
     },
     "s3": {
