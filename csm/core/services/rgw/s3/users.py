@@ -91,3 +91,14 @@ class S3IAMUserService(S3BaseService):
         uid = remove_key_body.get(const.RGW_JSON_UID)
         Log.debug(f"Removing key for S3 IAM user by uid = {uid}")
         return await self.execute_request(const.REMOVE_KEY_OPERATION, **remove_key_body)
+
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
+    async def add_user_caps(self, **request_body):
+        """
+        This method will add user caps for a new S3 IAM user.
+
+        :param **request_body: User body kwargs
+        """
+        uid = request_body.get(const.RGW_JSON_UID)
+        Log.debug(f"Add User caps for S3 IAM user by uid = {uid}")
+        return await self.execute_request(const.ADD_USER_CAPS_OPERATION, **request_body)

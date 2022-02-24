@@ -77,6 +77,13 @@ class RemoveKeySchema(S3IAMusersBaseSchema):
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
                     validate=validate.OneOf(['s3']))
 
+class AddUserCapsSchema(S3IAMusersBaseSchema):
+    """
+    S3 Create/Add Access Key schema validation class.
+    """
+
+    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, required=True)
+
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
@@ -216,4 +223,42 @@ class S3IAMUserKeyView(S3BaseView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
             response = await self._service.remove_key(**remove_key_body)
+            return CsmResponse(response)
+
+@CsmView._app_routes.view("/api/v2/s3/iam/caps/{uid}")
+class S3IAMUserCapsView(S3BaseView):
+    """
+    S3 IAM User Add User Caps for REST API implementation.
+
+    PUT: add user caps for S3 IAM user
+    """
+
+    def __init__(self, request):
+        """S3 IAM User List View Init."""
+        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def put(self):
+        """
+        PUT REST implementation to add user caps for iam user.
+        """
+        Log.debug(f"Handling add user caps PUT request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.RGW_JSON_UID]
+        path_params_dict = {const.RGW_JSON_UID: uid}
+        try:                       
+            schema = AddUserCapsSchema()
+            add_user_caps_body = schema.load(await self.request.json())
+            
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+
+        request_body = {**path_params_dict, **add_user_caps_body}
+        Log.debug(f"Handling add user caps PUT request"
+                  f" request body: {request_body}")
+        with self._guard_service():
+            response = await self._service.add_user_caps_body(**request_body)
             return CsmResponse(response)

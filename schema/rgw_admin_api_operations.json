@@ -55,5 +55,14 @@
             "key_type": "key-type"
         },
         "SUCCESS_CODE": 200
+    },
+    "ADD_USER_CAPS": {
+        "ENDPOINT": "/admin/user?caps",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "user_caps": "user-caps"
+        },
+        "SUCCESS_CODE": 200
     }
 }
