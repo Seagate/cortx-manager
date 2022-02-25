@@ -103,13 +103,12 @@ class Configure(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
-                const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
                 const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
-                const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
-                const.S3_AUTH_SECRET: f"{const.S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
+                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
+                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -140,30 +139,32 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
+    def _set_s3_endpoints(self):
+        s3_endpoints = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_DATA_ENDPOINTS_KEY)
+        if s3_endpoints:
+            Log.info(f"Fetching s3 endpoint.{s3_endpoints}")
+            s3_endpoints_count = len(s3_endpoints)
+            for endpoint_count in range(s3_endpoints_count):
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                        f'{const.RGW_S3_ENDPOINTS}[{endpoint_count}]',
+                        eval(f'{s3_endpoints}[{endpoint_count}]'))
+        else:
+            raise CsmSetupError("S3 endpoints not found.")
+
     def set_s3_info(self):
         """
         This Function will set s3  related configurations.
         :return:
         """
         Log.info("Setting S3 configurations in csm config")
-        iam_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_IAM_ENDPOINTS_KEY)
-        iam_protocol, iam_host, iam_port = self._parse_endpoints(iam_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_ENDPOINT, iam_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_HOST, iam_host)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PORT, iam_port)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL, iam_protocol)
-
-        data_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_DATA_ENDPOINTS_KEY)
-        data_protocol, data_host, data_port = self._parse_endpoints(data_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_ENDPOINT, data_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_HOST, data_host)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PORT, data_port)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PROTOCOL, data_protocol)
-
-        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
-        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
+        self._set_s3_endpoints()
+        # Set IAM user credentails
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
+        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY)
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_SECRET_KEY)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER, s3_auth_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY, s3_auth_admin)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
 
     async def _set_unsupported_feature_info(self):
         """

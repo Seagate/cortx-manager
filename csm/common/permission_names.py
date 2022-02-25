@@ -36,6 +36,7 @@ class Resource:
     LYVE_PILOT = 'lyve_pilot'
     HEALTH = 'health'
     CLUSTER_MANAGEMENT = 'cluster_management'
+    S3_IAM_USERS = 's3_iam_users'
 
 
 class Action:
