@@ -862,6 +862,7 @@ METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
 METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
 METRICS_PERF_STATS_RETENTION_SIZE_KEY = 'cortx>csm>metrics>stats>retention_size'
+HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -913,6 +914,10 @@ CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
 CSM_UPDATE_HOTFIX_PATH = 'UPDATE>hotfix_store_path'
 CSM_UPDATE_FIRMWARE_PATH = 'UPDATE>firmware_store_path'
+# Degraded byte count
+CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
+CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
+CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api'
 #keys for database models
 DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'

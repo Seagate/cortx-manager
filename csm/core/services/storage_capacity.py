@@ -14,6 +14,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
+import aiohttp
+from aiohttp.client import ClientSession
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess,AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
@@ -84,3 +87,25 @@ class StorageCapacityService(ApplicationService):
                                                              int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
         formatted_output[const.UNIT] = unit
         return formatted_output
+
+
+    async def request(self, session: ClientSession, method, url):
+        async with session.request(url=url, method=method) as resp:
+            return await resp.json(), resp.status
+
+    async def get_cluster_data(self, data_filter=None):
+        #TODO: Use data_filter for filtering out the data, once integrated in hctl api
+        url = Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT) + \
+            Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_CLUSTER_API)
+        method = const.GET
+        if data_filter:
+            url = url+data_filter
+        Log.info(f"Request {url} for cluster data")
+        async with aiohttp.ClientSession() as session:
+            try:
+                response, status = await self.request(session, method, url)
+            except Exception as e:
+                Log.error(f"Error in obtaining response from {url}: {e}")
+                raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
+        Log.debug(f"Response: {response}, Status:{status} for url :{url}")
+        return response, status

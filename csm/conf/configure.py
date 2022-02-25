@@ -78,6 +78,7 @@ class Configure(Setup):
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
         self.set_csm_endpoint()
         self.set_s3_info()
+        self.set_hax_endpoint()
         self.create_topics()
         try:
             await self._create_cluster_admin(self.force_action)
@@ -164,6 +165,18 @@ class Configure(Setup):
         s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
+
+    def _get_hax_endpoint(self, endpoints):
+        for endpoint in endpoints:
+            protocol, host, port = self._parse_endpoints(endpoint)
+            if protocol == "https" or protocol == "http":
+                return endpoint
+
+    def set_hax_endpoint(self):
+        endpoints = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
+        hax_endpoint = self._get_hax_endpoint(endpoints)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
+                hax_endpoint)
 
     async def _set_unsupported_feature_info(self):
         """
