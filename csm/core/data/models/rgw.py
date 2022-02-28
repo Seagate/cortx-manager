@@ -35,6 +35,8 @@ class RgwErrors(Enum):
     SignatureDoesNotMatch = "Signature Does Not Match."
     UnknownError = "Unknown Error from S3 service."
     InvalidArgument = "Invalid argument provided."
+    RequestTimeout = "Request to S3 service is timed out."
+    S3ServiceUnavailable = "Unable to connect to S3 service."
     # IAM APIs error responses
     UserAlreadyExists = "Attempt to create existing user."
     InvalidAccessKeyId = "Invalid access key specified."

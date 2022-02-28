@@ -935,6 +935,10 @@ MODIFY_USER_OPERATION = 'MODIFY_USER'
 RGW_CLIENT_ERROR_MSG = 'Unable to process the request'
 CREATE_KEY_OPERATION = 'CREATE_KEY'
 REMOVE_KEY_OPERATION = 'REMOVE_KEY'
+STD_ERROR_CODES = {
+    408:{"Code":"RequestTimeout"},
+    503:{"Code":"S3ServiceUnavailable"}
+    }
 
 # RGW AdminOps APIs
 RGW_JSON_UID = 'uid'

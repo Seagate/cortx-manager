@@ -61,6 +61,10 @@ class RGWPlugin:
             return response_body
         except RGWAdminClientException as rgwe:
             Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {rgwe}')
+            if str(rgwe) == "Request timeout":
+                return self._create_error(408, const.STD_ERROR_CODES[408])
+            if "Cannot connect to" in str(rgwe):
+                return self._create_error(503, const.STD_ERROR_CODES[503])
             raise CsmInternalError(const.RGW_CLIENT_ERROR_MSG)
 
     def _create_error(self, status: int, body: dict) -> Any:
