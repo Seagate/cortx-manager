@@ -54,6 +54,21 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
+class UserModifySchema(S3IAMusersBaseSchema):
+    """S3 IAM User modify schema validation class."""
+
+    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, required=True)
+    email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
+    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(['s3']))
+    max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
+    op_mask = fields.Str(data_key=const.RGW_JSON_OP_MASK, missing=None,
+                    validate=validate.OneOf(['read', 'write', 'delete', '*']))
+
 class CreateKeySchema(S3IAMusersBaseSchema):
     """
     S3 Create/Add Access Key schema validation class.
@@ -115,8 +130,9 @@ class S3IAMUserView(S3BaseView):
     """
     S3 IAM User View for REST API implementation.
 
-    GET: Get a existing IAM user
-    DELETE: Delete a existing IAM user
+    GET: Get an existing IAM user
+    DELETE: Delete an existing IAM user
+    PATCH: Modify an existing IAM user
     """
 
     def __init__(self, request):
@@ -127,7 +143,7 @@ class S3IAMUserView(S3BaseView):
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         """
-        GET REST implementation for fetching existing s3 iam user.
+        GET REST implementation for fetching an existing s3 iam user.
         """
         Log.debug(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -143,7 +159,7 @@ class S3IAMUserView(S3BaseView):
     @Log.trace_method(Log.DEBUG)
     async def delete(self):
         """
-        DELETE REST implementation for deleting existing s3 iam user.
+        DELETE REST implementation for deleting an existing s3 iam user.
         """
         Log.debug(f"Handling delete s3 iam user DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
@@ -151,9 +167,12 @@ class S3IAMUserView(S3BaseView):
         path_params_dict = {const.RGW_JSON_UID: uid}
         try:
             schema = UserDeleteSchema()
-            request_body_params_dict = schema.load(await self.request.json())
+            if self.request.body_exists:
+                request_body_params_dict = schema.load(await self.request.json())
+            else:
+                request_body_params_dict = {}
         except json.decoder.JSONDecodeError:
-            request_body_params_dict = {}
+            raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_params_dict}
@@ -161,6 +180,33 @@ class S3IAMUserView(S3BaseView):
                 f" path params/request body: {request_body}")
         with self._guard_service():
             response = await self._service.delete_user(**request_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def patch(self):
+        """
+        PATCH REST implementation for modifying an existing s3 iam user.
+        """
+        Log.debug(f"Handling patch s3 iam user PATCH request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.RGW_JSON_UID]
+        path_params_dict = {const.RGW_JSON_UID: uid}
+        try:
+            schema = UserModifySchema()
+            if self.request.body_exists:
+                request_body_params_dict = schema.load(await self.request.json())
+            else:
+                request_body_params_dict = {}
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        request_body = {**path_params_dict, **request_body_params_dict}
+        Log.debug(f"Handling s3 iam user Modify request"
+                f" path params/request body: {request_body}")
+        with self._guard_service():
+            response = await self._service.modify_user(**request_body)
             return CsmResponse(response)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/keys")
