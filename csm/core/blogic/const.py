@@ -558,6 +558,7 @@ UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
+RGW_S3_BUCKET_SERVICE = "rgw_s3_bucket_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -944,7 +945,12 @@ RGW_CLIENT_ERROR_CODES = {
     503: { "Code": "S3ServiceUnavailable" }
     }
 RGW_TIMEOUT = 10
+
 # RGW AdminOps APIs
+BUCKET_LINK_OPERATION = 'LINK_BUCKET'
+BUCKET_UNLINK_OPERATION = 'UNLINK_BUCKET'
+
+# RGW AdminOps- create-user
 RGW_JSON_UID = 'uid'
 RGW_JSON_DISPLAY_NAME = 'display_name'
 RGW_JSON_EMAIL = 'email'
@@ -956,7 +962,12 @@ RGW_JSON_GENERATE_KEY = 'generate_key'
 RGW_JSON_MAX_BUCKETS = 'max_buckets'
 RGW_JSON_SUSPENDED = 'suspended'
 RGW_JSON_TENANT = 'tenant'
-RGW_JSON_PURGE_DATA = 'purge_data'
+<<<<<<< HEAD
 RGW_JSON_OP_MASK = 'op_mask'
 RGW_SUPPORTED_OP_MASKS = ['read', 'write', 'delete', '*']
 RGW_SUPPORTED_KEY_TYPES = ['s3']
+
+# RGW Bucket
+RGW_JSON_OPERATION = 'operation'
+RGW_JSON_BUCKET = 'bucket'
+RGW_JSON_BUCKET_ID = 'bucket_id'  
