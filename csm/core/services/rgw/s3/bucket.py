@@ -40,7 +40,7 @@ class S3BucketService(S3BaseService):
     @Log.trace_method(Log.DEBUG)
     async def link_bucket(self, **request_body):
         """
-        This method will remove access key to S3 IAM user.
+        This method will Link bucket to user.
 
         :param **request_body: User body kwargs
         """
@@ -51,7 +51,7 @@ class S3BucketService(S3BaseService):
     @Log.trace_method(Log.DEBUG)
     async def unlink_bucket(self, **request_body):
         """
-        This method will remove access key to S3 IAM user.
+        This method will unlink bucket from User.
 
         :param **request_body: User body kwargs
         """

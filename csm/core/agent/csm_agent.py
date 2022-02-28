@@ -173,8 +173,7 @@ class CsmAgent:
 
         # RGW S3 IAM user service
         CsmAgent._configure_rgw_s3_iam_users_service()
-        CsmAgent._configure_rgw_s3_bucket_service()
-        
+        CsmAgent._configure_rgw_s3_bucket_service()        
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
@@ -375,7 +374,7 @@ if __name__ == '__main__':
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
-    from csm.core.services.rgw.s3.users import S3BucketService
+    from csm.core.services.rgw.s3.bucket import S3BucketService
 
     try:
         # try:

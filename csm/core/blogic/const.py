@@ -957,4 +957,4 @@ RGW_JSON_PURGE_DATA = 'purge_data'
 # RGW Bucket
 RGW_JSON_OPERATION = 'operation'
 RGW_JSON_BUCKET = 'bucket'
-RGW_JSON_BUCKET_ID = 'bucket_id'  
+RGW_JSON_BUCKET_ID = 'bucket_id'

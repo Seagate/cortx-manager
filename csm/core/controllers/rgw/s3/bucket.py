@@ -24,34 +24,45 @@ from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.core.controllers.rgw.s3.base import S3BaseView
 
 class S3BucketBaseSchema(Schema):
-    """Base Class for S3 Bucket Schema Validation"""
+
+    """ Base Class for S3 Bucket Schema Validation. """
 
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):
-        """This method invalidates the empty strings."""
+        """ method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
                 raise ValidationError(f"{key}: Can not be empty")
 
 class LinkBucketSchema(S3BucketBaseSchema):
-    """S3 Bucket Link schema validation class."""
+
+    """
+    S3 Bucket Link schema validation class.
+    """
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
     bucket_id = fields.Str(data_key=const.RGW_JSON_BUCKET_ID, missing=None)
 
 class UnlinkBucketSchema(S3BucketBaseSchema):
-    """S3 Bucket Unlink schema validation class."""
+    
+    """
+    S3 Bucket Unlink schema validation class.
+    """
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
 
 
 class BucketSchema(S3BucketBaseSchema):
-    """S3 Bucket create schema validation class."""
+    
+    """
+    S3 Bucket create schema validation class.
+    """
     operation = fields.Str(data_key=const.RGW_JSON_OPERATION, required=True)
     # arguments = fields.Nested(LinkBucketSchema, required=True)
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
 class S3BucketView(S3BaseView):
+
     """
     S3 Bucket View for REST API implementation.
     PUT: Bucket Opertation
@@ -61,10 +72,6 @@ class S3BucketView(S3BaseView):
     operation_schema_map = {
         "link": LinkBucketSchema,
         "unlink": UnlinkBucketSchema
-    }
-    operation_service_map = {
-        "link": link_bucket,
-        "unlink": unlink_bucket
     }
 
     def __init__(self, request):
@@ -87,7 +94,7 @@ class S3BucketView(S3BaseView):
             # Validate Request Schema Body with BucketSchema
             bucket_body = schema.load(await self.request.json())
             operation = bucket_body['operation']
-            if operation not in operation_schema_map:
+            if operation not in self.operation_schema_map:
                 raise ValidationError(f"{operation}: is not supported")
             operation_arguments = bucket_body['arguments']
             # Validation Operation Level Schema Validation
@@ -102,7 +109,7 @@ class S3BucketView(S3BaseView):
         # Call Service API and Return the Response
         with self._guard_service():
             response = await self._service.bucket_operation(operation, **request_body)
-            return CsmResponse(response)        
+            return CsmResponse(response)
 
     async def validate_operation_arguments(self, schemaClass, **arguments):
         """
@@ -110,9 +117,7 @@ class S3BucketView(S3BaseView):
         """
         schema = schemaClass()
         request_body = schema.load(arguments)
-
         return request_body
-
 
 
 
