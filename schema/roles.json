@@ -17,7 +17,8 @@
             "replace_node": ["create", "list"],
             "health": ["list"],
             "cluster_management": ["create", "list"],
-            "s3_iam_users": ["create", "list", "update", "delete"]
+            "s3_iam_users": ["create", "list", "update", "delete"],
+            "s3_buckets": ["update"]
         }
     },
     "manage":{
@@ -34,7 +35,8 @@
             "health": ["list"],
             "security": ["read"],
             "cluster_management": ["create", "list"],
-            "s3_iam_users": ["create", "list", "update", "delete"]
+            "s3_iam_users": ["create", "list", "update", "delete"],
+            "s3_buckets": ["update"]
         }
     },
     "monitor": {

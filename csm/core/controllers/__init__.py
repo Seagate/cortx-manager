@@ -24,6 +24,7 @@ from .cluster_management import ClusterOperationsView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 from .rgw.s3.users import S3IAMUserListView, S3IAMUserView, S3IAMUserKeyView
+from .rgw.s3.bucket import S3BucketView
 # from .file_transfer import CsmFileView
 from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
                   DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,

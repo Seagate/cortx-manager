@@ -558,6 +558,7 @@ UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
+RGW_S3_BUCKET_SERVICE = "rgw_s3_bucket_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -934,6 +935,8 @@ DELETE_USER_OPERATION = 'DELETE_USER'
 RGW_CLIENT_ERROR_MSG = 'Can not process the request'
 CREATE_KEY_OPERATION = 'CREATE_KEY'
 REMOVE_KEY_OPERATION = 'REMOVE_KEY'
+BUCKET_LINK_OPERATION = 'LINK_BUCKET'
+BUCKET_UNLINK_OPERATION = 'UNLINK_BUCKET'
 
 # RGW AdminOps- create-user
 RGW_JSON_UID = 'uid'
@@ -950,3 +953,8 @@ RGW_JSON_TENANT = 'tenant'
 
 # RGW AdminOps- remove-user
 RGW_JSON_PURGE_DATA = 'purge_data'
+
+# RGW Bucket
+RGW_JSON_OPERATION = 'operation'
+RGW_JSON_BUCKET = 'bucket'
+RGW_JSON_BUCKET_ID = 'bucket_id'  
