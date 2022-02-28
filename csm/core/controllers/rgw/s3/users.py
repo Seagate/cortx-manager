@@ -167,7 +167,7 @@ class S3IAMUserView(S3BaseView):
         path_params_dict = {const.RGW_JSON_UID: uid}
         try:
             schema = UserDeleteSchema()
-            if self.request.body_exists:
+            if await self.request.text():
                 request_body_params_dict = schema.load(await self.request.json())
             else:
                 request_body_params_dict = {}
@@ -194,7 +194,7 @@ class S3IAMUserView(S3BaseView):
         path_params_dict = {const.RGW_JSON_UID: uid}
         try:
             schema = UserModifySchema()
-            if self.request.body_exists:
+            if await self.request.text():
                 request_body_params_dict = schema.load(await self.request.json())
             else:
                 request_body_params_dict = {}
