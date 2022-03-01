@@ -16,8 +16,19 @@
 from contextlib import contextmanager
 from csm.core.controllers.view import CsmView, CsmHttpException
 from csm.core.services.rgw.s3.utils import S3ServiceError
+from marshmallow import Schema, ValidationError, validates_schema
 
 S3_SERVICE_ERROR = 0x3000
+
+class S3BaseSchema(Schema):
+    """Base Class for S3 Schema Validation."""
+
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """method invalidates the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"{key}: Can not be empty")
 
 class S3BaseView(CsmView):
     """Simple base class for any S3 view which works with one service."""

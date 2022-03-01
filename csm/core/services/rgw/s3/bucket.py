@@ -18,7 +18,7 @@ from csm.core.blogic import const
 from csm.core.data.models.rgw import RgwError
 from csm.core.services.rgw.s3.utils import S3BaseService
 
-class S3BucketService(S3BaseService):
+class BucketService(S3BaseService):
 
     """S3 IAM user management service class."""
 
