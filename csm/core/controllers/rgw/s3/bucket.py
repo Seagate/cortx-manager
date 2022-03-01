@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, ValidationError, validate, validates_schema
+from marshmallow import Schema, fields, ValidationError, validates_schema
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
@@ -25,11 +25,10 @@ from csm.core.controllers.rgw.s3.base import S3BaseView
 
 class S3BucketBaseSchema(Schema):
 
-    """ Base Class for S3 Bucket Schema Validation. """
-
+    """Base Class for S3 Bucket Schema Validation."""
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):
-        """ method invalidates the empty strings."""
+        """method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
                 raise ValidationError(f"{key}: Can not be empty")
@@ -44,7 +43,7 @@ class LinkBucketSchema(S3BucketBaseSchema):
     bucket_id = fields.Str(data_key=const.RGW_JSON_BUCKET_ID, missing=None)
 
 class UnlinkBucketSchema(S3BucketBaseSchema):
-    
+
     """
     S3 Bucket Unlink schema validation class.
     """
@@ -53,7 +52,7 @@ class UnlinkBucketSchema(S3BucketBaseSchema):
 
 
 class BucketSchema(S3BucketBaseSchema):
-    
+
     """
     S3 Bucket create schema validation class.
     """
@@ -67,7 +66,6 @@ class S3BucketView(S3BaseView):
     S3 Bucket View for REST API implementation.
     PUT: Bucket Opertation
     """
-
     # Map of operation to Operation Request Schema
     operation_schema_map = {
         "link": LinkBucketSchema,
@@ -77,6 +75,17 @@ class S3BucketView(S3BaseView):
     def __init__(self, request):
         """S3 Bucket View Init."""
         super().__init__(request, const.RGW_S3_BUCKET_SERVICE)
+
+    @Log.trace_method(Log.DEBUG)
+    async def validate_operation_arguments(self, schemaClass, **arguments):
+        """
+        Validate Operation Arguments
+        """
+        schema = schemaClass()
+        request_body = schema.load(arguments)
+            Log.debug(f"Handling s3 bucket request"
+                  f" request body: {request_body}")
+        return request_body
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -99,7 +108,6 @@ class S3BucketView(S3BaseView):
             operation_arguments = bucket_body['arguments']
             # Validation Operation Level Schema Validation
             request_body = await validate_operation_arguments(operation_schema_map[operation], operation_arguments)
-
             Log.debug(f"Handling s3 bucket PUT request"
                   f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
@@ -110,18 +118,3 @@ class S3BucketView(S3BaseView):
         with self._guard_service():
             response = await self._service.bucket_operation(operation, **request_body)
             return CsmResponse(response)
-
-    async def validate_operation_arguments(self, schemaClass, **arguments):
-        """
-        Validate Operation Arguments
-        """
-        schema = schemaClass()
-        request_body = schema.load(arguments)
-        return request_body
-
-
-
-
-        
-
-
