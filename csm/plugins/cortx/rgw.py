@@ -33,7 +33,7 @@ class RGWPlugin:
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key,
-            config.auth_user_secret_key, config.host, config.port)
+            config.auth_user_secret_key, config.host, config.port, timeout=10)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG)
