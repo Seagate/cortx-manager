@@ -84,7 +84,7 @@ class S3BucketView(S3BaseView):
         schema = schemaClass()
         request_body = schema.load(arguments)
             Log.debug(f"Handling s3 bucket request"
-                  f" request body: {request_body}")
+                      f" request body: {request_body}")
         return request_body
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
