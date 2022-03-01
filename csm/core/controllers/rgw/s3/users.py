@@ -57,7 +57,7 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 class UserModifySchema(S3IAMusersBaseSchema):
     """S3 IAM User modify schema validation class."""
 
-    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, required=True)
+    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, missing=None)
     email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
     generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
