@@ -14,26 +14,16 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, ValidationError, validate, validates_schema
+from marshmallow import fields, ValidationError
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.rgw.s3.base import S3BaseView
+from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
 
-class S3IAMusersBaseSchema(Schema):
-    """Base Class for S3 IAM User Schema Validation"""
-
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """This method invalidates the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"{key}: Can not be empty")
-
-class UserCreateSchema(S3IAMusersBaseSchema):
+class UserCreateSchema(S3BaseSchema):
     """S3 IAM User create schema validation class."""
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
@@ -49,12 +39,12 @@ class UserCreateSchema(S3IAMusersBaseSchema):
     suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
     tenant = fields.Str(data_key=const.RGW_JSON_TENANT, missing=None)
 
-class UserDeleteSchema(S3IAMusersBaseSchema):
+class UserDeleteSchema(S3BaseSchema):
     """S3 IAM User delete schema validation class."""
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
-class CreateKeySchema(S3IAMusersBaseSchema):
+class CreateKeySchema(S3BaseSchema):
     """
     S3 Create/Add Access Key schema validation class.
     """
@@ -67,7 +57,7 @@ class CreateKeySchema(S3IAMusersBaseSchema):
     user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
     generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
 
-class RemoveKeySchema(S3IAMusersBaseSchema):
+class RemoveKeySchema(S3BaseSchema):
     """
     S3 Remove Key schema validation class.
     """

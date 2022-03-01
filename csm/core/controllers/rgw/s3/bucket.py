@@ -14,26 +14,16 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, ValidationError, validates_schema
+from marshmallow import fields, ValidationError
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.rgw.s3.base import S3BaseView
+from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
 
-class S3BucketBaseSchema(Schema):
-
-    """Base Class for S3 Bucket Schema Validation."""
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """method invalidates the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"{key}: Can not be empty")
-
-class LinkBucketSchema(S3BucketBaseSchema):
+class LinkBucketSchema(S3BaseSchema):
 
     """
     S3 Bucket Link schema validation class.
@@ -42,7 +32,7 @@ class LinkBucketSchema(S3BucketBaseSchema):
     bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
     bucket_id = fields.Str(data_key=const.RGW_JSON_BUCKET_ID, missing=None)
 
-class UnlinkBucketSchema(S3BucketBaseSchema):
+class UnlinkBucketSchema(S3BaseSchema):
 
     """
     S3 Bucket Unlink schema validation class.
@@ -50,14 +40,14 @@ class UnlinkBucketSchema(S3BucketBaseSchema):
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
 
-
-class BucketSchema(S3BucketBaseSchema):
-
-    """
-    S3 Bucket create schema validation class.
-    """
-    operation = fields.Str(data_key=const.RGW_JSON_OPERATION, required=True)
-    # arguments = fields.Nested(LinkBucketSchema, required=True)
+class schemaFactory:
+    operation_schema_map = {
+        "link": LinkBucketSchema,
+        "unlink": UnlinkBucketSchema
+    }
+    @staticmethod
+    def init(operation):
+        return operation_schema_map[operation]()
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
 class S3BucketView(S3BaseView):
@@ -66,26 +56,10 @@ class S3BucketView(S3BaseView):
     S3 Bucket View for REST API implementation.
     PUT: Bucket Opertation
     """
-    # Map of operation to Operation Request Schema
-    operation_schema_map = {
-        "link": LinkBucketSchema,
-        "unlink": UnlinkBucketSchema
-    }
 
     def __init__(self, request):
         """S3 Bucket View Init."""
         super().__init__(request, const.RGW_S3_BUCKET_SERVICE)
-
-    @Log.trace_method(Log.DEBUG)
-    async def validate_operation_arguments(self, schemaClass, **arguments):
-        """
-        Validate Operation Arguments
-        """
-        schema = schemaClass()
-        request_body = schema.load(arguments)
-        Log.debug(f"Handling s3 bucket request"
-                  f" request body: {request_body}")
-        return request_body
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -96,18 +70,22 @@ class S3BucketView(S3BaseView):
         Log.debug(f"Handling s3 bucket PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         # Load Expected Bucket Schema
-        schema = BucketSchema()
         operation = None
         operation_arguments = None
         try:
             # Validate Request Schema Body with BucketSchema
-            bucket_body = schema.load(await self.request.json())
-            operation = bucket_body['operation']
-            if operation not in self.operation_schema_map:
+            input_body = await self.request.json()
+            if "operation" not in input_body.keys() or "arguments" not in input_body.keys():
+                 raise ValidationError("operation and arguments are required fields")
+            operation = input_body['operation']
+            if operation not in schemaFactory.operation_schema_map:
                 raise ValidationError(f"{operation}: is not supported")
-            operation_arguments = bucket_body['arguments']
+            operation_arguments = input_body['arguments']
+            if not isinstance(operation_arguments, dict):
+                raise ValidationError(f" operation_arguments is not of Type Dict :- {operation_arguments}")
             # Validation Operation Level Schema Validation
-            request_body = await validate_operation_arguments(operation_schema_map[operation], operation_arguments)
+            schema = schemaFactory.init(operation)
+            request_body = schema.load(operation_arguments)
             Log.debug(f"Handling s3 bucket PUT request"
                   f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
