@@ -23,9 +23,9 @@ S3_SERVICE_ERROR = 0x3000
 class S3BaseSchema(Schema):
 
     """Base Class for S3 Schema Validation."""
-
+    @classmethod
     @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
+    def invalidate_empty_values(data, **kwargs):
         """Method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
