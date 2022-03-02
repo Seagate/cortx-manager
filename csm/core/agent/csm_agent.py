@@ -171,8 +171,8 @@ class CsmAgent:
         # audit_mngr = AuditLogManager(db)
         # CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
 
-        # RGW S3 IAM user service
-        CsmAgent._configure_rgw_s3_service()
+        # RGW S3 services
+        CsmAgent._configure_rgw_s3_services()
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         update_repo = UpdateStatusRepository(db)
@@ -217,11 +217,11 @@ class CsmAgent:
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
-    def _configure_rgw_s3_service():
-        s3_iam_plugin = import_plugin_module(const.RGW_PLUGIN)
-        s3_iam_plugin_obj = s3_iam_plugin.RGWPlugin()
-        CsmRestApi._app[const.RGW_S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_iam_plugin_obj)
-        CsmRestApi._app[const.RGW_S3_BUCKET_SERVICE] = BucketService(s3_bucket_plugin_obj)
+    def _configure_rgw_s3_services():
+        rgw_s3_plugin = import_plugin_module(const.RGW_PLUGIN)
+        rgw_s3_plugin_obj = rgw_s3_plugin.RGWPlugin()
+        CsmRestApi._app[const.RGW_S3_IAM_USERS_SERVICE] = S3IAMUserService(rgw_s3_plugin_obj)
+        CsmRestApi._app[const.RGW_S3_BUCKET_SERVICE] = BucketService(rgw_s3_plugin_obj)
 
     @staticmethod
     def _get_consul_config():
