@@ -23,8 +23,8 @@ class BucketService(S3BaseService):
     """S3 IAM user management service class."""
 
     def __init__(self, plugin):
-        """Initializes s3_bucket_plugin.
-
+        """
+        Initializes s3_bucket_plugin.
         :param plugin: s3_bucket_plugin object
         :returns: None
         """
