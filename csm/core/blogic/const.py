@@ -915,7 +915,6 @@ RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
 RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
 RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
-
 # Degraded byte count
 CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
 CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
