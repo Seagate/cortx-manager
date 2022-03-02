@@ -19,8 +19,12 @@ from csm.core.data.models.rgw import RgwError
 from csm.core.services.rgw.s3.utils import S3BaseService
 
 class BucketService(S3BaseService):
-
-    """S3 IAM user management service class."""
+    """
+    S3 Bucket Operation service class.
+    service method of all bucket operations
+    entry point: execute()
+    exit point: execute_request()
+    """
 
     def __init__(self, plugin):
         """
@@ -41,7 +45,7 @@ class BucketService(S3BaseService):
         """
         This method will Link bucket to user.
 
-        :param **request_body: User body kwargs
+        :param **request_body: bucket body kwargs
         """
         uid = request_body.get(const.RGW_JSON_UID)
         Log.debug(f"Link bucket for S3 bucket to uid = {uid}")
@@ -52,7 +56,7 @@ class BucketService(S3BaseService):
         """
         This method will unlink bucket from User.
 
-        :param **request_body: User body kwargs
+        :param **request_body: bucket body kwargs
         """
         uid = request_body.get(const.RGW_JSON_UID)
         Log.debug(f"Unlink bucket from  uid = {uid}")
@@ -64,9 +68,10 @@ class BucketService(S3BaseService):
     }
 
     @Log.trace_method(Log.DEBUG)
-    async def bucket_operation(self, operation, **request_body):
+    async def execute(self, operation, **request_body):
         """
-        Bucket Operation
+        execute will be called from controller
+        operation(string) : bucket operation
         """
         Log.debug(f"Bucket Operation:- {operation} for S3 user")
 
