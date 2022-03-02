@@ -59,8 +59,8 @@ class BucketService(S3BaseService):
         return await self.execute_request(const.BUCKET_UNLINK_OPERATION, **request_body)
 
     operation_service_map = {
-        "link" : link_bucket,
-        "unlink" : unlink_bucket
+        const.LINK_BUCKET_OPERATION : link_bucket,
+        const.UNLINK_BUCKET_OPERATION : unlink_bucket
     }
 
     @Log.trace_method(Log.DEBUG)
