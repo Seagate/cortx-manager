@@ -390,10 +390,11 @@ class CsmRestApi(CsmApi, ABC):
                             lower_key.find("secret") > -1    :
                             del(request_body[key])
             payload = json.dumps(request_body)
-            try:
-                await CsmRestApi.check_for_unsupported_endpoint(request)
-            except DataAccessError as e:
-                Log.warn(f"Exception: {e}")
+            # TODO: This will be uncommented when unsupported feature is enable
+            #try:
+                #await CsmRestApi.check_for_unsupported_endpoint(request)
+            #except DataAccessError as e:
+                #Log.warn(f"Exception: {e}")
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)

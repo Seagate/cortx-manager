@@ -173,7 +173,7 @@ class Configure(Setup):
                 return endpoint
 
     def set_hax_endpoint(self):
-        endpoints = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
+        endpoints = Conf.get(const.CONSUMER_INDEX, const.HAX_ENDPOINT_KEY)
         hax_endpoint = self._get_hax_endpoint(endpoints)
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)

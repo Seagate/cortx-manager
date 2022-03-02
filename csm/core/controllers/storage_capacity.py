@@ -18,7 +18,10 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
 from csm.common.errors import InvalidRequest
+from csm.core.services.storage_capacity import CapacityError
+from csm.core.controllers.view import CsmHttpException
 
+CAPACITY_SERVICE_ERROR = 0x3010
 
 @CsmView._app_routes.view("/api/v1/capacity")
 @CsmView._app_routes.view("/api/v2/capacity")
@@ -48,13 +51,41 @@ class CapacityManagementView(CsmView):
     GET REST API view implementation for getting cluster status
     """
     def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.STORAGE_CAPACITY_SERVICE]
+
+    @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        Log.info("Handling GET implementation for getting cluster staus data")
+
+        resp = await self._service.get_cluster_data()
+        if isinstance(resp, CapacityError):
+            raise CsmHttpException(resp.http_status,
+                                   CAPACITY_SERVICE_ERROR,
+                                   resp.message_id,
+                                   resp.message)
+        return resp
+
+@CsmView._app_routes.view("/api/v2/cluster/status/{cluster_resource}")
+class CapacityManagementView(CsmView):
+    """
+    GET REST API view implementation for getting cluster status for specific resource
+    """
+    def __init__(self, request):
         super(CapacityManagementView, self).__init__(request)
         self._service = self.request.app[const.STORAGE_CAPACITY_SERVICE]
 
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        #TODO: Accept path parameter from URL to get filtered data as per paramter.
-        # Integration ticket to be taken in Sprint-60.
-        Log.info("Handling GET implementation for getting cluster staus data")
-        return await self._service.get_cluster_data()
+        path_param = self.request.match_info[const.ClUSTER_RESOURCE]
+        Log.info(f"Handling GET implementation for getting cluster staus data"
+                f" with path param: {path_param}")
+        resp = await self._service.get_cluster_data(path_param)
+        if isinstance(resp, CapacityError):
+            raise CsmHttpException(resp.http_status,
+                                   CAPACITY_SERVICE_ERROR,
+                                   resp.message_id,
+                                   resp.message)
+        return resp

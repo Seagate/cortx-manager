@@ -682,6 +682,7 @@ SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
                   'dns_network_settings', 'date_time_settings', 'notifications']
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
+ClUSTER_RESOURCE = "cluster_resource"
 ACTION = "action"
 NODE_STATUS = "node_status"
 STANDBY = "standby"

@@ -89,23 +89,50 @@ class StorageCapacityService(ApplicationService):
         return formatted_output
 
 
-    async def request(self, session: ClientSession, method, url):
+    async def request(self, session: ClientSession, method, url, expected_success_code):
         async with session.request(url=url, method=method) as resp:
-            return await resp.json(), resp.status
+            if resp.status != expected_success_code:
+                return self._create_error(resp.status, resp)
+            return await resp.json()
 
     async def get_cluster_data(self, data_filter=None):
         #TODO: Use data_filter for filtering out the data, once integrated in hctl api
         url = Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT) + \
             Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_CLUSTER_API)
         method = const.GET
+        expected_success_code=200
         if data_filter:
-            url = url+data_filter
+            url = url + "/" + data_filter
         Log.info(f"Request {url} for cluster data")
         async with aiohttp.ClientSession() as session:
             try:
-                response, status = await self.request(session, method, url)
+                response = await self.request(session, method, url, expected_success_code)
             except Exception as e:
                 Log.error(f"Error in obtaining response from {url}: {e}")
                 raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
-        Log.debug(f"Response: {response}, Status:{status} for url :{url}")
-        return response, status
+            #Log.debug(f"Response: {response}, Status:{status} for url :{url}")
+            return response
+
+    def _create_error(self, status: int, resp) -> Any:
+        """
+        Converts a body of a failed query into orignal error object.
+        :param status: HTTP Status code.
+        :param body: parsed HTTP response (dict) with the error's decription.
+        :returns: instance of error.
+        """
+
+        Log.error(f"Create error body: {resp}")
+
+        hax_error = CapacityError()
+        hax_error.http_status = status
+        hax_error.message_id = resp.reason
+        hax_error.message = resp.reason
+        return hax_error
+
+class CapacityError:
+
+        """Class that describes a non-successful result"""
+
+        http_status: int
+        message_id: str
+        message: str
