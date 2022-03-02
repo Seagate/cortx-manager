@@ -110,7 +110,7 @@ class S3IAMUserListView(S3BaseView):
         """
         POST REST implementation for creating a new s3 iam user.
         """
-        Log.debug(f"Handling create s3 iam user POST request"
+        Log.info(f"Handling create s3 iam user POST request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = UserCreateSchema()
@@ -145,7 +145,7 @@ class S3IAMUserView(S3BaseView):
         """
         GET REST implementation for fetching an existing s3 iam user.
         """
-        Log.debug(f"Handling get s3 iam user GET request"
+        Log.info(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
@@ -161,7 +161,7 @@ class S3IAMUserView(S3BaseView):
         """
         DELETE REST implementation for deleting an existing s3 iam user.
         """
-        Log.debug(f"Handling delete s3 iam user DELETE request"
+        Log.info(f"Handling delete s3 iam user DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
@@ -188,7 +188,7 @@ class S3IAMUserView(S3BaseView):
         """
         PATCH REST implementation for modifying an existing s3 iam user.
         """
-        Log.debug(f"Handling patch s3 iam user PATCH request"
+        Log.info(f"Handling patch s3 iam user PATCH request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
@@ -228,7 +228,7 @@ class S3IAMUserKeyView(S3BaseView):
         """
         PUT REST implementation to create/add access key for iam user.
         """
-        Log.debug(f"Handling Add access key PUT request"
+        Log.info(f"Handling add access key PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = CreateKeySchema()
@@ -249,7 +249,7 @@ class S3IAMUserKeyView(S3BaseView):
         """
         DELETE REST implementation to remove access key of user.
         """
-        Log.debug(f"Handling Remove access key DELETE request"
+        Log.info(f"Handling remove access key DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = RemoveKeySchema()
