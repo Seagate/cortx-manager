@@ -67,7 +67,7 @@ class CapacityStatusView(CsmView):
                                    resp.message)
         return resp
 
-@CsmView._app_routes.view("/api/v2/cluster/status/{cluster_resource}")
+@CsmView._app_routes.view("/api/v2/cluster/status/{capacity_resource}")
 class CapacityManagementView(CsmView):
     """
     GET REST API view implementation for getting cluster status for specific resource
@@ -79,7 +79,7 @@ class CapacityManagementView(CsmView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        path_param = self.request.match_info[const.ClUSTER_RESOURCE]
+        path_param = self.request.match_info[const.CAPACITY_RESOURCE]
         Log.info(f"Handling GET implementation for getting cluster staus data"
                 f" with path param: {path_param}")
         resp = await self._service.get_cluster_data(path_param)
