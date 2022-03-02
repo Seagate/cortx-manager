@@ -21,8 +21,10 @@ from marshmallow import Schema, ValidationError, validates_schema
 S3_SERVICE_ERROR = 0x3000
 
 class S3BaseSchema(Schema):
-
-    """Base Class for S3 Schema Validation."""
+    """
+    Base Class for S3 Schema Validation.
+    invalidate_empty_values : method with marshmallo schema validates_schema decorator
+    """
     @classmethod
     @validates_schema
     def invalidate_empty_values(data, **kwargs):

@@ -24,17 +24,17 @@ from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
 
 class BucketBaseSchema(S3BaseSchema):
-
     """
-    S3 Bucket base schema validation class.
+    S3 Bucket First Level schema validation class.
+    operation and arguments are required keys
     """
     operation = fields.Str(data_key=const.RGW_JSON_OPERATION, required=True,
         validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
     argruments = fields.Dict(data_key=const.RGW_JSON_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
 
 class LinkBucketSchema(S3BaseSchema):
-
     """
+    S3 bucket operation's Second Level Schema Validation.
     S3 Bucket Link schema validation class.
     """
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
@@ -42,8 +42,8 @@ class LinkBucketSchema(S3BaseSchema):
     bucket_id = fields.Str(data_key=const.RGW_JSON_BUCKET_ID, missing=None)
 
 class UnlinkBucketSchema(S3BaseSchema):
-
     """
+    S3 bucket operation's Second Level Schema Validation.
     S3 Bucket Unlink schema validation class.
     """
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
@@ -60,7 +60,6 @@ class SchemaFactory:
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
 class S3BucketView(S3BaseView):
-
     """
     S3 Bucket View for REST API implementation.
     PUT: Bucket Opertation
@@ -95,5 +94,5 @@ class S3BucketView(S3BaseView):
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
-            response = await self._service.bucket_operation(operation, **operation_request_body)
+            response = await self._service.execute(operation, **operation_request_body)
             return CsmResponse(response)
