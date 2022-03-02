@@ -55,7 +55,7 @@ class SchemaFactory:
         operation_schema_map = {
         const.LINK_BUCKET_OPERATION: LinkBucketSchema,
         const.UNLINK_BUCKET_OPERATION: UnlinkBucketSchema
-        }   
+        }
         return operation_schema_map[operation]()
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
