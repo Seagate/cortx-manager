@@ -29,6 +29,9 @@ class StorageCapacityService(ApplicationService):
     Service for Get disk capacity details
     """
 
+    def __init__(self):
+        hax_error = CapacityError()
+
     @staticmethod
     def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
@@ -92,7 +95,7 @@ class StorageCapacityService(ApplicationService):
     async def request(self, session: ClientSession, method, url, expected_success_code):
         async with session.request(url=url, method=method) as resp:
             if resp.status != expected_success_code:
-                return self._create_error(resp.status, resp)
+                return self.hax_error
             return await resp.json()
 
     async def get_cluster_data(self, data_filter=None):
@@ -126,16 +129,12 @@ class StorageCapacityService(ApplicationService):
         :returns: instance of error.
         """
         Log.error(f"Create error body: {resp}")
-        hax_error = CapacityError()
-        hax_error.http_status = status
-        hax_error.message_id = resp.reason
-        hax_error.message = resp.reason
-        return hax_error
+        self.hax_error.http_status = status
+        self.hax_error.message_id = resp.reason
+        self.hax_error.message = resp.reason
 
 class CapacityError:
-
         """Class that describes a non-successful result"""
-
         http_status: int
         message_id: str
         message: str

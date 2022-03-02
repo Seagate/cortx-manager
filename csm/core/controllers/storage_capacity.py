@@ -46,12 +46,12 @@ class StorageCapacityView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v2/cluster/status")
-class CapacityManagementView(CsmView):
+class CapacityStatusView(CsmView):
     """
     GET REST API view implementation for getting cluster status
     """
     def __init__(self, request):
-        super().__init__(request)
+        super(CapacityStatusView, self).__init__(request)
         self._service = self.request.app[const.STORAGE_CAPACITY_SERVICE]
 
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
