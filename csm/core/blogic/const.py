@@ -682,6 +682,7 @@ SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
                   'dns_network_settings', 'date_time_settings', 'notifications']
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
+CAPACITY_RESOURCE = "capacity_resource"
 ACTION = "action"
 NODE_STATUS = "node_status"
 STANDBY = "standby"
@@ -859,7 +860,7 @@ RGW_S3_AUTH_ADMIN = 'rgw_s3_auth_admin'
 RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
-
+HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -915,6 +916,10 @@ RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
 RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
 
+# Degraded byte count
+CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
+CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
+CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api'
 #keys for database models
 DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
