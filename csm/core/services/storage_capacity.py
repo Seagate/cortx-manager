@@ -96,7 +96,12 @@ class StorageCapacityService(ApplicationService):
             return await resp.json()
 
     async def get_cluster_data(self, data_filter=None):
-        #TODO: Use data_filter for filtering out the data, once integrated in hctl api
+        """
+        Retrieve cluster data for specific resource or all resources.
+        :param data_filter: Optional parameter indicate specific resource.
+        :returns: cluster data or instance of error for negative scenarios.
+        """
+
         url = Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT) + \
             Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_CLUSTER_API)
         method = const.GET
@@ -110,7 +115,7 @@ class StorageCapacityService(ApplicationService):
             except Exception as e:
                 Log.error(f"Error in obtaining response from {url}: {e}")
                 raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
-            #Log.debug(f"Response: {response}, Status:{status} for url :{url}")
+
             return response
 
     def _create_error(self, status: int, resp) -> Any:
@@ -120,9 +125,7 @@ class StorageCapacityService(ApplicationService):
         :param body: parsed HTTP response (dict) with the error's decription.
         :returns: instance of error.
         """
-
         Log.error(f"Create error body: {resp}")
-
         hax_error = CapacityError()
         hax_error.http_status = status
         hax_error.message_id = resp.reason
