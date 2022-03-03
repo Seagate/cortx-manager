@@ -18,7 +18,7 @@
             "health": ["list"],
             "cluster_management": ["create", "list"],
             "s3_iam_users": ["create", "list", "update", "delete"],
-            "s3_buckets": ["update"]
+            "s3_bucket": ["update"]
         }
     },
     "manage":{
@@ -36,7 +36,7 @@
             "security": ["read"],
             "cluster_management": ["create", "list"],
             "s3_iam_users": ["create", "list", "update", "delete"],
-            "s3_buckets": ["update"]
+            "s3_bucket": ["update"]
         }
     },
     "monitor": {

@@ -40,6 +40,7 @@ from csm.core.controllers.appliance_info import ApplianceInfoView
 from csm.core.controllers.unsupported_features import UnsupportedFeaturesView
 from csm.core.controllers.system_status import SystemStatusView, SystemStatusAllView
 from csm.core.controllers.rgw.s3.users import S3IAMUserListView, S3IAMUserView
+from csm.core.controllers.rgw.s3.bucket import S3BucketView
 
 
 class CsmRoutes():
