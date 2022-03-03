@@ -21,8 +21,8 @@ from csm.common.errors import CsmInternalError
 from csm.common.payload import Json
 from cortx.utils.log import Log
 from csm.core.blogic import const
-from cortx.utils.rgwadmin import RGWAdminClient
-from cortx.utils.rgwadmin import RGWAdminClientException
+from cortx.utils.s3 import S3Client
+from cortx.utils.s3 import S3ClientException
 
 
 class RGWPlugin:
@@ -32,7 +32,7 @@ class RGWPlugin:
         Initialize RGW plugin
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
-        self._rgw_admin_client = RGWAdminClient(config.auth_user_access_key,
+        self._rgw_admin_client = S3Client(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port, timeout=10)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
 
@@ -59,7 +59,7 @@ class RGWPlugin:
             if code != api_operation['SUCCESS_CODE']:
                 return self._create_error(code, response_body)
             return response_body
-        except RGWAdminClientException as rgwe:
+        except S3ClientException as rgwe:
             Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {rgwe}')
             if str(rgwe) == "Request timeout":
                 return self._create_error(408, const.STD_ERROR_CODES[408])

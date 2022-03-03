@@ -30,8 +30,9 @@ class ClusterOperationsQueryParameter(Schema):
 
 
 class ClusterOperationsRequestBody(Schema):
-    operation = fields.Str(required=True)
-
+    supported_operations = [const.ShUTDOWN_SIGNAL]
+    operation = fields.Str(required=True,
+                        validate=[Enum(supported_operations)])
 
 @CsmView._app_routes.view("/api/v2/system/management/{resource}")
 class ClusterOperationsView(CsmView):
