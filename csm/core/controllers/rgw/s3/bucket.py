@@ -75,7 +75,7 @@ class S3BucketView(S3BaseView):
         """
         PUT REST implementation for  s3 bucket.
         """
-        Log.debug(f"Handling s3 bucket PUT request"
+        Log.info(f"Handling s3 bucket PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         operation = None
         operation_arguments = None
