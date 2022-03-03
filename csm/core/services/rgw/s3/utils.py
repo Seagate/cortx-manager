@@ -27,16 +27,13 @@ class CsmRgwConfigurationFactory:
     def get_rgw_connection_config():
         """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
-        # ToDo: Read host port values from csm configuration
         rgw_endpoint = Conf.get(
             const.CSM_GLOBAL_INDEX, 'RGW>s3>endpoints[0]')
         protocol, host, port = CsmRgwConfigurationFactory._parse_endpoints(rgw_endpoint)
         rgw_connection_config.host = host
         rgw_connection_config.port = int(port)
-        # ToDo: Replace the keys with consts
-        # ToDo: Remove default values once keys are available in conf store
         rgw_connection_config.auth_user = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER, 'admin')
+            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
         rgw_connection_config.auth_user_access_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY)
         rgw_connection_config.auth_user_secret_key = Conf.get(
