@@ -25,9 +25,8 @@ class S3BaseSchema(Schema):
     Base Class for S3 Schema Validation.
     invalidate_empty_values : method with marshmallo schema validates_schema decorator
     """
-    @classmethod
     @validates_schema
-    def invalidate_empty_values(data, **kwargs):
+    def invalidate_empty_values(self, data, **kwargs):
         """Method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():

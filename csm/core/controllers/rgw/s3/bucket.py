@@ -30,7 +30,7 @@ class BucketBaseSchema(S3BaseSchema):
     """
     operation = fields.Str(data_key=const.RGW_JSON_OPERATION, required=True,
         validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
-    argruments = fields.Dict(data_key=const.RGW_JSON_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
+    arguments = fields.Dict(data_key=const.RGW_JSON_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
 
 class LinkBucketSchema(S3BaseSchema):
     """
