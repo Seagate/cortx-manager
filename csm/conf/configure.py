@@ -15,7 +15,6 @@
 
 import os
 import time
-import ldap
 from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json, Text
@@ -29,7 +28,6 @@ from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from csm.common.process import SimpleProcess
-from ldif import LDIFRecordList
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 
 
@@ -80,10 +78,9 @@ class Configure(Setup):
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
         self.set_csm_endpoint()
         self.set_s3_info()
+        self.set_hax_endpoint()
         self.create_topics()
         try:
-            self._configure_csm_ldap_schema()
-            self._set_user_collection()
             await self._create_cluster_admin(self.force_action)
             self.create()
             for count in range(0, 4):
@@ -107,15 +104,12 @@ class Configure(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
-                const.KEY_SERVER_NODE_TYPE:f"{const.ENV_TYPE_KEY}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.S3_IAM_ENDPOINTS: f"{const.S3_IAM_ENDPOINTS_KEY}",
-                const.S3_DATA_ENDPOINT: f"{const.S3_DATA_ENDPOINTS_KEY}",
                 const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
-                const.S3_AUTH_ADMIN: f"{const.S3_AUTH_ADMIN_KEY}",
-                const.OPENLDAP_ROOT_ADMIN:f"{const.OPENLDAP_ROOT_ADMIN_KEY}",
-                const.OPENLDAP_ROOT_SECRET:f"{const.OPENLDAP_ROOT_SECRET_KEY}",
-                const.S3_AUTH_SECRET: f"{const.S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
+                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
+                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -146,30 +140,44 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
+    def _set_s3_endpoints(self):
+        s3_endpoints = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_DATA_ENDPOINTS_KEY)
+        if s3_endpoints:
+            Log.info(f"Fetching s3 endpoint.{s3_endpoints}")
+            s3_endpoints_count = len(s3_endpoints)
+            for endpoint_count in range(s3_endpoints_count):
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                        f'{const.RGW_S3_ENDPOINTS}[{endpoint_count}]',
+                        eval(f'{s3_endpoints}[{endpoint_count}]'))
+        else:
+            raise CsmSetupError("S3 endpoints not found.")
+
     def set_s3_info(self):
         """
         This Function will set s3  related configurations.
         :return:
         """
         Log.info("Setting S3 configurations in csm config")
-        iam_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_IAM_ENDPOINTS_KEY)
-        iam_protocol, iam_host, iam_port = self._parse_endpoints(iam_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_ENDPOINT, iam_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_HOST, iam_host)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PORT, iam_port)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL, iam_protocol)
+        self._set_s3_endpoints()
+        # Set IAM user credentails
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
+        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY)
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_SECRET_KEY)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER, s3_auth_user)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY, s3_auth_admin)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
 
-        data_endpoint = Conf.get(const.CONSUMER_INDEX, const.S3_DATA_ENDPOINTS_KEY)
-        data_protocol, data_host, data_port = self._parse_endpoints(data_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_ENDPOINT, data_endpoint)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_HOST, data_host)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PORT, data_port)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_DATA_PROTOCOL, data_protocol)
+    def _get_hax_endpoint(self, endpoints):
+        for endpoint in endpoints:
+            protocol, host, port = self._parse_endpoints(endpoint)
+            if protocol == "https" or protocol == "http":
+                return endpoint
 
-        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_ADMIN_KEY)
-        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.S3_AUTH_SECRET_KEY)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_USER_CONF, s3_auth_user)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_AUTH_SECRET_CONF, s3_auth_secret)
+    def set_hax_endpoint(self):
+        endpoints = Conf.get(const.CONSUMER_INDEX, const.HAX_ENDPOINT_KEY)
+        hax_endpoint = self._get_hax_endpoint(endpoints)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
+                hax_endpoint)
 
     async def _set_unsupported_feature_info(self):
         """
@@ -223,169 +231,6 @@ class Configure(Setup):
         except Exception as e_:
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
-
-    def _configure_csm_ldap_schema(self):
-        """
-        Configure openLdap for CORTX Users
-        """
-        if not os.path.exists(const.TMP_CSM):
-            os.mkdir(const.TMP_CSM)
-        Log.info("Openldap configuration started for Cortx users.")
-        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                    Conf.get(const.CSM_GLOBAL_INDEX,const.S3_PASSWORD_DECRYPTION_KEY))
-        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
-        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
-        if not (_rootdnpassword or csm_admin_ldap_password):
-            raise CsmSetupError("Failed to fetch LDAP password.")
-        csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
-        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BIND_BASE_DN)
-        ldap_user = const.LDAP_USER.format(
-            Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER),base_dn)
-
-        ldap_root_admin_user = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_USER, 'admin')
-
-        Log.info(f"Updating base dn in {const.CORTXUSER_INIT_LDIF}")
-        tmpl_init_data = Text(const.CORTXUSER_INIT_LDIF).load()
-        tmpl_init_data = tmpl_init_data.replace('<version>',f"{csm_schema_version}")
-        tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
-        Text(const.CSM_LDAP_INIT_FILE_PATH).dump(tmpl_init_data)
-
-        for each_server_url in Setup._get_ldap_server_url():
-            for count in range(0, 4):
-                try:
-                    # Insert cortxuser schema
-                    Log.info(f"Inserting Cortxuser schema to server: {each_server_url}")
-                    self._perform_ldif_parsing(each_server_url, const.CORTXUSER_SCHEMA_LDIF,f'cn={ldap_root_admin_user},cn=config',_rootdnpassword)
-
-                    # Initialize dc=csm,dc=seagate,dc=com
-                    Log.info(f"Initializing dc=csm,dc=seagate,dc=com to server: {each_server_url}")
-                    self._perform_ldif_parsing(each_server_url, const.CSM_LDAP_INIT_FILE_PATH, bind_base_dn, _rootdnpassword)
-
-                    # Create CSM admin user in LDAP
-                    Log.info(f"Creating CSM ldap admin user to server: {each_server_url}")
-                    self._create_csm_ldap_user(each_server_url)
-                    # Setup necessary permissions
-                    Log.info(f"Setup necessary permissions to {ldap_user} on server: {each_server_url}")
-                    self._setup_ldap_permissions(each_server_url, base_dn, ldap_user)
-                    break
-                except Exception as e_:
-                    Log.warn(f"Failed while Configuring LDAP for CSM. Retrying : {count+1}.\n {e_}")
-                    time.sleep(2**count)
-
-        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_INIT_FILE_PATH}')
-
-        # Create Cortx Account
-        Log.info(f"Updating base dn in {const.CORTXUSER_ACCOUNT_LDIF}")
-        tmpl_useracc_data = Text(const.CORTXUSER_ACCOUNT_LDIF).load()
-        tmpl_useracc_data = tmpl_useracc_data.replace('<version>',csm_schema_version)
-        tmpl_useracc_data = tmpl_useracc_data.replace('<base-dn>',base_dn)
-        Text(const.CSM_LDAP_ACC_FILE_PATH).dump(tmpl_useracc_data)
-        self._perform_ldif_parsing(Setup._get_ldap_url(), const.CSM_LDAP_ACC_FILE_PATH, ldap_user, csm_admin_ldap_password)
-        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ACC_FILE_PATH}')
-        Log.info("Openldap configuration completed for Cortx users.")
-
-    def _setup_ldap_permissions(self, ldap_url, base_dn, ldap_user):
-        """
-        Setup necessary access permissions
-        """
-        dn = 'olcDatabase={2}mdb,cn=config'
-        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" read by self')
-        self._modify_ldap_attribute(ldap_url, dn, 'olcAccess', '{1}to dn.sub="dc=csm,'+base_dn+'" by dn.base="'+ldap_user+'" write by self')
-
-    def _create_csm_ldap_user(self, ldap_url):
-        """
-        Create CSM ldap user
-        """
-        Log.info("Creating csm ldap user.")
-        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _rootdnpassword = self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
-        bind_base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BIND_BASE_DN)
-        ldap_user = Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_USER)
-        csm_ldap_secret =  Conf.get(const.CSM_GLOBAL_INDEX, const.LDAP_AUTH_CSM_SECRET)
-        csm_admin_ldap_password = self._decrypt_secret(csm_ldap_secret,self.cluster_id,
-                        Conf.get(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY))
-        tmpl_init_data = Text(const.CSM_LDAP_ADMIN_USER_LDIF).load()
-        tmpl_init_data = tmpl_init_data.replace('<base-dn>',base_dn)
-        tmpl_init_data = tmpl_init_data.replace('<csm-admin-user>',ldap_user)
-        tmpl_init_data = tmpl_init_data.replace('<csm-admin-password>',csm_admin_ldap_password)
-        Text(const.CSM_LDAP_ADMIN_FILE_PATH).dump(tmpl_init_data)
-        self._perform_ldif_parsing(ldap_url, const.CSM_LDAP_ADMIN_FILE_PATH, bind_base_dn, _rootdnpassword)
-        Setup._run_cmd(f'rm -rf {const.CSM_LDAP_ADMIN_FILE_PATH}')
-
-    def _modify_ldap_attribute(self, ldap_url, dn, attribute, value):
-        ldap_root_admin_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.OPENLDAP_ROOT_ADMIN], 'admin')
-        _bind_dn = f"cn={ldap_root_admin_user},cn=config"
-        ldap_root_secret = Conf.get(const.CSM_GLOBAL_INDEX, const.OPEN_LDAP_ADMIN_SECRET)
-        _ldappasswd= self._decrypt_secret(ldap_root_secret,self.cluster_id,
-                    Conf.get(const.CSM_GLOBAL_INDEX, "S3>password_decryption_key"))
-        try:
-            self._connect_to_ldap_server(ldap_url, _bind_dn, _ldappasswd)
-            mod_attrs = [(ldap.MOD_ADD, attribute, bytes(str(value), 'utf-8'))]
-            Log.info(f"Modifying attribute permissions: {mod_attrs}")
-            self._ldap_conn.modify_s(dn, mod_attrs)
-        except Exception as e:
-            if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
-                Log.warn(f"Exception: Type or Value already exists: {e}")
-            else:
-                Log.error('Error while modifying attribute- '+ attribute )
-                raise Exception('Error while modifying attribute' + attribute)
-        finally:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-
-    def _perform_ldif_parsing(self, ldap_url, filename, binddn, pwd):
-        parser = LDIFRecordList(open(filename, 'r'))
-        parser.parse()
-        for dn, entry in parser.all_records:
-            add_record = list(entry.items())
-            self._add_attribute(ldap_url, binddn, dn, add_record, pwd)
-
-    def _add_attribute(self, ldap_url, binddn, dn, record, pwd):
-        try:
-            self._connect_to_ldap_server(ldap_url, binddn, pwd)
-            self._ldap_conn.add_s(dn, record)
-        except Exception as e:
-            if isinstance(e, ldap.TYPE_OR_VALUE_EXISTS):
-                Log.warn(f"Exception:Type already exist: {e}")
-            elif isinstance(e, ldap.OTHER):
-                Log.warn(f"Exception:Attribute  Error: {e}")
-            elif isinstance(e, ldap.ALREADY_EXISTS):
-                Log.warn(f"Exception: Resource already Exist: {e}")
-            else:
-                Log.error('Error while adding attribute')
-                raise Exception('Error while adding attribute')
-        finally:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-
-
-    def _set_user_collection(self):
-        """
-        Sets collection for User model in database.conf
-        :return:
-        """
-        base_dn = Conf.get(const.CSM_GLOBAL_INDEX,const.OPEN_LDAP_BASE_DN)
-        csm_schema_version = Conf.get(const.CSM_GLOBAL_INDEX,
-                                    const.LDAP_AUTH_CSM_SCHEMA_VERSION)
-        for each_count in range(int(Conf.get(const.DATABASE_INDEX,const.DB_MODELS_COUNT))):
-
-            database_name = Conf.get(const.DATABASE_INDEX,
-                                        const.DB_MODELS_DATABASE_NAME.format(each_count))
-
-            if Conf.get(const.DATABASE_INDEX,
-                        const.DB_MODELS_IMPORT_PATH.format(each_count)) \
-                                            == 'csm.core.data.models.users.User':
-                Conf.set(const.DATABASE_INDEX,
-                        const.DB_MODELS_COLLECTION_NAME.format(each_count,
-                                                                database_name),
-                        const.CORTXUSERS_DN.format(csm_schema_version,base_dn))
-                break
 
     def _create_perf_stat_topic(self, mb_admin):
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)

@@ -72,7 +72,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         self._set_cluster_id()
         self._set_db_host_addr()
         self._set_fqdn_for_nodeid()
-        self._set_csm_ldap_credentials()
         self._set_password_to_csm_user()
         #Configure functionality
         self._configure_uds_keys()
@@ -104,8 +103,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
             const.KEY_DATA_NW_PRIVATE_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PRIVATE_FQDN}",
             const.KEY_HOSTNAME:f"{const.SERVER_NODE_INFO}>{const.HOSTNAME}",
             const.KEY_CLUSTER_ID:f"{const.SERVER_NODE_INFO}>{const.CLUSTER_ID}",
-            const.KEY_CSM_LDAP_USER:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.USER}",
-            const.KEY_CSM_LDAP_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.OPENLDAP}>{const.SGIAM}>{const.SECRET}",
             const.KEY_CSM_SECRET:f"{const.CORTX}>{const.SOFTWARE}>{const.NON_ROOT_USER}>{const.SECRET}",
             const.KEY_DATA_NW_PUBLIC_FQDN:f"{const.SERVER_NODE_INFO}>{const.NETWORK}>{const.DATA}>{const.PUBLIC_FQDN}",
             })

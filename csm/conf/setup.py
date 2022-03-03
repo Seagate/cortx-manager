@@ -19,8 +19,6 @@ import grp
 import errno
 import aiohttp
 from cortx.utils.validator.v_consul import ConsulV
-import ldap
-from ldap.ldapobject import SimpleLDAPObject
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from cortx.utils.validator.error import VError
@@ -45,7 +43,6 @@ class Setup:
         self._setup_info = dict()
         self._is_env_vm = False
         self._is_env_dev = False
-        self._ldap_conn = None
         self.machine_id = Conf.machine_id
         self.conf_store_keys = {}
 
@@ -266,7 +263,6 @@ class Setup:
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
         from csm.common.conf import Security
-        # TODO confstore keys can be changed.
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
                                     const.CSM_AGENT_MGMT_ADMIN_KEY)
@@ -283,8 +279,6 @@ class Setup:
         cluster_admin_secret = self._decrypt_secret(cluster_admin_secret, self.cluster_id,
                                                 Conf.get(const.CSM_GLOBAL_INDEX,
                                                         const.S3_PASSWORD_DECRYPTION_KEY))
-        ldap_csm_admin_secret = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PASSWORD)
-
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
@@ -294,19 +288,9 @@ class Setup:
             'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
             'models': Conf.get(const.DB_DICT_INDEX,'models')
         }
-        del db_config_dict["databases"]["consul_db"]["config"]["hosts_count"]
-        del db_config_dict["databases"]["openldap"]["config"]["hosts_count"]
         conf = GeneralConfig(db_config_dict)
-        conf['databases']["openldap"]["config"][const.PORT] = int(
-                    conf['databases']["openldap"]["config"][const.PORT])
-        conf['databases']["openldap"]["config"]["login"] = Conf.get(const.DATABASE_INDEX,
-                                             const.DB_OPENLDAP_CONFIG_LOGIN)
-        conf['databases']["openldap"]["config"]["password"] = \
-                            self._decrypt_secret(ldap_csm_admin_secret,
-                                                self.cluster_id,
-                                                Conf.get(const.CSM_GLOBAL_INDEX,
-                                                        const.S3_PASSWORD_DECRYPTION_KEY))
-
+        conf['databases']["consul_db"]["config"][const.PORT] = int(
+                    conf['databases']["consul_db"]["config"][const.PORT])
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
         usr_service = CsmUserService(usr_mngr)
@@ -415,7 +399,6 @@ class Setup:
         Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
 
     def _decrypt_secret(self, secret, cluster_id, decryption_key):
-        Log.info("Fetching LDAP root user password from Conf Store.")
         try:
             cipher_key = Cipher.generate_key(cluster_id,decryption_key)
         except KvError as error:
@@ -425,96 +408,12 @@ class Setup:
             Log.error(f"{e}")
             return None
         try:
-            ldap_root_decrypted_value = Cipher.decrypt(cipher_key,
+            decrypted_value = Cipher.decrypt(cipher_key,
                                                 secret.encode("utf-8"))
-            return ldap_root_decrypted_value.decode('utf-8')
+            return decrypted_value.decode('utf-8')
         except CipherInvalidToken as error:
-            Log.error(f"Decryption for LDAP root user password Failed. {error}")
-            raise CipherInvalidToken(f"Decryption for LDAP root user password Failed. {error}")
-
-    def _fetch_ldap_root_user(self):
-        Log.info("Fetching LDAP root user from Conf Store.")
-        try:
-            ldap_root_user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ROOT_LDAP_USER])
-        except KvError as error:
-            Log.error(f"Failed to Fetch keys from Conf store. {error}")
-            return None
-        except Exception as e:
-            Log.error(f"{e}")
-            return None
-        return ldap_root_user
-
-    def _connect_to_ldap_server(self, ldap_url, bind_dn, ldappasswd):
-        """
-        Establish connection to ldap server.
-        """
-        from ldap import initialize, VERSION3, OPT_REFERRALS
-        Log.info("Setting up Ldap connection")
-        self._ldap_conn = initialize(ldap_url)
-        self._ldap_conn.protocol_version = VERSION3
-        self._ldap_conn.set_option(OPT_REFERRALS, 0)
-        self._ldap_conn.simple_bind_s(bind_dn, ldappasswd)
-
-    def _disconnect_from_ldap(self):
-        """
-        Disconnects from ldap.
-        """
-        Log.info("Closing Ldap connection")
-        self._ldap_conn.unbind_s()
-        self._ldap_conn = None
-
-    def _delete_user_data(self, bind_dn, ldappasswd, users_dn):
-        """
-        Delete data entries from ldap.
-        """
-        try:
-            self._connect_to_ldap_server(Setup._get_ldap_url(), bind_dn, ldappasswd)
-            try:
-                self._ldap_delete_recursive(self._ldap_conn, users_dn)
-            except ldap.NO_SUCH_OBJECT:
-            # If no entries found in ldap for given dn
-                pass
-            self._disconnect_from_ldap()
-        except Exception as e:
-            if self._ldap_conn:
-                self._disconnect_from_ldap()
-            Log.error(f'ERROR: Failed to delete ldap data, error: {str(e)}')
-            raise CsmSetupError(f'Failed to delete ldap data, error: {str(e)}')
-
-    def _ldap_delete_recursive(self, ldap_conn: SimpleLDAPObject, users_dn: str):
-        """
-        Delete all objects and its subordinate entries from ldap.
-        """
-        Log.info(f'Deleting all entries from {users_dn}')
-        l_search = ldap_conn.search_s(users_dn, ldap.SCOPE_ONELEVEL)
-        for dn, _ in l_search:
-            if not dn == users_dn:
-                self._ldap_delete_recursive(ldap_conn, dn)
-                ldap_conn.delete_s(dn)
-    @staticmethod
-    def _get_ldap_url():
-        """
-        Return ldap url
-        ldap endpoint and port will be read from database conf
-        """
-        ldap_hosts_count = int(Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_HOSTS_COUNT))
-        for each_ldap_host in range(ldap_hosts_count):
-            ldap_endpoint = Conf.get(const.DATABASE_INDEX,
-                        f'{const.DB_OPENLDAP_CONFIG_HOSTS}[{each_ldap_host}]')
-        ldap_port = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PORT)
-        ldap_url = f"ldap://{ldap_endpoint}:{ldap_port}/"
-        Log.info(f"Fetch LDAP URL: {ldap_url}")
-        return ldap_url
-
-    @staticmethod
-    def _get_ldap_server_url():
-        ldap_server_url_list = []
-        ldap_port = Conf.get(const.DATABASE_INDEX, const.DB_OPENLDAP_CONFIG_PORT)
-        for each_count in range(int(Conf.get(const.DATABASE_INDEX, const.OPEN_LDAP_SERVERS_COUNT))):
-            ldap_server = Conf.get(const.DATABASE_INDEX, f'{const.OPEN_LDAP_SERVERS}[{each_count}]')
-            ldap_server_url_list.append(f"ldap://{ldap_server}:{ldap_port}/")
-        Log.info(f"Fetch LDAP server URL: {ldap_server_url_list}")
-        return ldap_server_url_list
+            Log.error(f"Secret decryption Failed. {error}")
+            raise CipherInvalidToken(f"Secret decryption Failed. {error}")
 
     def _parse_endpoints(self, url):
         if "://"in url:
@@ -647,25 +546,17 @@ class Setup:
         if any(is_auto_restart_required):
             Log.debug("Updating All setup file for Auto Restart on "
                              "Failure")
-            Setup._update_systemd_conf("#< RESTART_OPTION >",
-                                      "Restart=on-failure")
+            # Related keys deprecated
+            #Setup._update_systemd_conf("#< RESTART_OPTION >",
+            #                         "Restart=on-failure")
             Setup._run_cmd("systemctl daemon-reload")
-
-    @staticmethod
-    def is_k8s_env() -> bool:
-        """
-        Check if systemd should be used for the current set up.
-
-        :returns: True if systemd should be used.
-        """
-        env_type = Conf.get(const.CONSUMER_INDEX, const.ENV_TYPE_KEY, None)
-        return env_type == const.K8S
 
     @staticmethod
     def _update_systemd_conf(key, value):
         """
         Update CSM Files Depending on Job Type of Setup.
         """
+        # TODO: Need to clean up this code removed method is_k8s_env:
         if Setup.is_k8s_env:
             Log.warn('SystemD is not used in this environment and will not be updated')
             return

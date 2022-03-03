@@ -1,5 +1,5 @@
 # CORTX-CSM: CORTX Management web and CLI interface.
-# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# Copyright (c) 2022 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
@@ -12,9 +12,3 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-
-dn: o=userAccount,ou=accounts,dc=<version>,dc=csm,<base-dn>
-o: userAccount
-cortxAccountId: cortxUserAccount
-objectclass: CortxAccount
-mail: cortxUserAccount@seagate.com

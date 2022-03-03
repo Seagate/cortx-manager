@@ -388,8 +388,6 @@ S3_HOST = 'S3>host'
 S3_IAM_PORT = 'S3>iam_port'
 S3_PORT = 'S3>s3_port'
 S3_MAX_RETRIES_NUM = 'S3>max_retries_num'
-S3_LDAP_LOGIN = 'S3>ldap_login'
-S3_LDAP_PASSWORD = 'S3>ldap_password'
 
 S3_CREATE_ACCOUNT_RESP_ACCOUNT_PATH = (
     'CreateAccountResponse', 'CreateAccountResult', 'Account')
@@ -559,6 +557,7 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -607,6 +606,7 @@ CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
+RGW_PLUGIN = "rgw"
 
 # REST METHODS
 POST = "POST"
@@ -631,9 +631,7 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "S3>ldap_password": "S3>password_decryption_key",
-    "CSM>password": "CSM>password_decryption_key",
-    "OPENLDAP>csm_ldap_user_password": "CSM>password_decryption_key"
+    "RGW>s3>iam>admin_secret_key": "DECRYPTION>decrypt_value"
 }
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
@@ -684,6 +682,7 @@ SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
                   'dns_network_settings', 'date_time_settings', 'notifications']
 #Maintenance
 STATE_CHANGE = "Successfully put {node} on {state} state"
+CAPACITY_RESOURCE = "capacity_resource"
 ACTION = "action"
 NODE_STATUS = "node_status"
 STANDBY = "standby"
@@ -809,14 +808,10 @@ KEY_ENCLOSURE_ID = "enclosure_id_key"
 KEY_CLUSTER_ID = "cluster_id_key"
 KEY_CSM_USER = "csm_user_key"
 KEY_CSM_SECRET = "csm_secret_key"
-KEY_CSM_LDAP_USER = "openldap_csm_user_key"
-KEY_CSM_LDAP_SECRET = "openldap_csm_secret_key"
 KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
-KEY_ROOT_LDAP_USER = "openldap_root_user_key"
-KEY_ROOT_LDAP_SECRET = "openldap_root_secret_key"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -825,49 +820,14 @@ DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
 
-#Openldap CSM Setup consts
-OPENLDAP_KEY = "OPENLDAP"
-BASE_DN_KEY = "base_dn"
-BIND_BASE_DN_KEY = "bind_base_dn"
-DEFAULT_BASE_DN = "dc=seagate,dc=com"
-DEFAULT_BIND_BASE_DN = "cn=admin,dc=seagate,dc=com"
-LDAP_USER = "cn={0},{1}"
-CSM_LDAP_INIT_FILE_NAME = "csm-ldap-init.ldif"
-CSM_LDAP_ACC_FILE_NAME = "userAccount.ldif"
-CSM_LDAP_ADMIN_FILE_NAME = "csm-admin.ldif"
-CSM_LDAP_ADMIN_USER_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ADMIN_FILE_NAME)
-CORTXUSER_SCHEMA_LDIF = "{}/conf/etc/openldap/cortxuser.ldif".format(CSM_PATH)
-CORTXUSER_INIT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_INIT_FILE_NAME)
-CORTXUSER_ACCOUNT_LDIF = "{0}/conf/etc/openldap/{1}".format(CSM_PATH, CSM_LDAP_ACC_FILE_NAME)
-CORTXUSERS_DN = "o=userAccount,ou=accounts,dc={0},dc=csm,{1}"
-CORTXACCOUNTS_DN = "ou=accounts,dc={0},dc=csm,{1}"
-CSM_DN = "dc=csm,{}"
-DEFAULT_OPENLDAP_PORT = "389"
-CSM_LDAP_INIT_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_INIT_FILE_NAME)
-CSM_LDAP_ADMIN_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_ADMIN_FILE_NAME)
-CSM_LDAP_ACC_FILE_PATH = "{0}/{1}".format(TMP_CSM, CSM_LDAP_ACC_FILE_NAME)
-
 #Cluster admin creds
 DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
 DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'
 DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
 
-# LC keys
+# cluster.conf keys
 ENV_TYPE = "env_type"
-ENV_TYPE_KEY = "cortx>common>setup_type"
 CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
-PRODUCT_REALESE = 'product_release'
-PRODUCT_REALESE_KEY = 'cortx>common>product_release'
-OPENLDAP_ENDPOINTS = 'openldap_endpoints'
-OPENLDAP_ENDPOINTS_KEY = 'cortx>external>openldap>endpoints[0]'
-OPENLDAP_SERVERS = 'openldap_servers'
-OPENLDAP_SERVERS_KEY = 'cortx>external>openldap>servers'
-OPENLDAP_ROOT_ADMIN = 'openldap_root_admin'
-OPENLDAP_ROOT_ADMIN_KEY = 'cortx>external>openldap>admin'
-OPENLDAP_ROOT_SECRET = 'openldap_root_secret'
-OPENLDAP_ROOT_SECRET_KEY = 'cortx>external>openldap>secret'
-OPENLDAP_BASEDN = 'openldap_base_dn'
-OPENLDAP_BASEDN_KEY = 'cortx>external>openldap>base_dn'
 KAFKA_ENDPOINTS = 'cortx>external>kafka>endpoints'
 CONSUL_ENDPOINTS = 'consul_endpoints'
 CONSUL_ENDPOINTS_KEY = 'cortx>external>consul>endpoints'
@@ -881,27 +841,26 @@ DOMAIN_CERTIFICATE = 'domain_certificate'
 DOMAIN_CERTIFICATE_KEY = 'cortx>common>security>domain_certificate'
 DEVICE_CERTIFICATE = 'device_certificate'
 DEVICE_CERTIFICATE_KEY = 'cortx>common>security>device_certificate'
-S3_IAM_ENDPOINTS = 's3_iam_endoints'
-S3_IAM_ENDPOINTS_KEY = 'cortx>s3>iam>endpoints[0]'
-S3_DATA_ENDPOINT = 's3_data_endpoints'
-S3_DATA_ENDPOINTS_KEY = 'cortx>s3>data>endpoints[0]'
-S3_AUTH_ADMIN = 's3_auth_admin'
-S3_AUTH_ADMIN_KEY = 'cortx>s3>auth_admin'
-S3_AUTH_SECRET = 's3_auth_secret'
-S3_AUTH_SECRET_KEY = 'cortx>s3>auth_secret'
 CSM_AGENT_ENDPOINTS = 'csm_agent_endpoints'
 CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints[0]'
 CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
 CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
-CSM_AGENT_AUTH_ADMIN_KEY = 'cortx>csm>auth_admin'
-CSM_AGENT_AUTH_SECRET_KEY = 'cortx>csm>auth_secret'
 CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
 CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
 METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
 METRICS_PERF_STATS_RETENTION_SIZE_KEY = 'cortx>csm>metrics>stats>retention_size'
+RGW_S3_DATA_ENDPOINT = 'rgw_s3_data_endpoints'
+RGW_S3_DATA_ENDPOINTS_KEY = 'cortx>rgw>s3>endpoints'
+RGW_S3_AUTH_USER = 'rgw_s3_auth_user'
+RGW_S3_AUTH_USER_KEY = 'cortx>rgw>auth_user'
+RGW_S3_AUTH_ADMIN = 'rgw_s3_auth_admin'
+RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
+RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
+RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
+HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -912,23 +871,12 @@ IAM_ENDPOINT = 'S3>iam>endpoints'
 IAM_HOST= 'S3>iam>host'
 IAM_PORT = 'S3>iam>port'
 IAM_PROTOCOL = 'S3>iam>protocol'
-LDAP_AUTH_CSM_USER = 'OPENLDAP>csm_ldap_user_login'
-LDAP_AUTH_CSM_SECRET = 'OPENLDAP>csm_ldap_user_password'
-LDAP_AUTH_CSM_SCHEMA_VERSION = 'OPENLDAP>csm_schema_version'
-OPEN_LDAP_ADMIN_USER = 'OPENLDAP>root_ldap_login'
-OPEN_LDAP_ADMIN_SECRET = 'OPENLDAP>root_ldap_password'
-OPEN_LDAP_SERVERS = 'OPENLDAP>servers'
-OPEN_LDAP_SERVERS_COUNT = 'OPENLDAP>servers_count'
-OPEN_LDAP_BASE_DN = 'OPENLDAP>base_dn'
-OPEN_LDAP_BIND_BASE_DN = 'OPENLDAP>bind_base_dn'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
 SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
 HTTPS_PORT = "HTTPS>port"
 LOG_PATH = 'Log>log_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
-S3_AUTH_USER_CONF = 'S3>ldap_login'
-S3_AUTH_SECRET_CONF = 'S3>ldap_password'
 CLUSTER_ADMIN_USER = 'CLUSTER_ADMIN>user'
 CLUSTER_ADMIN_SECRET = 'CLUSTER_ADMIN>secret'
 CLUSTER_ADMIN_EMAIL = 'CLUSTER_ADMIN>email'
@@ -962,6 +910,15 @@ CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
 CSM_UPDATE_HOTFIX_PATH = 'UPDATE>hotfix_store_path'
 CSM_UPDATE_FIRMWARE_PATH = 'UPDATE>firmware_store_path'
+RGW_S3_IAM_ADMIN_USER = 'RGW>s3>iam>admin_user'
+RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
+RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
+RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
+KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
+# Degraded byte count
+CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
+CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
+CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api'
 #keys for database models
 DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
@@ -969,12 +926,31 @@ DB_MODELS_DATABASE_NAME = 'models[{0}]>database'
 DB_MODELS_COLLECTION_NAME = 'models[{0}]>config>{1}>collection'
 #keys for database.conf file setup
 DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
-DB_CONSUL_CONFIG_HOST_COUNT = 'databases>consul_db>config>hosts_count'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
-DB_OPENLDAP_CONFIG_HOSTS = 'databases>openldap>config>hosts'
-DB_OPENLDAP_CONFIG_HOSTS_COUNT = 'databases>openldap>config>hosts_count'
-DB_OPENLDAP_CONFIG_PORT = 'databases>openldap>config>port'
-DB_OPENLDAP_CONFIG_LOGIN = 'databases>openldap>config>login'
-DB_OPENLDAP_CONFIG_PASSWORD = 'databases>openldap>config>password'
+
+# RGW AdminOps
+RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
+CREATE_USER_OPERATION = 'CREATE_USER'
+GET_USER_OPERATION = 'GET_USER'
+DELETE_USER_OPERATION = 'DELETE_USER'
+RGW_CLIENT_ERROR_MSG = 'Can not process the request'
+CREATE_KEY_OPERATION = 'CREATE_KEY'
+REMOVE_KEY_OPERATION = 'REMOVE_KEY'
+
+# RGW AdminOps- create-user
+RGW_JSON_UID = 'uid'
+RGW_JSON_DISPLAY_NAME = 'display_name'
+RGW_JSON_EMAIL = 'email'
+RGW_JSON_KEY_TYPE = 'key_type'
+RGW_JSON_ACCESS_KEY = 'access_key'
+RGW_JSON_SECRET_KEY = 'secret_key'
+RGW_JSON_USER_CAPS = 'user_caps'
+RGW_JSON_GENERATE_KEY = 'generate_key'
+RGW_JSON_MAX_BUCKETS = 'max_buckets'
+RGW_JSON_SUSPENDED = 'suspended'
+RGW_JSON_TENANT = 'tenant'
+
+# RGW AdminOps- remove-user
+RGW_JSON_PURGE_DATA = 'purge_data'
