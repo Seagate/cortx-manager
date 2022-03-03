@@ -1,0 +1,59 @@
+{
+    "CREATE_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "display_name": "display-name",
+            "email": "email",
+            "key_type": "key-type",
+            "access_key": "access-key",
+            "secret_key": "secret-key",
+            "user_caps": "user-caps",
+            "generate_key": "generate-key",
+            "max_buckets": "max-buckets",
+            "suspended": "suspended",
+            "tenant": "tenant"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "GET_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "DELETE_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "DELETE",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "purge_data":"purge-data"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "CREATE_KEY": {
+        "ENDPOINT": "/admin/user?key",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "key_type": "key-type",
+            "access_key": "access-key",
+            "secret_key": "secret-key",
+            "generate_key": "generate-key"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "REMOVE_KEY": {
+        "ENDPOINT": "/admin/user?key",
+        "METHOD": "DELETE",
+        "REQUEST_BODY_SCHEMA": {
+            "access_key": "access-key",
+            "uid": "uid",
+            "key_type": "key-type"
+        },
+        "SUCCESS_CODE": 200
+    }
+}

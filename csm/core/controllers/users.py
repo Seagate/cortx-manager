@@ -141,10 +141,12 @@ class CsmUsersListView(CsmView):
 
         await self.check_max_user_limit()
 
-        s3_account = await self.request.app["s3_account_service"].get_account(
-            user_body['user_id'])
-        if s3_account is not None:
-            raise InvalidRequest("S3 account with same name as passed CSM username already exists")
+        # TODO: Story has been taken for unsupported services
+        # The following commented lines will be removed by above story
+        # s3_account = await self.request.app["s3_account_service"].get_account(
+        #    user_body['user_id'])
+        # if s3_account is not None:
+        #    raise InvalidRequest("S3 account with same name as passed CSM username already exists")
 
         user_body['creator_id'] = creator
         response = await self._service.create_user(**user_body)
