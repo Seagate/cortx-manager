@@ -45,7 +45,7 @@ class StorageCapacityView(CsmView):
         return await self._service.get_capacity_details(unit=unit, round_off_value=round_off_value)
 
 
-@CsmView._app_routes.view("/api/v2/cluster/status")
+@CsmView._app_routes.view("/api/v2/capacity/status")
 class CapacityStatusView(CsmView):
     """
     GET REST API view implementation for getting cluster status
@@ -67,7 +67,7 @@ class CapacityStatusView(CsmView):
                                    resp.message)
         return resp
 
-@CsmView._app_routes.view("/api/v2/cluster/status/{capacity_resource}")
+@CsmView._app_routes.view("/api/v2/capacity/status/{capacity_resource}")
 class CapacityManagementView(CsmView):
     """
     GET REST API view implementation for getting cluster status for specific resource
