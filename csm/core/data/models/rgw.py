@@ -45,6 +45,7 @@ class RgwErrors(Enum):
     KeyExists = "Provided access key exists and belongs to another user."
     EmailExists = "Provided email address exists."
     InvalidCapability = "Attempt to grant invalid admin capability."
+    InvalidArgument = "Invalid Argument Key or Value"
 
 class RgwError:
     """Class that describes a non-successful result"""

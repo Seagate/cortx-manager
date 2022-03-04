@@ -75,4 +75,4 @@ class BucketService(S3BaseService):
         """
         Log.debug(f"Bucket Operation:- {operation} for S3 user")
 
-        return await self.operation_service_map[operation](**request_body)
+        return await self.operation_service_map[operation](self, **request_body)
