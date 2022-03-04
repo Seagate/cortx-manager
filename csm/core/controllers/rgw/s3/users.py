@@ -57,6 +57,13 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 class UserModifySchema(S3IAMusersBaseSchema):
     """S3 IAM User modify schema validation class."""
 
+    def validate_op_mask(op_mask: str):
+        op_mask = op_mask.replace(' ','')
+        if not op_mask:
+            return True
+        op_mask_list = op_mask.split(",")
+        return len(list(set(op_mask_list)-set(const.RGW_SUPPORTED_OP_MASKS)))==0
+
     display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, missing=None)
     email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
     generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
@@ -67,7 +74,7 @@ class UserModifySchema(S3IAMusersBaseSchema):
     max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
     suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
     op_mask = fields.Str(data_key=const.RGW_JSON_OP_MASK, missing=None,
-                    validate=validate.OneOf(const.RGW_SUPPORTED_OP_MASKS))
+                    validate=validate_op_mask)
 
 class CreateKeySchema(S3IAMusersBaseSchema):
     """
