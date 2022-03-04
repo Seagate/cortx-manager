@@ -14,6 +14,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
+import aiohttp
+from aiohttp.client import ClientSession
+from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess,AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
@@ -25,6 +28,9 @@ class StorageCapacityService(ApplicationService):
     """
     Service for Get disk capacity details
     """
+
+    def __init__(self):
+        self.capacity_error = CapacityError()
 
     @staticmethod
     def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
@@ -84,3 +90,54 @@ class StorageCapacityService(ApplicationService):
                                                              int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
         formatted_output[const.UNIT] = unit
         return formatted_output
+
+
+    async def request(self, session: ClientSession, method, url, expected_success_code):
+        async with session.request(url=url, method=method) as resp:
+            if resp.status != expected_success_code:
+                self._create_error(resp.status, resp.reason)
+                return self.capacity_error
+            return await resp.json()
+
+    async def get_cluster_data(self, data_filter=None):
+        """
+        Retrieve cluster data for specific resource or all resources.
+        :param data_filter: Optional parameter indicate specific resource.
+        :returns: cluster data or instance of error for negative scenarios.
+        """
+
+        url = Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT) + \
+            Conf.get(const.CSM_GLOBAL_INDEX,const.CAPACITY_MANAGMENT_HCTL_CLUSTER_API)
+        method = const.GET
+        expected_success_code=200
+        if data_filter:
+            url = url + "/" + data_filter
+        Log.info(f"Request {url} for cluster data")
+        async with aiohttp.ClientSession() as session:
+            try:
+                response = await self.request(session, method, url, expected_success_code)
+            except Exception as e:
+                Log.error(f"Error in obtaining response from {url}: {e}")
+                if "Cannot connect to" in str(e):
+                    self._create_error(503, "Unable to connect to the service")
+                    return self.capacity_error
+                raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
+
+            return response
+
+    def _create_error(self, status: int, reason):
+        """
+        Converts a body of a failed query into orignal error object.
+        :param status: HTTP Status code.
+        :param body: parsed HTTP response (dict) with the error's decription.
+        """
+        Log.error(f"Create error body: {reason}")
+        self.capacity_error.http_status = status
+        self.capacity_error.message_id = reason
+        self.capacity_error.message = reason
+
+class CapacityError:
+        """Class that describes a non-successful result"""
+        http_status: int
+        message_id: str
+        message: str
