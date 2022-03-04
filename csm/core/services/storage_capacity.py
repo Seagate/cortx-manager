@@ -95,7 +95,7 @@ class StorageCapacityService(ApplicationService):
     async def request(self, session: ClientSession, method, url, expected_success_code):
         async with session.request(url=url, method=method) as resp:
             if resp.status != expected_success_code:
-                self._create_error(resp.status, resp)
+                self._create_error(resp.status, resp.reason)
                 return self.capacity_error
             return await resp.json()
 
@@ -118,20 +118,23 @@ class StorageCapacityService(ApplicationService):
                 response = await self.request(session, method, url, expected_success_code)
             except Exception as e:
                 Log.error(f"Error in obtaining response from {url}: {e}")
+                if "Cannot connect to" in str(e):
+                    self._create_error(503, "Unable to connect to the service")
+                    return self.capacity_error
                 raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
 
             return response
 
-    def _create_error(self, status: int, resp):
+    def _create_error(self, status: int, reason):
         """
         Converts a body of a failed query into orignal error object.
         :param status: HTTP Status code.
         :param body: parsed HTTP response (dict) with the error's decription.
         """
-        Log.error(f"Create error body: {resp}")
+        Log.error(f"Create error body: {reason}")
         self.capacity_error.http_status = status
-        self.capacity_error.message_id = resp.reason
-        self.capacity_error.message = resp.reason
+        self.capacity_error.message_id = reason
+        self.capacity_error.message = reason
 
 class CapacityError:
         """Class that describes a non-successful result"""
