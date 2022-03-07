@@ -935,11 +935,16 @@ RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.
 CREATE_USER_OPERATION = 'CREATE_USER'
 GET_USER_OPERATION = 'GET_USER'
 DELETE_USER_OPERATION = 'DELETE_USER'
-RGW_CLIENT_ERROR_MSG = 'Can not process the request'
+MODIFY_USER_OPERATION = 'MODIFY_USER'
+RGW_CLIENT_ERROR_MSG = 'Unable to process the request'
 CREATE_KEY_OPERATION = 'CREATE_KEY'
 REMOVE_KEY_OPERATION = 'REMOVE_KEY'
-
-# RGW AdminOps- create-user
+RGW_CLIENT_ERROR_CODES = {
+    408: { "Code": "RequestTimeout" },
+    503: { "Code": "S3ServiceUnavailable" }
+    }
+RGW_TIMEOUT = 10
+# RGW AdminOps APIs
 RGW_JSON_UID = 'uid'
 RGW_JSON_DISPLAY_NAME = 'display_name'
 RGW_JSON_EMAIL = 'email'
@@ -951,6 +956,7 @@ RGW_JSON_GENERATE_KEY = 'generate_key'
 RGW_JSON_MAX_BUCKETS = 'max_buckets'
 RGW_JSON_SUSPENDED = 'suspended'
 RGW_JSON_TENANT = 'tenant'
-
-# RGW AdminOps- remove-user
 RGW_JSON_PURGE_DATA = 'purge_data'
+RGW_JSON_OP_MASK = 'op_mask'
+RGW_SUPPORTED_OP_MASKS = ['read', 'write', 'delete', '*']
+RGW_SUPPORTED_KEY_TYPES = ['s3']
