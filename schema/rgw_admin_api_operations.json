@@ -34,6 +34,24 @@
         },
         "SUCCESS_CODE": 200
     },
+    "MODIFY_USER": {
+        "ENDPOINT": "/admin/user",
+        "METHOD": "POST",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "display_name": "display-name",
+            "email": "email",
+            "generate_key": "generate-key",
+            "access_key": "access-key",
+            "secret_key": "secret-key",
+            "key_type": "key-type",
+            "user_caps": "user-caps",
+            "max_buckets": "max-buckets",
+            "suspended": "suspended",
+            "op_mask":"op-mask"
+        },
+        "SUCCESS_CODE": 200
+    },
     "CREATE_KEY": {
         "ENDPOINT": "/admin/user?key",
         "METHOD": "PUT",
