@@ -962,7 +962,6 @@ RGW_JSON_GENERATE_KEY = 'generate_key'
 RGW_JSON_MAX_BUCKETS = 'max_buckets'
 RGW_JSON_SUSPENDED = 'suspended'
 RGW_JSON_TENANT = 'tenant'
-<<<<<<< HEAD
 RGW_JSON_OP_MASK = 'op_mask'
 RGW_SUPPORTED_OP_MASKS = ['read', 'write', 'delete', '*']
 RGW_SUPPORTED_KEY_TYPES = ['s3']
