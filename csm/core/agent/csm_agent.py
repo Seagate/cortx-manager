@@ -157,7 +157,7 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
-        # RGW S3 IAM user service
+        # RGW S3 service
         CsmAgent._configure_s3_services()
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
