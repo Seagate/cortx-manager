@@ -40,7 +40,7 @@ class UserCreateSchema(S3IAMusersBaseSchema):
     display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, required=True)
     email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(['s3']))
+                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
     secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
     user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
@@ -54,6 +54,28 @@ class UserDeleteSchema(S3IAMusersBaseSchema):
 
     purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
 
+class UserModifySchema(S3IAMusersBaseSchema):
+    """S3 IAM User modify schema validation class."""
+
+    def validate_op_mask(op_mask: str):
+        op_mask = op_mask.replace(' ','')
+        if not op_mask:
+            return True
+        op_mask_list = op_mask.split(",")
+        return len(list(set(op_mask_list)-set(const.RGW_SUPPORTED_OP_MASKS)))==0
+
+    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, missing=None)
+    email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
+    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
+    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
+                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
+    max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
+    op_mask = fields.Str(data_key=const.RGW_JSON_OP_MASK, missing=None,
+                    validate=validate_op_mask)
+
 class CreateKeySchema(S3IAMusersBaseSchema):
     """
     S3 Create/Add Access Key schema validation class.
@@ -61,7 +83,7 @@ class CreateKeySchema(S3IAMusersBaseSchema):
 
     uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(['s3']))
+                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
     secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
     user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
@@ -75,7 +97,7 @@ class RemoveKeySchema(S3IAMusersBaseSchema):
     access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
     uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
     key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(['s3']))
+                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
@@ -95,7 +117,7 @@ class S3IAMUserListView(S3BaseView):
         """
         POST REST implementation for creating a new s3 iam user.
         """
-        Log.debug(f"Handling create s3 iam user POST request"
+        Log.info(f"Handling create s3 iam user POST request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = UserCreateSchema()
@@ -115,8 +137,9 @@ class S3IAMUserView(S3BaseView):
     """
     S3 IAM User View for REST API implementation.
 
-    GET: Get a existing IAM user
-    DELETE: Delete a existing IAM user
+    GET: Get an existing IAM user
+    DELETE: Delete an existing IAM user
+    PATCH: Modify an existing IAM user
     """
 
     def __init__(self, request):
@@ -127,9 +150,9 @@ class S3IAMUserView(S3BaseView):
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         """
-        GET REST implementation for fetching existing s3 iam user.
+        GET REST implementation for fetching an existing s3 iam user.
         """
-        Log.debug(f"Handling get s3 iam user GET request"
+        Log.info(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
@@ -143,17 +166,20 @@ class S3IAMUserView(S3BaseView):
     @Log.trace_method(Log.DEBUG)
     async def delete(self):
         """
-        DELETE REST implementation for deleting existing s3 iam user.
+        DELETE REST implementation for deleting an existing s3 iam user.
         """
-        Log.debug(f"Handling delete s3 iam user DELETE request"
+        Log.info(f"Handling delete s3 iam user DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
         try:
             schema = UserDeleteSchema()
-            request_body_params_dict = schema.load(await self.request.json())
+            if await self.request.text():
+                request_body_params_dict = schema.load(await self.request.json())
+            else:
+                request_body_params_dict = {}
         except json.decoder.JSONDecodeError:
-            request_body_params_dict = {}
+            raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_params_dict}
@@ -161,6 +187,33 @@ class S3IAMUserView(S3BaseView):
                 f" path params/request body: {request_body}")
         with self._guard_service():
             response = await self._service.delete_user(**request_body)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def patch(self):
+        """
+        PATCH REST implementation for modifying an existing s3 iam user.
+        """
+        Log.info(f"Handling patch s3 iam user PATCH request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.RGW_JSON_UID]
+        path_params_dict = {const.RGW_JSON_UID: uid}
+        try:
+            schema = UserModifySchema()
+            if await self.request.text():
+                request_body_params_dict = schema.load(await self.request.json())
+            else:
+                request_body_params_dict = {}
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Invalid Request Body")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        request_body = {**path_params_dict, **request_body_params_dict}
+        Log.debug(f"Handling s3 iam user Modify request"
+                f" path params/request body: {request_body}")
+        with self._guard_service():
+            response = await self._service.modify_user(**request_body)
             return CsmResponse(response)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/keys")
@@ -182,7 +235,7 @@ class S3IAMUserKeyView(S3BaseView):
         """
         PUT REST implementation to create/add access key for iam user.
         """
-        Log.debug(f"Handling Add access key PUT request"
+        Log.info(f"Handling add access key PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = CreateKeySchema()
@@ -203,7 +256,7 @@ class S3IAMUserKeyView(S3BaseView):
         """
         DELETE REST implementation to remove access key of user.
         """
-        Log.debug(f"Handling Remove access key DELETE request"
+        Log.info(f"Handling remove access key DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = RemoveKeySchema()
