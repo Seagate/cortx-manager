@@ -157,20 +157,6 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
-        # TODO: Story has been taken for unsupported services
-        # The following commented lines will be removed by above story
-        # S3 Plugin creation
-        #s3 = import_plugin_module(const.S3_PLUGIN).S3Plugin()
-        # CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = IamUsersService(s3)
-        # CsmRestApi._app[const.S3_ACCOUNT_SERVICE] = S3AccountService(s3)
-        # CsmRestApi._app[const.S3_BUCKET_SERVICE] = S3BucketService(s3)
-        # CsmRestApi._app[const.S3_ACCESS_KEYS_SERVICE] = S3AccessKeysService(s3)
-        # CsmRestApi._app[const.S3_SERVER_INFO_SERVICE] = S3ServerInfoService()
-
-        # # audit log download api
-        # audit_mngr = AuditLogManager(db)
-        # CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
-
         # RGW S3 IAM user service
         CsmAgent._configure_rgw_s3_iam_users_service()
 
@@ -191,19 +177,6 @@ class CsmAgent:
 
         CsmRestApi._app[const.APPLIANCE_INFO_SERVICE] = ApplianceInfoService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-
-        # TODO: Story has been taken for unsupported services
-        #  The commented lines will be removed by above story
-        # USL Service
-        # try:
-        #     Log.info("Load USL Configurations")
-        #     Conf.load(const.USL_GLOBAL_INDEX, f"yaml://{const.USL_CONF}")
-        #     usl_polling_log = Conf.get(const.USL_GLOBAL_INDEX, "Log>usl_polling_log")
-        #     CsmRestApi._app[const.USL_POLLING_LOG] = usl_polling_log
-        #     CsmRestApi._app[const.USL_SERVICE] = UslService(s3, db)    #NOT USING
-        # except Exception as e:
-        #     CsmRestApi._app[const.USL_POLLING_LOG] = 'false'
-        #     Log.warn(f"USL configuration not loaded: {e}")
 
         # Plugin for Maintenance
         # TODO : Replace PcsHAFramework with hare utility
