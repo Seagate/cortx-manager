@@ -47,7 +47,7 @@ class BucketService(S3BaseService):
 
         :param **request_body: bucket body kwargs
         """
-        uid = request_body.get(const.RGW_JSON_UID)
+        uid = request_body.get(const.UID)
         Log.debug(f"Link bucket for S3 bucket to uid = {uid}")
         return await self.execute_request(const.BUCKET_LINK_OPERATION, **request_body)
 
@@ -58,13 +58,13 @@ class BucketService(S3BaseService):
 
         :param **request_body: bucket body kwargs
         """
-        uid = request_body.get(const.RGW_JSON_UID)
+        uid = request_body.get(const.UID)
         Log.debug(f"Unlink bucket from  uid = {uid}")
         return await self.execute_request(const.BUCKET_UNLINK_OPERATION, **request_body)
 
     operation_service_map = {
-        const.LINK_BUCKET_OPERATION : link_bucket,
-        const.UNLINK_BUCKET_OPERATION : unlink_bucket
+        const.LINK : link_bucket,
+        const.UNLINK : unlink_bucket
     }
 
     @Log.trace_method(Log.DEBUG)

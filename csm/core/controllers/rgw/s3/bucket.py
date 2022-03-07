@@ -28,33 +28,33 @@ class BucketBaseSchema(S3BaseSchema):
     S3 Bucket First Level schema validation class.
     operation and arguments are required keys
     """
-    operation = fields.Str(data_key=const.RGW_JSON_OPERATION, required=True,
+    operation = fields.Str(data_key=const.ARG_OPERATION, required=True,
         validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
-    arguments = fields.Dict(data_key=const.RGW_JSON_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
+    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
 
 class LinkBucketSchema(S3BaseSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
     S3 Bucket Link schema validation class.
     """
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-    bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
-    bucket_id = fields.Str(data_key=const.RGW_JSON_BUCKET_ID, missing=None)
+    uid = fields.Str(data_key=const.UID, required=True)
+    bucket = fields.Str(data_key=const.BUCKET, required=True)
+    bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None)
 
 class UnlinkBucketSchema(S3BaseSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
     S3 Bucket Unlink schema validation class.
     """
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-    bucket = fields.Str(data_key=const.RGW_JSON_BUCKET, required=True)
+    uid = fields.Str(data_key=const.UID, required=True)
+    bucket = fields.Str(data_key=const.BUCKET, required=True)
 
 class SchemaFactory:
     @staticmethod
     def init(operation):
         operation_schema_map = {
-        const.LINK_BUCKET_OPERATION: LinkBucketSchema,
-        const.UNLINK_BUCKET_OPERATION: UnlinkBucketSchema
+        const.LINK: LinkBucketSchema,
+        const.UNLINK: UnlinkBucketSchema
         }
         return operation_schema_map[operation]()
 
@@ -67,7 +67,7 @@ class S3BucketView(S3BaseView):
 
     def __init__(self, request):
         """S3 Bucket View Init."""
-        super().__init__(request, const.RGW_S3_BUCKET_SERVICE)
+        super().__init__(request, const.S3_BUCKET_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -82,8 +82,8 @@ class S3BucketView(S3BaseView):
         try:
             schema = BucketBaseSchema()
             request_body = schema.load(await self.request.json())
-            operation = request_body.get(const.RGW_JSON_OPERATION)
-            operation_arguments = request_body.get(const.RGW_JSON_ARGUMENTS)
+            operation = request_body.get(const.ARG_OPERATION)
+            operation_arguments = request_body.get(const.ARG_ARGUMENTS)
             operation_schema = SchemaFactory.init(operation)
             operation_request_body = operation_schema.load(operation_arguments)
             Log.debug(f"Handling s3 bucket PUT request"

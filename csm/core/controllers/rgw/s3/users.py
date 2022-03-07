@@ -26,23 +26,23 @@ from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
 class UserCreateSchema(S3BaseSchema):
     """S3 IAM User create schema validation class."""
 
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, required=True)
-    email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
-    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
-    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
-    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
-    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
-    max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
-    suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
-    tenant = fields.Str(data_key=const.RGW_JSON_TENANT, missing=None)
+    uid = fields.Str(data_key=const.UID, required=True)
+    display_name = fields.Str(data_key=const.DISPLAY_NAME, required=True)
+    email = fields.Email(data_key=const.EMAIL, missing=None)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
+    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
+    tenant = fields.Str(data_key=const.TENANT, missing=None)
 
 class UserDeleteSchema(S3BaseSchema):
     """S3 IAM User delete schema validation class."""
 
-    purge_data = fields.Bool(data_key=const.RGW_JSON_PURGE_DATA, missing=None)
+    purge_data = fields.Bool(data_key=const.PURGE_DATA, missing=None)
 
 class UserModifySchema(S3BaseSchema):
     """S3 IAM User modify schema validation class."""
@@ -52,18 +52,18 @@ class UserModifySchema(S3BaseSchema):
         if not op_mask:
             return True
         op_mask_list = op_mask.split(",")
-        return len(list(set(op_mask_list)-set(const.RGW_SUPPORTED_OP_MASKS)))==0
+        return len(list(set(op_mask_list)-set(const.SUPPORTED_OP_MASKS)))==0
 
-    display_name = fields.Str(data_key=const.RGW_JSON_DISPLAY_NAME, missing=None)
-    email = fields.Email(data_key=const.RGW_JSON_EMAIL, missing=None)
-    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
-    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
-    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
-    max_buckets = fields.Int(data_key=const.RGW_JSON_MAX_BUCKETS, missing=None)
-    suspended = fields.Bool(data_key=const.RGW_JSON_SUSPENDED, missing=None)
-    op_mask = fields.Str(data_key=const.RGW_JSON_OP_MASK, missing=None,
+    display_name = fields.Str(data_key=const.DISPLAY_NAME, missing=None)
+    email = fields.Email(data_key=const.EMAIL, missing=None)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
+    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
+    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
+    op_mask = fields.Str(data_key=const.OP_MASK, missing=None,
                     validate=validate_op_mask)
 
 class CreateKeySchema(S3BaseSchema):
@@ -71,23 +71,23 @@ class CreateKeySchema(S3BaseSchema):
     S3 Create/Add Access Key schema validation class.
     """
 
-    uid = fields.Str(data_key=const.RGW_JSON_UID, required=True)
-    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
-    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.RGW_JSON_SECRET_KEY, missing=None)
-    user_caps = fields.Str(data_key=const.RGW_JSON_USER_CAPS, missing=None)
-    generate_key = fields.Bool(data_key=const.RGW_JSON_GENERATE_KEY, missing=None)
+    uid = fields.Str(data_key=const.UID, required=True)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
 
 class RemoveKeySchema(S3BaseSchema):
     """
     S3 Remove Key schema validation class.
     """
 
-    access_key = fields.Str(data_key=const.RGW_JSON_ACCESS_KEY, required=True)
-    uid = fields.Str(data_key=const.RGW_JSON_UID, missing=None)
-    key_type = fields.Str(data_key=const.RGW_JSON_KEY_TYPE, missing=None,
-                    validate=validate.OneOf(const.RGW_SUPPORTED_KEY_TYPES))
+    access_key = fields.Str(data_key=const.ACCESS_KEY, required=True)
+    uid = fields.Str(data_key=const.UID, missing=None)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
@@ -99,7 +99,7 @@ class S3IAMUserListView(S3BaseView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.DEBUG)
@@ -134,7 +134,7 @@ class S3IAMUserView(S3BaseView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
@@ -144,8 +144,8 @@ class S3IAMUserView(S3BaseView):
         """
         Log.info(f"Handling get s3 iam user GET request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        uid = self.request.match_info[const.RGW_JSON_UID]
-        path_params_dict = {const.RGW_JSON_UID: uid}
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
         Log.debug(f"Handling s3 iam user GET request"
                 f" with path param: {uid}")
         with self._guard_service():
@@ -160,8 +160,8 @@ class S3IAMUserView(S3BaseView):
         """
         Log.info(f"Handling delete s3 iam user DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        uid = self.request.match_info[const.RGW_JSON_UID]
-        path_params_dict = {const.RGW_JSON_UID: uid}
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
         try:
             schema = UserDeleteSchema()
             if await self.request.text():
@@ -187,8 +187,8 @@ class S3IAMUserView(S3BaseView):
         """
         Log.info(f"Handling patch s3 iam user PATCH request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        uid = self.request.match_info[const.RGW_JSON_UID]
-        path_params_dict = {const.RGW_JSON_UID: uid}
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
         try:
             schema = UserModifySchema()
             if await self.request.text():
@@ -217,7 +217,7 @@ class S3IAMUserKeyView(S3BaseView):
 
     def __init__(self, request):
         """S3 IAM User Key View Init."""
-        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
