@@ -73,5 +73,24 @@
             "key_type": "key-type"
         },
         "SUCCESS_CODE": 200
+    },
+    "LINK_BUCKET": {
+        "ENDPOINT": "/admin/bucket",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "bucket": "bucket",
+            "bucket_id": "bucket-id"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "UNLINK_BUCKET": {
+        "ENDPOINT": "/admin/bucket",
+        "METHOD": "POST",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "bucket": "bucket"
+        },
+        "SUCCESS_CODE": 200
     }
 }
