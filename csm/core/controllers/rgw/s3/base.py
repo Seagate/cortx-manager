@@ -30,7 +30,7 @@ class S3BaseSchema(Schema):
         """Method invalidates the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
-                raise ValidationError(f"{key}: Can not be empty")
+                raise ValidationError(f"Empty value for {key}")
 
 class S3BaseView(CsmView):
 
