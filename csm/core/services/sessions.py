@@ -21,8 +21,6 @@ from typing import Optional
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
-from csm.plugins.cortx.s3 import S3Plugin
-from csm.core.data.models.s3 import S3ConnectionConfig, IamError
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
@@ -196,25 +194,28 @@ class S3AuthPolicy(AuthPolicy):
     """ S3 account authentication policy """
 
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
-        cfg = S3ConnectionConfig()
-        # Following keys are deprecated
-        cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_HOST)
-        cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PORT)
-        cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
-        if Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL) == 'https':
-            cfg.use_ssl = True
+        # TODO: leaving the following line commented as an example of how S3 authentication
+        # might be implemented in CSM for RGW.
+        #
+        # cfg = S3ConnectionConfig()
+        # # Following keys are deprecated
+        # cfg.host = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_HOST)
+        # cfg.port = Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PORT)
+        # cfg.max_retries_num = Conf.get(const.CSM_GLOBAL_INDEX, 'S3>max_retries_num')
+        # if Conf.get(const.CSM_GLOBAL_INDEX, const.IAM_PROTOCOL) == 'https':
+        #     cfg.use_ssl = True
 
-        Log.debug(f'Authenticating {user.user_id}'
-                  f' with S3 IAM server {cfg.host}:{cfg.port}')
-        s3_conn_obj = S3Plugin()
-        response = await s3_conn_obj.get_temp_credentials(user.user_id, password,
-                                                          connection_config=cfg)
-        if type(response) is not IamError:
-            # return temporary credentials
-            return S3Credentials(user_id=user.user_id,
-                                access_key=response.access_key,
-                                secret_key=response.secret_key,
-                                session_token=response.session_token)
+        # Log.debug(f'Authenticating {user.user_id}'
+        #           f' with S3 IAM server {cfg.host}:{cfg.port}')
+        # s3_conn_obj = S3Plugin()
+        # response = await s3_conn_obj.get_temp_credentials(user.user_id, password,
+        #                                                   connection_config=cfg)
+        # if type(response) is not IamError:
+        #     # return temporary credentials
+        #     return S3Credentials(user_id=user.user_id,
+        #                         access_key=response.access_key,
+        #                         secret_key=response.secret_key,
+        #                         session_token=response.session_token)
 
         Log.error(f'Failed to authenticate S3 account {user.user_id}')
         return None
