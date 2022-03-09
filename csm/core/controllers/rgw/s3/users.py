@@ -279,17 +279,16 @@ class S3IAMUserCapsView(S3BaseView):
         """S3 IAM User List View Init."""
         super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
 
-    async def create_caps_request_body(self, req_method):
+    async def create_caps_request_body(self):
         uid = self.request.match_info[const.RGW_JSON_UID]
         path_params_dict = {const.RGW_JSON_UID: uid}
-        try:                       
+        try:
             schema = UserCapsSchema()
             user_caps_body = schema.load(await self.request.json())
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-
         request_body = {**path_params_dict, **user_caps_body}
         return request_body
 
@@ -307,7 +306,7 @@ class S3IAMUserCapsView(S3BaseView):
         with self._guard_service():
             response = await self._service.add_user_caps(**request_body)
             return CsmResponse(response)
-    
+
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.DELETE}})
     @Log.trace_method(Log.DEBUG)
     async def delete(self):
