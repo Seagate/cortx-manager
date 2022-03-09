@@ -44,7 +44,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **user_body: User body kwargs
         """
-        uid = user_body.get(const.RGW_JSON_UID)
+        uid = user_body.get(const.UID)
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
         return await self.execute_request(const.CREATE_USER_OPERATION, **user_body)
 
@@ -55,7 +55,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **request_body: Request body kwargs
         """
-        uid = request_body.get(const.RGW_JSON_UID)
+        uid = request_body.get(const.UID)
         Log.debug(f"Fetching S3 IAM user by uid = {uid}")
         return await self.execute_request(const.GET_USER_OPERATION, **request_body)
 
@@ -66,7 +66,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **request_body: Request body kwargs
         """
-        uid = request_body.get(const.RGW_JSON_UID)
+        uid = request_body.get(const.UID)
         Log.debug(f"Deleting S3 IAM user by uid = {uid}")
         return await self.execute_request(const.DELETE_USER_OPERATION, **request_body)
 
@@ -77,7 +77,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **request_body: Request body kwargs
         """
-        uid = request_body.get(const.RGW_JSON_UID)
+        uid = request_body.get(const.UID)
         Log.debug(f"Modifying S3 IAM user by uid = {uid}")
         return await self.execute_request(const.MODIFY_USER_OPERATION, **request_body)
 
@@ -88,7 +88,7 @@ class S3IAMUserService(S3BaseService):
 
         :param **create_key_body: User body kwargs
         """
-        uid = create_key_body.get(const.RGW_JSON_UID)
+        uid = create_key_body.get(const.UID)
         Log.debug(f"Creating Key for S3 IAM user by uid = {uid}")
         return await self.execute_request(const.CREATE_KEY_OPERATION, **create_key_body)
 
@@ -99,6 +99,6 @@ class S3IAMUserService(S3BaseService):
 
         :param **remove_key_body: User body kwargs
         """
-        uid = remove_key_body.get(const.RGW_JSON_UID)
+        uid = remove_key_body.get(const.UID)
         Log.debug(f"Removing key for S3 IAM user by uid = {uid}")
         return await self.execute_request(const.REMOVE_KEY_OPERATION, **remove_key_body)
