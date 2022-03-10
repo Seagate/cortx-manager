@@ -309,11 +309,6 @@ if __name__ == '__main__':
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
     from csm.core.services.stats import StatsAppService
-    from csm.core.services.s3.iam_users import IamUsersService
-    from csm.core.services.s3.accounts import S3AccountService
-    from csm.core.services.s3.buckets import S3BucketService
-    from csm.core.services.s3.access_keys import S3AccessKeysService
-    from csm.core.services.s3.server_info import S3ServerInfoService
     from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
