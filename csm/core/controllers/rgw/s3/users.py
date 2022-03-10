@@ -302,7 +302,7 @@ class S3IAMUserCapsView(S3BaseView):
         """
         Log.info(f"Handling add user caps PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        request_body = self.create_caps_request_body()
+        request_body = await self.create_caps_request_body()
 
         with self._guard_service():
             response = await self._service.add_user_caps(**request_body)
@@ -316,7 +316,7 @@ class S3IAMUserCapsView(S3BaseView):
         """
         Log.info(f"Handling add user caps DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        request_body = self.create_caps_request_body()
+        request_body = await self.create_caps_request_body()
         with self._guard_service():
             response = await self._service.remove_user_caps(**request_body)
             return CsmResponse(response)
