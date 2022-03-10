@@ -277,11 +277,11 @@ class S3IAMUserCapsView(S3BaseView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request, const.RGW_S3_IAM_USERS_SERVICE)
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     async def create_caps_request_body(self):
-        uid = self.request.match_info[const.RGW_JSON_UID]
-        path_params_dict = {const.RGW_JSON_UID: uid}
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
         try:
             schema = UserCapsSchema()
             user_caps_body = schema.load(await self.request.json())
@@ -290,6 +290,8 @@ class S3IAMUserCapsView(S3BaseView):
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **user_caps_body}
+        Log.debug(f"Handling user caps request"
+                    f" request body: {request_body}")
         return request_body
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
@@ -301,8 +303,7 @@ class S3IAMUserCapsView(S3BaseView):
         Log.info(f"Handling add user caps PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
         request_body = self.create_caps_request_body()
-        Log.debug(f"Handling user caps PUT request"
-                  f" request body: {request_body}")
+
         with self._guard_service():
             response = await self._service.add_user_caps(**request_body)
             return CsmResponse(response)
@@ -316,8 +317,6 @@ class S3IAMUserCapsView(S3BaseView):
         Log.info(f"Handling add user caps DELETE request"
                   f" user_id: {self.request.session.credentials.user_id}")
         request_body = self.create_caps_request_body()
-        Log.debug(f"Handling remove user caps DELETE request"
-                  f" request body: {request_body}")
         with self._guard_service():
             response = await self._service.remove_user_caps(**request_body)
             return CsmResponse(response)
