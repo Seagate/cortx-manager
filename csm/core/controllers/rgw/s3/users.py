@@ -271,12 +271,13 @@ class S3IAMUserKeyView(S3BaseView):
 @CsmView._app_routes.view("/api/v2/s3/iam/caps/{uid}")
 class S3IAMUserCapsView(S3BaseView):
     """
-    S3 IAM User Add User Caps for REST API implementation.
+    S3 IAM - Add User Caps REST API implementation.
     PUT: add user caps for S3 IAM user
+    DELETE: Remove user caps for S3 IAM user
     """
 
     def __init__(self, request):
-        """S3 IAM User List View Init."""
+        """S3 IAM Caps Init."""
         super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     async def create_caps_request_body(self):
