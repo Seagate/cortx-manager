@@ -309,7 +309,6 @@ if __name__ == '__main__':
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
     from csm.core.services.stats import StatsAppService
-    from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService

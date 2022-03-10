@@ -22,6 +22,3 @@ from .cluster_management import ClusterOperationsView
 from .audit_log import AuditLogShowView, AuditLogDownloadView
 from .maintenance import MaintenanceView
 # from .file_transfer import CsmFileView
-from .usl import (DeviceRegistrationView, RegistrationTokenView, DeviceView, DeviceVolumesListView,
-                  DeviceVolumeMountView, DeviceVolumeUnmountView, UdsEventsView, SystemView,
-                  SystemCertificatesView,  SystemCertificatesByTypeView, NetworkInterfacesView)
