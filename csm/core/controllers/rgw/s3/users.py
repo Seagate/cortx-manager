@@ -91,7 +91,7 @@ class RemoveKeySchema(S3BaseSchema):
 
 class UserCapsSchema(S3BaseSchema):
     """
-    S3 Create/Add Access Key schema validation class.
+    S3 user capability schema validation class.
     """
 
     user_caps = fields.Str(data_key=const.USER_CAPS, required=True)
