@@ -50,7 +50,6 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
-from csm.core.services.usl import UslService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
@@ -157,16 +156,6 @@ class CsmRestApi(CsmApi, ABC):
         return json.dumps(entry)
 
     @staticmethod
-    def process_audit_log(request, **kwargs):
-        url = request.path
-        if (not request.app[const.USL_POLLING_LOG]
-                and url.startswith('/usl/')
-                and not url.endswith('/registerDevice')):
-            return
-        entry = CsmRestApi.generate_audit_log_string(request, **kwargs)
-        Log.audit(f'{entry}')
-
-    @staticmethod
     def error_response(err: Exception, **kwargs) -> dict:
         resp = {
             "error_code": None,
@@ -191,9 +180,6 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.status
         else:
             resp["message"] = f'{str(err)}'
-        #EOS-25913: Commenting the audit log generation till new option is discussed.
-        #CsmRestApi.process_audit_log(request, response_code=resp['error_code'], \
-        #        request_id = kwargs.get("request_id", int(time.time())), payload=kwargs.get("payload"))
         return resp
 
     @staticmethod
@@ -401,9 +387,6 @@ class CsmRestApi(CsmApi, ABC):
                 return file_resp
 
             if isinstance(resp, web.StreamResponse):
-                #EOS-25913: Commenting the audit log generation till new option is discussed.
-                #CsmRestApi.process_audit_log(request, response_code = resp.status, \
-                #    request_id = request_id, payload=payload)
                 return resp
 
             status = 200
@@ -414,9 +397,6 @@ class CsmRestApi(CsmApi, ABC):
                     Log.error(f"Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
-            #EOS-25913: Commenting the audit log generation till new option is discussed.
-            #CsmRestApi.process_audit_log(request, response_code = status, \
-            #    request_id = request_id, payload=payload)
             return CsmRestApi.json_response(resp_obj, status)
         # todo: Changes for handling all Errors to be done.
 
