@@ -33,7 +33,7 @@ class RGWPlugin:
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = S3Client(config.auth_user_access_key,
-            config.auth_user_secret_key, config.host, config.port, timeout=const.RGW_TIMEOUT)
+            config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG)
@@ -60,12 +60,12 @@ class RGWPlugin:
                 return self._create_error(code, response_body)
             return response_body
         except S3ClientException as rgwe:
-            Log.error(f'{const.RGW_CLIENT_ERROR_MSG}: {rgwe}')
+            Log.error(f'{const.S3_CLIENT_ERROR_MSG}: {rgwe}')
             if str(rgwe) == "Request timeout":
-                return self._create_error(408, const.RGW_CLIENT_ERROR_CODES[408])
+                return self._create_error(408, const.S3_CLIENT_ERROR_CODES[408])
             if "Cannot connect to" in str(rgwe):
-                return self._create_error(503, const.RGW_CLIENT_ERROR_CODES[503])
-            raise CsmInternalError(const.RGW_CLIENT_ERROR_MSG)
+                return self._create_error(503, const.S3_CLIENT_ERROR_CODES[503])
+            raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
 
     def _create_error(self, status: int, body: dict) -> Any:
         """

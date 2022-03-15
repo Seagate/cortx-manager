@@ -157,8 +157,10 @@ class CsmAgent:
         except CsmError as ce:
             Log.error(f"Unable to load Provisioner plugin: {ce}")
 
-        # RGW S3 IAM user service
-        CsmAgent._configure_rgw_s3_iam_users_service()
+        # CsmRestApi._app[const.AUDIT_LOG_SERVICE] = AuditService(audit_mngr, s3)
+
+        # RGW S3 service
+        CsmAgent._configure_s3_services()
 
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
@@ -191,10 +193,11 @@ class CsmAgent:
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
-    def _configure_rgw_s3_iam_users_service():
-        s3_iam_plugin = import_plugin_module(const.RGW_PLUGIN)
-        s3_iam_plugin_obj = s3_iam_plugin.RGWPlugin()
-        CsmRestApi._app[const.RGW_S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_iam_plugin_obj)
+    def _configure_s3_services():
+        s3_plugin = import_plugin_module(const.RGW_PLUGIN)
+        s3_plugin_obj = s3_plugin.RGWPlugin()
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
 
     @staticmethod
     def _get_consul_config():
@@ -306,12 +309,6 @@ if __name__ == '__main__':
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
     from csm.core.services.stats import StatsAppService
-    from csm.core.services.s3.iam_users import IamUsersService
-    from csm.core.services.s3.accounts import S3AccountService
-    from csm.core.services.s3.buckets import S3BucketService
-    from csm.core.services.s3.access_keys import S3AccessKeysService
-    from csm.core.services.s3.server_info import S3ServerInfoService
-    from csm.core.services.usl import UslService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
@@ -341,6 +338,7 @@ if __name__ == '__main__':
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
+    from csm.core.services.rgw.s3.bucket import BucketService
 
     try:
         # try:

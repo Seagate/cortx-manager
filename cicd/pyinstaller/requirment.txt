@@ -1,4 +1,4 @@
-aiohttp==3.6.1
+aiohttp==3.8.1
 paramiko==2.7.1
 toml==0.10.0
 configparser==4.0.2

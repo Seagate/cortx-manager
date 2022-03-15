@@ -557,7 +557,6 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
-RGW_S3_IAM_USERS_SERVICE = "rgw_s3_iam_users_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -930,33 +929,43 @@ DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 
-# RGW AdminOps
+# S3 Plugin Configurations
+S3_CLIENT_ERROR_CODES = {
+    408: { "Code": "RequestTimeout" },
+    503: { "Code": "S3ServiceUnavailable" }
+    }
+S3_CONNECTION_TIMEOUT = 10
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
+S3_CLIENT_ERROR_MSG = 'Unable to process the request'
+
+# S3 Operations
 CREATE_USER_OPERATION = 'CREATE_USER'
 GET_USER_OPERATION = 'GET_USER'
 DELETE_USER_OPERATION = 'DELETE_USER'
 MODIFY_USER_OPERATION = 'MODIFY_USER'
-RGW_CLIENT_ERROR_MSG = 'Unable to process the request'
 CREATE_KEY_OPERATION = 'CREATE_KEY'
 REMOVE_KEY_OPERATION = 'REMOVE_KEY'
-RGW_CLIENT_ERROR_CODES = {
-    408: { "Code": "RequestTimeout" },
-    503: { "Code": "S3ServiceUnavailable" }
-    }
-RGW_TIMEOUT = 10
-# RGW AdminOps APIs
-RGW_JSON_UID = 'uid'
-RGW_JSON_DISPLAY_NAME = 'display_name'
-RGW_JSON_EMAIL = 'email'
-RGW_JSON_KEY_TYPE = 'key_type'
-RGW_JSON_ACCESS_KEY = 'access_key'
-RGW_JSON_SECRET_KEY = 'secret_key'
-RGW_JSON_USER_CAPS = 'user_caps'
-RGW_JSON_GENERATE_KEY = 'generate_key'
-RGW_JSON_MAX_BUCKETS = 'max_buckets'
-RGW_JSON_SUSPENDED = 'suspended'
-RGW_JSON_TENANT = 'tenant'
-RGW_JSON_PURGE_DATA = 'purge_data'
-RGW_JSON_OP_MASK = 'op_mask'
-RGW_SUPPORTED_OP_MASKS = ['read', 'write', 'delete', '*']
-RGW_SUPPORTED_KEY_TYPES = ['s3']
+BUCKET_LINK_OPERATION = 'LINK_BUCKET'
+BUCKET_UNLINK_OPERATION = 'UNLINK_BUCKET'
+
+# S3 API
+UID = 'uid'
+DISPLAY_NAME = 'display_name'
+EMAIL = 'email'
+KEY_TYPE = 'key_type'
+ACCESS_KEY = 'access_key'
+SKEY = 'secret_key'
+USER_CAPS = 'user_caps'
+GENERATE_KEY = 'generate_key'
+MAX_BUCKETS = 'max_buckets'
+SUSPENDED = 'suspended'
+TENANT = 'tenant'
+PURGE_DATA = 'purge_data'
+OP_MASK = 'op_mask'
+SUPPORTED_OP_MASKS = ['read', 'write', 'delete', '*']
+SUPPORTED_KEY_TYPES = ['s3']
+BUCKET = 'bucket'
+BUCKET_ID = 'bucket_id'
+LINK = 'link'
+UNLINK = 'unlink'
+SUPPORTED_BUCKET_OPERATIONS = [LINK, UNLINK]
