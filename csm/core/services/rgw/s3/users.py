@@ -107,7 +107,7 @@ class S3IAMUserService(S3BaseService):
     async def add_user_caps(self, **request_body):
         """
         This method will add user caps to IAM user.
-        :param **request_body: User body kwargs
+        :param **request_body: Add caps Request body
         """
         uid = request_body.get(const.UID)
         Log.info(f"Adding user capabilities for {uid}")
@@ -117,7 +117,7 @@ class S3IAMUserService(S3BaseService):
     async def remove_user_caps(self, **request_body):
         """
         This method will remove user caps for IAM user.
-        :param **request_body: User body kwargs
+        :param **request_body: Remove caps Request body
         """
         uid = request_body.get(const.UID)
         Log.info(f"Removing user capabilities for {uid}")
