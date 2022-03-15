@@ -106,19 +106,19 @@ class S3IAMUserService(S3BaseService):
     @Log.trace_method(Log.DEBUG)
     async def add_user_caps(self, **request_body):
         """
-        This method will add user caps to S3 IAM user.
+        This method will add user caps to IAM user.
         :param **request_body: User body kwargs
         """
         uid = request_body.get(const.UID)
-        Log.debug(f"Add User caps S3 IAM user = {uid}")
+        Log.info(f"Adding user capabilities for {uid}")
         return await self.execute_request(const.ADD_USER_CAPS_OPERATION, **request_body)
 
     @Log.trace_method(Log.DEBUG)
     async def remove_user_caps(self, **request_body):
         """
-        This method will remove user caps for a new S3 IAM user.
+        This method will remove user caps for IAM user.
         :param **request_body: User body kwargs
         """
         uid = request_body.get(const.UID)
-        Log.debug(f"remove User caps S3 IAM user = {uid}")
+        Log.info(f"Removing user capabilities for {uid}")
         return await self.execute_request(const.REMOVE_USER_CAPS_OPERATION, **request_body)
