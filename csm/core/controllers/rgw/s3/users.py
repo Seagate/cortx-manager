@@ -32,7 +32,7 @@ class UserCreateSchema(S3BaseSchema):
     key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
     access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None)
     user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
     generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
     max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
@@ -58,7 +58,7 @@ class UserModifySchema(S3BaseSchema):
     email = fields.Email(data_key=const.EMAIL, missing=None)
     generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
     access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None)
     key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
     max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
@@ -75,7 +75,7 @@ class CreateKeySchema(S3BaseSchema):
     key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
     access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SECRET_KEY, missing=None)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None)
     user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
     generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
 
