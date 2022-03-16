@@ -93,23 +93,23 @@ class Upgrade(Setup):
         """
         default_keys =  Conf.get_keys(default_index)
         for key in default_keys:
-            default_val = Conf.get(default_index, key)
+            default_value = Conf.get(default_index, key)
             # default_val is empty i,e expecting value from conf_store
-            if not default_val:
+            if not default_value:
                 continue
 
             # Add key-val pair to current index if missing otherwise
             # Update Key-val pair from current index based on deafult values
-            current_val = Conf.get(current_index, key)
-            if current_val:
-                if default_val == current_val:
+            current_value = Conf.get(current_index, key)
+            if current_value:
+                if default_value == current_value:
                     continue
                 else:
                     # handle case if values of config mismatched
                     self._update_current_config(key, default_index, current_index)
             else:
                 Log.DEBUG(f"Adding new key to current configuation {key}")
-                Conf.set(current_index, key, default_val)
+                Conf.set(current_index, key, default_value)
 
     def _update_current_config(self, key, default_index, current_index):
         """
