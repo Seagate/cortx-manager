@@ -1,0 +1,85 @@
+# CORTX-CSM: CORTX Management web and CLI interface.
+# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# For any questions about this software or licensing,
+# please email opensource@seagate.com or cortx-questions@seagate.com.
+
+databases:
+  consul_db:
+    import_path: ConsulDB
+    config:
+      hosts:
+        - ''
+      port: ''
+      login: ''
+      password: ''
+models:
+  - import_path: csm.core.data.models.users.User
+    database: consul_db
+    config:
+      consul_db:
+        collection: user_collection
+  - import_path: csm.core.data.models.system_config.SystemConfigSettings
+    database: consul_db
+    config:
+      consul_db:
+        collection: system_config
+  - import_path: csm.core.data.models.onboarding.OnboardingConfig
+    database: consul_db
+    config:
+      consul_db:
+        collection: onboarding_config
+  - import_path: csm.core.data.models.system_config.OnboardingLicense
+    database: consul_db
+    config:
+      consul_db:
+        collection: product_licenses
+  - import_path: csm.core.data.models.system_config.ApplianceName
+    database: consul_db
+    config:
+      consul_db:
+        collection: appliance_name
+  - import_path: csm.core.blogic.models.support_bundle.SupportBundleModel
+    database: es_db
+    config:
+      es_db:
+        collection: supportbundle
+  - import_path: csm.core.blogic.models.audit_log.CsmAuditLogModel
+    database: es_db
+    config:
+      es_db:
+        collection: csmauditlog
+  - import_path: csm.core.data.models.system_config.CertificateConfig
+    database: consul_db
+    config:
+      consul_db:
+        collection: certificate_config
+  - import_path: csm.core.data.models.system_config.SecurityConfig
+    database: consul_db
+    config:
+      consul_db:
+        collection: security_config
+  - import_path: csm.core.data.models.upgrade.UpdateStatusEntry
+    database: consul_db
+    config:
+      consul_db:
+        collection: update_status_entries
+  - import_path: cortx.utils.security.secure_storage.NamedEncryptedBytes
+    database: consul_db
+    config:
+      consul_db:
+        collection: secure_storage
+  - import_path: csm.core.data.models.node_replace.ReplaceNode
+    database: consul_db
+    config:
+      consul_db:
+        collection: replace_node_data
