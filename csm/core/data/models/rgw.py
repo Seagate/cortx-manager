@@ -31,7 +31,7 @@ class RgwErrors(Enum):
     InternalError = "Internal server error."
     NoSuchUser = "User does not exist."
     NoSuchBucket = "Bucket does not exist."
-    NoSuchKey = "No such access key."
+    NoSuchKey = "No such key."
     SignatureDoesNotMatch = "Signature Does Not Match."
     UnknownError = "Unknown Error from S3 service."
     InvalidArgument = "Invalid argument provided."
