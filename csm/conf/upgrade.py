@@ -17,7 +17,6 @@ from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.log import Log
-from csm.conf.setup import Setup
 from cortx.utils.conf_store import Conf
 from csm.conf.setup import Setup, CsmSetupError
 from cortx.utils.kv_store.error import KvError
@@ -60,7 +59,9 @@ class Upgrade(Setup):
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def load_default_config(self):
-        """Load default configurations for csm """
+        """
+        Load default configurations for csm.
+        """
         # Load general default configurations for csm.
         Conf.load(const.CSM_DEFAULT_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_CONF}")
@@ -137,7 +138,7 @@ class Upgrade(Setup):
         previous_key will be 'DEBUG>pre_enabled'
 
         """
-        list = key.rsplit('>', 1)
+        keys = key.rsplit('>', 1)
         if len(list)==1:
             return f"pre_{key}"
-        return list[0]+">"+f"pre_{list[-1]}"
+        return keys[0]+">"+f"pre_{keys[-1]}"
