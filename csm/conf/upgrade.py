@@ -65,7 +65,7 @@ class Upgrade(Setup):
         Conf.load(const.CSM_DEFAULT_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_CONF}")
         # Load deafult db related configurations for csm.
-        Conf.load(const.CSM_DEFAULT_DB_INDEX,
+        Conf.load(const.CSM_DEFAULT_DB_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_DB}")
 
     def upgrade(self):
@@ -74,7 +74,7 @@ class Upgrade(Setup):
         """
         Log.info("Preparing for upgrade.")
         self._update_general_config(const.CSM_DEFAULT_CONF_INDEX, const.CSM_GLOBAL_INDEX)
-        self._update_db_config(const.CSM_DEFAULT_DB_INDEX, const.DATABASE_INDEX)
+        self._update_db_config(const.CSM_DEFAULT_DB_CONF_INDEX, const.DATABASE_INDEX)
 
     def _update_general_config(self, default_index, current_index):
         Log.info("Updating general configurations.")
@@ -132,7 +132,7 @@ class Upgrade(Setup):
 
     def _previous_key(self, key):
         """
-        Form previous from given key.
+        Form previous key from given key.
         if key is 'DEBUG>enabled'
         previous_key will be 'DEBUG>pre_enabled'
 
