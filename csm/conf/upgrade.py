@@ -85,7 +85,6 @@ class Upgrade(Setup):
                     # handle case if values of config mismatched
                     self._update_current_config(key, default_index, current_index)
             else:
-                Log.DEBUG(f"Adding new key to current configuation {key}")
                 Conf.set(current_index, key, default_value)
 
     def _update_current_config(self, key, default_index, current_index):
