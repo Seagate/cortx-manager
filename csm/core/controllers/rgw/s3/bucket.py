@@ -39,7 +39,7 @@ class LinkBucketSchema(S3BaseSchema):
     """
     uid = fields.Str(data_key=const.UID, required=True)
     bucket = fields.Str(data_key=const.BUCKET, required=True)
-    bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None)
+    bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None, allow_none=False)
 
 class UnlinkBucketSchema(S3BaseSchema):
     """

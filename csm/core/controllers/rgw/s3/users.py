@@ -28,21 +28,21 @@ class UserCreateSchema(S3BaseSchema):
 
     uid = fields.Str(data_key=const.UID, required=True)
     display_name = fields.Str(data_key=const.DISPLAY_NAME, required=True)
-    email = fields.Email(data_key=const.EMAIL, missing=None)
+    email = fields.Email(data_key=const.EMAIL, missing=None, allow_none=False)
     key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
-                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
-    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SKEY, missing=None)
-    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
-    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
-    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
-    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
-    tenant = fields.Str(data_key=const.TENANT, missing=None)
+                    validate=validate.OneOf(const.SUPPORTED_KEY_TYPES), allow_none=False)
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None, allow_none=False)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None, allow_none=False)
+    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None, allow_none=False)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None, allow_none=False)
+    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None, allow_none=False)
+    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
+    tenant = fields.Str(data_key=const.TENANT, missing=None, allow_none=False)
 
 class UserDeleteSchema(S3BaseSchema):
     """S3 IAM User delete schema validation class."""
 
-    purge_data = fields.Bool(data_key=const.PURGE_DATA, missing=None)
+    purge_data = fields.Bool(data_key=const.PURGE_DATA, missing=None, allow_none=False)
 
 class UserModifySchema(S3BaseSchema):
     """S3 IAM User modify schema validation class."""
@@ -54,16 +54,16 @@ class UserModifySchema(S3BaseSchema):
         op_mask_list = op_mask.split(",")
         return len(list(set(op_mask_list)-set(const.SUPPORTED_OP_MASKS)))==0
 
-    display_name = fields.Str(data_key=const.DISPLAY_NAME, missing=None)
-    email = fields.Email(data_key=const.EMAIL, missing=None)
-    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
-    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SKEY, missing=None)
-    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+    display_name = fields.Str(data_key=const.DISPLAY_NAME, missing=None, allow_none=False)
+    email = fields.Email(data_key=const.EMAIL, missing=None, allow_none=False)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None, allow_none=False)
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None, allow_none=False)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None, allow_none=False)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None, allow_none=False,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
-    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None)
+    max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None, allow_none=False)
     suspended = fields.Bool(data_key=const.SUSPENDED, missing=None)
-    op_mask = fields.Str(data_key=const.OP_MASK, missing=None,
+    op_mask = fields.Str(data_key=const.OP_MASK, missing=None, allow_none=False,
                     validate=validate_op_mask)
 
 class CreateKeySchema(S3BaseSchema):
@@ -72,12 +72,12 @@ class CreateKeySchema(S3BaseSchema):
     """
 
     uid = fields.Str(data_key=const.UID, required=True)
-    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None, allow_none=False,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
-    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None)
-    secret_key = fields.Str(data_key=const.SKEY, missing=None)
-    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None)
-    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None)
+    access_key = fields.Str(data_key=const.ACCESS_KEY, missing=None, allow_none=False)
+    secret_key = fields.Str(data_key=const.SKEY, missing=None, allow_none=False)
+    user_caps = fields.Str(data_key=const.USER_CAPS, missing=None, allow_none=False)
+    generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None, allow_none=False)
 
 class RemoveKeySchema(S3BaseSchema):
     """
@@ -85,8 +85,8 @@ class RemoveKeySchema(S3BaseSchema):
     """
 
     access_key = fields.Str(data_key=const.ACCESS_KEY, required=True)
-    uid = fields.Str(data_key=const.UID, missing=None)
-    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None,
+    uid = fields.Str(data_key=const.UID, missing=None, allow_none=False)
+    key_type = fields.Str(data_key=const.KEY_TYPE, missing=None, allow_none=False,
                     validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
 
 class UserCapsSchema(S3BaseSchema):
