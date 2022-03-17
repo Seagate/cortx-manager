@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from curses import KEY_SDL, KEY_SEND
 from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
@@ -29,45 +30,22 @@ class Upgrade(Setup):
         super(Upgrade, self).__init__()
 
     async def execute(self, command):
-        Log.info("Perform upgrade for csm_setup")
+        Log.info("Performing upgrade and loading config files")
         try:
-            Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-
-            Log.info("Loading current csm configurations.")
             self.load_csm_config_indices()
-
-            Log.info("Loading default csm configurations.")
             self.load_default_config()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         services = command.options.get("services")
-        if ',' in services:
-            services = services.split(",")
-        elif 'all' in services:
-            services = ["agent", "web", "cli"]
+        if 'agent' in services or 'all' in services:
+            services = ["agent"]
         else:
-            services=[services]
-        self.execute_web_and_cli(command.options.get("config_url"),
-                                    services,
-                                    command.sub_command_name)
-        if not "agent" in services:
-            return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+            raise CsmSetupError(f"Provided services are unsupported:{services}")
         self.upgrade()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
-
-    def load_default_config(self):
-        """
-        Load default configurations for csm.
-        """
-        # Load general default configurations for csm.
-        Conf.load(const.CSM_DEFAULT_CONF_INDEX,
-                        f"yaml://{const.CSM_DEFAULT_CONF}")
-        # Load deafult db related configurations for csm.
-        Conf.load(const.CSM_DEFAULT_DB_CONF_INDEX,
-                        f"yaml://{const.CSM_DEFAULT_DB}")
 
     def upgrade(self):
         """
@@ -82,7 +60,7 @@ class Upgrade(Setup):
         self._update(default_index, current_index)
 
     def _update_db_config(self, default_index, current_index):
-        Log.info("Updating database related configurations.")
+        Log.info("Updating database configurations.")
         self._update(default_index, current_index)
 
     def _update(self, default_index, current_index):
@@ -98,7 +76,6 @@ class Upgrade(Setup):
             # default_val is empty i,e expecting value from conf_store
             if not default_value:
                 continue
-
             # Add key-val pair to current index if missing otherwise
             # Update Key-val pair from current index based on deafult values
             current_value = Conf.get(current_index, key)
@@ -138,6 +115,6 @@ class Upgrade(Setup):
         previous_key will be 'DEBUG>pre_enabled'
         """
         keys = key.rsplit('>', 1)
-        if len(list)==1:
+        if len(keys)==1:
             return f"pre_{key}"
-        return keys[0]+">"+f"pre_{keys[-1]}"
+        return f"{keys[0]}>pre_{keys[-1]}"
