@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from curses import KEY_SDL, KEY_SEND
 from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
