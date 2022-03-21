@@ -36,7 +36,7 @@ class Upgrade(Setup):
             self.load_default_config()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
-            raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
+            raise CsmSetupError("Could Not Load Url Provided in Kv Store, Unable to load configurations")
 
         services = command.options.get("services")
         if 'agent' in services or 'all' in services:
