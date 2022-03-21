@@ -274,5 +274,23 @@
     "dependent_on": [
       "rgw_s3"
     ]
+  },
+  "/api/*/s3/iam/keys": {
+    "feature_name": "s3_iam_users",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/*/s3/iam/caps/*": {
+    "feature_name": "s3_iam_users",
+    "dependent_on": [
+      "s3"
+    ]
+  },
+  "/api/*/s3/iam/bucket": {
+    "feature_name": "s3_bucket",
+    "dependent_on": [
+      "s3"
+    ]
   }
 }
