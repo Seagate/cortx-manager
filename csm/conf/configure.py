@@ -136,6 +136,8 @@ class Configure(Setup):
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
         if csm_protocol == 'https':
             Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEBUG_MODE, 'false')
+        else:
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEBUG_MODE, 'true')
         Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')

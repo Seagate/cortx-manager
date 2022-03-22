@@ -102,6 +102,17 @@ class Setup:
         Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
         Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
 
+    def load_default_config(self):
+        """
+        Load default configurations for csm.
+        """
+        # Load general default configurations for csm.
+        Conf.load(const.CSM_DEFAULT_CONF_INDEX,
+                        f"yaml://{const.CSM_DEFAULT_CONF}")
+        # Load deafult db related configurations for csm.
+        Conf.load(const.CSM_DEFAULT_DB_CONF_INDEX,
+                        f"yaml://{const.CSM_DEFAULT_DB}")
+
     def execute_web_and_cli(self,config_url,  service_list, phase_name):
         self._setup_rpm_map = {
                             "agent":"cortx-csm_agent",
