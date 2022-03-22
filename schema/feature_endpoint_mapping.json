@@ -264,31 +264,31 @@
     "dependent_on": []
   },
   "/api/*/s3/iam/users": {
-    "feature_name": "s3_iam_user",
+    "feature_name": "iam_user_mgmt",
     "dependent_on": [
       "s3"
     ]
   },
   "/api/*/s3/iam/users/*": {
-    "feature_name": "s3_iam_user",
+    "feature_name": "iam_user_mgmt",
     "dependent_on": [
       "s3"
     ]
   },
   "/api/*/s3/iam/keys": {
-    "feature_name": "s3_iam_user",
+    "feature_name": "iam_user_mgmt",
     "dependent_on": [
       "s3"
     ]
   },
   "/api/*/s3/iam/caps/*": {
-    "feature_name": "s3_iam_user",
+    "feature_name": "iam_user_mgmt",
     "dependent_on": [
       "s3"
     ]
   },
   "/api/*/s3/iam/bucket": {
-    "feature_name": "s3_bucket",
+    "feature_name": "s3_bucket_mgmt",
     "dependent_on": [
       "s3"
     ]
