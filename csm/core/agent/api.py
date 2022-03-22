@@ -49,7 +49,6 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
-from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
@@ -601,17 +600,3 @@ class CsmRestApi(CsmApi, ABC):
         asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
         return True
 
-
-class AlertHttpNotifyService(Service):
-    def __init__(self):
-        super().__init__()
-        self.unpublished_alerts = set()
-
-    def push_unpublished(self):
-        while self.unpublished_alerts:
-            self.handle_alert()
-
-    def handle_alert(self, alert):
-        self.unpublished_alerts.add(alert)
-        if CsmRestApi.push(alert):
-            self.unpublished_alerts.discard(alert)

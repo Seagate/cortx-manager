@@ -81,11 +81,6 @@ class CsmAgent:
         for f in cached_files:
             os.remove(f)
 
-        # Alert configuration
-        alerts_repository = AlertRepository(db)
-        alerts_service = AlertsAppService(alerts_repository)
-        CsmRestApi.init(alerts_service)
-
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
@@ -99,16 +94,6 @@ class CsmAgent:
                                     const.KAFKA_ENDPOINTS), unblock_consumer=True)
 
         CsmAgent._configure_cluster_management_service(message_bus_obj)
-
-        http_notifications = AlertHttpNotifyService()
-        pm = import_plugin_module(const.ALERT_PLUGIN)
-        CsmAgent.alert_monitor = AlertMonitorService(alerts_repository,\
-                pm.AlertPlugin(), http_notifications)
-        email_queue = EmailSenderQueue()
-        email_queue.start_worker_sync()
-
-        CsmAgent.alert_monitor.add_listener(http_notifications.handle_alert)
-        CsmRestApi._app["alerts_service"] = alerts_service
 
        # Network file manager registration
         CsmRestApi._app["download_service"] = DownloadFileManager()
@@ -139,11 +124,6 @@ class CsmAgent:
         #global base_path
         # System config storage service
         system_config_mgr = SystemConfigManager(db)
-
-        email_notifier = AlertEmailNotifier(email_queue, system_config_mgr,
-            Template.from_file(const.CSM_ALERT_EMAIL_NOTIFICATION_TEMPLATE_REL),
-            user_manager)
-        CsmAgent.alert_monitor.add_listener(email_notifier.handle_alert)
 
         CsmRestApi._app["onboarding_config_service"] = OnboardingConfigService(db)
 
@@ -279,14 +259,7 @@ class CsmAgent:
 
         if Options.daemonize:
             CsmAgent._daemonize()
-        # TODO: Story has been taken for unsupported services
-        #  The commented lines will be removed by above story
-
-        #CsmAgent.alert_monitor.start()
         CsmRestApi.run(port, https_conf, debug_conf)
-        #Log.info("Started stopping csm agent")
-        #CsmAgent.alert_monitor.stop()
-        #Log.info("Finished stopping alert monitor service")
         Log.info("Stopping Message Bus client")
         CsmRestApi._app["stat_service"].stop_msg_bus()
         Log.info("Finished stopping csm agent")
@@ -304,8 +277,6 @@ if __name__ == '__main__':
     from csm.common.payload import Yaml, Json
     from csm.common.template import Template
     from csm.core.blogic import const
-    from csm.core.services.alerts import AlertsAppService, AlertEmailNotifier, \
-                                        AlertMonitorService, AlertRepository
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
     from csm.core.services.stats import StatsAppService
@@ -315,10 +286,8 @@ if __name__ == '__main__':
     from csm.core.services.security import SecurityService
     from csm.core.services.hotfix_update import HotfixApplicationService
     from csm.core.repositories.update_status import UpdateStatusRepository
-    from csm.core.email.email_queue import EmailSenderQueue
     from csm.core.services.onboarding import OnboardingConfigService
-    from csm.core.agent.api import CsmRestApi, AlertHttpNotifyService
-
+    from csm.core.agent.api import CsmRestApi
     from csm.common.timeseries import TimelionProvider
     from csm.common.conf import Security
     from csm.common.ha_framework import CortxHAFramework
@@ -341,9 +310,6 @@ if __name__ == '__main__':
     from csm.core.services.rgw.s3.bucket import BucketService
 
     try:
-        # try:
-        #     from salt import client
-        # except ModuleNotFoundError:
         client = None
         CsmAgent.init()
         CsmAgent.run()
