@@ -101,7 +101,7 @@ class CsmRestApi(CsmApi, ABC):
     __unsupported_features = None
 
     @staticmethod
-    def init(alerts_service):
+    def init():
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtasks = []

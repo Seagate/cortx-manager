@@ -81,6 +81,9 @@ class CsmAgent:
         for f in cached_files:
             os.remove(f)
 
+        # CSM REST API initialization
+        CsmRestApi.init()
+
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
