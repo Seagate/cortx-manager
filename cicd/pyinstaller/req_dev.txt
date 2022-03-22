@@ -1,2 +1,0 @@
-git+ssh://git@github.com/Seagate/cortx-py-utils.git
-git+ssh://git@github.com/Seagate/cortx-prvsnr.git#subdirectory=api/python
