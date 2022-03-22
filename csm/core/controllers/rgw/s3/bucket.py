@@ -30,7 +30,7 @@ class BucketBaseSchema(S3BaseSchema):
     """
     operation = fields.Str(data_key=const.ARG_OPERATION, required=True,
         validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
-    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(), values=fields.Raw(), required=True)
+    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(), values=fields.Raw(allow_none=True), required=True)
 
 class LinkBucketSchema(S3BaseSchema):
     """
@@ -39,7 +39,7 @@ class LinkBucketSchema(S3BaseSchema):
     """
     uid = fields.Str(data_key=const.UID, required=True)
     bucket = fields.Str(data_key=const.BUCKET, required=True)
-    bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None)
+    bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None, allow_none=False)
 
 class UnlinkBucketSchema(S3BaseSchema):
     """
@@ -77,8 +77,6 @@ class S3BucketView(S3BaseView):
         """
         Log.info(f"Handling s3 bucket PUT request"
                   f" user_id: {self.request.session.credentials.user_id}")
-        operation = None
-        operation_arguments = None
         try:
             schema = BucketBaseSchema()
             request_body = schema.load(await self.request.json())

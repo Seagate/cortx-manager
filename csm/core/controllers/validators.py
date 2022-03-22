@@ -225,7 +225,7 @@ class ValidationErrorFormatter:
         error_messages = []
         for each_key in validation_error_obj.messages.keys():
             error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
-        return "\n".join(error_messages)
+        return " ".join(error_messages)
 
 
 class IsoFilenameValidator(Validator):
