@@ -216,10 +216,8 @@ class Configure(Setup):
                         feature.get(const.FEATURE_NAME))
             csm_unsupported_feature = Json(
                 const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            for setup in csm_unsupported_feature[const.SETUP_TYPES]:
-                if setup[const.NAME] == self._setup_info[const.STORAGE_TYPE]:
-                    unsupported_features_list.extend(
-                        setup[const.UNSUPPORTED_FEATURES])
+            unsupported_features_list.extend(csm_unsupported_feature)
+
             unsupported_features_list = list(set(unsupported_features_list))
             unique_unsupported_features_list = list(
                 filter(None, unsupported_features_list))
