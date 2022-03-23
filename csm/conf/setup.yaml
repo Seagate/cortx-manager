@@ -54,33 +54,3 @@ csm:
       post:
           cmd: /opt/seagate/cortx/csm/bin/csm_setup post_upgrade
           args: --config $URL [--services $service_name]
-
-usl:
-    post_install:
-        cmd: /opt/seagate/cortx/csm/lib/usl_setup post_install
-        args: --config $URL
-
-    prepare:
-        cmd: /opt/seagate/cortx/csm/lib/usl_setup prepare
-        args: --config $URL
-
-    config:
-        cmd: /opt/seagate/cortx/csm/lib/usl_setup config
-        args: --config $URL
-
-    init:
-        cmd: /opt/seagate/cortx/csm/lib/usl_setup init
-        args: --config $URL
-
-    reset:
-        cmd: /opt/seagate/cortx/csm/lib/usl_setup reset
-        args: --config $URL
-
-    upgrade:
-      pre:
-          cmd: /opt/seagate/cortx/csm/bin/usl_setup pre_upgrade
-          args: --config $URL
-
-      post:
-          cmd: /opt/seagate/cortx/csm/bin/usl_setup post_upgrade
-          args: --config $URL

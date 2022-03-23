@@ -46,7 +46,6 @@ class Configure(Setup):
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Conf.load(const.CORTXCLI_GLOBAL_INDEX, const.CORTXCLI_CONF_FILE_URL)
-            self._set_deployment_mode()
             self.cli_create(command)
         except KvError as e:
             err_msg = f"Failed to load the configuration: {e}"

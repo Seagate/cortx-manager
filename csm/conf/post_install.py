@@ -64,12 +64,9 @@ class PostInstall(Setup):
         if ',' in services:
             services = services.split(",")
         elif 'all' in services:
-            services = ["agent", "web", "cli"]
+            services = ["agent"]
         else:
             services=[services]
-        self.execute_web_and_cli(command.options.get("config_url"),
-                                    services,
-                                    command.sub_command_name)
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
