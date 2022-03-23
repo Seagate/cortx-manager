@@ -357,19 +357,8 @@ CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
 CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
 
 # Support Bundle
-SSH_USER_NAME = 'root'
-COMMANDS_FILE = "{}/schema/commands.yaml".format(CORTXCLI_PATH)
-SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
-SOS_COMP = 'os'
-SB_COMPONENTS = "components"
-SB_COMMENT = "comment"
-SB_NODE_NAME = "node_name"
 SB_BUNDLE_ID = "bundle_id"
-SB_BUNDLE_PATH = "bundle_path"
-SB_SYMLINK_PATH = "symlink_path"
-ROOT_PRIVILEGES_MSG = "Command requires root privileges"
-PERMISSION_ERROR_MSG = "Failed to cleanup {path} due to insufficient permissions"
 SB_TARGET = 'target'
 SB_DURATION = 'duration'
 SB_SIZE_LIMIT = 'size_limit'

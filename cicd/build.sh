@@ -241,7 +241,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
         -e "s|<CSM_PATH>|${CSM_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/csm_agent.spec"
 
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/csm/schema/commands.yaml"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
@@ -293,8 +292,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
         -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
-
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/cli/schema/commands.yaml"
 
     if [ "$QA" == true ]; then
         sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"
