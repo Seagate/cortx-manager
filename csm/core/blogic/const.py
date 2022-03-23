@@ -975,3 +975,6 @@ BUCKET_ID = 'bucket_id'
 LINK = 'link'
 UNLINK = 'unlink'
 SUPPORTED_BUCKET_OPERATIONS = [LINK, UNLINK]
+
+INVALID_REQUEST = 'MalformedRequest'
+UNKNOWN_ERROR = 'Unknown Error'

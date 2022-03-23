@@ -57,6 +57,7 @@ from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
 import re
 from cortx.utils.errors import DataAccessError
+from schema import error_codes
 
 
 class CsmApi(ABC):
@@ -160,6 +161,7 @@ class CsmRestApi(CsmApi, ABC):
         resp = {
             "error_code": None,
             "message": None,
+            "message_id":None
         }
 
         request = kwargs.get("request")
@@ -172,14 +174,22 @@ class CsmRestApi(CsmApi, ABC):
             message_id = err.message_id()
             if message_id is not None:
                 resp["message_id"] = err.message_id()
+            else:
+                # TODO: what should be the message id
+                resp["message_id"] = const.UNKNOWN_ERROR
             message_args = err.message_args()
             if message_args is not None:
                 resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
-            resp["message"] = str(err)
             resp["error_code"] = err.status
+            resp["message_id"] = str(err)
+            with open('schema/error_codes.yaml', 'r') as error_codes_file:
+                error_messages = yaml.safe_load(error_codes_file)
+            resp["message"] = error_messages[str(err)]
         else:
             resp["message"] = f'{str(err)}'
+            # resp["message_id"] = f'{str(err)}'
+            # TODO: what should be the error Code
         return resp
 
     @staticmethod
@@ -404,10 +414,11 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
+            # TODO: Here Error Response wont be same format
             return CsmRestApi.json_response("Call cancelled by client", status=499)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
-            raise e
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=e.status)
         except DataAccessError as e:
             Log.error(f"Failed to access the database: {e}")
             resp = CsmRestApi.error_response(e, request=request, request_id=request_id)

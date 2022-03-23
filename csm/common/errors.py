@@ -17,6 +17,7 @@ import inspect
 
 from cortx.utils.errors import BaseError
 from cortx.utils.log import Log
+from csm.core.blogic import const
 
 CSM_OPERATION_SUCESSFUL     = 0x0000
 CSM_ERR_INVALID_VALUE       = 0x1001
@@ -73,8 +74,8 @@ class InvalidRequest(CsmError):
 
     _err = CSM_INVALID_REQUEST
     _desc = "Invalid request message received."
-
-    def __init__(self, _desc=None, message_id=None, message_args=None):
+    
+    def __init__(self, _desc=None, message_id=const.INVALID_REQUEST, message_args=None):
         super(InvalidRequest, self).__init__(
             CSM_INVALID_REQUEST, _desc, message_id, message_args)
 
