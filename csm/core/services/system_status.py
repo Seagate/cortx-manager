@@ -29,8 +29,7 @@ class SystemStatusService(ApplicationService):
 
     def __init__(self):
         super(SystemStatusService, self).__init__()
-        self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status,
-            const.SYSTEM_STATUS_ELASTICSEARCH: self._get_elasticsearch_status}
+        self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status}
 
     async def check_status(self, resources):
         """
@@ -63,17 +62,4 @@ class SystemStatusService(ApplicationService):
         port = Conf.get(const.DATABASE_INDEX, 'databases>consul_db>config>port')
         # Validation throws exception on failure
         ConsulV().validate('service', [host, port])
-        return const.SYSTEM_STATUS_SUCCESS
-
-    async def _get_elasticsearch_status(self) -> str:
-        """
-        Return status of elasticsearch
-        """
-        Log.info("Getting elasticsearch status")
-        # get host and port of consul database from conf
-        hosts = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>hosts')
-        host = random.choice(hosts)
-        port = Conf.get(const.DATABASE_INDEX, 'databases>es_db>config>port')
-        # Validation throws exception on failure
-        ElasticsearchV().validate('service', [host, port])
         return const.SYSTEM_STATUS_SUCCESS

@@ -163,8 +163,6 @@ if __name__ == '__main__':
     from csm.common.storage_usage import StorageInfo
     Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
     Log.init(const.CSM_CLEANUP_LOG_FILE,
-            syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_server"),
-            syslog_port=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_port"),
             backup_count=Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files"),
             file_size_in_mb=Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size"),
             level=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level"),

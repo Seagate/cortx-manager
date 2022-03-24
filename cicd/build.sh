@@ -242,7 +242,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/csm_agent.spec"
 
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
 
     # if [ "$QA" == true ]; then
@@ -274,8 +273,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
     # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    # cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
-    # cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
     cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
 

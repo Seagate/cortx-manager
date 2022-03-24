@@ -178,11 +178,6 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
-# cron dir
-CRON_DIR = "/etc/cron.daily"
-SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
-DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
-
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -553,34 +548,11 @@ CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
-SYSTEM_STATUS_ELASTICSEARCH = 'es'
 SYSTEM_STATUS_SUCCESS = 'success'
-
-# Rsyslog
-RSYSLOG_DIR = "/etc/rsyslog.d"
-SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
-CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
-RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
-CLI_RSYSLOG_PATH = "{}/0-cortxcli_logs.conf".format(RSYSLOG_DIR)
-CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
-SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
-
-#cron dir
-CRON_DIR="/etc/cron.daily"
-SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
-DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
-
-#logrotate
-LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
 # https status code
 STATUS_CREATED = 201
 STATUS_CONFLICT = 409
-
-SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
-LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
-CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
@@ -632,7 +604,6 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
 
 # Provisioner status
 PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']

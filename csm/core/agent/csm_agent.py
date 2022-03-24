@@ -41,15 +41,12 @@ class CsmAgent:
         Conf.load(const.CSM_DICT_INDEX,'dict:{"k":"v"}')
         Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
         Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
-        syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
         console_output = True if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true" \
                             else False
         Log.init("csm_agent",
-               syslog_server=Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
-               syslog_port= int(syslog_port) if syslog_port else None,
                backup_count= int(backup_count) if backup_count else None,
                file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
                log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
@@ -97,9 +94,6 @@ class CsmAgent:
                                     const.KAFKA_ENDPOINTS), unblock_consumer=True)
 
         CsmAgent._configure_cluster_management_service(message_bus_obj)
-
-       # Network file manager registration
-        CsmRestApi._app["download_service"] = DownloadFileManager()
 
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
@@ -301,7 +295,6 @@ if __name__ == '__main__':
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
     from csm.core.services.audit_log import  AuditLogManager, AuditService
-    from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
     from csm.core.services.version import ProductVersionService

@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 from csm.common.services import Service
-
+# from csm.core.services.file_transfer import DownloadFileEntity
 class AlertHttpNotifyService(Service):
     def __init__(self):
         super().__init__()
@@ -27,3 +27,9 @@ class AlertHttpNotifyService(Service):
         self.unpublished_alerts.add(alert)
         if CsmRestApi.push(alert):
             self.unpublished_alerts.discard(alert)
+
+# FileTransferAPI related 
+# if isinstance(resp, DownloadFileEntity):
+#     file_resp = web.FileResponse(resp.path_to_file)
+#     file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
+#     return file_resp

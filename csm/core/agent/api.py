@@ -49,7 +49,6 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
 from csm.core.routes import ApiRoutes
-from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from csm.core.controllers import CsmRoutes
 from cortx.utils.data.access import Query
@@ -380,10 +379,6 @@ class CsmRestApi(CsmApi, ABC):
             except DataAccessError as e:
                 Log.warn(f"Exception: {e}")
             resp = await handler(request)
-            if isinstance(resp, DownloadFileEntity):
-                file_resp = web.FileResponse(resp.path_to_file)
-                file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
-                return file_resp
 
             if isinstance(resp, web.StreamResponse):
                 return resp
