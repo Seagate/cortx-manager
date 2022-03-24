@@ -95,6 +95,9 @@ class CsmAgent:
 
         CsmAgent._configure_cluster_management_service(message_bus_obj)
 
+        # Network file manager registration
+        CsmRestApi._app["download_service"] = DownloadFileManager()
+
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
@@ -295,6 +298,7 @@ if __name__ == '__main__':
     from csm.core.services.storage_capacity import StorageCapacityService
     from csm.core.services.system_config import SystemConfigAppService, SystemConfigManager
     from csm.core.services.audit_log import  AuditLogManager, AuditService
+    from csm.core.services.file_transfer import DownloadFileManager
     from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
     from csm.core.services.version import ProductVersionService
