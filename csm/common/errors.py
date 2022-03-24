@@ -74,7 +74,7 @@ class InvalidRequest(CsmError):
 
     _err = CSM_INVALID_REQUEST
     _desc = "Invalid request message received."
-    
+
     def __init__(self, _desc=None, message_id=const.INVALID_REQUEST, message_args=None):
         super(InvalidRequest, self).__init__(
             CSM_INVALID_REQUEST, _desc, message_id, message_args)

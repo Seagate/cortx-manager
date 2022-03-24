@@ -57,7 +57,6 @@ from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
 import re
 from cortx.utils.errors import DataAccessError
-from schema import error_codes
 
 
 class CsmApi(ABC):
