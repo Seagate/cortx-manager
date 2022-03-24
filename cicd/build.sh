@@ -273,7 +273,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
     # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
 
     # Copy executables files
