@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 from csm.common.services import Service
-# from csm.core.services.file_transfer import DownloadFileEntity
+# from csm.core.blogic.models.audit_log import CsmAuditLogModel
 class AlertHttpNotifyService(Service):
     def __init__(self):
         super().__init__()
@@ -28,8 +28,33 @@ class AlertHttpNotifyService(Service):
         if CsmRestApi.push(alert):
             self.unpublished_alerts.discard(alert)
 
-# FileTransferAPI related 
-# if isinstance(resp, DownloadFileEntity):
-#     file_resp = web.FileResponse(resp.path_to_file)
-#     file_resp.headers['Content-Disposition'] = f'attachment; filename="{resp.filename}"'
-#     return file_resp
+
+#Audit log function
+# @staticmethod
+# def generate_audit_log_string(request, **kwargs):
+#     if (getattr(request, "session", None) is not None
+#             and getattr(request.session, "credentials", None) is not None):
+#         user = request.session.credentials.user_id
+#     else:
+#         user = None
+#     remote_ip = request.remote
+#     forwarded_for_ip = str(request.headers.get('X-Forwarded-For')).split(',', 2)[0].strip()
+#     try:
+#         ip_address(forwarded_for_ip)
+#     except ValueError:
+#         forwarded_for_ip = None
+#     path = request.path
+#     method = request.method
+#     user_agent = request.headers.get('User-Agent')
+#     entry = {
+#         'user': user if user else "",
+#         'remote_ip': remote_ip,
+#         'forwarded_for_ip': forwarded_for_ip if forwarded_for_ip else "",
+#         'method': method,
+#         'path': path,
+#         'user_agent': user_agent,
+#         'response_code': kwargs.get("response_code", ""),
+#         'request_id': kwargs.get("request_id", int(time.time())),
+#         'payload': kwargs.get("payload", "")
+#     }
+#     return json.dumps(entry)

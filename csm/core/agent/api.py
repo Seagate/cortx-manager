@@ -31,7 +31,6 @@ from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
 from typing import Dict, Tuple
-from csm.core.blogic.models.audit_log import CsmAuditLogModel
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.services.sessions import LoginService
@@ -124,35 +123,6 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def is_debug(request) -> bool:
         return 'debug' in request.rel_url.query
-
-    @staticmethod
-    def generate_audit_log_string(request, **kwargs):
-        if (getattr(request, "session", None) is not None
-                and getattr(request.session, "credentials", None) is not None):
-            user = request.session.credentials.user_id
-        else:
-            user = None
-        remote_ip = request.remote
-        forwarded_for_ip = str(request.headers.get('X-Forwarded-For')).split(',', 2)[0].strip()
-        try:
-            ip_address(forwarded_for_ip)
-        except ValueError:
-            forwarded_for_ip = None
-        path = request.path
-        method = request.method
-        user_agent = request.headers.get('User-Agent')
-        entry = {
-            'user': user if user else "",
-            'remote_ip': remote_ip,
-            'forwarded_for_ip': forwarded_for_ip if forwarded_for_ip else "",
-            'method': method,
-            'path': path,
-            'user_agent': user_agent,
-            'response_code': kwargs.get("response_code", ""),
-            'request_id': kwargs.get("request_id", int(time.time())),
-            'payload': kwargs.get("payload", "")
-        }
-        return json.dumps(entry)
 
     @staticmethod
     def error_response(err: Exception, **kwargs) -> dict:

@@ -17,22 +17,14 @@
 from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
-from .onboarding import OnboardingStateView
-from .system_config import SystemConfigListView
-from .system_config import SystemConfigView
 from .storage_capacity import StorageCapacityView
 from .permissions import CurrentPermissionsView
 from .hotfix_update import CsmHotfixUploadView
 from .firmware_update import (FirmwarePackageUploadView, FirmwareUpdateView,
                               FirmwarePackageAvailibility)
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
-from csm.core.controllers.security import (SecurityInstallView, SecurityStatusView,
-                                           SecurityUploadView, SecurityDetailsView)
-from csm.core.controllers.maintenance import MaintenanceView
-from csm.core.controllers.version import ProductVersionView
 from csm.core.controllers.health import ResourcesHealthView
 from csm.core.controllers.cluster_management import ClusterOperationsView, ClusterStatusView
-from csm.core.controllers.appliance_info import ApplianceInfoView
 from csm.core.controllers.unsupported_features import UnsupportedFeaturesView
 from csm.core.controllers.system_status import SystemStatusView, SystemStatusAllView
 from csm.core.controllers.rgw.s3.users import (S3IAMUserListView, S3IAMUserView,

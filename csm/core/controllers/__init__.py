@@ -17,6 +17,4 @@ from .routes import CsmRoutes
 from .users import CsmUsersListView, CsmUsersView
 from .health import ResourcesHealthView
 from .cluster_management import ClusterOperationsView
-from .audit_log import AuditLogShowView, AuditLogDownloadView
-from .maintenance import MaintenanceView
 
