@@ -465,7 +465,6 @@ PORT_MIN_VALUE = 0
 PORT_MAX_VALUE = 65536
 
 SOFTWARE_UPDATE_ID = 'software_update'
-FIRMWARE_UPDATE_ID = 'firmware_update'
 REPLACE_NODE_ID = 'replace_node'
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
@@ -556,7 +555,6 @@ STATUS_CONFLICT = 409
 
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
-HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 USL_SERVICE = "usl_service"
@@ -604,9 +602,6 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-
-# Provisioner status
-PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
 # Provisioner Plugin constant
 NODE_LIST_KEY='cluster:node_list'
@@ -871,8 +866,6 @@ CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
 S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
-CSM_UPDATE_HOTFIX_PATH = 'UPDATE>hotfix_store_path'
-CSM_UPDATE_FIRMWARE_PATH = 'UPDATE>firmware_store_path'
 RGW_S3_IAM_ADMIN_USER = 'RGW>s3>iam>admin_user'
 RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
 RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'

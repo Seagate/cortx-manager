@@ -29,30 +29,6 @@
       "sspl"
     ]
   },
-  "/api/*/update/firmware/upload": {
-    "feature_name": "fw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
-  "/api/*/update/firmware/start": {
-    "feature_name": "fw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
-  "/api/*/update/firmware/availability": {
-    "feature_name": "fw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
-  "/api/*/update/firmware/status": {
-    "feature_name": "fw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
   "/api/*/system/health/*": {
     "feature_name": "health",
     "dependent_on": [
@@ -65,24 +41,7 @@
       "ha"
     ]
   },
-  "/api/*/update/hotfix/status": {
-    "feature_name": "sw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
-  "/api/*/update/hotfix/upload": {
-    "feature_name": "sw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
-  "/api/*/update/hotfix/start": {
-    "feature_name": "sw_update",
-    "dependent_on": [
-      "provisioner"
-    ]
-  },
+
   "/api/*/maintenance/cluster": {
     "feature_name": "cluster_management",
     "dependent_on": [

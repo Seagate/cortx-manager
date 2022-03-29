@@ -35,16 +35,4 @@ class BinFileFieldSchema(Schema):
     """Base File Filed validator for 'bin'-uploaded files"""
     content_type = fields.Str(required=True)
     filename = fields.Str(validate=BinFilenameValidator(), required=True)
-    file_ref = fields.Field(validate=FileRefValidator())    
-
-
-class HotFixFileFieldSchema(IsoFileFieldSchema):
-    """ Validation schema for uploaded files"""
-
-    pass
-
-
-class FirmwareUpdateFileFieldSchema(BinFileFieldSchema):
-    """Valdation schmea for firmware update"""
-
-    pass
+    file_ref = fields.Field(validate=FileRefValidator())

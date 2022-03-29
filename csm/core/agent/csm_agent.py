@@ -114,27 +114,11 @@ class CsmAgent:
 
         roles_service = RoleManagementService(role_manager)
         CsmRestApi._app["roles_service"] = roles_service
-
-        try:
-            # TODO: consider a more safe storage
-            params = {
-                "username": Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY),
-                "password": Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
-            }
-            provisioner = import_plugin_module(const.PROVISIONER_PLUGIN).ProvisionerPlugin(**params)
-        except CsmError as ce:
-            Log.error(f"Unable to load Provisioner plugin: {ce}")
-
         # RGW S3 service
         CsmAgent._configure_s3_services()
 
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
-        update_repo = UpdateStatusRepository(db)
-        CsmRestApi._app[const.HOTFIX_UPDATE_SERVICE] = HotfixApplicationService(
-            Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_UPDATE_HOTFIX_PATH), provisioner, update_repo)
-        CsmRestApi._app[const.FW_UPDATE_SERVICE] = FirmwareUpdateService(provisioner,
-                Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_UPDATE_FIRMWARE_PATH), update_repo)
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
 
@@ -258,7 +242,6 @@ if __name__ == '__main__':
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
-    from csm.core.services.hotfix_update import HotfixApplicationService
     from csm.core.repositories.update_status import UpdateStatusRepository
     from csm.core.agent.api import CsmRestApi
     from csm.common.timeseries import TimelionProvider
@@ -268,7 +251,6 @@ if __name__ == '__main__':
     from cortx.utils.validator.v_consul import ConsulV
     from cortx.utils.validator.error import VError
     from csm.core.services.storage_capacity import StorageCapacityService
-    from csm.core.services.firmware_update import FirmwareUpdateService
     from csm.common.errors import CsmError
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
