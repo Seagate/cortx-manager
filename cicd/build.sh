@@ -60,15 +60,6 @@ TAR_END_TIME=$(($(date +%s) - TAR_START_TIME))
 TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
 }
 
-    # install_py_req() {
-    #     # Check python package
-    #     req_file=$BASE_DIR/cicd/pyinstaller/$1
-    #     echo "Installing python packages..."
-    #     pip install -r "$req_file" || {
-    #         echo "Unable to install package from $req_file"; exit 1;
-    #     };
-    # }
-
 usage() {
     echo """
 usage: $PROG_NAME [-v <csm version>]
@@ -221,7 +212,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
     cp -f "$BASE_DIR/csm/conf/csm_setup.py" "$DIST/csm/lib/csm_setup"
-    # cp -f "$BASE_DIR/csm/conf/usl_setup.py" "$DIST/csm/lib/usl_setup"
     cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
     cp -f "$BASE_DIR/csm/cli/support_bundle/csm_bundle_generate.py" "$DIST/csm/lib/csm_bundle_generate"
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
@@ -242,12 +232,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
 
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
-
-    # if [ "$QA" == true ]; then
-    #     sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    # else
-    #     sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    # fi
 
     gen_tar_file csm_agent csm
     rm -rf "${TMPDIR}/csm/"*

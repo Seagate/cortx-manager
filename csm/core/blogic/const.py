@@ -876,7 +876,6 @@ CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
 CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
 CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api'
 #keys for database models
-DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
 DB_MODELS_DATABASE_NAME = 'models[{0}]>database'
 DB_MODELS_COLLECTION_NAME = 'models[{0}]>config>{1}>collection'

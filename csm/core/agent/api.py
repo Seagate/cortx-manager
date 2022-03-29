@@ -50,7 +50,7 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
 from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
-from csm.core.controllers import CsmRoutes
+from csm.core.controllers.routes import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
 import re
@@ -518,7 +518,9 @@ class CsmRestApi(CsmApi, ABC):
     async def _on_startup(app):
         Log.debug('REST API startup')
         CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
-        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
+
+        # Commented as securityservice and provisioner plugin is archieved.
+        # CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
     async def _on_shutdown(app):
