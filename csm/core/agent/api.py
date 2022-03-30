@@ -48,7 +48,7 @@ from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
-                               CsmRequestCancelled)
+                               CsmRequestCancelled, CsmUnauthorizedError)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
@@ -443,6 +443,8 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=504)
         except CsmServiceConflict as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=409)
+        except CsmUnauthorizedError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=401)
         except (CsmError, InvalidRequest) as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)
         except KeyError as e:

@@ -175,7 +175,7 @@ class CsmGatewayTimeout(CsmError):
 
     def __init__(self, desc=None, message_id=const.GATEWAY_TIMEOUT, message_args=None):
         super(CsmGatewayTimeout, self).__init__(
-            CSM_INTERNAL_ERROR, desc,
+            CSM_GATEWAY_TIMEOUT, desc,
             message_id, message_args)
 
 class CsmUnauthorizedError(CsmError):
