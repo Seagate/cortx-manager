@@ -171,7 +171,6 @@ class CsmRestApi(CsmApi, ABC):
         if isinstance(err, CsmError):
             resp["error_code"] = err.rc()
             resp["message"] = err.error()
-            message_id = err.message_id()
             resp["message_id"] = err.message_id()
             message_args = err.message_args()
             if message_args is not None:
@@ -409,7 +408,7 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            raise CsmRequestCancelled(message = "Call cancelled by client")
+            raise CsmRequestCancelled(desc= "Call cancelled by client")
         except CsmRequestCancelled as e:
             Log.warn(f"Client cancelled call for {e}")
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=499)
