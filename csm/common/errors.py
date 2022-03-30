@@ -35,6 +35,8 @@ CSM_NOT_IMPLEMENTED         = 0x100C
 CSM_SERVICE_CONFLICT        = 0x100D
 CSM_GATEWAY_TIMEOUT         = 0x100E
 CSM_UNAUTHORIZED_ERROR      = 0x100F
+CSM_UNKNOWN_ERROR           = 0x1010
+
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """

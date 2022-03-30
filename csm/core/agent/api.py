@@ -48,7 +48,7 @@ from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
-                               CsmRequestCancelled, CsmUnauthorizedError)
+                               CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
@@ -172,24 +172,19 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = err.rc()
             resp["message"] = err.error()
             message_id = err.message_id()
-            if message_id is not None:
-                resp["message_id"] = err.message_id()
-            else:
-                # TODO: what should be the message id
-                resp["message_id"] = const.UNKNOWN_ERROR
+            resp["message_id"] = err.message_id()
             message_args = err.message_args()
             if message_args is not None:
                 resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
             resp["error_code"] = err.status
             resp["message_id"] = str(err)
-            with open('schema/error_codes.yaml', 'r') as error_codes_file:
-                error_messages = yaml.safe_load(error_codes_file)
-            resp["message"] = error_messages[str(err)]
+            resp["message"] = str(err)
         else:
             resp["message"] = f'{str(err)}'
-            # resp["message_id"] = f'{str(err)}'
-            # TODO: what should be the error Code
+            resp["message_id"] = const.UNKNOWN_ERROR
+            resp["error_code"] = CSM_UNKNOWN_ERROR
+
         return resp
 
     @staticmethod
