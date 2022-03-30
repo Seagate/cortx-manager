@@ -240,7 +240,6 @@ class S3IAMUserKeyView(S3BaseView):
             Log.debug(f"Handling Add access key PUT request"
                   f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
-            # TODO:
             raise InvalidRequest(message_args="Invalid Request Body")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")

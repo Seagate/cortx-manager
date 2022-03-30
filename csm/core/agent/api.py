@@ -47,7 +47,8 @@ from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
-                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
+                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
+                               CsmRequestCancelled)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
@@ -204,7 +205,7 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def _unauthorised(reason: str):
         Log.debug(f'Unautorized: {reason}')
-        raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
+        raise CsmUnauthorizedError(desc="Invalid authentication credentials for the target resource.")
 
     @staticmethod
     async def _resolve_handler(request):
@@ -354,9 +355,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'User permissions: {request.session.permissions}')
             Log.debug(f'Allow access: {verdict}')
             if not verdict:
-                # TODO Change it to CSM Error : CsmPermissionDenied
-                raise InvalidRequest(message_id = "Forbidden", )
-                # raise web.HTTPForbidden()
+                raise CsmPermissionDenied("Access to the requested resource is forbidden")
         return await handler(request)
 
     @staticmethod
@@ -415,10 +414,10 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            # TODO: Here Error Response wont be same format
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id, message = "Call cancelled by client"),
-                                            status=499)
-            # return CsmRestApi.json_response("Call cancelled by client", status=499)
+            raise CsmRequestCancelled(message = "Call cancelled by client")
+        except CsmRequestCancelled as e:
+            Log.warn(f"Client cancelled call for {e}")
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=499)
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=e.status)
@@ -446,8 +445,6 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=409)
         except (CsmError, InvalidRequest) as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)
-        except ForbiddenError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=403)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"

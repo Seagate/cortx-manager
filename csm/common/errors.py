@@ -29,7 +29,12 @@ CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
 CSM_OPERATION_NOT_PERMITTED = 0x1008
 CSM_FAILURE                 = 0x1009
-CSM_FORBIDDEN_ERROR         = 0x1010
+CSM_SERVICE_NOT_AVAILABLE   = 0x100A
+CSM_REQUEST_CANCELLED       = 0x100B
+CSM_NOT_IMPLEMENTED         = 0x100C
+CSM_SERVICE_CONFLICT        = 0x100D
+CSM_GATEWAY_TIMEOUT         = 0x100E
+CSM_UNAUTHORIZED_ERROR      = 0x100F
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
@@ -123,7 +128,7 @@ class CsmPermissionDenied(CsmError):
 
     def __init__(self, desc=None, message_id=const.PERMISSION_DENIED_ERROR, message_args=None):
         super(CsmPermissionDenied, self).__init__(
-            CSM_INTERNAL_ERROR, desc,
+            CSM_OPERATION_NOT_PERMITTED, desc,
             message_id, message_args)
 
 
@@ -131,21 +136,35 @@ class CsmResourceNotAvailable(CsmInternalError):
 
     """Describes issues when requested resource is not available"""
 
+    def __init__(self, desc=None, message_id=const.RESOURCE_NOT_AVAILABLE, message_args=None):
+        super(CsmResourceNotAvailable, self).__init__(
+            desc, message_id, message_args)
 
 class CsmTypeError(CsmInternalError):
 
     """Issues related to incorrect type of argument/parameter, etc."""
 
+    def __init__(self, desc=None, message_id=const.TYPE_ERROR, message_args=None):
+        super(CsmTypeError, self).__init__(
+            desc, message_id, message_args)
 
 class CsmNotImplemented(CsmError):
 
     """This error represents HTTP 501 Not Implemented Error"""
 
+    def __init__(self, desc=None, message_id=const.NOT_IMPLEMENTED, message_args=None):
+        super(CsmNotImplemented, self).__init__(
+            CSM_NOT_IMPLEMENTED, desc,
+            message_id, message_args)
 
 class CsmServiceConflict(CsmError):
 
     """Service in conflict stat or operation can cause that state"""
 
+    def __init__(self, desc=None, message_id=const.SERVICE_CONFLICT, message_args=None):
+        super(CsmServiceConflict, self).__init__(
+            CSM_SERVICE_CONFLICT, desc,
+            message_id, message_args)
 
 class CsmGatewayTimeout(CsmError):
 
@@ -154,24 +173,34 @@ class CsmGatewayTimeout(CsmError):
     a timely response from the upstream server.
     """
 
+    def __init__(self, desc=None, message_id=const.GATEWAY_TIMEOUT, message_args=None):
+        super(CsmGatewayTimeout, self).__init__(
+            CSM_INTERNAL_ERROR, desc,
+            message_id, message_args)
 
 class CsmUnauthorizedError(CsmError):
 
     """This error represents HTTP 401 Unauthorized Error"""
 
+    def __init__(self, desc=None, message_id=const.UNAUTHORIZED_ERROR, message_args=None):
+        super(CsmUnauthorizedError, self).__init__(
+            CSM_UNAUTHORIZED_ERROR, desc,
+            message_id, message_args)
+
 class CsmServiceNotAvailable(CsmError):
 
     """This  error represents CSM service is Not Available."""
 
-class ForbiddenError(CsmError):
-    """
-    This error will be raised when an access is forbidden
-    This is equivalant to HTTP Forbidden 403
-    """
+    def __init__(self, desc=None, message_id=const.SERVICE_NOT_AVAILABLE, message_args=None):
+        super(CsmServiceNotAvailable, self).__init__(
+            CSM_SERVICE_NOT_AVAILABLE, desc,
+            message_id, message_args)
 
-    _err = CSM_FORBIDDEN_ERROR
-    _desc = "Access to the requested resource is forbidden"
+class CsmRequestCancelled(CsmError):
 
-    def __init__(self, _desc=None, message_id=const.FORBIDDEN_ERROR, message_args=None):
-        super(ForbiddenError, self).__init__(
-            CSM_FORBIDDEN_ERROR, _desc, message_id, message_args)
+    """This  error represents CSM service request is cancelled."""
+
+    def __init__(self, desc=None, message_id=const.REQUEST_CANCELLED, message_args=None):
+        super(CsmRequestCancelled, self).__init__(
+            CSM_REQUEST_CANCELLED, desc,
+            message_id, message_args)
