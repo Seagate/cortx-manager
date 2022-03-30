@@ -29,6 +29,7 @@ CSM_SETUP_ERROR             = 0x1006
 CSM_RESOURCE_EXIST          = 0x1007
 CSM_OPERATION_NOT_PERMITTED = 0x1008
 CSM_FAILURE                 = 0x1009
+CSM_FORBIDDEN_ERROR         = 0x1010
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
@@ -88,7 +89,7 @@ class ResourceExist(CsmError):
     _err = CSM_RESOURCE_EXIST
     _desc = "Resource already exist."
 
-    def __init__(self, _desc=None, message_id=None, message_args=None):
+    def __init__(self, _desc=None, message_id=const.RESOURCE_EXISTS, message_args=None):
         super(ResourceExist, self).__init__(
             CSM_RESOURCE_EXIST, _desc, message_id, message_args)
 
@@ -98,7 +99,7 @@ class CsmInternalError(CsmError):
     This error is raised by CLI for all unknown internal errors
     """
 
-    def __init__(self, desc=None, message_id=None, message_args=None):
+    def __init__(self, desc=None, message_id=const.INTERNAL_ERROR, message_args=None):
         super(CsmInternalError, self).__init__(
             CSM_INTERNAL_ERROR, 'Internal error: %s' % desc,
             message_id, message_args)
@@ -109,7 +110,7 @@ class CsmNotFoundError(CsmError):
     This error is raised for all cases when an entity was not found
     """
 
-    def __init__(self, desc=None, message_id=None, message_args=None):
+    def __init__(self, desc=None, message_id=const.NOT_FOUND_ERROR, message_args=None):
         super(CsmNotFoundError, self).__init__(
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
@@ -120,7 +121,7 @@ class CsmPermissionDenied(CsmError):
     This error is raised for all cases when we don't have permissions
     """
 
-    def __init__(self, desc=None, message_id=None, message_args=None):
+    def __init__(self, desc=None, message_id=const.PERMISSION_DENIED_ERROR, message_args=None):
         super(CsmPermissionDenied, self).__init__(
             CSM_INTERNAL_ERROR, desc,
             message_id, message_args)
@@ -161,3 +162,16 @@ class CsmUnauthorizedError(CsmError):
 class CsmServiceNotAvailable(CsmError):
 
     """This  error represents CSM service is Not Available."""
+
+class ForbiddenError(CsmError):
+    """
+    This error will be raised when an access is forbidden
+    This is equivalant to HTTP Forbidden 403
+    """
+
+    _err = CSM_FORBIDDEN_ERROR
+    _desc = "Access to the requested resource is forbidden"
+
+    def __init__(self, _desc=None, message_id=const.FORBIDDEN_ERROR, message_args=None):
+        super(ForbiddenError, self).__init__(
+            CSM_FORBIDDEN_ERROR, _desc, message_id, message_args)

@@ -20,7 +20,7 @@ from .login import LoginView, LogoutView
 from .onboarding import OnboardingStateView
 from .system_config import SystemConfigListView
 from .system_config import SystemConfigView
-from .storage_capacity import StorageCapacityView
+# from .storage_capacity import StorageCapacityView
 from .permissions import CurrentPermissionsView
 from .hotfix_update import CsmHotfixUploadView
 from .firmware_update import (FirmwarePackageUploadView, FirmwareUpdateView,

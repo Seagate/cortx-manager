@@ -977,4 +977,10 @@ UNLINK = 'unlink'
 SUPPORTED_BUCKET_OPERATIONS = [LINK, UNLINK]
 
 INVALID_REQUEST = 'MalformedRequest'
-UNKNOWN_ERROR = 'Unknown Error'
+UNKNOWN_ERROR = 'UnknownError'
+RESOURCE_EXISTS = 'ResourceExist'
+INTERNAL_ERROR = 'InternalError'
+NOT_FOUND_ERROR = 'NotFoundError'
+PERMISSION_DENIED_ERROR = 'PermissionDenied'
+FORBIDDEN_ERROR = 'Forbidden' 
+UNAUTHORISED = 'Unauthorized'
