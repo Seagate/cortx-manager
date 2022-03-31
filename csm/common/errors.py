@@ -36,6 +36,7 @@ CSM_SERVICE_CONFLICT        = 0x100D
 CSM_GATEWAY_TIMEOUT         = 0x100E
 CSM_UNAUTHORIZED_ERROR      = 0x100F
 CSM_UNKNOWN_ERROR           = 0x1010
+CSM_HTTP_ERROR              = 0x1011
 
 
 class CsmError(BaseError):

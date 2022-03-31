@@ -48,11 +48,12 @@ from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
-                               CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR)
+                               CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
+                               CSM_HTTP_ERROR)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth, CsmHttpException
 from csm.core.controllers import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
@@ -176,9 +177,9 @@ class CsmRestApi(CsmApi, ABC):
             if message_args is not None:
                 resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
-            resp["error_code"] = err.status
-            resp["message_id"] = str(err)
-            resp["message"] = str(err)
+            resp["error_code"] = CSM_HTTP_ERROR
+            resp["message_id"] = str(err.reason)
+            resp["message"] = str(err.text)
         else:
             resp["message"] = f'{str(err)}'
             resp["message_id"] = const.UNKNOWN_ERROR
@@ -408,10 +409,11 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            raise CsmRequestCancelled(desc= "Call cancelled by client")
-        except CsmRequestCancelled as e:
-            Log.warn(f"Client cancelled call for {e}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=499)
+            return CsmRestApi.json_response(CsmRestApi.error_response(CsmRequestCancelled(desc= "Call cancelled by client"),
+                                            request = request, request_id = request_id), status=499)
+        except CsmHttpException as e:
+            Log.error(f'CsmHttpException {e.status}: {e.reason}')
+            raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=e.status)
