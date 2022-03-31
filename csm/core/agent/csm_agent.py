@@ -171,7 +171,8 @@ class CsmAgent:
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
-                pass
+                Log.error(f"Unable to fetch the configurations from consul: {ve}")
+                raise CsmInternalError(desc="Unable to fetch the configurations")
 
         if not set_config_flag:
             conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     from cortx.utils.validator.v_consul import ConsulV
     from cortx.utils.validator.error import VError
     from csm.core.services.storage_capacity import StorageCapacityService
-    from csm.common.errors import CsmError
+    from csm.common.errors import CsmError, CsmInternalError
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm

@@ -84,7 +84,8 @@ class Setup:
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
-                Log.error(f" Failed to validate consul host: {ve}")
+                Log.error(f"Unable to fetch the configurations from consul: {ve}")
+                raise CsmSetupError("Unable to fetch the configurations")
 
         if not set_config_flag:
             config_path = self._set_csm_conf_path()
