@@ -108,6 +108,8 @@ class CsmInternalError(CsmError):
     This error is raised by CLI for all unknown internal errors
     """
 
+    _desc = "CSM Internal Error"
+
     def __init__(self, desc=None, message_id=const.INTERNAL_ERROR, message_args=None):
         super(CsmInternalError, self).__init__(
             CSM_INTERNAL_ERROR, 'Internal error: %s' % desc,
@@ -118,6 +120,8 @@ class CsmNotFoundError(CsmError):
     """
     This error is raised for all cases when an entity was not found
     """
+
+    _desc = "An entity was not found"
 
     def __init__(self, desc=None, message_id=const.NOT_FOUND_ERROR, message_args=None):
         super(CsmNotFoundError, self).__init__(
@@ -130,6 +134,8 @@ class CsmPermissionDenied(CsmError):
     This error is raised for all cases when we don't have permissions
     """
 
+    _desc = "Access to the requested resource is forbidden"
+
     def __init__(self, desc=None, message_id=const.PERMISSION_DENIED_ERROR, message_args=None):
         super(CsmPermissionDenied, self).__init__(
             CSM_OPERATION_NOT_PERMITTED, desc,
@@ -140,6 +146,8 @@ class CsmResourceNotAvailable(CsmInternalError):
 
     """Describes issues when requested resource is not available"""
 
+    _desc = "Requested resource is not available"
+
     def __init__(self, desc=None, message_id=const.RESOURCE_NOT_AVAILABLE, message_args=None):
         super(CsmResourceNotAvailable, self).__init__(
             desc, message_id, message_args)
@@ -147,6 +155,8 @@ class CsmResourceNotAvailable(CsmInternalError):
 class CsmTypeError(CsmInternalError):
 
     """Issues related to incorrect type of argument/parameter, etc."""
+
+    _desc = "Incorrect type of argument/parameter"
 
     def __init__(self, desc=None, message_id=const.TYPE_ERROR, message_args=None):
         super(CsmTypeError, self).__init__(
@@ -156,6 +166,8 @@ class CsmNotImplemented(CsmError):
 
     """This error represents HTTP 501 Not Implemented Error"""
 
+    _desc = "Not Implemented Error"
+
     def __init__(self, desc=None, message_id=const.NOT_IMPLEMENTED, message_args=None):
         super(CsmNotImplemented, self).__init__(
             CSM_NOT_IMPLEMENTED, desc,
@@ -164,6 +176,8 @@ class CsmNotImplemented(CsmError):
 class CsmServiceConflict(CsmError):
 
     """Service in conflict stat or operation can cause that state"""
+
+    _desc = "Service conflict state error."
 
     def __init__(self, desc=None, message_id=const.SERVICE_CONFLICT, message_args=None):
         super(CsmServiceConflict, self).__init__(
@@ -177,6 +191,8 @@ class CsmGatewayTimeout(CsmError):
     a timely response from the upstream server.
     """
 
+    _desc = "Did not receive a timely response from the upstream server"
+
     def __init__(self, desc=None, message_id=const.GATEWAY_TIMEOUT, message_args=None):
         super(CsmGatewayTimeout, self).__init__(
             CSM_GATEWAY_TIMEOUT, desc,
@@ -185,6 +201,8 @@ class CsmGatewayTimeout(CsmError):
 class CsmUnauthorizedError(CsmError):
 
     """This error represents HTTP 401 Unauthorized Error"""
+
+    _desc = "Invalid authentication credentials for the target resource."
 
     def __init__(self, desc=None, message_id=const.UNAUTHORIZED_ERROR, message_args=None):
         super(CsmUnauthorizedError, self).__init__(
@@ -195,6 +213,8 @@ class CsmServiceNotAvailable(CsmError):
 
     """This  error represents CSM service is Not Available."""
 
+    _desc = "CSM service is Not Available."
+
     def __init__(self, desc=None, message_id=const.SERVICE_NOT_AVAILABLE, message_args=None):
         super(CsmServiceNotAvailable, self).__init__(
             CSM_SERVICE_NOT_AVAILABLE, desc,
@@ -203,6 +223,8 @@ class CsmServiceNotAvailable(CsmError):
 class CsmRequestCancelled(CsmError):
 
     """This  error represents CSM service request is cancelled."""
+
+    _desc = "CSM service request is cancelled."
 
     def __init__(self, desc=None, message_id=const.REQUEST_CANCELLED, message_args=None):
         super(CsmRequestCancelled, self).__init__(
