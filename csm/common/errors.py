@@ -58,8 +58,9 @@ class CsmSetupError(CsmError):
     """
     _desc = "Csm Setup is failed"
 
-    def __init__(self, _desc=None):
-        super(CsmSetupError, self).__init__(CSM_SETUP_ERROR, _desc)
+    def __init__(self, _desc=None, message_id=const.SETUP_ERROR, message_args=None):
+        super(CsmSetupError, self).__init__(
+            CSM_SETUP_ERROR, _desc, message_id, message_args)
 
 
 class CommandTerminated(KeyboardInterrupt):
