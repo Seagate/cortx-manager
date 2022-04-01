@@ -122,7 +122,7 @@ class S3IAMUserListView(S3BaseView):
             Log.debug(f"Handling create s3 iam user PUT request"
                   f" request body: {user_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
@@ -176,7 +176,7 @@ class S3IAMUserView(S3BaseView):
             else:
                 request_body_params_dict = {}
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_params_dict}
@@ -203,7 +203,7 @@ class S3IAMUserView(S3BaseView):
             else:
                 request_body_params_dict = {}
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_params_dict}
@@ -240,7 +240,7 @@ class S3IAMUserKeyView(S3BaseView):
             Log.debug(f"Handling Add access key PUT request"
                   f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
@@ -261,7 +261,7 @@ class S3IAMUserKeyView(S3BaseView):
             Log.debug(f"Handling Remove access key DELETE request"
                   f" request body: {remove_key_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
@@ -287,7 +287,7 @@ class S3IAMUserCapsView(S3BaseView):
             schema = UserCapsSchema()
             user_caps_body = schema.load(await self.request.json())
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **user_caps_body}
