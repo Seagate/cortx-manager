@@ -87,6 +87,8 @@ class Configure(Setup):
                 except Exception as e_:
                     Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
+            else:
+                raise CsmSetupError(f"Unable to connect to storage after 4 attempts")
         except ValidationError as ve:
             Log.error(f"Validation Error: {ve}")
             raise CsmSetupError(f"Validation Error: {ve}")
