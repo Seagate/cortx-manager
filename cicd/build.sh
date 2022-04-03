@@ -167,11 +167,8 @@ COPY_END_TIME=$(date +%s)
 
 ################### BRAND SPECIFIC CHANGES ######################
 if [ "$BRAND_CONFIG_PATH" ]; then
-	cp "$BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH" "$CORTX_UNSUPPORTED_FEATURES_PATH"
-	echo "updated unsupported_features.json from $BRAND_CONFIG_PATH/$BRAND_UNSUPPORTED_FEATURES_PATH"
-
-	cp "$BRAND_CONFIG_PATH/$BRAND_L18N_PATH" "$CORTX_L18N_PATH"
-	echo "updated l18n.json from $BRAND_CONFIG_PATH/$BRAND_L18N_PATH"
+	echo "Brand specific changes are disabled and take no action"
+	echo "Consider removing BRAND_CONFIG_PATH (-l <path>) when launching the script"
 fi
 
 ################### Dependency ##########################
