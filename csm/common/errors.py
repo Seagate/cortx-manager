@@ -266,7 +266,6 @@ class CsmServiceNotAvailable(CsmError):
             message_id, message_args)
 
 class CsmRequestCancelled(CsmError):
-
     """This  error represents CSM service request is cancelled."""
 
     _desc = "Service request cancelled."
