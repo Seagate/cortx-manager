@@ -178,8 +178,8 @@ class CsmRestApi(CsmApi, ABC):
                 resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
             resp["error_code"] = CSM_HTTP_ERROR
-            resp["message_id"] = str(err.reason)
-            resp["message"] = str(err.text)
+            resp["message_id"] = const.HTTP_ERROR
+            resp["message"] = str(err.reason)
         else:
             resp["message"] = f'{str(err)}'
             resp["message_id"] = const.UNKNOWN_ERROR
