@@ -56,7 +56,7 @@ class CsmSetupError(CsmError):
     """
     This error will be raised when csm setup is failed
     """
-    _desc = "Csm Setup is failed"
+    _desc = "CSM setup failed."
 
     def __init__(self, _desc=None, message_id=const.SETUP_ERROR, message_args=None):
         super(CsmSetupError, self).__init__(
@@ -83,7 +83,7 @@ class InvalidRequest(CsmError):
     """
 
     _err = CSM_INVALID_REQUEST
-    _desc = "Invalid request message received."
+    _desc = "Invalid request"
 
     def __init__(self, _desc=None, message_id=const.INVALID_REQUEST, message_args=None):
         super(InvalidRequest, self).__init__(
@@ -146,7 +146,7 @@ class CsmResourceNotAvailable(CsmInternalError):
 
     """Describes issues when requested resource is not available"""
 
-    _desc = "Requested resource is not available"
+    _desc = "Resource not available"
 
     def __init__(self, desc=None, message_id=const.RESOURCE_NOT_AVAILABLE, message_args=None):
         super(CsmResourceNotAvailable, self).__init__(
@@ -156,7 +156,7 @@ class CsmTypeError(CsmInternalError):
 
     """Issues related to incorrect type of argument/parameter, etc."""
 
-    _desc = "Incorrect type of argument/parameter"
+    _desc = "Unsupported type"
 
     def __init__(self, desc=None, message_id=const.TYPE_ERROR, message_args=None):
         super(CsmTypeError, self).__init__(
@@ -166,7 +166,7 @@ class CsmNotImplemented(CsmError):
 
     """This error represents HTTP 501 Not Implemented Error"""
 
-    _desc = "Not Implemented Error"
+    _desc = "Not Implemented"
 
     def __init__(self, desc=None, message_id=const.NOT_IMPLEMENTED, message_args=None):
         super(CsmNotImplemented, self).__init__(
@@ -177,7 +177,7 @@ class CsmServiceConflict(CsmError):
 
     """Service in conflict stat or operation can cause that state"""
 
-    _desc = "Service conflict state error."
+    _desc = "Service conflict state."
 
     def __init__(self, desc=None, message_id=const.SERVICE_CONFLICT, message_args=None):
         super(CsmServiceConflict, self).__init__(
@@ -191,7 +191,7 @@ class CsmGatewayTimeout(CsmError):
     a timely response from the upstream server.
     """
 
-    _desc = "Did not receive a timely response from the upstream server"
+    _desc = "Unable to get timely response"
 
     def __init__(self, desc=None, message_id=const.GATEWAY_TIMEOUT, message_args=None):
         super(CsmGatewayTimeout, self).__init__(
@@ -213,7 +213,7 @@ class CsmServiceNotAvailable(CsmError):
 
     """This  error represents CSM service is Not Available."""
 
-    _desc = "CSM service is Not Available."
+    _desc = "CSM service not available"
 
     def __init__(self, desc=None, message_id=const.SERVICE_NOT_AVAILABLE, message_args=None):
         super(CsmServiceNotAvailable, self).__init__(
@@ -224,7 +224,7 @@ class CsmRequestCancelled(CsmError):
 
     """This  error represents CSM service request is cancelled."""
 
-    _desc = "CSM service request is cancelled."
+    _desc = "Service request cancelled."
 
     def __init__(self, desc=None, message_id=const.REQUEST_CANCELLED, message_args=None):
         super(CsmRequestCancelled, self).__init__(
