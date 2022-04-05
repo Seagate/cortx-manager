@@ -88,7 +88,7 @@ class S3BucketView(S3BaseView):
                   f" request operation: {operation}"
                   f" request operation body: {operation_request_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Invalid Request Body")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with self._guard_service():
