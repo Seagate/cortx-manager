@@ -52,7 +52,7 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
 from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
-from csm.core.controllers import CsmRoutes
+from csm.core.controllers.routes import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
 import re
