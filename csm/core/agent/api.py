@@ -47,11 +47,13 @@ from csm.core.blogic import const
 from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
-                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout)
+                               CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
+                               CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
+                               CSM_HTTP_ERROR)
 from csm.core.routes import ApiRoutes
 from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
-from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
+from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
@@ -160,6 +162,7 @@ class CsmRestApi(CsmApi, ABC):
         resp = {
             "error_code": None,
             "message": None,
+            "message_id":None
         }
 
         request = kwargs.get("request")
@@ -169,17 +172,19 @@ class CsmRestApi(CsmApi, ABC):
         if isinstance(err, CsmError):
             resp["error_code"] = err.rc()
             resp["message"] = err.error()
-            message_id = err.message_id()
-            if message_id is not None:
-                resp["message_id"] = err.message_id()
+            resp["message_id"] = err.message_id()
             message_args = err.message_args()
             if message_args is not None:
                 resp["error_format_args"] = err.message_args()
         elif isinstance(err, web_exceptions.HTTPError):
-            resp["message"] = str(err)
-            resp["error_code"] = err.status
+            resp["error_code"] = CSM_HTTP_ERROR
+            resp["message_id"] = const.HTTP_ERROR
+            resp["message"] = str(err.reason)
         else:
             resp["message"] = f'{str(err)}'
+            resp["message_id"] = const.UNKNOWN_ERROR
+            resp["error_code"] = CSM_UNKNOWN_ERROR
+
         return resp
 
     @staticmethod
@@ -195,7 +200,7 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def _unauthorised(reason: str):
         Log.debug(f'Unautorized: {reason}')
-        raise web.HTTPUnauthorized(headers=CsmAuth.UNAUTH)
+        raise CsmUnauthorizedError(desc="Invalid authentication credentials for the target resource.")
 
     @staticmethod
     async def _resolve_handler(request):
@@ -345,7 +350,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'User permissions: {request.session.permissions}')
             Log.debug(f'Allow access: {verdict}')
             if not verdict:
-                raise web.HTTPForbidden()
+                raise CsmPermissionDenied("Access to the requested resource is forbidden")
         return await handler(request)
 
     @staticmethod
@@ -404,10 +409,14 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError) as e:
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            return CsmRestApi.json_response("Call cancelled by client", status=499)
+            return CsmRestApi.json_response(CsmRestApi.error_response(CsmRequestCancelled(desc= "Call cancelled by client"),
+                                            request = request, request_id = request_id), status=499)
+        except CsmHttpException as e:
+            Log.error(f'CsmHttpException {e.status}: {e.reason}')
+            raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
-            raise e
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=e.status)
         except DataAccessError as e:
             Log.error(f"Failed to access the database: {e}")
             resp = CsmRestApi.error_response(e, request=request, request_id=request_id)
@@ -430,6 +439,8 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=504)
         except CsmServiceConflict as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=409)
+        except CsmUnauthorizedError as e:
+            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=401)
         except (CsmError, InvalidRequest) as e:
             return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)
         except KeyError as e:
