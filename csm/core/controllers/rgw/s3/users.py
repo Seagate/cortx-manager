@@ -272,7 +272,7 @@ class S3IAMUserKeyView(S3BaseView):
 class S3IAMUserCapsView(S3BaseView):
     """
     S3 IAM - Add User Caps REST API implementation.
-    PUT: add user caps for S3 IAM user
+    PUT: add user caps for S3 IAM user.
     DELETE: Remove user caps for S3 IAM user
     """
 
