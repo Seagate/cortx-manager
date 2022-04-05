@@ -531,7 +531,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
 
         # For Sending SSL expiry information to IEM logs below code is required,
-        # logic needs to be improved, hence commenting. 
+        # logic needs to be improved, hence commenting.
         # CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
