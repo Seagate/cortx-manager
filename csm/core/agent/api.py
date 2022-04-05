@@ -530,7 +530,8 @@ class CsmRestApi(CsmApi, ABC):
         Log.debug('REST API startup')
         CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
 
-        # Commented as securityservice and provisioner plugin is archieved.
+        # For Sending SSL expiry information to IEM logs below code is required,
+        # logic needs to be improved, hence commenting. 
         # CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
