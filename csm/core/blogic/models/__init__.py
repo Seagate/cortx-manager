@@ -14,4 +14,3 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from .base import CsmModel
-#from csm.core.blogic.models.alerts import Alert

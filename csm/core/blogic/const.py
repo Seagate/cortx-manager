@@ -178,11 +178,6 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
-# cron dir
-CRON_DIR = "/etc/cron.daily"
-SOURCE_CRON_PATH = "{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
-DEST_CRON_PATH = "{}/es_logrotate.cron".format(CRON_DIR)
-
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -357,19 +352,8 @@ CSM_SETUP_FILE = '{}/schema/csm_setup.json'.format(CSM_PATH)
 CLI_SETUP_FILE = '{}/cli_setup.json'.format(COMMAND_DIRECTORY)
 
 # Support Bundle
-SSH_USER_NAME = 'root'
-COMMANDS_FILE = "{}/schema/commands.yaml".format(CORTXCLI_PATH)
-SUPPORT_BUNDLE_TAG = "support_bundle;"
 SUPPORT_BUNDLE = 'SUPPORT_BUNDLE'
-SOS_COMP = 'os'
-SB_COMPONENTS = "components"
-SB_COMMENT = "comment"
-SB_NODE_NAME = "node_name"
 SB_BUNDLE_ID = "bundle_id"
-SB_BUNDLE_PATH = "bundle_path"
-SB_SYMLINK_PATH = "symlink_path"
-ROOT_PRIVILEGES_MSG = "Command requires root privileges"
-PERMISSION_ERROR_MSG = "Failed to cleanup {path} due to insufficient permissions"
 SB_TARGET = 'target'
 SB_DURATION = 'duration'
 SB_SIZE_LIMIT = 'size_limit'
@@ -481,7 +465,6 @@ PORT_MIN_VALUE = 0
 PORT_MAX_VALUE = 65536
 
 SOFTWARE_UPDATE_ID = 'software_update'
-FIRMWARE_UPDATE_ID = 'firmware_update'
 REPLACE_NODE_ID = 'replace_node'
 # Email configuration
 CSM_SMTP_SEND_TIMEOUT_SEC = 30
@@ -564,38 +547,14 @@ CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
-SYSTEM_STATUS_ELASTICSEARCH = 'es'
 SYSTEM_STATUS_SUCCESS = 'success'
-
-# Rsyslog
-RSYSLOG_DIR = "/etc/rsyslog.d"
-SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-csm_logs.conf".format(CSM_PATH, RSYSLOG_DIR)
-CLI_SOURCE_RSYSLOG_PATH = "{0}/conf{1}/0-cortxcli_logs.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
-RSYSLOG_PATH = "{}/0-csm_logs.conf".format(RSYSLOG_DIR)
-CLI_RSYSLOG_PATH = "{}/0-cortxcli_logs.conf".format(RSYSLOG_DIR)
-CLI_SOURCE_SUPPORT_BUNDLE_CONF = "{0}/conf{1}/0-support_bundle.conf".format(CORTXCLI_PATH, RSYSLOG_DIR)
-SUPPORT_BUNDLE_CONF = "{}/0-support_bundle.conf".format(RSYSLOG_DIR)
-
-#cron dir
-CRON_DIR="/etc/cron.daily"
-SOURCE_CRON_PATH="{0}/conf{1}/es_logrotate.cron".format(CSM_PATH, CRON_DIR)
-DEST_CRON_PATH="{}/es_logrotate.cron".format(CRON_DIR)
-
-#logrotate
-LOGROTATE_DIR = "/etc/logrotate.d"
-LOGROTATE_DIR_DEST = "/etc/logrotate.d"
 
 # https status code
 STATUS_CREATED = 201
 STATUS_CONFLICT = 409
 
-SOURCE_LOGROTATE_PATH = "{0}/conf{1}/csm/csm_agent_log.conf".format(CSM_PATH, LOGROTATE_DIR)
-LOGROTATE_PATH = "{}/".format(LOGROTATE_DIR)
-CSM_LOGROTATE_DEST = "{0}/csm_agent_log.conf".format(LOGROTATE_DIR_DEST)
-
 # Service instance literal constant
 FW_UPDATE_SERVICE = "fw_update_service"
-HOTFIX_UPDATE_SERVICE = "hotfix_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 USL_SERVICE = "usl_service"
@@ -643,10 +602,6 @@ SOFTWARE = "software"
 
 #Third party packages information
 python_pkgs_req_path = CSM_INSTALL_BASE_DIR + "/conf/requirment.txt"
-dependent_rpms = ["elasticsearch-oss-7.10", "consul-1.9", "opendistroforelasticsearch-kibana-1.12", "cortx-csm_web"]
-
-# Provisioner status
-PROVISIONER_CONFIG_TYPES = ['network', 'firmware', 'hotfix']
 
 # Provisioner Plugin constant
 NODE_LIST_KEY='cluster:node_list'
@@ -911,8 +866,6 @@ CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
 S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
-CSM_UPDATE_HOTFIX_PATH = 'UPDATE>hotfix_store_path'
-CSM_UPDATE_FIRMWARE_PATH = 'UPDATE>firmware_store_path'
 RGW_S3_IAM_ADMIN_USER = 'RGW>s3>iam>admin_user'
 RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
 RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
@@ -923,7 +876,6 @@ CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
 CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'
 CAPACITY_MANAGMENT_HCTL_CLUSTER_API ='STORAGE_CAPACITY_MANAGMENT>cluster_status_api'
 #keys for database models
-DB_MODELS_COUNT = 'models_count'
 DB_MODELS_IMPORT_PATH = 'models[{0}]>import_path'
 DB_MODELS_DATABASE_NAME = 'models[{0}]>database'
 DB_MODELS_COLLECTION_NAME = 'models[{0}]>config>{1}>collection'

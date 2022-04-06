@@ -13,6 +13,3 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from .csm_bundle_generate import CSMBundle
-from .support_bundle import SupportBundle
-from .bundle_generate import ComponentsBundle

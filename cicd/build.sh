@@ -23,7 +23,6 @@ CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
 DEBUG="DEBUG"
 INFO="INFO"
-PROVISIONER_CONFIG_PATH="${CORTX_PATH}provisioner/generated_configs"
 CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
@@ -59,15 +58,6 @@ echo "Creating tar for $1 build from $2 folder"
     tar -czf "${DIST}/rpmbuild/SOURCES/${PRODUCT}-$1-${VER}.tar.gz" "$2"
 TAR_END_TIME=$(($(date +%s) - TAR_START_TIME))
 TAR_TOTAL_TIME=$((TAR_TOTAL_TIME + TAR_END_TIME))
-}
-
-install_py_req() {
-    # Check python package
-    req_file=$BASE_DIR/cicd/pyinstaller/$1
-    echo "Installing python packages..."
-    pip install -r "$req_file" || {
-        echo "Unable to install package from $req_file"; exit 1;
-    };
 }
 
 usage() {
@@ -190,11 +180,11 @@ if [ "$DEV" == true ]; then
     source "${VENV}/bin/activate"
     python --version
     pip install --upgrade pip
-    yum install -y cortx-py-utils 
+    yum install -y cortx-py-utils
 else
     pip3 install --upgrade pip
     # add cortx-py-utils below
-    yum install -y cortx-py-utils 
+    yum install -y cortx-py-utils
 fi
 
 # Solving numpy libgfortran-ed201abd.so.3.0.0 dependency problem
@@ -222,7 +212,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
     cp -f "$BASE_DIR/csm/conf/csm_setup.py" "$DIST/csm/lib/csm_setup"
-    cp -f "$BASE_DIR/csm/conf/usl_setup.py" "$DIST/csm/lib/usl_setup"
     cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
     cp -f "$BASE_DIR/csm/cli/support_bundle/csm_bundle_generate.py" "$DIST/csm/lib/csm_bundle_generate"
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
@@ -241,16 +230,8 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
         -e "s|<CSM_PATH>|${CSM_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/csm_agent.spec"
 
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/csm/schema/commands.yaml"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/etc/rsyslog.d/2-emailsyslog.conf.tmpl"
     sed -i -e "s|<CSM_PATH>|${CSM_PATH}|g" "$DIST/csm/conf/setup.yaml"
-
-    if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/csm/conf/etc/csm/csm.conf"
-    fi
 
     gen_tar_file csm_agent csm
     rm -rf "${TMPDIR}/csm/"*
@@ -275,9 +256,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
     # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    cp "$CLI_CONF/uds_setup.yaml" "$DIST/cli/conf/uds_setup.yaml"
-    cp "$CLI_CONF/elasticsearch_setup.yaml" "$DIST/cli/conf/elasticsearch_setup.yaml"
-    cp "$CLI_CONF/alerts_setup.yaml" "$DIST/cli/conf/alerts_setup.yaml"
     cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
 
     # Copy executables files
@@ -293,8 +271,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
         -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
-
-    sed -i -e "s|<CORTX_PATH>|${CORTX_PATH}|g" "$DIST/cli/schema/commands.yaml"
 
     if [ "$QA" == true ]; then
         sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"

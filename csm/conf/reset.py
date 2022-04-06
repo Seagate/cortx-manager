@@ -92,11 +92,7 @@ class Reset(Setup):
     def directory_cleanup(self):
         Log.info("Deleting files and folders")
 
-        files_directory_list = [
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>firmware_store_path'),
-            Conf.get(const.CSM_GLOBAL_INDEX, 'UPDATE>hotfix_store_path'),
-            const.TMP_CSM
-            ]
+        files_directory_list = [const.TMP_CSM]
         for _path in files_directory_list:
             Log.info(f"Deleting path :{_path}")
             Setup._run_cmd(f"rm -rf {_path}")

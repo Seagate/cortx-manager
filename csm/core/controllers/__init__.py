@@ -12,13 +12,3 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-
-from .routes import CsmRoutes
-from .users import CsmUsersListView, CsmUsersView
-from .alerts.alerts import AlertsView, AlertsListView
-from .alerts.alerts_history import AlertsHistoryListView, AlertsHistoryView
-from .health import ResourcesHealthView
-from .cluster_management import ClusterOperationsView
-from .audit_log import AuditLogShowView, AuditLogDownloadView
-from .maintenance import MaintenanceView
-# from .file_transfer import CsmFileView

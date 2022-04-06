@@ -84,7 +84,8 @@ class Setup:
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
-                Log.error(f" Failed to validate consul host: {ve}")
+                Log.error(f"Unable to fetch the configurations from consul: {ve}")
+                raise CsmSetupError("Unable to fetch the configurations")
 
         if not set_config_flag:
             config_path = self._set_csm_conf_path()
@@ -112,41 +113,6 @@ class Setup:
         # Load deafult db related configurations for csm.
         Conf.load(const.CSM_DEFAULT_DB_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_DB}")
-
-    def execute_web_and_cli(self,config_url,  service_list, phase_name):
-        self._setup_rpm_map = {
-                            "agent":"cortx-csm_agent",
-                            "web":"cortx-csm_web",
-                            "cli":"cortx-cli"
-                        }
-
-        if "web" in service_list:
-            Log.info("~~~Validate Web rpm and Csm-web-Setup executable~~~")
-            # Csm_web_setup will internally execute cli_setup if CLI RPM installed
-            try:
-                PkgV().validate("rpms", [self._setup_rpm_map.get("web")])
-                PathV().validate("exists" ,[f"link:/usr/bin/csm_web_setup"])
-                Log.info(f"{self._setup_rpm_map.get('web')} installed")
-            except VError as ve:
-                Log.warn(f"{self._setup_rpm_map.get('web')} not installed")
-                raise CsmSetupError(f"{self._setup_rpm_map.get('web')} not installed.")
-
-            Log.info("~~~Executing Csm-web-Setup~~~")
-            Setup._run_cmd(f"csm_web_setup {phase_name} --config {config_url}")
-
-        if "cli" in service_list and "web" not in service_list:
-            #Execute only cli-setup
-            Log.info("~~~Validate Cli rpm and Cli-Setup executable~~~")
-            try:
-                PkgV().validate("rpms", [self._setup_rpm_map.get("cli")])
-                PathV().validate("exists" ,[f"link:/usr/bin/cli_setup"])
-                Log.info(f"{self._setup_rpm_map.get('cli')} installed")
-            except VError as ve:
-                Log.warn(f"{self._setup_rpm_map.get('cli')} not installed")
-                raise CsmSetupError(f"{self._setup_rpm_map.get('cli')} not installed.")
-
-            Log.info("~~~Executing Cli-Setup~~~")
-            Setup._run_cmd(f"cli_setup {phase_name} --config {config_url}")
 
     @staticmethod
     async def request(url, method, json=None):
@@ -192,28 +158,6 @@ class Setup:
             raise CsmSetupError("Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
-
-    def _set_deployment_mode(self):
-        """
-        This Method will set a deployment Mode according to env_type.
-        :return:
-        """
-        self._get_setup_info()
-        self._set_service_user()
-        if self._setup_info[const.NODE_TYPE] in [const.VM, const.VIRTUAL]:
-            Log.info("Running Csm Setup for VM Environment Mode.")
-            self._is_env_vm = True
-
-        if Conf.get(const.CONSUMER_INDEX, const.KEY_DEPLOYMENT_MODE) == const.DEV:
-            Log.info("Running Csm Setup for Dev Mode.")
-            self._is_env_dev = True
-
-    def _set_service_user(self):
-        """
-        This Method will set the username for service user to Self._user
-        :return:
-        """
-        self._user = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_USER])
 
     @staticmethod
     def _run_cmd(cmd):
@@ -323,92 +267,6 @@ class Setup:
         except ResourceExist as ex:
             Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
-    def _is_user_exist(self):
-        """
-        Check if user exists
-        """
-        try:
-            u = pwd.getpwnam(self._user)
-            self._uid = u.pw_uid
-            self._gid = u.pw_gid
-            return True
-        except KeyError as err:
-            return False
-
-    def _get_setup_info(self):
-        """
-        Return Setup Info from Conf Store
-        :return:
-        """
-        self._setup_info = {const.NODE_TYPE: "", const.STORAGE_TYPE: ""}
-        self._setup_info[const.NODE_TYPE] = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SERVER_NODE_TYPE])
-        enclosure_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_ENCLOSURE_ID])
-        storage_type_key = f"{const.STORAGE_ENCL}>{enclosure_id}>{const.TYPE}"
-        self._validate_conf_store_keys(const.CONSUMER_INDEX, [storage_type_key])
-        self._setup_info[const.STORAGE_TYPE] = Conf.get(const.CONSUMER_INDEX, storage_type_key)
-
-    @staticmethod
-    def _get_machine_id():
-        """
-        Obtains current minion id. If it cannot be obtained, returns default node #1 id.
-        """
-        Log.info("Fetching Machine Id.")
-        cmd = "cat /etc/machine-id"
-        proc_obj = SimpleProcess(cmd)
-        machine_id, _err, _returncode = proc_obj.run()
-        if _returncode != 0:
-            raise CsmSetupError('Unable to obtain current machine id.')
-        return (machine_id.decode("utf-8")).replace("\n", "")
-
-    @staticmethod
-    def _is_group_exist(user_group):
-        """
-        Check if user group exists
-        """
-        try:
-            Log.debug(f"Check if user group {user_group} exists.")
-            grp.getgrnam(user_group)
-            return True
-        except KeyError as err:
-            return False
-
-    def _check_if_dir_exist_remote_host(self, dir, host):
-        try:
-            process = SimpleProcess("ssh "+ host +" ls "+ dir)
-            stdout, stderr, rc = process.run()
-        except Exception as e:
-            Log.warn(f"Error in command execution : {e}")
-        if stderr:
-            Log.warn(stderr)
-        if rc == 0:
-            return True
-
-    def _create_ssh_config(self, path, private_key):
-        ssh_config = '''Host *
-    User {user}
-    UserKnownHostsFile /dev/null
-    StrictHostKeyChecking no
-    IdentityFile {private_key}
-    IdentitiesOnly yes
-    LogLevel ERROR'''.format(user=self._user, private_key=private_key )
-        try:
-            Log.info(f"Writing ssh config {ssh_config} to file {path}")
-            with open(path, "w") as fh:
-                fh.write(ssh_config)
-        except OSError as err:
-            Log.error(f"Error in writing ssh config: {err}")
-            if err.errno != errno.EEXIST: raise
-
-
-    def _config_user_permission_unset(self, bundle_path):
-        """
-        Unset user permission
-        """
-        Log.info("Unset User Permission")
-        Setup._run_cmd("rm -rf " + const.CSM_TMP_FILE_CACHE_DIR)
-        Setup._run_cmd("rm -rf " + bundle_path)
-        Setup._run_cmd("rm -rf " + const.CSM_PIDFILE_PATH)
-
     def _decrypt_secret(self, secret, cluster_id, decryption_key):
         try:
             cipher_key = Cipher.generate_key(cluster_id,decryption_key)
@@ -442,47 +300,6 @@ class Setup:
             log_path = log_path + f"/{const.CSM_COMPONENT_NAME}/"
         return log_path
 
-    class Config:
-        """
-        Action for csm config
-            create: Copy configuraion file
-            load: Load configuraion file
-            reset: Reset configuraion file
-            delete: Delete configuration file
-        """
-
-        @staticmethod
-        def load():
-            Log.info("Loading config")
-            csm_conf_target_path = os.path.join(const.CSM_CONF_PATH,
-                                                const.CSM_CONF_FILE_NAME)
-            if not os.path.exists(csm_conf_target_path):
-                Log.error(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
-                raise CsmSetupError(f"{const.CSM_CONF_FILE_NAME} file is missing for csm setup")
-            Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{csm_conf_target_path}")
-            Log.info("Loading database config")
-            Setup.Config.load_db()
-
-        @staticmethod
-        def load_db():
-            Log.info("Loading databse config")
-            db_conf_target_path = os.path.join(const.CSM_CONF_PATH, const.DB_CONF_FILE_NAME)
-            if not os.path.exists(db_conf_target_path):
-                Log.error("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
-                raise CsmSetupError("%s file is missing for csm setup" %const.DB_CONF_FILE_NAME)
-            Conf.load(const.DATABASE_INDEX, f"yaml://{db_conf_target_path}")
-
-        @staticmethod
-        def delete():
-            Log.info("Delete config")
-            Setup._run_cmd("rm -rf " + const.CSM_CONF_PATH)
-
-        @staticmethod
-        def reset():
-            Log.info("Reset config")
-            os.makedirs(const.CSM_CONF_PATH, exist_ok=True)
-            Setup._run_cmd("cp -rf " +const.CSM_SOURCE_CONF_PATH+ " " +const.ETC_PATH)
-
     def _log_cleanup(self):
         """
         Delete all logs
@@ -491,97 +308,6 @@ class Setup:
         log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
         Setup._run_cmd("rm -rf " +log_path)
 
-    class ConfigServer:
-        """
-        Manage Csm service
-            stop: Stop csm service
-            restart: restart csm service
-            reload: reload systemd deamon
-        """
-
-        @staticmethod
-        def stop():
-            _proc = SimpleProcess("systemctl is-active csm_agent")
-            _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-            _proc = SimpleProcess("systemctl is-active csm_web")
-            _output_web, _err_web, _rc_web = _proc.run(universal_newlines=True)
-            if _rc_agent == 0:
-                _proc = SimpleProcess("systemctl stop csm_agent")
-                _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-            if _rc_web == 0:
-                _proc = SimpleProcess("systemctl stop csm_web")
-                _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-
-        @staticmethod
-        def reload():
-            Setup._run_cmd("systemctl daemon-reload")
-
-        @staticmethod
-        def restart():
-            _proc = SimpleProcess("systemctl is-active csm_agent")
-            _output_agent, _err_agent, _rc_agent = _proc.run(universal_newlines=True)
-            _proc = SimpleProcess("systemctl is-active csm_web")
-            _output_web, _err_web, _rc_web = _proc.run(universal_newlines=True)
-            if _rc_agent == 0:
-                Setup._run_cmd("systemctl restart csm_agent")
-            if _rc_web == 0:
-                Setup._run_cmd("systemctl restart csm_web")
-
-    def _configure_system_auto_restart(self):
-        """
-        Check's System Installation Type an dUpdate the Service File
-        Accordingly.
-        :return: None
-        """
-        Log.info("Configuring System Auto restart")
-        is_auto_restart_required = list()
-        if self._setup_info:
-            for each_key in self._setup_info:
-                comparison_data = const.EDGE_INSTALL_TYPE.get(each_key, None)
-                #Check Key Exists:
-                if comparison_data is None:
-                    Log.warn(f"Edge Installation missing key {each_key}")
-                    continue
-                if isinstance(comparison_data, list):
-                    if self._setup_info[each_key] in comparison_data:
-                        is_auto_restart_required.append(False)
-                    else:
-                        is_auto_restart_required.append(True)
-                elif self._setup_info[each_key] == comparison_data:
-                    is_auto_restart_required.append(False)
-                else:
-                    is_auto_restart_required.append(True)
-        else:
-            Log.warn("Setup info does not exist.")
-            is_auto_restart_required.append(True)
-        if any(is_auto_restart_required):
-            Log.debug("Updating All setup file for Auto Restart on "
-                             "Failure")
-            # Related keys deprecated
-            #Setup._update_systemd_conf("#< RESTART_OPTION >",
-            #                         "Restart=on-failure")
-            Setup._run_cmd("systemctl daemon-reload")
-
-    @staticmethod
-    def _update_systemd_conf(key, value):
-        """
-        Update CSM Files Depending on Job Type of Setup.
-        """
-        # TODO: Need to clean up this code removed method is_k8s_env:
-        if Setup.is_k8s_env:
-            Log.warn('SystemD is not used in this environment and will not be updated')
-            return
-        Log.info(f"Update file for {key}:{value}")
-        for each_file in const.CSM_FILES:
-            service_file_data = Text(each_file).load()
-            if not service_file_data:
-                Log.warn(f"File {each_file} not updated.")
-                continue
-            data = service_file_data.replace(key, value)
-            Text(each_file).dump(data)
-
-# TODO: Divide changes in backend and frontend
-# TODO: Optimise use of args for like product, force, component
 class CsmSetup(Setup):
     def __init__(self):
         super(CsmSetup, self).__init__()
@@ -600,16 +326,3 @@ class CsmSetup(Setup):
             raise Exception("Not implemented for Component %s" %args["Component"])
         if "f" in args.keys() and args["f"] is True:
             raise Exception("Not implemented for force action")
-
-    def reset(self, args):
-        try:
-            self._verify_args(args)
-            self.Config.load()
-            self.ConfigServer.stop()
-            self._log_cleanup()
-            self._config_user_permission(reset=True)
-            self.Config.delete()
-            self._config_user(reset=True)
-        except Exception as e:
-            Log.error(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")
-            raise CsmSetupError(f"csm_setup reset failed. Error: {e} - {str(traceback.print_exc())}")

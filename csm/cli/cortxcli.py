@@ -54,12 +54,9 @@ class CortxCli(Cmd):
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
-        syslog_port = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_port")
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         Log.init("cortxcli",
-             syslog_server = Conf.get(const.CSM_GLOBAL_INDEX, "Log>syslog_server"),
-             syslog_port = int(syslog_port) if syslog_port else None,
              backup_count = int(backup_count) if backup_count else None,
              file_size_in_mb = int(file_size_in_mb) if file_size_in_mb else None,
              log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),

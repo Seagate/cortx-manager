@@ -61,7 +61,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
 
         self._prepare_and_validate_confstore_keys()
         #Postinstall functionality
-        self._set_deployment_mode()
         self.validate_3rd_party_pkgs()
         self._config_user()
         self._configure_system_auto_restart()

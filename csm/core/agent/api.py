@@ -31,7 +31,6 @@ from abc import ABC
 from ipaddress import ip_address
 from secure import SecureHeaders
 from typing import Dict, Tuple
-from csm.core.blogic.models.audit_log import CsmAuditLogModel
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.services.sessions import LoginService
@@ -51,10 +50,9 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
                                CSM_HTTP_ERROR)
 from csm.core.routes import ApiRoutes
-from csm.core.services.alerts import AlertsAppService
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
-from csm.core.controllers import CsmRoutes
+from csm.core.controllers.routes import CsmRoutes
 from cortx.utils.data.access import Query
 from cortx.utils.data.db.db_provider import DataAccessError
 import re
@@ -104,7 +102,7 @@ class CsmRestApi(CsmApi, ABC):
     __unsupported_features = None
 
     @staticmethod
-    def init(alerts_service):
+    def init():
         CsmApi.init()
         CsmRestApi._queue = asyncio.Queue()
         CsmRestApi._bgtasks = []
@@ -127,35 +125,6 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def is_debug(request) -> bool:
         return 'debug' in request.rel_url.query
-
-    @staticmethod
-    def generate_audit_log_string(request, **kwargs):
-        if (getattr(request, "session", None) is not None
-                and getattr(request.session, "credentials", None) is not None):
-            user = request.session.credentials.user_id
-        else:
-            user = None
-        remote_ip = request.remote
-        forwarded_for_ip = str(request.headers.get('X-Forwarded-For')).split(',', 2)[0].strip()
-        try:
-            ip_address(forwarded_for_ip)
-        except ValueError:
-            forwarded_for_ip = None
-        path = request.path
-        method = request.method
-        user_agent = request.headers.get('User-Agent')
-        entry = {
-            'user': user if user else "",
-            'remote_ip': remote_ip,
-            'forwarded_for_ip': forwarded_for_ip if forwarded_for_ip else "",
-            'method': method,
-            'path': path,
-            'user_agent': user_agent,
-            'response_code': kwargs.get("response_code", ""),
-            'request_id': kwargs.get("request_id", int(time.time())),
-            'payload': kwargs.get("payload", "")
-        }
-        return json.dumps(entry)
 
     @staticmethod
     def error_response(err: Exception, **kwargs) -> dict:
@@ -560,7 +529,10 @@ class CsmRestApi(CsmApi, ABC):
     async def _on_startup(app):
         Log.debug('REST API startup')
         CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
-        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
+
+        # For Sending SSL expiry information to IEM logs below code is required,
+        # logic needs to be improved, hence commenting.
+        # CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._ssl_cert_check_bg()))
 
     @staticmethod
     async def _on_shutdown(app):
@@ -612,17 +584,3 @@ class CsmRestApi(CsmApi, ABC):
         asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
         return True
 
-
-class AlertHttpNotifyService(Service):
-    def __init__(self):
-        super().__init__()
-        self.unpublished_alerts = set()
-
-    def push_unpublished(self):
-        while self.unpublished_alerts:
-            self.handle_alert()
-
-    def handle_alert(self, alert):
-        self.unpublished_alerts.add(alert)
-        if CsmRestApi.push(alert):
-            self.unpublished_alerts.discard(alert)
