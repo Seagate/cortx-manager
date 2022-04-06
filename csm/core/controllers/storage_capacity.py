@@ -23,8 +23,8 @@ from csm.core.controllers.view import CsmHttpException
 
 CAPACITY_SERVICE_ERROR = 0x3010
 
-@CsmView._app_routes.view("/api/v1/capacity")
-@CsmView._app_routes.view("/api/v2/capacity")
+# @CsmView._app_routes.view("/api/v1/capacity")
+# @CsmView._app_routes.view("/api/v2/capacity")
 class StorageCapacityView(CsmView):
     """
     GET REST API view implementation for getting disk capacity details.
