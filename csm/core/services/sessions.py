@@ -29,21 +29,8 @@ from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
 from csm.core.blogic.models import CsmModel
-from csm.core.services.session_factory import SessionFactory
-
-
-class SessionCredentials:
-    """ Base class for a variying part of the session
-    depending on the user type (CSM, LDAP, S3).
-    """
-
-    def __init__(self, user_id: str) -> None:
-        self._user_id = user_id
-
-    @property
-    def user_id(self) -> str:
-        return self._user_id
-
+from csm.core.services.session_factory import (SessionFactory, SessionCredentials,
+                                               Session)
 
 class LocalCredentials(SessionCredentials):
     """ CSM local user specific session credentials - empty """
@@ -86,46 +73,6 @@ class S3Credentials(SessionCredentials):
     @property
     def session_token(self):
         return self._session_token
-
-class Session(CsmModel):
-    """ Session data """
-
-    Id = str
-    _id = "_session_id"
-
-    def __init__(self, session_id: Id,
-                 expiry_time: datetime,
-                 credentials: SessionCredentials,
-                 permissions: PermissionSet) -> None:
-        self._session_id = session_id
-        self._expiry_time = expiry_time
-        self._credentials = credentials
-        self._permissions = permissions
-
-    @property
-    def session_id(self) -> Id:
-        return self._session_id
-
-    @property
-    def expiry_time(self) -> datetime:
-        return self._expiry_time
-
-    @expiry_time.setter
-    def expiry_time(self, expiry_time):
-        self._expiry_time = expiry_time
-
-    @property
-    def credentials(self) -> SessionCredentials:
-        return self._credentials
-
-    @property
-    def permissions(self) -> PermissionSet:
-        return self._permissions
-
-    def get_user_role(self) -> Optional[str]:
-        creds = self._credentials
-        return creds.user_role if isinstance(creds, LocalCredentials) else None
-
 
 class SessionManager:
     """ Session management class """
