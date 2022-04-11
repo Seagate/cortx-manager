@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.blogic import const
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
@@ -27,6 +28,8 @@ from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
+from csm.core.blogic.models import CsmModel
+from csm.core.services.session_factory import SessionFactory
 
 
 class SessionCredentials:
@@ -84,11 +87,11 @@ class S3Credentials(SessionCredentials):
     def session_token(self):
         return self._session_token
 
-
-class Session:
+class Session(CsmModel):
     """ Session data """
 
     Id = str
+    _id = "_session_id"
 
     def __init__(self, session_id: Id,
                  expiry_time: datetime,
@@ -127,9 +130,9 @@ class Session:
 class SessionManager:
     """ Session management class """
 
-    def __init__(self):
-        self._stg = {}
+    def __init__(self, session_backend:str, storage: DataBaseProvider=None):
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
+        self._sessionFactory = SessionFactory.get_session(session_backend, storage)
 
     @property
     def expiry_interval(self):
@@ -147,20 +150,20 @@ class SessionManager:
         session_id = self._generate_sid()
         expiry_time = self.calc_expiry_time()
         session = Session(session_id, expiry_time, credentials, permissions)
-        self._stg[session_id] = session
+        await self._sessionFactory.store(session)
         return session
 
     async def delete(self, session_id: Session.Id) -> None:
-        self._stg.pop(session_id)
+        await self._sessionFactory.delete(session_id)
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
-        return self._stg.get(session_id, None)
+        return await self._sessionFactory.get(session_id)
 
     async def get_all(self):
-        return list(self._stg.values())
+        return await self._sessionFactory.get_all()
 
     async def update(self, session: Session) -> None:
-        self._stg[session.session_id] = session
+        await self._sessionFactory.store(session)
 
 
 class AuthPolicy(ABC):

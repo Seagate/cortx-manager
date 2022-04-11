@@ -945,3 +945,7 @@ SERVICE_NOT_AVAILABLE   = 'ServiceNotAvailable'
 REQUEST_CANCELLED       = 'RequestCancelled'
 SETUP_ERROR             = 'SetupError'
 HTTP_ERROR              = 'HttpError'
+
+# Session Backend factory
+DB        = 'database'
+IN_MEMORY = 'in_memory'
