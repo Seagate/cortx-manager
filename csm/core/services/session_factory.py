@@ -124,7 +124,7 @@ class Database:
 
 class SessionFactory:
     @staticmethod
-    def get_session(self, session_backend, storage: DataBaseProvider=None):
+    def get_session(session_backend: str, storage: DataBaseProvider=None):
         if session_backend == const.DB:
             return Database(storage)
         elif session_backend == const.IN_MEMORY:
