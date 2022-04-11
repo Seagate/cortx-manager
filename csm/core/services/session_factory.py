@@ -19,6 +19,8 @@ from csm.core.blogic import const
 from cortx.utils.data.access import Query
 from cortx.utils.data.access.filters import Compare
 from csm.core.services.permissions import PermissionSet
+from csm.core.blogic.models import CsmModel
+from datetime import datetime
 
 class SessionCredentials:
     """ Base class for a variying part of the session
@@ -31,6 +33,18 @@ class SessionCredentials:
     @property
     def user_id(self) -> str:
         return self._user_id
+
+
+class LocalCredentials(SessionCredentials):
+    """ CSM local user specific session credentials - empty """
+
+    def __init__(self, user_id: str, user_role: str) -> None:
+        super().__init__(user_id)
+        self._user_role = user_role
+
+    @property
+    def user_role(self) -> str:
+        return self._user_role
 
 
 class Session(CsmModel):

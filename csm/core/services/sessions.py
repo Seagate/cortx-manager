@@ -28,20 +28,8 @@ from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
-from csm.core.blogic.models import CsmModel
 from csm.core.services.session_factory import (SessionFactory, SessionCredentials,
-                                               Session)
-
-class LocalCredentials(SessionCredentials):
-    """ CSM local user specific session credentials - empty """
-
-    def __init__(self, user_id: str, user_role: str) -> None:
-        super().__init__(user_id)
-        self._user_role = user_role
-
-    @property
-    def user_role(self) -> str:
-        return self._user_role
+                                               Session, LocalCredentials)
 
 
 class LdapCredentials(SessionCredentials):
