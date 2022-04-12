@@ -49,7 +49,7 @@ class LocalCredentials(SessionCredentials):
         return self._user_role
 
 
-class Session(CsmModel):
+class Session:
     """ Session data """
 
     Id = str
@@ -109,16 +109,26 @@ class Database:
     def __init__(self, storage: DataBaseProvider):
         self.storage = storage
 
+    async def convert_model_to_session(self, session_model_list:List[SessionModel]):
+        session_list = []
+        for model in session_model_list:
+            session = Session(model._session_id, model._expiry_time,
+                              SessionCredentials(model._credentials._user_id,)
+                              PermissionSet(model._permissions._items))
+            session_list.append(session)
+        return session_list
+
     async def delete(self, session_id: Session.Id) -> None:
-        await self.storage(Session).delete(Compare(Session.Id, '=', session_id))
+        await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
-        query = Query().filter_by(Compare(Session.Id, '=', session_id))
-        session_list = await self.storage(Session).get(query)
+        query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
+        session__model_list = await self.storage(SessionModel).get(query)
+        session_list = convert_model_to_session(session__model_list)
         """
-        Database get() : 
+        Database get() :
         :param query: session id
-        :return: empty list or list with session objects which satisfy the passed query condition
+        :return: empty list or list with session object which satisfy the passed query condition
         """
         if session_list:
             return session_list[0]
@@ -129,7 +139,9 @@ class Database:
         #TODO :- need to verify
         # Convert SessionModel to Session
         query = Query()
-        return list(await self.storage(Session).get(query))
+        session__model_list = await self.storage(SessionModel).get(query)
+        session_list = convert_model_to_session(session__model_list)
+        return session_list
 
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
@@ -137,7 +149,7 @@ class Database:
         cred._user_id = session._credentials._user_id
 
         perm = PermissionSetModel()
-        perm._items = session._permissions.permissions._items
+        perm._items = session._permissions._items
         sessionModel = SessionModel.instantiate_session(session._session_id, session._expiry_time,
                                                         cred, perm)
         await self.storage(SessionModel).store(sessionModel)

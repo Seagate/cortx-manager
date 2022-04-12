@@ -31,7 +31,6 @@ class SessionCredentialsModel(CsmModel):
 class SessionModel(CsmModel):
     """ Session data """
 
-    Id = str
     _id = "_session_id"
     _session_id = StringType()
     _expiry_time = DateTimeType()
@@ -39,7 +38,7 @@ class SessionModel(CsmModel):
     _permissions = ModelType(PermissionSetModel)
 
     @staticmethod
-    def instantiate_session(session_id: Id,
+    def instantiate_session(session_id: str,
                 expiry_time: datetime,
                 credentials: SessionCredentialsModel,
                 permissions: PermissionSetModel):
