@@ -21,6 +21,8 @@ from cortx.utils.data.access.filters import Compare
 from csm.core.services.permissions import PermissionSet
 from csm.core.blogic.models import CsmModel
 from datetime import datetime
+from csm.core.data.models.session import (SessionModel, SessionCredentialsModel, 
+                                          PermissionSetModel)
 
 class SessionCredentials:
     """ Base class for a variying part of the session
@@ -112,15 +114,33 @@ class Database:
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(Compare(Session.Id, '=', session_id))
-        return list(await self.storage(Session).get(query))
+        session_list = await self.storage(Session).get(query)
+        """
+        Database get() : 
+        :param query: session id
+        :return: empty list or list with session objects which satisfy the passed query condition
+        """
+        if session_list:
+            return session_list[0]
+        else:
+            return None
 
     async def get_all(self):
         #TODO :- need to verify
+        # Convert SessionModel to Session
         query = Query()
         return list(await self.storage(Session).get(query))
 
     async def store(self, session: Session) -> None:
-        await self.storage(Session).store(session)
+        # Convert session to SessionModel
+        cred = SessionCredentialsModel()
+        cred._user_id = session._credentials._user_id
+
+        perm = PermissionSetModel()
+        perm._items = session._permissions.permissions._items
+        sessionModel = SessionModel.instantiate_session(session._session_id, session._expiry_time,
+                                                        cred, perm)
+        await self.storage(SessionModel).store(sessionModel)
 
 class SessionFactory:
     @staticmethod
