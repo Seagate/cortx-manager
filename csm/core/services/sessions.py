@@ -28,7 +28,7 @@ from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
-from csm.core.services.session_factory import (SessionFactory, SessionCredentials,
+from csm.core.services.session.session_factory import (SessionFactory, SessionCredentials,
                                                Session, LocalCredentials)
 
 
