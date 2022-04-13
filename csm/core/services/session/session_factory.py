@@ -21,8 +21,7 @@ from cortx.utils.data.access.filters import Compare
 from csm.core.services.permissions import PermissionSet
 from csm.core.blogic.models import CsmModel
 from datetime import datetime
-from csm.core.data.models.session import (SessionModel, SessionCredentialsModel, 
-                                          PermissionSetModel)
+from csm.core.data.models.session import SessionModel
 from csm.common.errors import CsmError
 from cortx.utils.conf_store.conf_store import Conf
 
@@ -117,7 +116,7 @@ class Database:
             session = Session(model._session_id,
                               model._expiry_time,
                               SessionCredentials(model._user_id),
-                              PermissionSet(model._items))
+                              PermissionSet(model._permission))
             session_list.append(session)
         return session_list
 
