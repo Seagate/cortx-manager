@@ -23,6 +23,8 @@ from csm.core.blogic.models import CsmModel
 from datetime import datetime
 from csm.core.data.models.session import (SessionModel, SessionCredentialsModel, 
                                           PermissionSetModel)
+from csm.common.errors import CsmError
+from cortx.utils.conf_store.conf_store import Conf
 
 class SessionCredentials:
     """ Base class for a variying part of the session
@@ -109,14 +111,21 @@ class Database:
     def __init__(self, storage: DataBaseProvider):
         self.storage = storage
 
-    async def convert_model_to_session(self, session_model_list:List[SessionModel]):
+    async def convert_model_to_session(self, session_model_list):
         session_list = []
         for model in session_model_list:
-            session = Session(model._session_id, model._expiry_time,
-                              SessionCredentials(model._credentials._user_id,)
-                              PermissionSet(model._permissions._items))
+            session = Session(model._session_id,
+                              model._expiry_time,
+                              SessionCredentials(model._user_id),
+                              PermissionSet(model._items))
             session_list.append(session)
         return session_list
+
+    async def convert_session_to_model(self, session:Session):
+        sessionModel = SessionModel.instantiate_session(session._session_id, session._expiry_time,
+                                                        session._credentials._user_id,
+                                                        session._permissions._items)
+        return sessionModel
 
     async def delete(self, session_id: Session.Id) -> None:
         await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
@@ -124,12 +133,12 @@ class Database:
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
         session__model_list = await self.storage(SessionModel).get(query)
-        session_list = convert_model_to_session(session__model_list)
         """
-        Database get() :
+        Storage get() :
         :param query: session id
-        :return: empty list or list with session object which satisfy the passed query condition
+        :return: empty list or list with session model object which satisfy the passed query condition
         """
+        session_list = await self.convert_model_to_session(session__model_list)
         if session_list:
             return session_list[0]
         else:
@@ -140,27 +149,31 @@ class Database:
         # Convert SessionModel to Session
         query = Query()
         session__model_list = await self.storage(SessionModel).get(query)
-        session_list = convert_model_to_session(session__model_list)
+        session_list = await self.convert_model_to_session(session__model_list)
         return session_list
 
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
-        cred = SessionCredentialsModel()
-        cred._user_id = session._credentials._user_id
-
-        perm = PermissionSetModel()
-        perm._items = session._permissions._items
-        sessionModel = SessionModel.instantiate_session(session._session_id, session._expiry_time,
-                                                        cred, perm)
+        sessionModel = await self.convert_session_to_model(session)
         await self.storage(SessionModel).store(sessionModel)
 
 class SessionFactory:
     @staticmethod
-    def get_session(session_backend: str, storage: DataBaseProvider=None):
+    def get_session(storage: DataBaseProvider=None):
+        backend = Conf.get(const.CSM_GLOBAL_INDEX, const.SESSION_BACKEND_KEY)
+        #TODO : Nedd to discuss
+        session_backend_map = {
+            const.LOCAL: const.IN_MEMORY,
+            const.PERSISTENT: const.DB
+        }
+        session_backend = session_backend_map[backend]
         if session_backend == const.DB:
+            if storage is None:
+                #TODO : Verify the error
+                raise CsmError("Persistent Database is NULL")
             return Database(storage)
         elif session_backend == const.IN_MEMORY:
             return InMemory()
         else:
+            #TODO : Verify the error
             raise ValueError(session_backend)
-

@@ -949,4 +949,6 @@ HTTP_ERROR              = 'HttpError'
 # Session Backend factory
 DB                  = 'database'
 IN_MEMORY           = 'in_memory'
-SESSION_BACKEND_KEY = 'CSM>session_backend'
+SESSION_BACKEND_KEY = 'CSM>SESSION>storage'
+LOCAL               = 'local'
+PERSISTENT          = 'persistent'

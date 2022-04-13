@@ -65,9 +65,9 @@ class S3Credentials(SessionCredentials):
 class SessionManager:
     """ Session management class """
 
-    def __init__(self, session_backend:str, storage: DataBaseProvider=None):
+    def __init__(self, storage: DataBaseProvider=None):
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
-        self._sessionFactory = SessionFactory.get_session(session_backend, storage)
+        self._sessionFactory = SessionFactory.get_session(storage)
 
     @property
     def expiry_interval(self):

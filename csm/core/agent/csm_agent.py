@@ -106,8 +106,7 @@ class CsmAgent:
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
-        session_manager = SessionManager(Conf.get(const.CSM_GLOBAL_INDEX, const.SESSION_BACKEND_KEY),
-                                         db)
+        session_manager = SessionManager(db)
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      user_manager,
                                                      role_manager,

@@ -17,34 +17,24 @@ from datetime import datetime
 from schematics.types import (StringType, DateTimeType, ModelType,
                               DictType, ListType)
 
-class PermissionSetModel(CsmModel):
-    ''' Permission Set Model stored in a compact way as a dictionary '''
-
-    _items = DictType(ListType(StringType))
-
-class SessionCredentialsModel(CsmModel):
-    """ Model class for a variying part of the session
-    depending on the user type (CSM, LDAP, S3).
-    """
-    _user_id = StringType()
-
 class SessionModel(CsmModel):
     """ Session data """
 
     _id = "_session_id"
     _session_id = StringType()
     _expiry_time = DateTimeType()
-    _credentials = ModelType(SessionCredentialsModel)
-    _permissions = ModelType(PermissionSetModel)
+    _user_id = StringType()
+    #TODO: Need to verify and Discuss
+    _permission = DictType(ListType(StringType))
 
     @staticmethod
     def instantiate_session(session_id: str,
                 expiry_time: datetime,
-                credentials: SessionCredentialsModel,
-                permissions: PermissionSetModel):
+                user_id: str,
+                permissions: {}):
         session = SessionModel()
         session._session_id = session_id
         session._expiry_time = expiry_time
-        session._credentials = credentials
-        session._permissions = permissions
+        session._user_id = user_id
+        session._permission = permissions
         return session
