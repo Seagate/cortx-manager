@@ -294,7 +294,7 @@ class CsmRestApi(CsmApi, ABC):
         if is_hybrid:
             is_public = True
             conf_key = CsmRestApi._retrieve_config(request)
-            if conf_key == "enable" or conf_key == "Enable":
+            if conf_key.lower() == const.ENABLE:
                 is_public = False
         Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
         try:
