@@ -19,6 +19,7 @@ from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf as conf_store
+from cortx.utils.security.certificate import Certificate
 from csm.common.process import SimpleProcess
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
@@ -137,3 +138,45 @@ class Security:
                 import traceback
                 Log.exception(f"Decryption for {each_key} Failed. {error}")
                 Log.exception(f"{traceback.format_exc()}")
+
+    @staticmethod
+    def store_tls_bundle(global_index: str, bundle_index: str, bundle: bytes) -> None:
+        """
+        Store encrypted TLS bundle to Conf store.
+
+        :param global_index: global ConfStore.
+        :param bundle_index: ConfStore for TLS bundle.
+        :param bundle: bytes to be encrypted and stored.
+        :returns: None.
+        """
+
+        cluster_id = conf_store.get(global_index, const.CLUSTER_ID_KEY)
+        csm_decryption_key = conf_store.get(global_index, const.CSM_PASSWORD_DECRYPTION_KEY)
+        key = Cipher.generate_key(cluster_id, csm_decryption_key)
+
+        encrypted_bundle = Cipher.encrypt(key, bundle)
+        conf_store.set(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME, encrypted_bundle.decode('ascii'))
+
+    @staticmethod
+    def restore_tls_bundle(global_index: str, bundle_index: str) -> None:
+        """
+        Restore (and decrypt) TLS bundle from Conf store to provided path.
+
+        :param global_index: global ConfStore.
+        :param bundle_index: ConfStore for TLS bundle.
+        :returns: None.
+        """
+
+        cluster_id = conf_store.get(global_index, const.CLUSTER_ID_KEY)
+        csm_decryption_key = conf_store.get(global_index, const.CSM_PASSWORD_DECRYPTION_KEY)
+        key = Cipher.generate_key(cluster_id, csm_decryption_key)
+
+        encrypted_bundle = conf_store.get(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME)
+        decrypted_bundle = Cipher.decrypt(key, encrypted_bundle.encode('utf-8'))
+
+        path = conf_store.get(global_index, const.SSL_CERTIFICATE_PATH)
+        cert = Certificate.init('ssl')
+        cert._create_dirs(path)
+        with open(path, 'wb') as f:
+            f.write(decrypted_bundle)
+
