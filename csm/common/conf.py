@@ -19,6 +19,7 @@ from csm.common.errors import CsmError, InvalidRequest
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf as conf_store
+from cortx.utils.kv_store.error import KvError
 from cortx.utils.security.certificate import Certificate
 from csm.common.process import SimpleProcess
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
@@ -158,25 +159,42 @@ class Security:
         conf_store.set(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME, encrypted_bundle.decode('ascii'))
 
     @staticmethod
-    def restore_tls_bundle(global_index: str, bundle_index: str) -> None:
+    def restore_tls_bundle(global_index: str, bundle_index: str) -> bool:
         """
         Restore (and decrypt) TLS bundle from Conf store to provided path.
 
         :param global_index: global ConfStore.
         :param bundle_index: ConfStore for TLS bundle.
-        :returns: None.
+        :returns: True if the bundle is restored successfully, False otherwise.
         """
 
         cluster_id = conf_store.get(global_index, const.CLUSTER_ID_KEY)
         csm_decryption_key = conf_store.get(global_index, const.CSM_PASSWORD_DECRYPTION_KEY)
         key = Cipher.generate_key(cluster_id, csm_decryption_key)
 
-        encrypted_bundle = conf_store.get(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME)
-        decrypted_bundle = Cipher.decrypt(key, encrypted_bundle.encode('utf-8'))
+        try:
+            encrypted_bundle = conf_store.get(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME)
+        except KvError:
+            Log.warn(f'No TLS Bundle found in ConfStore {bundle_index}')
+            return False 
 
+        decrypted_bundle = Cipher.decrypt(key, encrypted_bundle.encode('utf-8'))
         path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
         cert = Certificate.init('ssl')
         cert._create_dirs(path)
         with open(path, 'wb') as f:
             f.write(decrypted_bundle)
+        return True
+
+    @staticmethod
+    def purge_tls_bundle() -> None:
+        """
+        Removes the file with TLS bundle if it exists.
+
+        :returns: None.
+        """
+        try:
+            os.remove(const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH)
+        except FileNotFoundError:
+            pass
 

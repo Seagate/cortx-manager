@@ -81,7 +81,6 @@ class CsmAgent:
         # CSM REST API initialization
         CsmRestApi.init()
 
-        CsmAgent.check_restore_tls_bundle()
         # system status
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
@@ -122,14 +121,6 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-
-
-    @staticmethod
-    def check_restore_tls_bundle() -> None:
-        protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
-        bundle_storage = f"consul://{consul_host}:{consul_port}/{const.CSM_TLS_CERTIFICATE_BUNDLE_BASE}"
-        Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle_storage)
-        Security.restore_tls_bundle(const.CSM_GLOBAL_INDEX, const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX)
 
     @staticmethod
     def _configure_cluster_management_service(message_bus_obj):
@@ -177,6 +168,8 @@ class CsmAgent:
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.CSM_TLS_CERTIFICATE_BUNDLE_BASE}")
                 set_config_flag = True
             except VError as ve:
                 Log.error(f"Unable to fetch the configurations from consul: {ve}")
@@ -189,6 +182,7 @@ class CsmAgent:
                     f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
             Conf.load(const.DATABASE_INDEX,
                     f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
+            Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, 'dict:{"k":"v"}')
             set_config_flag = True
 
     @staticmethod
@@ -222,8 +216,6 @@ class CsmAgent:
     @staticmethod
     def run():
         https_conf = ConfSection(Conf.get(const.CSM_DICT_INDEX, "HTTPS"))
-        https_conf.certificate_path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
-        https_conf.private_key_path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_DICT_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_PORT)
 

@@ -37,7 +37,7 @@ from csm.core.services.sessions import LoginService
 from csm.common.observer import Observable
 from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.conf import  ConfSection, DebugConf
+from csm.common.conf import  ConfSection, DebugConf, Security
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from csm.common.payload import Json
@@ -434,6 +434,7 @@ class CsmRestApi(CsmApi, ABC):
             if task != asyncio.Task.current_task():
                 task.cancel()
         await site.stop()
+        Security.purge_tls_bundle()
         loop.stop()
 
     @staticmethod
@@ -470,12 +471,10 @@ class CsmRestApi(CsmApi, ABC):
     def run(port: int, https_conf: ConfSection, debug_conf: DebugConf):
         if not debug_conf.http_enabled:
             port = https_conf.port
-            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            if not all(map(os.path.exists,
-                           (https_conf.certificate_path,
-                            https_conf.private_key_path))):
+            if not Security.restore_tls_bundle(const.CSM_GLOBAL_INDEX, const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX):
                 raise CsmError(errno.ENOENT, "Invalid path to certificate/private key")
-            ssl_context.load_cert_chain(https_conf.certificate_path, https_conf.private_key_path)
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH)
         else:
             ssl_context = None
         CsmRestApi._run_server(
