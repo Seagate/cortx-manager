@@ -174,7 +174,7 @@ class Security:
         encrypted_bundle = conf_store.get(bundle_index, const.CSM_TLS_CERTIFICATE_BUNDLE_NAME)
         decrypted_bundle = Cipher.decrypt(key, encrypted_bundle.encode('utf-8'))
 
-        path = conf_store.get(global_index, const.SSL_CERTIFICATE_PATH)
+        path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
         cert = Certificate.init('ssl')
         cert._create_dirs(path)
         with open(path, 'wb') as f:

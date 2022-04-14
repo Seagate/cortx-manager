@@ -222,6 +222,8 @@ class CsmAgent:
     @staticmethod
     def run():
         https_conf = ConfSection(Conf.get(const.CSM_DICT_INDEX, "HTTPS"))
+        https_conf.certificate_path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
+        https_conf.private_key_path = const.CSM_TLS_CERTIFICATE_BUNDLE_RUNTIME_PATH
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_DICT_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_PORT)
 
