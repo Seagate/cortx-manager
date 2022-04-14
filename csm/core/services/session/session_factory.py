@@ -122,6 +122,8 @@ class Database:
         """
         Instantiation Method for Database class
         """
+        if storage is None:
+            raise CsmInternalError("Database Provider is NULL")
         self.storage = storage
 
     async def convert_model_to_session(self, session_model_list):
@@ -169,19 +171,28 @@ class Database:
 
 class SessionFactory:
     @staticmethod
-    def get_session(storage: DataBaseProvider=None):
-        session_backend_map = {
-            const.LOCAL: const.IN_MEMORY,
-            const.PERSISTENT: const.DB
+    def get_instance(storage: DataBaseProvider=None):
+        # session_backend_keys: Two Level nested map 
+        # First Level Storage :- Local / Persistent
+        # Inner Level(leaf) backend : add here for more session backend option
+        session_backend_keys = {
+            const.LOCAL: {
+                const.IN_MEMORY_DICT:const.IN_MEMORY
+            },
+            const.PERSISTENT: {
+                const.DB : const.DB
+            }
+        }
+        # Leaf level session backend to respective class instance
+        session_backend_instances = {
+            const.DB: Database(storage),
+            const.IN_MEMORY: InMemory()
         }
         try:
+            # Reading Config file for storage and backend
+            storage = Conf.get(const.CSM_GLOBAL_INDEX, const.SESSION_STORAGE_KEY)
             backend = Conf.get(const.CSM_GLOBAL_INDEX, const.SESSION_BACKEND_KEY)
-            session_backend = session_backend_map[backend]
+            storage_backend = session_backend_keys[storage][backend]
         except:
-            raise CsmInternalError("Unsupported Key for Session Backend")
-        if session_backend == const.DB:
-            if storage is None:
-                raise CsmInternalError("Database Provider is NULL")
-            return Database(storage)
-        elif session_backend == const.IN_MEMORY:
-            return InMemory()
+            raise CsmInternalError("Unable to get Session")
+        return session_backend_instances[storage_backend]

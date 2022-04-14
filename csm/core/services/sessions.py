@@ -70,7 +70,7 @@ class SessionManager:
         Instantiation Method for SessionManager class
         """
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
-        self._sessionFactory = SessionFactory.get_session(storage)
+        self._sessionFactory = SessionFactory.get_instance(storage)
 
     @property
     def expiry_interval(self):
