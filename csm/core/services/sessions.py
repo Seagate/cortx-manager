@@ -66,6 +66,9 @@ class SessionManager:
     """ Session management class """
 
     def __init__(self, storage: DataBaseProvider=None):
+        """
+        Instantiation Method for SessionManager class
+        """
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
         self._sessionFactory = SessionFactory.get_session(storage)
 

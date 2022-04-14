@@ -14,11 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 from csm.core.blogic.models import CsmModel
 from datetime import datetime
-from schematics.types import (StringType, DateTimeType, ModelType,
+from schematics.types import (StringType, DateTimeType,
                               DictType, ListType)
 
 class SessionModel(CsmModel):
-    """ Session data """
+    """ Session Model data """
 
     _id = "_session_id"
     _session_id = StringType()
