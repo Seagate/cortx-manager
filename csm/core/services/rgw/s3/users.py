@@ -122,3 +122,25 @@ class S3IAMUserService(S3BaseService):
         uid = request_body.get(const.UID)
         Log.info(f"Removing user capabilities for {uid}")
         return await self.execute_request(const.REMOVE_USER_CAPS_OPERATION, **request_body)
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_user_quota(self, **request_body):
+        """
+        Method to get user level quota.
+
+        :param **request_body: Request body kwargs
+        """
+        uid = request_body.get(const.UID)
+        Log.debug(f"Fetching user level quota by uid = {uid}")
+        return await self.execute_request(const.GET_USER_LEVEL_QUOTA_OPERATION, **request_body)
+
+    @Log.trace_method(Log.DEBUG)
+    async def set_user_quota(self, **request_body):
+        """
+        Method to set user level quota.
+
+        :param **request_body: Request body kwargs
+        """
+        uid = request_body.get(const.UID)
+        Log.debug(f"Setting user level quota by uid = {uid}")
+        return await self.execute_request(const.SET_USER_LEVEL_QUOTA_OPERATION, **request_body)

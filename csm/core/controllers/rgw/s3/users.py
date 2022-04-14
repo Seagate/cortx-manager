@@ -96,6 +96,14 @@ class UserCapsSchema(S3BaseSchema):
 
     user_caps = fields.Str(data_key=const.USER_CAPS, required=True)
 
+class SetUserQuotaSchema(S3BaseSchema):
+    """Set user level quota schema validation class."""
+
+    enabled = fields.Bool(data_key=const.ENABLED, missing=None, allow_none=False)
+    max_size = fields.Int(data_key=const.MAX_SIZE, missing=None, allow_none=False)
+    max_objects = fields.Int(data_key=const.MAX_OBJECTS, missing=None, allow_none=False)
+    check_on_raw = fields.Bool(data_key=const.CHECK_ON_RAW, missing=None, allow_none=False)
+
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
@@ -320,4 +328,59 @@ class S3IAMUserCapsView(S3BaseView):
         request_body = await self.create_caps_request_body()
         with self._guard_service():
             response = await self._service.remove_user_caps(**request_body)
+            return CsmResponse(response)
+
+@CsmView._app_routes.view("/api/v2/s3/iam/quota/{uid}")
+class S3IAMUserQuotaView(S3BaseView):
+    """
+    S3 IAM user quota management REST API implementation.
+    GET: Fetch user level quota of iam user
+    PUT: Set user level quota of iam user
+    """
+
+    def __init__(self, request):
+        """S3 IAM user quota Init."""
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        """
+        GET REST implementation for fetching user level quota by uid.
+        """
+        Log.info(f"Handling iam user quota GET request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
+        Log.debug(f"Handling iam user quota GET request"
+                f" with path param: {uid}")
+        with self._guard_service():
+            response = await self._service.get_user_quota(**path_params_dict)
+            return CsmResponse(response)
+
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
+    @Log.trace_method(Log.DEBUG)
+    async def put(self):
+        """
+        PUT REST implementation for setting user level quota by uid.
+        """
+        Log.info(f"Handling iam user quota PUT request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        uid = self.request.match_info[const.UID]
+        path_params_dict = {const.UID: uid}
+        try:
+            schema = SetUserQuotaSchema()
+            if await self.request.text():
+                request_body_params_dict = schema.load(await self.request.json())
+            else:
+                request_body_params_dict = {}
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        request_body = {**path_params_dict, **request_body_params_dict}
+        Log.debug(f"Handling iam user quota PUT request"
+                f" path params/request body: {request_body}")
+        with self._guard_service():
+            response = await self._service.set_user_quota(**request_body)
             return CsmResponse(response)

@@ -110,5 +110,25 @@
             "user_caps": "user-caps"
         },
         "SUCCESS_CODE": 200
+    },
+    "SET_USER_LEVEL_QUOTA": {
+        "ENDPOINT": "/admin/user?quota&quota-type=user",
+        "METHOD": "PUT",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid",
+            "enabled": "enabled",
+            "max_size": "max-size",
+            "max_objects": "max-objects",
+            "check_on_raw": "check-on-raw"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "GET_USER_LEVEL_QUOTA": {
+        "ENDPOINT": "/admin/user?quota&quota-type=user",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid"
+        },
+        "SUCCESS_CODE": 200
     }
 }
