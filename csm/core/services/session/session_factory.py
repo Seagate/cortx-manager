@@ -146,10 +146,9 @@ class Database:
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
         session__model_list = await self.storage(SessionModel).get(query)
-        """
-        Storage get() -> param query: session id
-        return: empty list or list with session model object which satisfy the passed query condition
-        """
+        # Storage get() -> param query: session id
+        # returns empty list or list with session model object which satisfy the passed query condition
+
         session_list = await self.convert_model_to_session(session__model_list)
         if session_list:
             return session_list[0]
