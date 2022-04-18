@@ -117,10 +117,10 @@ class InMemory:
     async def store(self, session: Session) -> None:
         self._stg[session.session_id] = session
 
-class Database:
+class PersistentDatabase:
     def __init__(self, storage: DataBaseProvider):
         """
-        Instantiation Method for Database class
+        Instantiation Method for PersistentDatabase class
         """
         if storage is None:
             raise CsmInternalError("Database Provider is NULL")
@@ -185,7 +185,7 @@ class SessionFactory:
         }
         # Leaf level session backend to respective class instance
         session_backend_instances = {
-            const.PERSISTENT_DB: Database(storage),
+            const.PERSISTENT_DB: PersistentDatabase(storage),
             const.IN_MEMORY: InMemory()
         }
         try:
