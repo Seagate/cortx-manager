@@ -180,12 +180,12 @@ class SessionFactory:
                 const.IN_MEMORY_DICT:const.IN_MEMORY
             },
             const.PERSISTENT: {
-                const.DB : const.DB
+                const.DB : const.PERSISTENT_DB
             }
         }
         # Leaf level session backend to respective class instance
         session_backend_instances = {
-            const.DB: Database(storage),
+            const.PERSISTENT_DB: Database(storage),
             const.IN_MEMORY: InMemory()
         }
         try:
