@@ -117,10 +117,10 @@ class InMemory:
     async def store(self, session: Session) -> None:
         self._stg[session.session_id] = session
 
-class PersistentDatabase:
+class Database:
     def __init__(self, storage: DataBaseProvider):
         """
-        Instantiation Method for PersistentDatabase class
+        Instantiation Method for Database class
         """
         if storage is None:
             raise CsmInternalError("Database Provider is NULL")
@@ -177,16 +177,11 @@ class SessionFactory:
         # Inner Level(leaf) backend : add here for more session backend option
         session_backend_keys = {
             const.LOCAL: {
-                const.IN_MEMORY_DICT:const.IN_MEMORY
+                const.IN_MEMORY : InMemory()
             },
             const.PERSISTENT: {
-                const.DB : const.PERSISTENT_DB
+                const.DB : Database(storage)
             }
-        }
-        # Leaf level session backend to respective class instance
-        session_backend_instances = {
-            const.PERSISTENT_DB: PersistentDatabase(storage),
-            const.IN_MEMORY: InMemory()
         }
         try:
             # Reading Config file for storage and backend
@@ -195,4 +190,4 @@ class SessionFactory:
             storage_backend = session_backend_keys[storage][backend]
         except:
             raise CsmInternalError("Unable to get Session")
-        return session_backend_instances[storage_backend]
+        return storage_backend

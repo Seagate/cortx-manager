@@ -24,7 +24,6 @@ class SessionModel(CsmModel):
     _session_id = StringType()
     _expiry_time = DateTimeType()
     _user_id = StringType()
-    #TODO: Need to verify and Discuss
     _permission = DictType(ListType(StringType))
 
     @staticmethod
