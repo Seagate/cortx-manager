@@ -122,7 +122,6 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
 
-
     @staticmethod
     def _configure_cluster_management_service(message_bus_obj):
         # Cluster Management configuration
@@ -169,6 +168,8 @@ class CsmAgent:
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.CSM_TLS_CERTIFICATE_BUNDLE_BASE}")
                 set_config_flag = True
             except VError as ve:
                 Log.error(f"Unable to fetch the configurations from consul: {ve}")
@@ -181,6 +182,7 @@ class CsmAgent:
                     f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
             Conf.load(const.DATABASE_INDEX,
                     f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
+            Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, 'dict:{"k":"v"}')
             set_config_flag = True
 
     @staticmethod

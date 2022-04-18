@@ -23,6 +23,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from csm.core.providers.providers import Response
 from csm.core.blogic import const
+from csm.common.conf import Security
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.error import VError
@@ -70,6 +71,7 @@ class Prepare(Setup):
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
+        self.store_tls_bundle()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -79,7 +81,8 @@ class Prepare(Setup):
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
-                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}"
+                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
+                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
                 # TODO: validate following keys once available in conf-store
                 #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
                 #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
@@ -127,6 +130,21 @@ class Prepare(Setup):
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
+
+    def store_tls_bundle(self):
+        '''
+        Store CSM TLS bundle to the secure storage
+        '''
+        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+
+        consul_host = Conf.get(const.DATABASE_INDEX, f'{const.DB_CONSUL_CONFIG_HOST}[{0}]')
+        consul_port = Conf.get(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT)
+        bundle_store = f"consul://{consul_host}:{consul_port}/{const.CSM_TLS_CERTIFICATE_BUNDLE_BASE}"
+        Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle_store)
+        with open(ssl_certificate_path, 'rb') as f:
+            bundle = f.read()
+            Security.store_tls_bundle(const.CSM_GLOBAL_INDEX, const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle) 
+    
 
     def store_encrypted_password(self):
         """
