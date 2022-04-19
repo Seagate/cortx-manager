@@ -125,6 +125,44 @@ class StorageCapacityService(ApplicationService):
 
             return response
 
+    async def get_capacity_usage(self, user_id):
+        """
+        Retrieve capacity usage for specific user.
+        :param user_id: user id whose capacity usage is fetching
+        :returns: capacity usage or instance of error for negative scenarios.
+        """
+
+        # TODO : url is yet to decide
+        url = "sample_url"
+        method = const.GET
+        expected_success_code=200
+
+        Log.info(f"Request {url} for capacity usage")
+        async with aiohttp.ClientSession() as session:
+            try:
+                # TODO: uncomment the code
+                # response = await self.request(session, method, url, expected_success_code)
+                # TODO: Removed hardcoded response
+                response = {
+                    "stats": {
+                        "size": 250,
+                        "size_actual": 20480,
+                        "size_kb": 1,
+                        "size_kb_actual": 20,
+                        "num_objects": 5
+                    },
+                    "last_stats_sync": "2022-03-16T04:54:03.776590Z",
+                    "last_stats_update": "2022-03-16T04:54:58.047985Z"
+                }
+            except Exception as e:
+                Log.error(f"Error in obtaining response from {url}: {e}")
+                if "Cannot connect to" in str(e):
+                    self._create_error(503, "Unable to connect to the service")
+                    return self.capacity_error
+                raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
+
+            return response
+
     def _create_error(self, status: int, reason):
         """
         Converts a body of a failed query into orignal error object.
