@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.data.db.db_provider import DataBaseProvider
 from csm.core.blogic import const
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
@@ -27,31 +28,8 @@ from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
 from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
-
-
-class SessionCredentials:
-    """ Base class for a variying part of the session
-    depending on the user type (CSM, LDAP, S3).
-    """
-
-    def __init__(self, user_id: str) -> None:
-        self._user_id = user_id
-
-    @property
-    def user_id(self) -> str:
-        return self._user_id
-
-
-class LocalCredentials(SessionCredentials):
-    """ CSM local user specific session credentials - empty """
-
-    def __init__(self, user_id: str, user_role: str) -> None:
-        super().__init__(user_id)
-        self._user_role = user_role
-
-    @property
-    def user_role(self) -> str:
-        return self._user_role
+from csm.core.services.session.session_factory import (SessionFactory, SessionCredentials,
+                                               Session, LocalCredentials)
 
 
 class LdapCredentials(SessionCredentials):
@@ -84,52 +62,15 @@ class S3Credentials(SessionCredentials):
     def session_token(self):
         return self._session_token
 
-
-class Session:
-    """ Session data """
-
-    Id = str
-
-    def __init__(self, session_id: Id,
-                 expiry_time: datetime,
-                 credentials: SessionCredentials,
-                 permissions: PermissionSet) -> None:
-        self._session_id = session_id
-        self._expiry_time = expiry_time
-        self._credentials = credentials
-        self._permissions = permissions
-
-    @property
-    def session_id(self) -> Id:
-        return self._session_id
-
-    @property
-    def expiry_time(self) -> datetime:
-        return self._expiry_time
-
-    @expiry_time.setter
-    def expiry_time(self, expiry_time):
-        self._expiry_time = expiry_time
-
-    @property
-    def credentials(self) -> SessionCredentials:
-        return self._credentials
-
-    @property
-    def permissions(self) -> PermissionSet:
-        return self._permissions
-
-    def get_user_role(self) -> Optional[str]:
-        creds = self._credentials
-        return creds.user_role if isinstance(creds, LocalCredentials) else None
-
-
 class SessionManager:
     """ Session management class """
 
-    def __init__(self):
-        self._stg = {}
+    def __init__(self, storage: DataBaseProvider=None):
+        """
+        Instantiation Method for SessionManager class
+        """
         self._expiry_interval = timedelta(minutes=60)  # TODO: Load from config
+        self._sessionFactory = SessionFactory.get_instance(storage)
 
     @property
     def expiry_interval(self):
@@ -147,20 +88,20 @@ class SessionManager:
         session_id = self._generate_sid()
         expiry_time = self.calc_expiry_time()
         session = Session(session_id, expiry_time, credentials, permissions)
-        self._stg[session_id] = session
+        await self._sessionFactory.store(session)
         return session
 
     async def delete(self, session_id: Session.Id) -> None:
-        self._stg.pop(session_id)
+        await self._sessionFactory.delete(session_id)
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
-        return self._stg.get(session_id, None)
+        return await self._sessionFactory.get(session_id)
 
     async def get_all(self):
-        return list(self._stg.values())
+        return await self._sessionFactory.get_all()
 
     async def update(self, session: Session) -> None:
-        self._stg[session.session_id] = session
+        await self._sessionFactory.store(session)
 
 
 class AuthPolicy(ABC):

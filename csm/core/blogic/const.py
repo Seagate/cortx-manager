@@ -953,3 +953,11 @@ SERVICE_NOT_AVAILABLE   = 'ServiceNotAvailable'
 REQUEST_CANCELLED       = 'RequestCancelled'
 SETUP_ERROR             = 'SetupError'
 HTTP_ERROR              = 'HttpError'
+
+# Session Backend factory
+DB                  = 'database'
+IN_MEMORY           = 'in_memory'
+SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
+SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
+LOCAL               = 'local'
+PERSISTENT          = 'persistent'
