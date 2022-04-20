@@ -119,7 +119,6 @@ class CsmAgent:
 
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
-        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
 
 
@@ -137,6 +136,7 @@ class CsmAgent:
         s3_plugin_obj = s3_plugin.RGWPlugin()
         CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
         CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(s3_plugin_obj)
 
     @staticmethod
     def _get_consul_config():

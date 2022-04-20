@@ -19,18 +19,25 @@ from aiohttp.client import ClientSession
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess,AsyncioSubprocess
 from cortx.utils.log import Log
-from csm.common.services import ApplicationService
+from csm.core.services.rgw.s3.utils import S3BaseService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
 from typing import Callable, Dict, Any
+from csm.core.data.models.rgw import RgwError
 
-class StorageCapacityService(ApplicationService):
+class StorageCapacityService(S3BaseService):
     """
     Service for Get disk capacity details
     """
 
-    def __init__(self):
+    def __init__(self, plugin):
+        """
+        Instantiation of StorageCapacityService.
+        :param plugin: s3_iam_plugin object
+        :returns: None
+        """
         self.capacity_error = CapacityError()
+        self._s3_iam_plugin = plugin
 
     @staticmethod
     def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
@@ -125,43 +132,31 @@ class StorageCapacityService(ApplicationService):
 
             return response
 
-    async def get_capacity_usage(self, user_id):
+    async def get_capacity_usage(self, **request_body):
         """
         Retrieve capacity usage for specific user.
         :param user_id: user id whose capacity usage is fetching
         :returns: capacity usage or instance of error for negative scenarios.
         """
+        uid = request_body.get(const.UID)
+        Log.debug(f"Get Capcity usage of S3 IAM user by uid = {uid}")
 
-        # TODO : url is yet to decide
-        url = "sample_url"
-        method = const.GET
-        expected_success_code=200
+        plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response)
+        return plugin_response
 
-        Log.info(f"Request {url} for capacity usage")
-        async with aiohttp.ClientSession() as session:
-            try:
-                # TODO: uncomment the code
-                # response = await self.request(session, method, url, expected_success_code)
-                # TODO: Removed hardcoded response
-                response = {
-                    "stats": {
-                        "size": 250,
-                        "size_actual": 20480,
-                        "size_kb": 1,
-                        "size_kb_actual": 20,
-                        "num_objects": 5
-                    },
-                    "last_stats_sync": "2022-03-16T04:54:03.776590Z",
-                    "last_stats_update": "2022-03-16T04:54:58.047985Z"
-                }
-            except Exception as e:
-                Log.error(f"Error in obtaining response from {url}: {e}")
-                if "Cannot connect to" in str(e):
-                    self._create_error(503, "Unable to connect to the service")
-                    return self.capacity_error
-                raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
-
-            return response
+        # response = {
+        #     "stats": {
+        #         "size": 250,
+        #         "size_actual": 20480,
+        #         "size_kb": 1,
+        #         "size_kb_actual": 20,
+        #         "num_objects": 5
+        #     },
+        #     "last_stats_sync": "2022-03-16T04:54:03.776590Z",
+        #     "last_stats_update": "2022-03-16T04:54:58.047985Z"
+        # }
 
     def _create_error(self, status: int, reason):
         """

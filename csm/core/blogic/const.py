@@ -961,3 +961,6 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# capcity usage 
+GET_CAPACITY_USAGE_OPERATION  = 'GET_CAPACITY_USAGE'
