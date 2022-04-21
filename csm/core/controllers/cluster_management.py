@@ -108,3 +108,22 @@ class ClusterStatusView(CsmView):
                                         .get_cluster_status(node_id)
         return cluster_status
 
+@CsmView._app_routes.view("/api/v2/system/management/{resource}/{id}")
+class ClusterResourceStatusView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
+
+    @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        """
+        API to get cluster resource status with id
+        """
+        resource = self.request.match_info["resource"]
+        id = self.request.match_info["id"]
+        #TODO: should we read request body also?
+        Log.debug(f" Get status for {resource} with id: {id}")
+        response = await self.cluster_management_service\
+                                .get_resource_status(resource, id)
+        return response

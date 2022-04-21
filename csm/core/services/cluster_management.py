@@ -73,3 +73,24 @@ class ClusterManagementAppService(ApplicationService):
             request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
         return request_params
 
+    @Log.trace_method(Log.DEBUG)
+    def get_resource_status(self, resource, id):
+        """
+        Request to get status of the resource with id
+        """
+        # Create a URL, request body
+        # Call HA API
+        # Check response
+        # create an Error if there is
+        # Return response
+
+        # Directly call HA service, if there is
+        # url = 
+        # method = const.GET
+        # expected_success_code=200
+        # Log.info(f"Request {url} for Resource Status")
+        # async with aiohttp.ClientSession() as session:
+        #     try:
+        #         response = await self.request(session, method, url, expected_success_code)
+        #     except Exception as e:
+        #         Log.error(f"Error in obtaining response from {url}: {e}")
