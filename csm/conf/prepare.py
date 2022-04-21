@@ -82,7 +82,8 @@ class Prepare(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
                 const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
+                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
+                const.KEY_SSL_PK : const.SSL_PK_KEY
                 # TODO: validate following keys once available in conf-store
                 #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
                 #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
@@ -135,16 +136,22 @@ class Prepare(Setup):
         '''
         Store CSM TLS bundle to the secure storage
         '''
-        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-
         consul_host = Conf.get(const.DATABASE_INDEX, f'{const.DB_CONSUL_CONFIG_HOST}[{0}]')
         consul_port = Conf.get(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT)
         bundle_store = f"consul://{consul_host}:{consul_port}/{const.CSM_TLS_CERTIFICATE_BUNDLE_BASE}"
         Conf.load(const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle_store)
+
+        ssl_pk_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_PK])
+        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        bundle = b''
+        # If private key path and certificate path point to the same location
+        # then assume the private key is in the certificate file and load only the latter.
+        if ssl_pk_path != ssl_certificate_path:
+            with open(ssl_pk_path, 'rb') as f:
+                bundle += f.read()
         with open(ssl_certificate_path, 'rb') as f:
-            bundle = f.read()
-            Security.store_tls_bundle(const.CSM_GLOBAL_INDEX, const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle) 
-    
+            bundle += f.read()
+        Security.store_tls_bundle(const.CSM_GLOBAL_INDEX, const.CSM_TLS_CERTIFICATE_BUNDLE_INDEX, bundle)
 
     def store_encrypted_password(self):
         """

@@ -77,9 +77,10 @@ class PostInstall(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
-                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
+                const.KEY_SERVER_NODE_INFO : f"{const.NODE}>{self.machine_id}",
+                const.KEY_SSL_CERTIFICATE : f"{const.SSL_CERTIFICATE_KEY}",
+                const.KEY_SSL_PK : const.SSL_PK_KEY,
+                const.KEY_LOGPATH : f"{const.CSM_LOG_PATH_KEY}"
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -88,23 +89,32 @@ class PostInstall(Setup):
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def set_ssl_certificate(self):
+        ssl_pk_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_PK])
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
         csm_protocol, csm_host, csm_port = self._parse_endpoints(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
-        if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
-            Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
-                    Generating self signed ssl certificate")
+        pk_exists = os.path.exists(ssl_certificate_path)
+        crt_exists = os.path.exists(ssl_pk_path)
+        if csm_protocol == 'https' and not (crt_exists and pk_exists):
+            warn_msg = f"HTTPS enabled but SSL certificate or private key is missing:\n"
+                f"Certificate is {'' if crt_exists else 'not'} found: {ssl_certificate_path}\n"
+                f"Private key is {'' if pk_exists else 'not'} found: {ssl_pk_path}"
+            Log.warn(warn_msg)
+            Log.warn("Generating self-signed SSL certificate")
             try:
                 ssl_cert_configs = const.SSL_CERT_CONFIGS
                 ssl_cert_obj = Certificate.init('ssl')
                 ssl_cert_obj.generate(cert_path = ssl_certificate_path, dns_list = const.DNS_LIST,
                                             **ssl_cert_configs)
+                # Generator stores certificate and private key in certificate file
+                # under `ssl_certificate_path`
+                ssl_pk_path = ssl_certificate_path
             except SSLCertificateError as e:
                 Log.error(f"Failed to generate self signed ssl certificate: {e}")
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
             Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_pk_path)
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
