@@ -14,34 +14,31 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-import pprint
-import sys
 import time
 import errno
-from typing import ClassVar, Dict, Any, Tuple
-from importlib import import_module
+from typing import Tuple
 import aiohttp
 
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from cortx.utils.schema.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
-from cortx.utils.cli_framework.command import Command
 from cortx.utils.cli_framework.client import Client
 
 
 class CsmApiClient(Client):
-    """ Concrete class to communicate with RAS API, invokes CsmApi directly """
+    """Concrete class to communicate with RAS API, invokes CsmApi directly."""
 
     def __init__(self):
+        """Csm Api Client init."""
         super(CsmApiClient, self).__init__(None)
         CsmApi.init()
 
     def call(self, cmd):
         """
-        Method Invocation:
         Call remote API method asynchronously. Response is received over the
         callback channel. Here we wait until the response is received.
+
         TODO: Add a timeout.
         """
         self._response = None
@@ -63,9 +60,10 @@ class CsmApiClient(Client):
         self._response = response
 
 class CsmRestClient(Client):
-    """ REST API client for CSM server """
+    """REST API client for CSM server"""
 
     def __init__(self, url):
+        """Csm Rest Client init."""
         super(CsmRestClient, self).__init__(url)
         self.not_authorized = "You are not authorized to run cli commands."
         self.could_not_parse = "Could not parse the response"
@@ -77,7 +75,7 @@ class CsmRestClient(Client):
         if response.rc() not in  (200, 201):
             return True
         return False
-    
+
     async def login(self, username, password):
         url = "/v1/login"
         method = const.POST
@@ -146,12 +144,14 @@ class CsmRestClient(Client):
         return Response(rc=status, output=data), headers
 
     def __cleanup__(self):
+        """Csm Rest Client cleanup."""
         self._loop.close()
 
 class RestRequest(Request):
-    """Cli Rest Request Class """
+    """Cli Rest Request Class."""
 
     def __init__(self, url, session, command):
+        """Cli Rest Request init."""
         super(RestRequest, self).__init__(command.args, command.name)
         self._method = command.method
         self._options = command.options
@@ -182,9 +182,10 @@ class RestRequest(Request):
                            .format(exception.host, exception.port))
 
 class DirectRestRequest(Request):
-    """Cli Rest Request Class """
+    """Cli Rest Request Class."""
 
     def __init__(self, url, session, method, params_json, body_json):
+        """Direct Rest Request init."""
         super(DirectRestRequest, self).__init__(None, None)
         self._url = url
         self._session = session
