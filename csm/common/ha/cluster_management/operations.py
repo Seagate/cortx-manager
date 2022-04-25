@@ -22,16 +22,25 @@ from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
 
+
 class Operation(ABC):
     """
     Base class that will be extended by all operation implementations.
+
     Extending classes will have to provide implementation for
     validate_arguments and execute methods.
     The process method will call validate_arguments and execute methods in order.
     """
+
     not_blank_validator = validate.Length(min=1, error=const.ARG_BLANK_ERR_MSG)
 
     def process(self, cluster_manager, **kwargs):
+        """
+        Process operation.
+
+        :param cluster_manager: cluster manager object.
+        :returns: None.
+        """
         self.validate_arguments(**kwargs)
 
         executor = ThreadPoolExecutor(max_workers=1)
@@ -40,16 +49,20 @@ class Operation(ABC):
 
     @abstractmethod
     def validate_arguments(self, **kwargs):
+        """Abstract method for arguments validation."""
         pass
 
     @abstractmethod
     def execute(self, cluster_manager, **kwargs):
+        """Abstract method for execution."""
         pass
 
     def parse_errors(self, errors):
         """
-        Parse the errors raised in validate_arguments method by
-        the extending classes.
+        Parse the errors raised in validate_arguments method by the extending classes.
+
+        :param errors: list of errors to parse.
+        :raises InvalidRequest: after processing error messages with a concatenated result.
         """
         error_messages = []
         for each_key in errors.keys():
@@ -63,29 +76,38 @@ class Operation(ABC):
 
 
 class ClusterStartOperation(Operation):
+    """Cluster start operation."""
 
     def validate_arguments(self, **kwargs):
+        """Validate arguments stub."""
         pass
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute stub."""
         pass
 
 
 class ClusterStopOperation(Operation):
+    """Cluster stop operation."""
 
     def validate_arguments(self, **kwargs):
+        """Validate arguments stub."""
         pass
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute stub."""
         pass
 
 
 class ClusterShutdownSignal(Operation):
+    """Cluster shutdown signal operation."""
 
     def validate_arguments(self, **kwargs):
+        """Validate arguments stub."""
         pass
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute stub."""
         mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         message = {"start_cluster_shutdown": 1}
         try:
@@ -94,20 +116,22 @@ class ClusterShutdownSignal(Operation):
             Log.error(f"Error while sending shutdown signal:{e}")
             raise CsmInternalError(f"Error while sending shutdown signal:{e}")
 
+
 class NodeStartOperation(Operation):
-    """
-    Process start operation on node with he arguments provided.
-    """
+    """Process start operation on node with he arguments provided."""
+
     def validate_arguments(self, **kwargs):
+        """Validate arguments implementation for the Node start."""
         fields_to_validate = {
             const.ARG_RESOURCE_ID: fields.Str(required=True,
-                                    validate=self.not_blank_validator)
+                                              validate=self.not_blank_validator)
         }
         ValidatorSchema = Schema.from_dict(fields_to_validate)
         errors = ValidatorSchema().validate(kwargs)
         self.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute implementation for the node start."""
         node_id = kwargs.get(const.ARG_RESOURCE_ID, "")
         args = {
             const.ARG_POWER_ON: True
@@ -122,13 +146,13 @@ class NodeStartOperation(Operation):
 
 
 class NodeStopOperation(Operation):
-    """
-    Process stop operation on node with he arguments provided.
-    """
+    """Process stop operation on node with he arguments provided."""
+
     def validate_arguments(self, **kwargs):
+        """Validate arguments implementation for the Node stop."""
         fields_to_validate = {
-            const.ARG_RESOURCE_ID: fields.Str(required=True,
-                                    validate=self.not_blank_validator),
+            const.ARG_RESOURCE_ID: fields.Str(
+                required=True, validate=self.not_blank_validator),
             const.ARG_FORCE: fields.Bool()
         }
         ValidatorSchema = Schema.from_dict(fields_to_validate)
@@ -136,6 +160,7 @@ class NodeStopOperation(Operation):
         self.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute implementation for the Node stop."""
         node_id = kwargs.get(const.ARG_RESOURCE_ID, "")
         args = {
             const.ARG_CHECK_CLUSTER: not kwargs.get(const.ARG_FORCE, False)
@@ -150,13 +175,13 @@ class NodeStopOperation(Operation):
 
 
 class NodePoweroffOperation(Operation):
-    """
-    Process poweroff operation on node with he arguments provided.
-    """
+    """Process poweroff operation on node with he arguments provided."""
+
     def validate_arguments(self, **kwargs):
+        """Validate arguments implementation for the Node power off."""
         fields_to_validate = {
-            const.ARG_RESOURCE_ID: fields.Str(required=True,
-                                    validate=self.not_blank_validator),
+            const.ARG_RESOURCE_ID: fields.Str(
+                required=True, validate=self.not_blank_validator),
             const.ARG_FORCE: fields.Bool(),
             const.ARG_STORAGE_OFF: fields.Bool()
         }
@@ -165,6 +190,7 @@ class NodePoweroffOperation(Operation):
         self.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
+        """Execute implementation for the Node power off."""
         node_id = kwargs.get(const.ARG_RESOURCE_ID, "")
         args = {
             const.ARG_CHECK_CLUSTER: not kwargs.get(const.ARG_FORCE, False),
@@ -178,4 +204,3 @@ class NodePoweroffOperation(Operation):
         except Exception as e:
             err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
             Log.error(err_msg)
-
