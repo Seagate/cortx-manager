@@ -92,7 +92,7 @@ class CapacityManagementView(CsmView):
                                    resp.message)
         return resp
 
-@CsmView._app_routes.view("/api/v2/capacity/usage/{uid}")
+@CsmView._app_routes.view("/api/v2/capacity/status/{resource}/{id}")
 class CapacityUsageView(S3BaseView):
     """
     GET REST API view implementation for getting capacity usage for specific user
@@ -105,10 +105,11 @@ class CapacityUsageView(S3BaseView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        uid = self.request.match_info[const.UID]
+        id = self.request.match_info[const.ID]
+        resource = self.request.match_info[const.ARG_RESOURCE]
         Log.info(f"Handling GET implementation for getting capacity usage"
-                f" with path param: {uid}")
-        path_params_dict = {const.UID: uid}
+                f" for resource: {resource} with id : {id}")
+        path_params_dict = {const.id: id, const.ARG_RESOURCE:resource}
         with self._guard_service():
             response = await self._service.get_capacity_usage(**path_params_dict)
             return CsmResponse(response)

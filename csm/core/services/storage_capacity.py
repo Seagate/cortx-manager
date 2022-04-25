@@ -138,25 +138,29 @@ class StorageCapacityService(S3BaseService):
         :param user_id: user id whose capacity usage is fetching
         :returns: capacity usage or instance of error for negative scenarios.
         """
-        uid = request_body.get(const.UID)
-        Log.debug(f"Get Capcity usage of S3 IAM user by uid = {uid}")
+        id = request_body.get(const.ID)
+        resource = request_body.get(const.ARG_RESOURCE)
+        Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
 
         plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+        # TODO: based on the level of system
+        # what are the expected resource? will it always inner level like user bucket node etc.
+        # or can it be on first level resource like system s3 etc.
+        plugin_response = {
+            "s3":
+            {
+                "user":{
+                    "id": id,
+                    "size": 0000,
+                    "actual_size": 0000, 
+                    "num_objects": 0
+                }
+            }
+        }
+
         if isinstance(plugin_response, RgwError):
             self._handle_error(plugin_response)
         return plugin_response
-
-        # response = {
-        #     "stats": {
-        #         "size": 250,
-        #         "size_actual": 20480,
-        #         "size_kb": 1,
-        #         "size_kb_actual": 20,
-        #         "num_objects": 5
-        #     },
-        #     "last_stats_sync": "2022-03-16T04:54:03.776590Z",
-        #     "last_stats_update": "2022-03-16T04:54:58.047985Z"
-        # }
 
     def _create_error(self, status: int, reason):
         """
