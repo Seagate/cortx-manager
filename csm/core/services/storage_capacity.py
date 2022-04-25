@@ -24,6 +24,7 @@ from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
 from typing import Callable, Dict, Any
 from csm.core.data.models.rgw import RgwError
+from csm.common.errors import CsmResourceNotAvailable
 
 class StorageCapacityService(S3BaseService):
     """
@@ -143,10 +144,16 @@ class StorageCapacityService(S3BaseService):
         Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
 
         plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
-        # TODO: based on the level of system
-        # what are the expected resource? will it always inner level like user bucket node etc.
-        # or can it be on first level resource like system s3 etc.
+        # Sample Responce for RGW
         plugin_response = {
+            "system": {
+                "node": {
+                    "total": 1111,
+                    "available": 1111,
+                    "free": 1111,
+                    "degraded": {}
+                }
+            },
             "s3":
             {
                 "user":{
@@ -160,7 +167,26 @@ class StorageCapacityService(S3BaseService):
 
         if isinstance(plugin_response, RgwError):
             self._handle_error(plugin_response)
-        return plugin_response
+
+        # TODO: Need to discuss
+        # what are the expected resource? will it always inner level like user bucket node etc.
+        # or can it be on first level resource like system s3 etc.
+
+        resp = {}
+        # Check on First Level, if available then return dict with Key= resource and Value = resp[key]
+        if resource in plugin_response.keys():
+            resp[resource] = plugin_response[resource]
+            return resp
+        else:
+            for first_level_resource in plugin_response.keys():
+                # else Check on Inner level of Each Resource, 
+                if resource in plugin_response[first_level_resource].keys():
+                    # If resource found in sec
+                    # {key= firstLevel_resource, value = dict{key= resource, value=resp[first_level][resource]} } 
+                    resp[first_level_resource] = {resource : plugin_response[first_level_resource][resource]}
+                    return resp
+        # else Resource does not exist
+        raise CsmResourceNotAvailable("Request resource is not available")
 
     def _create_error(self, status: int, reason):
         """
