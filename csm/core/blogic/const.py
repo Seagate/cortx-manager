@@ -178,6 +178,7 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
+
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -326,6 +327,8 @@ ARGUMENTS_FORMAT_NESTED = 'nested'
 PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
 PROCESS_CLUSTER_STATUS_REQ = 'process_cluster_status'
 ShUTDOWN_SIGNAL = 'shutdown_signal'
+MARK_NODE_FAILURE = 'mark_node_failure'
+NOT_DEFINED = 'NOT_DEFINED'
 CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
 CLUSTER_STATUS_ERR_MSG = 'Error getting cluster status.'
 ARG_NODE_ID = 'node_id'
@@ -819,6 +822,9 @@ RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
+CLUSTERID_KEY = 'cluster>id'
+#index = 'index'
+#NODES_KEY = 'cluster>storage_set[{}]>nodes'.format(index)
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -872,6 +878,8 @@ RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
 RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
 RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
+KEY_CLUSTERID = 'SYSTEM>cluster_id'
+KEY_NODE_ID = 'SYSTEM>nodes'
 # Degraded byte count
 CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
 CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'

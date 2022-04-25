@@ -179,3 +179,34 @@ class NodePoweroffOperation(Operation):
             err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
             Log.error(err_msg)
 
+class NodeMarkFailure(Operation):
+    """
+    Process mark node failure request.
+    """
+    def validate_arguments(self, **kwargs):
+        # TODO: Validate arguments
+        pass
+
+    def execute(self, cluster_manager, **kwargs):
+        mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
+        # TODO: Form schema and send it as a message
+        cluster_id = "get_cluster_id"
+        node_id = "get_from_req"
+        payload = {
+                    "source": "<source>",
+                    "cluster_id": cluster_id,
+                    "site_id": const.NOT_DEFINED,
+                    "rack_id": const.NOT_DEFINED,
+                    "storageset_id": const.NOT_DEFINED,
+                    "node_id": "<node_id>",
+                    "resource_type": "node",
+                    "resource_id": "<resource_id>",
+                    "resource_status": "<health_status>", # For node: "<unknown | online | degraded | offline | failed | recovering>", for cvg and disk: "<online | failed | repairing | repaired | rebalancing >"
+                    "specific_info": "{<specific_info>}" # Key/value pairs specific to resource type
+                    }
+        try:
+            print(payload)
+            #mssg_bus_obj.send([payload])
+        except Exception as e:
+            Log.error(f"Error while sending Mark node failure signal:{e}")
+            raise CsmInternalError(f"Error while sending Mark Node failure signal:{e}")

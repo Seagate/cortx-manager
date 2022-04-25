@@ -69,7 +69,7 @@ class ClusterManagementAppService(ApplicationService):
         request_params[const.ARG_RESOURCE] = resource
         request_params[const.ARG_OPERATION] = operation
         request_params[const.ARG_ARGUMENTS] = arguments
-        if operation == const.ShUTDOWN_SIGNAL:
+        if operation == const.ShUTDOWN_SIGNAL or operation == const.MARK_NODE_FAILURE:
             request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
         return request_params
 

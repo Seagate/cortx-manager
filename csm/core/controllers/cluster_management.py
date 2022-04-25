@@ -30,7 +30,7 @@ class ClusterOperationsQueryParameter(Schema):
 
 
 class ClusterOperationsRequestBody(Schema):
-    supported_operations = [const.ShUTDOWN_SIGNAL]
+    supported_operations = [const.ShUTDOWN_SIGNAL, const.MARK_NODE_FAILURE]
     operation = fields.Str(required=True,
                         validate=[Enum(supported_operations)])
 
