@@ -61,7 +61,7 @@ class NodeOperations(ResourceOperations):
             nodeOperation = operations.NodeStopOperation()
         elif operation == "poweroff":
             nodeOperation = operations.NodePoweroffOperation()
-        elif operation == "mark_node_failure":
+        elif operation == const.MARK_NODE_FAILURE:
             nodeOperation = operations.NodeMarkFailure()
         if nodeOperation is None:
             raise InvalidRequest(f"Node does not support {operation} operation.")

@@ -210,7 +210,7 @@ class NodeMarkFailure(Operation):
         arguments = kwargs.get('arguments', "")
         node_id = arguments['id']
         health_attrs = {
-            f'{HealthAttr.SOURCE}': 'csm',
+            f'{HealthAttr.SOURCE}': const.CSM_COMPONENT_NAME,
             f'{HealthAttr.CLUSTER_ID}': cluster_id ,
             f'{HealthAttr.SITE_ID}': const.NOT_DEFINED,
             f'{HealthAttr.RACK_ID}': const.NOT_DEFINED,
@@ -218,7 +218,7 @@ class NodeMarkFailure(Operation):
             f'{HealthAttr.NODE_ID}': node_id,
             f'{HealthAttr.RESOURCE_TYPE}':const.NODE,
             f'{HealthAttr.RESOURCE_ID}': node_id,
-            f'{HealthAttr.RESOURCE_STATUS}': 'failed',
+            f'{HealthAttr.RESOURCE_STATUS}': const.FAILED,
             f'{HealthAttr.SPECIFIC_INFO}': ''
             }
         return HealthEvent(**health_attrs).json

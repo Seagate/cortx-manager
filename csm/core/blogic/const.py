@@ -650,6 +650,7 @@ SHUTDOWN = "shutdown"
 START = "start"
 STOP = "stop"
 ONLINE = "online"
+FAILED = 'failed'
 RESOURCE_NAME = "resource_name"
 REPLACE_NODE = "replace_node"
 REPLACE_NODE_STATUS = "replace_node_status"
