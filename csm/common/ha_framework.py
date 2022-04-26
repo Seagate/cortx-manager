@@ -13,10 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys
 import os
 import time
-import crypt
 from importlib import import_module
 from csm.common.errors import CsmNotFoundError, InvalidRequest
 from csm.common.process import SimpleProcess
@@ -30,16 +28,29 @@ from cortx.utils.log import Log
 
 
 class HAFramework:
+    """Base class that enables client interaction with the HA framework."""
+
     def __init__(self, resource_agents):
+        """
+        Initialize HA framework.
+
+        :param resource_agents: list of resource agents.
+        :returns: None.
+        """
         self._resource_agents = resource_agents
 
     def init(self, force_flag):
-        _results = []
+        """
+        HA framework's 'init' operation.
+
+        :param force_flag: forcefully repeat 'init'.
+        :returns: None.
+        """
         if self.get_status() != 'up':
             raise Exception('Error: HA Framework is not initalized ...')
         for ra in self._resource_agents.values():
             if not ra.init(force_flag):
-                raise Exception('Error: initalizing resource agent %s' %ra)
+                raise Exception('Error: initalizing resource agent %s' % ra)
         return True
 
     def failover(self):
@@ -54,8 +65,9 @@ class HAFramework:
     def get_status(self):
         pass
 
+
 class CortxHAFramework(HAFramework):
-    def __init__(self, resource_agents = None):
+    def __init__(self, resource_agents=None):
         super(CortxHAFramework, self).__init__(resource_agents)
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
         self._cluster_manager = None
@@ -64,10 +76,10 @@ class CortxHAFramework(HAFramework):
     def get_nodes(self):
         """Return the status of Cortx HA Cluster/Nodes."""
         online = False
-        _live_node_cmd = const.CORTXHA_CLUSTER.format(command = 'status')
+        _live_node_cmd = const.CORTXHA_CLUSTER.format(command='status')
         Log.debug(f"executing command :- {_live_node_cmd}")
         _proc = SimpleProcess(_live_node_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines = True)
+        _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc not in [0, 1]:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
                 _live_node_cmd, _rc, _err))
@@ -80,35 +92,37 @@ class CortxHAFramework(HAFramework):
         """Put node on standby node for maintenance use."""
         try:
             _start_cmd = const.HCTL_NODE.format(
-                command = const.CORTXHA_CLUSTER.format(command="start"))
+                command=const.CORTXHA_CLUSTER.format(command="start"))
             Log.debug(f"executing command :-  {_start_cmd}")
             _proc = SimpleProcess(_start_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc not in [0, 1]:
                 raise Exception(_err)
             return {"message": const.STATE_CHANGE.format(node="cluster",
-                                                          state='start')}
+                                                         state='start')}
         except Exception as e:
-            raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
+            raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
 
     def shutdown(self, node):
         """Shutdown the current Cluster or Node."""
         _command = "{CSM_PATH}/scripts/cortxha_shutdown_cron.sh"
-        _cluster_shutdown_cmd = _command.format(CSM_PATH = const.CSM_PATH)
+        _cluster_shutdown_cmd = _command.format(CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
                                       "MAINTENANCE>shutdown_cron_time")
         Log.info(f"Setting Cron Command with args ->  user : {self._user}")
         cron_job_obj = CronJob(self._user)
         cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
-        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} current system time {time.asctime()}")
+        err_msg = (f"Setting Shutdown Cron at time -> {str(cron_time)}"
+                   f"current system time {time.asctime()}")
+        Log.info(err_msg)
         cron_job_obj.create_new_job(_cluster_shutdown_cmd,
                                     const.SHUTDOWN_COMMENT, cron_time)
         return {
             "message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
 
-    def get_system_health(self, element='cluster', depth: int=1, **kwargs):
-        if self._cluster_manager is None or \
-            not hasattr(self._cluster_manager, "get_system_health"):
+    def get_system_health(self, element='cluster', depth: int = 1, **kwargs):
+        has_system_health = hasattr(self._cluster_manager, "get_system_health")
+        if self._cluster_manager is None or not has_system_health:
             self._init_cluster_manager()
 
         self._validate_resource(element)
@@ -131,14 +145,14 @@ class CortxHAFramework(HAFramework):
         return parsed_system_health[const.OUTPUT_LITERAL]
 
     def get_cluster_status(self, node_id):
-        if self._cluster_manager is None or \
-            not hasattr(self._cluster_manager, "get_system_health"):
+        has_system_health = hasattr(self._cluster_manager, "get_system_health")
+        if self._cluster_manager is None or not has_system_health:
             self._init_cluster_manager()
 
         cluster_status_resp = None
         try:
             cluster_status_resp_json = self._cluster_manager.node_controller\
-                                                    .check_cluster_feasibility(node_id)
+                .check_cluster_feasibility(node_id)
             # TODO: Remove the statement below when delimiter issue is
             # fixed in cortx-utils.
             Conf.init(delim='>')
@@ -163,17 +177,17 @@ class CortxHAFramework(HAFramework):
         return result
 
     def process_cluster_operation(self, resource, operation, **arguments):
-        if self._cluster_manager is None or \
-            not hasattr(self._cluster_manager, "get_system_health"):
+        has_system_health = hasattr(self._cluster_manager, "get_system_health")
+        if self._cluster_manager is None or not has_system_health:
             self._init_cluster_manager()
 
         self._validate_resource(resource)
         Log.debug(f"HA Framework - Cluster Operation: "
-                    f"Requesting {operation} operation on {resource} with "
-                    f"arguments {arguments}.")
+                  f"Requesting {operation} operation on {resource} with "
+                  f"arguments {arguments}.")
         ResourceOperationsFactory.get_operations_by_resource(resource)\
-                                    .get_operation(operation)\
-                                    .process(self._cluster_manager, **arguments)
+            .get_operation(operation)\
+            .process(self._cluster_manager, **arguments)
         # TODO: Remove the statement below when delimiter issue is
         # fixed in cortx-utils.
         Conf.init(delim='>')
@@ -186,11 +200,12 @@ class CortxHAFramework(HAFramework):
 
     def _init_cluster_manager(self):
         Log.info("Initializing CortxClusterManager")
-        cortx_cluster_manager = import_module(f'ha.core.cluster.cluster_manager')
-        ha_system_health_const = import_module(f'ha.core.system_health.const')
+        cortx_cluster_manager = import_module('ha.core.cluster.cluster_manager')
+        ha_system_health_const = import_module('ha.core.system_health.const')
 
         try:
-            self._cluster_manager = cortx_cluster_manager.CortxClusterManager(default_log_enable=False)
+            self._cluster_manager = cortx_cluster_manager.CortxClusterManager(
+                default_log_enable=False)
             self._cluster_elements = ha_system_health_const.CLUSTER_ELEMENTS
         except Exception as e:
             err_msg = f"Error instantiating CortxClusterManager: {e}"
@@ -203,11 +218,11 @@ class CortxHAFramework(HAFramework):
                 unsupported_resource = False
                 break
 
-        if unsupported_resource == True:
+        if unsupported_resource:
             raise CsmNotFoundError(f"Resource {resource} not found.")
 
     def _validate_system_health_response(self, system_health):
-        if system_health == None:
+        if system_health is None:
             raise Exception(const.HEALTH_FETCH_ERR_MSG)
 
         if system_health[const.STATUS_LITERAL] == const.STATUS_FAILED:
@@ -232,14 +247,14 @@ class PcsHAFramework(HAFramework):
                 Offline:
         """
         _live_node_cmd = const.HCTL_NODE.format(command='status',
-                        user=self._user, pwd=self._password)
+                                                user=self._user, pwd=self._password)
         Log.debug(f"executing command :- "
-              f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
+                  f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
         _proc = SimpleProcess(_live_node_cmd)
         _output, _err, _rc = _proc.run(universal_newlines=True)
         if _rc != 0:
             raise Exception("Failed: Command: %s Returncode: %s Error: %s"
-                            %(_live_node_cmd, _rc, _err))
+                            % (_live_node_cmd, _rc, _err))
         return {"node_status": JsonMessage(_output.strip()).load()}
 
     def make_node_active(self, node):
@@ -250,17 +265,17 @@ class PcsHAFramework(HAFramework):
             _command = 'unstandby '
             _command = f"{_command } --all" if node == "all" else f"{_command } {node}"
             Log.debug(f"executing command :-  "
-              f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
+                      f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
             _standby_cmd = const.HCTL_NODE.format(command=_command,
-                          user=self._user, pwd=self._password)
+                                                  user=self._user, pwd=self._password)
             _proc = SimpleProcess(_standby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
                 raise Exception(_err)
             node = "all nodes" if node == "all" else node
-            return { "message": const.STATE_CHANGE.format(node=node, state='active')}
+            return {"message": const.STATE_CHANGE.format(node=node, state='active')}
         except Exception as e:
-            raise Exception("Failed to put %s on active state. Error: %s" %(node,e))
+            raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
 
     def make_node_passive(self, node):
         """
@@ -270,18 +285,18 @@ class PcsHAFramework(HAFramework):
             _command = 'standby '
             _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
             Log.debug(f"executing command :-  "
-              f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
+                      f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
 
             _unstandby_cmd = const.HCTL_NODE.format(command=_command,
-                          user=self._user, pwd=self._password)
+                                                    user=self._user, pwd=self._password)
             _proc = SimpleProcess(_unstandby_cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _rc != 0:
                 raise Exception(_err)
             node = "all nodes" if node == "all" else node
-            return { "message": const.STATE_CHANGE.format(node=node, state='passive')}
+            return {"message": const.STATE_CHANGE.format(node=node, state='passive')}
         except Exception as e:
-            raise Exception("Failed to remove %s from passive state. Error: %s" %(node, e))
+            raise Exception("Failed to remove %s from passive state. Error: %s" % (node, e))
 
     def get_status(self):
         """
@@ -298,16 +313,18 @@ class PcsHAFramework(HAFramework):
         :return:
         """
         _command = "{CSM_PATH}/scripts/shutdown_cron.sh -u {user} -p {pwd} -n {node}"
-        _cluster_shutdown_cmd = _command.format(node=node,
-                          user=self._user, pwd=self._password, CSM_PATH=const.CSM_PATH)
+        _cluster_shutdown_cmd = _command.format(node=node, user=self._user, pwd=self._password,
+                                                CSM_PATH=const.CSM_PATH)
         shutdown_cron_time = Conf.get(const.CSM_GLOBAL_INDEX,
-                                       "MAINTENANCE>shutdown_cron_time")
+                                      "MAINTENANCE>shutdown_cron_time")
         Log.info(f"Setting Cron Command with args -> node : {node}, user : {self._user}")
         cron_job_obj = CronJob(self._user)
         cron_time = cron_job_obj.create_run_time(seconds=shutdown_cron_time)
-        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} current system time {time.asctime()}")
+        Log.info(f"Setting Shutdown Cron at time -> {str(cron_time)} "
+                 f"current system time {time.asctime()}")
         cron_job_obj.create_new_job(_cluster_shutdown_cmd, const.SHUTDOWN_COMMENT, cron_time)
         return {"message": f"Node shutdown will begin in {shutdown_cron_time} seconds."}
+
 
 class ResourceAgent:
     def __init__(self, resources):
@@ -324,6 +341,7 @@ class ResourceAgent:
 
     def is_available(self):
         pass
+
 
 class PcsResourceAgent(ResourceAgent):
     def __init__(self, resources):
@@ -349,12 +367,13 @@ class PcsResourceAgent(ResourceAgent):
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _err != '':
                 raise Exception("Failed: Command: %s Error: %s Returncode: %s"
-                                %(_delete_res_cmd, _err, _rc))
+                                % (_delete_res_cmd, _err, _rc))
 
     def _ra_init(self):
         self._cmd_list = []
-        self._resource_file = "/var/tmp/resource.conf"
-        if not os.path.exists("/var/tmp"): os.makedirs("/var/tmp")
+        self._resource_file = "/var/csm/ha/resource-loaded.conf"
+        if not os.path.exists("/var/csm/ha"):
+            os.makedirs("/var/csm/ha")
         self._cmd_list.append("pcs cluster cib " + self._resource_file)
 
     def _init_resource(self, resource, service, provider, interval, timeout):
@@ -367,21 +386,18 @@ class PcsResourceAgent(ResourceAgent):
 
     def _init_constraint(self, score):
         # Configure colocation
-        self._cmd_list.append("pcs -f " + self._resource_file +\
-            " constraint colocation set " + ' '.join(self._resources))
-
+        self._cmd_list.append(f"pcs -f {self._resource_file} constraint "
+                              f"colocation set {' '.join(self._resources)}")
         # Configure update
-        self._cmd_list.append("pcs -f " + self._resource_file +\
-            " constraint order set " + ' '.join(self._resources))
+        self._cmd_list.append(f"pcs -f {self._resource_file} constraint "
+                              f"order set {' '.join(self._resources)}")
 
         # Configure score
         for resource in self._resources:
-            self._cmd_list.append("pcs -f " + self._resource_file +\
-                " constraint location " + resource + " prefers " +\
-                self._primary + "=" + score)
-            self._cmd_list.append("pcs -f " + self._resource_file +\
-                " constraint location " + resource + " prefers " +\
-                self._secondary + "=" + score)
+            self._cmd_list.append(f'pcs -f {self._resource_file} constraint location {resource} '
+                                  f'prefers {self._primary}={score}')
+            self._cmd_list.append(f'pcs -f {self._resource_file} constraint location {resource} '
+                                  f'prefers {self._secondary}={score}')
 
     def _execute_config(self):
         self._cmd_list.append("pcs cluster cib-push " + self._resource_file)
@@ -389,4 +405,4 @@ class PcsResourceAgent(ResourceAgent):
             _proc = SimpleProcess(cmd)
             _output, _err, _rc = _proc.run(universal_newlines=True)
             if _err != '':
-                raise Exception("Failed: Command: %s Error: %s Returncode: %s" %(cmd, _err, _rc))
+                raise Exception("Failed: Command: %s Error: %s Returncode: %s" % (cmd, _err, _rc))
