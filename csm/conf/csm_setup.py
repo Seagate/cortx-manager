@@ -26,8 +26,9 @@ class CsmSetupCommand:
         Provide cli to setup csm. Create user for csm to allow basic
         permission like log, bundle path.
     """
+
     def __init__(self, argv):
-        ''' Check csm setup command and initialize '''
+        """Check csm setup command and initialize."""
         self._args = argv
         self._args[0] = 'csm_setup'
         self._validate()
@@ -37,13 +38,12 @@ class CsmSetupCommand:
                 level=const.LOG_LEVEL)
 
     def _validate(self):
-        ''' Validate setup command '''
-
+        """Validate setup command."""
         if len(self._args) < 2:
             raise Exception('Usage: csm_setup -h')
 
     def _get_command(self):
-        ''' Parse csm setup command '''
+        """Parse csm setup command."""
         parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
@@ -58,7 +58,7 @@ class CsmSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        ''' Parse args for csm_setup and execute cmd to print output '''
+        """Parse args for csm_setup and execute cmd to print output"""
         self._cmd = self._get_command()
         obj = CliClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))

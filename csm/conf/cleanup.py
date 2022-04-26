@@ -23,11 +23,10 @@ from csm.conf.setup import CsmSetupError, Setup
 from cortx.utils.validator.error import VError
 
 class Cleanup(Setup):
-    """
-    Delete all the CSM generated files and folders
-    """
+    """Perform cleanup operation for csm_setup."""
 
     def __init__(self):
+        """Csm_setup cleanup operation initialization."""
         super(Cleanup, self).__init__()
         Log.info("Triggering Cleanup for CSM.")
 

@@ -14,21 +14,15 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import pwd
-import grp
-import errno
 import aiohttp
 from cortx.utils.validator.v_consul import ConsulV
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from cortx.utils.validator.error import VError
-from cortx.utils.validator.v_path import PathV
-from cortx.utils.validator.v_pkg import PkgV
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, ResourceExist
 import traceback
-from csm.common.payload import Text
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
@@ -37,7 +31,10 @@ client = None
 
 
 class Setup:
+    """Base class for csm_setup operations."""
+
     def __init__(self):
+        """Setup init."""
         self._user = None
         self._uid = self._gid = -1
         self._setup_info = dict()
@@ -73,7 +70,7 @@ class Setup:
 
     def load_csm_config_indices(self):
         set_config_flag = False
-        protocol, consul_host, consul_port, secret, endpoint = self._get_consul_config()
+        _, consul_host, consul_port, _, _ = self._get_consul_config()
         if consul_host and consul_port:
             try:
                 ConsulV().validate_service_status(consul_host,consul_port)
@@ -97,16 +94,14 @@ class Setup:
             set_config_flag = True
 
     def _copy_base_configs(self):
-        Log.info(f"Copying Csm base configurations to destination indices")
+        Log.info("Copying Csm base configurations to destination indices")
         Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
         Conf.load("DATABASE_SOURCE_CONF_INDEX",f"yaml://{const.DB_SOURCE_CONF}")
         Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
         Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
 
     def load_default_config(self):
-        """
-        Load default configurations for csm.
-        """
+        """Load default configurations for csm."""
         # Load general default configurations for csm.
         Conf.load(const.CSM_DEFAULT_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_CONF}")
@@ -139,7 +134,7 @@ class Setup:
     async def erase_index(collection, url, method, payload=None):
         Log.info(f"Url: {url}")
         try:
-            response, headers, status = await Setup.request(url, method, payload)
+            response, _, status = await Setup.request(url, method, payload)
             if status != 200:
                 Log.error(f"Unable to delete collection: {collection}")
                 Log.error(f"Response: {response}")
@@ -210,14 +205,13 @@ class Setup:
         return csm_user_pass
 
     async def _create_cluster_admin(self, force_action=False):
-        '''
+        """
         Create Cluster admin using CSM User managment.
-        Username, Password, Email will be obtaineed from Confstore
-        '''
+        Username, Password, Email will be obtaineed from Confstore.
+        """
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-        from csm.common.conf import Security
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
                                     const.CSM_AGENT_MGMT_ADMIN_KEY)
@@ -264,7 +258,7 @@ class Setup:
             await usr_service.create_cluster_admin(cluster_admin_user,
                                                 cluster_admin_secret,
                                                 cluster_admin_emailid)
-        except ResourceExist as ex:
+        except ResourceExist:
             Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
     def _decrypt_secret(self, secret, cluster_id, decryption_key):

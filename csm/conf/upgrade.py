@@ -22,10 +22,10 @@ from csm.conf.setup import Setup, CsmSetupError
 from cortx.utils.kv_store.error import KvError
 
 class Upgrade(Setup):
-    """
-    Perform upgrade operations for csm
-    """
+    """Perform upgrade operation for csm_setup."""
+
     def __init__(self):
+        """Csm_setup upgrade operation initialization."""
         super(Upgrade, self).__init__()
 
     async def execute(self, command):

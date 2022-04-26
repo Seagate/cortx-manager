@@ -13,21 +13,16 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-
-import crypt
 import os
 from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
 from cortx.utils.security.certificate import Certificate
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
-from cortx.utils.validator.v_pkg import PkgV
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.payload import Text
-from cortx.utils.service.service_handler import Service
 from cortx.utils.errors import SSLCertificateError
 
 class PostInstall(Setup):
@@ -89,7 +84,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        csm_protocol, csm_host, csm_port = self._parse_endpoints(
+        csm_protocol, _ = self._parse_endpoints(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\

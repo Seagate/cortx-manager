@@ -20,10 +20,10 @@ from cortx.utils.log import Log
 from csm.conf.setup import Setup
 
 class PreUpgrade(Setup):
-    """
-    Perform preinstall operations for csm
-    """
+    """Perform preupgrade operation for csm."""
+
     def __init__(self):
+        """Csm_setup preupgrade operation initialization."""
         super(PreUpgrade, self).__init__()
 
     async def execute(self, command):
