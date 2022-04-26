@@ -58,7 +58,7 @@ class CsmSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        """Parse args for csm_setup and execute cmd to print output"""
+        """Parse args for csm_setup and execute cmd to print output."""
         self._cmd = self._get_command()
         obj = CliClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))
@@ -90,6 +90,6 @@ if __name__ == '__main__':
         csm_setup = CsmSetupCommand(sys.argv)
         csm_setup.process()
         sys.exit(0)
-    except Exception as e:
+    except Exception:
         sys.stderr.write('csm_setup command failed: %s\n' %traceback.format_exc())
         sys.exit(1)

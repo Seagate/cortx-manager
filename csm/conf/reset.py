@@ -30,6 +30,8 @@ class Reset(Setup):
 
     async def execute(self, command):
         """
+        Execute csm_setup reset operation.
+
         :param command:
         :return:
         """

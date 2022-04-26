@@ -41,7 +41,8 @@ class PostInstall(Setup):
 
     async def execute(self, command):
         """
-        Execute all the Methods Required for Post Install Steps of CSM Rpm's.
+        Execute csm_setup post install operation.
+
         :param command: Command Class Object :type: class
         :return:
         """

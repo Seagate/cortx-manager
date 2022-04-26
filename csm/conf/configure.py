@@ -47,6 +47,8 @@ class Configure(Setup):
 
     async def execute(self, command):
         """
+        Execute csm_setup config operation.
+
         :param command:
         :return:
         """

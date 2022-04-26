@@ -30,6 +30,7 @@ class Init(Setup):
 
     async def execute(self, command):
         """
+        Execute csm_setup init operation.
 
         :param command:
         :return:
