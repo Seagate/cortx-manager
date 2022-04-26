@@ -119,6 +119,7 @@ class CsmAgent:
 
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
 
 
@@ -136,7 +137,7 @@ class CsmAgent:
         s3_plugin_obj = s3_plugin.RGWPlugin()
         CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
         CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
-        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService(s3_plugin_obj)
+        CsmRestApi._app[const.STORAGE_CAPACITY_USAGE_SERVICE] = StorageCapacityUsageService(s3_plugin_obj)
 
     @staticmethod
     def _get_consul_config():
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     from cortx.utils.cron import CronJob
     from cortx.utils.validator.v_consul import ConsulV
     from cortx.utils.validator.error import VError
-    from csm.core.services.storage_capacity import StorageCapacityService
+    from csm.core.services.storage_capacity import StorageCapacityService, StorageCapacityUsageService
     from csm.common.errors import CsmError, CsmInternalError
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService

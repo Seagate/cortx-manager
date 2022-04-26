@@ -100,7 +100,7 @@ class CapacityUsageView(S3BaseView):
 
     def __init__(self, request):
         """Get user level capacity usage Init."""
-        super().__init__(request, const.STORAGE_CAPACITY_SERVICE)
+        super().__init__(request, const.STORAGE_CAPACITY_USAGE_SERVICE)
 
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)

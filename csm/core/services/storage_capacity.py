@@ -19,6 +19,7 @@ from aiohttp.client import ClientSession
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import SimpleProcess,AsyncioSubprocess
 from cortx.utils.log import Log
+from csm.common.services import ApplicationService
 from csm.core.services.rgw.s3.utils import S3BaseService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
@@ -26,25 +27,18 @@ from typing import Callable, Dict, Any
 from csm.core.data.models.rgw import RgwError
 from csm.common.errors import CsmResourceNotAvailable
 
-class StorageCapacityService(S3BaseService):
+class StorageCapacityService(ApplicationService):
     """
     Service for Get disk capacity details
     """
 
-    def __init__(self, plugin):
-        """
-        Instantiation of StorageCapacityService.
-        :param plugin: s3_iam_plugin object
-        :returns: None
-        """
+    def __init__(self):
         self.capacity_error = CapacityError()
-        self._s3_iam_plugin = plugin
 
     @staticmethod
     def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
-
         :param capacity: Disk size in bytes :type: int
         :return: :type: str
         """
@@ -62,7 +56,6 @@ class StorageCapacityService(S3BaseService):
     async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
         """
         This method will return system disk details as per command
-
         :return: dict
         """
 
@@ -133,6 +126,36 @@ class StorageCapacityService(S3BaseService):
 
             return response
 
+    def _create_error(self, status: int, reason):
+        """
+        Converts a body of a failed query into orignal error object.
+        :param status: HTTP Status code.
+        :param body: parsed HTTP response (dict) with the error's decription.
+        """
+        Log.error(f"Create error body: {reason}")
+        self.capacity_error.http_status = status
+        self.capacity_error.message_id = reason
+        self.capacity_error.message = reason
+
+class CapacityError:
+        """Class that describes a non-successful result"""
+        http_status: int
+        message_id: str
+        message: str
+
+class StorageCapacityUsageService(S3BaseService):
+    """
+    Service for Get disk capacity details
+    """
+
+    def __init__(self, plugin):
+        """
+        Instantiation of StorageCapacityService.
+        :param plugin: s3_iam_plugin object
+        :returns: None
+        """
+        self._s3_iam_plugin = plugin
+
     async def get_capacity_usage(self, **request_body):
         """
         Retrieve capacity usage for specific user.
@@ -187,20 +210,3 @@ class StorageCapacityService(S3BaseService):
                     return resp
         # else Resource does not exist
         raise CsmResourceNotAvailable("Request resource is not available")
-
-    def _create_error(self, status: int, reason):
-        """
-        Converts a body of a failed query into orignal error object.
-        :param status: HTTP Status code.
-        :param body: parsed HTTP response (dict) with the error's decription.
-        """
-        Log.error(f"Create error body: {reason}")
-        self.capacity_error.http_status = status
-        self.capacity_error.message_id = reason
-        self.capacity_error.message = reason
-
-class CapacityError:
-        """Class that describes a non-successful result"""
-        http_status: int
-        message_id: str
-        message: str
