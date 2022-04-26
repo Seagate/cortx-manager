@@ -143,7 +143,7 @@ class StorageCapacityService(S3BaseService):
         resource = request_body.get(const.ARG_RESOURCE)
         Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
 
-        plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+        #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
         # Sample Responce for RGW
         plugin_response = {
             "system": {

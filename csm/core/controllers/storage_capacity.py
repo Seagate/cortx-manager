@@ -109,7 +109,7 @@ class CapacityUsageView(S3BaseView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         Log.info(f"Handling GET implementation for getting capacity usage"
                 f" for resource: {resource} with id : {id}")
-        path_params_dict = {const.id: id, const.ARG_RESOURCE:resource}
+        path_params_dict = {const.ID: id, const.ARG_RESOURCE:resource}
         with self._guard_service():
             response = await self._service.get_capacity_usage(**path_params_dict)
             return CsmResponse(response)
