@@ -178,7 +178,6 @@ CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
 
-
 # Non root user
 NON_ROOT_USER = 'csm'
 NON_ROOT_USER_KEY = 'CSM>username'
@@ -825,8 +824,6 @@ HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 CLUSTERID_KEY = 'cluster>id'
 NUM_STORAGE_SET = 'cluster>num_storage_set'
 STORAGE_SET_NODES = 'cluster>storage_set[0]>nodes'
-#index = 'index'
-#NODES_KEY = 'cluster>storage_set[{}]>nodes'.format(index)
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'

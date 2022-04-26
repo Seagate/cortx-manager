@@ -138,7 +138,7 @@ class PostInstall(Setup):
 
     def set_node_id(self):
         """
-        This Function Sets node id's for each storage set in csm configuration..
+        This Function Sets node id's for each storage set in csm configuration.
         :return:
         """
         node_ids = []

@@ -80,6 +80,5 @@ class ClusterManagementAppService(ApplicationService):
                             method=Conf.get(const.CSM_GLOBAL_INDEX,
                                                 const.MSG_BUS_NODE_FAILURE_METHOD))
             request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
-
         return request_params
 

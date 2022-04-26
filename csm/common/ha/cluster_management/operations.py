@@ -186,8 +186,14 @@ class NodeMarkFailure(Operation):
     Process mark node failure request.
     """
     def validate_arguments(self, **kwargs):
+        """
+        Validates node_id provided by user.
+        :param kwargs: arguments with node_id
+        :returns:
+        """
         arguments = kwargs.get('arguments', "")
         num_node_id = int(Conf.get(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID))
+        Log.info("Validating node_id")
         for node_id in range(num_node_id):
             valid_node_id = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{node_id}]")
             if arguments['id'] == valid_node_id:
@@ -195,6 +201,11 @@ class NodeMarkFailure(Operation):
         raise InvalidRequest('Request body is missing or invalid request body.')
 
     def _create_payload(self, **kwargs):
+        """
+        Create payload for tagging node failure.
+        :param : arguments with node_id
+        :returns:
+        """
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID)
         arguments = kwargs.get('arguments', "")
         node_id = arguments['id']
@@ -216,8 +227,10 @@ class NodeMarkFailure(Operation):
         self.validate_arguments(**kwargs)
         mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         payload = self._create_payload(**kwargs)
+        Log.debug(f"Sending node failure request with payload:{payload}")
         try:
             mssg_bus_obj.send([str(payload)])
+            Log.info("Tagging Node failure request sent successfully")
         except Exception as e:
             Log.error(f"Error while sending Mark node failure signal:{e}")
             raise CsmInternalError(f"Error while sending Mark Node failure signal:{e}")
