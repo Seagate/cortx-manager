@@ -188,8 +188,8 @@ class NodeMarkFailure(Operation):
     def validate_arguments(self, **kwargs):
         arguments = kwargs.get('arguments', "")
         num_node_id = int(Conf.get(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID))
-        for id in range(num_node_id):
-            valid_node_id = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{id}]")
+        for node_id in range(num_node_id):
+            valid_node_id = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{node_id}]")
             if arguments['id'] == valid_node_id:
                 return
         raise InvalidRequest('Request body is missing or invalid request body.')

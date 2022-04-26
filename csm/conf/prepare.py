@@ -66,11 +66,10 @@ class Prepare(Setup):
 
         self._prepare_and_validate_confstore_keys()
         self._set_secret_string_for_decryption()
+        self._set_cluster_id()
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
         self._set_db_host_addr()
-        self.set_cluster_id()
-        self.set_node_id()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -80,8 +79,7 @@ class Prepare(Setup):
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
-                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}",
-                const.STORAGE_SET_NODES:f"{const.STORAGE_SET_NODES}"
+                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}"
                 # TODO: validate following keys once available in conf-store
                 #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
                 #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
@@ -103,6 +101,13 @@ class Prepare(Setup):
                     self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
                     self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
+
+    def _set_cluster_id(self):
+        Log.info("Setting up cluster id")
+        cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
+        if not cluster_id:
+            raise CsmSetupError("Failed to fetch cluster id")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
     def _set_db_host_addr(self):
         """
@@ -161,27 +166,3 @@ class Prepare(Setup):
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
 
-    def set_cluster_id(self):
-        """
-        This Function sets cluster_id in csm configuration.
-        :return:
-        """
-        clusterid = Conf.get(const.CONSUMER_INDEX, const.CLUSTERID_KEY)
-        Log.info(f"Setting cluster id:{clusterid}")
-        Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID, clusterid)
-
-    def set_node_id(self):
-        """
-        This Function Sets node id's for each storage set in csm configuration..
-        :return:
-        """
-        node_ids = []
-        Log.info("Fetching node ids from each storage set.")
-        num_storage_sets = Conf.get(const.CONSUMER_INDEX, const.NUM_STORAGE_SET)
-        for index in range(num_storage_sets):
-            node_ids =  node_ids + Conf.get(const.CONSUMER_INDEX,
-                                            f'cluster>storage_set[{index}]>nodes')
-        Log.info("Setting node id.")
-        num_nodes = Conf.set(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID, str(len(node_ids)))
-        for id in range(len(node_ids)):
-            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{id}]", str(node_ids[id]))
