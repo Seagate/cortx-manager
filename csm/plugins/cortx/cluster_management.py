@@ -22,6 +22,7 @@ from csm.common.plugin import CsmPlugin
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
+from cortx.utils.conf_store.conf_store import Conf
 
 class ClusterManagementPlugin(CsmPlugin):
     """
@@ -55,6 +56,8 @@ class ClusterManagementPlugin(CsmPlugin):
                 process_request_resut = self._process_shutdown_signal(kwargs)
             else:
                 process_request_resut = self._process_cluster_operation(kwargs)
+        elif request == const.PROCESS_GET_RESOURCE_STATUS:
+            process_request_resut = self._process_resource_status_operation(kwargs)
         return process_request_resut
 
     def _process_cluster_operation(self, filters):
@@ -78,4 +81,36 @@ class ClusterManagementPlugin(CsmPlugin):
             "message": "Shutdown signal sent successfully."
         }
         Log.debug(f"Cluster Operation: {cluster_op_resp}")
+        return cluster_op_resp
+
+    def _process_resource_status_operation(self, kwargs):
+        id = kwargs.get(const.ARG_RESOURCE_ID, "")
+        resource = kwargs.get(const.ARG_RESOURCE, "")
+
+        # Create a URL, request body
+        base_url = Conf.get(const.CSM_GLOBAL_INDEX,const.CLUSTER_MANAGMENT_HA_SVC_ENDPOINT) + \
+            Conf.get(const.CSM_GLOBAL_INDEX,const.CLUSTER_MANAGMENT_HA_CLUSTER_API)
+        url = f"{base_url}/{resource}/{id}"
+        method = const.GET
+        expected_success_code=200
+        Log.info(f"Request {url} for Resource Status")
+
+        # Call HA API 
+        cluster_op_resp = {
+            "resource_id": id,
+            "last_updated_timestamp": "12345678",
+            "resource_status": url
+        }
+        # async with aiohttp.ClientSession() as session:
+        #     try:
+        #         response = await self.request(session, method, url, expected_success_code)
+        #     except Exception as e:
+        #         Log.error(f"Error in obtaining response from {url}: {e}")
+        #TODO : Use HttpClient to make REST Call
+
+        # Check response
+
+        # create an Error if there is
+
+        # Return response
         return cluster_op_resp

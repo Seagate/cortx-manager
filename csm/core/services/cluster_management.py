@@ -78,19 +78,11 @@ class ClusterManagementAppService(ApplicationService):
         """
         Request to get status of the resource with id
         """
-        # Create a URL, request body
-        # Call HA API
-        # Check response
-        # create an Error if there is
-        # Return response
-
-        # Directly call HA service, if there is
-        # url = 
-        # method = const.GET
-        # expected_success_code=200
-        # Log.info(f"Request {url} for Resource Status")
-        # async with aiohttp.ClientSession() as session:
-        #     try:
-        #         response = await self.request(session, method, url, expected_success_code)
-        #     except Exception as e:
-        #         Log.error(f"Error in obtaining response from {url}: {e}")
+        request_params = dict()
+        request_params[const.PLUGIN_REQUEST] = const.PROCESS_GET_RESOURCE_STATUS
+        request_params[const.ARG_RESOURCE_ID] = id
+        request_params[const.ARG_RESOURCE] = resource
+        Log.debug(f"ClusterOperationsAppService: Making plugin call with arguments: "
+                  f"{request_params}")
+        plugin_response = self._cluster_management_plugin.process_request(**request_params)
+        return plugin_response

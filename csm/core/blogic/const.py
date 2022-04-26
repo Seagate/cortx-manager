@@ -325,6 +325,7 @@ ARGUMENTS_FORMAT_FLAT = 'flat'
 ARGUMENTS_FORMAT_NESTED = 'nested'
 PROCESS_CLUSTER_OPERATION_REQ = 'process_cluster_operation'
 PROCESS_CLUSTER_STATUS_REQ = 'process_cluster_status'
+PROCESS_GET_RESOURCE_STATUS = 'process_get_resource_status'
 ShUTDOWN_SIGNAL = 'shutdown_signal'
 CLUSTER_OPERATIONS_ERR_MSG = 'Error processing cluster operation.'
 CLUSTER_STATUS_ERR_MSG = 'Error getting cluster status.'
@@ -885,6 +886,10 @@ DB_CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts'
 DB_CONSUL_CONFIG_PORT = 'databases>consul_db>config>port'
 DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
+
+# Resource status
+CLUSTER_MANAGMENT_HA_SVC_ENDPOINT ='CLUSTER_MANAGEMENT>ha_service_endpoint'
+CLUSTER_MANAGMENT_HA_CLUSTER_API ='CLUSTER_MANAGEMENT>cluster_status_api'
 
 # S3 Plugin Configurations
 S3_CLIENT_ERROR_CODES = {

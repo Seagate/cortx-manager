@@ -122,7 +122,6 @@ class ClusterResourceStatusView(CsmView):
         """
         resource = self.request.match_info["resource"]
         id = self.request.match_info["id"]
-        #TODO: should we read request body also?
         Log.debug(f" Get status for {resource} with id: {id}")
         response = await self.cluster_management_service\
                                 .get_resource_status(resource, id)
