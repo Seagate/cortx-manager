@@ -208,7 +208,7 @@ class NodeMarkFailure(Operation):
         """
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID)
         arguments = kwargs.get('arguments', "")
-        node_id = arguments['id']
+        node_id = arguments[const.ID]
         health_attrs = {
             f'{HealthAttr.SOURCE}': const.CSM_COMPONENT_NAME,
             f'{HealthAttr.CLUSTER_ID}': cluster_id ,
