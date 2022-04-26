@@ -207,7 +207,7 @@ class NodeMarkFailure(Operation):
         :returns:
         """
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID)
-        arguments = kwargs.get('arguments', "")
+        arguments = kwargs.get(const.ARG_ARGUMENTS, "")
         node_id = arguments[const.ID]
         health_attrs = {
             f'{HealthAttr.SOURCE}': const.CSM_COMPONENT_NAME,
