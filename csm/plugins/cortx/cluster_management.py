@@ -89,7 +89,7 @@ class ClusterManagementPlugin(CsmPlugin):
                                     .get_operation(operation)\
                                     .execute(None, **kwargs)
         cluster_op_resp = {
-            "message": "Mark node failure signal sent successfully."
+            "message": "Request sent successfully."
         }
         Log.debug(f"Cluster Operation: {cluster_op_resp}")
         return cluster_op_resp
