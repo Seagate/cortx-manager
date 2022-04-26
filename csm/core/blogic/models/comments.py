@@ -33,4 +33,5 @@ class CommentModel(CsmModel):
         return obj
 
     def __hash__(self):
+        """Returns hash value of the object."""
         return hash(self.comment_id)

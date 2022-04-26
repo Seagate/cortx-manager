@@ -304,6 +304,7 @@ class Setup:
 
 class CsmSetup(Setup):
     def __init__(self):
+        """Csm Setup initialization."""
         super(CsmSetup, self).__init__()
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
