@@ -21,7 +21,7 @@ please email opensource@seagate.com or cortx-questions@seagate.com.
 
 CORTX Manager provides APIs which communicate with different CORTX components and features. These APIs are consumed by CORTX Management Portal and CLI.
 
-## Get CORTX-Manager Ready! 
+## Get CORTX-Manager Ready
 
 Jump to the [CORTX-Manager Quickstart Guide](CORTXManagerQuickstartGuide.md) to set up CORTX-Manager. 
 
@@ -33,9 +33,9 @@ We take community very seriously and we are committed to creating a community bu
 
 ## Reach Out To Us
 
-- Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
-- If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
+-   Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
+-   If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
 
-## Thank You!
+## Thank You
 
 We thank you for stopping by to check out the CORTX Community. We are fully dedicated to our mission to build open source technologies that help the world save unlimited data and solve challenging data problems. Join our mission to help reinvent a data-driven world.
