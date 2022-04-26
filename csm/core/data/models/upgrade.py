@@ -13,10 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import uuid
 import datetime
 from enum import Enum
-from schematics.types import IntType, StringType, DateType, ListType, DateTimeType
+from schematics.types import StringType, DateTimeType
 from csm.core.blogic.models import CsmModel
 from cortx.utils.log import Log
 

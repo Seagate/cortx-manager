@@ -41,6 +41,6 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
 
         :param command:
         :return:
-        """ 
+        """
         # TODO: Implement post upgrade logic
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

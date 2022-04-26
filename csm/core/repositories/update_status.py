@@ -15,11 +15,11 @@
 
 import datetime
 from cortx.utils.data.db.db_provider import DataBaseProvider
-from cortx.utils.data.access.filters import Compare, And, Or
+from cortx.utils.data.access.filters import Compare
 from cortx.utils.data.access import Query, SortOrder
 from cortx.utils.log import Log
 from csm.core.data.models.upgrade import UpdateStatusEntry
-
+from csm.common.errors import CsmInternalError
 
 class UpdateStatusRepository:
     """
@@ -62,7 +62,7 @@ class UpdateStatusRepository:
         """
         # This is a workaround to delete all records - that is currently not directly
         # supported by the generic db
-        filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
+        _filter = Compare(UpdateStatusEntry.update_type, '=', update_type)
         Log.info(f"Deleting update status entry for update type {update_type}")
-        await self.db(UpdateStatusEntry).delete(filter)
+        await self.db(UpdateStatusEntry).delete(_filter)
         Log.info("Entry Deleted.")
