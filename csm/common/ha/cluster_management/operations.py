@@ -21,6 +21,8 @@ from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.event_framework.health import HealthEvent, HealthAttr
 
 class Operation(ABC):
     """
@@ -184,29 +186,38 @@ class NodeMarkFailure(Operation):
     Process mark node failure request.
     """
     def validate_arguments(self, **kwargs):
-        # TODO: Validate arguments
-        pass
+        arguments = kwargs.get('arguments', "")
+        num_node_id = int(Conf.get(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID))
+        for id in range(num_node_id):
+            valid_node_id = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{id}]")
+            if arguments['id'] == valid_node_id:
+                return
+        raise InvalidRequest('Request body is missing or invalid request body.')
+
+    def _create_payload(self, **kwargs):
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID)
+        arguments = kwargs.get('arguments', "")
+        node_id = arguments['id']
+        health_attrs = {
+            f'{HealthAttr.SOURCE}': 'csm',
+            f'{HealthAttr.CLUSTER_ID}': cluster_id ,
+            f'{HealthAttr.SITE_ID}': const.NOT_DEFINED,
+            f'{HealthAttr.RACK_ID}': const.NOT_DEFINED,
+            f'{HealthAttr.STORAGESET_ID}': const.NOT_DEFINED,
+            f'{HealthAttr.NODE_ID}': node_id,
+            f'{HealthAttr.RESOURCE_TYPE}':const.NODE,
+            f'{HealthAttr.RESOURCE_ID}': node_id,
+            f'{HealthAttr.RESOURCE_STATUS}': 'failed',
+            f'{HealthAttr.SPECIFIC_INFO}': ''
+            }
+        return HealthEvent(**health_attrs).json
 
     def execute(self, cluster_manager, **kwargs):
+        self.validate_arguments(**kwargs)
         mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
-        # TODO: Form schema and send it as a message
-        cluster_id = "get_cluster_id"
-        node_id = "get_from_req"
-        payload = {
-                    "source": "<source>",
-                    "cluster_id": cluster_id,
-                    "site_id": const.NOT_DEFINED,
-                    "rack_id": const.NOT_DEFINED,
-                    "storageset_id": const.NOT_DEFINED,
-                    "node_id": "<node_id>",
-                    "resource_type": "node",
-                    "resource_id": "<resource_id>",
-                    "resource_status": "<health_status>", # For node: "<unknown | online | degraded | offline | failed | recovering>", for cvg and disk: "<online | failed | repairing | repaired | rebalancing >"
-                    "specific_info": "{<specific_info>}" # Key/value pairs specific to resource type
-                    }
+        payload = self._create_payload(**kwargs)
         try:
-            print(payload)
-            #mssg_bus_obj.send([payload])
+            mssg_bus_obj.send([str(payload)])
         except Exception as e:
             Log.error(f"Error while sending Mark node failure signal:{e}")
             raise CsmInternalError(f"Error while sending Mark Node failure signal:{e}")

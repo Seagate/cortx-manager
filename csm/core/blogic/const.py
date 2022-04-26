@@ -823,6 +823,8 @@ RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 CLUSTERID_KEY = 'cluster>id'
+NUM_STORAGE_SET = 'cluster>num_storage_set'
+STORAGE_SET_NODES = 'cluster>storage_set[0]>nodes'
 #index = 'index'
 #NODES_KEY = 'cluster>storage_set[{}]>nodes'.format(index)
 # keys for conf file setup
@@ -869,6 +871,9 @@ MSG_BUS_CLUSTER_STOP_RETENTION_SIZE = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cl
 MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cluster_stop>retention_period_ms'
 MSG_BUS_CLUSTER_STOP_PRODUCER_ID = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cluster_stop>producer_id'
 MSG_BUS_CLUSTER_STOP_METHOD = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cluster_stop>method'
+MSG_BUS_NODE_FAILURE_MSG_TYPE = 'MESSAGEBUS>PRODUCER>NODE_OPERATIONS>tag_node_failure>message_type'
+MSG_BUS_NODE_FAILURE_PRODUCER_ID = 'MESSAGEBUS>PRODUCER>NODE_OPERATIONS>tag_node_failure>producer_id'
+MSG_BUS_NODE_FAILURE_METHOD = 'MESSAGEBUS>PRODUCER>NODE_OPERATIONS>tag_node_failure>method'
 CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
 S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
@@ -880,6 +885,7 @@ RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
 KEY_CLUSTERID = 'SYSTEM>cluster_id'
 KEY_NODE_ID = 'SYSTEM>nodes'
+NUM_NODE_ID = 'SYSTEM>num_nodes'
 # Degraded byte count
 CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
 CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT ='STORAGE_CAPACITY_MANAGMENT>hctl_service_endpoint'

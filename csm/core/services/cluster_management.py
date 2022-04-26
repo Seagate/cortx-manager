@@ -27,13 +27,6 @@ class ClusterManagementAppService(ApplicationService):
     def __init__(self, plugin, message_bus_obj):
         self._cluster_management_plugin = plugin
         self.message_bus_obj = message_bus_obj
-        self.message_bus_obj.init(type=const.PRODUCER,
-                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
-                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
-                            method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_METHOD))
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_status(self, node_id):
@@ -69,7 +62,24 @@ class ClusterManagementAppService(ApplicationService):
         request_params[const.ARG_RESOURCE] = resource
         request_params[const.ARG_OPERATION] = operation
         request_params[const.ARG_ARGUMENTS] = arguments
-        if operation == const.ShUTDOWN_SIGNAL or operation == const.MARK_NODE_FAILURE:
+        if operation == const.ShUTDOWN_SIGNAL:
+            self.message_bus_obj.init(type=const.PRODUCER,
+                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
+                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
+                            method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_CLUSTER_STOP_METHOD))
             request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
+        if operation == const.MARK_NODE_FAILURE:
+            self.message_bus_obj.init(type=const.PRODUCER,
+                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_NODE_FAILURE_PRODUCER_ID),
+                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_NODE_FAILURE_MSG_TYPE),
+                            method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_NODE_FAILURE_METHOD))
+            request_params[const.ARG_MSG_OBJ] = self.message_bus_obj
+
         return request_params
 
