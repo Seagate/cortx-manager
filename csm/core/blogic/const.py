@@ -963,5 +963,5 @@ SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
 
-# capcity usage 
+# capcity usage
 GET_CAPACITY_USAGE_OPERATION  = 'GET_CAPACITY_USAGE'

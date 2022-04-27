@@ -105,11 +105,11 @@ class CapacityUsageView(S3BaseView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        id = self.request.match_info[const.ID]
+        resource_id = self.request.match_info[const.ID]
         resource = self.request.match_info[const.ARG_RESOURCE]
         Log.info(f"Handling GET implementation for getting capacity usage"
-                f" for resource: {resource} with id : {id}")
-        path_params_dict = {const.ID: id, const.ARG_RESOURCE:resource}
+                f" for resource: {resource} with id : {resource_id}")
+        path_params_dict = {const.ID: resource_id, const.ARG_RESOURCE:resource}
         with self._guard_service():
             response = await self._service.get_capacity_usage(**path_params_dict)
             return CsmResponse(response)

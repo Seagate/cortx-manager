@@ -175,12 +175,12 @@ class StorageCapacityUsageService(S3BaseService):
                 "user":{
                     "id": "user id",
                     "size": 0000,
-                    "actual_size": 0000, 
+                    "actual_size": 0000,
                     "num_objects": 0
                 }
             }
         }
-        
+
         # TODO: Need to discuss
         # what are the expected resource? will it always inner level like user bucket node etc.
         # or can it be on first level resource like system s3 etc.
@@ -192,10 +192,10 @@ class StorageCapacityUsageService(S3BaseService):
             return resp
         else:
             for first_level_resource in plugin_response.keys():
-                # else Check on Inner level of Each Resource, 
+                # else Check on Inner level of Each Resource,
                 if resource in plugin_response[first_level_resource].keys():
                     # If resource found in sec
-                    # {key= firstLevel_resource, value = dict{key= resource, value=resp[first_level][resource]} } 
+                    # {key= firstLevel_resource, value = dict{key= resource, value=resp[first_level][resource]} }
                     resp[first_level_resource] = {resource : plugin_response[first_level_resource][resource]}
                     return resp
         # else Resource does not exist
@@ -207,9 +207,9 @@ class StorageCapacityUsageService(S3BaseService):
         :param user_id: user id whose capacity usage is fetching
         :returns: capacity usage or instance of error for negative scenarios.
         """
-        id = request_body.get(const.ID)
+        resource_id = request_body.get(const.ID)
         resource = request_body.get(const.ARG_RESOURCE)
-        Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
+        Log.debug(f"Get Capcity usage of resource: {resource} by id = {resource_id}")
 
         #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
         plugin_response = {}
