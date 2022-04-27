@@ -159,47 +159,11 @@ class StorageCapacityUsageService(S3BaseService):
         self._s3_iam_plugin = plugin
 
     async def create_response_body(self, resource, plugin_response):
-        # Map response from rgw to Csm response body
-        # Sample Responce for RGW
-        plugin_response = {
-            "system": {
-                "node": {
-                    "total": 1111,
-                    "available": 1111,
-                    "free": 1111,
-                    "degraded": {}
-                }
-            },
-            "s3":
-            {
-                "user":{
-                    "id": "user id",
-                    "size": 0000,
-                    "actual_size": 0000,
-                    "num_objects": 0
-                }
-            }
-        }
+        # TODO: Map response from rgw to Csm response body
+        Log.debug(f"Mapping response for {resource} ")
 
-        # TODO: Need to discuss
-        # what are the expected resource? will it always inner level like user bucket node etc.
-        # or can it be on first level resource like system s3 etc.
-
-        resp = {}
-        # Check on First Level, if available then return dict with Key= resource and Value = resp[key]
-        if resource in plugin_response.keys():
-            resp[resource] = plugin_response[resource]
-            return resp
-        else:
-            for first_level_resource in plugin_response.keys():
-                # else Check on Inner level of Each Resource,
-                if resource in plugin_response[first_level_resource].keys():
-                    # If resource found in sec
-                    # {key= firstLevel_resource, value = dict{key= resource, value=resp[first_level][resource]} }
-                    resp[first_level_resource] = {resource : plugin_response[first_level_resource][resource]}
-                    return resp
-        # else Resource does not exist
-        raise CsmResourceNotAvailable("Request resource is not available")
+        resp = plugin_response
+        return resp
 
     async def get_capacity_usage(self, **request_body):
         """
@@ -211,6 +175,8 @@ class StorageCapacityUsageService(S3BaseService):
         resource = request_body.get(const.ARG_RESOURCE)
         Log.debug(f"Get Capcity usage of resource: {resource} by id = {resource_id}")
 
+        # TODO: uncomment code when rgw api endpoint are available
+        # update rgw_admin_endpoint file when endpoint finalise
         #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
         plugin_response = {}
         if isinstance(plugin_response, RgwError):
