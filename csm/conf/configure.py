@@ -76,7 +76,7 @@ class Configure(Setup):
         self.set_csm_endpoint()
         self.set_s3_info()
         self.set_hax_endpoint()
-        self.set_ha_endpoint()
+        # self.set_ha_endpoint()
         self.create_topics()
         try:
             await self._create_cluster_admin(self.force_action)
