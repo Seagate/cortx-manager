@@ -15,6 +15,7 @@
 
 import asyncio
 import aiohttp
+from aiohttp.client import ClientSession
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 

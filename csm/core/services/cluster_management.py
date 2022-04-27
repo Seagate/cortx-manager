@@ -74,13 +74,13 @@ class ClusterManagementAppService(ApplicationService):
         return request_params
 
     @Log.trace_method(Log.DEBUG)
-    def get_resource_status(self, resource, id):
+    def get_resource_status(self, resource, resource_id):
         """
         Request to get status of the resource with id
         """
         request_params = dict()
         request_params[const.PLUGIN_REQUEST] = const.PROCESS_GET_RESOURCE_STATUS
-        request_params[const.ARG_RESOURCE_ID] = id
+        request_params[const.ARG_RESOURCE_ID] = resource_id
         request_params[const.ARG_RESOURCE] = resource
         Log.debug(f"ClusterOperationsAppService: Making plugin call with arguments: "
                   f"{request_params}")
