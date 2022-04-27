@@ -15,15 +15,13 @@
 
 import sys, os
 import time
-import asyncio
 import requests
 import traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from cortx.utils.conf_store.conf_store import Conf
-from csm.test.common import TestFailed, TestProvider, Const
+from csm.test.common import TestFailed
 from csm.core.blogic import const
 from cortx.utils.log import Log
-from csm.common.errors import CsmError
 
 def init(args):
     pass
@@ -49,7 +47,7 @@ def test1(args):
         resp = process_request(url)
         if resp.status_code != 401:
             raise
-    except Exception as e:
+    except Exception:
         raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
 
 def test2(args):

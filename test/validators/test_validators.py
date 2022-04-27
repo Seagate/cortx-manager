@@ -13,11 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from marshmallow import (Schema, fields, ValidationError, validate,
-                         validates_schema)
+from marshmallow import (Schema, fields, ValidationError)
 from csm.core.controllers import  validators
-from cortx.utils.log import Log
-import os
 import json
 import unittest
 from csm.test.common import Const
@@ -38,7 +35,7 @@ class TestSchema(Schema):
     comments = fields.Str(validate=[validators.CommentsValidator()])
     port = fields.Int(validate=[validators.PortValidator()])
     bucket_name = fields.Str(validate=[validators.BucketNameValidator()])
-    
+
 test_schema_obj = TestSchema()
 
 def test_1(args):
@@ -58,6 +55,5 @@ def test_2(args):
             print(f"{e}")
 
 test_list = [test_1, test_2]
-    
-    
+
     
