@@ -23,6 +23,7 @@ from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.http import HttpClient, HttpClientException
 
 class ClusterManagementPlugin(CsmPlugin):
     """
@@ -34,6 +35,8 @@ class ClusterManagementPlugin(CsmPlugin):
         super().__init__()
 
         self._ha = ha
+        # self._rgw_admin_client = HttpClient(host, port, tls_enabled, ca_bundle, timeout)
+        # config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT
 
     def init(self, **kwargs):
         pass
@@ -92,25 +95,21 @@ class ClusterManagementPlugin(CsmPlugin):
             Conf.get(const.CSM_GLOBAL_INDEX,const.CLUSTER_MANAGMENT_HA_CLUSTER_API)
         url = f"{base_url}/{resource}/{id}"
         method = const.GET
-        expected_success_code=200
-        Log.info(f"Request {url} for Resource Status")
+        # expected_success_code=200
+        Log.info(f"Request {method}:{url} for Resource Status")
 
-        # Call HA API 
-        cluster_op_resp = {
-            "resource_id": id,
-            "last_updated_timestamp": "12345678",
-            "resource_status": url
-        }
-        # async with aiohttp.ClientSession() as session:
-        #     try:
-        #         response = await self.request(session, method, url, expected_success_code)
-        #     except Exception as e:
-        #         Log.error(f"Error in obtaining response from {url}: {e}")
-        #TODO : Use HttpClient to make REST Call
-
-        # Check response
-
-        # create an Error if there is
+        # Call Rest call
+        async with aiohttp.ClientSession() as session:
+            try:
+                # response = await self.request(session, method, url, expected_success_code)
+                #TODO: For testing the flow Sample response:- cluster_op_resp
+                cluster_op_resp = {
+                    "resource_id": id,
+                    "last_updated_timestamp": "12345678",
+                    "resource_status": url
+                }
+            except Exception as e:
+                Log.error(f"Error in obtaining response from {url}: {e}")
 
         # Return response
         return cluster_op_resp
