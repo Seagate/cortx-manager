@@ -36,8 +36,6 @@ class ClusterManagementPlugin(CsmPlugin):
         super().__init__()
 
         self._ha = ha
-        # self._rgw_admin_client = HttpClient(host, port, tls_enabled, ca_bundle, timeout)
-        # config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT
 
     def init(self, **kwargs):
         pass
