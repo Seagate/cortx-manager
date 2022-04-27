@@ -102,8 +102,8 @@ class ClusterManagementPlugin(CsmPlugin):
         async with aiohttp.ClientSession() as session:
             try:
                 # response = await self.request(session, method, url, expected_success_code)
-                #TODO: For testing the flow Sample response:- cluster_op_resp
-                cluster_op_resp = {
+                #TODO: For testing the flow Sample response:- response
+                response = {
                     "resource_id": id,
                     "last_updated_timestamp": "12345678",
                     "resource_status": url
@@ -111,5 +111,4 @@ class ClusterManagementPlugin(CsmPlugin):
             except Exception as e:
                 Log.error(f"Error in obtaining response from {url}: {e}")
 
-        # Return response
-        return cluster_op_resp
+        return response
