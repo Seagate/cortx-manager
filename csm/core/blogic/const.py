@@ -820,8 +820,8 @@ RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
+HA_ENDPOINT_KEY = 'cortx>ha>service>endpoints'
 # keys for conf file setup
-K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
 S3_DATA_HOST= 'S3>data>host'
 S3_DATA_PORT = 'S3>data>port'
