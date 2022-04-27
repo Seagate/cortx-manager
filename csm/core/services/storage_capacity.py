@@ -39,6 +39,7 @@ class StorageCapacityService(ApplicationService):
     def _integer_to_human(capacity: int, unit:str, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> str:
         """
         Method to dynamically convert byte data in KB/MB/GB ... YB.
+
         :param capacity: Disk size in bytes :type: int
         :return: :type: str
         """
@@ -56,6 +57,7 @@ class StorageCapacityService(ApplicationService):
     async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
         """
         This method will return system disk details as per command
+
         :return: dict
         """
 
@@ -156,17 +158,8 @@ class StorageCapacityUsageService(S3BaseService):
         """
         self._s3_iam_plugin = plugin
 
-    async def get_capacity_usage(self, **request_body):
-        """
-        Retrieve capacity usage for specific user.
-        :param user_id: user id whose capacity usage is fetching
-        :returns: capacity usage or instance of error for negative scenarios.
-        """
-        id = request_body.get(const.ID)
-        resource = request_body.get(const.ARG_RESOURCE)
-        Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
-
-        #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+    async def create_response_body(self, resource, plugin_response):
+        # Map response from rgw to Csm response body
         # Sample Responce for RGW
         plugin_response = {
             "system": {
@@ -180,17 +173,14 @@ class StorageCapacityUsageService(S3BaseService):
             "s3":
             {
                 "user":{
-                    "id": id,
+                    "id": "user id",
                     "size": 0000,
                     "actual_size": 0000, 
                     "num_objects": 0
                 }
             }
         }
-
-        if isinstance(plugin_response, RgwError):
-            self._handle_error(plugin_response)
-
+        
         # TODO: Need to discuss
         # what are the expected resource? will it always inner level like user bucket node etc.
         # or can it be on first level resource like system s3 etc.
@@ -210,3 +200,20 @@ class StorageCapacityUsageService(S3BaseService):
                     return resp
         # else Resource does not exist
         raise CsmResourceNotAvailable("Request resource is not available")
+
+    async def get_capacity_usage(self, **request_body):
+        """
+        Retrieve capacity usage for specific user.
+        :param user_id: user id whose capacity usage is fetching
+        :returns: capacity usage or instance of error for negative scenarios.
+        """
+        id = request_body.get(const.ID)
+        resource = request_body.get(const.ARG_RESOURCE)
+        Log.debug(f"Get Capcity usage of resource: {resource} by id = {id}")
+        
+        #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+        plugin_response = {}
+        if isinstance(plugin_response, RgwError):
+            self._handle_error(plugin_response)
+
+        return await self.create_response_body(resource, plugin_response)

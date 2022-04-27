@@ -92,7 +92,7 @@ class CapacityManagementView(CsmView):
                                    resp.message)
         return resp
 
-@CsmView._app_routes.view("/api/v2/capacity/status/{resource}/{id}")
+@CsmView._app_routes.view("/api/v2/capacity/{resource}/{id}")
 class CapacityUsageView(S3BaseView):
     """
     GET REST API view implementation for getting capacity usage for specific user
