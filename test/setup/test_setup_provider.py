@@ -13,7 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
+import sys, os, time
 import traceback
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
