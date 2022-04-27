@@ -65,7 +65,7 @@ def test2(args):
         resp = process_request(url)
         if resp.status_code != 200:
             raise
-    except Exception as e:
+    except Exception:
         raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
 test_list = [ test1 ]

@@ -13,13 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
-
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
-from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 
