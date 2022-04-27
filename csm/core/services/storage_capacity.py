@@ -25,7 +25,6 @@ from csm.core.blogic import const
 from csm.common.errors import CsmInternalError, CsmError
 from typing import Callable, Dict, Any
 from csm.core.data.models.rgw import RgwError
-from csm.common.errors import CsmResourceNotAvailable
 
 class StorageCapacityService(ApplicationService):
     """
