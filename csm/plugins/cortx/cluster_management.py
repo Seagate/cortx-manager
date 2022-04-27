@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
+import aiohttp
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
@@ -23,7 +24,6 @@ from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.http import HttpClient, HttpClientException
 
 class ClusterManagementPlugin(CsmPlugin):
     """
