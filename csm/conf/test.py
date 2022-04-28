@@ -44,7 +44,7 @@ class Test(Setup):
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
-        self._validate_csm_gui_test_rpm()
+        Test._validate_csm_gui_test_rpm()
         self._execute_test_plans(command)
 
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
@@ -61,7 +61,8 @@ class Test(Setup):
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
-    def _validate_csm_gui_test_rpm(self):
+    @staticmethod
+    def _validate_csm_gui_test_rpm():
         try:
             Log.info("Validating cortx-csm_test rpm")
             PkgV().validate("rpms", ["cortx-csm_test"])

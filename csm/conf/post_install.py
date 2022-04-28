@@ -24,6 +24,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.errors import SSLCertificateError
+from csm.common.service_urls import ServiceUrls
 
 class PostInstall(Setup):
     """
@@ -51,7 +52,7 @@ class PostInstall(Setup):
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             self.load_csm_config_indices()
-            self._copy_base_configs()
+            Setup.copy_base_configs()
 
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -85,7 +86,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        csm_protocol, *_ = self._parse_endpoints(
+        csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\

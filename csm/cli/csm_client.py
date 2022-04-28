@@ -24,6 +24,7 @@ from csm.core.blogic import const
 from cortx.utils.schema.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
 from cortx.utils.cli_framework.client import Client
+from cortx.utils.log import Log
 
 
 class CsmApiClient(Client):
@@ -68,7 +69,8 @@ class CsmRestClient(Client):
         self.not_authorized = "You are not authorized to run cli commands."
         self.could_not_parse = "Could not parse the response"
 
-    def _failed(self, response):
+    @staticmethod
+    def _failed(response):
         """
         This check if response failed it will return true else false
         """
@@ -88,7 +90,7 @@ class CsmRestClient(Client):
             # during login we want to logout on  any error
             return False
         token = headers.get('Authorization', "").split(' ')
-        if self._failed(response) and len(token) != 2 and token[0] != 'Bearer':
+        if CsmRestClient._failed(response) and len(token) != 2 and token[0] != 'Bearer':
             return False
         return token[1]
 
@@ -97,10 +99,10 @@ class CsmRestClient(Client):
         method = const.POST
         async with aiohttp.ClientSession(headers=headers) as session:
             try:
-                response, _ = await self.process_direct_request(url, session,
+                _ = await self.process_direct_request(url, session,
                                                                   method, {}, {})
-            except:
-                pass
+            except Exception as e:
+                Log.warn(f"Error while performing logout operation: {e}")
         return True
 
     async def permissions(self, headers):
@@ -109,12 +111,12 @@ class CsmRestClient(Client):
         async with aiohttp.ClientSession(headers=headers) as session:
             response, _ = await self.process_direct_request(url, session,
                                                             method, {}, {})
-        if self._failed(response):
+        if CsmRestClient._failed(response):
             raise CsmError(errno.EACCES, 'Could not get permissions from server,'
                                          ' check session')
         return response.output()['permissions']
 
-    async def call(self, cmd, headers={}):
+    async def call(self, cmd, headers=None):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
         if status == 401:

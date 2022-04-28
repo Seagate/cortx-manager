@@ -33,7 +33,7 @@ class Upgrade(Setup):
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             self.load_csm_config_indices()
-            self.load_default_config()
+            Setup.load_default_config()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store, Unable to load configurations")

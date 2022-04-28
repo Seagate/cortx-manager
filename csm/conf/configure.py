@@ -18,6 +18,7 @@ import time
 from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json, Text
+from csm.common.service_urls import ServiceUrls
 from ipaddress import ip_address
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -129,7 +130,7 @@ class Configure(Setup):
     def set_csm_endpoint(self):
         Log.info("Setting csm endpoint in csm config")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
-        csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
+        csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
@@ -170,7 +171,7 @@ class Configure(Setup):
 
     def _get_hax_endpoint(self, endpoints):
         for endpoint in endpoints:
-            protocol, host, port = self._parse_endpoints(endpoint)
+            protocol, host, port = ServiceUrls.parse_url(endpoint)
             if protocol == "https" or protocol == "http":
                 return endpoint
 
