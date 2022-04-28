@@ -24,19 +24,18 @@ USERS_MSG_USER_NOT_FOUND = "users_not_found"
 
 
 class BasePermissionsView(CsmView):
-    """
-    Base class for permissions handling
-    """
+    """Base class for permissions handling."""
 
     def __init__(self, request):
         super(BasePermissionsView, self).__init__(request)
 
     def transform_permissions(self, permissions: PermissionSet) -> dict:
         """
-        Transform our internal representation of the permission set
-        to the format expected by the UI, e.g.
+        Transform internal representation of the permission set to the format expected by the UI.
+
+        E.g.
         'alert': ['list, 'update']
-        to 
+        to
         'alert': {'list': True, 'update': True}
         """
         mod_permissions = {}
@@ -61,11 +60,10 @@ class CurrentPermissionsView(BasePermissionsView):
     """
     @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
-        """
-        Calling Security get permissions Get Method
-        """
-        permissions = self.transform_permissions(self.request.session.permissions) 
+        """Get security permissions."""
+        permissions = self.transform_permissions(self.request.session.permissions)
         return permissions
+
 
 @CsmView._app_routes.view("/api/v1/permissions/{user_id}")
 @CsmView._app_routes.view("/api/v2/permissions/{user_id}")
@@ -78,9 +76,7 @@ class UserPermissionsView(BasePermissionsView):
 
     @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
-        """
-        Calling Security get csm user permissions Get Method
-        """
+        """Get csm user permissions."""
         Log.debug("Handling csm users permissions get request")
         user_id = self.request.match_info["user_id"]
         try:

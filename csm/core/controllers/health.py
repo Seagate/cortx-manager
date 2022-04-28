@@ -26,19 +26,19 @@ class HealthViewQueryParameter(Schema):
     response_format_values = [const.RESPONSE_FORMAT_TABLE, const.RESPONSE_FORMAT_TREE]
     resource_id = fields.Str(default="", missing="")
     depth = fields.Int(validate=validate.Range(min=0),
-                        default=const.HEALTH_DEFAULT_DEPTH,
-                        missing=const.HEALTH_DEFAULT_DEPTH)
+                       default=const.HEALTH_DEFAULT_DEPTH,
+                       missing=const.HEALTH_DEFAULT_DEPTH)
     response_format = fields.Str(default=const.RESPONSE_FORMAT_TREE,
-                                    missing=const.RESPONSE_FORMAT_TREE,
-                                    validate=[Enum(response_format_values)])
+                                 missing=const.RESPONSE_FORMAT_TREE,
+                                 validate=[Enum(response_format_values)])
     offset = fields.Int(validate=validate.Range(min=1),
-                            allow_none=True,
-                            default=const.HEALTH_DEFAULT_OFFSET,
-                            missing=const.HEALTH_DEFAULT_OFFSET)
+                        allow_none=True,
+                        default=const.HEALTH_DEFAULT_OFFSET,
+                        missing=const.HEALTH_DEFAULT_OFFSET)
     limit = fields.Int(validate=validate.Range(min=0),
-                            allow_none=True,
-                            default=const.HEALTH_DEFAULT_LIMIT,
-                            missing=const.HEALTH_DEFAULT_LIMIT)
+                       allow_none=True,
+                       default=const.HEALTH_DEFAULT_LIMIT,
+                       missing=const.HEALTH_DEFAULT_LIMIT)
 
 
 @CsmView._app_routes.view("/api/v2/system/health/{resource}")
@@ -49,21 +49,17 @@ class ResourcesHealthView(CsmView):
 
     @CsmAuth.permissions({Resource.HEALTH: {Action.LIST}})
     async def get(self):
-        """
-        Get health of all resources of type {resource}
-        and/or their sub resources based on input depth.
-        """
+        """Get health of all resources of type {resource} and/or their sub resources."""
         resource = self.request.match_info["resource"]
         health_view_qp_obj = HealthViewQueryParameter()
         try:
             health_view_qp = health_view_qp_obj.load(self.request.rel_url.query,
-                                        unknown='EXCLUDE')
+                                                     unknown='EXCLUDE')
             Log.debug(f"Fetch Health of {resource} "
-                        f"with query parameters {health_view_qp}."
-                        f"user_id: {self.request.session.credentials.user_id}")
+                      f"with query parameters {health_view_qp}."
+                      f"user_id: {self.request.session.credentials.user_id}")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        resources_health = await self.health_service.fetch_resources_health(resource,
-                                        **health_view_qp)
+        resources_health = await self.health_service.fetch_resources_health(
+            resource, **health_view_qp)
         return resources_health
-

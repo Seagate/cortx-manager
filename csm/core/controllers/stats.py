@@ -22,11 +22,12 @@ from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.common.permission_names import Resource, Action
 
+
 class MatricsSchemaValidator(Schema):
     messages = fields.List(fields.Str(), allow_none=False,
-            validate=validate.Length(min=1, error='Message list cannot be empty.') )
+                           validate=validate.Length(min=1, error='Message list cannot be empty.'))
 
-#@atomic
+
 @CsmView._app_routes.view("/api/v1/stats/{panel}")
 @CsmView._app_routes.view("/api/v2/stats/{panel}")
 class StatsView(CsmView):
@@ -43,7 +44,7 @@ class StatsView(CsmView):
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @CsmView.asyncio_shield
     async def get(self):
-        """Calling Stats Get Method"""
+        """GET stats."""
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
                   f"user_id: {self.request.session.credentials.user_id}")
         getopt = self.request.rel_url.query.get("get", None)
@@ -62,8 +63,10 @@ class StatsView(CsmView):
             output_format = self.request.rel_url.query.get("output_format", "gui")
             query = self.request.rel_url.query.get("query", "")
             unit = self.request.rel_url.query.get("unit", "")
-            return await self._service.get(stats_id, panel, from_t, to_t, metric_list,
-                interval, total_sample, unit, output_format, query)
+            return await self._service.get(
+                stats_id, panel, from_t, to_t, metric_list, interval, total_sample, unit,
+                output_format, query)
+
 
 @CsmView._app_routes.view("/api/v1/stats")
 @CsmView._app_routes.view("/api/v2/stats")
@@ -75,8 +78,9 @@ class StatsPanelListView(CsmView):
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
         """
-        GET REST implementation for Statistics Get Panel List or
-                statistics for group of panels with common parameters
+        GET REST implementation for Statistics.
+
+        Get Panel List or statistics for group of panels with common parameters.
         Sample request:
             /api/v1/stats - to get list of panels
 
@@ -120,23 +124,26 @@ class StatsPanelListView(CsmView):
             Log.debug("Handling Stats Get Panel List request")
             return await self._service.get_panel_list()
 
+
 @CsmAuth.hybrid
 @CsmView._app_routes.view("/api/v2/metrics/stats/perf")
 class MetricsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app["stat_service"]
+
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
-        Log.debug(f"Handling get request for performance stats")
+        Log.debug("Handling get request for performance stats")
         return await self._service.get_perf_metrics()
+
     async def post(self):
-        Log.debug(f"Handling Per Metrics post api request")
+        Log.debug("Handling Per Metrics post api request")
         try:
             schema = MatricsSchemaValidator()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.post_perf_metrics_to_msg_bus(user_body["messages"])
