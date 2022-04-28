@@ -13,8 +13,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
-import paramiko, socket
+import os
+import paramiko
+import socket
 import ftplib
 import getpass
 import time
@@ -26,15 +27,13 @@ from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from csm.common.errors import CsmError
-import json
-from abc import ABC, ABCMeta, abstractmethod
-from functools import partial
-import random
+from abc import ABCMeta, abstractmethod
 from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
 from cortx.utils.message_bus.error import MessageBusError
 
+
 class Channel(metaclass=ABCMeta):
-    """ Abstract class to represent a comm channel to a node """
+    """Abstract class to represent a comm channel to a node."""
 
     @abstractmethod
     def init(self):
@@ -67,11 +66,14 @@ class Channel(metaclass=ABCMeta):
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
 
+
 class SSHChannel(Channel):
     """
-    Represents ssh channel to a node for communication
-    Communication to node is taken care by this class using paramiko
+    Represents ssh channel to a node for communication.
+
+    Communication to node is taken care by this class using paramiko.
     """
+
     def __init__(self, node, user=None, **args):
         super(SSHChannel, self).__init__()
         self._user = user or getpass.getuser()
@@ -81,8 +83,8 @@ class SSHChannel(Channel):
         self._node = node
         self.look_for_keys = args.get('look_for_keys', False)
         self.key_filename = args.get('key_filename', None)
-        self._ssh_timeout = Conf.get(const.CSM_GLOBAL_INDEX,
-                const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
+        self._ssh_timeout = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
         for key, value in args.items():
             setattr(self, key, value)
 
@@ -90,34 +92,35 @@ class SSHChannel(Channel):
         raise Exception('init not implemented for SSH Channel')
 
     def connect(self):
-        Log.debug('node=%s user=%s' %(self._node, self._user))
+        Log.debug('node=%s user=%s' % (self._node, self._user))
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             self._ssh.connect(self._node, username=self._user,
-                    timeout=self._ssh_timeout, allow_agent=self.allow_agent,
-                    key_filename=self.key_filename)
-            if not self.ftp_enabled: return 0
+                              timeout=self._ssh_timeout, allow_agent=self.allow_agent,
+                              key_filename=self.key_filename)
+            if not self.ftp_enabled:
+                return 0
             self._sftp = self._ssh.open_sftp()
         except socket.error as e:
             rc = errno.EHOSTUNREACH if e.errno is None else e.errno
             Log.exception(e)
-            raise CsmError(rc, 'can not connect to host %s' %self._node)
+            raise CsmError(rc, 'can not connect to host %s' % self._node)
         except (SSHException, Exception) as e:
             Log.exception(e)
-            raise CsmError(-1, 'can not connect to host %s@%s. %s'\
-                    %(self._user, self._node, e))
+            raise CsmError(-1, 'can not connect to host %s@%s. %s' % (self._user, self._node, e))
 
     def disconnect(self):
-        """ Close the SSH channel """
+        """Close the SSH channel."""
         try:
             self._ssh.close()
-            if self.ftp_enabled: self._sftp.close()
+            if self.ftp_enabled:
+                self._sftp.close()
         except Exception as e:
             Log.exception(e)
 
     def execute(self, command, **kwargs):
-        """ Execute the command at node """
+        """Execute the command at the node."""
         try:
             _in, _out, _err = self._ssh.exec_command(command,
                                                      timeout=kwargs.get("timeout", None))
@@ -127,14 +130,15 @@ class SSHChannel(Channel):
             error = u''.join(_err.readlines())
             _out.close()
             _err.close()
-            if rc != 0: output = error
-            Log.debug('$ %s\n%s' %(command, output))
+            if rc != 0:
+                output = error
+            Log.debug('$ %s\n%s' % (command, output))
         except IOError as e:
             Log.exception(e)
-            raise CsmError(errno.EIO, '%s' %e)
+            raise CsmError(errno.EIO, '%s' % e)
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
         return rc, output
 
     def send(self, message):
@@ -144,27 +148,28 @@ class SSHChannel(Channel):
         raise Exception('recv not implemented for SSH Channel')
 
     def recv_file(self, remote_file, local_file):
-        """ Get a file from node """
+        """Get a file from the node."""
         if not self.ftp_enabled:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
         try:
             self._sftp.get(remote_file, local_file)
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
 
     def send_file(self, local_file, remote_file):
-        """ Put a file in node """
+        """Put a file in node."""
         if not self._ftp_enabled:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
         try:
             self._sftp.put(local_file, remote_file)
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
 
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for SSH Channel')
+
 
 class FILEChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -181,7 +186,8 @@ class FILEChannel(Channel):
 
     def send_file(self, local_file_path, remote_directory):
         """
-        Moves the FIle from Local File Path to Path Given
+        Move the file from local file path to the path given.
+
         :param local_file_path:
         :param remote_directory:
         :return:
@@ -200,9 +206,11 @@ class FILEChannel(Channel):
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
 
+
 class FTPChannel(Channel):
     """
     Represents FTP channel for communication.
+
     Communication to FTP server is taken care by this class using ftplib.
     """
 
@@ -225,7 +233,7 @@ class FTPChannel(Channel):
             self._ftp.connect(self._host, self._port)
             self._ftp.login(self._user, self._password)
             self._ftp.set_pasv(self._ispassive)
-        except ftplib.Error as e:
+        except ftplib.Error:
             Log.error(f"Cannot Connect to the host {self._host}")
             rc = errno.EHOSTUNREACH
             raise CsmError(rc, f"Cannot Connect to the host {self._host}")
@@ -243,14 +251,13 @@ class FTPChannel(Channel):
         raise Exception('send not implemented in FTP Channel class')
 
     def send_file(self, local_file_path, remote_directory):
-        """Send Files to FTP server """
+        """Send Files to FTP server."""
         if not self._ftp:
             raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
         try:
             if remote_directory:
                 self._ftp.cwd(remote_directory)
-            remote_file = os.path.join(remote_directory,
-                           local_file_path.split(os.sep)[-1])
+            remote_file = os.path.join(remote_directory, local_file_path.split(os.sep)[-1])
             with open(local_file_path, 'rb') as file_obj:
                 self._ftp.storbinary(f"STOR {remote_file}", file_obj)
         except Exception as e:
@@ -266,8 +273,10 @@ class FTPChannel(Channel):
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
 
+
 class Comm(metaclass=ABCMeta):
-    """ Abstract class to represent a comm channel """
+    """Abstract class to represent a comm channel."""
+
     @abstractmethod
     def init(self):
         raise Exception('init not implemented in Comm class')
@@ -292,12 +301,16 @@ class Comm(metaclass=ABCMeta):
     def acknowledge(self):
         raise Exception('acknowledge not implemented in Comm class')
 
+
 class MessageBusComm(Comm):
     """
-    MessageBusComm Classprovides an easy-to-use interface which can be used to
+    Message bus client.
+
+    MessageBusComm Class provides an easy-to-use interface which can be used to
     send or receive messages across any component on a node to any other
-    component on the other nodes
+    component on the other nodes.
     """
+
     def __init__(self, message_server_endpoints, unblock_consumer=False):
         Comm.__init__(self)
         self.message_callback = None
@@ -314,7 +327,8 @@ class MessageBusComm(Comm):
 
     def init(self, **kwargs):
         """
-        Initializes the producer and consumer communication.
+        Initialize the producer and consumer communication.
+
         :param kwargs:
             type: producer|consumer|both(default)
             producer_id: String representing ID that uniquely identifies a producer
@@ -333,11 +347,11 @@ class MessageBusComm(Comm):
                 ("earliest" will cause messages to be read from the beginning)
         """
         self.type = kwargs.get(const.TYPE)
-        #Producer related configuration
+        # Producer related configuration
         self.producer_id = kwargs.get(const.PRODUCER_ID)
         self.message_type = kwargs.get(const.MESSAGE_TYPE)
         self.method = kwargs.get(const.METHOD, const.ASYNC)
-        #Consumer related configuration
+        # Consumer related configuration
         self.consumer_id = kwargs.get(const.CONSUMER_ID)
         self.consumer_group = kwargs.get(const.CONSUMER_GROUP)
         self.consumer_message_types = kwargs.get(const.CONSUMER_MSG_TYPES)
@@ -352,25 +366,26 @@ class MessageBusComm(Comm):
             self._initialize_consumer()
 
     def initialize_message_bus(self, message_server_endpoints):
-        """ Initializing Messagebus server """
+        """Initialize Messagebus server."""
         Log.info(f"Initializing Messagebus server with endpoints:{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
 
     def _initialize_producer(self):
-        """ Initializing Producer """
-        self.producer = MessageProducer(producer_id=self.producer_id,\
-                message_type=self.message_type, method=self.method)
-        Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"\
-                f" Message Type: {self.message_type}, method: {self.method}")
+        """Initialize Producer."""
+        self.producer = MessageProducer(
+            producer_id=self.producer_id, message_type=self.message_type, method=self.method)
+        Log.info(f"Producer Initialized - Produce ID : {self.producer_id},"
+                 f" Message Type: {self.message_type}, method: {self.method}")
 
     def _initialize_consumer(self):
-        """ Initializing Consumer """
-        self.consumer = MessageConsumer(consumer_id=self.consumer_id,\
-                consumer_group=self.consumer_group, message_types=self.consumer_message_types,
-                auto_ack=self.auto_ack, offset=self.offset)
-        Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"\
-                f" Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"\
-                f" Message Types: {self.consumer_message_types}, Offset: {self.offset}")
+        """Initialize Consumer."""
+        self.consumer = MessageConsumer(
+            consumer_id=self.consumer_id, consumer_group=self.consumer_group,
+            message_types=self.consumer_message_types,
+            auto_ack=self.auto_ack, offset=self.offset)
+        Log.info(f"Consumer Initialized - Consumer ID : {self.consumer_id},"
+                 f" Consumer Group: {self.consumer_group}, Auto Ack: {self.auto_ack}"
+                 f" Message Types: {self.consumer_message_types}, Offset: {self.offset}")
         if self.is_blocking:
             self.recv_timeout = 0
 
@@ -382,7 +397,8 @@ class MessageBusComm(Comm):
 
     def send(self, message, **kwargs):
         """
-        Sends list of messages to a specifed message type.
+        Send a list of messages to a specifed message type.
+
         :param message: List of messages.
         :param kwargs: For future use. If we need some more config.
         """
@@ -397,7 +413,8 @@ class MessageBusComm(Comm):
 
     def recv(self, callback_fn=None, message=None):
         """
-        Receives messages from message bus
+        Receive messages from message bus.
+
         :param callback_fn: This is the callback method on which we will
         receive messages from message bus.
         """
@@ -413,10 +430,10 @@ class MessageBusComm(Comm):
                         else:
                             if self.unblock_consumer:
                                 break
-                            #For non-blocking calls.
+                            # For non-blocking calls.
                             time.sleep(1)
                     else:
-                        #Stop called need to break
+                        # Stop called need to break
                         self.consumer = None
                         break
                 except MessageBusError as ex:
@@ -426,10 +443,10 @@ class MessageBusComm(Comm):
             Log.error("Message Bus Consumer not initialized.")
 
     def acknowledge(self):
-        """ Acknowledge the read messages. """
+        """Acknowledge the read messages."""
         if self.consumer:
             self.consumer.ack()
 
     def stop(self):
-        #Stopping the sending and receiving of messages.
+        # Stopping the sending and receiving of messages.
         self.is_running = False
