@@ -24,15 +24,17 @@ from email.message import EmailMessage
 EMAIL_CLIENT_CACHE_SIZE = 10
 EMAIL_BCC_BULK_LIMIT = 50
 
+
 def chunk_generator(orig_list, chunk_size):
     total_size = len(orig_list)
     for i in range(0, total_size, chunk_size):
-        yield orig_list[i:(i+chunk_size)]
+        yield orig_list[i: (i + chunk_size)]
 
 
 class EmailSenderQueue:
     """
     Interface to a worker that performs mass email sending.
+
     For now it is just a worker coroutine, but later it might end up as an
     interface to some separate worker process.
 
@@ -44,22 +46,22 @@ class EmailSenderQueue:
 
     await instance.stop_worker(True)
     """
+
     def __init__(self):
         self.queue = asyncio.Queue()
         self.worker = None
 
     @Log.trace_method(level=Log.DEBUG)
     async def enqueue_email(self, message: EmailMessage, config: SmtpServerConfiguration):
-        """
-        Enqueue an email message to be sent
-        """
+        """Enqueue an email message to be sent."""
         self.queue.put_nowait((message, config))
 
     @Log.trace_method(level=Log.DEBUG)
     async def enqueue_bulk_email(self, message: EmailMessage, recipients,
-            config: SmtpServerConfiguration):
+                                 config: SmtpServerConfiguration):
         """
-        Enqueues a bulk of identical messages
+        Enqueues a bulk of identical messages.
+
         :param mesage: an instance of EmailMessage, it will not be modified
         :param recipients: a list of target recipients
         :param config:
@@ -83,9 +85,7 @@ class EmailSenderQueue:
 
     @Log.trace_method(level=Log.DEBUG)
     async def join_worker(self):
-        """
-        Pauses until the worker's queue becomes empty
-        """
+        """Pause until the worker's queue becomes empty."""
         if self.worker:
             await self.queue.join()
 
