@@ -179,3 +179,17 @@ class NodePoweroffOperation(Operation):
             err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
             Log.error(err_msg)
 
+class NodeFailure(Operation):
+    """
+    Process mark node failure request.
+    """
+    def validate_arguments(self, **kwargs):
+        pass
+
+    def execute(self, cluster_manager, **kwargs):
+        try:
+            # TODO: Call interface
+            Log.info("Tagging Node failure request sent successfully")
+        except Exception as e:
+            Log.error(f"Error while sending Mark node failure signal:{e}")
+            raise CsmInternalError(f"Error while sending Mark Node failure signal:{e}")

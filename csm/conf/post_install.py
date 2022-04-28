@@ -73,13 +73,16 @@ class PostInstall(Setup):
         self.set_ssl_certificate()
         self.set_logpath()
         self.create()
+        self.set_cluster_id()
+        self.set_node_id()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
                 const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
-                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
+                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}",
+                const.STORAGE_SET_NODES:f"{const.STORAGE_SET_NODES}"
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -123,3 +126,28 @@ class PostInstall(Setup):
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
         Conf.save(const.CSM_GLOBAL_INDEX)
+
+    def set_cluster_id(self):
+        """
+        This Function sets cluster_id in csm configuration.
+        :return:
+        """
+        clusterid = Conf.get(const.CONSUMER_INDEX, const.CLUSTERID_KEY)
+        Log.info(f"Setting cluster id:{clusterid}")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID, clusterid)
+
+    def set_node_id(self):
+        """
+        This Function Sets node id's for each storage set in csm configuration.
+        :return:
+        """
+        node_ids = []
+        Log.info("Fetching node ids from each storage set.")
+        num_storage_sets = Conf.get(const.CONSUMER_INDEX, const.NUM_STORAGE_SET)
+        for index in range(num_storage_sets):
+            node_ids =  node_ids + Conf.get(const.CONSUMER_INDEX,
+                                            f'cluster>storage_set[{index}]>nodes')
+        Log.info("Setting node id.")
+        Conf.set(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID, str(len(node_ids)))
+        for index, node_id in enumerate(node_ids):
+            Conf.set(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{index}]", str(node_id))
