@@ -21,8 +21,6 @@ from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
 from csm.common.errors import InvalidRequest, CsmInternalError
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.event_framework.health import HealthEvent, HealthAttr
 
 class Operation(ABC):
     """
@@ -181,55 +179,16 @@ class NodePoweroffOperation(Operation):
             err_msg = f"{const.CLUSTER_OPERATIONS_ERR_MSG} : {e}"
             Log.error(err_msg)
 
-class NodeMarkFailure(Operation):
+class NodeFailure(Operation):
     """
     Process mark node failure request.
     """
     def validate_arguments(self, **kwargs):
-        """
-        Validates node_id provided by user.
-        :param kwargs: arguments with node_id
-        :returns:
-        """
-        arguments = kwargs.get(const.ARG_ARGUMENTS, "")
-        num_node_id = int(Conf.get(const.CSM_GLOBAL_INDEX, const.NUM_NODE_ID))
-        Log.info("Validating node_id")
-        for node_id in range(num_node_id):
-            valid_node_id = Conf.get(const.CSM_GLOBAL_INDEX, f"{const.KEY_NODE_ID}[{node_id}]")
-            if arguments[const.ID] == valid_node_id:
-                return
-        raise InvalidRequest('Request body is missing or invalid request body.')
-
-    def _create_payload(self, **kwargs):
-        """
-        Create payload for tagging node failure.
-        :param : arguments with node_id
-        :returns:
-        """
-        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.KEY_CLUSTERID)
-        arguments = kwargs.get(const.ARG_ARGUMENTS, "")
-        node_id = arguments[const.ID]
-        health_attrs = {
-            f'{HealthAttr.SOURCE}': const.CSM_COMPONENT_NAME,
-            f'{HealthAttr.CLUSTER_ID}': cluster_id ,
-            f'{HealthAttr.SITE_ID}': const.NOT_DEFINED,
-            f'{HealthAttr.RACK_ID}': const.NOT_DEFINED,
-            f'{HealthAttr.STORAGESET_ID}': const.NOT_DEFINED,
-            f'{HealthAttr.NODE_ID}': node_id,
-            f'{HealthAttr.RESOURCE_TYPE}':const.NODE,
-            f'{HealthAttr.RESOURCE_ID}': node_id,
-            f'{HealthAttr.RESOURCE_STATUS}': const.FAILED,
-            f'{HealthAttr.SPECIFIC_INFO}': ''
-            }
-        return HealthEvent(**health_attrs).json
+        pass
 
     def execute(self, cluster_manager, **kwargs):
-        self.validate_arguments(**kwargs)
-        mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
-        payload = self._create_payload(**kwargs)
-        Log.debug(f"Sending node failure request with payload:{payload}")
         try:
-            mssg_bus_obj.send([str(payload)])
+            # TODO: Call interface
             Log.info("Tagging Node failure request sent successfully")
         except Exception as e:
             Log.error(f"Error while sending Mark node failure signal:{e}")

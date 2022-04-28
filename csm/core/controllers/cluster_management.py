@@ -87,6 +87,58 @@ class ClusterOperationsView(CsmView):
                                                 **operation_arguments)
         return operation_req_result
 
+@CsmView._app_routes.view("/api/v2/system/{resource}")
+class ClusterAvailabilityView(CsmView):
+    def __init__(self, request):
+        super().__init__(request)
+        self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
+
+    @staticmethod
+    def _validate_operation(resource: str, operation: str, role: str) -> None:
+        """
+        Check if the provided operation is allowed for the provided role.
+
+        :param resource: the resource under the operation.
+        :param operation: the requested operation.
+        :param role: current user's role.
+        :returns: None.
+        """
+        if operation in const.ADMIN_ONLY_OPERATIONS and role != const.CSM_SUPER_USER_ROLE:
+            msg = f"Operation '{operation}' can not be performed by the user with role: '{role}'"
+            raise CsmPermissionDenied(msg)
+
+    @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.CREATE}})
+    async def post(self):
+        """
+        API to manage resources in cluster.
+        """
+        resource = self.request.match_info["resource"]
+        qp_schema = ClusterOperationsQueryParameter()
+        req_body_schema = ClusterOperationsRequestBody()
+        operation = None
+        operation_arguments = None
+        try:
+            qp = qp_schema.load(self.request.rel_url.query, unknown=EXCLUDE)
+            req_body = req_body_schema.load(await self.request.json(), unknown=INCLUDE)
+
+            operation = req_body['operation']
+            if qp['arguments_format'] == const.ARGUMENTS_FORMAT_FLAT:
+                req_body.pop('operation')
+                operation_arguments = req_body
+            else:
+                operation_arguments = req_body['arguments']
+
+            Log.debug(f"Cluster operation {operation} on {resource} "
+                        f"with arguments {operation_arguments}. "
+                        f"user_id: {self.request.session.credentials.user_id}")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        ClusterAvailabilityView._validate_operation(
+            resource, operation, self.request.session.get_user_role())
+        operation_req_result = await self.cluster_management_service\
+                                            .request_operation(resource, operation,
+                                                **operation_arguments)
+        return operation_req_result
 
 @CsmView._app_routes.view("/api/v2/system/management/cluster_status/{node_id}")
 class ClusterStatusView(CsmView):
