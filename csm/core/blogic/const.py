@@ -889,8 +889,9 @@ DB_CONSUL_CONFIG_PASSWORD = 'databases>consul_db>config>password'
 DB_CONSUL_CONFIG_LOGIN = 'databases>consul_db>config>login'
 
 # Resource status
-CLUSTER_MANAGMENT_HA_SVC_ENDPOINT ='CLUSTER_MANAGEMENT>ha_service_endpoint'
-CLUSTER_MANAGMENT_HA_CLUSTER_API ='CLUSTER_MANAGEMENT>cluster_status_api'
+CLUSTER_MANAGMENT_HA_SVC_PROTOCOL ='CLUSTER_MANAGEMENT>protocol'
+CLUSTER_MANAGMENT_HA_SVC_HOST ='CLUSTER_MANAGEMENT>host'
+CLUSTER_MANAGMENT_HA_SVC_PORT ='CLUSTER_MANAGEMENT>port'
 
 # S3 Plugin Configurations
 S3_CLIENT_ERROR_CODES = {
@@ -967,3 +968,7 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# system health
+RESOURCE_STATUS_OPERATION = 'GET_RESOURCE_STATUS'
+HA_API_OPERATIONS_MAPPING_SCHEMA = '{}/schema/ha_api_operations.json'.format(CSM_PATH)

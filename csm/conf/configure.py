@@ -76,7 +76,7 @@ class Configure(Setup):
         self.set_csm_endpoint()
         self.set_s3_info()
         self.set_hax_endpoint()
-        # self.set_ha_endpoint()
+        self.set_ha_endpoint()
         self.create_topics()
         try:
             await self._create_cluster_admin(self.force_action)
@@ -267,14 +267,9 @@ class Configure(Setup):
         self._create_perf_stat_topic(mb_admin)
         self._create_cluster_stop_topic(mb_admin)
 
-    def _get_ha_endpoint(self, endpoints):
-        for endpoint in endpoints:
-            protocol, host, port = self._parse_endpoints(endpoint)
-            if protocol == "https" or protocol == "http":
-                return endpoint
-
     def set_ha_endpoint(self):
-        endpoints = Conf.get(const.CONSUMER_INDEX, const.HA_ENDPOINT_KEY)
-        ha_endpoint = self._get_ha_endpoint(endpoints)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_MANAGMENT_HA_SVC_ENDPOINT,
-                ha_endpoint)
+        endpoint = Conf.get(const.CONSUMER_INDEX, const.HA_ENDPOINT_KEY)
+        protocol, host, port = self._parse_endpoints(endpoint)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_MANAGMENT_HA_SVC_PROTOCOL, protocol)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_MANAGMENT_HA_SVC_HOST, host)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_MANAGMENT_HA_SVC_PORT, port)

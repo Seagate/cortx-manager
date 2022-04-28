@@ -14,8 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
-import aiohttp
-from aiohttp.client import ClientSession
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
@@ -24,7 +22,7 @@ from csm.common.plugin import CsmPlugin
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
-from cortx.utils.conf_store.conf_store import Conf
+from csm.common.payload import Json
 
 class ClusterManagementPlugin(CsmPlugin):
     """
@@ -36,6 +34,7 @@ class ClusterManagementPlugin(CsmPlugin):
         super().__init__()
 
         self._ha = ha
+        self._api_operations = Json(const.HA_API_OPERATIONS_MAPPING_SCHEMA).load()
 
     def init(self, **kwargs):
         pass
@@ -86,28 +85,7 @@ class ClusterManagementPlugin(CsmPlugin):
         return cluster_op_resp
 
     def _process_resource_status_operation(self, kwargs):
-        id = kwargs.get(const.ARG_RESOURCE_ID, "")
-        resource = kwargs.get(const.ARG_RESOURCE, "")
-
-        # Create a URL, request body
-        base_url = Conf.get(const.CSM_GLOBAL_INDEX,const.CLUSTER_MANAGMENT_HA_SVC_ENDPOINT) + \
-            Conf.get(const.CSM_GLOBAL_INDEX,const.CLUSTER_MANAGMENT_HA_CLUSTER_API)
-        url = f"{base_url}/{resource}/{id}"
-        method = const.GET
-        # expected_success_code=200
-        Log.info(f"Request {method}:{url} for Resource Status")
-
-        # Call Rest call
-        async with aiohttp.ClientSession() as session:
-            try:
-                # response = await self.request(session, method, url, expected_success_code)
-                #TODO: For testing the flow Sample response:- response
-                response = {
-                    "resource_id": id,
-                    "last_updated_timestamp": "12345678",
-                    "resource_status": url
-                }
-            except Exception as e:
-                Log.error(f"Error in obtaining response from {url}: {e}")
-
+        Log.debug(f"Getting system health status with arguments: {kwargs}")
+        # TODO: add logic to get health status
+        response = {}
         return response

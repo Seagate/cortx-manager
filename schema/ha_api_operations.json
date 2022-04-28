@@ -1,0 +1,7 @@
+{
+    "GET_RESOURCE_STATUS": {
+        "ENDPOINT": "/v1/system/health/",
+        "METHOD": "GET",
+        "SUCCESS_CODE": 200
+    }
+}

@@ -82,7 +82,6 @@ class ClusterManagementAppService(ApplicationService):
         request_params[const.PLUGIN_REQUEST] = const.PROCESS_GET_RESOURCE_STATUS
         request_params[const.ARG_RESOURCE_ID] = resource_id
         request_params[const.ARG_RESOURCE] = resource
-        Log.debug(f"ClusterOperationsAppService: Making plugin call with arguments: "
-                  f"{request_params}")
+        Log.debug(f"GetResourceStatus: Args : {request_params}")
         plugin_response = self._cluster_management_plugin.process_request(**request_params)
         return plugin_response
