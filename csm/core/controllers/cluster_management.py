@@ -123,6 +123,6 @@ class ClusterResourceStatusView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ID]
         Log.debug(f" Getting the status for {resource} with id: {resource_id}")
-        response = await self.cluster_management_service\
+        response = self.cluster_management_service\
                                 .get_resource_status(resource, resource_id)
         return response
