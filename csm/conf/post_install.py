@@ -85,7 +85,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        csm_protocol, _ = self._parse_endpoints(
+        csm_protocol, *_ = self._parse_endpoints(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
