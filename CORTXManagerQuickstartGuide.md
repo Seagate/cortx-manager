@@ -233,6 +233,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
    $ cortx-manager_setup config
    $ cortx-manager_setup init
    ```
+
 5.  Enable and Restart cortx-manager using: 
    
    ```shell
