@@ -83,22 +83,29 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
   5. Install Consul
   
      1.  Download consule binary. 
-     
-        `$ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip`
+
+        ```shell
+        $ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip
+        ```
 
      2.  Unzip downloaded zip.
      
-        `$ unzip consul_1.8.3_linux_amd64.zip`
+        ```shell
+        $ unzip consul_1.8.3_linux_amd64.zip
+        ```
 
      3.  Install unzip if not already installed.
      
-        `$ yum install unzip`
-
-        `$ unzip consul_1.8.3_linux_amd64.zip`
+        ```shell
+        $ yum install unzip
+        $ unzip consul_1.8.3_linux_amd64.zip
+        ```
 
      4.  Move binary to /usr/loval/bin folder.
      
-        `$ mv consul /usr/local/bin/`
+        ```shell
+        $ mv consul /usr/local/bin/
+        ```
 
      5.  Check if the PATH contains `/usr/local/bin`. If it doesn’t, add it to the path.
         
@@ -109,11 +116,15 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         ```
      6.  Check if consul is installed.
      
-        `$ consul`
+        ```
+        $ consul
+        ```
         
      7.  Run consul in the background.
      
-        `$ nohup consul agent --dev &`
+        ```
+        $ nohup consul agent --dev &
+        ```
 
   6. Install provisioner
   
