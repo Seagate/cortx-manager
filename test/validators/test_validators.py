@@ -55,5 +55,3 @@ def test_2(args):
             print(f"{e}")
 
 test_list = [test_1, test_2]
-
-    

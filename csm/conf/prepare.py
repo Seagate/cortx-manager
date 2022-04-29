@@ -112,7 +112,7 @@ class Prepare(Setup):
         Sets database hosts address in CSM config.
         :return:
         """
-        _, consul_host, consul_port, secret, _ = self._get_consul_config()
+        _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
             if consul_host and consul_port:

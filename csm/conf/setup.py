@@ -59,7 +59,8 @@ class Setup:
         Log.info(f"Setting Config saving path:{conf_path} from confstore")
         return conf_path
 
-    def _get_consul_config(self):
+    @staticmethod
+    def get_consul_config():
         protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
@@ -72,7 +73,7 @@ class Setup:
 
     def load_csm_config_indices(self):
         set_config_flag = False
-        _, consul_host, consul_port, _, _ = self._get_consul_config()
+        _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:
             try:
                 ConsulV().validate_service_status(consul_host,consul_port)
