@@ -32,7 +32,6 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    `$ sudo -s`
 
 3.  Ensure you've installed the following softwares:
-  
   1.  Install RabbitMQ
       
       ```shell
@@ -68,7 +67,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      6. Set all permissions and select virtual host as SSPL
        
         ![](images/Image%204.jpg)
-  2. Install Elastic Search:
+  2.  Install Elastic Search:
   
      ```shell
 
@@ -80,40 +79,40 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     
      ![Successful elasticsearch.yml installation](images/Image-5.jpg)
 
-  3. Install Consul
+  3.  Install Consul
   
      1.  Download consule binary. 
      
-        `$ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip`
+     `$ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip`
 
      2.  Unzip downloaded zip.
      
-        `$ unzip consul_1.8.3_linux_amd64.zip`
+      `$ unzip consul_1.8.3_linux_amd64.zip`
 
      3.  Install unzip if not already installed.
      
-        `$ yum install unzip`
+      `$ yum install unzip`
 
-        `$ unzip consul_1.8.3_linux_amd64.zip`
+      `$ unzip consul_1.8.3_linux_amd64.zip`
 
      4.  Move binary to /usr/loval/bin folder.
      
-        `$ mv consul /usr/local/bin/`
+      `$ mv consul /usr/local/bin/`
 
      5.  Check if the PATH contains `/usr/local/bin`. If it doesn’t, add it to the path.
         
-        ```shell
+      ```shell
         
         $ echo $PATH
         $ export PATH=$PATH:/usr/local/bin
-        ```
+      ```
      6.  Check if consul is installed.
      
-        `$ consul`
+      `$ consul`
         
      7.  Run consul in the background.
      
-        `$ nohup consul agent --dev &`
+      `$ nohup consul agent --dev &`
 
   4. Install provisioner
   
