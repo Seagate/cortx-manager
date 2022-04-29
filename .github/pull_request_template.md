@@ -31,4 +31,4 @@
 
 ## Documentation
 >   Checklist for Author
--   [ ] Changes done to WIKI / Confluence page / Quick Start Guide
+-   \[ \] Changes done to WIKI / Confluence page / Quick Start Guide
