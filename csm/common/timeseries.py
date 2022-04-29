@@ -22,7 +22,6 @@ from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from csm.common.errors import CsmInternalError, InvalidRequest
-from csm.common.payload import *
 
 
 class TimeSeriesProvider:

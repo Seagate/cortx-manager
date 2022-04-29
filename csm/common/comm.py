@@ -22,7 +22,6 @@ import time
 import shutil
 import errno
 from paramiko.ssh_exception import SSHException
-from csm.common.payload import *
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const

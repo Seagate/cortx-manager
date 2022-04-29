@@ -33,7 +33,6 @@ from typing import Dict, Tuple
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.services.sessions import LoginService
-from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.conf import ConfSection, DebugConf
 from cortx.utils.log import Log
