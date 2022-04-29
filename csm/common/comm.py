@@ -13,10 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
 import paramiko
 import socket
-import ftplib
 import getpass
 import time
 import shutil
@@ -195,73 +193,6 @@ class FILEChannel(Channel):
 
     def disconnect(self):
         pass
-
-    def recv(self, message=None):
-        raise Exception('recv not implemented in Channel class')
-
-    def recv_file(self, remote_file, local_file):
-        raise Exception('recv_file not implemented in Channel class')
-
-    def acknowledge(self, delivery_tag=None):
-        raise Exception('acknowledge not implemented for Channel class')
-
-
-class FTPChannel(Channel):
-    """
-    Represents FTP channel for communication.
-
-    Communication to FTP server is taken care by this class using ftplib.
-    """
-
-    def __init__(self, host, user, password, port=21, **kwargs):
-        super(FTPChannel, self).__init__()
-        self._host = host
-        self._port = port
-        self._user = user
-        self._ftp = None
-        self._password = password
-        self._ispassive = kwargs.get("is_passive", False)
-
-    def init(self):
-        raise Exception('init not implemented in FTP Channel class')
-
-    def connect(self):
-        Log.debug('host=%s user=%s' % (self._host, self._user))
-        try:
-            self._ftp = ftplib.FTP()
-            self._ftp.connect(self._host, self._port)
-            self._ftp.login(self._user, self._password)
-            self._ftp.set_pasv(self._ispassive)
-        except ftplib.Error:
-            Log.error(f"Cannot Connect to the host {self._host}")
-            rc = errno.EHOSTUNREACH
-            raise CsmError(rc, f"Cannot Connect to the host {self._host}")
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, f"Cannot Connect to  {self._user}@{self._host}")
-
-    def disconnect(self):
-        try:
-            self._ftp.close()
-        except Exception as e:
-            Log.exception(e)
-
-    def send(self, message):
-        raise Exception('send not implemented in FTP Channel class')
-
-    def send_file(self, local_file_path, remote_directory):
-        """Send Files to FTP server."""
-        if not self._ftp:
-            raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
-        try:
-            if remote_directory:
-                self._ftp.cwd(remote_directory)
-            remote_file = os.path.join(remote_directory, local_file_path.split(os.sep)[-1])
-            with open(local_file_path, 'rb') as file_obj:
-                self._ftp.storbinary(f"STOR {remote_file}", file_obj)
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, '%s' % e)
 
     def recv(self, message=None):
         raise Exception('recv not implemented in Channel class')
