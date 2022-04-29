@@ -114,16 +114,16 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
       `$ nohup consul agent --dev &`
 
-  4. Install provisioner
+  4.  Install provisioner
   
      1.  Go to your home directory.
      2.  Git clone the provisioner repository, and follow the steps below:
      
-      ```shell
+     ```shell
          $ git clone git@github.com:Seagate/cortx-prvsnr.git
          $ mkdir /opt/seagate/cortx/provisioner
          $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
-      ```
+     ```
       </p>
       </details>
       
@@ -140,7 +140,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 2.  Install pyutils that is custom-built for CORTX project:
 
    1.  Go to your home directory
-
+   
    2.  Git clone `cortx-py-utils` and follow the steps below:
    
       ```shell
@@ -177,6 +177,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     $ git clone https://github.com/Seagate/cortx-manager.git
     $ git clone git@github.com:Seagate/cortx-manager.git
     ```
+
 2.  Once you have obtained the sources, build the cortx-manager by running: 
  
     ```shell
