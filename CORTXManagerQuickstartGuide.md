@@ -32,7 +32,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    `$ sudo -s`
 
 3.  Ensure you've installed the following softwares:
-
+  
    1.  Install RabbitMQ
       
       ```shell
@@ -68,7 +68,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      6. Set all permissions and select virtual host as SSPL
        
         ![](images/Image%204.jpg)
-  4. Install Elastic Search:
+  2. Install Elastic Search:
   
      ```shell
 
@@ -80,7 +80,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     
      ![Successful elasticsearch.yml installation](images/Image-5.jpg)
 
-  5. Install Consul
+  3. Install Consul
   
      1. Download consule binary. 
      
@@ -115,7 +115,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      
         `$ nohup consul agent --dev &`
 
-  6. Install provisioner
+  4. Install provisioner
   
      1. Go to your home directory.
      2. Git clone the provisioner repository, and follow the steps below:
