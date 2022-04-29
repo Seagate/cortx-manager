@@ -134,27 +134,29 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       
   Please refer to the documentation to [Import the CORTX Open Virtual Appliance (OVA)](https://github.com/Seagate/cortx/blob/main/doc/Importing_OVA_File.rst).
      
-  1. Install GitHub.
-     
-     Refer to the [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/CONTRIBUTING.md) document to install GitHub and clone cortx-manager and its dependent repos.
+1.  Install GitHub.
+   
+   Refer to the [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/CONTRIBUTING.md) document to install GitHub and clone cortx-manager and its dependent repos.
+   
+2.  Install pyutils that is custom-built for CORTX project:
+  ```
+   1.  Go to your home directory
 
-  2. Install pyutils that is custom-built for CORTX project:
-  
-     1. Go to your home directory
-     2. Git clone `cortx-py-utils` and follow the steps below:
-     
-        ```shell
+   2.  Git clone `cortx-py-utils` and follow the steps below:
+   
+      ```shell
 
-        $ cd /home/727891/githubssh/
-        $ git clone --recursive git@github.com:Seagate/cortx-py-utils.git
-        $ cd /opt/seagate/
-        $ mkdir cortx
-        $ cd cortx
-        $ ln -s /<path-to-cortx-py-utils>/cortx-py-utils/src/utils
-        ```
-  3. Install Python 3
-  
-     `$ yum –y install python3`
+      $ cd /home/727891/githubssh/
+      $ git clone --recursive git@github.com:Seagate/cortx-py-utils.git
+      $ cd /opt/seagate/
+      $ mkdir cortx
+      $ cd cortx
+      $ ln -s /<path-to-cortx-py-utils>/cortx-py-utils/src/utils
+      ```
+  ```
+3.  Install Python 3
+
+   `$ yum –y install python3`
      
    </p>
    </details>
