@@ -159,7 +159,6 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    </p>
    </details>
       
-       
 </p>
 </details>
 
@@ -203,43 +202,43 @@ All the dependencies should be preinstalled and prerequisites met before you run
    <summary>Follow these steps to deploy the CORTX-Manager on a Test VM</summary>
    <p>
 
-   1.  SSH-Login to VM with GitHub ID and Password.
-   2.  Remove previously installed CORTX-Manager RPMs, if any:
+1.  SSH-Login to VM with GitHub ID and Password.
+2.  Remove previously installed CORTX-Manager RPMs, if any:
 
-        For pkg in 
-        
-        `$ rpm -qa | grep -E "cortx|salt"` 
-        
-        Run 
-        
-        `$ yum remove -y $pkg`
-
-   3.  Install CORTX-Manager (RPM) using:
-   
-      ```shell
+      For pkg in 
       
-         $ yum install -i <rpm-created-by-dest-directory>
-         
-      ```
-     
-   4.  Executing the cortx-manager setup commands should pass: 
-  
-      ```shell
-     
-      $ cortx-manager_setup post_install
-      $ cortx-manager_setup config
-      $ cortx-manager_setup init
-      ```
-  5.  Enable and Restart cortx-manager using: 
-     
-     ```shell
+      `$ rpm -qa | grep -E "cortx|salt"` 
+      
+      Run 
+      
+      `$ yum remove -y $pkg`
 
-     $ systemctl enable cortx_manager
-     $ systemctl restart cortx_manager
-     ```
-     
-     </p>
-     </details>
+3.  Install CORTX-Manager (RPM) using:
+
+   ```shell
+   
+      $ yum install -i <rpm-created-by-dest-directory>
+      
+   ```
+   
+4.  Executing the cortx-manager setup commands should pass: 
+
+   ```shell
+   
+   $ cortx-manager_setup post_install
+   $ cortx-manager_setup config
+   $ cortx-manager_setup init
+   ```
+5.  Enable and Restart cortx-manager using: 
+   
+   ```shell
+
+   $ systemctl enable cortx_manager
+   $ systemctl restart cortx_manager
+   ```
+   
+   </p>
+   </details>
      
 
 ## You're All Set & You're Awesome
