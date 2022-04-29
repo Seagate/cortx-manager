@@ -32,7 +32,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    `$ sudo -s`
 
 3.  Ensure you've installed the following softwares:
-  
+   
    1.  Install RabbitMQ
       
       ```shell
@@ -82,36 +82,36 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
   3. Install Consul
   
-     1. Download consule binary. 
+     1.  Download consule binary. 
      
         `$ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip`
 
-     2. Unzip downloaded zip.
+     2.  Unzip downloaded zip.
      
         `$ unzip consul_1.8.3_linux_amd64.zip`
 
-     3. Install unzip if not already installed.
+     3.  Install unzip if not already installed.
      
         `$ yum install unzip`
 
         `$ unzip consul_1.8.3_linux_amd64.zip`
 
-     4. Move binary to /usr/loval/bin folder.
+     4.  Move binary to /usr/loval/bin folder.
      
         `$ mv consul /usr/local/bin/`
 
-     5. Check if the PATH contains `/usr/local/bin`. If it doesn’t, add it to the path.
+     5.  Check if the PATH contains `/usr/local/bin`. If it doesn’t, add it to the path.
         
         ```shell
         
         $ echo $PATH
         $ export PATH=$PATH:/usr/local/bin
         ```
-     6. Check if consul is installed.
+     6.  Check if consul is installed.
      
         `$ consul`
         
-     7. Run consul in the background.
+     7.  Run consul in the background.
      
         `$ nohup consul agent --dev &`
 
