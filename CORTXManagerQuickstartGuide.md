@@ -2,9 +2,9 @@
 
 This guide provides a step-by-step walkthrough for getting you CORTX-Manager ready.
 
-- [1.0 Prerequisites](##10-Prerequisites)
-- [1.2 Install Cortx Manager](#12-Install-Cortx-Manager)
-- [1.3 Deploy CORTX-Manager on Test VM](#13-Deploy-CORTX-Manager-on-Test-VM)
+-   [1.0 Prerequisites](##10-Prerequisites)
+-   [1.2 Install Cortx Manager](#12-Install-Cortx-Manager)
+-   [1.3 Deploy CORTX-Manager on Test VM](#13-Deploy-CORTX-Manager-on-Test-VM)
 
 ## 1.0 Prerequisites
 
@@ -171,27 +171,29 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    <summary>Follow these steps to Install CORTX-Manager</summary>
    <p>
  
- 1. Clone cortx-manager using HTTP or SSH:
+1.  Clone cortx-manager using HTTP or SSH:
  
     ```shell
     
     $ git clone https://github.com/Seagate/cortx-manager.git
     $ git clone git@github.com:Seagate/cortx-manager.git
     ```
- 2. Once you have obtained the sources, build the cortx-manager by running: 
+
+2.  Once you have obtained the sources, build the cortx-manager by running: 
  
     ```shell
     
     $ cd cortx-cortx-manager
     $ sudo cicd/build.sh
     ```
- 3. Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
+
+3.  Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
  
-    **Examples:**
-     
-     - To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
-     - To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
-     
+   **Examples:**
+    ```
+     -   To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
+     -   To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
+    ```
      </p>
      </details>
      
@@ -203,46 +205,47 @@ All the dependencies should be preinstalled and prerequisites met before you run
    <summary>Follow these steps to deploy the CORTX-Manager on a Test VM</summary>
    <p>
 
-   1. SSH-Login to VM with GitHub ID and Password.
-   2. Remove previously installed CORTX-Manager RPMs, if any:
+1.  SSH-Login to VM with GitHub ID and Password.
 
-        For pkg in 
-        
-        `$ rpm -qa | grep -E "cortx|salt"` 
-        
-        Run 
-        
-        `$ yum remove -y $pkg`
+2.  Remove previously installed CORTX-Manager RPMs, if any:
 
-   3. Install CORTX-Manager [RPM] using:
+    For pkg in 
+    
+    `$ rpm -qa | grep -E "cortx|salt"` 
+    
+    Run 
+    
+    `$ yum remove -y $pkg`
+
+3.  Install CORTX-Manager (RPM) using:
+
+   ```shell
    
-      ```shell
+      $ yum install -i <rpm-created-by-dest-directory>
       
-         $ yum install -i <rpm-created-by-dest-directory>
-         
-      ```
-     
-   4. Executing the cortx-manager setup commands should pass: 
-  
-      ```shell
-     
-      $ cortx-manager_setup post_install
-      $ cortx-manager_setup config
-      $ cortx-manager_setup init
-      ```
-  5. Enable and Restart cortx-manager using: 
-     
-     ```shell
+   ```
+   
+4.  Executing the cortx-manager setup commands should pass: 
 
-     $ systemctl enable cortx_manager
-     $ systemctl restart cortx_manager
-     ```
-     
-     </p>
-     </details>
-     
+   ```shell
+   
+   $ cortx-manager_setup post_install
+   $ cortx-manager_setup config
+   $ cortx-manager_setup init
+   ```
 
-## You're All Set & You're Awesome!
+5.  Enable and Restart cortx-manager using: 
+   
+   ```shell
+
+   $ systemctl enable cortx_manager
+   $ systemctl restart cortx_manager
+   ```
+   
+   </p>
+   </details>
+     
+## You're All Set & You're Awesome
 
 We thank you for stopping by to check out the CORTX Community. We are fully dedicated to our mission to build open source technologies that help the world save unlimited data and solve challenging data problems. Join our mission to help reinvent a data-driven world. 
 
