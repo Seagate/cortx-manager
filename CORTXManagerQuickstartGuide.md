@@ -203,15 +203,16 @@ All the dependencies should be preinstalled and prerequisites met before you run
    <p>
 
 1.  SSH-Login to VM with GitHub ID and Password.
+
 2.  Remove previously installed CORTX-Manager RPMs, if any:
 
-      For pkg in 
-      
-      `$ rpm -qa | grep -E "cortx|salt"` 
-      
-      Run 
-      
-      `$ yum remove -y $pkg`
+    For pkg in 
+    
+    `$ rpm -qa | grep -E "cortx|salt"` 
+    
+    Run 
+    
+    `$ yum remove -y $pkg`
 
 3.  Install CORTX-Manager (RPM) using:
 
@@ -240,7 +241,6 @@ All the dependencies should be preinstalled and prerequisites met before you run
    </p>
    </details>
      
-
 ## You're All Set & You're Awesome
 
 We thank you for stopping by to check out the CORTX Community. We are fully dedicated to our mission to build open source technologies that help the world save unlimited data and solve challenging data problems. Join our mission to help reinvent a data-driven world. 
