@@ -32,8 +32,8 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    `$ sudo -s`
 
 3.  Ensure you've installed the following softwares:
-   
-   1.  Install RabbitMQ
+  
+  1.  Install RabbitMQ
       
       ```shell
       $ wget https://www.rabbitmq.com/releases/rabbitmq-server/v3.6.1/rabbitmq-server-3.6.1-1.noarch.rpm
@@ -117,8 +117,8 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
   4. Install provisioner
   
-     1. Go to your home directory.
-     2. Git clone the provisioner repository, and follow the steps below:
+     1.  Go to your home directory.
+     2.  Git clone the provisioner repository, and follow the steps below:
      
       ```shell
          $ git clone git@github.com:Seagate/cortx-prvsnr.git
