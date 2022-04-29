@@ -32,6 +32,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    `$ sudo -s`
 
 3.  Ensure you've installed the following softwares:
+
    1.  Install RabbitMQ
       
       ```shell
@@ -45,7 +46,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       $ rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
       $ rabbitmqctl add_vhost SSPL
       $ rabbitmq-plugins enable rabbitmq_management
-
+      ```
      From your browser, navigate go to: http://<hostname>:15672/ 
 
      1. Login with your admin password.
@@ -67,6 +68,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      6. Set all permissions and select virtual host as SSPL
        
         ![](images/Image%204.jpg)
+
    2.  Install Elastic Search:
   
      ```shell
