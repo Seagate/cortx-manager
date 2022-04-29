@@ -2,9 +2,9 @@
 
 This guide provides a step-by-step walkthrough for getting you CORTX-Manager ready.
 
-- [1.0 Prerequisites](##10-Prerequisites)
-- [1.2 Install Cortx Manager](#12-Install-Cortx-Manager)
-- [1.3 Deploy CORTX-Manager on Test VM](#13-Deploy-CORTX-Manager-on-Test-VM)
+  - [1.0 Prerequisites](##10-Prerequisites)
+  - [1.2 Install Cortx Manager](#12-Install-Cortx-Manager)
+  - [1.3 Deploy CORTX-Manager on Test VM](#13-Deploy-CORTX-Manager-on-Test-VM)
 
 ## 1.0 Prerequisites
 
