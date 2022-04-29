@@ -116,7 +116,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
         ```
      6.  Check if consul is installed.
      
-        ```
+        ```shell
         $ consul
         ```
         
