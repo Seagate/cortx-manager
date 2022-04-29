@@ -115,7 +115,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       `$ nohup consul agent --dev &`
 
    4.  Install provisioner
-  
+    ```
      1.  Go to your home directory.
      2.  Git clone the provisioner repository, and follow the steps below:
      
@@ -124,6 +124,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
          $ mkdir /opt/seagate/cortx/provisioner
          $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
      ```
+    ```
       </p>
       </details>
       
