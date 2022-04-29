@@ -190,10 +190,10 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 3.  Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
  
    **Examples:**
-     
+    ```
      -   To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
      -   To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
-     
+    ```
      </p>
      </details>
      
