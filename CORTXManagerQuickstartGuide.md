@@ -82,7 +82,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      ![Successful elasticsearch.yml installation](images/Image-5.jpg)
 
    3.  Install Consul
-     ```
+
      1.  Download consule binary. 
      
      `$ wget https://releases.hashicorp.com/consul/1.8.3/consul_1.8.3_linux_amd64.zip`
@@ -115,7 +115,6 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      7.  Run consul in the background.
      
       `$ nohup consul agent --dev &`
-     ```
 
    4.  Install provisioner
     ```
