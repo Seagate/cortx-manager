@@ -16,24 +16,24 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    <summary>Click to view the process to manually install the full stack.</summary>
    <p>
 
-1. You'll need to install the following components:
+1.  You'll need to install the following components:
 
-   - [Provisioner](https://github.com/Seagate/cortx-prvsnr/blob/dev/Cortx-ProvisionerQuickstartGuide.md)
-   - [S3 Server](https://github.com/Seagate/cortx-s3server/blob/dev/docs/CORTX-S3%20Server%20Quick%20Start%20Guide.md)
-   - [Hare](https://github.com/Seagate/cortx-hare)
-   - [Monitor](https://github.com/Seagate/cortx-monitor/blob/dev/cortx-monitorQuickstartGuide.md)
+   -   [Provisioner](https://github.com/Seagate/cortx-prvsnr/blob/dev/Cortx-ProvisionerQuickstartGuide.md)
+   -   [S3 Server](https://github.com/Seagate/cortx-s3server/blob/dev/docs/CORTX-S3%20Server%20Quick%20Start%20Guide.md)
+   -   [Hare](https://github.com/Seagate/cortx-hare)
+   -   [Monitor](https://github.com/Seagate/cortx-monitor/blob/dev/cortx-monitorQuickstartGuide.md)
 
-2. Login with super user:
+2.  Login with super user:
    
    `$ sudo su`
 
-    Or 
+   Or 
     
    `$ sudo -s`
 
-3. Ensure you've installed the following softwares:
+3.  Ensure you've installed the following softwares:
 
-   1. Install RabbitMQ
+   1.  Install RabbitMQ
       
       ```shell
       $ wget https://www.rabbitmq.com/releases/rabbitmq-server/v3.6.1/rabbitmq-server-3.6.1-1.noarch.rpm
