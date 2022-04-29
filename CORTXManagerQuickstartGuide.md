@@ -46,7 +46,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       $ rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
       $ rabbitmqctl add_vhost SSPL
       $ rabbitmq-plugins enable rabbitmq_management
-      ```
+
      From your browser, navigate go to: http://<hostname>:15672/ 
 
      1. Login with your admin password.
