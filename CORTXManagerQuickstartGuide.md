@@ -171,26 +171,26 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
    <summary>Follow these steps to Install CORTX-Manager</summary>
    <p>
  
-1. Clone cortx-manager using HTTP or SSH:
+1.  Clone cortx-manager using HTTP or SSH:
  
     ```shell
     
     $ git clone https://github.com/Seagate/cortx-manager.git
     $ git clone git@github.com:Seagate/cortx-manager.git
     ```
-2. Once you have obtained the sources, build the cortx-manager by running: 
+2.  Once you have obtained the sources, build the cortx-manager by running: 
  
     ```shell
     
     $ cd cortx-cortx-manager
     $ sudo cicd/build.sh
     ```
-3. Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
+3.  Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
  
-    **Examples:**
+   **Examples:**
      
-     - To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
-     - To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
+     -   To build cortx-manager with integration tests, run: `$ sudo cicd/build.sh -i`
+     -   To build cortx-manager with log level debug, run: `$ sudo cicd/build.sh -q true`
      
      </p>
      </details>
