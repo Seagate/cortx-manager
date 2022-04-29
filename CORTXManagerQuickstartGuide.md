@@ -152,6 +152,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
       $ cd cortx
       $ ln -s /<path-to-cortx-py-utils>/cortx-py-utils/src/utils
       ```
+
 3.  Install Python 3
 
    `$ yum –y install python3`
@@ -185,6 +186,7 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
     $ cd cortx-cortx-manager
     $ sudo cicd/build.sh
     ```
+
 3.  Run `$ sudo cicd/build.sh -h` to list build options in more detail. - This will build an RPM on a dest directory.
  
    **Examples:**
