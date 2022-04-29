@@ -12,9 +12,9 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 <summary>Before you begin</summary>
 <p>
    
-   <details>
-   <summary>Click to view the process to manually install the full stack.</summary>
-   <p>
+<details>
+<summary>Click to view the process to manually install the full stack.</summary>
+<p>
 
 1.  You'll need to install the following components:
 
@@ -136,12 +136,12 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
          $ mkdir /opt/seagate/cortx/provisioner
          $ ln -s /<path-to-cortx-prvsnr>/cortx-prvsnr/* /opt/seagate/cortx/provisioner/
       ```
-      </p>
-      </details>
+</p>
+</details>
       
-     <details>
-   <summary>Install OVA and these prerequisites to skip manual installation.</summary>
-   <p>
+<details>
+<summary>Install OVA and these prerequisites to skip manual installation.</summary>
+<p>
       
   Please refer to the documentation to [Import the CORTX Open Virtual Appliance (OVA)](https://github.com/Seagate/cortx/blob/main/doc/Importing_OVA_File.rst).
      
@@ -169,9 +169,8 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
 
    `$ yum –y install python3`
      
-   </p>
-   </details>
-      
+</p>
+</details>
        
 </p>
 </details>
