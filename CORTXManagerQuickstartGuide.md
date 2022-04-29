@@ -203,8 +203,8 @@ All the dependencies should be preinstalled and prerequisites met before you run
    <summary>Follow these steps to deploy the CORTX-Manager on a Test VM</summary>
    <p>
 
-   1. SSH-Login to VM with GitHub ID and Password.
-   2. Remove previously installed CORTX-Manager RPMs, if any:
+   1.  SSH-Login to VM with GitHub ID and Password.
+   2.  Remove previously installed CORTX-Manager RPMs, if any:
 
         For pkg in 
         
@@ -214,7 +214,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
         
         `$ yum remove -y $pkg`
 
-   3. Install CORTX-Manager [RPM] using:
+   3.  Install CORTX-Manager [RPM] using:
    
       ```shell
       
@@ -222,7 +222,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
          
       ```
      
-   4. Executing the cortx-manager setup commands should pass: 
+   4.  Executing the cortx-manager setup commands should pass: 
   
       ```shell
      
@@ -230,7 +230,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
       $ cortx-manager_setup config
       $ cortx-manager_setup init
       ```
-  5. Enable and Restart cortx-manager using: 
+  5.  Enable and Restart cortx-manager using: 
      
      ```shell
 
@@ -242,7 +242,7 @@ All the dependencies should be preinstalled and prerequisites met before you run
      </details>
      
 
-## You're All Set & You're Awesome!
+## You're All Set & You're Awesome
 
 We thank you for stopping by to check out the CORTX Community. We are fully dedicated to our mission to build open source technologies that help the world save unlimited data and solve challenging data problems. Join our mission to help reinvent a data-driven world. 
 
