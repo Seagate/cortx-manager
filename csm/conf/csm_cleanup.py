@@ -66,7 +66,7 @@ def remove_old_indexes(es, arg_d, arg_n, arg_e):
     Log.debug(f'Will remove all indexes earlier than [{date_dago}]')
     try:
         response = requests.get(f'http://{host}/_cat/indices?v')
-    except Exception as e:
+    except Exception:
         Log.error(f'ERROR: can not connect to {host}, exiting')
         return
 
@@ -157,9 +157,8 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.log import Log
     from cortx.utils.cleanup.es_data_cleanup import esCleanup
-    from cortx.utils.conf_store.conf_store import Conf, ConfSection, DebugConf
+    from cortx.utils.conf_store.conf_store import Conf
     from csm.core.blogic import const
-    from csm.common.payload import Yaml
     from csm.common.storage_usage import StorageInfo
     Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
     Log.init(const.CSM_CLEANUP_LOG_FILE,

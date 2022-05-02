@@ -15,7 +15,7 @@
 
 
 from typing import List
-
+from urllib.parse import urlsplit
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.network_addresses import NetworkAddresses
 from csm.core.blogic import const
@@ -78,3 +78,15 @@ class ServiceUrls:
         :returns: Bucket URL
         """
         return '{}/{}'.format(ServiceUrls.get_s3_uri(scheme), bucket_name)
+
+    @staticmethod
+    def parse_url(url: str):
+        """
+        Parses the url.
+
+        :returns protocol
+        :returns host
+        :returns port
+        """
+        url_split = urlsplit(url)
+        return url_split.scheme, url_split.hostname, url_split.port

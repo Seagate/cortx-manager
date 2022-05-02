@@ -30,9 +30,8 @@ from cortx.utils.support_framework.log_filters import FilterLog
 
 
 class GenerateCsmBundle:
-    '''
-    Csm support bundle generation class
-    '''
+    """Csm support bundle generation class."""
+
     bundle_id = None
     target_path = None
     duration = None

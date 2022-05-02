@@ -26,8 +26,9 @@ class CsmSetupCommand:
         Provide cli to setup csm. Create user for csm to allow basic
         permission like log, bundle path.
     """
+
     def __init__(self, argv):
-        ''' Check csm setup command and initialize '''
+        """Check csm setup command and initialize."""
         self._args = argv
         self._args[0] = 'csm_setup'
         self._validate()
@@ -37,13 +38,12 @@ class CsmSetupCommand:
                 level=const.LOG_LEVEL)
 
     def _validate(self):
-        ''' Validate setup command '''
-
+        """Validate setup command."""
         if len(self._args) < 2:
             raise Exception('Usage: csm_setup -h')
 
     def _get_command(self):
-        ''' Parse csm setup command '''
+        """Parse csm setup command."""
         parser = argparse.ArgumentParser(description='CSM Setup CLI', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
@@ -58,7 +58,7 @@ class CsmSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        ''' Parse args for csm_setup and execute cmd to print output '''
+        """Parse args for csm_setup and execute cmd to print output."""
         self._cmd = self._get_command()
         obj = CliClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.conf_store.conf_store import Conf
-    from csm.common.payload import *
+    from csm.common.payload import Json
     from cortx.utils.cli_framework.parser import CommandParser
     from csm.core.blogic import const
     from cortx.utils.log import Log
@@ -90,6 +90,6 @@ if __name__ == '__main__':
         csm_setup = CsmSetupCommand(sys.argv)
         csm_setup.process()
         sys.exit(0)
-    except Exception as e:
+    except Exception:
         sys.stderr.write('csm_setup command failed: %s\n' %traceback.format_exc())
         sys.exit(1)

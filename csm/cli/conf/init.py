@@ -22,19 +22,18 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
 class Init(Setup):
-    """
-    Init CORTX CLI
-    """
+    """Init CORTX CLI."""
 
     def __init__(self):
+        """Initialize CORTX CLI init phase."""
         super(Init, self).__init__()
 
     async def execute(self, command):
         """
-        Execute CORTX CLI setup Init Command
+        Execute CORTX CLI setup Init Command.
+
         :param command: Command Object For CLI. :type: Command
         :return: 0 on success, RC != 0 otherwise.
         """
-
         Log.info("Executing Init for CORTX CLI")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

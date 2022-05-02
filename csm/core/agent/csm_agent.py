@@ -140,20 +140,12 @@ class CsmAgent:
 
     @staticmethod
     def _get_consul_config():
-        def _parse_endpoints(url):
-            if "://"in url:
-                protocol, endpoint = url.split("://")
-            else:
-                protocol = ''
-                endpoint = url
-            host, port = endpoint.split(":")
-            return protocol, host, port
         protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         for each_endpoint in endpoint_list:
             if 'http' in each_endpoint:
-                protocol, host, port = _parse_endpoints(each_endpoint)
+                protocol, host, port = ServiceUrls.parse_url(each_endpoint)
                 break
         return protocol, host, port, secret, each_endpoint
 
@@ -258,6 +250,7 @@ if __name__ == '__main__':
     from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
+    from csm.common.service_urls import ServiceUrls
 
     try:
         client = None

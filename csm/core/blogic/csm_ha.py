@@ -14,19 +14,18 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import subprocess
-
 from cortx.utils.log import Log
 from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import CsmError
 from csm.core.blogic import const
-from csm.common.ha_framework import PcsHAFramework, PcsResourceAgent
+from csm.common.ha_framework import PcsResourceAgent
 
 class CsmResourceAgent(PcsResourceAgent):
-    ''' Provide initalization on csm resources '''
+    """Provide initalization on csm resources."""
 
     def __init__(self, resources):
+        """Csm resource agent init."""
         super(CsmResourceAgent, self).__init__(resources)
         self._resources = resources
         self._csm_index = const.CSM_GLOBAL_INDEX
@@ -34,7 +33,7 @@ class CsmResourceAgent(PcsResourceAgent):
         self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>secondary")
 
     def init(self, force_flag):
-        ''' Perform initalization for CSM resources '''
+        """Perform initalization for CSM resources"""
         try:
             Log.info("Starting configuring HA for CSM..")
 

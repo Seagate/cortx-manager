@@ -29,6 +29,7 @@ class Test(Setup):
     """
 
     def __init__(self):
+        """Initialize CORTX CLI tests."""
         super(Test, self).__init__()
 
     async def execute(self, command):
