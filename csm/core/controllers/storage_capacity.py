@@ -19,7 +19,8 @@ from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
 from csm.common.errors import InvalidRequest
 from csm.core.services.storage_capacity import CapacityError
-from csm.core.controllers.view import CsmHttpException
+from csm.core.controllers.view import CsmHttpException, CsmResponse
+from csm.core.controllers.rgw.s3.base import S3BaseView
 
 CAPACITY_SERVICE_ERROR = 0x3010
 
@@ -90,3 +91,25 @@ class CapacityManagementView(CsmView):
                                    resp.message_id,
                                    resp.message)
         return resp
+
+@CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}")
+class CapacityUsageView(S3BaseView):
+    """
+    GET REST API view implementation for getting capacity usage for specific user
+    """
+
+    def __init__(self, request):
+        """Get user level capacity usage Init."""
+        super().__init__(request, const.STORAGE_CAPACITY_USAGE_SERVICE)
+
+    @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        resource_id = self.request.match_info[const.ID]
+        resource = self.request.match_info[const.ARG_RESOURCE]
+        Log.info(f"Handling GET implementation for getting capacity usage"
+                f" for resource: {resource} with id : {resource_id}")
+        path_params_dict = {const.ID: resource_id, const.ARG_RESOURCE:resource}
+        with self._guard_service():
+            response = await self._service.get_capacity_usage(**path_params_dict)
+            return CsmResponse(response)

@@ -557,6 +557,7 @@ STATUS_CONFLICT = 409
 FW_UPDATE_SERVICE = "fw_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
+STORAGE_CAPACITY_USAGE_SERVICE = "storage_capacity_usage_service"
 USL_SERVICE = "usl_service"
 MAINTENANCE_SERVICE = "maintenance"
 REPLACE_NODE_SERVICE = "replace_node"
@@ -961,3 +962,6 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# capcity usage
+GET_CAPACITY_USAGE_OPERATION  = 'GET_CAPACITY_USAGE'
