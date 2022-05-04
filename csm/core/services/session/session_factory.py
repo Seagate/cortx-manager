@@ -174,7 +174,7 @@ class SessionFactory:
     @staticmethod
     def get_instance(storage: DataBaseProvider=None):
         # session_backend_keys: Two Level nested map
-        # First Level Storage :- Local / Persistent
+        # First Level Storage : Local / Persistent
         # Inner Level(leaf) backend : add here for more session backend option
         session_backend_keys = {
             const.LOCAL: {
