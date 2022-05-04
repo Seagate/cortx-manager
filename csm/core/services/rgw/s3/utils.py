@@ -19,6 +19,7 @@ from csm.common.services import ApplicationService
 from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
+from csm.common.service_urls import ServiceUrls
 
 class CsmRgwConfigurationFactory:
     """Factory for the most common CSM RGW connections configurations."""
@@ -29,9 +30,9 @@ class CsmRgwConfigurationFactory:
         rgw_connection_config = RgwConnectionConfig()
         rgw_endpoint = Conf.get(
             const.CSM_GLOBAL_INDEX, 'RGW>s3>endpoints[0]')
-        protocol, host, port = CsmRgwConfigurationFactory._parse_endpoints(rgw_endpoint)
+        _, host, port = ServiceUrls.parse_url(rgw_endpoint)
         rgw_connection_config.host = host
-        rgw_connection_config.port = int(port)
+        rgw_connection_config.port = port
         rgw_connection_config.auth_user = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
         rgw_connection_config.auth_user_access_key = Conf.get(
@@ -39,24 +40,6 @@ class CsmRgwConfigurationFactory:
         rgw_connection_config.auth_user_secret_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
         return rgw_connection_config
-
-    @staticmethod
-    def _parse_endpoints(url):
-        """
-        Parse RGW endpoint.
-
-        :returns protocol: RGW connection protocol
-        :returns host: RGW connection host
-        :returns port: RGW connection port
-
-        """
-        if "://"in url:
-            protocol, endpoint = url.split("://")
-        else:
-            protocol = ''
-            endpoint = url
-        host, port = endpoint.split(":")
-        return protocol, host, port
 
 class S3ServiceError(Exception):
     """S3 service error class."""

@@ -15,7 +15,7 @@
 
 from cortx.utils.data.access.filters import Compare, And, Or
 from schematics.exceptions import ConversionError
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 from csm.common.errors import InvalidRequest
 import urllib.parse
 import re

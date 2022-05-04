@@ -23,13 +23,14 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 class PostInstall(Setup):
     """
-    Post-install CORTX CLI
+    Post-install CORTX CLI.
 
     Post install is used after just all rpms are install but
-    no service are started
+    no service are started.
     """
 
     def __init__(self):
+        """Initialize CORTX CLI post install phase."""
         super(PostInstall, self).__init__()
 
     async def execute(self, command):

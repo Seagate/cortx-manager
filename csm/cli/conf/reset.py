@@ -22,15 +22,16 @@ from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
 class Reset(Setup):
-    """
-    Reset CORTX CLI configuration
-    """
+    """Reset CORTX CLI configuration."""
 
     def __init__(self):
+        """Initialize CORTX CLI reset phase."""
         super(Reset, self).__init__()
 
     async def execute(self, command):
         """
+        Execute CORTX CLI setup Reset Command.
+
         :param command:
         :return:
         """

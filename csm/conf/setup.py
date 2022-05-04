@@ -14,21 +14,16 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import pwd
-import grp
-import errno
 import aiohttp
+import traceback
 from cortx.utils.validator.v_consul import ConsulV
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from cortx.utils.validator.error import VError
-from cortx.utils.validator.v_path import PathV
-from cortx.utils.validator.v_pkg import PkgV
 from csm.core.blogic import const
 from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, ResourceExist
-import traceback
-from csm.common.payload import Text
+from csm.common.service_urls import ServiceUrls
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
@@ -37,7 +32,10 @@ client = None
 
 
 class Setup:
+    """Base class for csm_setup operations."""
+
     def __init__(self):
+        """Setup init."""
         self._user = None
         self._uid = self._gid = -1
         self._setup_info = dict()
@@ -51,7 +49,8 @@ class Setup:
         Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF} {self.config_path}")
         Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
-    def _set_csm_conf_path(self):
+    @staticmethod
+    def _set_csm_conf_path():
         conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY,
                                                      const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
@@ -60,20 +59,21 @@ class Setup:
         Log.info(f"Setting Config saving path:{conf_path} from confstore")
         return conf_path
 
-    def _get_consul_config(self):
+    @staticmethod
+    def get_consul_config():
         protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         for each_endpoint in endpoint_list:
             if 'http' in each_endpoint:
-                protocol, host, port = self._parse_endpoints(each_endpoint)
+                protocol, host, port = ServiceUrls.parse_url(each_endpoint)
                 Log.info(f"Fetching consul endpoint : {each_endpoint}")
                 break
         return protocol, host, port, secret, each_endpoint
 
     def load_csm_config_indices(self):
         set_config_flag = False
-        protocol, consul_host, consul_port, secret, endpoint = self._get_consul_config()
+        _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:
             try:
                 ConsulV().validate_service_status(consul_host,consul_port)
@@ -88,7 +88,7 @@ class Setup:
                 raise CsmSetupError("Unable to fetch the configurations")
 
         if not set_config_flag:
-            config_path = self._set_csm_conf_path()
+            config_path = Setup._set_csm_conf_path()
             Log.info(f"Setting CSM configuration to local storage: {config_path}")
             Conf.load(const.CSM_GLOBAL_INDEX,
                     f"yaml://{config_path}/{const.CSM_CONF_FILE_NAME}")
@@ -96,17 +96,17 @@ class Setup:
                     f"yaml://{config_path}/{const.DB_CONF_FILE_NAME}")
             set_config_flag = True
 
-    def _copy_base_configs(self):
-        Log.info(f"Copying Csm base configurations to destination indices")
+    @staticmethod
+    def copy_base_configs():
+        Log.info("Copying Csm base configurations to destination indices")
         Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
         Conf.load("DATABASE_SOURCE_CONF_INDEX",f"yaml://{const.DB_SOURCE_CONF}")
         Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
         Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
 
-    def load_default_config(self):
-        """
-        Load default configurations for csm.
-        """
+    @staticmethod
+    def load_default_config():
+        """Load default configurations for csm."""
         # Load general default configurations for csm.
         Conf.load(const.CSM_DEFAULT_CONF_INDEX,
                         f"yaml://{const.CSM_DEFAULT_CONF}")
@@ -139,7 +139,7 @@ class Setup:
     async def erase_index(collection, url, method, payload=None):
         Log.info(f"Url: {url}")
         try:
-            response, headers, status = await Setup.request(url, method, payload)
+            response, _, status = await Setup.request(url, method, payload)
             if status != 200:
                 Log.error(f"Unable to delete collection: {collection}")
                 Log.error(f"Response: {response}")
@@ -210,14 +210,13 @@ class Setup:
         return csm_user_pass
 
     async def _create_cluster_admin(self, force_action=False):
-        '''
+        """
         Create Cluster admin using CSM User managment.
-        Username, Password, Email will be obtaineed from Confstore
-        '''
+        Username, Password, Email will be obtaineed from Confstore.
+        """
         from csm.core.services.users import CsmUserService, UserManager
         from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
-        from csm.common.conf import Security
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
                                     const.CSM_AGENT_MGMT_ADMIN_KEY)
@@ -231,7 +230,7 @@ class Setup:
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
-        cluster_admin_secret = self._decrypt_secret(cluster_admin_secret, self.cluster_id,
+        cluster_admin_secret = Setup._decrypt_secret(cluster_admin_secret, self.cluster_id,
                                                 Conf.get(const.CSM_GLOBAL_INDEX,
                                                         const.S3_PASSWORD_DECRYPTION_KEY))
         UserNameValidator()(cluster_admin_user)
@@ -264,10 +263,11 @@ class Setup:
             await usr_service.create_cluster_admin(cluster_admin_user,
                                                 cluster_admin_secret,
                                                 cluster_admin_emailid)
-        except ResourceExist as ex:
+        except ResourceExist:
             Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
-    def _decrypt_secret(self, secret, cluster_id, decryption_key):
+    @staticmethod
+    def _decrypt_secret(secret, cluster_id, decryption_key):
         try:
             cipher_key = Cipher.generate_key(cluster_id,decryption_key)
         except KvError as error:
@@ -284,45 +284,11 @@ class Setup:
             Log.error(f"Secret decryption Failed. {error}")
             raise CipherInvalidToken(f"Secret decryption Failed. {error}")
 
-    def _parse_endpoints(self, url):
-        if "://"in url:
-            protocol, endpoint = url.split("://")
-        else:
-            protocol = ''
-            endpoint = url
-        host, port = endpoint.split(":")
-        Log.info(f"Parsing endpoint url:{url} as protocol:{protocol}, host:{host}, port:{port}")
-        return protocol, host, port
-
-    def _get_log_path_from_conf_store(self):
-        log_path = Conf.get(const.CONSUMER_INDEX, const.CSM_LOG_PATH_KEY, const.CSM_LOG_PATH)
-        if log_path and log_path.find(const.CSM_COMPONENT_NAME) == -1:
-            log_path = log_path + f"/{const.CSM_COMPONENT_NAME}/"
-        return log_path
-
-    def _log_cleanup(self):
-        """
-        Delete all logs
-        """
-        Log.info("Delete all logs")
-        log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
-        Setup._run_cmd("rm -rf " +log_path)
-
 class CsmSetup(Setup):
     def __init__(self):
+        """Csm Setup initialization."""
         super(CsmSetup, self).__init__()
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
 
-    def _verify_args(self, args):
-        """
-        Verify args for actions
-        """
-        Log.info(f"Verifying arguments... {args}")
-        if "Product" in args.keys() and args["Product"] != "cortx":
-            raise Exception("Not implemented for Product %s" %args["Product"])
-        if "Component" in args.keys() and args["Component"] != "all":
-            raise Exception("Not implemented for Component %s" %args["Component"])
-        if "f" in args.keys() and args["f"] is True:
-            raise Exception("Not implemented for force action")

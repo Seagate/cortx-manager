@@ -50,7 +50,7 @@ class HealthPlugin(CsmPlugin):
         """
         resource = filters.get(const.ARG_RESOURCE, "")
         depth = filters.get(const.ARG_DEPTH, const.HEALTH_DEFAULT_DEPTH)
-        args = self._build_args_to_get_system_health(filters)
+        args = HealthPlugin._build_args_to_get_system_health(filters)
 
         response_format = filters.get(const.ARG_RESPONSE_FORMAT,
                                         const.RESPONSE_FORMAT_TREE)
@@ -63,7 +63,8 @@ class HealthPlugin(CsmPlugin):
 
         return resource_health_resp
 
-    def _build_args_to_get_system_health(self, filters):
+    @staticmethod
+    def _build_args_to_get_system_health(filters):
         args = dict()
 
         resource_id = filters.get(const.ARG_RESOURCE_ID, "")

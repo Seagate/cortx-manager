@@ -15,7 +15,6 @@
 
 import sys
 from csm.core.blogic import const
-from cortx.utils.conf_store.conf_store import Conf
 from csm.common.process import AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
@@ -30,8 +29,7 @@ class System:
         :param command: Command object from argparser.
         :return:
         """
-        _user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
-        _password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
+
         _command = "start"
 
         Log.debug(f"executing command :-  "
