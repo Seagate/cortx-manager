@@ -14,15 +14,14 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import shutil
 import subprocess
-import getpass
 import errno
 
 from csm.common.comm import SSHChannel
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import CsmError
+
 
 class FileCollector(object):
     """ Base class of File collector. """
@@ -42,7 +41,7 @@ class FileCollector(object):
             [<component>] = ...
         """
 
-        if collection_rules == None:
+        if collection_rules is None:
             raise CsmError(errno.EINVAL, 'invalid component spec. Check configuration')
 
         self._collection_rules = collection_rules
@@ -64,22 +63,22 @@ class FileCollector(object):
             self._startup()
             for comp_name in comp_name_list:
                 if comp_name not in self._collection_rules.keys():
-                    Log.error('Invalid component %s. Valid: %s' \
-                        %(comp_name, self._collection_rules.keys()))
-                    raise CsmError(errno.EINVAL, 'Invalid component %s' %comp_name)
+                    Log.error('Invalid component %s. Valid: %s'
+                              % (comp_name, self._collection_rules.keys()))
+                    raise CsmError(errno.EINVAL, 'Invalid component %s' % comp_name)
                     # TODO - Raise proper Exception
 
                 out_dir = os.path.join(self._target, comp_name)
                 os.makedirs(out_dir)
 
-                Log.debug('collecting %s data into %s' %(comp_name, out_dir))
+                Log.debug('collecting %s data into %s' % (comp_name, out_dir))
                 self._execute_commands(comp_name, out_dir)
 
                 # File specs may contain wild-card characters e.g. 'debug.*'
                 # Expand them first
                 file_list = []
                 for file_spec in self._collection_rules[comp_name]['files']:
-                    Log.debug('file_spec: %s' %file_spec)
+                    Log.debug('file_spec: %s' % file_spec)
                     file_list.extend(self._expand_file_spec(file_spec))
 
                 self._collect_files(file_list, out_dir)
@@ -91,15 +90,16 @@ class FileCollector(object):
 
         except OSError as e:
             Log.exception(e)
-            raise CsmError(e.errno, '%s' %e)
+            raise CsmError(e.errno, '%s' % e)
 
         except IOError as e:
             Log.exception(e)
-            raise CsmError(errno.EIO, '%s' %e)
+            raise CsmError(errno.EIO, '%s' % e)
 
         except Exception as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
+
 
 class LocalFileCollector(FileCollector):
     """ Collects files from the local machine """
@@ -116,43 +116,42 @@ class LocalFileCollector(FileCollector):
         with open(os.path.join(out_dir, const.SUMMARY_FILE), 'w') as summary:
             for cmd in self._collection_rules[comp_name]['commands']:
                 try:
-                    Log.debug('$ %s' %cmd)
+                    Log.debug('$ %s' % cmd)
                     summary.write('$ %s\n' % cmd)
-                    output = subprocess.check_output(cmd, \
-                        stderr=subprocess.PIPE, shell=True)
+                    output = subprocess.check_output(cmd,
+                                                     stderr=subprocess.PIPE, shell=True)
                     summary.write(output)
 
                 except (OSError, subprocess.CalledProcessError) as exc:
                     Log.error('%s %s' % (exc.__class__.__name__, str(exc)))
 
     def _expand_file_spec(self, file_spec):
-        Log.debug('file_spec: %s' %file_spec)
-        cmd = 'ls %s' %file_spec
+        Log.debug('file_spec: %s' % file_spec)
+        cmd = 'ls %s' % file_spec
         output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
         return output.split('\n')
-
 
     def _collect_files(self, file_list, out_dir):
         """ Collect files from various logging sources """
 
-        Log.debug('file_list: %s' %file_list)
+        Log.debug('file_list: %s' % file_list)
         files = ' '.join(file_list)
         tar_cmd = 'tar czvf %s %s' % (os.path.join(out_dir, const.BUNDLE_FILE), files)
         try:
-            Log.debug('$ %s' %tar_cmd)
+            Log.debug('$ %s' % tar_cmd)
             subprocess.check_output(tar_cmd, stderr=subprocess.PIPE, shell=True)
 
         except OSError as e:
             Log.exception(e)
-            raise CsmError(e.errno, '%s' %e)
+            raise CsmError(e.errno, '%s' % e)
 
         except IOError as e:
             Log.exception(e)
-            raise CsmError(errno.EIO, '%s' %e)
+            raise CsmError(errno.EIO, '%s' % e)
 
         except (subprocess.CalledProcessError) as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
 
     def _cleanup(self):
         pass
@@ -182,22 +181,22 @@ class RemoteFileCollector(FileCollector):
                 try:
                     summary.write('\n$ %s\n' % action)
                     rc, output = self._channel.execute(action)
-                    summary.write('%s\n' %output)
+                    summary.write('%s\n' % output)
 
                 except OSError as e:
                     Log.exception(e)
-                    raise CsmError(e.errno, '%s' %e)
+                    raise CsmError(e.errno, '%s' % e)
 
                 except IOError as e:
                     Log.exception(e)
-                    raise CsmError(errno.EIO, '%s' %e)
+                    raise CsmError(errno.EIO, '%s' % e)
 
-                except (subprocess.CalledProcessError) as err:
+                except (subprocess.CalledProcessError) as e:
                     Log.exception(e)
-                    raise CsmError(-1, '%s' %e)
+                    raise CsmError(-1, '%s' % e)
 
     def _expand_file_spec(self, file_spec):
-        cmd = 'ls %s' %file_spec
+        cmd = 'ls %s' % file_spec
         rc, output = self._channel.execute(cmd)
         return output.split('\n')
 
@@ -211,26 +210,26 @@ class RemoteFileCollector(FileCollector):
         tar_cmd = 'tar czvf %s %s' % (remote_file, files)
 
         try:
-            Log.debug('cmd: %s' %tar_cmd)
+            Log.debug('cmd: %s' % tar_cmd)
             output, error = self._channel.execute(tar_cmd)
-            Log.debug('Copy remote:%s local:%s' %(remote_file, local_file))
+            Log.debug('Copy remote:%s local:%s' % (remote_file, local_file))
             self._channel.recv_file(remote_file, local_file)
-            self._channel.execute('rm -f %s' %remote_file)
+            self._channel.execute('rm -f %s' % remote_file)
 
         except CsmError:
             raise
 
         except OSError as e:
             Log.exception(e)
-            raise CsmError(e.errno, '%s' %e)
+            raise CsmError(e.errno, '%s' % e)
 
         except IOError as e:
             Log.exception(e)
-            raise CsmError(errno.EIO, '%s' %e)
+            raise CsmError(errno.EIO, '%s' % e)
 
-        except (subprocess.CalledProcessError) as err:
+        except (subprocess.CalledProcessError) as e:
             Log.exception(e)
-            raise CsmError(-1, '%s' %e)
+            raise CsmError(-1, '%s' % e)
 
     def _cleanup(self):
         """ Clean all the temp files and the directory """

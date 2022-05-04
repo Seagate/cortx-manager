@@ -39,7 +39,7 @@ class CsmUserCreateSchema(Schema):
 class CsmUserPatchSchema(Schema):
     current_password = fields.Str(validate=[PasswordValidator()])
     password = fields.Str(validate=[PasswordValidator()])
-    user_role = fields.Str(data_key='role',validate=validate.OneOf(const.CSM_USER_ROLES))
+    user_role = fields.Str(data_key='role', validate=validate.OneOf(const.CSM_USER_ROLES))
     email_address = fields.Email(data_key='email')
     reset_password = fields.Bool(required=False)
 
@@ -134,8 +134,8 @@ class CsmUsersListView(CsmView):
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
@@ -200,8 +200,8 @@ class CsmUsersView(CsmView):
             schema = CsmUserPatchSchema()
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
-        except json.decoder.JSONDecodeError as jde:
-            raise InvalidRequest(message_args=f"Request body missing")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 

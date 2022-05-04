@@ -16,6 +16,5 @@
 class Validator:
     @staticmethod
     def validate_type(obj, typ, name):
-        if type(obj) is not typ:
+        if not isinstance(obj, typ):
             raise ValueError(f'Type of {name} should be a {typ.__name__}')
-

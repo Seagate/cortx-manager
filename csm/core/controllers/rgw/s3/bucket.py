@@ -23,45 +23,58 @@ from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
 from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
 
+
 class BucketBaseSchema(S3BaseSchema):
     """
     S3 Bucket First Level schema validation class.
-    operation and arguments are required keys
+
+    Operation and arguments are required keys
     """
+
     operation = fields.Str(data_key=const.ARG_OPERATION, required=True,
-        validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
-    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(), values=fields.Raw(allow_none=True), required=True)
+                           validate=validate.OneOf(const.SUPPORTED_BUCKET_OPERATIONS))
+    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(),
+                            values=fields.Raw(allow_none=True), required=True)
+
 
 class LinkBucketSchema(S3BaseSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
+
     S3 Bucket Link schema validation class.
     """
+
     uid = fields.Str(data_key=const.UID, required=True)
     bucket = fields.Str(data_key=const.BUCKET, required=True)
     bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None, allow_none=False)
 
+
 class UnlinkBucketSchema(S3BaseSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
+
     S3 Bucket Unlink schema validation class.
     """
+
     uid = fields.Str(data_key=const.UID, required=True)
     bucket = fields.Str(data_key=const.BUCKET, required=True)
+
 
 class SchemaFactory:
     @staticmethod
     def init(operation):
         operation_schema_map = {
-        const.LINK: LinkBucketSchema,
-        const.UNLINK: UnlinkBucketSchema
+            const.LINK: LinkBucketSchema,
+            const.UNLINK: UnlinkBucketSchema
         }
         return operation_schema_map[operation]()
+
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
 class S3BucketView(S3BaseView):
     """
     S3 Bucket View for REST API implementation.
+
     PUT: Bucket Opertation
     """
 
@@ -72,11 +85,9 @@ class S3BucketView(S3BaseView):
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
     async def put(self):
-        """
-        PUT REST implementation for  s3 bucket.
-        """
+        """PUT REST implementation for  s3 bucket."""
         Log.info(f"Handling s3 bucket PUT request"
-                  f" user_id: {self.request.session.credentials.user_id}")
+                 f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = BucketBaseSchema()
             request_body = schema.load(await self.request.json())
@@ -85,8 +96,8 @@ class S3BucketView(S3BaseView):
             operation_schema = SchemaFactory.init(operation)
             operation_request_body = operation_schema.load(operation_arguments)
             Log.debug(f"Handling s3 bucket PUT request"
-                  f" request operation: {operation}"
-                  f" request operation body: {operation_request_body}")
+                      f" request operation: {operation}"
+                      f" request operation body: {operation_request_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:

@@ -20,24 +20,23 @@ from marshmallow import Schema, ValidationError, validates_schema
 
 S3_SERVICE_ERROR = 0x3000
 
+
 class S3BaseSchema(Schema):
-    """
-    Base Class for S3 Schema Validation.
-    invalidate_empty_values : method with marshmallo schema validates_schema decorator
-    """
+    """Base Class for S3 Schema Validation."""
+
     @validates_schema
     def invalidate_empty_values(self, data, **kwargs):
-        """Method invalidates the empty strings."""
+        """Invalidate the empty strings."""
         for key, value in data.items():
             if value is not None and not str(value).strip():
                 raise ValidationError(f"Empty value for {key}")
 
-class S3BaseView(CsmView):
 
+class S3BaseView(CsmView):
     """Simple base class for any S3 view which works with one service."""
 
     def __init__(self, request, service_name):
-        """S3 Base View init."""
+        """Construct S3 Base View."""
         super().__init__(request)
         self._service = self.request.app[service_name]
 

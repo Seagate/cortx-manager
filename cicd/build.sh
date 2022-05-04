@@ -1,3 +1,4 @@
+#!/bin/bash
 # CORTX-CSM: CORTX Management web and CLI interface.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 # This program is free software: you can redistribute it and/or modify
@@ -15,9 +16,10 @@
 
 set -e
 BUILD_START_TIME=$(date +%s)
-BASE_DIR=$(realpath "$(dirname $0)/..")
-PROG_NAME=$(basename $0)
-DIST=$(realpath $BASE_DIR/dist)
+SCRIPT_DIR_NAME=$(dirname "$0")
+BASE_DIR=$(realpath "$SCRIPT_DIR_NAME/..")
+PROG_NAME=$(basename "$0")
+DIST=$(realpath "$BASE_DIR/dist")
 CORTX_PATH="/opt/seagate/cortx/"
 CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
@@ -35,7 +37,7 @@ print_time() {
 show_stat() {
 if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "$1" ]; then
     DIFF=$(( $3 - $2 ))
-    printf "$4 BUILD TIME:  \t\t"
+    printf "%s BUILD TIME:  \t\t" "$4"
     print_time $DIFF
 fi
 }
@@ -51,8 +53,8 @@ fi
 
 gen_tar_file() {
 TAR_START_TIME=$(date +%s)
-cd $BASE_DIR
-cd ${DIST}
+cd "$BASE_DIR"
+cd "${DIST}"
 pwd
 echo "Creating tar for $1 build from $2 folder"
     tar -czf "${DIST}/rpmbuild/SOURCES/${PRODUCT}-$1-${VER}.tar.gz" "$2"
@@ -98,9 +100,6 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
         c)
             COMPONENT=${OPTARG}
             ;;
-        n)
-            BRAND_NAME=${OPTARG}
-            ;;
         l)
             BRAND_CONFIG_PATH=${OPTARG}
             ;;
@@ -122,10 +121,10 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
     esac
 done
 
-cd $BASE_DIR
+cd "$BASE_DIR"
 [ -z $"$BUILD" ] && BUILD="$(git rev-parse --short HEAD)" \
         || BUILD="${BUILD}_$(git rev-parse --short HEAD)"
-[ -z "$VER" ] && VER=$(cat $BASE_DIR/VERSION)
+[ -z "$VER" ] && VER=$(cat "$BASE_DIR/VERSION")
 [ -z "$PRODUCT" ] && PRODUCT="cortx"
 [ -z "$KEY" ] && KEY="cortx@ees@csm@pr0duct"
 [ -z "$COMPONENT" ] && COMPONENT="all"
@@ -143,14 +142,13 @@ COPY_START_TIME=$(date +%s)
 DIST="$BASE_DIR/dist"
 TMPDIR="$DIST/tmp"
 [ -d "$TMPDIR" ] && {
-    rm -rf ${TMPDIR}
+    rm -rf "${TMPDIR}"
 }
-mkdir -p $TMPDIR
+mkdir -p "$TMPDIR"
 
-CONF=$BASE_DIR/csm/conf/
 CLI_CONF=$BASE_DIR/csm/cli/conf/
 
-cd $BASE_DIR
+cd "$BASE_DIR"
 rm -rf "${DIST}/rpmbuild"
 mkdir -p "${DIST}/rpmbuild/SOURCES"
 COPY_END_TIME=$(date +%s)
@@ -288,7 +286,7 @@ fi
 
 # Generate RPMs
 RPM_BUILD_START_TIME=$(date +%s)
-TOPDIR=$(realpath ${DIST}/rpmbuild)
+TOPDIR=$(realpath "${DIST}/rpmbuild")
 
 # CSM Backend RPM
 rpm_build backend csm_agent
@@ -307,16 +305,14 @@ echo "CSM RPMs ..."
 find "$BASE_DIR" -name "*.rpm"
 
 [ "$INTEGRATION" == true ] && {
-    INTEGRATION_TEST_START=$(date +%s)
     bash "$BASE_DIR/cicd/auxiliary/csm_cicd.sh" "$DIST/rpmbuild/RPMS/x86_64" "$BASE_DIR" "$CSM_PATH"
     RESULT=$(cat /tmp/result.txt)
     cat /tmp/result.txt
-    echo $RESULT
-    [ "Failed" == $RESULT ] && {
+    echo "$RESULT"
+    [ "Failed" == "$RESULT" ] && {
         echo "CICD Failed"
         exit 1
     }
-    INTEGRATION_TEST_STOP=$(date +%s)
 }
 
 printf "COPY TIME:      \t\t"

@@ -59,9 +59,11 @@ class CsmAuth:
     def permissions(cls, permissions):
         if not issubclass(type(permissions), PermissionSet):
             permissions = PermissionSet(permissions)
+
         def decorator(handler):
             setattr(handler, cls.ATTR_PERMISSIONS, permissions)
             return handler
+
         return decorator
 
     @classmethod
@@ -79,14 +81,14 @@ class CsmResponse(web.Response):
 
 
 class CsmHttpException(web.HTTPException):
-    ''' Temporary solution: Imitate common REST API error structure '''
+    """Temporary solution: Imitate common REST API error structure."""
 
     def __init__(self, status, error_code, message_id, message, args=None):
         self.status_code = status
         body = {
             "error_code": error_code,
             "message_id": message_id,
-            "message":  message,
+            "message": message,
         }
         if args is not None:
             body["error_format_args"] = args
@@ -119,10 +121,11 @@ class CsmView(web.View):
 
     @classmethod
     def is_public(cls, handler, method):
-        ''' Check whether a particular method of the CsmView subclass has
-            the 'public' attribute. If not then check whether the handler
-            itself has the 'public' attribute '''
+        """
+        Check whether a particular method of the CsmView subclass has the 'public' attribute.
 
+        If not then check whether the handler itself has the 'public' attribute.
+        """
         method_handler = cls._get_method_handler(handler, method)
         if method_handler is not None:
             if CsmAuth.is_public(method_handler):
@@ -139,10 +142,12 @@ class CsmView(web.View):
 
     @classmethod
     def get_permissions(cls, handler, method):
-        ''' Obtain the list of required permissions associated with
-            the handler. Combine required pesmissions from the individual
-            method handler (like get/post/...) and from the whole view '''
+        """
+        Obtain the list of required permissions associated with the handler.
 
+        Combine required pesmissions from the individual method handler (like get/post/...)
+        and from the whole view.
+        """
         view_permissions = CsmAuth.get_permissions(handler)
         method_handler = cls._get_method_handler(handler, method)
         if method_handler is not None:
@@ -160,14 +165,12 @@ class CsmView(web.View):
             res = asyncio.shield(func(*arg, **kw))
             return res
         return wrapper
-    
+
     def validate_get(self):
         pass
 
     async def get(self):
-        """"
-        Generic get call implementation
-        """
+        """GET REST generic implementation."""
         self.validate_get()
         if self.request.match_info:
             match_info = {}
@@ -185,7 +188,8 @@ class CsmView(web.View):
                                       content_byte_size_limit=100 * (1024 ** 2),
                                       file_byte_size_limit=2 * (1024 ** 3)):
         """
-        Parse multipart request to dict
+        Parse multipart request to dict.
+
         Default limit for non-file content is 100 MB
         Default limit for file content is 2 GB
         """
@@ -229,8 +233,8 @@ class CsmView(web.View):
 
             # TODO: Add support for attribute "multiple" (HTML5)
             if fieldname in parse_results:
-                raise InvalidRequest(
-                    'Repeated fieldname in multipart request. Multiple attribute are not supported for now')
+                raise InvalidRequest("Repeated fieldname in multipart request. "
+                                     "Multiple attribute are not supported for now.")
 
             # If field has filename, write it to cache, else place the content in dict
             parse_result = None
@@ -245,8 +249,8 @@ class CsmView(web.View):
                 async for chunk in self.aiohttp_body_getter(field):
                     size += len(chunk)
                     if size > file_byte_size_limit:
-                        raise InvalidRequest(
-                            f'File "{filename}" is bigger than permissible limit. Max size = {file_byte_size_limit} bytes')
+                        raise InvalidRequest(f'File "{filename}" is bigger than permissible limit. '
+                                             f'Max size = {file_byte_size_limit} bytes')
                     file_cache.write_chunck(file_uuid, chunk)
                 parse_result = {
                     'content_type': ct,
@@ -258,7 +262,8 @@ class CsmView(web.View):
                 async for chunk in self.aiohttp_body_getter(field):
                     if size > content_byte_size_limit:
                         raise InvalidRequest(
-                            f'Field "{fieldname}" is bigger than permissible limit. Max size = {content_byte_size_limit} bytes')
+                            f'Field "{fieldname}" is bigger than permissible limit.'
+                            f' Max size = {content_byte_size_limit} bytes')
                     size += len(chunk)
                     content += chunk
                 parse_result = {
@@ -272,10 +277,8 @@ class CsmView(web.View):
 
     async def aiohttp_body_getter(self,
                                   body_reader,
-                                  chunk_byte_size_limit=10 * (1024 **2)):
-        """
-        chunk_byte_size_limit was figured out as an optimal value for fast upload
-        """
+                                  chunk_byte_size_limit=10 * (1024 ** 2)):
+        # chunk_byte_size_limit was figured out as an optimal value for fast upload.
         while True:
             # TODO: do aiohttp decode?
             chunk = await body_reader.read_chunk(chunk_byte_size_limit)
