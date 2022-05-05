@@ -51,7 +51,7 @@ class PostInstall(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
-            self.load_csm_config_indices()
+            Setup.load_csm_config_indices()
             Setup.copy_base_configs()
 
         except KvError as e:

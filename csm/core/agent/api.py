@@ -417,7 +417,7 @@ class CsmRestApi(CsmApi, ABC):
         except CsmUnauthorizedError as e:
             return CsmRestApi.json_response(
                 CsmRestApi.error_response(e, request=request, request_id=request_id), status=401)
-        except (CsmError, InvalidRequest) as e:
+        except CsmError as e:
             return CsmRestApi.json_response(
                 CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
         except KeyError as e:

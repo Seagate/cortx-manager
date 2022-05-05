@@ -53,11 +53,12 @@ class CsmFileView(CsmView):
         self._service = self.request.app["download_service"]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for downloading file
-    """
     async def get(self):
-        """Show an example of handling download request."""
+        """
+        GET REST implementation for downloading file.
+
+        Show an example of handling download request.
+        """
         Log.debug("Handling file download request")
         filename = self.request.rel_url.query.get("filename")
 
@@ -67,13 +68,11 @@ class CsmFileView(CsmView):
         file_response = self._service.get_file_response(FileType.ETC_CSM, filename)
         return file_response
 
-    """
-    POST REST implementation for uploading file
-    """
     async def post(self):
         """
-        Show an example of post multipart request handler.
+        POST REST implementation for uploading file.
 
+        Show an example of post multipart request handler.
         We are expecting that request includes text field and file field.
         """
         # We use FileCache context manager if we expect a file in the incoming request

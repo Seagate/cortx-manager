@@ -87,15 +87,15 @@ class CortxHAFramework(HAFramework):
             online = True
         return {"node_status": [{"name": "cluster", "online": online,
                                  "standby": not online}]}
-
-    def make_node_active(self, node):
+    @staticmethod
+    def make_node_active(node):
         """Put node on standby node for maintenance use."""
         try:
             _start_cmd = const.HCTL_NODE.format(
                 command=const.CORTXHA_CLUSTER.format(command="start"))
             Log.debug(f"executing command :-  {_start_cmd}")
             _proc = SimpleProcess(_start_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
+            _, _err, _rc = _proc.run(universal_newlines=True)
             if _rc not in [0, 1]:
                 raise Exception(_err)
             return {"message": const.STATE_CHANGE.format(node="cluster",
@@ -221,7 +221,8 @@ class CortxHAFramework(HAFramework):
         if unsupported_resource:
             raise CsmNotFoundError(f"Resource {resource} not found.")
 
-    def _validate_system_health_response(self, system_health):
+    @staticmethod
+    def _validate_system_health_response(system_health):
         if system_health is None:
             raise Exception(const.HEALTH_FETCH_ERR_MSG)
 

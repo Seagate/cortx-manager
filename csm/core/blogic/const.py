@@ -778,11 +778,6 @@ DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
 DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
 DEFAULT_OUTPUTFILE = '/tmp/output.log'
 
-#Cluster admin creds
-DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
-DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'
-DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
-
 # cluster.conf keys
 ENV_TYPE = "env_type"
 CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"

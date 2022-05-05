@@ -20,9 +20,8 @@ import asyncio
 class Process:
     def __init__(self, cmd):
         self._cmd = cmd
-        pass
 
-    def run(self):
+    def run(self, **kwargs):
         pass
 
 
@@ -37,13 +36,13 @@ class SimpleProcess(Process):
         self.env = None
         self.universal_newlines = None
 
-    def run(self, **args):
+    def run(self, **kwargs):
         """Run simple process."""
-        for key, value in args.items():
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
         try:
-            cmd = self._cmd.split() if type(self._cmd) is str else self._cmd
+            cmd = self._cmd.split() if isinstance(self._cmd, str) else self._cmd
             self._cp = subprocess.run(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE, shell=self.shell, cwd=self.cwd,
                                       timeout=self.timeout, env=self.env,
@@ -66,16 +65,15 @@ class PipedProcess(Process):
     def __init__(self, cmd):
         super(PipedProcess, self).__init__(cmd)
 
-    def run(self, **args):
+    def run(self, **kwargs):
         # TODO
         pass
-
 
 class AsyncioSubprocess(Process):
     def __init__(self, cmd):
         super(AsyncioSubprocess, self).__init__(cmd)
 
-    async def run(self, **agrs):
+    async def run(self, **kwagrs):
         try:
             self._process = await asyncio.create_subprocess_shell(self._cmd,
                                                                   stdout=asyncio.subprocess.PIPE,

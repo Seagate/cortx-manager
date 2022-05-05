@@ -32,7 +32,7 @@ class Upgrade(Setup):
         Log.info("Performing upgrade and loading config files")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.load_csm_config_indices()
+            Setup.load_csm_config_indices()
             Setup.load_default_config()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")

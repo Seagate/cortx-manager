@@ -132,7 +132,7 @@ class Ini(Doc):
 class Dict(Doc):
     """Python dictionary representation as a document."""
 
-    def __init__(self, data={}):
+    def __init__(self, data=None):
         Doc.__init__(self, data)
 
     def load(self):

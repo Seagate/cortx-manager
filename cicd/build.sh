@@ -100,6 +100,9 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
         c)
             COMPONENT=${OPTARG}
             ;;
+        n)
+            BRAND_NAME=${OPTARG}
+            ;;
         l)
             BRAND_CONFIG_PATH=${OPTARG}
             ;;

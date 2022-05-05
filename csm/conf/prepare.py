@@ -46,7 +46,7 @@ class Prepare(Setup):
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.load_csm_config_indices()
+            Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -67,7 +67,7 @@ class Prepare(Setup):
         self._set_cluster_id()
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
-        self._set_db_host_addr()
+        Prepare._set_db_host_addr()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -107,7 +107,8 @@ class Prepare(Setup):
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
-    def _set_db_host_addr(self):
+    @staticmethod
+    def _set_db_host_addr():
         """
         Sets database hosts address in CSM config.
         :return:

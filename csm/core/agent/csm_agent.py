@@ -154,7 +154,7 @@ class CsmAgent:
         """Load CSM configuration from the database."""
         set_config_flag = False
         Conf.load(const.CONSUMER_INDEX, Options.config)
-        protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
+        _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
                 ConsulV().validate_service_status(consul_host, consul_port)

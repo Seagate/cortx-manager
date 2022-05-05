@@ -15,7 +15,6 @@
 
 import os
 from cortx.utils.log import Log
-from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import CsmError
 from csm.core.blogic import const
