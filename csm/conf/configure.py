@@ -250,7 +250,7 @@ class Configure(Setup):
                                             data_limit_bytes=retention_size)
         else:
             Log.info(f"message_type:{message_type} already exists.")
-    
+
     @staticmethod
     def _create_cluster_stop_topic(mb_admin):
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_MSG_TYPE)

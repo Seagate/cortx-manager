@@ -54,8 +54,8 @@ class LogoutView(CsmView):
     async def post(self):
         Log.debug(f"Handling Logout Post request. "
                   f"user_id: {self.request.session.credentials.user_id}")
-        """ We use POST method here instead of GET
-        to avoid browser prefetching this URL """
+        # We use POST method here instead of GET
+        # to avoid browser prefetching this URL
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session

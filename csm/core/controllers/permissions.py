@@ -29,7 +29,8 @@ class BasePermissionsView(CsmView):
     def __init__(self, request):
         super(BasePermissionsView, self).__init__(request)
 
-    def transform_permissions(self, permissions: PermissionSet) -> dict:
+    @staticmethod
+    def transform_permissions(permissions: PermissionSet) -> dict:
         """
         Transform internal representation of the permission set to the format expected by the UI.
 
@@ -55,13 +56,14 @@ class CurrentPermissionsView(BasePermissionsView):
     def __init__(self, request):
         super(CurrentPermissionsView, self).__init__(request)
 
-    """
-    GET REST implementation for security permissions request
-    """
     @CsmAuth.permissions({Resource.PERMISSIONS: {Action.LIST}})
     async def get(self):
-        """Get security permissions."""
-        permissions = self.transform_permissions(self.request.session.permissions)
+        """
+        GET REST implementation for security permissions request.
+
+        Get security permissions.
+        """
+        permissions = BasePermissionsView.transform_permissions(self.request.session.permissions)
         return permissions
 
 
@@ -85,5 +87,5 @@ class UserPermissionsView(BasePermissionsView):
         except CsmNotFoundError:
             raise CsmNotFoundError("There is no such user", USERS_MSG_USER_NOT_FOUND, user_id)
         permissions_internal = await self._roles_service.get_permissions(roles)
-        permissions = self.transform_permissions(permissions_internal)
+        permissions = BasePermissionsView.transform_permissions(permissions_internal)
         return permissions
