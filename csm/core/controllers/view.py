@@ -72,7 +72,7 @@ class CsmAuth:
 
 
 class CsmResponse(web.Response):
-    def __init__(self, res={}, status=200, headers=None,
+    def __init__(self, res=None, status=200, headers=None,
                  content_type='application/json',
                  **kwargs):
         body = json.dumps(res)
@@ -286,7 +286,8 @@ class CsmView(web.View):
             if chunk == b'':
                 break
 
-    def __parse_multipart_part(self, field):
+    @staticmethod
+    def __parse_multipart_part(field):
         # Content-Disposition parse
         cd = field.headers.get('Content-Disposition')
         if not cd:
