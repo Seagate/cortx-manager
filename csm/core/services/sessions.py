@@ -15,13 +15,10 @@
 
 import uuid
 from abc import ABC, abstractmethod
-from enum import Enum
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.db.db_provider import DataBaseProvider
-from csm.core.blogic import const
 # TODO: from csm.common.passwd import Passwd
 from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
@@ -76,7 +73,8 @@ class SessionManager:
     def expiry_interval(self):
         return self._expiry_interval
 
-    def _generate_sid(self) -> Session.Id:
+    @staticmethod
+    def _generate_sid() -> Session.Id:
         return uuid.uuid4().hex
 
     def calc_expiry_time(self) -> datetime:
@@ -109,8 +107,7 @@ class AuthPolicy(ABC):
 
     @abstractmethod
     async def authenticate(self, user: User, password: str) -> Optional[SessionCredentials]:
-        ...
-
+        pass
 
 class LocalAuthPolicy(AuthPolicy):
     """ Local CSM user authentication policy """
@@ -217,7 +214,7 @@ class LoginService:
             if session:
                 return session.session_id, {"reset_password": user.reset_password}
             else:
-                Log.critical(f'Failed to create a new session')
+                Log.critical('Failed to create a new session')
         else:
             Log.error(f'Failed to authenticate {user_id}')
         return None, None

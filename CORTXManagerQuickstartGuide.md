@@ -53,9 +53,11 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      2. Select Virtual host as SSPL.
      
         ![](images/Image%201.jpg)
+
      3. Navigate to the Admin section.
         
         ![](images/Image%202.jpg)
+
      4. Click on add user and enter the following details:
         
         > **username:** sspluser 
@@ -65,9 +67,11 @@ This guide provides a step-by-step walkthrough for getting you CORTX-Manager rea
      5. Added user will be listed in users table. Click on added user.
       
         ![](images/Image%203.jpg)
+
      6. Set all permissions and select virtual host as SSPL
        
         ![](images/Image%204.jpg)
+
   4. Install Elastic Search:
   
      ```shell

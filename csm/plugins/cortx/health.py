@@ -120,7 +120,8 @@ class HealthPlugin(CsmPlugin):
 
         return resources
 
-    def _build_resource_obj(self, resource):
+    @staticmethod
+    def _build_resource_obj(resource):
         return {
             "resource" : resource["resource"],
             "id" : resource["id"],

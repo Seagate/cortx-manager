@@ -156,7 +156,7 @@ class CortxCli(Cmd):
             if not hasattr(self, channel_name):
                 err_str = f"Invalid communication protocol {command.comm.get('type','')} selected."
                 Log.error(f"{self.username}:{err_str}")
-                sys.stderr(err_str)
+                sys.stderr.write(err_str)
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command executed")
         except CsmUnauthorizedError as e:

@@ -15,13 +15,9 @@
 
 import os
 import uuid
-from abc import ABC
 from enum import Enum
-from typing import List
 from shutil import copyfile
 from contextlib import ContextDecorator
-
-from csm.core.blogic import const
 from csm.common.errors import CsmInternalError
 from csm.core.blogic import const
 from cortx.utils.log import Log
@@ -71,7 +67,7 @@ class DownloadFileManager:
 
         path_to_file = os.path.join(directory, filename)
         if not os.path.exists(path_to_file) or not os.path.isfile(path_to_file):
-            raise CsmInternalError(f'Attempt to get non existing file')
+            raise CsmInternalError('Attempt to get non existing file')
         return DownloadFileEntity(filename, path_to_file)
 
 
@@ -116,7 +112,7 @@ class FileRef():
         except PermissionError as pe:
             Log.warn(f"Incorrect permissions for {dir_to_save}: {pe}.")
             raise CsmInternalError(f"Incorrect permissions for {dir_to_save}")
-        
+
         return path_to_file_to_save
 
 

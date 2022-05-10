@@ -47,6 +47,7 @@ class CsmUserPatchSchema(Schema):
     def pre_load(self, data, **kwargs):
         """Validate PATCH body pre  marshamallow validation."""
         if const.CSM_USER_NAME in data:
+            Log.debug(f"Username cannot be modified using role: {self.user_role}")
             raise InvalidRequest("username cannot be modified", INVALID_REQUEST_PARAMETERS)
         return data
 
@@ -60,6 +61,7 @@ class CsmUserPatchSchema(Schema):
 
         # just current_password in body is invalid
         if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
+            Log.debug(f"User cannot be modified with only current_password field: {self.current_password}")
             raise InvalidRequest(
                 f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
         return data
