@@ -92,10 +92,6 @@ class FileCollector(object):
             Log.exception(e)
             raise CsmError(e.errno, '%s' % e)
 
-        except IOError as e:
-            Log.exception(e)
-            raise CsmError(errno.EIO, '%s' % e)
-
         except Exception as e:
             Log.exception(e)
             raise CsmError(-1, '%s' % e)
@@ -145,10 +141,6 @@ class LocalFileCollector(FileCollector):
             Log.exception(e)
             raise CsmError(e.errno, '%s' % e)
 
-        except IOError as e:
-            Log.exception(e)
-            raise CsmError(errno.EIO, '%s' % e)
-
         except (subprocess.CalledProcessError) as e:
             Log.exception(e)
             raise CsmError(-1, '%s' % e)
@@ -180,16 +172,12 @@ class RemoteFileCollector(FileCollector):
             for action in self._collection_rules[comp_name]['commands']:
                 try:
                     summary.write('\n$ %s\n' % action)
-                    rc, output = self._channel.execute(action)
+                    _, output = self._channel.execute(action)
                     summary.write('%s\n' % output)
 
                 except OSError as e:
                     Log.exception(e)
                     raise CsmError(e.errno, '%s' % e)
-
-                except IOError as e:
-                    Log.exception(e)
-                    raise CsmError(errno.EIO, '%s' % e)
 
                 except (subprocess.CalledProcessError) as e:
                     Log.exception(e)
@@ -197,7 +185,7 @@ class RemoteFileCollector(FileCollector):
 
     def _expand_file_spec(self, file_spec):
         cmd = 'ls %s' % file_spec
-        rc, output = self._channel.execute(cmd)
+        _, output = self._channel.execute(cmd)
         return output.split('\n')
 
     def _collect_files(self, file_list, out_dir):
@@ -211,7 +199,7 @@ class RemoteFileCollector(FileCollector):
 
         try:
             Log.debug('cmd: %s' % tar_cmd)
-            output, error = self._channel.execute(tar_cmd)
+            _, _ = self._channel.execute(tar_cmd)
             Log.debug('Copy remote:%s local:%s' % (remote_file, local_file))
             self._channel.recv_file(remote_file, local_file)
             self._channel.execute('rm -f %s' % remote_file)
@@ -222,10 +210,6 @@ class RemoteFileCollector(FileCollector):
         except OSError as e:
             Log.exception(e)
             raise CsmError(e.errno, '%s' % e)
-
-        except IOError as e:
-            Log.exception(e)
-            raise CsmError(errno.EIO, '%s' % e)
 
         except (subprocess.CalledProcessError) as e:
             Log.exception(e)

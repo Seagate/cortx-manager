@@ -73,7 +73,7 @@ class RoleManager:
             Validator.validate_type(value, dict, 'role value')
             permissions = value.get('permissions', None)
             if permissions is None:
-                raise ValueError(f'Permission set should be specified for a role')
+                raise ValueError('Permission set should be specified for a role')
             cls._validate_role(name, permissions)
 
     def __init__(self, predefined_roles):

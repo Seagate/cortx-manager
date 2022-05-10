@@ -13,15 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from csm.common.errors import CsmError, CsmInternalError, InvalidRequest
-from csm.common.fs_utils import FSUtils
-from csm.common.services import Service, ApplicationService
-from cortx.utils.log import Log
-from csm.core.data.models.upgrade import UpdateStatusEntry
-from csm.core.blogic import const
-
 import os
 
+from csm.common.errors import CsmInternalError
+from csm.common.fs_utils import FSUtils
+from csm.common.services import ApplicationService
+from cortx.utils.log import Log
 
 class UpdateService(ApplicationService):
 

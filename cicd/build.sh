@@ -100,6 +100,9 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
         c)
             COMPONENT=${OPTARG}
             ;;
+        n)
+            BRAND_NAME=${OPTARG}
+            ;;
         l)
             BRAND_CONFIG_PATH=${OPTARG}
             ;;
@@ -145,8 +148,6 @@ TMPDIR="$DIST/tmp"
     rm -rf "${TMPDIR}"
 }
 mkdir -p "$TMPDIR"
-
-CLI_CONF=$BASE_DIR/csm/cli/conf/
 
 cd "$BASE_DIR"
 rm -rf "${DIST}/rpmbuild"
@@ -253,15 +254,10 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
     cp -R "$BASE_DIR/csm/scripts" "$DIST/cli/"
     cp -R "$BASE_DIR/csm/cli/schema" "$DIST/cli/cli/"
 
-    # cp "$CLI_CONF/setup.yaml" "$DIST/cli/conf/setup.yaml"
-    cp -R "$CLI_CONF/etc" "$DIST/cli/conf"
-
     # Copy executables files
     cp -f "$BASE_DIR/csm/cli/cortxcli.py" "$DIST/cli/lib/cortxcli"
     chmod +x "$DIST/cli/lib/"*
     cd "$TMPDIR"
-
-    cp -f "$BASE_DIR/csm/cli/conf/cli_setup.py" "$DIST/cli/lib/cli_setup"
 
 ################## Add CORTXCLI_PATH #################################
 # Genrate spec file for CSM
@@ -269,12 +265,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "cli" ]; then
         -e "s|<CSM_AGENT_RPM_NAME>|${PRODUCT}-csm_agent|g" \
         -e "s|<CORTXCLI_PATH>|${CORTXCLI_PATH}|g" \
         -e "s/<PRODUCT>/${PRODUCT}/g" "$TMPDIR/cortxcli.spec"
-
-    if [ "$QA" == true ]; then
-        sed -i -e "s|<LOG_LEVEL>|${DEBUG}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"
-    else
-        sed -i -e "s|<LOG_LEVEL>|${INFO}|g" "$DIST/cli/conf/etc/cli/cortxcli.conf"
-    fi
 
     gen_tar_file cli cli
     rm -rf "${TMPDIR}/csm/"*

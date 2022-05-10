@@ -71,7 +71,8 @@ class Setup:
                 break
         return protocol, host, port, secret, each_endpoint
 
-    def load_csm_config_indices(self):
+    @staticmethod
+    def load_csm_config_indices():
         set_config_flag = False
         _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:

@@ -43,19 +43,17 @@ class CsmUserPatchSchema(Schema):
     email_address = fields.Email(data_key='email')
     reset_password = fields.Bool(required=False)
 
-    """
-    Validate PATCH body pre  marshamallow validation
-    """
     @pre_load
     def pre_load(self, data, **kwargs):
+        """Validate PATCH body pre  marshamallow validation."""
         if const.CSM_USER_NAME in data:
+            Log.debug(f"Username cannot be modified using role: {self.user_role}")
             raise InvalidRequest("username cannot be modified", INVALID_REQUEST_PARAMETERS)
         return data
-    """
-    Validate PATCH body for no operation post marshamallow validation
-    """
+
     @post_load
     def post_load(self, data, **kwargs):
+        """Validate PATCH body for no operation post marshamallow validation."""
         # empty body is invalid request
         if not data:
             raise InvalidRequest(
@@ -63,17 +61,16 @@ class CsmUserPatchSchema(Schema):
 
         # just current_password in body is invalid
         if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
+            Log.debug(f"User cannot be modified with only current_password field: {self.current_password}")
             raise InvalidRequest(
                 f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
         return data
-
 
 class GetUsersSortBy(fields.Str):
     def _deserialize(self, value, attr, data, **kwargs):
         if value == 'username':
             return 'user_id'
         return value
-
 
 class CsmGetUsersSchema(Schema):
     offset = fields.Int(validate=validate.Range(min=0), allow_none=True,
@@ -105,11 +102,9 @@ class CsmUsersListView(CsmView):
         if existing_users_count >= max_users_allowed:
             raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
 
-    """
-    GET REST implementation for fetching csm users
-    """
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for fetching csm users."""
         Log.debug(f"Handling csm users fetch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         csm_schema = CsmGetUsersSchema()
@@ -121,11 +116,9 @@ class CsmUsersListView(CsmView):
         users = await self._service.get_user_list(**request_data)
         return {'users': users}
 
-    """
-    POST REST implementation for creating a csm user
-    """
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
+        """POST REST implementation for creating a csm user."""
         Log.debug("Handling users post request.")
 
         creator = self.request.session.credentials.user_id if self.request.session else None
@@ -161,21 +154,17 @@ class CsmUsersView(CsmView):
         self._service = self.request.app["csm_user_service"]
         self._service_dispatch = {}
 
-    """
-    GET REST implementation for csm account get request
-    """
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
+        """GET REST implementation for csm account get request."""
         Log.debug(f"Handling get csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
         return await self._service.get_user(user_id)
 
-    """
-    DELETE REST implementation for csm account delete request
-    """
     @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
+        """DELETE REST implementation for csm account delete request."""
         Log.debug(f"Handling delete csm account request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
@@ -187,11 +176,9 @@ class CsmUsersView(CsmView):
         await self.request.app.login_service.delete_all_sessions_for_user(user_id)
         return resp
 
-    """
-    PATCH implementation for creating a csm user
-    """
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def patch(self):
+        """PATCH implementation for creating a csm user."""
         Log.debug(f"Handling users patch request."
                   f" user_id: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]

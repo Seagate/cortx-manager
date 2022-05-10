@@ -38,13 +38,14 @@ class StatsView(CsmView):
             "get": self._service.get
         }
 
-    """
-    GET REST implementation for Statistics request
-    """
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     @CsmView.asyncio_shield
     async def get(self):
-        """GET stats."""
+        """
+        GET REST implementation for Statistics request.
+
+        GET stats.
+        """
         Log.debug(f"Handling get stats request {self.request.rel_url.query}. "
                   f"user_id: {self.request.session.credentials.user_id}")
         getopt = self.request.rel_url.query.get("get", None)

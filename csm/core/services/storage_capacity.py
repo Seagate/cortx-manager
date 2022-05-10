@@ -17,12 +17,12 @@ import json
 import aiohttp
 from aiohttp.client import ClientSession
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.process import SimpleProcess,AsyncioSubprocess
+from csm.common.process import AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.common.errors import CsmInternalError, CsmError
-from typing import Callable, Dict, Any
+from csm.common.errors import CsmInternalError
+from typing import Dict, Any
 
 class StorageCapacityService(ApplicationService):
     """
@@ -66,7 +66,7 @@ class StorageCapacityService(ApplicationService):
 
         try:
             process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
-            stdout, stderr, rc = await process.run()
+            stdout, stderr, _ = await process.run()
         except Exception as e:
             raise CsmInternalError(f"Error in command execution, command : {e}")
         if not stdout:

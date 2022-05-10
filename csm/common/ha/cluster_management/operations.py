@@ -57,7 +57,8 @@ class Operation(ABC):
         """Abstract method for execution."""
         pass
 
-    def parse_errors(self, errors):
+    @staticmethod
+    def parse_errors(errors):
         """
         Parse the errors raised in validate_arguments method by the extending classes.
 
@@ -128,7 +129,7 @@ class NodeStartOperation(Operation):
         }
         ValidatorSchema = Schema.from_dict(fields_to_validate)
         errors = ValidatorSchema().validate(kwargs)
-        self.parse_errors(errors)
+        Operation.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
         """Execute implementation for the node start."""
@@ -157,7 +158,7 @@ class NodeStopOperation(Operation):
         }
         ValidatorSchema = Schema.from_dict(fields_to_validate)
         errors = ValidatorSchema().validate(kwargs)
-        self.parse_errors(errors)
+        Operation.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
         """Execute implementation for the Node stop."""
@@ -187,7 +188,7 @@ class NodePoweroffOperation(Operation):
         }
         ValidatorSchema = Schema.from_dict(fields_to_validate)
         errors = ValidatorSchema().validate(kwargs)
-        self.parse_errors(errors)
+        Operation.parse_errors(errors)
 
     def execute(self, cluster_manager, **kwargs):
         """Execute implementation for the Node power off."""
