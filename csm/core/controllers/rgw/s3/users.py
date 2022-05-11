@@ -104,7 +104,7 @@ class SetUserQuotaSchema(S3BaseSchema):
     max_objects = fields.Int(data_key=const.MAX_OBJECTS, missing=None, allow_none=False)
     check_on_raw = fields.Bool(data_key=const.CHECK_ON_RAW, missing=None, allow_none=False)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/users")
+@CsmView._app_routes.view("/api/v2/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
@@ -137,7 +137,7 @@ class S3IAMUserListView(S3BaseView):
             response = await self._service.create_user(**user_body)
             return CsmResponse(response, const.STATUS_CREATED)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/users/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/users/{uid}")
 class S3IAMUserView(S3BaseView):
     """
     S3 IAM User View for REST API implementation.
@@ -276,7 +276,7 @@ class S3IAMUserKeyView(S3BaseView):
             response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/caps/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/caps/{uid}")
 class S3IAMUserCapsView(S3BaseView):
     """
     S3 IAM - Add User Caps REST API implementation.
@@ -330,7 +330,7 @@ class S3IAMUserCapsView(S3BaseView):
             response = await self._service.remove_user_caps(**request_body)
             return CsmResponse(response)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/quota/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/quota/{uid}")
 class S3IAMUserQuotaView(S3BaseView):
     """
     S3 IAM user quota management REST API implementation.

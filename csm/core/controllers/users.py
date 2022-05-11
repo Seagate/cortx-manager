@@ -91,8 +91,8 @@ class CsmGetUsersSchema(Schema):
     role = fields.Str(default=None, missing=None)
 
 
-@CsmView._app_routes.view("/api/v1/csm/users")
-@CsmView._app_routes.view("/api/v2/csm/users")
+@CsmView._app_routes.view("/api/v1/users")
+@CsmView._app_routes.view("/api/v2/users")
 class CsmUsersListView(CsmView):
     def __init__(self, request):
         super(CsmUsersListView, self).__init__(request)
@@ -153,8 +153,8 @@ class CsmUsersListView(CsmView):
         return CsmResponse(response, const.STATUS_CREATED)
 
 
-@CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
-@CsmView._app_routes.view("/api/v2/csm/users/{user_id}")
+@CsmView._app_routes.view("/api/v1/users/{user_id}")
+@CsmView._app_routes.view("/api/v2/users/{user_id}")
 class CsmUsersView(CsmView):
     def __init__(self, request):
         super(CsmUsersView, self).__init__(request)
