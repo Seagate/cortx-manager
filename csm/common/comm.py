@@ -13,17 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import paramiko
-import socket
-import getpass
 import time
 import shutil
-import errno
-from paramiko.ssh_exception import SSHException
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
-from csm.common.errors import CsmError
 from abc import ABCMeta, abstractmethod
 from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer
 from cortx.utils.message_bus.error import MessageBusError
@@ -63,6 +57,7 @@ class Channel(metaclass=ABCMeta):
     @abstractmethod
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
+
 
 class FILEChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -193,7 +188,8 @@ class MessageBusComm(Comm):
 
     def initialize_message_bus(self, message_server_endpoints):
         """Initialize Messagebus server."""
-        Log.info(f"Initializing Messagebus server with endpoints:{message_server_endpoints} and recieve timeout = {self.recv_timeout}")
+        Log.info(
+            f"Initializing Messagebus server with endpoints:{message_server_endpoints} and recieve timeout = {self.recv_timeout}")
         MessageBus.init(message_server_endpoints)
 
     def _initialize_producer(self):
@@ -231,7 +227,8 @@ class MessageBusComm(Comm):
         if self.producer:
             if self.is_running:
                 self.producer.send(message)
-                Log.debug(f"Messages: {message} sent over {self.message_type} channel.")
+                Log.debug(
+                    f"Messages: {message} sent over {self.message_type} channel.")
             else:
                 self.producer = None
         else:
