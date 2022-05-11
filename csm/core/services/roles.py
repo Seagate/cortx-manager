@@ -84,7 +84,7 @@ class RoleManager:
         roles in the RoleDB during the onboarding.
         """
 
-        Log.info(f'Initializing role manager with predefined roles')
+        Log.info('Initializing role manager with predefined roles')
         self._validate_roles(predefined_roles)
 
         self._roles = {

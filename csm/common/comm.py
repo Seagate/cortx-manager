@@ -60,113 +60,9 @@ class Channel(metaclass=ABCMeta):
     def recv_file(self, remote_file, local_file):
         raise Exception('recv_file not implemented in Channel class')
 
+    @abstractmethod
     def acknowledge(self, delivery_tag=None):
         raise Exception('acknowledge not implemented for Channel class')
-
-
-class SSHChannel(Channel):
-    """
-    Represents ssh channel to a node for communication.
-
-    Communication to node is taken care by this class using paramiko.
-    """
-
-    def __init__(self, node, user=None, **args):
-        super(SSHChannel, self).__init__()
-        self._user = user or getpass.getuser()
-        self.ftp_enabled = False
-        self.allow_agent = True
-        self._ssh = None
-        self._node = node
-        self.look_for_keys = args.get('look_for_keys', False)
-        self.key_filename = args.get('key_filename', None)
-        self._ssh_timeout = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.SSH_TIMEOUT, const.DEFAULT_SSH_TIMEOUT)
-        for key, value in args.items():
-            setattr(self, key, value)
-
-    def init(self):
-        raise Exception('init not implemented for SSH Channel')
-
-    def connect(self):
-        Log.debug('node=%s user=%s' % (self._node, self._user))
-        self._ssh = paramiko.SSHClient()
-        self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            self._ssh.connect(self._node, username=self._user,
-                              timeout=self._ssh_timeout, allow_agent=self.allow_agent,
-                              key_filename=self.key_filename)
-            if not self.ftp_enabled:
-                return 0
-            self._sftp = self._ssh.open_sftp()
-        except socket.error as e:
-            rc = errno.EHOSTUNREACH if e.errno is None else e.errno
-            Log.exception(e)
-            raise CsmError(rc, 'can not connect to host %s' % self._node)
-        except (SSHException, Exception) as e:
-            Log.exception(e)
-            raise CsmError(-1, 'can not connect to host %s@%s. %s' % (self._user, self._node, e))
-
-    def disconnect(self):
-        """Close the SSH channel."""
-        try:
-            self._ssh.close()
-            if self.ftp_enabled:
-                self._sftp.close()
-        except Exception as e:
-            Log.exception(e)
-
-    def execute(self, command, **kwargs):
-        """Execute the command at the node."""
-        try:
-            _in, _out, _err = self._ssh.exec_command(command,
-                                                     timeout=kwargs.get("timeout", None))
-            _in.close()
-            rc = _out.channel.recv_exit_status()
-            output = u''.join(_out.readlines()).encode('utf-8')
-            error = u''.join(_err.readlines())
-            _out.close()
-            _err.close()
-            if rc != 0:
-                output = error
-            Log.debug('$ %s\n%s' % (command, output))
-        except IOError as e:
-            Log.exception(e)
-            raise CsmError(errno.EIO, '%s' % e)
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, '%s' % e)
-        return rc, output
-
-    def send(self, message):
-        raise Exception('send not implemented for SSH Channel')
-
-    def recv(self, message=None):
-        raise Exception('recv not implemented for SSH Channel')
-
-    def recv_file(self, remote_file, local_file):
-        """Get a file from the node."""
-        if not self.ftp_enabled:
-            raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
-        try:
-            self._sftp.get(remote_file, local_file)
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, '%s' % e)
-
-    def send_file(self, local_file, remote_file):
-        """Put a file in node."""
-        if not self._ftp_enabled:
-            raise CsmError(errno.EINVAL, 'Internal Error: FTP is not enabled')
-        try:
-            self._sftp.put(local_file, remote_file)
-        except Exception as e:
-            Log.exception(e)
-            raise CsmError(-1, '%s' % e)
-
-    def acknowledge(self, delivery_tag=None):
-        raise Exception('acknowledge not implemented for SSH Channel')
-
 
 class FILEChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -181,15 +77,15 @@ class FILEChannel(Channel):
     def send(self, message):
         raise Exception('send not implemented in FIle Channel class')
 
-    def send_file(self, local_file_path, remote_directory):
+    def send_file(self, local_file, remote_file):
         """
         Move the file from local file path to the path given.
 
-        :param local_file_path:
-        :param remote_directory:
+        :param local_file:
+        :param remote_file:
         :return:
         """
-        shutil.move(local_file_path, remote_directory)
+        shutil.move(local_file, remote_file)
 
     def disconnect(self):
         pass
@@ -208,7 +104,7 @@ class Comm(metaclass=ABCMeta):
     """Abstract class to represent a comm channel."""
 
     @abstractmethod
-    def init(self):
+    def init(self, **kwargs):
         raise Exception('init not implemented in Comm class')
 
     @abstractmethod
@@ -297,7 +193,7 @@ class MessageBusComm(Comm):
 
     def initialize_message_bus(self, message_server_endpoints):
         """Initialize Messagebus server."""
-        Log.info(f"Initializing Messagebus server with endpoints:{message_server_endpoints}")
+        Log.info(f"Initializing Messagebus server with endpoints:{message_server_endpoints} and recieve timeout = {self.recv_timeout}")
         MessageBus.init(message_server_endpoints)
 
     def _initialize_producer(self):
