@@ -16,7 +16,6 @@
 import time
 import shutil
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from abc import ABCMeta, abstractmethod
 from cortx.utils.message_bus import MessageBus, MessageProducer, MessageConsumer

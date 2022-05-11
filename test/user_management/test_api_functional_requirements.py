@@ -152,7 +152,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'password': 'Seagate@1',
             }
             resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
-            self.assertEqual(HTTPStatus(resp.status), HTTPStatus.CREATED)
+            self.assertEqual(HTTPStatus(resp.status, None), HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             username = 'test_manage1'
             new_user = {
@@ -275,7 +275,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'password': 'Seagate@1',
             }
             session.open_endpoint('POST', 'api/v2/csm/users', new_user)
-        self.assertEqual(HTTPStatus(cm.exception.status), HTTPStatus.FORBIDDEN)
+        self.assertEqual(HTTPStatus(cm.exception.status, None), HTTPStatus.FORBIDDEN)
 
     def test_010_create_manage_user_as_monitor_user_fail(self):
         with CSMSession(_AGENT_URL, 'test_monitor0', 'Seagate@1') as session, \
@@ -319,7 +319,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'email': f'{username}_by_admin@cortx-examples.seagate.com',
             }
             resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
-            self.assertEqual(HTTPStatus(resp.status), HTTPStatus.OK)
+            self.assertEqual(HTTPStatus(resp.status, None), HTTPStatus.OK)
 
     def test_010_change_email_of_monitor_user_as_admin_user_ok(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
@@ -660,7 +660,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 CSMSession(_AGENT_URL, 'test_manage_del_by_itself', 'Seagate@1') as session:
             username = session.username
             resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
-        self.assertEqual(HTTPStatus(cm.exception.status), HTTPStatus.UNAUTHORIZED)
+        self.assertEqual(HTTPStatus(cm.exception.status, None), HTTPStatus.UNAUTHORIZED)
         self.assertIsInstance(resp, HTTPResponse)
         self.assertEqual(HTTPStatus(resp.status), HTTPStatus.OK)
 
