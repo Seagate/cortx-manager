@@ -17,7 +17,6 @@ import os
 import time
 from importlib import import_module
 from csm.common.errors import CsmNotFoundError, InvalidRequest
-from csm.common.process import SimpleProcess
 from csm.common.payload import JsonMessage
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 from cortx.utils.cron import CronJob
@@ -46,8 +45,9 @@ class HAFramework:
         :param force_flag: forcefully repeat 'init'.
         :returns: None.
         """
-        if self.get_status() != 'up':
-            raise Exception('Error: HA Framework is not initalized ...')
+        # ToDo: This is not being used, need to revisit
+        # if self.get_status() != 'up':
+        #     raise Exception('Error: HA Framework is not initalized ...')
         for ra in self._resource_agents.values():
             if not ra.init(force_flag):
                 raise Exception('Error: initalizing resource agent %s' % ra)
@@ -56,14 +56,16 @@ class HAFramework:
     def failover(self):
         pass
 
-    def is_available(self):
-        pass
+    # def is_available(self):
+    #     pass
+    
+    # ToDo: This is not being used, need to revisit
+    # def get_nodes(self):
+    #     pass
 
-    def get_nodes(self):
-        pass
-
-    def get_status(self):
-        pass
+    # ToDo: This is not being used, need to revisit
+    # def get_status(self):
+    #     pass
 
 
 class CortxHAFramework(HAFramework):
@@ -73,35 +75,38 @@ class CortxHAFramework(HAFramework):
         self._cluster_manager = None
         self._cluster_elements = None
 
-    def get_nodes(self):
-        """Return the status of Cortx HA Cluster/Nodes."""
-        online = False
-        _live_node_cmd = const.CORTXHA_CLUSTER.format(command='status')
-        Log.debug(f"executing command :- {_live_node_cmd}")
-        _proc = SimpleProcess(_live_node_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        if _rc not in [0, 1]:
-            raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
-                _live_node_cmd, _rc, _err))
-        if _output and _output.lower().strip() == "online":
-            online = True
-        return {"node_status": [{"name": "cluster", "online": online,
-                                 "standby": not online}]}
-    @staticmethod
-    def make_node_active(node):
-        """Put node on standby node for maintenance use."""
-        try:
-            _start_cmd = const.HCTL_NODE.format(
-                command=const.CORTXHA_CLUSTER.format(command="start"))
-            Log.debug(f"executing command :-  {_start_cmd}")
-            _proc = SimpleProcess(_start_cmd)
-            _, _err, _rc = _proc.run(universal_newlines=True)
-            if _rc not in [0, 1]:
-                raise Exception(_err)
-            return {"message": const.STATE_CHANGE.format(node="cluster",
-                                                         state='start')}
-        except Exception as e:
-            raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
+    # ToDo: This is not being used, need to revisit
+    # def get_nodes(self):
+    #     """Return the status of Cortx HA Cluster/Nodes."""
+    #     online = False
+    #     _live_node_cmd = const.CORTXHA_CLUSTER.format(command='status')
+    #     Log.debug(f"executing command :- {_live_node_cmd}")
+    #     _proc = SimpleProcess(_live_node_cmd)
+    #     _output, _err, _rc = _proc.run(universal_newlines=True)
+    #     if _rc not in [0, 1]:
+    #         raise Exception("Failed: Command: %s Returncode: %s Error: %s" % (
+    #             _live_node_cmd, _rc, _err))
+    #     if _output and _output.lower().strip() == "online":
+    #         online = True
+    #     return {"node_status": [{"name": "cluster", "online": online,
+    #                              "standby": not online}]}
+    
+    # ToDo: This is not being used, need to revisit
+    # @staticmethod
+    # def make_node_active(node):
+    #     """Put node on standby node for maintenance use."""
+    #     try:
+    #         _start_cmd = const.HCTL_NODE.format(
+    #             command=const.CORTXHA_CLUSTER.format(command="start"))
+    #         Log.debug(f"executing command :-  {_start_cmd}")
+    #         _proc = SimpleProcess(_start_cmd)
+    #         _, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _rc not in [0, 1]:
+    #             raise Exception(_err)
+    #         return {"message": const.STATE_CHANGE.format(node="cluster",
+    #                                                      state='start')}
+    #     except Exception as e:
+    #         raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
 
     def shutdown(self, node):
         """Shutdown the current Cluster or Node."""
@@ -237,76 +242,80 @@ class PcsHAFramework(HAFramework):
         self._user = Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)
         self._password = Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password")
 
-    def get_nodes(self):
-        """
-            Return tuple containing following things:
-            1. List of active nodes
-            2. List of inactive nodes
-            Output:
-            Corosync Nodes:
-                Online: node1 node2
-                Offline:
-        """
-        _live_node_cmd = const.HCTL_NODE.format(command='status',
-                                                user=self._user, pwd=self._password)
-        Log.debug(f"executing command :- "
-                  f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
-        _proc = SimpleProcess(_live_node_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        if _rc != 0:
-            raise Exception("Failed: Command: %s Returncode: %s Error: %s"
-                            % (_live_node_cmd, _rc, _err))
-        return {"node_status": JsonMessage(_output.strip()).load()}
+    # ToDo: This is not being used, need to revisit
+    # def get_nodes(self):
+    #     """
+    #         Return tuple containing following things:
+    #         1. List of active nodes
+    #         2. List of inactive nodes
+    #         Output:
+    #         Corosync Nodes:
+    #             Online: node1 node2
+    #             Offline:
+    #     """
+    #     _live_node_cmd = const.HCTL_NODE.format(command='status',
+    #                                             user=self._user, pwd=self._password)
+    #     Log.debug(f"executing command :- "
+    #               f"{const.HCTL_NODE.format(command='status',user=self._user, pwd='*****')}")
+    #     _proc = SimpleProcess(_live_node_cmd)
+    #     _output, _err, _rc = _proc.run(universal_newlines=True)
+    #     if _rc != 0:
+    #         raise Exception("Failed: Command: %s Returncode: %s Error: %s"
+    #                         % (_live_node_cmd, _rc, _err))
+    #     return {"node_status": JsonMessage(_output.strip()).load()}
 
-    def make_node_active(self, node):
-        """
-            Put node on standby node for maintenance use
-        """
-        try:
-            _command = 'unstandby '
-            _command = f"{_command } --all" if node == "all" else f"{_command } {node}"
-            Log.debug(f"executing command :-  "
-                      f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
-            _standby_cmd = const.HCTL_NODE.format(command=_command,
-                                                  user=self._user, pwd=self._password)
-            _proc = SimpleProcess(_standby_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _rc != 0:
-                raise Exception(_err)
-            node = "all nodes" if node == "all" else node
-            return {"message": const.STATE_CHANGE.format(node=node, state='active')}
-        except Exception as e:
-            raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
+    # ToDo: This is not being used, need to revisit
+    # def make_node_active(self, node):
+    #     """
+    #         Put node on standby node for maintenance use
+    #     """
+    #     try:
+    #         _command = 'unstandby '
+    #         _command = f"{_command } --all" if node == "all" else f"{_command } {node}"
+    #         Log.debug(f"executing command :-  "
+    #                   f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
+    #         _standby_cmd = const.HCTL_NODE.format(command=_command,
+    #                                               user=self._user, pwd=self._password)
+    #         _proc = SimpleProcess(_standby_cmd)
+    #         _output, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _rc != 0:
+    #             raise Exception(_err)
+    #         node = "all nodes" if node == "all" else node
+    #         return {"message": const.STATE_CHANGE.format(node=node, state='active')}
+    #     except Exception as e:
+    #         raise Exception("Failed to put %s on active state. Error: %s" % (node, e))
 
-    def make_node_passive(self, node):
-        """
-            Put node on standby node for maintenance use
-        """
-        try:
-            _command = 'standby '
-            _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
-            Log.debug(f"executing command :-  "
-                      f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
+    # ToDo: This is not being used, need to revisit
+    # def make_node_passive(self, node):
+    #     """
+    #         Put node on standby node for maintenance use
+    #     """
+    #     try:
+    #         _command = 'standby '
+    #         _command = f"{_command} --all" if node == "all" else f"{_command} {node}"
+    #         Log.debug(f"executing command :-  "
+    #                   f"{const.HCTL_NODE.format(command=_command, user=self._user, pwd='*****')}")
 
-            _unstandby_cmd = const.HCTL_NODE.format(command=_command,
-                                                    user=self._user, pwd=self._password)
-            _proc = SimpleProcess(_unstandby_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _rc != 0:
-                raise Exception(_err)
-            node = "all nodes" if node == "all" else node
-            return {"message": const.STATE_CHANGE.format(node=node, state='passive')}
-        except Exception as e:
-            raise Exception("Failed to remove %s from passive state. Error: %s" % (node, e))
+    #         _unstandby_cmd = const.HCTL_NODE.format(command=_command,
+    #                                                 user=self._user, pwd=self._password)
+    #         _proc = SimpleProcess(_unstandby_cmd)
+    #         _output, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _rc != 0:
+    #             raise Exception(_err)
+    #         node = "all nodes" if node == "all" else node
+    #         return {"message": const.STATE_CHANGE.format(node=node, state='passive')}
+    #     except Exception as e:
+    #         raise Exception("Failed to remove %s from passive state. Error: %s" % (node, e))
 
-    def get_status(self):
-        """
-            Return if HAFramework in up or down
-        """
-        _cluster_status_cmd = "hctl cluster status"
-        _proc = SimpleProcess(_cluster_status_cmd)
-        _output, _err, _rc = _proc.run(universal_newlines=True)
-        return 'down' if _err != '' else 'up'
+    # ToDo: This is not being used, need to revisit
+    # def get_status(self):
+    #     """
+    #         Return if HAFramework in up or down
+    #     """
+    #     _cluster_status_cmd = "hctl cluster status"
+    #     _proc = SimpleProcess(_cluster_status_cmd)
+    #     _output, _err, _rc = _proc.run(universal_newlines=True)
+    #     return 'down' if _err != '' else 'up'
 
     def shutdown(self, node):
         """
@@ -340,8 +349,8 @@ class ResourceAgent:
     def failover(self):
         pass
 
-    def is_available(self):
-        pass
+    # def is_available(self):
+    #     pass
 
 
 class PcsResourceAgent(ResourceAgent):
@@ -349,26 +358,26 @@ class PcsResourceAgent(ResourceAgent):
         super(PcsResourceAgent, self).__init__(resources)
         self._resources = resources
 
-    def is_available(self):
-        """
-            Return True if all resources available else False
-        """
-        for resource in self._resources:
-            _chk_res_cmd = "pcs resource show " + resource
-            _proc = SimpleProcess(_chk_res_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _err != '':
-                return False
-        return True
+    # def is_available(self):
+    #     """
+    #         Return True if all resources available else False
+    #     """
+    #     for resource in self._resources:
+    #         _chk_res_cmd = "pcs resource show " + resource
+    #         _proc = SimpleProcess(_chk_res_cmd)
+    #         _output, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _err != '':
+    #             return False
+    #     return True
 
-    def _delete_resource(self):
-        for resource in self._resources:
-            _delete_res_cmd = "pcs resource delete " + resource
-            _proc = SimpleProcess(_delete_res_cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _err != '':
-                raise Exception("Failed: Command: %s Error: %s Returncode: %s"
-                                % (_delete_res_cmd, _err, _rc))
+    # def _delete_resource(self):
+    #     for resource in self._resources:
+    #         _delete_res_cmd = "pcs resource delete " + resource
+    #         _proc = SimpleProcess(_delete_res_cmd)
+    #         _output, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _err != '':
+    #             raise Exception("Failed: Command: %s Error: %s Returncode: %s"
+    #                             % (_delete_res_cmd, _err, _rc))
 
     def _ra_init(self):
         self._cmd_list = []
@@ -400,10 +409,10 @@ class PcsResourceAgent(ResourceAgent):
             self._cmd_list.append(f'pcs -f {self._resource_file} constraint location {resource} '
                                   f'prefers {self._secondary}={score}')
 
-    def _execute_config(self):
-        self._cmd_list.append("pcs cluster cib-push " + self._resource_file)
-        for cmd in self._cmd_list:
-            _proc = SimpleProcess(cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            if _err != '':
-                raise Exception("Failed: Command: %s Error: %s Returncode: %s" % (cmd, _err, _rc))
+    # def _execute_config(self):
+    #     self._cmd_list.append("pcs cluster cib-push " + self._resource_file)
+    #     for cmd in self._cmd_list:
+    #         _proc = SimpleProcess(cmd)
+    #         _output, _err, _rc = _proc.run(universal_newlines=True)
+    #         if _err != '':
+    #             raise Exception("Failed: Command: %s Error: %s Returncode: %s" % (cmd, _err, _rc))
