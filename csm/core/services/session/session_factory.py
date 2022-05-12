@@ -19,7 +19,7 @@ from csm.core.blogic import const
 from cortx.utils.data.access import Query
 from cortx.utils.data.access.filters import Compare
 from csm.core.services.permissions import PermissionSet
-from datetime import datetime
+from datetime import datetime, timezone
 from csm.core.data.models.session import SessionModel
 from csm.common.errors import CsmInternalError
 from cortx.utils.conf_store.conf_store import Conf
@@ -96,6 +96,10 @@ class Session:
     def get_user_role(self) -> Optional[str]:
         creds = self._credentials
         return creds.user_role if isinstance(creds, LocalCredentials) else None
+
+    def is_expired(self) -> bool:
+        """Check if the session is expired."""
+        return datetime.now(timezone.utc) > self._expiry_time
 
 
 class InMemory:
