@@ -51,7 +51,7 @@ or using a hanging indent.
   import time
   ```
 
--   Imports are always put at the top of the file, just after any module comments and docstrings, and before module globals and constants.
+-   Imports are always put at the top of the file, after any module comments and docstrings, and before module globals and constants.
 -   Imports should be grouped in the following order:
 -   Standard library imports.
 -   Related third party imports.
