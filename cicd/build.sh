@@ -67,7 +67,6 @@ usage: $PROG_NAME [-v <csm version>]
                             [-p <product_name>]
                             [-c <all|backend>] [-t]
                             [-d][-i]
-                            [-q <true|false>]
 
 Options:
     -v : Build rpm with version
@@ -79,7 +78,6 @@ Options:
     -t : Build rpm with test plan
     -d : Build dev env
     -i : Build csm with integration test
-    -q : Build csm with log level debug or info.
         """ 1>&2;
     exit 1;
 }
@@ -112,9 +110,6 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
             ;;
         i)
             INTEGRATION=true
-            ;;
-        q)
-            QA=true
             ;;
         *)
             usage
