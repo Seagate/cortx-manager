@@ -77,8 +77,8 @@ class TimeSeriesProvider:
             raise CsmInternalError("Invalid panel request for stats %s" % panel)
         return self._template_agg_rule[panel]["axis"]
 
-    async def process_request(self, **kwargs):
-        pass
+    # async def process_request(self, **kwargs):
+    #     pass
 
 
 class TimelionProvider(TimeSeriesProvider):

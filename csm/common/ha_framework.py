@@ -90,7 +90,7 @@ class CortxHAFramework(HAFramework):
     #         online = True
     #     return {"node_status": [{"name": "cluster", "online": online,
     #                              "standby": not online}]}
-    
+
     # ToDo: This is not being used, need to revisit
     # @staticmethod
     # def make_node_active(node):
