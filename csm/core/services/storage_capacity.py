@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
 import aiohttp
 from aiohttp.client import ClientSession
 from cortx.utils.conf_store.conf_store import Conf
@@ -22,7 +21,6 @@ from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError
-from typing import Dict, Any
 
 class StorageCapacityService(ApplicationService):
     """

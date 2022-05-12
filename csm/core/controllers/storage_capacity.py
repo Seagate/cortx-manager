@@ -17,7 +17,6 @@ from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
-from csm.common.errors import InvalidRequest
 from csm.core.services.storage_capacity import CapacityError
 from csm.core.controllers.view import CsmHttpException
 

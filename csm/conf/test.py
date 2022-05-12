@@ -20,7 +20,6 @@ from importlib import import_module
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.conf_store import Conf
-from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
 from cortx.utils.validator.v_pkg import PkgV
 from argparse import Namespace
@@ -87,7 +86,7 @@ class Test(Setup):
                 log_path = const.CSM_SETUP_LOG_DIR
             if output_file == "":
                 output_file = const.DEFAULT_OUTPUTFILE
-            cmd = (f"/usr/bin/csm_test -t  {plan_file} -f {args_loc} -l {log_path}"
+            _ = (f"/usr/bin/csm_test -t  {plan_file} -f {args_loc} -l {log_path}"
                     f" -o {output_file}")
             # ToDo: Revisit SimpleProcess
             _return_code = 0

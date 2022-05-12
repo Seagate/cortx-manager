@@ -58,7 +58,7 @@ class HAFramework:
 
     # def is_available(self):
     #     pass
-    
+
     # ToDo: This is not being used, need to revisit
     # def get_nodes(self):
     #     pass
