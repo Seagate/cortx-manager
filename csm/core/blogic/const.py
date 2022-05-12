@@ -961,3 +961,6 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# CSM usage quotas
+CSM_ACTIVE_USERS_QUOTA = 50
