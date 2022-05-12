@@ -131,7 +131,7 @@ class Database:
         for model in session_model_list:
             session = Session(model._session_id,
                               model._expiry_time,
-                              SessionCredentials(model._user_id),
+                              LocalCredentials(model._user_id, model._user_role),
                               PermissionSet(model._permission))
             session_list.append(session)
         return session_list
@@ -139,6 +139,7 @@ class Database:
     async def convert_session_to_model(self, session:Session):
         sessionModel = SessionModel.instantiate_session(session._session_id, session._expiry_time,
                                                         session._credentials._user_id,
+                                                        session._credentials._user_role,
                                                         session._permissions._items)
         return sessionModel
 
@@ -173,7 +174,7 @@ class SessionFactory:
     @staticmethod
     def get_instance(storage: DataBaseProvider=None):
         # session_backend_keys: Two Level nested map
-        # First Level Storage :- Local / Persistent
+        # First Level Storage : Local / Persistent
         # Inner Level(leaf) backend : add here for more session backend option
         session_backend_keys = {
             const.LOCAL: {
