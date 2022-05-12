@@ -179,16 +179,18 @@ class Cluster(object):
 
         return state, active_node_list, inactive_node_list
 
-    def get_nodes(self):
-        """
-        Get list of nodes.
+    # ToDo: This is not being used, need to revisit
+    # def get_nodes(self):
+    #     """
+    #     Get list of nodes.
 
-        Return following things
-        1. List of active nodes
-        2. List of inactive nodes
-        """
-        return self._ha_framework.get_nodes()
+    #     Return following things
+    #     1. List of active nodes
+    #     2. List of inactive nodes
+    #     """
+    #     return self._ha_framework.get_nodes()
 
-    def get_status(self):
-        """Check if HAFramework in up or down."""
-        return self._ha_framework.get_status()
+    # ToDo: This is not being used, need to revisit
+    # def get_status(self):
+    #     """Check if HAFramework in up or down."""
+    #     return self._ha_framework.get_status()

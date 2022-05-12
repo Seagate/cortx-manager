@@ -23,8 +23,6 @@ DIST=$(realpath "$BASE_DIR/dist")
 CORTX_PATH="/opt/seagate/cortx/"
 CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
-DEBUG="DEBUG"
-INFO="INFO"
 CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
 BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
 CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
@@ -69,7 +67,6 @@ usage: $PROG_NAME [-v <csm version>]
                             [-p <product_name>]
                             [-c <all|backend>] [-t]
                             [-d][-i]
-                            [-q <true|false>]
 
 Options:
     -v : Build rpm with version
@@ -81,7 +78,6 @@ Options:
     -t : Build rpm with test plan
     -d : Build dev env
     -i : Build csm with integration test
-    -q : Build csm with log level debug or info.
         """ 1>&2;
     exit 1;
 }
@@ -114,9 +110,6 @@ while getopts ":g:v:b:p:c:n:l:tdiq" o; do
             ;;
         i)
             INTEGRATION=true
-            ;;
-        q)
-            QA=true
             ;;
         *)
             usage
@@ -211,7 +204,6 @@ if [ "$COMPONENT" == "all" ] || [ "$COMPONENT" == "backend" ]; then
     # Copy executables files
     cp -f "$BASE_DIR/csm/core/agent/csm_agent.py" "$DIST/csm/lib/csm_agent"
     cp -f "$BASE_DIR/csm/conf/csm_setup.py" "$DIST/csm/lib/csm_setup"
-    cp -f "$BASE_DIR/csm/conf/csm_cleanup.py" "$DIST/csm/lib/csm_cleanup"
     cp -f "$BASE_DIR/csm/cli/support_bundle/csm_bundle_generate.py" "$DIST/csm/lib/csm_bundle_generate"
     cp -f "$DIST/csm/test/test_framework/csm_test.py" "$DIST/csm/lib/csm_test"
     chmod +x "$DIST/csm/lib/"*

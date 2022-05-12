@@ -21,7 +21,6 @@ from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from cortx.utils.validator.error import VError
 from csm.core.blogic import const
-from csm.common.process import SimpleProcess
 from csm.common.errors import CsmSetupError, ResourceExist
 from csm.common.service_urls import ServiceUrls
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
@@ -43,11 +42,6 @@ class Setup:
         self._is_env_dev = False
         self.machine_id = Conf.machine_id
         self.conf_store_keys = {}
-
-    def _copy_skeleton_configs(self):
-        Log.info(f"Copying Csm config skeletons to {self.config_path}")
-        Setup._run_cmd(f"cp -rn {const.CSM_SOURCE_CONF} {self.config_path}")
-        Setup._run_cmd(f"cp -rn {const.DB_SOURCE_CONF} {self.config_path}")
 
     @staticmethod
     def _set_csm_conf_path():
@@ -159,24 +153,6 @@ class Setup:
             raise CsmSetupError("Keylist should be kind of list")
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
-
-    @staticmethod
-    def _run_cmd(cmd):
-        """
-        Run command and throw error if cmd failed
-        """
-        try:
-            _err = ""
-            Log.info(f"Executing cmd: {cmd}")
-            _proc = SimpleProcess(cmd)
-            _output, _err, _rc = _proc.run(universal_newlines=True)
-            Log.info(f"Output: {_output}, \n Err:{_err}, \n RC:{_rc}")
-            if _rc != 0:
-                raise
-            return _output, _err, _rc
-        except Exception as e:
-            Log.error(f"Csm setup is failed Error: {e}, {_err}")
-            raise CsmSetupError("Csm setup is failed Error: %s %s" %(e,_err))
 
     def _fetch_csm_user_password(self, decrypt=False):
         """

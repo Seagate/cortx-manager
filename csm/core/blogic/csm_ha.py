@@ -37,17 +37,17 @@ class CsmResourceAgent(PcsResourceAgent):
             Log.info("Starting configuring HA for CSM..")
 
             if force_flag:
-                if self.is_available():
-                    self._delete_resource()
+                # if self.is_available():
+                #     self._delete_resource()
                 if os.path.exists(const.HA_INIT):
                     os.remove(const.HA_INIT)
 
             # Check if resource already configured
-            if self.is_available():
-                if not os.path.exists(const.HA_INIT):
-                    open(const.HA_INIT, 'a').close()
-                Log.info("Csm resources are already configured...")
-                return True
+            # if self.is_available():
+            #     if not os.path.exists(const.HA_INIT):
+            #         open(const.HA_INIT, 'a').close()
+            #     Log.info("Csm resources are already configured...")
+            #     return True
 
             self._ra_init()
 
@@ -60,7 +60,7 @@ class CsmResourceAgent(PcsResourceAgent):
 
             # TODO- check score for failback
             self._init_constraint("INFINITY")
-            self._execute_config()
+            # self._execute_config()
             open(const.HA_INIT, 'a').close()
             Log.info("Successed: Configuring HA for CSM..")
             return True
