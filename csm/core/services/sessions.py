@@ -146,18 +146,20 @@ class QuotaSessionManager(SessionManager):
         :returns: True if quota is not full, False otherwise.
         """
         if not self._active_users_restored:
-            await self._restore_active_users()
             self._active_users_restored = True
+            await self._restore_active_users()
         active_users = len(self._active_users)
         # Try to free space by removing expired sessions
         if active_users >= self._active_users_quota:
             await self._remove_expired_sessions()
+        active_users = len(self._active_users)
         if active_users > self._active_users_quota:
             return False
         user_sessions = self._active_users.get(user_id, 0)
         if active_users == self._active_users_quota and user_sessions == 0:
             return False
         self._active_users[user_id] = user_sessions + 1
+        return True
 
     def _remove_active_user(self, user_id: str) -> None:
         """
@@ -300,11 +302,13 @@ class LoginService:
         credentials = await self._auth_service.authenticate(user, password)
         if credentials is None:
             Log.error(f'Failed to authenticate {user_id}')
+            return None, None
 
         permissions = await self._role_manager.calc_effective_permissions(user.user_role)
         session = await self._session_manager.create(credentials, permissions)
         if not session:
             Log.critical('Failed to create a new session')
+            return None, None
         return session.session_id, {"reset_password": user.reset_password}
 
     async def logout(self, session_id):
