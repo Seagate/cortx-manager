@@ -23,10 +23,10 @@ DIST=$(realpath "$BASE_DIR/dist")
 CORTX_PATH="/opt/seagate/cortx/"
 CSM_PATH="${CORTX_PATH}csm"
 CORTXCLI_PATH="${CORTX_PATH}cli"
-CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
-BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
-CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
-BRAND_L18N_PATH="config/csm/l18n.json"
+# CORTX_UNSUPPORTED_FEATURES_PATH="${BASE_DIR}/schema/unsupported_features.json"
+# BRAND_UNSUPPORTED_FEATURES_PATH="config/csm/unsupported_features.json"
+# CORTX_L18N_PATH="${BASE_DIR}/schema/l18n.json"
+# BRAND_L18N_PATH="config/csm/l18n.json"
 
 print_time() {
     printf "%02d:%02d:%02d\n" $(( $1 / 3600 )) $(( ( $1 / 60 ) % 60 )) $(( $1 % 60 ))
