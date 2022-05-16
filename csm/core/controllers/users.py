@@ -47,7 +47,6 @@ class CsmUserPatchSchema(Schema):
     def pre_load(self, data, **kwargs):
         """Validate PATCH body pre  marshamallow validation."""
         if const.CSM_USER_NAME in data:
-            Log.debug(f"Username cannot be modified using role: {self.user_role}")
             raise InvalidRequest("username cannot be modified", INVALID_REQUEST_PARAMETERS)
         return data
 
