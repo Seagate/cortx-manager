@@ -893,7 +893,9 @@ S3_CLIENT_ERROR_CODES = {
     }
 S3_CONNECTION_TIMEOUT = 10
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
+RGW_ADMIN_OPERATIONS_RESPONSE_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_response.json'.format(CSM_PATH)
 S3_CLIENT_ERROR_MSG = 'Unable to process the request'
+CONVERT_RESPONSE = 'CONVERT_RESPONSE'
 
 # S3 Operations
 CREATE_USER_OPERATION = 'CREATE_USER'
