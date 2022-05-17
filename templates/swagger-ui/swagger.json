@@ -31,7 +31,7 @@
               "tags": [
                   "User"
               ],
-              "summary": "This API allow login to Admin user, CSM user and S3 User",
+              "summary": "This API allow login to CSM user",
               "security": [],
               "responses": {
                   "200": {
@@ -799,7 +799,7 @@
                                   "uid": {
                                       "type": "string",
                                       "example": "",
-                                      "required": true
+                                      "required": false
                                   },
                                   "key_type": {
                                       "type": "string",
@@ -809,7 +809,7 @@
                                   "acsess_key": {
                                       "type": "string",
                                       "example": "",
-                                      "required": false
+                                      "required": true
                                   }
                               }
                           }
