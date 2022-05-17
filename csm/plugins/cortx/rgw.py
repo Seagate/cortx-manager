@@ -82,7 +82,8 @@ class RGWPlugin:
                 parsed_response_payload = Payload(Dict(dict()))
                 raw_response_payload.convert(mapping, parsed_response_payload)
                 parsed_response_payload.dump()
-                mapped_response = RGWPlugin._params_cleanup(parsed_response_payload.load())
+                mapped_response = parsed_response_payload.load()
+                RGWPlugin._params_cleanup(mapped_response)
             except Exception as e:
                 Log.error(f"Error occured while coverting raw api response to required response. {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
