@@ -106,7 +106,7 @@ class CsmAgent:
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
-        session_manager = SessionManager(db)
+        session_manager = QuotaSessionManager(db, const.CSM_ACTIVE_USERS_QUOTA)
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      user_manager,
                                                      role_manager,
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     from csm.core.services.stats import StatsAppService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
-    from csm.core.services.sessions import SessionManager, LoginService, AuthService
+    from csm.core.services.sessions import QuotaSessionManager, LoginService, AuthService
     from csm.core.repositories.update_status import UpdateStatusRepository
     from csm.core.agent.api import CsmRestApi
     from csm.common.timeseries import TimelionProvider
