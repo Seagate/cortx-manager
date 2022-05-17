@@ -37,23 +37,22 @@ class RGWPlugin:
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
         response = await self._process(api_operation, request_body)
         return self._build_response(operation, response)
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:
         request_body = dict()
         for key, value in request_body_schema.items():
             if kwargs.get(key, None) is not None:
                 request_body[value] = kwargs.get(key, None)
-        Log.debug(f"RGW Plugin - request body: {request_body}")
         return request_body
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def _process(self, api_operation, request_body) -> Any:
         try:
             (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
@@ -72,6 +71,7 @@ class RGWPlugin:
             Log.error(f'{const.UNKNOWN_ERROR}: {e}')
             raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
 
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_response(self, operation, response) -> Any:
         mapped_response = response
         mapping = self._api_response_mapping_schema.get(operation)

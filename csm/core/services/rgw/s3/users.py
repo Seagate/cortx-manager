@@ -48,7 +48,7 @@ class S3IAMUserService(S3BaseService):
         Log.debug(f"Creating S3 IAM user by uid = {uid}")
         return await self.execute_request(const.CREATE_USER_OPERATION, **user_body)
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def get_user(self, **request_body):
         """
         Method to get existing S3 IAM user.
