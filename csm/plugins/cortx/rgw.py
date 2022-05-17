@@ -91,7 +91,7 @@ class RGWPlugin:
 
     @staticmethod
     def _params_cleanup(params):
-        for key, value in params.items():
+        for key, value in list(params.items()):
             if value is None:
                 params.pop(key)
 
