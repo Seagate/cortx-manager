@@ -60,9 +60,9 @@ class S3IAMUserService(S3BaseService):
         return await self.execute_request(const.GET_USER_OPERATION, **request_body)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_users(self, **request_body):
+    async def get_all_users(self, **request_body):
         """
-        Method to list IAM users.
+        Method to list all IAM users.
 
         :param **request_body: Request body kwargs
         """

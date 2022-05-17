@@ -32,8 +32,7 @@
             "max_entries": "max-entries",
             "marker": "marker"
         },
-        "SUCCESS_CODE": 200,
-        "CONVERT_RESPONSE": true
+        "SUCCESS_CODE": 200
     },
     "DELETE_USER": {
         "ENDPOINT": "/admin/user",

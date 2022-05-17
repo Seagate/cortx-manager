@@ -35,16 +35,14 @@ class RGWPlugin:
         self._rgw_admin_client = S3Client(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
-        self._api_response_mapping_schema = Json(const.RGW_ADMIN_OPERATIONS_RESPONSE_MAPPING_SCHEMA).load()
+        self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG)
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
-        response_body = await self._process(api_operation, request_body)
-        if const.CONVERT_RESPONSE in api_operation and api_operation[const.CONVERT_RESPONSE] == True:
-            response_body = self._build_response(operation, response_body)
-        return response_body
+        response = await self._process(api_operation, request_body)
+        return self._build_response(operation, response)
 
     @Log.trace_method(Log.DEBUG)
     def _build_request(self, request_body_schema, **kwargs) -> Any:
@@ -74,17 +72,27 @@ class RGWPlugin:
             Log.error(f'{const.UNKNOWN_ERROR}: {e}')
             raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
 
-    def _build_response(self, operation, response_body) -> Any:
-        try:
-            raw_response_payload = Payload(JsonMessage(json.dumps(response_body)))
-            parsed_response_payload = Payload(Dict(dict()))
-            raw_response_payload.convert(self._api_response_mapping_schema.get(operation), parsed_response_payload)
-            parsed_response_payload.dump()
-            response_body = parsed_response_payload.load()
-        except Exception as e:
-            Log.error(f"Error occured while coverting raw api response to required response. {e}")
-            raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
-        return response_body
+    def _build_response(self, operation, response) -> Any:
+        mapped_response = response
+        mapping = self._api_response_mapping_schema.get(operation)
+        if mapping:
+            try:
+                Log.info(f'Performing raw response mapping for {operation}')
+                raw_response_payload = Payload(JsonMessage(json.dumps(response)))
+                parsed_response_payload = Payload(Dict(dict()))
+                raw_response_payload.convert(mapping, parsed_response_payload)
+                parsed_response_payload.dump()
+                mapped_response = RGWPlugin._params_cleanup(parsed_response_payload.load())
+            except Exception as e:
+                Log.error(f"Error occured while coverting raw api response to required response. {e}")
+                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+        return mapped_response
+
+    @staticmethod
+    def _params_cleanup(params):
+        for key, value in params.items():
+            if value is None:
+                params.pop(key)
 
     def _create_error(self, status: int, body: dict) -> Any:
         """
