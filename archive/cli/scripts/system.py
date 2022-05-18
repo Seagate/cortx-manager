@@ -13,26 +13,33 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-
-from cortx.utils.log import Log
-from csm.conf.setup import Setup
-from csm.core.providers.providers import Response
+import sys
 from csm.core.blogic import const
+from csm.common.process import AsyncioSubprocess
+from cortx.utils.log import Log
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from csm.core.providers.providers import Response
 
+class System:
 
-class Reset(Setup):
-    """
-    Reset CORTX CLI configuration
-    """
-
-    def __init__(self):
-        super(Reset, self).__init__()
-
-    async def execute(self, command):
+    @staticmethod
+    async def unmaintenance(command):
         """
-        :param command:
+        Wrapper method for HCTL commands.
+        :param command: Command object from argparser.
         :return:
         """
-        Log.info("Executing Reset for CORTX CLI")
-        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
+        _command = "start"
+
+        Log.debug(f"executing command :-  "
+                  f"{const.CORTXHA_CLUSTER.format(command=_command)}")
+
+        _unstandby_cmd = const.CORTXHA_CLUSTER.format(command=_command)
+        subprocess_obj = AsyncioSubprocess(_unstandby_cmd)
+        _output, _err, _rc = await subprocess_obj.run()
+        if _rc != 0:
+            Log.error(f"_output={_output}\n _err={_err}")
+            sys.stderr.write(const.HCTL_ERR_MSG)
+            return
+        return Response(output = "Starting System ...", rc=CSM_OPERATION_SUCESSFUL)

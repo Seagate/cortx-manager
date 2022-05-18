@@ -16,12 +16,14 @@
 from csm.common.process import SimpleProcess
 from cortx.utils.log import Log
 
+
 class StorageInfo:
 
     @staticmethod
     def get_dir_usage(dir_path="", unit="K"):
         """
-         Method to get disk usage of provided dir_path. eg: sudo du -BM /var/log
+        Get disk usage of provided dir_path. eg: sudo du -BM /var/log.
+
         :param dir_path: Path to find disk usage info :type: str
                unit: Unit to define data block :type: str
         :return:  :type: tuple
@@ -32,7 +34,8 @@ class StorageInfo:
     @staticmethod
     def get_fs_usage(fs="", unit="K"):
         """
-        Method to get disk usage of provided filesystem. eg: df -BM /var/log/elasticsearch
+        Get disk usage of provided filesystem. eg: df -BM /var/log/elasticsearch.
+
         :param fs: Path to find disk usage of filesystem info :type: str
                unit: Unit to define data block :type: str
         :return:  :type: tuple

@@ -13,31 +13,27 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+
+from cortx.utils.log import Log
+from csm.conf.setup import Setup
 from csm.core.blogic import const
-from cortx.utils.cli_framework.command_factory import CommandFactory
-from argparse import ArgumentError
-import unittest
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
-alerts_command = CommandFactory.get_command(
-    [const.ALERTS_COMMAND, 'acknowledge', '1', 'comment_1'])
-t = unittest.TestCase()
 
-def init(args):
-    pass
+class Init(Setup):
+    """Init CORTX CLI."""
 
-def test_patch_action(args):
-    expected_output = 'acknowledge'
-    actual_output = alerts_command.action()
-    t.assertEqual(actual_output, expected_output)
+    def __init__(self):
+        """Initialize CORTX CLI init phase."""
+        super(Init, self).__init__()
 
-def test_patch_options(args):
-    expected_output = {'alert_id': '1', 'comment': 'comment_1'}
-    actual_output = alerts_command.options()
-    t.assertDictEqual(actual_output, expected_output)
+    async def execute(self, command):
+        """
+        Execute CORTX CLI setup Init Command.
 
-def test_patch_method(args):
-    expected_output = 'patch'
-    actual_output = alerts_command.method('acknowledge')
-    t.assertEqual(actual_output, expected_output)
-
-test_list = [test_patch_action, test_patch_options, test_patch_method]
+        :param command: Command Object For CLI. :type: Command
+        :return: 0 on success, RC != 0 otherwise.
+        """
+        Log.info("Executing Init for CORTX CLI")
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

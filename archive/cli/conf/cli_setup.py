@@ -27,8 +27,9 @@ class CliSetupCommand:
         Provide cli to setup csm. Create user for csm to allow basic
         permission like log, bundle path.
     """
+
     def __init__(self, argv):
-        ''' Check cli setup command and initialize '''
+        """Check cli setup command and initialize."""
         self._args = argv
         self._args[0] = 'cli_setup'
         self._validate()
@@ -38,12 +39,12 @@ class CliSetupCommand:
                 level=const.LOG_LEVEL)
 
     def _validate(self):
-        ''' Validate setup command '''
+        """Validate setup command."""
         if len(self._args) < 2:
             raise Exception('Usage: cli_setup -h')
 
     def _get_command(self):
-        ''' Parse cli setup command '''
+        """Parse cli setup command."""
         parser = argparse.ArgumentParser(description='CLI Setup', usage='')
         subparsers = parser.add_subparsers()
         # hardcoded permissions
@@ -58,7 +59,7 @@ class CliSetupCommand:
         return command(action, vars(namespace), args)
 
     def process(self):
-        ''' Parse args for cli_setup and execute cmd to print output '''
+        """Parse args for cli_setup and execute cmd to print output."""
         self._cmd = self._get_command()
         obj = CliClient()
         response = self._loop.run_until_complete(obj.call(self._cmd))
@@ -83,6 +84,6 @@ if __name__ == '__main__':
         cli_setup = CliSetupCommand(sys.argv)
         cli_setup.process()
         sys.exit(0)
-    except Exception as e:
+    except Exception:
         sys.stderr.write('cli_setup command failed: %s\n' %traceback.format_exc())
         sys.exit(1)

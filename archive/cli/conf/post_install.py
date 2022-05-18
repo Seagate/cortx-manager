@@ -13,21 +13,33 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import sys, os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.log import Log
+from csm.conf.setup import Setup
 from csm.core.blogic import const
+from csm.core.providers.providers import Response
+from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
-def init(args):
-    pass
 
-def test1(args={}):
-    val = Conf.get(const.CSM_GLOBAL_INDEX, 'dummy', 'default')
-    return True if val == 'default' else False
+class PostInstall(Setup):
+    """
+    Post-install CORTX CLI.
 
-def test2(args={}):
-    val = Conf.get(const.INVENTORY_FILE, const.DEFAULT_INVENTORY_FILE)
-    return True if val == '/etc/csm/cluster.yaml' else False
+    Post install is used after just all rpms are install but
+    no service are started.
+    """
 
-test_list = [ test1, test2 ]
+    def __init__(self):
+        """Initialize CORTX CLI post install phase."""
+        super(PostInstall, self).__init__()
+
+    async def execute(self, command):
+        """
+        Execute CORTX CLI setup Post-install Command
+
+        :param command: Command Object For CLI. :type: Command
+        :return: 0 on success, RC != 0 otherwise.
+        """
+
+        Log.info("Executing Post-install for CORTX CLI")
+        return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

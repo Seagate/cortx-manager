@@ -16,29 +16,24 @@
 
 from cortx.utils.log import Log
 from csm.conf.setup import Setup
-from csm.core.blogic import const
 from csm.core.providers.providers import Response
+from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 
 
-class PostInstall(Setup):
-    """
-    Post-install CORTX CLI
-
-    Post install is used after just all rpms are install but
-    no service are started
-    """
+class Reset(Setup):
+    """Reset CORTX CLI configuration."""
 
     def __init__(self):
-        super(PostInstall, self).__init__()
+        """Initialize CORTX CLI reset phase."""
+        super(Reset, self).__init__()
 
     async def execute(self, command):
         """
-        Execute CORTX CLI setup Post-install Command
+        Execute CORTX CLI setup Reset Command.
 
-        :param command: Command Object For CLI. :type: Command
-        :return: 0 on success, RC != 0 otherwise.
+        :param command:
+        :return:
         """
-
-        Log.info("Executing Post-install for CORTX CLI")
+        Log.info("Executing Reset for CORTX CLI")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

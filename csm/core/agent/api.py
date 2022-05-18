@@ -15,35 +15,30 @@
 
 import os
 import errno
-import yaml
 import asyncio
 import json
 import traceback
 import signal
 import ssl
 import time
-from concurrent.futures import CancelledError as ConcurrentCancelledError, TimeoutError as ConcurrentTimeoutError
+from concurrent.futures import (CancelledError as ConcurrentCancelledError,
+                                TimeoutError as ConcurrentTimeoutError)
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from aiohttp.client_exceptions import ServerDisconnectedError, ClientConnectorError, ClientOSError
 from abc import ABC
-from ipaddress import ip_address
 from secure import SecureHeaders
 from typing import Dict, Tuple
 from csm.core.providers.provider_factory import ProviderFactory
 from csm.core.providers.providers import Request, Response
 from csm.core.services.sessions import LoginService
-from csm.common.observer import Observable
-from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.conf import  ConfSection, DebugConf
+from csm.common.conf import ConfSection, DebugConf
 from cortx.utils.log import Log
 from cortx.utils.product_features import unsupported_features
 from csm.common.payload import Json
-from csm.common.services import Service
 from csm.core.blogic import const
-from csm.common.cluster import Cluster
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
@@ -53,20 +48,19 @@ from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers.routes import CsmRoutes
-from cortx.utils.data.access import Query
-from cortx.utils.data.db.db_provider import DataAccessError
 import re
 from cortx.utils.errors import DataAccessError
 
 
 class CsmApi(ABC):
-    """ Interface class to communicate with RAS API """
+    """Interface class to communicate with RAS API."""
+
     _providers = {}
     _cluster = None
 
     @staticmethod
     def init():
-        """ API server initialization. Validates and Loads configuration """
+        """Initialize API server, validate and load configuration."""
         pass
 
     @staticmethod
@@ -80,7 +74,8 @@ class CsmApi(ABC):
     @staticmethod
     def process_request(command, request: Request, callback=None):
         """
-        Processes requests received from client using a backend provider.
+        Process requests received from client using a backend provider.
+
         Provider is loaded initially and instance is reused for future calls.
         """
         if CsmApi._cluster is None:
@@ -88,7 +83,7 @@ class CsmApi(ABC):
         Log.info('command=%s action=%s args=%s' % (command,
                                                    request.action(),
                                                    request.args()))
-        if not command in CsmApi._providers.keys():
+        if command not in CsmApi._providers.keys():
             CsmApi._providers[command] = ProviderFactory.get_provider(command,
                                                                       CsmApi._cluster)
         provider = CsmApi._providers[command]
@@ -96,7 +91,7 @@ class CsmApi(ABC):
 
 
 class CsmRestApi(CsmApi, ABC):
-    """ REST Interface to communicate with CSM """
+    """REST Interface to communicate with CSM."""
 
     __is_shutting_down = False
     __unsupported_features = None
@@ -131,7 +126,7 @@ class CsmRestApi(CsmApi, ABC):
         resp = {
             "error_code": None,
             "message": None,
-            "message_id":None
+            "message_id": None
         }
 
         request = kwargs.get("request")
@@ -169,7 +164,8 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def _unauthorised(reason: str):
         Log.debug(f'Unautorized: {reason}')
-        raise CsmUnauthorizedError(desc="Invalid authentication credentials for the target resource.")
+        raise CsmUnauthorizedError(
+            desc="Invalid authentication credentials for the target resource.")
 
     @staticmethod
     async def _resolve_handler(request):
@@ -211,13 +207,10 @@ class CsmRestApi(CsmApi, ABC):
 
     @classmethod
     async def check_for_unsupported_endpoint(cls, request):
-        """
-        Check whether the endpoint is supported. If not, send proper error
-        reponse.
-        """
+        """Check whether the endpoint is supported. If not, send proper error reponse."""
         def getMatchingEndpoint(endpoint_map, path):
-            for key,value in endpoint_map.items():
-                map_re = f'^{key}$'.replace("*", "[\w\d]*")
+            for key, value in endpoint_map.items():
+                map_re = f'^{key}$'.replace("*", r"[\w\d]*")
                 if re.search(rf"{map_re}", path):
                     return value
 
@@ -227,10 +220,15 @@ class CsmRestApi(CsmApi, ABC):
             if endpoint[const.DEPENDENT_ON]:
                 for component in endpoint[const.DEPENDENT_ON]:
                     if not await cls.is_feature_supported(component, endpoint[const.FEATURE_NAME]):
-                        Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {component}")
+                        Log.debug(f"The request {request.path} "
+                                  f"of feature {endpoint[const.FEATURE_NAME]} "
+                                  f"is not supported by {component}")
                         raise InvalidRequest("This feature is not supported on this environment.")
-            if not await cls.is_feature_supported(const.CSM_COMPONENT_NAME, endpoint[const.FEATURE_NAME]):
-                Log.debug(f"The request {request.path} of feature {endpoint[const.FEATURE_NAME]} is not supported by {const.CSM_COMPONENT_NAME}")
+            if not await cls.is_feature_supported(const.CSM_COMPONENT_NAME,
+                                                  endpoint[const.FEATURE_NAME]):
+                Log.debug(f"The request {request.path} "
+                          f"of feature {endpoint[const.FEATURE_NAME]} "
+                          f"is not supported by {const.CSM_COMPONENT_NAME}")
                 raise InvalidRequest("This feature is not supported on this environment.")
         else:
             Log.debug(f"Feature endpoint is not found for {request.path}")
@@ -243,7 +241,6 @@ class CsmRestApi(CsmApi, ABC):
         :param headers: HTTP headers.
         :returns: bearer token.
         """
-
         hdr = headers.get(CsmAuth.HDR)
         if not hdr:
             raise CsmNotFoundError(f'No {CsmAuth.HDR} header')
@@ -267,7 +264,6 @@ class CsmRestApi(CsmApi, ABC):
         :param session_id: bearer token's value.
         :returns: session object.
         """
-
         try:
             session = await login_service.auth_session(session_id)
         except CsmError as e:
@@ -280,7 +276,7 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     def _retrieve_config(request):
         path = request.path
-        method =  request.method
+        method = request.method
         key = method + ":" + path
         conf_key = CsmAuth.HYBRID_APIS[key]
         return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
@@ -325,7 +321,7 @@ class CsmRestApi(CsmApi, ABC):
     @web.middleware
     async def set_secure_headers(request, handler):
         resp = await handler(request)
-        SecureHeaders(csp=True,server=True).aiohttp(resp)
+        SecureHeaders(csp=True, server=True).aiohttp(resp)
         return resp
 
     @staticmethod
@@ -339,16 +335,14 @@ class CsmRestApi(CsmApi, ABC):
             if not request_body and request.content_length and request.content_length > 0:
                 try:
                     request_body = await request.json()
-                except Exception as e:
+                except Exception:
                     request_body = {}
                 if request_body:
                     for key in list(request_body.keys()):
                         lower_key = key.lower()
-                        if lower_key.find("password") > -1 or \
-                            lower_key.find("passwd") > -1 or \
-                            lower_key.find("secret") > -1    :
+                        if (lower_key.find("password") > -1 or lower_key.find("passwd") > -1 or
+                                lower_key.find("secret") > -1):
                             del(request_body[key])
-            payload = json.dumps(request_body)
             try:
                 await CsmRestApi.check_for_unsupported_endpoint(request)
             except DataAccessError as e:
@@ -375,51 +369,72 @@ class CsmRestApi(CsmApi, ABC):
 
         # These exceptions are thrown by aiohttp when request is cancelled
         # by client to complete task which are await use atomic
-        except (ConcurrentCancelledError, AsyncioCancelledError) as e:
+        except (ConcurrentCancelledError, AsyncioCancelledError):
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(CsmRequestCancelled(desc= "Call cancelled by client"),
-                                            request = request, request_id = request_id), status=499)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(
+                    CsmRequestCancelled(desc="Call cancelled by client"),
+                    request=request, request_id=request_id),
+                status=499)
         except CsmHttpException as e:
             Log.error(f'CsmHttpException {e.status}: {e.reason}')
             raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=e.status)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id),
+                status=e.status)
         except DataAccessError as e:
             Log.error(f"Failed to access the database: {e}")
             resp = CsmRestApi.error_response(e, request=request, request_id=request_id)
             return CsmRestApi.json_response(resp, status=503)
         except InvalidRequest as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
         except CsmNotFoundError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=404)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=404)
         except CsmPermissionDenied as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=403)
-        except ResourceExist  as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id),
-                                            status=const.STATUS_CONFLICT)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=403)
+        except ResourceExist as e:
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id),
+                status=const.STATUS_CONFLICT)
         except CsmInternalError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=500)
         except CsmNotImplemented as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=501)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=501)
         except CsmGatewayTimeout as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=504)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=504)
         except CsmServiceConflict as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=409)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=409)
         except CsmUnauthorizedError as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=401)
-        except (CsmError, InvalidRequest) as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=400)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=401)
+        except CsmError as e:
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
         except KeyError as e:
             Log.error(f"Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
-            return CsmRestApi.json_response(CsmRestApi.error_response(KeyError(message), request = request, request_id = request_id), status=422)
-        except (ServerDisconnectedError, ClientConnectorError, ClientOSError, ConcurrentTimeoutError) as e:
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=503)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(KeyError(message), request=request,
+                                          request_id=request_id),
+                status=422)
+        except (ServerDisconnectedError, ClientConnectorError, ClientOSError,
+                ConcurrentTimeoutError) as e:
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=503)
         except Exception as e:
             Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(CsmRestApi.error_response(e, request = request, request_id = request_id), status=500)
+            return CsmRestApi.json_response(
+                CsmRestApi.error_response(e, request=request, request_id=request_id), status=500)
 
     @staticmethod
     async def _shut_down(loop, site, server=None):
@@ -482,7 +497,7 @@ class CsmRestApi(CsmApi, ABC):
 
     @staticmethod
     async def process_request(request):
-        """ Receives a request, processes and sends response back to client """
+        """Receive a request, processes and sends response back to client."""
         cmd = request.rel_url.query['cmd']
         action = request.rel_url.query['action']
         args = request.rel_url.query['args']
@@ -496,7 +511,7 @@ class CsmRestApi(CsmApi, ABC):
     @CsmAuth.public
     async def process_websocket(request):
         """
-        The method handles websocket connection.
+        Handle websocket connection.
 
         TODO: Implement authentication mechanism for websockets.
         As JavaScript WebSocket API does not support sending
@@ -559,7 +574,7 @@ class CsmRestApi(CsmApi, ABC):
             for ws in clients:
                 json_msg = CsmRestApi.json_serializer(msg)
                 await ws.send_str(json_msg)
-        except:
+        except Exception:
             Log.debug('REST API websock broadcast error')
 
     @classmethod
@@ -582,4 +597,3 @@ class CsmRestApi(CsmApi, ABC):
         coro = CsmRestApi._async_push(alert)
         asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
         return True
-

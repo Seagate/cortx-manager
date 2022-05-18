@@ -32,6 +32,7 @@ class Configure(Setup):
     """
 
     def __init__(self):
+        """Initialize CORTX CLI config phase."""
         super(Configure, self).__init__()
 
     async def execute(self, command):

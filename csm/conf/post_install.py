@@ -13,22 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-
-import crypt
 import os
 from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
 from cortx.utils.security.certificate import Certificate
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
-from cortx.utils.validator.v_pkg import PkgV
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.payload import Text
-from cortx.utils.service.service_handler import Service
 from cortx.utils.errors import SSLCertificateError
+from csm.common.service_urls import ServiceUrls
 
 class PostInstall(Setup):
     """
@@ -46,7 +42,8 @@ class PostInstall(Setup):
 
     async def execute(self, command):
         """
-        Execute all the Methods Required for Post Install Steps of CSM Rpm's.
+        Execute csm_setup post install operation.
+
         :param command: Command Class Object :type: class
         :return:
         """
@@ -54,8 +51,8 @@ class PostInstall(Setup):
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
-            self.load_csm_config_indices()
-            self._copy_base_configs()
+            Setup.load_csm_config_indices()
+            Setup.copy_base_configs()
 
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -89,7 +86,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        csm_protocol, csm_host, csm_port = self._parse_endpoints(
+        csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\

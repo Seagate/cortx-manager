@@ -17,8 +17,8 @@ import os
 import time
 from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
-from csm.common.payload import Json, Text
-from ipaddress import ip_address
+from csm.common.payload import Json
+from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
@@ -26,8 +26,6 @@ from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from cortx.utils.validator.v_network import NetworkV
-from csm.common.process import SimpleProcess
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 
 
@@ -47,13 +45,15 @@ class Configure(Setup):
 
     async def execute(self, command):
         """
+        Execute csm_setup config operation.
+
         :param command:
         :return:
         """
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.load_csm_config_indices()
+            Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -73,10 +73,10 @@ class Configure(Setup):
 
         self.cluster_id = Conf.get(const.CONSUMER_INDEX,
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
-        self.set_csm_endpoint()
-        self.set_s3_info()
-        self.set_hax_endpoint()
-        self.create_topics()
+        Configure._set_csm_endpoint()
+        Configure._set_s3_info()
+        Configure.set_hax_endpoint()
+        Configure._create_topics()
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
@@ -88,7 +88,7 @@ class Configure(Setup):
                     Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
                     time.sleep(2**count)
             else:
-                raise CsmSetupError(f"Unable to connect to storage after 4 attempts")
+                raise CsmSetupError("Unable to connect to storage after 4 attempts")
         except ValidationError as ve:
             Log.error(f"Validation Error: {ve}")
             raise CsmSetupError(f"Validation Error: {ve}")
@@ -126,10 +126,11 @@ class Configure(Setup):
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
 
-    def set_csm_endpoint(self):
+    @staticmethod
+    def _set_csm_endpoint():
         Log.info("Setting csm endpoint in csm config")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
-        csm_protocol, csm_host, csm_port = self._parse_endpoints(csm_endpoint)
+        csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
@@ -141,7 +142,8 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
 
-    def _set_s3_endpoints(self):
+    @staticmethod
+    def _set_s3_endpoints():
         s3_endpoints = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_DATA_ENDPOINTS_KEY)
         if s3_endpoints:
             Log.info(f"Fetching s3 endpoint.{s3_endpoints}")
@@ -153,13 +155,14 @@ class Configure(Setup):
         else:
             raise CsmSetupError("S3 endpoints not found.")
 
-    def set_s3_info(self):
+    @staticmethod
+    def _set_s3_info():
         """
         This Function will set s3  related configurations.
         :return:
         """
         Log.info("Setting S3 configurations in csm config")
-        self._set_s3_endpoints()
+        Configure._set_s3_endpoints()
         # Set IAM user credentails
         s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
         s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY)
@@ -168,15 +171,17 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY, s3_auth_admin)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
 
-    def _get_hax_endpoint(self, endpoints):
+    @staticmethod
+    def _get_hax_endpoint(endpoints):
         for endpoint in endpoints:
-            protocol, host, port = self._parse_endpoints(endpoint)
+            protocol, _, _ = ServiceUrls.parse_url(endpoint)
             if protocol == "https" or protocol == "http":
                 return endpoint
 
-    def set_hax_endpoint(self):
+    @staticmethod
+    def set_hax_endpoint():
         endpoints = Conf.get(const.CONSUMER_INDEX, const.HAX_ENDPOINT_KEY)
-        hax_endpoint = self._get_hax_endpoint(endpoints)
+        hax_endpoint = Configure._get_hax_endpoint(endpoints)
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
 
@@ -231,7 +236,8 @@ class Configure(Setup):
             Log.error(f"Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
-    def _create_perf_stat_topic(self, mb_admin):
+    @staticmethod
+    def _create_perf_stat_topic(mb_admin):
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
@@ -245,7 +251,8 @@ class Configure(Setup):
         else:
             Log.info(f"message_type:{message_type} already exists.")
 
-    def _create_cluster_stop_topic(self, mb_admin):
+    @staticmethod
+    def _create_cluster_stop_topic(mb_admin):
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
@@ -256,12 +263,13 @@ class Configure(Setup):
             mb_admin.set_message_type_expire(message_type,
                                             expire_time_ms=retention_period,
                                             data_limit_bytes=retention_size)
-    def create_topics(self):
+    @staticmethod
+    def _create_topics():
         """
         Create required messagebus topics for csm.
         """
         message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
-        self._create_perf_stat_topic(mb_admin)
-        self._create_cluster_stop_topic(mb_admin)
+        Configure._create_perf_stat_topic(mb_admin)
+        Configure._create_cluster_stop_topic(mb_admin)

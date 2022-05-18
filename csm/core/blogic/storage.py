@@ -19,15 +19,15 @@ from collections import OrderedDict
 class SyncKeyValueStorage(ABC):
     @abstractmethod
     def get(self, key, defval = None):
-        ...
+        pass
 
     @abstractmethod
     def put(self, key, val):
-        ...
+        pass
 
     @abstractmethod
     def items(self):
-        ...
+        pass
 
 class SyncInMemoryKeyValueStorage(SyncKeyValueStorage):
     def __init__(self):
@@ -46,15 +46,15 @@ class SyncInMemoryKeyValueStorage(SyncKeyValueStorage):
 class AsyncKeyValueStorage(ABC):
     @abstractmethod
     async def get(self, key, defval = None):
-        ...
+        pass
 
     @abstractmethod
     async def put(self, key, val):
-        ...
+        pass
 
     @abstractmethod
     async def items(self):
-        ...
+        pass
 
 class AsyncInMemoryKeyValueStorage(AsyncKeyValueStorage):
     def __init__(self):

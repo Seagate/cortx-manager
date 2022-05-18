@@ -19,16 +19,37 @@ from typing import Callable
 
 
 class Observable:
+    """Observer pattern implementation."""
+
     def __init__(self):
+        """Initialize Observable."""
         self._observers = set()
 
     def add_listener(self, observer: Callable):
+        """
+        Add listener to Observable.
+
+        :param observer: observer function.
+        :returns: None.
+        """
         self._observers.add(observer)
 
     def remove_listener(self, observer: Callable):
+        """
+        Remove listener from Observable.
+
+        :param observer: observer to remove.
+        :returns: None.
+        """
         self._observers.discard(observer)
 
     def _notify_listeners(self, *args, loop, **kwargs):
+        """
+        Notify subscribed listeners.
+
+        :param loop: asyncio loop.
+        :returns: None.
+        """
         for observer in self._observers:
             if inspect.iscoroutinefunction(observer):
                 asyncio.run_coroutine_threadsafe(observer(*args, **kwargs), loop=loop)
