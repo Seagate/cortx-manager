@@ -100,6 +100,9 @@ class CsmRestApi(CsmApi, ABC):
 
     __is_shutting_down = False
     __unsupported_features = None
+    __nreq = 0
+    __blocked = 0
+    __server = None
 
     @staticmethod
     def init():
@@ -109,7 +112,8 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._wsclients = WeakSet()
 
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers,
+            middlewares=[CsmRestApi.throttler_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
@@ -284,6 +288,30 @@ class CsmRestApi(CsmApi, ABC):
         key = method + ":" + path
         conf_key = CsmAuth.HYBRID_APIS[key]
         return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
+    @web.middleware
+    async def throttler_middleware(request, handler):
+        print(f"Server.connections = {len(CsmRestApi.__server.connections)}")
+        print(f"Asyncio tasks = {len(asyncio.Task.all_tasks())}")
+        if CsmRestApi.__nreq > 3:
+            CsmRestApi.__blocked += 1
+            print(f"Too many requests in progress - {CsmRestApi.__nreq}. Blocking this one. "
+                  f"Blocked - {CsmRestApi.__blocked}")
+
+            return web.Response(status=429, text="Too many requests")
+        else:
+            CsmRestApi.__nreq += 1
+            print(f"New incoming request. In progress - {CsmRestApi.__nreq}. Handling...")
+
+        await asyncio.sleep(10)
+        res = await handler(request)
+        CsmRestApi.__nreq -= 1
+        print(f"Handled the request. In progress - {CsmRestApi.__nreq}")
+        print(f"Server.connections = {len(CsmRestApi.__server.connections)}")
+        print(f"Asyncio tasks = {len(asyncio.Task.all_tasks())}")
+        return res
+
 
     @staticmethod
     @web.middleware
