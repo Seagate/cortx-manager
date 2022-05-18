@@ -1,0 +1,7 @@
+{
+    "LIST_USERS": {
+        "keys": "users",
+        "count": "count",
+        "marker": "marker"
+    }
+}

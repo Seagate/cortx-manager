@@ -105,6 +105,11 @@ class SetUserQuotaSchema(S3BaseSchema):
     max_objects = fields.Int(data_key=const.MAX_OBJECTS, missing=None, allow_none=False)
     check_on_raw = fields.Bool(data_key=const.CHECK_ON_RAW, missing=None, allow_none=False)
 
+class ListAllUsersSchema(S3BaseSchema):
+    """List all IAM users schema validation class."""
+
+    max_entries = fields.Int(data_key=const.MAX_ENTRIES, missing=None, allow_none=False)
+    marker = fields.Str(data_key=const.MARKER, missing=None, allow_none=False)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
 class S3IAMUserListView(S3BaseView):
@@ -137,6 +142,26 @@ class S3IAMUserListView(S3BaseView):
             response = await self._service.create_user(**user_body)
             return CsmResponse(response, const.STATUS_CREATED)
 
+    @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        """
+        GET REST implementation for list IAM users.
+        """
+        Log.info(f"Handling list iam users GET request"
+                  f" user_id: {self.request.session.credentials.user_id}")
+        try:
+            schema = ListAllUsersSchema()
+            request_parameters = schema.load(self.request.rel_url.query)
+            Log.debug(f"Handling listing of all IAM users request"
+                  f" request body: {request_parameters}")
+        except json.decoder.JSONDecodeError:
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with self._guard_service():
+            response = await self._service.get_all_users(**request_parameters)
+            return CsmResponse(response)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users/{uid}")
 class S3IAMUserView(S3BaseView):
