@@ -14,25 +14,21 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import crypt
-import socket
 from cortx.utils.log import Log
-from ipaddress import ip_address
 from csm.conf.setup import Setup, CsmSetupError
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from cortx.utils.validator.v_network import NetworkV
 from cortx.utils.validator.error import VError
 
 
 class Prepare(Setup):
-    """
-    Reset csm Configuration.
-    """
+    """Perform prepare operation for csm_setup."""
+
     def __init__(self):
+        """Csm_setup prepare operation initialization."""
         super(Prepare, self).__init__()
         Log.info("Triggering csm_setup prepare")
         self._replacement_node_flag = os.environ.get(
@@ -42,13 +38,15 @@ class Prepare(Setup):
 
     async def execute(self, command):
         """
+        Execute csm_setup prepare operation.
+
         :param command:
         :return:
         """
         try:
             Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.load_csm_config_indices()
+            Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -69,7 +67,7 @@ class Prepare(Setup):
         self._set_cluster_id()
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
-        self._set_db_host_addr()
+        Prepare._set_db_host_addr()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
@@ -91,10 +89,10 @@ class Prepare(Setup):
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def _set_secret_string_for_decryption(self):
-        '''
+        """
         This will be the root of csm secret key
-        eg: for "cortx>software>csm>secret" root is "cortx"
-        '''
+        eg: for "cortx>software>csm>secret" root is "cortx".
+        """
         Log.info("Set decryption keys for CSM and S3")
 
         Conf.set(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY,
@@ -109,12 +107,13 @@ class Prepare(Setup):
             raise CsmSetupError("Failed to fetch cluster id")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY, cluster_id)
 
-    def _set_db_host_addr(self):
+    @staticmethod
+    def _set_db_host_addr():
         """
         Sets database hosts address in CSM config.
         :return:
         """
-        protocols, consul_host, consul_port, secret, endpoints = self._get_consul_config()
+        _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
             if consul_host and consul_port:

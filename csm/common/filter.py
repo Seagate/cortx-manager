@@ -15,7 +15,6 @@
 
 from cortx.utils.data.access.filters import Compare, And, Or
 from schematics.exceptions import ConversionError
-from csm.core.blogic.models import CsmModel
 from csm.common.errors import InvalidRequest
 import urllib.parse
 import re
@@ -51,7 +50,7 @@ class Filter:
         for key, value in fields.items():
             try:
                 field = eval(f"model.{key}")
-                valid_operand = field.to_native(value)
+                _ = field.to_native(value)
             except AttributeError:
                 raise InvalidRequest(f"key {key} not found")
             except ConversionError:

@@ -21,9 +21,7 @@ from csm.core.blogic import const
 
 
 class NetworkAddresses:
-    """
-    Helper class that manages CORTX network addresses.
-    """
+    """Helper class that manages CORTX network addresses."""
 
     @staticmethod
     def get_virtual_host_ip_addr() -> str:

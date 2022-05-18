@@ -20,8 +20,8 @@ from csm.core.controllers.validators import BucketNameValidator
 from csm.common.payload import CommonPayload
 
 class Validators():
-
     """CLI Validators Class"""
+
     @staticmethod
     def bucket_name(value):
         validator = BucketNameValidator()

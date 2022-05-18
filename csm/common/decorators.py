@@ -17,14 +17,12 @@ from typing import Callable
 
 
 class Decorators:
-    """
-    A collection of general-purpose decorators.
-    """
+    """A collection of general-purpose decorators."""
 
     @staticmethod
     def decorate_if(condition: bool, f: Callable) -> Callable:
         """
-        Decorates a function according to a condition.
+        Decorate a function according to a condition.
 
         :param condition: Determines if the decorator is going to be used
         :param f: Decorator to be used in case the condition applies.

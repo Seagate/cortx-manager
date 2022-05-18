@@ -31,13 +31,13 @@ class Options:
     def parse(cls, args: List[str]) -> None:
         parser = argparse.ArgumentParser(description='')
         parser.add_argument('start', help='Start CSM Agent')
-        parser.add_argument('-c','--config', help='Confstore URL eg:<type>://<path>')
+        parser.add_argument('-c', '--config', help='Confstore URL eg:<type>://<path>')
         parser.add_argument('--debug', help='Start CSM Agent in Debug mode',
-                                        action='store_true',
-                                        default=False)
+                            action='store_true',
+                            default=False)
         parser.add_argument('--daemonize', help='Start CSM Agent in Demonize mode',
-                                        action='store_true',
-                                        default=False)
+                            action='store_true',
+                            default=False)
         opts = vars(parser.parse_args())
         cls.debug = opts["debug"]
         cls.start = opts['start'] == 'start'

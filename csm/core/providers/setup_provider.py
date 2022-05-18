@@ -13,12 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-import sys
 import errno
 from csm.conf.setup import CsmSetup
 from csm.core.blogic import const
-from csm.core.providers.providers import Provider, Request, Response
+from csm.core.providers.providers import Provider, Response
 
 class SetupProvider(Provider):
     """

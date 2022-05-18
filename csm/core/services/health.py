@@ -32,14 +32,15 @@ class HealthAppService(ApplicationService):
         Fetch health of all resources of type {resource}
         and/or their sub resources based on input level.
         """
-        plugin_request_params = self._build_request_parameters(resource, filters)
+        plugin_request_params = HealthAppService._build_request_parameters(resource, filters)
         Log.debug(f"Health service fetch {resource} health with filters: \
                     {plugin_request_params}")
 
         plugin_response = self._health_plugin.process_request(**plugin_request_params)
         return plugin_response
 
-    def _build_request_parameters(self, resource, filters):
+    @staticmethod
+    def _build_request_parameters(resource, filters):
         """
         Build request parameters based on the filters.
         """
@@ -58,4 +59,3 @@ class HealthAppService(ApplicationService):
                                                         const.RESPONSE_FORMAT_TREE)
 
         return request_params
-

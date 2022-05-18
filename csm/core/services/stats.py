@@ -23,10 +23,9 @@
 from typing import Dict
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
-from csm.common.services import Service, ApplicationService
+from csm.common.services import ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
 from aiohttp import web
-from csm.common.comm import MessageBusComm
 from csm.plugins.cortx.convertor import Convertor
 from csm.core.blogic import const
 
@@ -186,7 +185,8 @@ class StatsAppService(ApplicationService):
         #StatsAppService.BUFFER.append(converted_message)
         StatsAppService.BUFFER.append(message)
 
-    def _parse_metrics(self, messages):
+    @staticmethod
+    def _parse_metrics(messages):
         metrics = ""
         for metric in messages:
             # Add new line while parsing if metrics are not read from a static file

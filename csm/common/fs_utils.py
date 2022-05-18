@@ -129,8 +129,8 @@ class ArchiveFormats(Enum):
 class Archivator:
     """Base class to perform packing/unpacking operations"""
 
-    def __init__(self, thread_pool_exec: ThreadPoolExecutor=None,
-                 loop: asyncio.AbstractEventLoop=None):
+    def __init__(self, thread_pool_exec: ThreadPoolExecutor = None,
+                 loop: asyncio.AbstractEventLoop = None):
         self._pool = (ThreadPoolExecutor(max_workers=multiprocessing.cpu_count())
                       if thread_pool_exec is None else thread_pool_exec)
         self._loop = asyncio.get_event_loop() if loop is None else loop
@@ -142,8 +142,8 @@ class Archivator:
             # imported function validates correctness/existence of archive and directories itself
             make_archive(base_name=_base_name, format=_format,
                          root_dir=_root_dir, base_dir=_base_dir)
-        result = await self._loop.run_in_executor(self._pool, _make_archive,
-                                                  base_name, format, root_dir, base_dir)
+        await self._loop.run_in_executor(self._pool, _make_archive,
+                                         base_name, format, root_dir, base_dir)
 
     async def unpack_archive(self, filename, extract_dir=None, format=None):
 
@@ -151,5 +151,5 @@ class Archivator:
             # imported function validates correctness/existence of archive and directories itself
             unpack_archive(filename=_filename, extract_dir=_extract_dir, format=_format)
 
-        result = await self._loop.run_in_executor(self._pool, _unpack_archive,
-                                                  filename, extract_dir, format)
+        await self._loop.run_in_executor(self._pool, _unpack_archive,
+                                         filename, extract_dir, format)
