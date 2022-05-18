@@ -70,9 +70,6 @@ class Configure(Setup):
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
-
-        self.cluster_id = Conf.get(const.CONSUMER_INDEX,
-                        self.conf_store_keys[const.KEY_CLUSTER_ID])
         Configure._set_csm_endpoint()
         Configure._set_s3_info()
         Configure.set_hax_endpoint()
@@ -103,7 +100,6 @@ class Configure(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
-                const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
                 const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",

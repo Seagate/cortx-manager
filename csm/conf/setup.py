@@ -23,9 +23,8 @@ from cortx.utils.validator.error import VError
 from csm.core.blogic import const
 from csm.common.errors import CsmSetupError, ResourceExist
 from csm.common.service_urls import ServiceUrls
-from cortx.utils.security.cipher import Cipher, CipherInvalidToken
+from csm.common.conf import Security
 from cortx.utils.conf_store.conf_store import Conf
-from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.v_confkeys import ConfKeysV
 client = None
 
@@ -154,38 +153,6 @@ class Setup:
         Log.info(f"Validating confstore keys: {keylist}")
         ConfKeysV().validate("exists", index, keylist)
 
-    def _fetch_csm_user_password(self, decrypt=False):
-        """
-        This Method Fetches the Password for CSM User from Provisioner.
-        :param decrypt:
-        :return:
-        """
-        csm_user_pass = None
-        if self._is_env_dev:
-            decrypt = False
-        Log.info("Fetching CSM User Password from Conf Store.")
-        csm_user_pass = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CSM_SECRET])
-        if decrypt and csm_user_pass:
-            Log.info("Decrypting CSM Password.")
-            try:
-                cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
-                cipher_key = Cipher.generate_key(cluster_id,
-                            Conf.get(const.CSM_GLOBAL_INDEX, "CSM>password_decryption_key"))
-            except KvError as error:
-                Log.error(f"Failed to Fetch Cluster Id. {error}")
-                return None
-            except Exception as e:
-                Log.error(f"{e}")
-                return None
-            try:
-                decrypted_value = Cipher.decrypt(cipher_key,
-                                                 csm_user_pass.encode("utf-8"))
-                return decrypted_value.decode("utf-8")
-            except CipherInvalidToken as error:
-                Log.error(f"Decryption for CSM Failed. {error}")
-                raise CipherInvalidToken(f"Decryption for CSM Failed. {error}")
-        return csm_user_pass
-
     async def _create_cluster_admin(self, force_action=False):
         """
         Create Cluster admin using CSM User managment.
@@ -201,15 +168,16 @@ class Setup:
                                     const.CSM_AGENT_MGMT_SECRET_KEY)
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
                                     const.CSM_AGENT_EMAIL_KEY)
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        decryption_key = Conf.get(const.CSM_GLOBAL_INDEX,const.KEY_DECRYPTION)
         if not (cluster_admin_user or cluster_admin_secret or cluster_admin_emailid):
             raise CsmSetupError("Cluster admin details  not obtainer from confstore")
         Log.info("Set Cortx admin credentials in config")
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
-        cluster_admin_secret = Setup._decrypt_secret(cluster_admin_secret, self.cluster_id,
-                                                Conf.get(const.CSM_GLOBAL_INDEX,
-                                                        const.S3_PASSWORD_DECRYPTION_KEY))
+        cluster_admin_secret = Security.decrypt_secret(cluster_admin_secret,
+            cluster_id, decryption_key)
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
 
@@ -243,24 +211,6 @@ class Setup:
         except ResourceExist:
             Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
-    @staticmethod
-    def _decrypt_secret(secret, cluster_id, decryption_key):
-        try:
-            cipher_key = Cipher.generate_key(cluster_id,decryption_key)
-        except KvError as error:
-            Log.error(f"Failed to Fetch keys from Conf store. {error}")
-            return None
-        except Exception as e:
-            Log.error(f"{e}")
-            return None
-        try:
-            decrypted_value = Cipher.decrypt(cipher_key,
-                                                secret.encode("utf-8"))
-            return decrypted_value.decode('utf-8')
-        except CipherInvalidToken as error:
-            Log.error(f"Secret decryption Failed. {error}")
-            raise CipherInvalidToken(f"Secret decryption Failed. {error}")
-
 class CsmSetup(Setup):
     def __init__(self):
         """Csm Setup initialization."""
@@ -268,4 +218,3 @@ class CsmSetup(Setup):
         self._replacement_node_flag = os.environ.get("REPLACEMENT_NODE") == "true"
         if self._replacement_node_flag:
             Log.info("REPLACEMENT_NODE flag is set")
-

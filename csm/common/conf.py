@@ -14,9 +14,8 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import traceback
 from csm.common.payload import Payload
-from csm.common.errors import CsmError, InvalidRequest
+from csm.common.errors import CsmError, InvalidRequest, CsmInternalError
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf as conf_store
@@ -123,15 +122,24 @@ class Security:
         if not cluster_id:
             raise ClusterIdFetchError("Failed to get cluster id.")
         for each_key in const.DECRYPTION_KEYS:
-            cipher_key = Cipher.generate_key(cluster_id,
-                                             conf_store.get(const.CSM_GLOBAL_INDEX,
-                                                            const.DECRYPTION_KEYS[each_key]))
-            encrypted_value = conf_store.get(const.CSM_GLOBAL_INDEX, each_key)
+            secret = conf_store.get(const.CSM_GLOBAL_INDEX, each_key)
+            decryption_key = conf_store.get(const.CSM_GLOBAL_INDEX,
+                                             const.DECRYPTION_KEYS[each_key])
             try:
-                decrypted_value = Cipher.decrypt(cipher_key,
-                                                 encrypted_value.encode("utf-8"))
-                conf_store.set(const.CSM_GLOBAL_INDEX, each_key,
-                               decrypted_value.decode("utf-8"))
+                decrypted_secret = Security.decrypt_secret(secret, cluster_id, decryption_key)
+                conf_store.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_secret)
             except CipherInvalidToken as error:
-                Log.exception(f"Decryption for {each_key} Failed. {error}")
-                Log.exception(f"{traceback.format_exc()}")
+                raise CsmInternalError(error)
+
+    @staticmethod
+    def decrypt_secret(secret, cluster_id, decryption_key):
+        try:
+            cipher_key = Cipher.generate_key(cluster_id, decryption_key)
+            decrypted_value = Cipher.decrypt(cipher_key,
+                                                secret.encode("utf-8"))
+            return decrypted_value.decode('utf-8')
+        except CipherInvalidToken as error:
+            import traceback
+            Log.error(f"Secret Decryption Failed. {error}")
+            Log.error(f"{traceback.format_exc()}")
+            raise CipherInvalidToken(f"Secret decryption Failed. {error}")

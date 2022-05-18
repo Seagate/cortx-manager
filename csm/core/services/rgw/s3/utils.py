@@ -20,6 +20,7 @@ from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.service_urls import ServiceUrls
+from csm.common.conf import Security
 
 class CsmRgwConfigurationFactory:
     """Factory for the most common CSM RGW connections configurations."""
@@ -37,9 +38,18 @@ class CsmRgwConfigurationFactory:
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
         rgw_connection_config.auth_user_access_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY)
-        rgw_connection_config.auth_user_secret_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
+        rgw_connection_config.auth_user_secret_key = \
+            CsmRgwConfigurationFactory._get_decrypted_secret_key()
         return rgw_connection_config
+
+    @staticmethod
+    def _get_decrypted_secret_key():
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        auth_user_secret_key = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
+        decreption_key = Conf.get(const.CSM_GLOBAL_INDEX,const.KEY_DECRYPTION)
+        return Security.decrypt_secret(auth_user_secret_key, cluster_id, decreption_key)
+
 
 class S3ServiceError(Exception):
     """S3 service error class."""
