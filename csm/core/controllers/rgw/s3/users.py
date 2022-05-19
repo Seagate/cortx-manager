@@ -294,6 +294,7 @@ class S3IAMUserKeyView(S3BaseView):
             response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
 
+
 @CsmView._app_routes.view("/api/v2/iam/caps/{uid}")
 class S3IAMUserCapsView(S3BaseView):
     """
@@ -344,6 +345,7 @@ class S3IAMUserCapsView(S3BaseView):
         with self._guard_service():
             response = await self._service.remove_user_caps(**request_body)
             return CsmResponse(response)
+
 
 @CsmView._app_routes.view("/api/v2/iam/quota/{uid}")
 class S3IAMUserQuotaView(S3BaseView):
