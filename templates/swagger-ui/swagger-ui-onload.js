@@ -2,6 +2,7 @@ window.onload = function() {
     const ui = SwaggerUIBundle({
         url: "static/swagger.json",
         dom_id: "#swagger-ui",
+        validatorUrl: null,
         deepLinking: true,
         presets: [
           SwaggerUIBundle.presets.apis,
