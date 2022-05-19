@@ -176,7 +176,6 @@
           },
           "post": {
               "tags": [
-                  "Admin user",
                   "CSM User"
               ],
               "summary": "Create new CSM user: CSM user having permission admin or manage can create new CSM user",
