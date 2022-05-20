@@ -592,10 +592,6 @@ USED = 'used'
 AVAILABLE = 'avail'
 USAGE_PERCENTAGE = 'usage_percentage'
 
-# Keys for  Description
-DECRYPTION_KEYS = {
-    "RGW>s3>iam>admin_secret_key": "DECRYPTION>decrypt_value"
-}
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
 ENCLOSURE_ID = "enclosure_id"
