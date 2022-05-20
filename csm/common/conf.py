@@ -15,10 +15,8 @@
 
 import os
 from csm.common.payload import Payload
-from csm.common.errors import CsmError, InvalidRequest, CsmInternalError
-from csm.core.blogic import const
+from csm.common.errors import CsmError, InvalidRequest
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf as conf_store
 from cortx.utils.security.cipher import Cipher, CipherInvalidToken
 
 
@@ -116,7 +114,21 @@ class DebugConf:
 class Security:
 
     @staticmethod
-    def decrypt(secret, private_key, decryption_key):
+    def decrypt(secret, private_key, decryption_key) -> str:
+        """
+        Utility method to decrypt a secret.
+
+        Args:
+            secret (str): Secret string to be decrypted.
+            private_key (str): Private Key.
+            decryption_key (str): Decryption Key.
+
+        Raises:
+            CipherInvalidToken: In case of decryption failure.
+
+        Returns:
+            str: Decrypted secret string.
+        """
         try:
             cipher_key = Cipher.generate_key(private_key, decryption_key)
             decrypted_value = Cipher.decrypt(cipher_key,
