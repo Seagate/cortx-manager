@@ -108,7 +108,8 @@ class SetUserQuotaSchema(S3BaseSchema):
 class ListAllUsersSchema(S3BaseSchema):
     """List all IAM users schema validation class."""
 
-    max_entries = fields.Int(data_key=const.MAX_ENTRIES, missing=None, allow_none=False)
+    max_entries = fields.Int(data_key=const.MAX_ENTRIES, missing=None,
+        allow_none=False, validate=validate.Range(min=1))
     marker = fields.Str(data_key=const.MARKER, missing=None, allow_none=False)
 
 @CsmView._app_routes.view("/api/v2/s3/iam/users")
