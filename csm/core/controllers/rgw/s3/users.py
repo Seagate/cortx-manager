@@ -243,7 +243,7 @@ class S3IAMUserView(S3BaseView):
             return CsmResponse(response)
 
 
-@CsmView._app_routes.view("/api/v2/s3/iam/keys")
+@CsmView._app_routes.view("/api/v2/iam/keys")
 class S3IAMUserKeyView(S3BaseView):
     """
     S3 IAM User Key View for REST API implementation.
