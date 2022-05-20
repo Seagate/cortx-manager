@@ -18,9 +18,12 @@ from csm.core.data.models.rgw import RgwConnectionConfig
 from csm.common.services import ApplicationService
 from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
-from cortx.utils.conf_store.conf_store import Conf
 from csm.common.service_urls import ServiceUrls
 from csm.common.conf import Security
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.security.cipher import CipherInvalidToken
+from cortx.utils.log import Log
+
 
 class CsmRgwConfigurationFactory:
     """Factory for the most common CSM RGW connections configurations."""
@@ -48,7 +51,10 @@ class CsmRgwConfigurationFactory:
         auth_user_secret_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
         decreption_key = Conf.get(const.CSM_GLOBAL_INDEX,const.KEY_DECRYPTION)
-        return Security.decrypt_secret(auth_user_secret_key, cluster_id, decreption_key)
+        try:
+            return Security.decrypt(auth_user_secret_key, cluster_id, decreption_key)
+        except CipherInvalidToken as e:
+            Log.error(f"Privileged IAM user secret key decryption failed: {e}")
 
 
 class S3ServiceError(Exception):

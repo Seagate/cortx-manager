@@ -126,20 +126,18 @@ class Security:
             decryption_key = conf_store.get(const.CSM_GLOBAL_INDEX,
                                              const.DECRYPTION_KEYS[each_key])
             try:
-                decrypted_secret = Security.decrypt_secret(secret, cluster_id, decryption_key)
+                decrypted_secret = Security.decrypt(secret, cluster_id, decryption_key)
                 conf_store.set(const.CSM_GLOBAL_INDEX, each_key, decrypted_secret)
             except CipherInvalidToken as error:
                 raise CsmInternalError(error)
 
     @staticmethod
-    def decrypt_secret(secret, cluster_id, decryption_key):
+    def decrypt(secret, private_key, decryption_key):
         try:
-            cipher_key = Cipher.generate_key(cluster_id, decryption_key)
+            cipher_key = Cipher.generate_key(private_key, decryption_key)
             decrypted_value = Cipher.decrypt(cipher_key,
                                                 secret.encode("utf-8"))
             return decrypted_value.decode('utf-8')
         except CipherInvalidToken as error:
-            import traceback
-            Log.error(f"Secret Decryption Failed. {error}")
-            Log.error(f"{traceback.format_exc()}")
+            Log.error(f"Decryption failed: {error}")
             raise CipherInvalidToken(f"Secret decryption Failed. {error}")

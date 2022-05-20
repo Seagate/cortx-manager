@@ -176,7 +176,7 @@ class Setup:
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
-        cluster_admin_secret = Security.decrypt_secret(cluster_admin_secret,
+        cluster_admin_secret = Security.decrypt(cluster_admin_secret,
             cluster_id, decryption_key)
         UserNameValidator()(cluster_admin_user)
         PasswordValidator()(cluster_admin_secret)
