@@ -33,7 +33,6 @@ INVENTORY_SOURCE_CONF = "{}/conf/etc/csm/cluster.conf".format(CSM_PATH)
 CSM_DEFAULT_CONF = "{}/conf/csm_default.conf".format(CSM_PATH)
 CSM_DEFAULT_DB = "{}/conf/csm_default_db.conf".format(CSM_PATH)
 CSM_SOURCE_CONF_URL = f"yaml://{CSM_SOURCE_CONF}"
-CSM_SETUP_LOG_DIR = "/tmp"
 CSM_CONF_FILE_NAME = 'csm.conf'
 CORTXCLI_CONF_FILE_NAME = 'cortxcli.conf'
 CORTXCLI_CONF_FILE_URL = (f'yaml://{CORTXCLI_SOURCE_CONF_PATH}/'
@@ -46,6 +45,9 @@ DB_SOURCE_CONF_FILE_URL = f'yaml://{CSM_PATH}/conf/etc/csm/{DB_CONF_FILE_NAME}'
 PLUGIN_DIR = 'cortx'
 WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
+# ToDo: Revisit csm temp path
+CSM_TEMP_PATH = "{}/csm_temp".format(CSM_PATH)
+CSM_SETUP_LOG_DIR = CSM_TEMP_PATH
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
@@ -142,13 +144,12 @@ TYPE_S3_SERVER = 'S3_SERVER'
 
 # Config
 CORTX = 'cortx'
-TMP_CSM = '/tmp/csm'
 CSM_ETC_DIR = '/etc/csm'
 CSM_CONF = '/etc/csm/csm.conf'
 USL_CONF = '/etc/csm/usl.conf'
 CORTXCLI_CONF = '/etc/cli/cortxcli.conf'
 CORTXCLI_SECTION = 'CORTXCLI'
-CSM_TMP_FILE_CACHE_DIR = '/tmp/csm/file_cache/transfer'
+CSM_TMP_FILE_CACHE_DIR = "{}/file_cache/transfer".format(CSM_TEMP_PATH)
 COMPONENTS_CONF = '/etc/csm/components.yaml'
 DATABASE_CONF = '/etc/csm/database.conf'
 DATABASE_CONF_URL = f"yaml://{DATABASE_CONF}"
@@ -491,7 +492,7 @@ NTP_TIMEZONE_OFFSET = 'ntp_timezone_offset'
 
 # Audit Log
 CSM_AUDIT_LOG_SCHEMA = '{}/schema/csm_audit_log.json'.format(CSM_PATH)
-AUDIT_LOG = "/tmp/auditlogs/"
+AUDIT_LOG = "{}/auditlogs/".format(CSM_TEMP_PATH)
 MAX_RESULT_WINDOW = 10000
 SORTABLE_FIELDS = "sortable_fields"
 
@@ -775,13 +776,8 @@ KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
 DEFAULT_BROWSER = 'chrome'
 DEFAULT_TEST_PLAN = CSM_PATH + '/test/plans/service_sanity.pln'
 DEFAULT_ARG_PATH = CSM_PATH + '/test/test_data/args.yaml'
-DEFAULT_LOGFILE = '/tmp/csm_gui_test.log'
-DEFAULT_OUTPUTFILE = '/tmp/output.log'
-
-#Cluster admin creds
-DEFAULT_CLUSTER_ADMIN_USER = 'cortxadmin'
-DEFAULT_CLUSTER_ADMIN_PASS = 'Cortxadmin@123'
-DEFAULT_CLUSTER_ADMIN_EMAIL = 'cortxadmin@seagate.com'
+DEFAULT_LOGFILE = '{}/csm_gui_test.log'.format(CSM_TEMP_PATH)
+DEFAULT_OUTPUTFILE = '{}/output.log'.format(CSM_TEMP_PATH)
 
 # cluster.conf keys
 ENV_TYPE = "env_type"
@@ -893,6 +889,7 @@ S3_CLIENT_ERROR_CODES = {
     }
 S3_CONNECTION_TIMEOUT = 10
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
+IAM_OPERATIONS_MAPPING_SCHEMA = '{}/schema/iam_operations_mapping.json'.format(CSM_PATH)
 S3_CLIENT_ERROR_MSG = 'Unable to process the request'
 
 # S3 Operations
@@ -908,6 +905,7 @@ ADD_USER_CAPS_OPERATION = 'ADD_USER_CAPS'
 REMOVE_USER_CAPS_OPERATION = 'REMOVE_USER_CAPS'
 GET_USER_LEVEL_QUOTA_OPERATION = 'GET_USER_LEVEL_QUOTA'
 SET_USER_LEVEL_QUOTA_OPERATION = 'SET_USER_LEVEL_QUOTA'
+LIST_USERS_OPERATION = 'LIST_USERS'
 
 # S3 API
 UID = 'uid'
@@ -934,6 +932,8 @@ ENABLED = 'enabled'
 MAX_SIZE = 'max_size'
 MAX_OBJECTS = 'max_objects'
 CHECK_ON_RAW = 'check_on_raw'
+MAX_ENTRIES = 'max_entries'
+MARKER = 'marker'
 
 #CSM ERROR CODES
 INVALID_REQUEST = 'MalformedRequest'
@@ -961,3 +961,12 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# Swagger UI
+SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)
+SWAGGER_UI_INDEX_HTML = '{}/index.html'.format(SWAGGER_UI_DIST)
+SWAGGER_JSON = '{}/swagger.json'.format(SWAGGER_UI_DIST)
+SWAGGER_UI_URL = '/api/doc'
+SWAGGER_JSON_URL = '/api/doc/swagger.json'
+SWAGGER_UI_STATICS_URL = '/api/static'
+

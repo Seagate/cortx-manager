@@ -17,6 +17,7 @@ from csm.core.controllers.view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.core.blogic import const
 
+
 @CsmView._app_routes.view("/api/v2/unsupported_features")
 @CsmAuth.public
 class UnsupportedFeaturesView(CsmView):
@@ -26,6 +27,6 @@ class UnsupportedFeaturesView(CsmView):
         self._service_dispatch = {}
 
     async def get(self):
-        ''' GET REST implementation for fetching unsupported features '''
+        """GET REST implementation for fetching unsupported features."""
         Log.debug("Handling unsupported features fetch request")
         return await self._service.get_unsupported_features()

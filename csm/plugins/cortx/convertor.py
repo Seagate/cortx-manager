@@ -1,5 +1,5 @@
 from cortx.utils.log import Log
-from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.common.errors import InvalidRequest
 import re
 
 class Prometheus:

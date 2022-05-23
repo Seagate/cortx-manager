@@ -13,16 +13,14 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
 import aiohttp
 from aiohttp.client import ClientSession
 from cortx.utils.conf_store.conf_store import Conf
-from csm.common.process import SimpleProcess,AsyncioSubprocess
+# from csm.common.process import AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.common.errors import CsmInternalError, CsmError
-from typing import Callable, Dict, Any
+from csm.common.errors import CsmInternalError
 
 class StorageCapacityService(ApplicationService):
     """
@@ -50,46 +48,46 @@ class StorageCapacityService(ApplicationService):
 
         return round(capacity_float, round_off_value)
 
-    @Log.trace_method(Log.DEBUG)
-    async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
-        """
-        This method will return system disk details as per command
+    # @Log.trace_method(Log.DEBUG)
+    # async def get_capacity_details(self, unit=const.DEFAULT_CAPACITY_UNIT, round_off_value=const.DEFAULT_ROUNDOFF_VALUE) -> Dict[str, Any]:
+    #     """
+    #     This method will return system disk details as per command
 
-        :return: dict
-        """
+    #     :return: dict
+    #     """
 
-        def convert_to_format(value: int, unit: str ,round_off_value:int) -> Any:
-            if unit.upper()==const.DEFAULT_CAPACITY_UNIT:
-                # keep original format (i.e., integer)
-                return value
-            return StorageCapacityService._integer_to_human(value, unit.upper(), round_off_value)
+    #     def convert_to_format(value: int, unit: str ,round_off_value:int) -> Any:
+    #         if unit.upper()==const.DEFAULT_CAPACITY_UNIT:
+    #             # keep original format (i.e., integer)
+    #             return value
+    #         return StorageCapacityService._integer_to_human(value, unit.upper(), round_off_value)
 
-        try:
-            process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
-            stdout, stderr, rc = await process.run()
-        except Exception as e:
-            raise CsmInternalError(f"Error in command execution, command : {e}")
-        if not stdout:
-            raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
-                                   f"-{stdout.decode('utf-8')}")
-        Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
-        console_output = json.loads(stdout.decode('utf-8'))
-        capacity_info = console_output.get('filesystem',{}).get('stats',{})
+    #     try:
+    #         process = AsyncioSubprocess(const.FILESYSTEM_STAT_CMD)
+    #         stdout, stderr, _ = await process.run()
+    #     except Exception as e:
+    #         raise CsmInternalError(f"Error in command execution, command : {e}")
+    #     if not stdout:
+    #         raise CsmInternalError(f"Failed to process command : {stderr.decode('utf-8')}"
+    #                                f"-{stdout.decode('utf-8')}")
+    #     Log.debug(f'{const.FILESYSTEM_STAT_CMD} command output stdout:{stdout}')
+    #     console_output = json.loads(stdout.decode('utf-8'))
+    #     capacity_info = console_output.get('filesystem',{}).get('stats',{})
 
-        if not capacity_info:
-            raise CsmInternalError("System storage details not available.")
-        if int(capacity_info[const.TOTAL_SPACE]) <= 0:
-            raise CsmInternalError("Total storage space cannot be zero", message_args=capacity_info)
-        formatted_output = {}
-        formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
-        formatted_output[const.USED] = convert_to_format(
-            int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit,round_off_value)
-        formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit,round_off_value)
-        formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
-                                                             int(capacity_info[const.FREE_SPACE])) /
-                                                             int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
-        formatted_output[const.UNIT] = unit
-        return formatted_output
+    #     if not capacity_info:
+    #         raise CsmInternalError("System storage details not available.")
+    #     if int(capacity_info[const.TOTAL_SPACE]) <= 0:
+    #         raise CsmInternalError("Total storage space cannot be zero", message_args=capacity_info)
+    #     formatted_output = {}
+    #     formatted_output[const.SIZE] = convert_to_format(int(capacity_info[const.TOTAL_SPACE]),unit,round_off_value)
+    #     formatted_output[const.USED] = convert_to_format(
+    #         int(capacity_info[const.TOTAL_SPACE] - capacity_info[const.FREE_SPACE]),unit,round_off_value)
+    #     formatted_output[const.AVAILABLE] = convert_to_format(int(capacity_info[const.FREE_SPACE]),unit,round_off_value)
+    #     formatted_output[const.USAGE_PERCENTAGE] = round((((int(capacity_info[const.TOTAL_SPACE]) -
+    #                                                          int(capacity_info[const.FREE_SPACE])) /
+    #                                                          int(capacity_info[const.TOTAL_SPACE])) * 100),round_off_value)
+    #     formatted_output[const.UNIT] = unit
+    #     return formatted_output
 
 
     async def request(self, session: ClientSession, method, url, expected_success_code):

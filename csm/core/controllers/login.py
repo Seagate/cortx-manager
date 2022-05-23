@@ -15,7 +15,6 @@
 
 import json
 from cortx.utils.log import Log
-from csm.core.services.sessions import LoginService
 from csm.common.errors import InvalidRequest
 from .view import CsmView, CsmResponse, CsmAuth
 from aiohttp import web
@@ -30,7 +29,7 @@ class LoginView(CsmView):
         try:
             body = await self.request.json()
             Log.debug(f"Handling Login Post request. Username: {body.get('username')}")
-        except json.decoder.JSONDecodeError as jde:
+        except json.decoder.JSONDecodeError:
             raise InvalidRequest(message_args="Request body is missing")
 
         username = body.get('username', None)
@@ -44,7 +43,7 @@ class LoginView(CsmView):
             raise web.HTTPUnauthorized()
 
         Log.debug(f'User: {username} successfully logged in.')
-        headers = { CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}' }
+        headers = {CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}'}
         return CsmResponse(body, headers=headers)
 
 
@@ -55,10 +54,10 @@ class LogoutView(CsmView):
     async def post(self):
         Log.debug(f"Handling Logout Post request. "
                   f"user_id: {self.request.session.credentials.user_id}")
-        """ We use POST method here instead of GET
-        to avoid browser prefetching this URL """
+        # We use POST method here instead of GET
+        # to avoid browser prefetching this URL
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
-        Log.info(f'Session ended')
+        Log.info('Session ended')
         return CsmResponse()

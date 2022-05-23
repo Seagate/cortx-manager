@@ -14,11 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from typing import Any
-from json import loads
+import json
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from csm.common.errors import CsmInternalError
-from csm.common.payload import Json
+from csm.common.payload import Json, Payload, JsonMessage, Dict
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.s3 import S3Client
@@ -35,27 +35,28 @@ class RGWPlugin:
         self._rgw_admin_client = S3Client(config.auth_user_access_key,
             config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
+        self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
-        return await self._process(api_operation, request_body)
+        response = await self._process(api_operation, request_body)
+        return self._build_response(operation, response)
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:
         request_body = dict()
         for key, value in request_body_schema.items():
             if kwargs.get(key, None) is not None:
                 request_body[value] = kwargs.get(key, None)
-        Log.debug(f"RGW Plugin - request body: {request_body}")
         return request_body
 
-    @Log.trace_method(Log.DEBUG)
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def _process(self, api_operation, request_body) -> Any:
         try:
             (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
-            response_body = loads(body) if body else {}
+            response_body = json.loads(body) if body else {}
             if code != api_operation['SUCCESS_CODE']:
                 return self._create_error(code, response_body)
             return response_body
@@ -66,6 +67,33 @@ class RGWPlugin:
             if "Cannot connect to" in str(rgwe):
                 return self._create_error(503, const.S3_CLIENT_ERROR_CODES[503])
             raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+        except Exception as e:
+            Log.error(f'{const.UNKNOWN_ERROR}: {e}')
+            raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+
+    @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
+    def _build_response(self, operation, response) -> Any:
+        mapped_response = response
+        mapping = self._api_response_mapping_schema.get(operation)
+        if mapping:
+            try:
+                Log.info(f'Performing raw response mapping for {operation}')
+                raw_response_payload = Payload(JsonMessage(json.dumps(response)))
+                parsed_response_payload = Payload(Dict(dict()))
+                raw_response_payload.convert(mapping, parsed_response_payload)
+                parsed_response_payload.dump()
+                mapped_response = parsed_response_payload.load()
+                RGWPlugin._params_cleanup(mapped_response)
+            except Exception as e:
+                Log.error(f"Error occured while coverting raw api response to required response. {e}")
+                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+        return mapped_response
+
+    @staticmethod
+    def _params_cleanup(params):
+        for key, value in list(params.items()):
+            if value is None:
+                params.pop(key)
 
     def _create_error(self, status: int, body: dict) -> Any:
         """

@@ -14,22 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import errno
-from datetime import datetime
-import sys
-import shutil
-import subprocess
-from threading import Thread
-
-from csm.common.cluster import Node, Cluster
-from csm.common.file_collector import RemoteFileCollector
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf
-from csm.core.blogic import const
 from csm.common.errors import CsmError
 
 class EmailConfig(object):
-    """ Logic to manage email configuration for syslog events.  """
+    """Logic to manage email configuration for syslog events."""
 
     CA_CERTIFICATE    = "/etc/pki/tls/certs/ca-bundle.crt"
     SSMTP_TEMPL       = "/etc/ssmtp/ssmtp.conf.tmpl"
@@ -38,6 +27,7 @@ class EmailConfig(object):
     EMAIL_LIST_FILE   = "/etc/csm/email/email_list"
 
     def __init__(self):
+        """Email config init."""
         self._email_conf_dict = {
                                     "TLS_CA_FILE": EmailConfig.CA_CERTIFICATE,
                                     "mailhub": "",
@@ -50,9 +40,7 @@ class EmailConfig(object):
         self._ssmtp_conf = EmailConfig.SSMTP_CONF
 
     def configure(self, args, password = ""):
-        """
-        dumps dictionary to /etc/ssmtp/ssmtp.conf.
-        """
+        """Dumps dictionary to /etc/ssmtp/ssmtp.conf."""
         mail_hub = args[0]+":"+args[1]
         self._email_conf_dict["mailhub"] = mail_hub
         self._email_conf_dict["AuthUser"] = args[2]
@@ -111,9 +99,7 @@ class EmailConfig(object):
         return msg
 
     def subscribe(self, args):
-        """
-        dumps dictionary to /etc/csm/email/email_list.
-        """
+        """Dumps dictionary to /etc/csm/email/email_list."""
         try:
             File = open(EmailConfig.EMAIL_LIST_FILE, "a")
             for email in args:
@@ -135,9 +121,7 @@ class EmailConfig(object):
         return msg
 
     def unsubscribe(self, args):
-        """
-        dumps dictionary to /etc/csm/email/email_list.
-        """
+        """Dumps dictionary to /etc/csm/email/email_list."""
         try:
             File = open(EmailConfig.EMAIL_LIST_FILE, "r")
             email_list = File.readlines()
@@ -164,10 +148,7 @@ class EmailConfig(object):
         return msg
 
     def show(self):
-        """
-        shows current configuration file i.e. /etc/ssmtp/ssmtp.conf.
-        """
-
+        """Shows current configuration file i.e. /etc/ssmtp/ssmtp.conf."""
         try:
             msg = "Email is not configured."
             if os.path.isfile(EmailConfig.SSMTP_CONF):
