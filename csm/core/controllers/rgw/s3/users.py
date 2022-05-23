@@ -363,9 +363,6 @@ class S3IAMUserQuotaView(S3BaseView):
         Log.info(f"Handling iam user quota GET request"
                  f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
-        # Is it required ?
-        if self._is_iam_privileged_user(uid):
-                raise CsmPermissionDenied()
         path_params_dict = {const.UID: uid}
         Log.debug(f"Handling iam user quota GET request"
                   f" with path param: {uid}")
