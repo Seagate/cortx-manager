@@ -964,3 +964,4 @@ PERSISTENT          = 'persistent'
 
 # CSM usage quotas
 CSM_ACTIVE_USERS_QUOTA = 50
+CSM_ACTIVE_REQUESTS_QUOTA = 100

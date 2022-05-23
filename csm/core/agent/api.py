@@ -101,8 +101,7 @@ class CsmRestApi(CsmApi, ABC):
     __is_shutting_down = False
     __unsupported_features = None
     __nreq = 0
-    __blocked = 0
-    __server = None
+    __nblocked = 0
 
     @staticmethod
     def init():
@@ -292,26 +291,18 @@ class CsmRestApi(CsmApi, ABC):
     @staticmethod
     @web.middleware
     async def throttler_middleware(request, handler):
-        print(f"Server.connections = {len(CsmRestApi.__server.connections)}")
-        print(f"Asyncio tasks = {len(asyncio.Task.all_tasks())}")
-        if CsmRestApi.__nreq > 3:
-            CsmRestApi.__blocked += 1
-            print(f"Too many requests in progress - {CsmRestApi.__nreq}. Blocking this one. "
-                  f"Blocked - {CsmRestApi.__blocked}")
-
+        if CsmRestApi.__nreq >= const.CSM_ACTIVE_REQUESTS_QUOTA:
+            CsmRestApi.__nblocked += 1
+            msg = (f"The request is blocked because the number of requests reached threshold\n"
+                   f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
+            Log.warn(msg)
             return web.Response(status=429, text="Too many requests")
         else:
             CsmRestApi.__nreq += 1
-            print(f"New incoming request. In progress - {CsmRestApi.__nreq}. Handling...")
 
-        await asyncio.sleep(10)
         res = await handler(request)
         CsmRestApi.__nreq -= 1
-        print(f"Handled the request. In progress - {CsmRestApi.__nreq}")
-        print(f"Server.connections = {len(CsmRestApi.__server.connections)}")
-        print(f"Asyncio tasks = {len(asyncio.Task.all_tasks())}")
         return res
-
 
     @staticmethod
     @web.middleware
