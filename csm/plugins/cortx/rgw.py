@@ -36,13 +36,15 @@ class RGWPlugin:
             config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
+        self._api_suppress_response_keys_schema = Json(const.SUPPRESS_RESPONSE_KEYS_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
         response = await self._process(api_operation, request_body)
-        return self._build_response(operation, response)
+        suppressed_response = self._supress_keys(operation, response)
+        return self._build_response(operation, suppressed_response)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:
@@ -88,6 +90,21 @@ class RGWPlugin:
                 Log.error(f"Error occured while coverting raw api response to required response. {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return mapped_response
+
+    def _supress_keys(self, operation, response):
+        suppressed_response = response
+        keys = self._api_suppress_response_keys_schema.get(operation)
+        for key in keys:
+            suppressed_response = self._remove_keys(suppressed_response, key)
+        return suppressed_response
+
+    def _remove_keys(self, input, key):
+        if isinstance(input, dict):
+            return {k: self._remove_keys(v, key) for k, v in input.items() if k != key}
+        elif isinstance(input, list):
+            return [self._remove_keys(element, key) for element in input]
+        else:
+            return input
 
     @staticmethod
     def _params_cleanup(params):
