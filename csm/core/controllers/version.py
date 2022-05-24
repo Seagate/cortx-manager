@@ -24,10 +24,10 @@ from csm.core.controllers.rgw.s3.base import S3BaseSchema
 
 class VersionValidationSchema(S3BaseSchema):
     # Define schema here
-    required = fields.List(fields.Str, data_key=const.REQUIRED, required=True)
+    requires = fields.List(fields.Str, data_key=const.REQUIRES, required=True)
 
 @CsmView._app_routes.view("/api/v2/version/compatibility/{resource}/{resource_id}")
-class VersionCompatibilityView(CsmView):
+class VersionCompatibilityView(S3BaseView):
     """
     Version compatiblity validation for REST API implementation.
 
@@ -43,11 +43,13 @@ class VersionCompatibilityView(CsmView):
         # Read path parameter
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         resource = self.request.match_info[const.ARG_RESOURCE]
+        # Check for valid Resource
+        if resource not in const.version_resources:
+            raise CsmNotFoundError(f"{resource} is not valid".)
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
         }
-        # Check for valid Resource
         try:
             # Check for request body schema
             schema = VersionValidationSchema()
@@ -57,7 +59,6 @@ class VersionCompatibilityView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest("Invalid parameter for request body")
         request_body = {**path_params_dict, **request_body_param}
-        # Call Corresponding Service
-        with self._guard_service():
-            response = await self._service.is_version_compatible(**request_body)
-            return CsmResponse(response)
+        # Call Version Compatibility validation Service
+        response = await self._service.is_version_compatible(**request_body)
+        return CsmResponse(response)
