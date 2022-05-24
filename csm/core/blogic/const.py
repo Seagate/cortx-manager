@@ -966,5 +966,7 @@ SWAGGER_UI_URL = '/api/doc'
 SWAGGER_JSON_URL = '/api/doc/swagger.json'
 SWAGGER_UI_STATICS_URL = '/api/static'
 
-REQUIRED = 'required'
+# Version Validation
+REQUIRES = 'requires'
 VERSION_VALIDATION_SERVICE = "version_compatibility_service"
+version_resources = ['cluster', 'node']
