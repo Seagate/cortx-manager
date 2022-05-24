@@ -970,3 +970,4 @@ SWAGGER_UI_STATICS_URL = '/api/static'
 REQUIRES = 'requires'
 INFORMATION_SERVICE = "information_service"
 VERSION_RESOURCES = ['node']
+
