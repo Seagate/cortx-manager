@@ -20,14 +20,21 @@ from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-from csm.core.controllers.rgw.s3.base import S3BaseSchema
 
-class VersionValidationSchema(S3BaseSchema):
+class VersionValidationSchema(Schema):
     # Define schema here
     requires = fields.List(fields.Str, data_key=const.REQUIRES, required=True)
 
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """Invalidate the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"Empty value for {key}")
+
+
 @CsmView._app_routes.view("/api/v2/version/compatibility/{resource}/{resource_id}")
-class VersionCompatibilityView(S3BaseView):
+class VersionCompatibilityView(CsmView):
     """
     Version compatiblity validation for REST API implementation.
 
@@ -35,7 +42,7 @@ class VersionCompatibilityView(S3BaseView):
     """
     def __init__(self, request):
         super(VersionCompatibilityView, self).__init__(request)
-        self._service = self.request.app[const.VERSION_VALIDATION_SERVICE]
+        self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def post(self):
         """POST REST implementation for Validating version compatibility."""

@@ -120,7 +120,7 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        CsmRestApi._app[const.VERSION_VALIDATION_SERVICE] = VersionValidationService()
+        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
 
     @staticmethod
     def _configure_cluster_management_service(message_bus_obj):
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
-    from csm.core.services.version import VersionValidationService
+    from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
 
     try:

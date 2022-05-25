@@ -18,7 +18,7 @@ from cortx.utils.schema.release import Release
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 
-class VersionValidationService(ApplicationService):
+class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
 
     @Log.trace_method(Log.DEBUG)
