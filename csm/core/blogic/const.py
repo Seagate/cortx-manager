@@ -968,4 +968,4 @@ SWAGGER_UI_STATICS_URL = '/api/static'
 # Version Validation
 REQUIRES = 'requires'
 INFORMATION_SERVICE = "information_service"
-version_resources = ['cluster', 'node']
+VERSION_RESOURCES = ['cluster', 'node']
