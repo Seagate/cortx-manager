@@ -77,6 +77,7 @@ class Configure(Setup):
         self.set_s3_info()
         self.set_hax_endpoint()
         self.create_topics()
+        self.set_resource_limits()
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
@@ -265,3 +266,55 @@ class Configure(Setup):
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         self._create_perf_stat_topic(mb_admin)
         self._create_cluster_stop_topic(mb_admin)
+
+    @staticmethod
+    def _calculate_request_quota(mem_min: int, mem_max: int, cpu_min: int, cpu_max: int) -> int:
+        """
+        Calculate the maximum number of requests CSM handles at particular time.
+
+        :param mem_min: minimum memory limit.
+        :param mem_max: maximum memory limit.
+        :param cpu_min: minumem CPU limit.
+        :param cpu_max: maximum CPU limit.
+        :returns: number of requests.
+        """
+        Log.info(f"CPU boundaries are currently not included in calculation: {cpu_min}:{cpu_max}")
+        quota = (mem_max - mem_min) // const.MAX_MEM_PER_REQUEST
+        return quota
+
+    @staticmethod
+    def _mem_limit_to_int(mem: str) -> int:
+        """
+        Convert memory limit from Conf to integer, e.g. '128Mi' -> 128.
+
+        :param mem: value from Conf as string.
+        :returns: integer value.
+        """
+        numbers_only = mem[:mem.find('M')]
+        return int(numbers_only)
+
+    @staticmethod
+    def _cpu_limit_to_int(cpu: str) -> int:
+        """
+        Convert CPU limit from Conf string to integer, e.g. '250m' -> 250.
+
+        :param cpu: value from Conf as string.
+        :returns: integer value.
+        """
+        numbers_only = cpu[:cpu.find('m')]
+        return int(numbers_only)
+
+    @staticmethod
+    def set_resource_limits() -> None:
+        """Set resource limits for CSM."""
+        limits = Conf.get(const.CONSUMER_INDEX, const.CSM_USAGE_LIMIT_SERVICES)
+        limits = next(filter(lambda x: x[const.NAME] == "agent", limits), None)
+        if limits:
+            mem_min = Configure._mem_limit_to_int(limits["memory"]["min"])
+            mem_max = Configure._mem_limit_to_int(limits["memory"]["max"])
+            cpu_min = Configure._cpu_limit_to_int(limits["cpu"]["min"])
+            cpu_max = Configure._cpu_limit_to_int(limits["cpu"]["max"])
+
+            request_rate = Configure._calculate_request_quota(mem_min, mem_max, cpu_min, cpu_max)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA, request_rate)
+

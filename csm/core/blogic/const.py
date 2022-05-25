@@ -965,3 +965,8 @@ PERSISTENT          = 'persistent'
 # CSM usage quotas
 CSM_ACTIVE_USERS_QUOTA = 50
 CSM_ACTIVE_REQUESTS_QUOTA = 100
+MAX_MEM_PER_REQUEST = 5
+
+USAGE_REQUEST_QUOTA = 'usage>request_quota'
+CSM_USAGE_LIMIT_SERVICES = 'cortx>csm>limits>services'
+
