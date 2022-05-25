@@ -87,16 +87,30 @@ class RGWPlugin:
                 mapped_response = parsed_response_payload.load()
                 RGWPlugin._params_cleanup(mapped_response)
             except Exception as e:
-                Log.error(f"Error occured while coverting raw api response to required response. {e}")
+                Log.error(f"Error occured while coverting raw api response to\
+                    required response: {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return mapped_response
 
     def _supress_response_keys(self, operation, response):
+        """
+        Remove specific keys from response based on operation.
+        Args:
+            operation (str): IAM operation
+            response (str): Raw response from s3 server.
+        Returns:
+            Modified response
+        """
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
+        Log.debug(f"Suppressing {keys} keys from raw response.")
         if keys:
-            for key in keys:
-                suppressed_response = RGWPlugin._remove_key(suppressed_response, key)
+            try:
+                for key in keys:
+                    suppressed_response = RGWPlugin._remove_key(suppressed_response, key)
+            except Exception as e:
+                Log.error(f"Error occured while suppressing {keys} keys from response: {e}")
+                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return suppressed_response
 
     @staticmethod
@@ -110,6 +124,11 @@ class RGWPlugin:
 
     @staticmethod
     def _params_cleanup(params):
+        """
+        Removes the first level keys from dict whos values are None.
+        Args:
+            params (dict): Mapped response as per operation's schema.
+        """
         for key, value in list(params.items()):
             if value is None:
                 params.pop(key)
