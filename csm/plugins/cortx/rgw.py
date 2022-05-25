@@ -19,6 +19,7 @@ from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from csm.common.errors import CsmInternalError
 from csm.common.payload import Json, Payload, JsonMessage, Dict
+from csm.common.utility import Utility
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.s3 import S3Client
@@ -107,20 +108,11 @@ class RGWPlugin:
         if keys:
             try:
                 for key in keys:
-                    suppressed_response = RGWPlugin._remove_key(suppressed_response, key)
+                    suppressed_response = Utility.suppress_json_key(suppressed_response, key)
             except Exception as e:
                 Log.error(f"Error occured while suppressing {keys} keys from response: {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return suppressed_response
-
-    @staticmethod
-    def _remove_key(data, key):
-        if isinstance(data, dict):
-            return {k: RGWPlugin._remove_key(v, key) for k, v in data.items() if k != key}
-        elif isinstance(data, list):
-            return [RGWPlugin._remove_key(element, key) for element in data]
-        else:
-            return data
 
     @staticmethod
     def _params_cleanup(params):
