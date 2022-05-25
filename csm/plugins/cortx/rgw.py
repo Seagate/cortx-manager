@@ -36,7 +36,7 @@ class RGWPlugin:
             config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
-        self._api_suppress_response_keys_schema = Json(const.SUPPRESS_RESPONSE_KEYS_SCHEMA).load()
+        self._api_suppress_payload_schema = Json(const.SUPPRESS_PAYLOAD_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
@@ -93,19 +93,20 @@ class RGWPlugin:
 
     def _supress_response_keys(self, operation, response):
         suppressed_response = response
-        keys = self._api_suppress_response_keys_schema.get(operation)
+        keys = self._api_suppress_payload_schema.get(operation)
         if keys:
             for key in keys:
-                suppressed_response = self._remove_key(suppressed_response, key)
+                suppressed_response = RGWPlugin._remove_key(suppressed_response, key)
         return suppressed_response
 
-    def _remove_key(self, input, key):
-        if isinstance(input, dict):
-            return {k: self._remove_key(v, key) for k, v in input.items() if k != key}
-        elif isinstance(input, list):
-            return [self._remove_key(element, key) for element in input]
+    @staticmethod
+    def _remove_key(data, key):
+        if isinstance(data, dict):
+            return {k: RGWPlugin._remove_key(v, key) for k, v in data.items() if k != key}
+        elif isinstance(data, list):
+            return [RGWPlugin._remove_key(element, key) for element in data]
         else:
-            return input
+            return data
 
     @staticmethod
     def _params_cleanup(params):
