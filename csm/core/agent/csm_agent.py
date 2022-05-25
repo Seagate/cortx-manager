@@ -19,45 +19,43 @@ import sys
 import os
 import glob
 import traceback
-from aiohttp import web
 from importlib import import_module
 import pathlib
 
 
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
-    """ Import product-specific plugin module by the plugin name """
-
+    """Import product-specific plugin module by the plugin name."""
     return import_module(f'csm.plugins.{const.PLUGIN_DIR}.{name}')
 
 
 class CsmAgent:
-    """ CSM Core Agent / Deamon """
+    """CSM Core Agent / Deamon."""
 
     @staticmethod
     def init():
+        """Initializa CSM agent."""
         CsmAgent.load_csm_config_indices()
-        Conf.load(const.DB_DICT_INDEX,'dict:{"k":"v"}')
-        Conf.load(const.CSM_DICT_INDEX,'dict:{"k":"v"}')
+        Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
+        Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
         Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
         Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
-        console_output = True if Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true" \
-                            else False
+        console_output = Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true"
         Log.init("csm_agent",
-               backup_count= int(backup_count) if backup_count else None,
-               file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
-               log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-               level=log_level, console_output=console_output)
+                 backup_count=int(backup_count) if backup_count else None,
+                 file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+                 level=log_level, console_output=console_output)
 
         if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
             Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = {
-            'databases':Conf.get(const.DB_DICT_INDEX,'databases'),
-            'models': Conf.get(const.DB_DICT_INDEX,'models')
+            'databases': Conf.get(const.DB_DICT_INDEX, 'databases'),
+            'models': Conf.get(const.DB_DICT_INDEX, 'models')
         }
         db_config['databases']["es_db"]["config"][const.PORT] = int(
             db_config['databases']["es_db"]["config"][const.PORT])
@@ -68,9 +66,10 @@ class CsmAgent:
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        #Remove all Old Shutdown Cron Jobs
-        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(const.SHUTDOWN_COMMENT)
-        #todo: Remove the below line it only dumps the data when server starts.
+        # Remove all Old Shutdown Cron Jobs
+        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(
+            const.SHUTDOWN_COMMENT)
+        # TODO: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
         # Clearing cached files
@@ -85,22 +84,22 @@ class CsmAgent:
         system_status_service = SystemStatusService()
         CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
 
-        #Heath configuration
+        # Heath configuration
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
-        message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, \
-                                    const.KAFKA_ENDPOINTS), unblock_consumer=True)
+        message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
+                                         unblock_consumer=True)
 
         CsmAgent._configure_cluster_management_service(message_bus_obj)
 
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
-        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider,
-                                           MessageBusComm(Conf.get(const.CONSUMER_INDEX,
-                                                    const.KAFKA_ENDPOINTS), unblock_consumer=True))
+        kafka_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        CsmRestApi._app["stat_service"] = StatsAppService(
+            time_series_provider, MessageBusComm(kafka_endpoints, unblock_consumer=True))
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
@@ -122,13 +121,14 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
 
-
     @staticmethod
     def _configure_cluster_management_service(message_bus_obj):
         # Cluster Management configuration
         cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
-        cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(CortxHAFramework())
-        cluster_management_service = ClusterManagementAppService(cluster_management_plugin_obj, message_bus_obj)
+        cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(
+            CortxHAFramework())
+        cluster_management_service = ClusterManagementAppService(
+            cluster_management_plugin_obj, message_bus_obj)
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
@@ -141,35 +141,28 @@ class CsmAgent:
 
     @staticmethod
     def _get_consul_config():
-        def _parse_endpoints(url):
-            if "://"in url:
-                protocol, endpoint = url.split("://")
-            else:
-                protocol = ''
-                endpoint = url
-            host, port = endpoint.split(":")
-            return protocol, host, port
         protocol, host, port, secret, each_endpoint = '','','','',''
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
-        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
+        secret = Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         for each_endpoint in endpoint_list:
             if 'http' in each_endpoint:
-                protocol, host, port = _parse_endpoints(each_endpoint)
+                protocol, host, port = ServiceUrls.parse_url(each_endpoint)
                 break
         return protocol, host, port, secret, each_endpoint
 
     @staticmethod
     def load_csm_config_indices():
+        """Load CSM configuration from the database."""
         set_config_flag = False
         Conf.load(const.CONSUMER_INDEX, Options.config)
-        protocol, consul_host, consul_port, secret, endpoint = CsmAgent._get_consul_config()
+        _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV().validate_service_status(consul_host,consul_port)
+                ConsulV().validate_service_status(consul_host, consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
+                          f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                          f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
                 set_config_flag = True
             except VError as ve:
                 Log.error(f"Unable to fetch the configurations from consul: {ve}")
@@ -179,14 +172,14 @@ class CsmAgent:
             conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
             csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
             Conf.load(const.CSM_GLOBAL_INDEX,
-                    f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
+                      f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
             Conf.load(const.DATABASE_INDEX,
-                    f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
+                      f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
             set_config_flag = True
 
     @staticmethod
     def _daemonize():
-        """ Change process into background service """
+        """Change process into background service."""
         if not os.path.isdir("/var/run/csm/"):
             os.makedirs('/var/run/csm/')
         try:
@@ -214,6 +207,7 @@ class CsmAgent:
 
     @staticmethod
     def run():
+        """Run CSM agent."""
         https_conf = ConfSection(Conf.get(const.CSM_DICT_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_DICT_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_PORT)
@@ -227,16 +221,18 @@ class CsmAgent:
 
 
 if __name__ == '__main__':
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
-    sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..','..'))
+    sys.path.append(os.path.join(
+        os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
+    sys.path.append(os.path.join(
+        os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
+    sys.path.append(os.path.join(
+        os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..', '..'))
     from cortx.utils.log import Log
     from csm.common.runtime import Options
     Options.parse(sys.argv)
     from csm.common.conf import ConfSection, DebugConf
     from cortx.utils.conf_store.conf_store import Conf
-    from csm.common.payload import Yaml, Json
-    from csm.common.template import Template
+    from csm.common.payload import Json
     from csm.core.blogic import const
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
@@ -244,7 +240,6 @@ if __name__ == '__main__':
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
-    from csm.core.repositories.update_status import UpdateStatusRepository
     from csm.core.agent.api import CsmRestApi
     from csm.common.timeseries import TimelionProvider
     from csm.common.conf import Security
@@ -253,12 +248,13 @@ if __name__ == '__main__':
     from cortx.utils.validator.v_consul import ConsulV
     from cortx.utils.validator.error import VError
     from csm.core.services.storage_capacity import StorageCapacityService, StorageCapacityUsageService
-    from csm.common.errors import CsmError, CsmInternalError
+    from csm.common.errors import CsmInternalError
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
+    from csm.common.service_urls import ServiceUrls
 
     try:
         client = None

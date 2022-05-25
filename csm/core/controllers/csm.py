@@ -16,6 +16,7 @@
 from aiohttp import web
 from csm.core.agent.api import CsmApi, Request
 
+
 class CsmCliView(web.View, CsmApi):
     async def get(self):
         cmd = self.request.rel_url.query['cmd']

@@ -12,7 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 from datetime import datetime
 from schematics.types import (StringType, DateTimeType,
                               DictType, ListType)
@@ -24,16 +24,19 @@ class SessionModel(CsmModel):
     _session_id = StringType()
     _expiry_time = DateTimeType()
     _user_id = StringType()
+    _user_role = StringType()
     _permission = DictType(ListType(StringType))
 
     @staticmethod
     def instantiate_session(session_id: str,
                 expiry_time: datetime,
                 user_id: str,
+                user_role: str,
                 permissions: {}):
         session = SessionModel()
         session._session_id = session_id
         session._expiry_time = expiry_time
         session._user_id = user_id
+        session._user_role = user_role
         session._permission = permissions
         return session

@@ -17,17 +17,17 @@
 
 import sys
 import os
-import traceback
 import asyncio
-import errno
 import shlex
 from getpass import getpass
 from cmd import Cmd
 import pathlib
-import argparse
 
 class CortxCli(Cmd):
+    """CORTX CLI."""
+
     def __init__(self, args):
+        """Initialize CORTX CLI."""
         super(CortxCli, self).__init__()
         self.intro = const.INTERACTIVE_SHELL_HEADER
         self.prompt = const.CLI_PROMPT
@@ -51,6 +51,7 @@ class CortxCli(Cmd):
         Initialize Log for CSM CLI and Set the API for Rest API
         :return:
         """
+
         #Set Logger
         Conf.init()
         Conf.load(const.CSM_GLOBAL_INDEX, f"yaml://{const.CSM_CONF}")
@@ -155,7 +156,7 @@ class CortxCli(Cmd):
             if not hasattr(self, channel_name):
                 err_str = f"Invalid communication protocol {command.comm.get('type','')} selected."
                 Log.error(f"{self.username}:{err_str}")
-                sys.stderr(err_str)
+                sys.stderr.write(err_str)
             getattr(self, channel_name)(command)
             Log.info(f"{self.username}: {cmd}: Command executed")
         except CsmUnauthorizedError as e:
@@ -206,20 +207,17 @@ if __name__ == '__main__':
     from cortx.utils.cli_framework.client import CliClient
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import Conf
-    from cortx.utils.cli_framework.errors import CliError
     from cortx.utils.cli_framework.terminal import Terminal
     from csm.common.errors import CsmError, CsmUnauthorizedError, CsmServiceNotAvailable
     from csm.common.payload import *
-    from csm.common.payload import Yaml
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
     from csm.common.conf import Security
-    from csm.cli.cli_validators import Validators
     from cortx.utils.validator.error import VError
     try:
         CortxCli(sys.argv).cmdloop()
     except KeyboardInterrupt:
-        Log.debug(f"Stopped via keyboard interrupt.")
+        Log.debug("Stopped via keyboard interrupt.")
         sys.stdout.write("\n")
     except InvalidRequest as e:
         raise InvalidRequest(f"{e}")

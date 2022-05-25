@@ -153,7 +153,7 @@
       ],
       "comm": {
         "type": "direct",
-        "target": "csm.cli.scripts",
+        "target": "csm.cli.scripts.system",
         "method": "unmaintenance",
         "class": "System",
         "is_static": true

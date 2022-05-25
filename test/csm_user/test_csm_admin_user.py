@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.data.db.db_provider import DataBaseProvider, GeneralConfig
-from csm.common.errors import CsmPermissionDenied
 from csm.core.services.users import CsmUserService, UserManager
 from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.core.blogic import const
@@ -51,7 +50,7 @@ def test_csm_admin_user_create(args):
     try:
         args['user'] = loop.run_until_complete(
             user_service.get_user(data['user_id']))
-    except:
+    except Exception:
         args['user'] = loop.run_until_complete(
             user_service.create_user(**data))
 

@@ -69,7 +69,7 @@ def tmain(argp, argv):
                     ts_list.append(x.strip())
     else:
         file_path = os.path.dirname(os.path.realpath(__file__))
-        for root, directories, filenames in os.walk(os.getcwd()):
+        for root, _, filenames in os.walk(os.getcwd()):
             for filename in filenames:
                 if re.match(r'test_.*\.py$', filename):
                     file = os.path.join(root, filename).rsplit('.', 1)[0]\
@@ -87,7 +87,6 @@ def tmain(argp, argv):
             init = getattr(ts_module, 'init')
             init(args)
         except Exception as e:
-            import traceback
             traceback.print_exc()
             print('FAILED: Error: %s #@#@#@' %e)
             fail_count += 1
@@ -125,7 +124,6 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.log import Log
     from csm.common.errors import CsmError
-    from csm.common.payload import *
     from cortx.utils.conf_store.conf_store import Conf
     from csm.common.conf import Security
     from csm.test.common import TestFailed, Const

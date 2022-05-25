@@ -14,34 +14,32 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-import pprint
-import sys
 import time
 import errno
-from typing import ClassVar, Dict, Any, Tuple
-from importlib import import_module
+from typing import Tuple
 import aiohttp
 
 from csm.core.agent.api import CsmApi
 from csm.core.blogic import const
 from cortx.utils.schema.providers import Request, Response
 from csm.common.errors import CsmError, CSM_PROVIDER_NOT_AVAILABLE, CsmUnauthorizedError, CsmServiceNotAvailable
-from cortx.utils.cli_framework.command import Command
 from cortx.utils.cli_framework.client import Client
+from cortx.utils.log import Log
 
 
 class CsmApiClient(Client):
-    """ Concrete class to communicate with RAS API, invokes CsmApi directly """
+    """Concrete class to communicate with RAS API, invokes CsmApi directly."""
 
     def __init__(self):
+        """Csm Api Client init."""
         super(CsmApiClient, self).__init__(None)
         CsmApi.init()
 
     def call(self, cmd):
         """
-        Method Invocation:
         Call remote API method asynchronously. Response is received over the
         callback channel. Here we wait until the response is received.
+
         TODO: Add a timeout.
         """
         self._response = None
@@ -63,21 +61,23 @@ class CsmApiClient(Client):
         self._response = response
 
 class CsmRestClient(Client):
-    """ REST API client for CSM server """
+    """REST API client for CSM server"""
 
     def __init__(self, url):
+        """Csm Rest Client init."""
         super(CsmRestClient, self).__init__(url)
         self.not_authorized = "You are not authorized to run cli commands."
         self.could_not_parse = "Could not parse the response"
 
-    def _failed(self, response):
+    @staticmethod
+    def _failed(response):
         """
         This check if response failed it will return true else false
         """
         if response.rc() not in  (200, 201):
             return True
         return False
-    
+
     async def login(self, username, password):
         url = "/v1/login"
         method = const.POST
@@ -90,7 +90,7 @@ class CsmRestClient(Client):
             # during login we want to logout on  any error
             return False
         token = headers.get('Authorization', "").split(' ')
-        if self._failed(response) and len(token) != 2 and token[0] != 'Bearer':
+        if CsmRestClient._failed(response) and len(token) != 2 and token[0] != 'Bearer':
             return False
         return token[1]
 
@@ -99,10 +99,10 @@ class CsmRestClient(Client):
         method = const.POST
         async with aiohttp.ClientSession(headers=headers) as session:
             try:
-                response, _ = await self.process_direct_request(url, session,
+                _ = await self.process_direct_request(url, session,
                                                                   method, {}, {})
-            except:
-                pass
+            except Exception as e:
+                Log.warn(f"Error while performing logout operation: {e}")
         return True
 
     async def permissions(self, headers):
@@ -111,12 +111,12 @@ class CsmRestClient(Client):
         async with aiohttp.ClientSession(headers=headers) as session:
             response, _ = await self.process_direct_request(url, session,
                                                             method, {}, {})
-        if self._failed(response):
+        if CsmRestClient._failed(response):
             raise CsmError(errno.EACCES, 'Could not get permissions from server,'
                                          ' check session')
         return response.output()['permissions']
 
-    async def call(self, cmd, headers={}):
+    async def call(self, cmd, headers=None):
         async with aiohttp.ClientSession(headers=headers) as session:
             body, headers, status = await self.process_request(session, cmd)
         if status == 401:
@@ -146,12 +146,14 @@ class CsmRestClient(Client):
         return Response(rc=status, output=data), headers
 
     def __cleanup__(self):
+        """Csm Rest Client cleanup."""
         self._loop.close()
 
 class RestRequest(Request):
-    """Cli Rest Request Class """
+    """Cli Rest Request Class."""
 
     def __init__(self, url, session, command):
+        """Cli Rest Request init."""
         super(RestRequest, self).__init__(command.args, command.name)
         self._method = command.method
         self._options = command.options
@@ -182,9 +184,10 @@ class RestRequest(Request):
                            .format(exception.host, exception.port))
 
 class DirectRestRequest(Request):
-    """Cli Rest Request Class """
+    """Cli Rest Request Class."""
 
     def __init__(self, url, session, method, params_json, body_json):
+        """Direct Rest Request init."""
         super(DirectRestRequest, self).__init__(None, None)
         self._url = url
         self._session = session

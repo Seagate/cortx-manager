@@ -20,20 +20,24 @@ from csm.common.ha.cluster_management import operations
 
 
 class ResourceOperations(ABC):
-    """
-    Base class that all operations factory classes wi.
-    """
+    """Base class that all operations factory classes wi."""
+
     @abstractmethod
     def get_operation(self, operation: str) -> operations.Operation:
+        """Get operation abstract method."""
         raise Exception('get_operation not implemented in ResourceOperations class')
 
 
 class ClusterOperations(ResourceOperations):
-    """
-    Factory for Cluster operations.
-    """
-    def get_operation(self, operation: str) -> operations.Operation:
+    """Factory for Cluster operations."""
 
+    def get_operation(self, operation: str) -> operations.Operation:
+        """
+        Get new cluster operation.
+
+        :param operation: operation name.
+        :returns: required Operation object.
+        """
         clusterOperation = None
         if operation == "start":
             clusterOperation = operations.ClusterStartOperation()
@@ -49,11 +53,15 @@ class ClusterOperations(ResourceOperations):
 
 
 class NodeOperations(ResourceOperations):
-    """
-    Factory for Node operations.
-    """
-    def get_operation(self, operation: str) -> operations.Operation:
+    """Factory for Node operations."""
 
+    def get_operation(self, operation: str) -> operations.Operation:
+        """
+        Get new node operation.
+
+        :param operation: operation name.
+        :returns: required Operation object.
+        """
         nodeOperation = None
         if operation == "start":
             nodeOperation = operations.NodeStartOperation()
@@ -69,12 +77,16 @@ class NodeOperations(ResourceOperations):
 
 
 class ResourceOperationsFactory:
-    """
-    Factory of operation factories.
-    """
+    """Factory of operation factories."""
+
     @staticmethod
     def get_operations_by_resource(resource: str) -> ResourceOperations:
+        """
+        Get new operation by resource.
 
+        :param resource: resource name.
+        :returns: required Operation object.
+        """
         resourceOperations = None
         if resource == 'cluster':
             resourceOperations = ClusterOperations()
@@ -82,7 +94,7 @@ class ResourceOperationsFactory:
             resourceOperations = NodeOperations()
 
         if resourceOperations is None:
-            raise InvalidRequest("Invalid resource or the resource does not support any operations.")
+            err_msg = "Invalid resource or the resource does not support any operations."
+            raise InvalidRequest(err_msg)
 
         return resourceOperations
-

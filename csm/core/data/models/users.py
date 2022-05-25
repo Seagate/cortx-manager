@@ -18,7 +18,7 @@ from schematics.types import (StringType, DateTimeType, BooleanType)
 from datetime import datetime, timezone
 from enum import Enum
 from csm.core.blogic import const
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 
 
 # TODO: move to the appropriate location
