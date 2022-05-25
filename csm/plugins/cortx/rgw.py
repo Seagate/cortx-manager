@@ -119,7 +119,7 @@ class RGWPlugin:
             CsmInternalError
 
         Returns:
-            odified response.
+            Modified response.
         """
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
