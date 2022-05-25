@@ -35,7 +35,10 @@ class CsmAuth:
     ATTR_PERMISSIONS = '_csm_auth_permissions_'
     # ADD all hybrid api's here with required keys, use hybrid decorator
     # TODO: make it dynamic by adding required key as param to hybrid decorator.
-    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH}
+    HYBRID_APIS = {"GET:/api/v2/metrics/stats/perf": const.AUTH,
+                   "GET:/api/v2/system/topology" : const.INFORMATION_AUTH_KEY,
+                   "GET:/api/v2/system/topology/cluster" : const.INFORMATION_AUTH_KEY,
+                   "GET:/api/v2/system/topology/certificate" : const.INFORMATION_AUTH_KEY}
 
     @classmethod
     def public(cls, handler):
