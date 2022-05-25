@@ -14,8 +14,8 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields
-from marshmallow.exceptions import ValidationError, validates_schema
+from marshmallow import Schema, fields, validates_schema
+from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView, CsmResponse
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
