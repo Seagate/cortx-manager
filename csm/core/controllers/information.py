@@ -34,14 +34,14 @@ class VersionValidationSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v2/version/compatibility/{resource}/{resource_id}")
-class VersionCompatibilityView(CsmView):
+class VersionInformationView(CsmView):
     """
     Version compatiblity validation for REST API implementation.
 
     POST: Validate version compatibilty
     """
     def __init__(self, request):
-        super(VersionCompatibilityView, self).__init__(request)
+        super(VersionInformationView, self).__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def post(self):
