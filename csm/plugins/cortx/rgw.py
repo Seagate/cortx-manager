@@ -76,6 +76,20 @@ class RGWPlugin:
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_response(self, operation, response) -> Any:
+        """
+        This method maps the raw response to the required schema 
+        based on the given operation.
+
+        Args:
+            operation (str): IAM operation.
+            response (dict): Response from s3 server.
+
+        Raises:
+            CsmInternalError.
+
+        Returns:
+            Mapped response.
+        """
         mapped_response = response
         mapping = self._api_response_mapping_schema.get(operation)
         if mapping:
@@ -93,14 +107,19 @@ class RGWPlugin:
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return mapped_response
 
-    def _supress_response_keys(self, operation, response):
+    def _supress_response_keys(self, operation, response) -> Any:
         """
-        Remove specific keys from response based on operation.
+        Remove specific keys from response based on an operation.
+
         Args:
-            operation (str): IAM operation
-            response (str): Raw response from s3 server.
+            operation (str): IAM operation.
+            response (dict): Response from s3 server.
+
+        Raises:
+            CsmInternalError
+
         Returns:
-            Modified response
+            odified response.
         """
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
@@ -108,7 +127,7 @@ class RGWPlugin:
         if keys:
             try:
                 for key in keys:
-                    suppressed_response = Utility.suppress_json_key(suppressed_response, key)
+                    suppressed_response = Utility.remove_json_key(suppressed_response, key)
             except Exception as e:
                 Log.error(f"Error occured while suppressing {keys} keys from response: {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)

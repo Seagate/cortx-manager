@@ -15,12 +15,25 @@
 
 
 class Utility:
+    """
+    Helper class for common independent utilities.
+    """
 
     @staticmethod
-    def suppress_json_key(payload, key):
+    def remove_json_key(payload, key):
+        """
+        Removes a particular key from complex a deserialized json payload.
+
+        Args:
+            payload (dict): payload from which particular key should be deleted.
+            key (str): key which is to be deleted.
+
+        Returns:
+            Modified payload.
+        """
         if isinstance(payload, dict):
-            return {k: Utility.suppress_json_key(v, key) for k, v in payload.items() if k != key}
+            return {k: Utility.remove_json_key(v, key) for k, v in payload.items() if k != key}
         elif isinstance(payload, list):
-            return [Utility.suppress_json_key(element, key) for element in payload]
+            return [Utility.remove_json_key(element, key) for element in payload]
         else:
             return payload
