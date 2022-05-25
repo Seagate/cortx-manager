@@ -18,7 +18,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.errors import CsmNotFoundError
 
-@CsmAuth.hybrid
+@CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology")
 class CortxAboutInformationView(CsmView):
     """
@@ -41,7 +41,7 @@ class CortxAboutInformationView(CsmView):
         response = await self._service.get_cortx_information(is_authenticated)
         return CsmResponse(response)
 
-@CsmAuth.hybrid
+@CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}")
 class ResourceAboutInformationView(CsmView):
     """
