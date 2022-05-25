@@ -965,6 +965,7 @@ SWAGGER_UI_URL = '/api/doc'
 SWAGGER_JSON_URL = '/api/doc/swagger.json'
 SWAGGER_UI_STATICS_URL = '/api/static'
 
+# Cortx About Information
 INFORMATION_SERVICE = "information_service"
 ABOUT_INFO_RESOURCES = ['cluster', 'certificate']
 INFORMATION_AUTH_KEY = 'INFORMATION>auth'

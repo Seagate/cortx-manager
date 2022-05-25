@@ -33,7 +33,7 @@ class CortxAboutInformationView(CsmView):
     async def get(self):
         """GET REST implementation for About Information."""
         Log.debug("Handling GET request for Cortx About information.")
-        # Check if request is authenticated 
+        # Check if request is authenticated
         is_authenticated = False
         if self.request.session is not None:
             is_authenticated = True
@@ -61,7 +61,7 @@ class ResourceAboutInformationView(CsmView):
         # Check for valid Resource
         if resource not in const.ABOUT_INFO_RESOURCES:
             raise CsmNotFoundError(f"{resource} is not valid")
-        # Check if request is authenticated 
+        # Check if request is authenticated
         is_authenticated = False
         if self.request.session is not None:
             is_authenticated = True
