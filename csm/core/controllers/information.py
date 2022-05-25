@@ -14,40 +14,45 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView, CsmResponse. CsmAuth
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
-from csm.common.errors import CsmNotFoundError
-from csm.core.controllers.validators import ValidationErrorFormatter
 
 class VersionValidationSchema(Schema):
     # Define schema here
     requires = fields.List(fields.Str, data_key=const.REQUIRES, required=True)
 
-@CsmAuth.public
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """Invalidate the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"Empty value for {key}")
+
+
 @CsmView._app_routes.view("/api/v2/version/compatibility/{resource}/{resource_id}")
-class VersionInformationView(CsmView):
+class VersionCompatibilityView(CsmView):
     """
     Version compatiblity validation for REST API implementation.
 
     POST: Validate version compatibilty
     """
     def __init__(self, request):
-        super().__init__(request)
+        super(VersionCompatibilityView, self).__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def post(self):
         """POST REST implementation for Validating version compatibility."""
-        Log.info("Handling POST request for Version compatibility Validation.")
+        Log.debug(f"Handling POST request.")
         # Read path parameter
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
-        if resource not in const.VERSION_RESOURCES:
-            raise CsmNotFoundError(f"{resource} is not valid")
+        if resource not in const.version_resources:
+            raise CsmNotFoundError(f"{resource} is not valid".)
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
@@ -59,9 +64,8 @@ class VersionInformationView(CsmView):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+            raise InvalidRequest("Invalid parameter for request body")
         request_body = {**path_params_dict, **request_body_param}
         # Call Version Compatibility validation Service
-        Log.info("Checking Version compatibility Validation.")
-        response = await self._service.check_compatibility(**request_body)
+        response = await self._service.is_version_compatible(**request_body)
         return CsmResponse(response)
