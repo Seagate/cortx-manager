@@ -15,11 +15,13 @@
 
 import json
 from marshmallow import Schema, fields, validate
-from marshmallow.exceptions import ValidationError
+from marshmallow.exceptions import ValidationError, validates_schema
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
+from csm.common.errors import CsmNotFoundError
+from csm.core.controllers.validators import ValidationErrorFormatter
 
 class VersionValidationSchema(Schema):
     # Define schema here
@@ -41,18 +43,18 @@ class VersionInformationView(CsmView):
     POST: Validate version compatibilty
     """
     def __init__(self, request):
-        super(VersionInformationView, self).__init__(request)
+        super().__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def post(self):
         """POST REST implementation for Validating version compatibility."""
-        Log.debug(f"Handling POST request.")
+        Log.debug("Handling POST request for Version compatibility Validation.")
         # Read path parameter
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.version_resources:
-            raise CsmNotFoundError(f"{resource} is not valid".)
+            raise CsmNotFoundError(f"{resource} is not valid")
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
@@ -64,8 +66,9 @@ class VersionInformationView(CsmView):
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
-            raise InvalidRequest("Invalid parameter for request body")
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_param}
         # Call Version Compatibility validation Service
+        Log.debug("Checking Version compatibility Validation.")
         response = await self._service.is_version_compatible(**request_body)
         return CsmResponse(response)
