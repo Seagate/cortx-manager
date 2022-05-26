@@ -106,7 +106,7 @@ class ListAllUsersSchema(S3BaseSchema):
         allow_none=False, validate=validate.Range(min=1))
     marker = fields.Str(data_key=const.MARKER, missing=None, allow_none=False)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/users")
+@CsmView._app_routes.view("/api/v2/iam/users")
 class S3IAMUserListView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
@@ -158,7 +158,7 @@ class S3IAMUserListView(S3BaseView):
             response = await self._service.get_all_users(**request_parameters)
             return CsmResponse(response)
 
-@CsmView._app_routes.view("/api/v2/s3/iam/users/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/users/{uid}")
 class S3IAMUserView(S3BaseView):
     """
     S3 IAM User View for REST API implementation.
@@ -233,7 +233,8 @@ class S3IAMUserView(S3BaseView):
             return CsmResponse(response)
 
 
-@CsmView._app_routes.view("/api/v2/s3/iam/keys")
+
+@CsmView._app_routes.view("/api/v2/iam/keys")
 class S3IAMUserKeyView(S3BaseView):
     """
     S3 IAM User Key View for REST API implementation.
@@ -289,7 +290,7 @@ class S3IAMUserKeyView(S3BaseView):
             return CsmResponse(response)
 
 
-@CsmView._app_routes.view("/api/v2/s3/iam/caps/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/caps/{uid}")
 class S3IAMUserCapsView(S3BaseView):
     """
     S3 IAM - Add User Caps REST API implementation.
@@ -343,7 +344,7 @@ class S3IAMUserCapsView(S3BaseView):
             return CsmResponse(response)
 
 
-@CsmView._app_routes.view("/api/v2/s3/iam/quota/{uid}")
+@CsmView._app_routes.view("/api/v2/iam/quota/{uid}")
 class S3IAMUserQuotaView(S3BaseView):
     """
     S3 IAM user quota management REST API implementation.
