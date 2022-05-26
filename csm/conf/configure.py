@@ -106,9 +106,9 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
                 const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
-                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
-                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_IAM_ADMIN_USER}",
+                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_IAM_ACCESS_KEY}",
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_IAM_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))

@@ -32,8 +32,8 @@ class Upgrade(Setup):
         Log.info("Performing upgrade and loading config files")
         try:
             # CAN WE HARDCODE GCONF PATH
-            Conf.load(const.CONSUMER_INDEX, "yaml:///etc/cortx/cluster.conf")
-            Conf.load(const.CHANGESET_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CHANGESET_INDEX, command.options.get(const.CHANGESET_URL))
             Setup.load_csm_config_indices()
             Setup.load_default_config()
         except KvError as e:

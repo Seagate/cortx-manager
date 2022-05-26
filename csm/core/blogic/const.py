@@ -193,6 +193,7 @@ SSH_AUTHORIZED_KEY='{}/authorized_keys'.format(SSH_DIR)
 SSH_CONFIG='{}/config'.format(SSH_DIR)
 PRIMARY_ROLE='primary'
 CONFIG_URL = 'config_url'
+CHANGESET_URL = 'chanegeset_url'
 
 # CSM Alert Related
 CSM_ALERT_CMD = 'cmd'
@@ -791,7 +792,6 @@ CONSUL_ADMIN_KEY = 'cortx>external>consul>admin'
 CONSUL_SECRET = 'consul_secret'
 CONSUL_SECRET_KEY = 'cortx>external>consul>secret'
 SSL_CERTIFICATE = 'ssl_certificate'
-SSL_CERTIFICATE_KEY = 'cortx>common>security>ssl_certificate'
 DOMAIN_CERTIFICATE = 'domain_certificate'
 DOMAIN_CERTIFICATE_KEY = 'cortx>common>security>domain_certificate'
 DEVICE_CERTIFICATE = 'device_certificate'
@@ -809,11 +809,8 @@ METRICS_PERF_STATS_RETENTION_SIZE_KEY = 'cortx>csm>metrics>stats>retention_size'
 RGW_S3_DATA_ENDPOINT = 'rgw_s3_data_endpoints'
 RGW_S3_DATA_ENDPOINTS_KEY = 'cortx>rgw>public>endpoints'
 RGW_S3_AUTH_USER = 'rgw_s3_auth_user'
-RGW_S3_AUTH_USER_KEY = 'cortx>rgw>auth_user'
 RGW_S3_AUTH_ADMIN = 'rgw_s3_auth_admin'
-RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
-RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
 CONSUL_ENDPOINTS_LEN = 'cortx>external>consul>num_endpoints'
 # keys for conf file setup

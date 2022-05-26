@@ -204,7 +204,7 @@ class Setup:
         if not (cluster_admin_user or cluster_admin_secret or cluster_admin_emailid):
             raise CsmSetupError("Cluster admin details  not obtainer from confstore")
         Log.info("Set Cortx admin credentials in config")
-        Conf.set(const.CSM_GLOBAL_INDEX,conCLUSTER_ADMIN_USERst.,cluster_admin_user)
+        Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_USER,cluster_admin_user)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_SECRET,cluster_admin_secret)
         Conf.set(const.CSM_GLOBAL_INDEX,const.CLUSTER_ADMIN_EMAIL,cluster_admin_emailid)
         cluster_admin_secret = Setup._decrypt_secret(cluster_admin_secret, self.cluster_id,
