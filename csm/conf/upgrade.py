@@ -31,7 +31,9 @@ class Upgrade(Setup):
     async def execute(self, command):
         Log.info("Performing upgrade and loading config files")
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            # CAN WE HARDCODE GCONF PATH
+            Conf.load(const.CONSUMER_INDEX, "yaml:///etc/cortx/cluster.conf")
+            Conf.load(const.CHANGESET_INDEX, command.options.get(const.CONFIG_URL))
             Setup.load_csm_config_indices()
             Setup.load_default_config()
         except KvError as e:
@@ -51,8 +53,40 @@ class Upgrade(Setup):
         Perform upgrade
         """
         Log.info("Preparing for upgrade.")
+        self._update_globalconfig(const.CHANGESET_INDEX, const.CONSUMER_INDEX)
+        self._add_keys_csm_config(const.CHANGESET_INDEX, const.CSM_GLOBAL_INDEX)
         self._update_general_config(const.CSM_DEFAULT_CONF_INDEX, const.CSM_GLOBAL_INDEX)
         self._update_db_config(const.CSM_DEFAULT_DB_CONF_INDEX, const.DATABASE_INDEX)
+
+    def _update_globalconfig(self, changeset, globalconfig):
+        Log.info("Updating global configurations.")
+        # Fetch all keys of changeset
+        keys = Conf.get_keys(changeset)
+        import pdb
+        pdb.set_trace()
+        for key in keys:
+            if key.startswith(const.CHANGED):
+                value = Conf.get(changeset, key)
+                old_val, new_val = value.split('|')
+                gconf_key =  self._get_gconf_key(self, const.CHANGED, key)
+                gconf_value = Conf.get(globalconfig, gconf_key)
+                if gconf_value == old_val or gconf_value:
+                    Conf.set(globalconfig, gconf_key, new_val)
+
+    def _get_gconf_key(self, prefix, key):
+        gconf_key = key.split(prefix, 1)[-1]
+        return gconf_key
+
+    def _add_keys_csm_config(self, changeset, csmconfig):
+        Log.info("Adding new keys to csm configurations based on global configurations.")
+        keys = Conf.get_keys(changeset)
+        for key in keys:
+            if key.startswith(const.NEW):
+                value = Conf.get(changeset, key)
+                gconf_key =  self._get_gconf_key(self, const.CHANGED, key)
+                print("Adding new key")
+                print(gconf_key)
+                Conf.set(csmconfig, gconf_key, value)
 
     def _update_general_config(self, default_index, current_index):
         Log.info("Updating general configurations.")

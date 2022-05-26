@@ -310,7 +310,7 @@
       "permissions_tag": "update",
       "args": [
         {
-          "flag": "--config",
+          "flag": "--changeset",
           "dest": "config_url",
           "type": "str",
           "required": true,

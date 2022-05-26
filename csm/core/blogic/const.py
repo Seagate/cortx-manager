@@ -125,6 +125,7 @@ INVENTORY_INDEX = 'INVENTORY'
 COMPONENTS_INDEX = 'COMPONENTS'
 DATABASE_INDEX = 'DATABASE'
 CONSUMER_INDEX = 'CONSUMER'
+CHANGESET_INDEX = 'CHANGESET'
 CSM_DEFAULT_CONF_INDEX = 'CSM_DEFAULT_CONF'
 CSM_DEFAULT_DB_CONF_INDEX = 'CSM_DEFAULT_DB_CONF'
 TEST_INDEX = 'TEST'
@@ -594,9 +595,9 @@ USAGE_PERCENTAGE = 'usage_percentage'
 
 # Keys for  Description
 DECRYPTION_KEYS = {
-    "RGW>s3>iam>admin_secret_key": "DECRYPTION>decrypt_value"
+    "cortx>rgw>auth_secret": "DECRYPTION>decrypt_value"
 }
-CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
+CLUSTER_ID_KEY = "cluster>id"
 SERVER_NODE = "server_node"
 ENCLOSURE_ID = "enclosure_id"
 SOFTWARE = "software"
@@ -801,7 +802,6 @@ CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
 CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
 CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
-CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
 METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
 METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
@@ -815,6 +815,7 @@ RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
+CONSUL_ENDPOINTS_LEN = 'cortx>external>consul>num_endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -827,14 +828,14 @@ IAM_PORT = 'S3>iam>port'
 IAM_PROTOCOL = 'S3>iam>protocol'
 KEY_SSL_CERTIFICATE = 'key_ssl_certificate'
 KEY_LOGPATH = 'key_logpath'
-SSL_CERTIFICATE_PATH = 'HTTPS>certificate_path'
+SSL_CERTIFICATE_PATH = 'cortx>common>security>ssl_certificate'
 HTTPS_PORT = "HTTPS>port"
-LOG_PATH = 'Log>log_path'
+LOG_PATH = 'cortx>common>storage>log'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
-CLUSTER_ADMIN_USER = 'CLUSTER_ADMIN>user'
-CLUSTER_ADMIN_SECRET = 'CLUSTER_ADMIN>secret'
-CLUSTER_ADMIN_EMAIL = 'CLUSTER_ADMIN>email'
-AGENT_ENDPOINTS = 'CSM_SERVICE>CSM_AGENT>endpoints'
+CLUSTER_ADMIN_USER = 'cortx>csm>mgmt_admin'
+CLUSTER_ADMIN_SECRET = 'cortx>csm>mgmt_secret'
+CLUSTER_ADMIN_EMAIL = 'cortx>csm>email_address'
+AGENT_ENDPOINTS = 'cortx>csm>agent>endpoints[0]'
 AGENT_HOST = 'CSM_SERVICE>CSM_AGENT>host'
 AGENT_PORT = 'CSM_SERVICE>CSM_AGENT>port'
 AGENT_BASE_URL = 'CSM_SERVICE>CSM_AGENT>base_url'
@@ -863,9 +864,9 @@ CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
 S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
-RGW_S3_IAM_ADMIN_USER = 'RGW>s3>iam>admin_user'
-RGW_S3_IAM_ACCESS_KEY = 'RGW>s3>iam>admin_access_key'
-RGW_S3_IAM_SECRET_KEY = 'RGW>s3>iam>admin_secret_key'
+RGW_S3_IAM_ADMIN_USER = 'cortx>rgw>auth_user'
+RGW_S3_IAM_ACCESS_KEY = 'cortx>rgw>auth_admin'
+RGW_S3_IAM_SECRET_KEY = 'cortx>rgw>auth_secret'
 RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
 # Degraded byte count
@@ -970,3 +971,7 @@ SWAGGER_UI_URL = '/api/doc'
 SWAGGER_JSON_URL = '/api/doc/swagger.json'
 SWAGGER_UI_STATICS_URL = '/api/static'
 
+# Upgrade
+CHANGED = "changed"
+NEW = "new"
+DELETED = "deleted"
