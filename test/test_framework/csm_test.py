@@ -50,8 +50,6 @@ def tmain(argp, argv):
                      level=Conf.get(Const.CSM_GLOBAL_INDEX, "Log>log_level"))
         test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())
-        if ( Conf.get(Const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != Const.DEV ):
-            Security.decrypt_conf()
         if args is None: args = {}
     except TestFailed as e:
         print('Test Pre-condition failed. %s' %e)
