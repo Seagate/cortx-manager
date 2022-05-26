@@ -593,10 +593,6 @@ USED = 'used'
 AVAILABLE = 'avail'
 USAGE_PERCENTAGE = 'usage_percentage'
 
-# Keys for  Description
-DECRYPTION_KEYS = {
-    "RGW>s3>iam>admin_secret_key": "DECRYPTION>decrypt_value"
-}
 CLUSTER_ID_KEY = "PROVISIONER>cluster_id"
 SERVER_NODE = "server_node"
 ENCLOSURE_ID = "enclosure_id"
@@ -861,7 +857,6 @@ MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>
 MSG_BUS_CLUSTER_STOP_PRODUCER_ID = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cluster_stop>producer_id'
 MSG_BUS_CLUSTER_STOP_METHOD = 'MESSAGEBUS>PRODUCER>CLUSTER_MANAGEMENT>cluster_stop>method'
 CSM_PASSWORD_DECRYPTION_KEY = "CSM>password_decryption_key"
-S3_PASSWORD_DECRYPTION_KEY = "S3>password_decryption_key"
 CSM_DEPLOYMENT_MODE = 'DEPLOYMENT>mode'
 CSM_DEBUG_MODE = 'DEBUG>http_enabled'
 RGW_S3_IAM_ADMIN_USER = 'RGW>s3>iam>admin_user'
