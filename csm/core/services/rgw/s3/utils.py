@@ -54,7 +54,7 @@ class CsmRgwConfigurationFactory:
         try:
             return Security.decrypt(auth_user_secret_key, cluster_id, decreption_key)
         except CipherInvalidToken as e:
-            Log.error(f"Privileged IAM user secret key decryption failed: {e}")
+            Log.error(f"Decryption failed: {e}")
 
 
 class S3ServiceError(Exception):
