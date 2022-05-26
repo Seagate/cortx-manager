@@ -53,10 +53,10 @@ class S3BaseView(CsmView):
         Returns:
             bool: True if input uid is of privileged IAM user.
         """
-        verdict: bool = False
+        result: bool = False
         if uid == self._iam_privileged_user_uid:
-            verdict = True
-        return verdict
+            result = True
+        return result
 
     @contextmanager
     def _guard_service(self):
