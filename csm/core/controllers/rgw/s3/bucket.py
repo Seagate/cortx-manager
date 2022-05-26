@@ -21,10 +21,11 @@ from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
+from csm.core.controllers.validators import ValidateSchema
+from csm.common.errors import ServiceError
 
 
-class BucketBaseSchema(S3BaseSchema):
+class BucketBaseSchema(ValidateSchema):
     """
     S3 Bucket First Level schema validation class.
 
@@ -37,7 +38,7 @@ class BucketBaseSchema(S3BaseSchema):
                             values=fields.Raw(allow_none=True), required=True)
 
 
-class LinkBucketSchema(S3BaseSchema):
+class LinkBucketSchema(ValidateSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
 
@@ -49,7 +50,7 @@ class LinkBucketSchema(S3BaseSchema):
     bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None, allow_none=False)
 
 
-class UnlinkBucketSchema(S3BaseSchema):
+class UnlinkBucketSchema(ValidateSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
 
@@ -71,7 +72,7 @@ class SchemaFactory:
 
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
-class S3BucketView(S3BaseView):
+class S3BucketView(CsmView):
     """
     S3 Bucket View for REST API implementation.
 
@@ -80,7 +81,8 @@ class S3BucketView(S3BaseView):
 
     def __init__(self, request):
         """S3 Bucket View Init."""
-        super().__init__(request, const.S3_BUCKET_SERVICE)
+        super().__init__(request)
+        self._service = self.request.app[const.S3_BUCKET_SERVICE]
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -102,6 +104,6 @@ class S3BucketView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.execute(operation, **operation_request_body)
             return CsmResponse(response)

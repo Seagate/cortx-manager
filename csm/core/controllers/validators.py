@@ -17,6 +17,7 @@ import re
 from marshmallow.validate import Validator, ValidationError
 from csm.core.blogic import const
 from csm.core.services.file_transfer import FileRef
+from marshmallow import Schema, ValidationError, validates_schema
 
 
 class FileRefValidator(Validator):
@@ -226,3 +227,13 @@ class BinFilenameValidator(Validator):
     def __call__(self, file_name):
         if not file_name.endswith(".bin"):
             raise ValidationError("Package must be a '.bin' file.")
+
+class ValidateSchema(Schema):
+    """Base Class for Schema level Validation."""
+
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """Invalidate the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"Empty value for {key}")

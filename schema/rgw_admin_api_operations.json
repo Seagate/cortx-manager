@@ -141,7 +141,7 @@
         "SUCCESS_CODE": 200
     },
     "GET_CAPACITY_USAGE": {
-        "ENDPOINT": "/admin/user",
+        "ENDPOINT": "/admin/usage",
         "METHOD": "GET",
         "REQUEST_BODY_SCHEMA": {
             "uid": "uid"

@@ -558,7 +558,7 @@ STATUS_CONFLICT = 409
 FW_UPDATE_SERVICE = "fw_update_service"
 SECURITY_SERVICE = "security_service"
 STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
-STORAGE_CAPACITY_USAGE_SERVICE = "storage_capacity_usage_service"
+S3_CAPACITY_SERVICE = "s3_capacity_service"
 USL_SERVICE = "usl_service"
 MAINTENANCE_SERVICE = "maintenance"
 REPLACE_NODE_SERVICE = "replace_node"
@@ -971,3 +971,6 @@ SWAGGER_JSON = '{}/swagger.json'.format(SWAGGER_UI_DIST)
 SWAGGER_UI_URL = '/api/doc'
 SWAGGER_JSON_URL = '/api/doc/swagger.json'
 SWAGGER_UI_STATICS_URL = '/api/static'
+
+#Capacity API
+SUPPORTED_RESOURCE_TYPES = [USER]

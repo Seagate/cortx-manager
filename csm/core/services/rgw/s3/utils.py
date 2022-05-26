@@ -13,10 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Any, Optional
 from csm.core.data.models.rgw import RgwConnectionConfig
-from csm.common.services import ApplicationService
-from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.service_urls import ServiceUrls
@@ -40,23 +37,3 @@ class CsmRgwConfigurationFactory:
         rgw_connection_config.auth_user_secret_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
         return rgw_connection_config
-
-class S3ServiceError(Exception):
-    """S3 service error class."""
-
-    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
-        """S3 Service Error init."""
-        self.status = status
-        self.code = code
-        self.message = message
-        self.message_args = args
-
-class S3BaseService(ApplicationService):
-    def _handle_error(self, error, args: Optional[Any] = None):
-        """A helper method for raising exceptions on S3 related errors."""
-
-        if isinstance(error, RgwError):
-            raise S3ServiceError(error.http_status,
-                                 error.error_code.name,
-                                 error.error_message,
-                                 args)

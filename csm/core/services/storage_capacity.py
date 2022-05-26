@@ -19,10 +19,11 @@ from cortx.utils.conf_store.conf_store import Conf
 # from csm.common.process import AsyncioSubprocess
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
-from csm.core.services.rgw.s3.utils import S3BaseService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError
 from csm.core.data.models.rgw import RgwError
+from csm.common.errors import ServiceError
+from csm.plugins.cortx.rgw import RGWPlugin
 
 class StorageCapacityService(ApplicationService):
     """
@@ -142,41 +143,24 @@ class CapacityError:
         message_id: str
         message: str
 
-class StorageCapacityUsageService(S3BaseService):
-    """
-    Service for Get disk capacity details
-    """
 
-    def __init__(self, plugin):
+class S3CapacityService(ApplicationService):
+    """S3 Capacity service."""
+
+    def __init__(self, s3_plugin:RGWPlugin):
         """
-        Instantiation of StorageCapacityService.
-        :param plugin: s3_iam_plugin object
-        :returns: None
+        Instanstiate capacity service.
+        Args:
+            s3_plugin (s3 plugin obj): S3 communication plugin object.
         """
-        self._s3_iam_plugin = plugin
+        self._s3_iam_plugin = s3_plugin
+    
+    async def get_usage(self, resource, resource_id):
+        if resource == const.USER:
+            return await self._get_user_usage({const.UID:resource_id})
 
-    async def create_response_body(self, resource, plugin_response):
-        # TODO: Map response from rgw to Csm response body
-        Log.debug(f"Mapping response for {resource} ")
-
-        resp = plugin_response
-        return resp
-
-    async def get_capacity_usage(self, **request_body):
-        """
-        Retrieve capacity usage for specific user.
-        :param user_id: user id whose capacity usage is fetching
-        :returns: capacity usage or instance of error for negative scenarios.
-        """
-        resource_id = request_body.get(const.ID)
-        resource = request_body.get(const.ARG_RESOURCE)
-        Log.debug(f"Get Capcity usage of resource: {resource} by id = {resource_id}")
-
-        # TODO: uncomment code when rgw api endpoint are available
-        # update rgw_admin_endpoint file when endpoint finalise
-        #plugin_response =await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
-        plugin_response = {}
+    async def _get_user_usage(self, **request_body):
+        plugin_response = await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
         if isinstance(plugin_response, RgwError):
-            self._handle_error(plugin_response)
-
-        return await self.create_response_body(resource, plugin_response)
+            ServiceError.create(plugin_response)
+        return plugin_response
