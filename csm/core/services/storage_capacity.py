@@ -154,10 +154,15 @@ class S3CapacityService(ApplicationService):
             s3_plugin (s3 plugin obj): S3 communication plugin object.
         """
         self._s3_iam_plugin = s3_plugin
-    
+
     async def get_usage(self, resource, resource_id):
         if resource == const.USER:
-            return await self._get_user_usage({const.UID:resource_id})
+            request_body = {const.UID:resource_id}
+            return await self._get_user_usage(**request_body)
+        if resource == const.BUCKET:
+            return {}
+        if resource == const.ACCOUNT:
+            return {}
 
     async def _get_user_usage(self, **request_body):
         plugin_response = await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)

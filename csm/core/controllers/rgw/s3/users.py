@@ -125,7 +125,7 @@ class S3IAMUserListView(CsmView):
         """S3 IAM User List View Init."""
         super().__init__(request)
         self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
-        
+   
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.DEBUG)

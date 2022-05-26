@@ -974,3 +974,4 @@ SWAGGER_UI_STATICS_URL = '/api/static'
 
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
+ACCOUNT = 'account'

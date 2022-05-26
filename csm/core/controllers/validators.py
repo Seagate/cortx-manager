@@ -17,7 +17,7 @@ import re
 from marshmallow.validate import Validator, ValidationError
 from csm.core.blogic import const
 from csm.core.services.file_transfer import FileRef
-from marshmallow import Schema, ValidationError, validates_schema
+from marshmallow import Schema, validates_schema
 
 
 class FileRefValidator(Validator):
