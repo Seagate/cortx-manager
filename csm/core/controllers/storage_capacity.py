@@ -17,7 +17,7 @@ from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
-from csm.core.controllers.validators import ValidateSchema
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
 from marshmallow import fields, ValidationError, validate
 from csm.core.services.storage_capacity import CapacityError
 from csm.core.services.storage_capacity import S3CapacityService
@@ -123,7 +123,7 @@ class S3CapacityView(CsmView):
             schema = S3CapacitySchema()
             schema.load({const.ARG_RESOURCE:resource})
         except ValidationError as val_err:
-            raise InvalidRequest(f"Invalid request: {val_err}")
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with ServiceError.guard_service():
             response = await self._service.get_usage(resource, resource_id)
             return CsmResponse(response)

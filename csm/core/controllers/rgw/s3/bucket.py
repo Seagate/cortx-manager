@@ -20,8 +20,7 @@ from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
-from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.validators import ValidateSchema
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
 from csm.common.errors import ServiceError
 
 

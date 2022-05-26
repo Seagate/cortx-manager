@@ -19,7 +19,6 @@ from cortx.utils.errors import BaseError
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.core.data.models.rgw import RgwError
-from csm.core.controllers.view import CsmHttpException
 
 CSM_OPERATION_SUCESSFUL = 0x0000
 CSM_ERR_INVALID_VALUE = 0x1001
@@ -314,6 +313,7 @@ class ServiceError():
     @contextmanager
     @staticmethod
     def guard_service():
+        from csm.core.controllers.view import CsmHttpException
         try:
             yield None
         except S3ServiceError as error:
