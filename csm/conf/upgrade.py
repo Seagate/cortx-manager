@@ -74,6 +74,7 @@ class Upgrade(Setup):
                     Conf.set(globalconfig, gconf_key, new_val)
 
     def _get_gconf_key(self, prefix, key):
+        # Add comment
         gconf_key = key.split(prefix, 1)[-1]
         return gconf_key
 
