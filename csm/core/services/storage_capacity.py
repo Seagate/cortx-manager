@@ -157,6 +157,7 @@ class S3CapacityService(ApplicationService):
 
     async def get_usage(self, resource, resource_id):
         if resource == const.USER:
+            Log.debug(f"Fetching IAM user capacity usage by uid = {resource_id}")
             request_body = {const.UID:resource_id}
             return await self._get_user_usage(**request_body)
         if resource == const.BUCKET:

@@ -310,8 +310,8 @@ class ServiceError():
                                  error.error_message,
                                  args)
 
-    @contextmanager
     @staticmethod
+    @contextmanager
     def guard_service():
         from csm.core.controllers.view import CsmHttpException
         try:

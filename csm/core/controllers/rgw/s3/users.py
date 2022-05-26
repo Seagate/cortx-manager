@@ -112,7 +112,6 @@ class ListAllUsersSchema(ValidateSchema):
         allow_none=False, validate=validate.Range(min=1))
     marker = fields.Str(data_key=const.MARKER, missing=None, allow_none=False)
 
-
 @CsmView._app_routes.view("/api/v2/iam/users")
 class S3IAMUserListView(CsmView):
     """
@@ -125,7 +124,6 @@ class S3IAMUserListView(CsmView):
         """S3 IAM User List View Init."""
         super().__init__(request)
         self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
-   
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.DEBUG)
@@ -167,7 +165,6 @@ class S3IAMUserListView(CsmView):
             response = await self._service.get_all_users(**request_parameters)
             return CsmResponse(response)
 
-
 @CsmView._app_routes.view("/api/v2/iam/users/{uid}")
 class S3IAMUserView(CsmView):
     """
@@ -180,7 +177,8 @@ class S3IAMUserView(CsmView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request, const.S3_IAM_USERS_SERVICE)
+        super().__init__(request)
+        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
@@ -258,7 +256,8 @@ class S3IAMUserKeyView(CsmView):
 
     def __init__(self, request):
         """S3 IAM User Key View Init."""
-        super().__init__(request, const.S3_IAM_USERS_SERVICE)
+        super().__init__(request)
+        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -310,7 +309,8 @@ class S3IAMUserCapsView(CsmView):
 
     def __init__(self, request):
         """S3 IAM Caps Init."""
-        super().__init__(request, const.S3_IAM_USERS_SERVICE)
+        super().__init__(request)
+        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
 
     async def create_caps_request_body(self):
         uid = self.request.match_info[const.UID]
@@ -362,7 +362,8 @@ class S3IAMUserQuotaView(CsmView):
 
     def __init__(self, request):
         """S3 IAM user quota Init."""
-        super().__init__(request, const.S3_IAM_USERS_SERVICE)
+        super().__init__(request)
+        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)

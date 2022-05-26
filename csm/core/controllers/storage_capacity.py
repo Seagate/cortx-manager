@@ -119,6 +119,8 @@ class S3CapacityView(CsmView):
     async def get(self):
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ID]
+        Log.info(f"Handling GET s3 capacity request"
+                  f"resource={resource} and id ={resource_id}")
         try:
             schema = S3CapacitySchema()
             schema.load({const.ARG_RESOURCE:resource})
