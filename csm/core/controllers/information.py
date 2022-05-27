@@ -16,9 +16,9 @@
 import json
 from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView, CsmResponse. CsmAuth
+from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.blogic import const
 from csm.common.errors import CsmNotFoundError
 from csm.core.controllers.validators import ValidationErrorFormatter
@@ -63,5 +63,9 @@ class VersionInformationView(CsmView):
         request_body = {**path_params_dict, **request_body_param}
         # Call Version Compatibility validation Service
         Log.info("Checking Version compatibility Validation.")
-        response = await self._service.check_compatibility(**request_body)
+        try:
+            response = await self._service.check_compatibility(**request_body)
+        except Exception as e:
+            Log.error(f"Error in checking compatability: {e}")
+            raise CsmInternalError(f"Error in checking compatability: {e}")
         return CsmResponse(response)
