@@ -88,7 +88,7 @@ class CsmGetUsersSchema(Schema):
 
 
 @CsmView._app_routes.view("/api/v1/csm/users")
-@CsmView._app_routes.view("/api/v2/csm/users")
+@CsmView._app_routes.view("/api/v2/system/users")
 class CsmUsersListView(CsmView):
     def __init__(self, request):
         super(CsmUsersListView, self).__init__(request)
@@ -146,7 +146,7 @@ class CsmUsersListView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v1/csm/users/{user_id}")
-@CsmView._app_routes.view("/api/v2/csm/users/{user_id}")
+@CsmView._app_routes.view("/api/v2/system/users/{user_id}")
 class CsmUsersView(CsmView):
     def __init__(self, request):
         super(CsmUsersView, self).__init__(request)
