@@ -16,6 +16,7 @@
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
+from cortx.utils.schema.release import Release
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -29,11 +30,15 @@ class InformationService(ApplicationService):
         """
         Log.debug(f"Request body: {request_body}")
         # Invoke api to check compatibility
+        resource = request_body[const.ARG_RESOURCE]
+        resource_id = request_body[const.ARG_RESOURCE_ID]
+        release = request_body[const.REQUIRES]
+        status, reason = Release.is_version_compatible(resource, resource_id, release)
 
         # handle the response and return
         response = {
             "node_id": request_body.get(const.ARG_RESOURCE_ID),
-            "compatible": True,
-            "reason": "Current version is compatible"
+            "compatible": status,
+            "reason": reason
         }
         return response
