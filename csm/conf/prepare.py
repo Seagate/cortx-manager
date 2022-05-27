@@ -94,9 +94,6 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx".
         """
         Log.info("Set decryption keys for CSM and S3")
-
-        Conf.set(const.CSM_GLOBAL_INDEX, const.S3_PASSWORD_DECRYPTION_KEY,
-                    self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
                     self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
 
@@ -126,24 +123,6 @@ class Prepare(Setup):
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
-
-    def store_encrypted_password(self):
-        """
-        :return:
-        """
-        _paswd = self._fetch_csm_user_password()
-        if not _paswd:
-            raise CsmSetupError("CSM Password Not Found.")
-
-        Log.info("CSM Credentials Copied to CSM Configuration.")
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.PASSWORD}",
-                 _paswd)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.PASSWORD}",
-                 _paswd)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.CSM}>{const.USERNAME}",
-                 self._user)
-        Conf.set(const.CSM_GLOBAL_INDEX, f"{const.PROVISIONER}>{const.USERNAME}",
-                 self._user)
 
     def _set_msgbus_perf_stat_info(self):
         msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
