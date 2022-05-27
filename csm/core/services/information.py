@@ -21,7 +21,7 @@ class InformationService(ApplicationService):
     """Information service class."""
 
     @Log.trace_method(Log.DEBUG)
-    async def get_cortx_information(self, is_authenticated=True, resource=None):
+    async def get_cortx_information(self, authorized=True, resource=None):
         """
         Method to fetch the cortx information
 
@@ -30,7 +30,7 @@ class InformationService(ApplicationService):
         Log.debug(f"Request body: {resource}")
         # Call Utils API to get information
         response = {
-            "is_authenticated" : is_authenticated
+            "authorized" : authorized
         }
         return response
 
