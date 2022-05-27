@@ -50,8 +50,6 @@ class CsmAgent:
                  log_path=Conf.get(const.CSM_GLOBAL_INDEX, const.LOG_PATH),
                  level=log_level, console_output=console_output)
 
-        if Conf.get(const.CSM_GLOBAL_INDEX, "DEPLOYMENT>mode") != const.DEV:
-            Security.decrypt_conf()
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = {
             'databases': Conf.get(const.DB_DICT_INDEX, 'databases'),
@@ -241,7 +239,6 @@ if __name__ == '__main__':
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
     from csm.core.agent.api import CsmRestApi
     from csm.common.timeseries import TimelionProvider
-    from csm.common.conf import Security
     from csm.common.ha_framework import CortxHAFramework
     from cortx.utils.cron import CronJob
     from cortx.utils.validator.v_consul import ConsulV

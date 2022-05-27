@@ -18,8 +18,12 @@ from csm.core.data.models.rgw import RgwConnectionConfig
 from csm.common.services import ApplicationService
 from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
-from cortx.utils.conf_store.conf_store import Conf
 from csm.common.service_urls import ServiceUrls
+from csm.common.conf import Security
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.security.cipher import CipherInvalidToken
+from cortx.utils.log import Log
+
 
 class CsmRgwConfigurationFactory:
     """Factory for the most common CSM RGW connections configurations."""
@@ -37,9 +41,21 @@ class CsmRgwConfigurationFactory:
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
         rgw_connection_config.auth_user_access_key = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY)
-        rgw_connection_config.auth_user_secret_key = Conf.get(
-            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
+        rgw_connection_config.auth_user_secret_key = \
+            CsmRgwConfigurationFactory._get_decrypted_secret_key()
         return rgw_connection_config
+
+    @staticmethod
+    def _get_decrypted_secret_key():
+        cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
+        auth_user_secret_key = Conf.get(
+            const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY)
+        decreption_key = Conf.get(const.CSM_GLOBAL_INDEX,const.KEY_DECRYPTION)
+        try:
+            return Security.decrypt(auth_user_secret_key, cluster_id, decreption_key)
+        except CipherInvalidToken as e:
+            Log.error(f"Decryption failed: {e}")
+
 
 class S3ServiceError(Exception):
     """S3 service error class."""
