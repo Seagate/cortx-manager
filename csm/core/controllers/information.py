@@ -14,9 +14,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import Schema, fields, validates_schema
+from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
-from csm.core.controllers.view import CsmView, CsmResponse
+from csm.core.controllers.view import CsmView, CsmResponse. CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
@@ -27,14 +27,7 @@ class VersionValidationSchema(Schema):
     # Define schema here
     requires = fields.List(fields.Str, data_key=const.REQUIRES, required=True)
 
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """Invalidate the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"Empty value for {key}")
-
-
+@CsmAuth.public
 @CsmView._app_routes.view("/api/v2/version/compatibility/{resource}/{resource_id}")
 class VersionInformationView(CsmView):
     """
@@ -48,7 +41,7 @@ class VersionInformationView(CsmView):
 
     async def post(self):
         """POST REST implementation for Validating version compatibility."""
-        Log.debug("Handling POST request for Version compatibility Validation.")
+        Log.info("Handling POST request for Version compatibility Validation.")
         # Read path parameter
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         resource = self.request.match_info[const.ARG_RESOURCE]
@@ -69,6 +62,6 @@ class VersionInformationView(CsmView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_param}
         # Call Version Compatibility validation Service
-        Log.debug("Checking Version compatibility Validation.")
-        response = await self._service.is_version_compatible(**request_body)
+        Log.info("Checking Version compatibility Validation.")
+        response = await self._service.check_compatibility(**request_body)
         return CsmResponse(response)

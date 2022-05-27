@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.log import Log
-from cortx.utils.schema.release import Release
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 
@@ -22,17 +21,19 @@ class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
 
     @Log.trace_method(Log.DEBUG)
-    async def is_version_compatible(self, **request_body):
+    async def check_compatibility(self, **request_body):
         """
-        Method to check whether new requirements are compatible with deployed version
+        Method to check whether new version are compatible with deployed version
 
         :param **request_body: Request body kwargs
         """
         Log.debug(f"Request body: {request_body}")
+        # Invoke api to check compatibility
+
+        # handle the response and return
         response = {
             "node_id": request_body.get(const.ARG_RESOURCE_ID),
             "compatible": True,
             "reason": "Current version is compatible"
         }
         return response
-
