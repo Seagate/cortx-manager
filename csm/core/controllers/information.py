@@ -20,7 +20,7 @@ from csm.common.errors import CsmNotFoundError
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology")
-class CortxAboutInformationView(CsmView):
+class CortxInformationView(CsmView):
     """
     CORTX About information REST API implementation.
 
@@ -34,16 +34,16 @@ class CortxAboutInformationView(CsmView):
         """GET REST implementation for About Information."""
         Log.debug("Handling GET request for Cortx About information.")
         # Check if request is authenticated
-        is_authenticated = False
+        authorized = False
         if self.request.session is not None:
-            is_authenticated = True
+            authorized = True
         # Call Cortx Information Service
-        response = await self._service.get_cortx_information(is_authenticated)
+        response = await self._service.get_cortx_information(authorized)
         return CsmResponse(response)
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}")
-class ResourceAboutInformationView(CsmView):
+class ResourceInformationView(CsmView):
     """
     CORTX About information REST API implementation.
 
@@ -62,11 +62,11 @@ class ResourceAboutInformationView(CsmView):
         if resource not in const.ABOUT_INFO_RESOURCES:
             raise CsmNotFoundError(f"{resource} is not valid")
         # Check if request is authenticated
-        is_authenticated = False
+        authorized = False
         if self.request.session is not None:
-            is_authenticated = True
+            authorized = True
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
-        response = await self._service.get_cortx_information(is_authenticated, resource)
+        response = await self._service.get_cortx_information(authorized, resource)
         return CsmResponse(response)
 
