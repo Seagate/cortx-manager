@@ -3,5 +3,10 @@
         "keys": "users",
         "count": "count",
         "marker": "marker"
+    },
+    "GET_CAPACITY_USAGE": {
+        "StorageStats.size": "capacity.s3.user.used",
+        "StorageStats.size_actual": "capacity.s3.user.used_total",
+        "StorageStats.num_objects": "capacity.s3.user.objects"
     }
 }
