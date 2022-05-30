@@ -77,7 +77,7 @@ class RGWPlugin:
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_response(self, operation, response) -> Any:
         """
-        This method maps the raw response to the required schema 
+        This method maps the raw response to the required schema
         based on the given operation.
 
         Args:
