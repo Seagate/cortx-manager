@@ -279,7 +279,12 @@ class Configure(Setup):
         :returns: number of requests.
         """
         Log.info(f"CPU boundaries are currently not included in calculation: {cpu_min}:{cpu_max}")
-        quota = (mem_max - mem_min) // const.MAX_MEM_PER_REQUEST
+        # Minimum memroy limit is considered the bare minimem to run CSM only.
+        # The rest part up to maximum limit is for handling incoming requests.
+        # CSM also reserves some amount (const.CSM_USAGE_RESERVED_BUFFER_PERCENT) for future needs.
+        mem_for_req = mem_max - mem_min
+        reserved_mem = mem_for_req * const.CSM_USAGE_RESERVED_BUFFER_PERCENT // 100
+        quota = (mem_for_req - reserved_mem) // const.MAX_MEM_PER_REQUEST
         return quota
 
     @staticmethod
