@@ -21,6 +21,7 @@ from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from csm.core.controllers.rgw.s3.base import S3BaseView
 from csm.common.errors import ServiceError
 
 
@@ -71,7 +72,7 @@ class SchemaFactory:
 
 
 @CsmView._app_routes.view("/api/v2/s3/bucket")
-class S3BucketView(CsmView):
+class S3BucketView(S3BaseView):
     """
     S3 Bucket View for REST API implementation.
 
@@ -80,8 +81,7 @@ class S3BucketView(CsmView):
 
     def __init__(self, request):
         """S3 Bucket View Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_BUCKET_SERVICE]
+        super().__init__(request, const.S3_BUCKET_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_BUCKET: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)

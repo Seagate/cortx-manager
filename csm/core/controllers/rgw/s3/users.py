@@ -21,6 +21,7 @@ from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
 from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from csm.core.controllers.rgw.s3.base import S3BaseView
 from csm.common.errors import ServiceError
 
 
@@ -113,7 +114,7 @@ class ListAllUsersSchema(ValidateSchema):
     marker = fields.Str(data_key=const.MARKER, missing=None, allow_none=False)
 
 @CsmView._app_routes.view("/api/v2/iam/users")
-class S3IAMUserListView(CsmView):
+class S3IAMUserListView(S3BaseView):
     """
     S3 IAM User List View for REST API implementation.
 
@@ -122,8 +123,7 @@ class S3IAMUserListView(CsmView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.CREATE}})
     @Log.trace_method(Log.DEBUG)
@@ -166,7 +166,7 @@ class S3IAMUserListView(CsmView):
             return CsmResponse(response)
 
 @CsmView._app_routes.view("/api/v2/iam/users/{uid}")
-class S3IAMUserView(CsmView):
+class S3IAMUserView(S3BaseView):
     """
     S3 IAM User View for REST API implementation.
 
@@ -177,8 +177,7 @@ class S3IAMUserView(CsmView):
 
     def __init__(self, request):
         """S3 IAM User List View Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
@@ -246,7 +245,7 @@ class S3IAMUserView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v2/iam/keys")
-class S3IAMUserKeyView(CsmView):
+class S3IAMUserKeyView(S3BaseView):
     """
     S3 IAM User Key View for REST API implementation.
 
@@ -256,8 +255,7 @@ class S3IAMUserKeyView(CsmView):
 
     def __init__(self, request):
         """S3 IAM User Key View Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
     @Log.trace_method(Log.DEBUG)
@@ -299,7 +297,7 @@ class S3IAMUserKeyView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v2/iam/caps/{uid}")
-class S3IAMUserCapsView(CsmView):
+class S3IAMUserCapsView(S3BaseView):
     """
     S3 IAM - Add User Caps REST API implementation.
 
@@ -309,8 +307,7 @@ class S3IAMUserCapsView(CsmView):
 
     def __init__(self, request):
         """S3 IAM Caps Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     async def create_caps_request_body(self):
         uid = self.request.match_info[const.UID]
@@ -352,7 +349,7 @@ class S3IAMUserCapsView(CsmView):
 
 
 @CsmView._app_routes.view("/api/v2/iam/quota/{uid}")
-class S3IAMUserQuotaView(CsmView):
+class S3IAMUserQuotaView(S3BaseView):
     """
     S3 IAM user quota management REST API implementation.
 
@@ -362,8 +359,7 @@ class S3IAMUserQuotaView(CsmView):
 
     def __init__(self, request):
         """S3 IAM user quota Init."""
-        super().__init__(request)
-        self._service = self.request.app[const.S3_IAM_USERS_SERVICE]
+        super().__init__(request, const.S3_IAM_USERS_SERVICE)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
