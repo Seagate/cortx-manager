@@ -886,6 +886,7 @@ S3_CLIENT_ERROR_CODES = {
 S3_CONNECTION_TIMEOUT = 10
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
 IAM_OPERATIONS_MAPPING_SCHEMA = '{}/schema/iam_operations_mapping.json'.format(CSM_PATH)
+SUPPRESS_PAYLOAD_SCHEMA = '{}/schema/suppress_payload.json'.format(CSM_PATH)
 S3_CLIENT_ERROR_MSG = 'Unable to process the request'
 
 # S3 Operations

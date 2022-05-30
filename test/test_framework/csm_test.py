@@ -123,7 +123,6 @@ if __name__ == '__main__':
     from cortx.utils.log import Log
     from csm.common.errors import CsmError
     from cortx.utils.conf_store.conf_store import Conf
-    from csm.common.conf import Security
     from csm.test.common import TestFailed, Const
 
     try:

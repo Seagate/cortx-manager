@@ -16,7 +16,7 @@
 import json
 from marshmallow import fields, ValidationError, validate
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
@@ -95,6 +95,11 @@ class S3BucketView(S3BaseView):
             operation_arguments = request_body.get(const.ARG_ARGUMENTS)
             operation_schema = SchemaFactory.init(operation)
             operation_request_body = operation_schema.load(operation_arguments)
+            uid = operation_request_body.get(const.UID, None)
+            # Check if uid field is present in request params.
+            # Check if uid is of privileged IAM user.
+            if uid is not None and self._is_iam_privileged_user(uid):
+                raise CsmPermissionDenied()
             Log.debug(f"Handling s3 bucket PUT request"
                       f" request operation: {operation}"
                       f" request operation body: {operation_request_body}")
