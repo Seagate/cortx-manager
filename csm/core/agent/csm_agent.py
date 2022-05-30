@@ -106,7 +106,8 @@ class CsmAgent:
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
-        session_manager = QuotaSessionManager(db, const.CSM_ACTIVE_USERS_QUOTA)
+        session_manager = QuotaSessionManager(
+            db, const.CSM_ACTIVE_USERS_QUOTA, const.CSM_SESSIONS_PER_USER_QUOTA)
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      user_manager,
                                                      role_manager,
