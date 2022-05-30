@@ -19,6 +19,7 @@ from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from csm.common.errors import CsmInternalError
 from csm.common.payload import Json, Payload, JsonMessage, Dict
+from csm.common.utility import Utility
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.s3 import S3Client
@@ -36,13 +37,15 @@ class RGWPlugin:
             config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
+        self._api_suppress_payload_schema = Json(const.SUPPRESS_PAYLOAD_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
         response = await self._process(api_operation, request_body)
-        return self._build_response(operation, response)
+        suppressed_response = self._supress_response_keys(operation, response)
+        return self._build_response(operation, suppressed_response)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:
@@ -73,6 +76,20 @@ class RGWPlugin:
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_response(self, operation, response) -> Any:
+        """
+        This method maps the raw response to the required schema
+        based on the given operation.
+
+        Args:
+            operation (str): IAM operation.
+            response (dict): Response from s3 server.
+
+        Raises:
+            CsmInternalError.
+
+        Returns:
+            Mapped response.
+        """
         mapped_response = response
         mapping = self._api_response_mapping_schema.get(operation)
         if mapping:
@@ -85,12 +102,44 @@ class RGWPlugin:
                 mapped_response = parsed_response_payload.load()
                 RGWPlugin._params_cleanup(mapped_response)
             except Exception as e:
-                Log.error(f"Error occured while coverting raw api response to required response. {e}")
+                Log.error(f"Error occured while coverting raw api response to\
+                    required response: {e}")
                 raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
         return mapped_response
 
+    def _supress_response_keys(self, operation, response) -> Any:
+        """
+        Remove specific keys from response based on an operation.
+
+        Args:
+            operation (str): IAM operation.
+            response (dict): Response from s3 server.
+
+        Raises:
+            CsmInternalError
+
+        Returns:
+            Modified response.
+        """
+        suppressed_response = response
+        keys = self._api_suppress_payload_schema.get(operation)
+        Log.debug(f"Suppressing {keys} keys from raw response.")
+        if keys:
+            try:
+                for key in keys:
+                    suppressed_response = Utility.remove_json_key(suppressed_response, key)
+            except Exception as e:
+                Log.error(f"Error occured while suppressing {keys} keys from response: {e}")
+                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+        return suppressed_response
+
     @staticmethod
     def _params_cleanup(params):
+        """
+        Removes the first level keys from dict whos values are None.
+        Args:
+            params (dict): Mapped response as per operation's schema.
+        """
         for key, value in list(params.items()):
             if value is None:
                 params.pop(key)

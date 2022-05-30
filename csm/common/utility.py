@@ -14,32 +14,26 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 
-from csm.core.controllers.view import CsmView
-from csm.core.blogic import const
-from cortx.utils.conf_store.conf_store import Conf
+class Utility:
+    """
+    Helper class for common independent utilities.
+    """
 
-
-class S3BaseView(CsmView):
-    """Simple base class for any S3 view which works with one service."""
-
-    def __init__(self, request, service_name):
-        """Construct S3 Base View."""
-        super().__init__(request)
-        self._service = self.request.app[service_name]
-        self._iam_privileged_user_uid = Conf.get(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
-
-    def _is_iam_privileged_user(self, uid) -> bool:
+    @staticmethod
+    def remove_json_key(payload, key):
         """
-        Check if uid is of privileged IAM user.
+        Removes a particular key from complex a deserialized json payload.
 
         Args:
-            uid (string): uid of an IAM user.
+            payload (dict): payload from which particular key should be deleted.
+            key (str): key which is to be deleted.
 
         Returns:
-            bool: True if input uid is of privileged IAM user.
+            Modified payload.
         """
-        result: bool = False
-        if uid == self._iam_privileged_user_uid:
-            result = True
-        return result
-
+        if isinstance(payload, dict):
+            return {k: Utility.remove_json_key(v, key) for k, v in payload.items() if k != key}
+        elif isinstance(payload, list):
+            return [Utility.remove_json_key(element, key) for element in payload]
+        else:
+            return payload
