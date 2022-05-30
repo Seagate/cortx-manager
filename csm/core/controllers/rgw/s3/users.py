@@ -40,11 +40,6 @@ class UserCreateSchema(S3BaseSchema):
     suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
     tenant = fields.Str(data_key=const.TENANT, missing=None, allow_none=False)
 
-class UserDeleteSchema(S3BaseSchema):
-    """S3 IAM User delete schema validation class."""
-
-    purge_data = fields.Bool(data_key=const.PURGE_DATA, missing=None, allow_none=False)
-
 
 class UserModifySchema(S3BaseSchema):
     """S3 IAM User modify schema validation class."""
@@ -198,24 +193,13 @@ class S3IAMUserView(S3BaseView):
         Log.info(f"Handling delete s3 iam user DELETE request"
                  f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
-        path_params_dict = {const.UID: uid}
-        try:
-            if self._is_iam_privileged_user(uid):
-                raise CsmPermissionDenied()
-            schema = UserDeleteSchema()
-            if await self.request.text():
-                request_body_params_dict = schema.load(await self.request.json())
-            else:
-                request_body_params_dict = {}
-        except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Could not parse request body, invalid JSON received.")
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        request_body = {**path_params_dict, **request_body_params_dict}
+        if self._is_iam_privileged_user(uid):
+            raise CsmPermissionDenied()
+        path_params = {const.UID: uid}
         Log.debug(f"Handling s3 iam user DELETE request"
-                  f" path params/request body: {request_body}")
+                  f" path params/request body: {path_params}")
         with self._guard_service():
-            response = await self._service.delete_user(**request_body)
+            response = await self._service.delete_user(**path_params)
             return CsmResponse(response)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
