@@ -28,7 +28,7 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         Log.debug(f"Request body: {resource}")
-        if not authorized and resource == "certicate":
+        if not authorized and resource == "certificate":
             raise CsmUnauthorizedError("Invalid authentication credentials for the target resource.")
         # TODO: Call Utils API to get information
         # TODO: Remove code
