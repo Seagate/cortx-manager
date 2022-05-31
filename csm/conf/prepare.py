@@ -113,6 +113,7 @@ class Prepare(Setup):
         _, consul_host, consul_port, secret, endpoint = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         consul_endpoint_len = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_LEN)
+        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         try:
             if consul_host and consul_port:
                 Conf.set(const.DATABASE_INDEX,
@@ -127,7 +128,7 @@ class Prepare(Setup):
             for endpoint_count in range(consul_endpoint_len):
                 Conf.set(const.CSM_GLOBAL_INDEX,
                         f'{const.CONSUL_ENDPOINTS_KEY}[{endpoint_count}]',
-                        eval(f'{endpoint}[{endpoint_count}]'))
+                        eval(f'{endpoint_list}[{endpoint_count}]'))
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
