@@ -770,6 +770,7 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+KEY_SERVICE_LIMITS = "limits_services"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -964,3 +965,11 @@ PERSISTENT          = 'persistent'
 
 # CSM usage quotas
 CSM_ACTIVE_USERS_QUOTA = 50
+CSM_ACTIVE_REQUESTS_QUOTA = 100
+CSM_SESSIONS_PER_USER_QUOTA = 10
+CSM_USAGE_RESERVED_BUFFER_PERCENT = 5
+MAX_MEM_PER_REQUEST_MB = 2
+
+USAGE_REQUEST_QUOTA = 'usage>request_quota'
+CSM_USAGE_LIMIT_SERVICES = 'cortx>csm>limits>services'
+

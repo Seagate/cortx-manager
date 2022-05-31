@@ -100,6 +100,9 @@ class CsmRestApi(CsmApi, ABC):
 
     __is_shutting_down = False
     __unsupported_features = None
+    __nreq = 0
+    __nblocked = 0
+    __request_quota = 0
 
     @staticmethod
     def init():
@@ -108,8 +111,14 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
+        request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA))
+        CsmRestApi.__request_quota = min(
+            const.CSM_ACTIVE_REQUESTS_QUOTA, request_quota)
+        Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
+
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers,
+            middlewares=[CsmRestApi.throttler_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
@@ -284,6 +293,22 @@ class CsmRestApi(CsmApi, ABC):
         key = method + ":" + path
         conf_key = CsmAuth.HYBRID_APIS[key]
         return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
+    @web.middleware
+    async def throttler_middleware(request, handler):
+        if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
+            CsmRestApi.__nblocked += 1
+            msg = (f"The request is blocked because the number of requests reached threshold\n"
+                   f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
+            Log.warn(msg)
+            return web.Response(status=429, text="Too many requests")
+        else:
+            CsmRestApi.__nreq += 1
+
+        res = await handler(request)
+        CsmRestApi.__nreq -= 1
+        return res
 
     @staticmethod
     @web.middleware
