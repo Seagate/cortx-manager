@@ -282,8 +282,6 @@ class LoginService:
                 if s.credentials.user_id.lower() == user_id.lower() and isinstance(
                     s.credentials, S3Credentials)]
 
-
-
     async def delete_all_sessions(self, session_id: Session.Id) -> None:
         """
         This Function will delete all the current user's active sessions.
