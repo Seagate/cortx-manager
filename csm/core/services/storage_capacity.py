@@ -166,9 +166,7 @@ class S3CapacityService(ApplicationService):
             return {}
 
     async def _get_user_usage(self, **request_body):
-        plugin_response = await self._s3_iam_plugin.execute(const.GET_CAPACITY_USAGE_OPERATION, **request_body)
+        plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_CAPACITY_OPERATION, **request_body)
         if isinstance(plugin_response, RgwError):
             ServiceError.create(plugin_response)
-        # ToDo: Remove this code when uid will be available in resp from s3
-        plugin_response["capacity"]["s3"]["user"]["uid"] = request_body.get(const.UID)
         return plugin_response
