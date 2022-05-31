@@ -123,7 +123,13 @@ class SessionManager:
             start = start + interval
 
     async def _remove_expired_sessions(self, current_time):
-        print("Helllooo")
+        """
+        Remove expired sessions from the storage.
+        """
+        sessions = await self.get_all()
+        for s in sessions:
+            if s.is_expired():
+                await self.delete(s.session_id)
 
 class AuthPolicy(ABC):
     """ Base abstract class for various authentication policies """

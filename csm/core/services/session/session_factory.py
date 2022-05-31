@@ -23,6 +23,7 @@ from datetime import datetime
 from csm.core.data.models.session import SessionModel
 from csm.common.errors import CsmInternalError
 from cortx.utils.conf_store.conf_store import Conf
+from datetime import datetime, timezone
 
 class SessionCredentials:
     """ Base class for a variying part of the session
@@ -97,7 +98,9 @@ class Session:
         creds = self._credentials
         return creds.user_role if isinstance(creds, LocalCredentials) else None
 
-
+    def is_expired(self) -> bool:
+        """Check if the session is expired."""
+        return datetime.now(timezone.utc) > self._expiry_time
 class InMemory:
     def __init__(self):
         """
