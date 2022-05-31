@@ -13,10 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from typing import Any, Optional
 from csm.core.data.models.rgw import RgwConnectionConfig
-from csm.common.services import ApplicationService
-from csm.core.data.models.rgw import RgwError
 from csm.core.blogic import const
 from csm.common.service_urls import ServiceUrls
 from csm.common.conf import Security
@@ -55,24 +52,3 @@ class CsmRgwConfigurationFactory:
             return Security.decrypt(auth_user_secret_key, cluster_id, decreption_key)
         except CipherInvalidToken as e:
             Log.error(f"Decryption failed: {e}")
-
-
-class S3ServiceError(Exception):
-    """S3 service error class."""
-
-    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
-        """S3 Service Error init."""
-        self.status = status
-        self.code = code
-        self.message = message
-        self.message_args = args
-
-class S3BaseService(ApplicationService):
-    def _handle_error(self, error, args: Optional[Any] = None):
-        """A helper method for raising exceptions on S3 related errors."""
-
-        if isinstance(error, RgwError):
-            raise S3ServiceError(error.http_status,
-                                 error.error_code.name,
-                                 error.error_message,
-                                 args)

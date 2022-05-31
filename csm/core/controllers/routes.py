@@ -18,7 +18,7 @@ from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
 from .storage_capacity import (CapacityStatusView, CapacityManagementView,
-                               CapacityUsageView)
+                               S3CapacityView)
 from .permissions import CurrentPermissionsView
 from .users import CsmUsersListView, CsmUsersView
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
