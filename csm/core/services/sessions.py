@@ -112,6 +112,10 @@ class SessionManager:
         start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(seconds=2))
 
     async def _timer_task(self, handler, start: datetime, interval: timedelta):
+        """
+        Create timer for background task
+        :return:
+        """
         current = datetime.now(timezone.utc)
         while True:
             delta = (start - current).total_seconds()
