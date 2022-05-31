@@ -16,7 +16,7 @@
 import json
 from marshmallow import fields, ValidationError, validate
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
@@ -39,7 +39,6 @@ class UserCreateSchema(S3BaseSchema):
     max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None, allow_none=False)
     suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
     tenant = fields.Str(data_key=const.TENANT, missing=None, allow_none=False)
-
 
 class UserDeleteSchema(S3BaseSchema):
     """S3 IAM User delete schema validation class."""
@@ -201,6 +200,8 @@ class S3IAMUserView(S3BaseView):
         uid = self.request.match_info[const.UID]
         path_params_dict = {const.UID: uid}
         try:
+            if self._is_iam_privileged_user(uid):
+                raise CsmPermissionDenied()
             schema = UserDeleteSchema()
             if await self.request.text():
                 request_body_params_dict = schema.load(await self.request.json())
@@ -226,6 +227,8 @@ class S3IAMUserView(S3BaseView):
         uid = self.request.match_info[const.UID]
         path_params_dict = {const.UID: uid}
         try:
+            if self._is_iam_privileged_user(uid):
+                raise CsmPermissionDenied()
             schema = UserModifySchema()
             if await self.request.text():
                 request_body_params_dict = schema.load(await self.request.json())
@@ -266,6 +269,8 @@ class S3IAMUserKeyView(S3BaseView):
         try:
             schema = CreateKeySchema()
             create_key_body = schema.load(await self.request.json())
+            if self._is_iam_privileged_user(create_key_body.get(const.UID)):
+                raise CsmPermissionDenied()
             Log.debug(f"Handling Add access key PUT request"
                       f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
@@ -285,6 +290,8 @@ class S3IAMUserKeyView(S3BaseView):
         try:
             schema = RemoveKeySchema()
             remove_key_body = schema.load(await self.request.json())
+            if self._is_iam_privileged_user(remove_key_body.get(const.UID)):
+                raise CsmPermissionDenied()
             Log.debug(f"Handling Remove access key DELETE request"
                       f" request body: {remove_key_body}")
         except json.decoder.JSONDecodeError:
@@ -311,14 +318,16 @@ class S3IAMUserCapsView(S3BaseView):
 
     async def create_caps_request_body(self):
         uid = self.request.match_info[const.UID]
-        path_params_dict = {const.UID: uid}
         try:
+            if self._is_iam_privileged_user(uid):
+                raise CsmPermissionDenied()
             schema = UserCapsSchema()
             user_caps_body = schema.load(await self.request.json())
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        path_params_dict = {const.UID: uid}
         request_body = {**path_params_dict, **user_caps_body}
         Log.debug(f"Handling user caps request"
                   f" request body: {request_body}")
@@ -382,8 +391,9 @@ class S3IAMUserQuotaView(S3BaseView):
         Log.info(f"Handling iam user quota PUT request"
                  f" user_id: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
-        path_params_dict = {const.UID: uid}
         try:
+            if self._is_iam_privileged_user(uid):
+                raise CsmPermissionDenied()
             schema = SetUserQuotaSchema()
             if await self.request.text():
                 request_body_params_dict = schema.load(await self.request.json())
@@ -393,6 +403,7 @@ class S3IAMUserQuotaView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        path_params_dict = {const.UID: uid}
         request_body = {**path_params_dict, **request_body_params_dict}
         Log.debug(f"Handling iam user quota PUT request"
                   f" path params/request body: {request_body}")

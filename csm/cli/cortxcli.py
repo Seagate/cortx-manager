@@ -210,7 +210,6 @@ if __name__ == '__main__':
     from csm.common.payload import *
     from csm.core.blogic import const
     from csm.common.errors import InvalidRequest
-    from csm.common.conf import Security
     from cortx.utils.validator.error import VError
     try:
         CortxCli(sys.argv).cmdloop()
