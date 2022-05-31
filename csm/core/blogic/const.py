@@ -561,6 +561,7 @@ STORAGE_CAPACITY_SERVICE = "storage_capacity_service"
 USL_SERVICE = "usl_service"
 MAINTENANCE_SERVICE = "maintenance"
 REPLACE_NODE_SERVICE = "replace_node"
+SESSION_MGR_SERVICE = "session_manager"
 
 # Plugins literal constansts
 ALERT_PLUGIN = "alert"
