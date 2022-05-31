@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
+import errno
 from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
@@ -22,6 +23,7 @@ from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.blogic import const
 from csm.common.errors import CsmNotFoundError
 from csm.core.controllers.validators import ValidationErrorFormatter
+from cortx.utils.schema.release import SetupError
 
 class VersionValidationSchema(Schema):
     # Define schema here
@@ -65,6 +67,12 @@ class VersionInformationView(CsmView):
         Log.info("Checking Version compatibility Validation.")
         try:
             response = await self._service.check_compatibility(**request_body)
+        except SetupError as se:
+            Log.error(f"Setup Error in checking compatability: {se}")
+            if se._rc == errno.EINVAL:
+                raise InvalidRequest(f"Error in checking compatability: {se}")
+            else: 
+                raise CsmInternalError(f"{se}")
         except Exception as e:
             Log.error(f"Error in checking compatability: {e}")
             raise CsmInternalError(f"Error in checking compatability: {e}")
