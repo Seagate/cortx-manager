@@ -109,7 +109,8 @@ class Configure(Setup):
                 const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}",
+                const.KEY_SERVICE_LIMITS: const.CSM_USAGE_LIMIT_SERVICES
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -284,7 +285,7 @@ class Configure(Setup):
         # CSM also reserves some amount (const.CSM_USAGE_RESERVED_BUFFER_PERCENT) for future needs.
         mem_for_req = mem_max - mem_min
         reserved_mem = mem_for_req * const.CSM_USAGE_RESERVED_BUFFER_PERCENT // 100
-        quota = (mem_for_req - reserved_mem) // const.MAX_MEM_PER_REQUEST
+        quota = (mem_for_req - reserved_mem) // const.MAX_MEM_PER_REQUEST_MB
         return quota
 
     @staticmethod
@@ -313,6 +314,7 @@ class Configure(Setup):
     def set_resource_limits() -> None:
         """Set resource limits for CSM."""
         limits = Conf.get(const.CONSUMER_INDEX, const.CSM_USAGE_LIMIT_SERVICES)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_USAGE_LIMIT_SERVICES, limits)
         limits = next(filter(lambda x: x[const.NAME] == "agent", limits), None)
         if limits:
             mem_min = Configure._mem_limit_to_int(limits["memory"]["min"])
