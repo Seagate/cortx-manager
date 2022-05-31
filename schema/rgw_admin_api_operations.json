@@ -139,5 +139,13 @@
             "uid": "uid"
         },
         "SUCCESS_CODE": 200
+    },
+    "GET_USER_CAPACITY": {
+        "ENDPOINT": "/admin/user?stats",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid"
+        },
+        "SUCCESS_CODE": 200
     }
 }
