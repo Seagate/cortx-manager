@@ -547,6 +547,7 @@ class CsmRestApi(CsmApi, ABC):
     async def _on_startup(app):
         Log.debug('REST API startup')
         CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._websock_bg()))
+        CsmRestApi._bgtasks.append(app.loop.create_task(CsmRestApi._clear_expired_sessions_bg()))
 
         # For Sending SSL expiry information to IEM logs below code is required,
         # logic needs to be improved, hence commenting.
@@ -591,6 +592,16 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug('SSL certificate expiry check background task canceled')
 
         Log.debug('SSL certificate expiry check background task done')
+
+    @classmethod
+    async def _clear_expired_sessions_bg(cls):
+        Log.info('Started background task for clearing expired sessions')
+        try:
+            session_mgr_service = cls._app[const.SESSION_MGR_SERVICE]
+            await session_mgr_service.clear_sessions()
+        except AsyncioCancelledError:
+            Log.error('Background task for clearing expired session cancelled')
+        Log.info('Background task for clearing expired session done')
 
     @staticmethod
     async def _async_push(msg):
