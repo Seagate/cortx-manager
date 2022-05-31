@@ -102,6 +102,28 @@ class SessionManager:
     async def update(self, session: Session) -> None:
         await self._sessionFactory.store(session)
 
+    async def clear_sessions(self):
+        """
+        Entry point for clearing expired token background task
+        :return:
+        """
+        today= datetime.now(timezone.utc).date()
+        await self._timer_task(handler=self._remove_expired_sessions,
+        start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(seconds=2))
+
+    async def _timer_task(self, handler, start: datetime, interval: timedelta):
+        current = datetime.now(timezone.utc)
+        while True:
+            delta = (start - current).total_seconds()
+            if delta > 0:
+                await asyncio.sleep(delta)
+            current = datetime.now(timezone.utc)
+            await handler(current)
+            current = datetime.now(timezone.utc)
+            start = start + interval
+
+    async def _remove_expired_sessions(self, current_time):
+        print("Helllooo")
 
 class AuthPolicy(ABC):
     """ Base abstract class for various authentication policies """
@@ -254,28 +276,7 @@ class LoginService:
                 if s.credentials.user_id.lower() == user_id.lower() and isinstance(
                     s.credentials, S3Credentials)]
 
-    async def clear_sessions(self):
-        """
-        Entry point for clearing expired token background task
-        :return:
-        """
-        today= datetime.now(timezone.utc).date()
-        await self._timer_task(handler=self._remove_expired_sessions,
-        start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(seconds=2))
 
-    async def _timer_task(self, handler, start: datetime, interval: timedelta):
-        current = datetime.now(timezone.utc)
-        while True:
-            delta = (start - current).total_seconds()
-            if delta > 0:
-                await asyncio.sleep(delta)
-            current = datetime.now(timezone.utc)
-            await handler(current)
-            current = datetime.now(timezone.utc)
-            start = start + interval
-
-    async def _remove_expired_sessions(self, current_time):
-        print("Helllooo")
 
     async def delete_all_sessions(self, session_id: Session.Id) -> None:
         """
