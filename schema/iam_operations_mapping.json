@@ -3,5 +3,11 @@
         "keys": "users",
         "count": "count",
         "marker": "marker"
+    },
+    "GET_USER_CAPACITY": {
+        "user_id": "capacity.s3.users.id",
+        "stats.size": "capacity.s3.users.used",
+        "stats.size_actual": "capacity.s3.users.used_total",
+        "stats.num_objects": "capacity.s3.users.objects"
     }
 }

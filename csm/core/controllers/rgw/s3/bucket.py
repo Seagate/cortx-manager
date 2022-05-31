@@ -20,11 +20,12 @@ from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
-from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from csm.core.controllers.rgw.s3.base import S3BaseView
+from csm.common.errors import ServiceError
 
 
-class BucketBaseSchema(S3BaseSchema):
+class BucketBaseSchema(ValidateSchema):
     """
     S3 Bucket First Level schema validation class.
 
@@ -37,7 +38,7 @@ class BucketBaseSchema(S3BaseSchema):
                             values=fields.Raw(allow_none=True), required=True)
 
 
-class LinkBucketSchema(S3BaseSchema):
+class LinkBucketSchema(ValidateSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
 
@@ -49,7 +50,7 @@ class LinkBucketSchema(S3BaseSchema):
     bucket_id = fields.Str(data_key=const.BUCKET_ID, missing=None, allow_none=False)
 
 
-class UnlinkBucketSchema(S3BaseSchema):
+class UnlinkBucketSchema(ValidateSchema):
     """
     S3 bucket operation's Second Level Schema Validation.
 
@@ -107,6 +108,6 @@ class S3BucketView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.execute(operation, **operation_request_body)
             return CsmResponse(response)

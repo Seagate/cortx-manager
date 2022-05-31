@@ -13,25 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from contextlib import contextmanager
-from csm.core.controllers.view import CsmView, CsmHttpException
-from csm.core.services.rgw.s3.utils import S3ServiceError
-from marshmallow import Schema, ValidationError, validates_schema
+
+from csm.core.controllers.view import CsmView
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
-
-S3_SERVICE_ERROR = 0x3000
-
-
-class S3BaseSchema(Schema):
-    """Base Class for S3 Schema Validation."""
-
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """Invalidate the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"Empty value for {key}")
 
 
 class S3BaseView(CsmView):
@@ -58,15 +43,3 @@ class S3BaseView(CsmView):
             result = True
         return result
 
-    @contextmanager
-    def _guard_service(self):
-        try:
-            yield None
-        except S3ServiceError as error:
-            raise CsmHttpException(error.status,
-                                   S3_SERVICE_ERROR,
-                                   error.code,
-                                   error.message,
-                                   error.message_args)
-        else:
-            return

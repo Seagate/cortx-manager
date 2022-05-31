@@ -20,11 +20,12 @@ from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
-from csm.core.controllers.validators import ValidationErrorFormatter
-from csm.core.controllers.rgw.s3.base import S3BaseView, S3BaseSchema
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from csm.core.controllers.rgw.s3.base import S3BaseView
+from csm.common.errors import ServiceError
 
 
-class UserCreateSchema(S3BaseSchema):
+class UserCreateSchema(ValidateSchema):
     """S3 IAM User create schema validation class."""
 
     uid = fields.Str(data_key=const.UID, required=True)
@@ -40,13 +41,14 @@ class UserCreateSchema(S3BaseSchema):
     suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
     tenant = fields.Str(data_key=const.TENANT, missing=None, allow_none=False)
 
-class UserDeleteSchema(S3BaseSchema):
+
+class UserDeleteSchema(ValidateSchema):
     """S3 IAM User delete schema validation class."""
 
     purge_data = fields.Bool(data_key=const.PURGE_DATA, missing=None, allow_none=False)
 
 
-class UserModifySchema(S3BaseSchema):
+class UserModifySchema(ValidateSchema):
     """S3 IAM User modify schema validation class."""
 
     def validate_op_mask(op_mask: str):
@@ -69,7 +71,7 @@ class UserModifySchema(S3BaseSchema):
                          validate=validate_op_mask)
 
 
-class CreateKeySchema(S3BaseSchema):
+class CreateKeySchema(ValidateSchema):
     """S3 Create/Add Access Key schema validation class."""
 
     uid = fields.Str(data_key=const.UID, required=True)
@@ -81,7 +83,7 @@ class CreateKeySchema(S3BaseSchema):
     generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None, allow_none=False)
 
 
-class RemoveKeySchema(S3BaseSchema):
+class RemoveKeySchema(ValidateSchema):
     """S3 Remove Key schema validation class."""
 
     access_key = fields.Str(data_key=const.ACCESS_KEY, required=True)
@@ -90,13 +92,13 @@ class RemoveKeySchema(S3BaseSchema):
                           validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
 
 
-class UserCapsSchema(S3BaseSchema):
+class UserCapsSchema(ValidateSchema):
     """S3 user capability schema validation class."""
 
     user_caps = fields.Str(data_key=const.USER_CAPS, required=True)
 
 
-class SetUserQuotaSchema(S3BaseSchema):
+class SetUserQuotaSchema(ValidateSchema):
     """Set user level quota schema validation class."""
 
     enabled = fields.Bool(data_key=const.ENABLED, missing=None, allow_none=False)
@@ -104,7 +106,7 @@ class SetUserQuotaSchema(S3BaseSchema):
     max_objects = fields.Int(data_key=const.MAX_OBJECTS, missing=None, allow_none=False)
     check_on_raw = fields.Bool(data_key=const.CHECK_ON_RAW, missing=None, allow_none=False)
 
-class ListAllUsersSchema(S3BaseSchema):
+class ListAllUsersSchema(ValidateSchema):
     """List all IAM users schema validation class."""
 
     max_entries = fields.Int(data_key=const.MAX_ENTRIES, missing=None,
@@ -138,7 +140,7 @@ class S3IAMUserListView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.create_user(**user_body)
             return CsmResponse(response, const.STATUS_CREATED)
 
@@ -159,7 +161,7 @@ class S3IAMUserListView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.get_all_users(**request_parameters)
             return CsmResponse(response)
 
@@ -187,7 +189,7 @@ class S3IAMUserView(S3BaseView):
         path_params_dict = {const.UID: uid}
         Log.debug(f"Handling s3 iam user GET request"
                   f" with path param: {uid}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.get_user(**path_params_dict)
             return CsmResponse(response)
 
@@ -214,7 +216,7 @@ class S3IAMUserView(S3BaseView):
         request_body = {**path_params_dict, **request_body_params_dict}
         Log.debug(f"Handling s3 iam user DELETE request"
                   f" path params/request body: {request_body}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.delete_user(**request_body)
             return CsmResponse(response)
 
@@ -241,10 +243,9 @@ class S3IAMUserView(S3BaseView):
         request_body = {**path_params_dict, **request_body_params_dict}
         Log.debug(f"Handling s3 iam user Modify request"
                   f" path params/request body: {request_body}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.modify_user(**request_body)
             return CsmResponse(response)
-
 
 
 @CsmView._app_routes.view("/api/v2/iam/keys")
@@ -277,7 +278,7 @@ class S3IAMUserKeyView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.create_key(**create_key_body)
             return CsmResponse(response)
 
@@ -298,7 +299,7 @@ class S3IAMUserKeyView(S3BaseView):
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.remove_key(**remove_key_body)
             return CsmResponse(response)
 
@@ -341,7 +342,7 @@ class S3IAMUserCapsView(S3BaseView):
                  f" user_id: {self.request.session.credentials.user_id}")
         request_body = await self.create_caps_request_body()
 
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.add_user_caps(**request_body)
             return CsmResponse(response)
 
@@ -352,7 +353,7 @@ class S3IAMUserCapsView(S3BaseView):
         Log.info(f"Handling add user caps DELETE request"
                  f" user_id: {self.request.session.credentials.user_id}")
         request_body = await self.create_caps_request_body()
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.remove_user_caps(**request_body)
             return CsmResponse(response)
 
@@ -380,7 +381,7 @@ class S3IAMUserQuotaView(S3BaseView):
         path_params_dict = {const.UID: uid}
         Log.debug(f"Handling iam user quota GET request"
                   f" with path param: {uid}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.get_user_quota(**path_params_dict)
             return CsmResponse(response)
 
@@ -407,6 +408,6 @@ class S3IAMUserQuotaView(S3BaseView):
         request_body = {**path_params_dict, **request_body_params_dict}
         Log.debug(f"Handling iam user quota PUT request"
                   f" path params/request body: {request_body}")
-        with self._guard_service():
+        with ServiceError.guard_service():
             response = await self._service.set_user_quota(**request_body)
             return CsmResponse(response)

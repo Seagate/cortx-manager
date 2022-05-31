@@ -17,10 +17,19 @@ from .view import CsmView, CsmAuth
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.permission_names import Resource, Action
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from marshmallow import fields, ValidationError, validate
 from csm.core.services.storage_capacity import CapacityError
-from csm.core.controllers.view import CsmHttpException
+from csm.core.services.storage_capacity import S3CapacityService
+from csm.common.errors import InvalidRequest
+from csm.core.controllers.view import CsmHttpException, CsmResponse
+from csm.common.errors import ServiceError
 
 CAPACITY_SERVICE_ERROR = 0x3010
+
+class S3CapacitySchema(ValidateSchema):
+    resource = fields.Str(data_key=const.ARG_RESOURCE, required=True, allow_none=False,
+                          validate=validate.OneOf(const.SUPPORTED_RESOURCE_TYPES))
 
 
 # TODO: Commenting for now will re-visit and enable once CEPH capacity work is done
@@ -93,3 +102,30 @@ class CapacityManagementView(CsmView):
                                    resp.message_id,
                                    resp.message)
         return resp
+
+@CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}")
+class S3CapacityView(CsmView):
+    """
+    GET REST API view implementation for getting capacity usage for specific user
+    """
+
+    def __init__(self, request):
+        """Get user level capacity usage Init."""
+        super().__init__(request)
+        self._service: S3CapacityService = self.request.app[const.S3_CAPACITY_SERVICE]
+
+    @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        resource = self.request.match_info[const.ARG_RESOURCE]
+        resource_id = self.request.match_info[const.ID]
+        Log.info(f"Handling GET s3 capacity request"
+                  f"resource={resource} and id ={resource_id}")
+        try:
+            schema = S3CapacitySchema()
+            schema.load({const.ARG_RESOURCE:resource})
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with ServiceError.guard_service():
+            response = await self._service.get_usage(resource, resource_id)
+            return CsmResponse(response)
