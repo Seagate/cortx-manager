@@ -5,9 +5,9 @@
         "marker": "marker"
     },
     "GET_USER_CAPACITY": {
-        "user_id": "capacity.s3.user.user_id",
-        "stats.size": "capacity.s3.user.used",
-        "stats.size_actual": "capacity.s3.user.used_total",
-        "stats.num_objects": "capacity.s3.user.objects"
+        "user_id": "capacity.s3.users.id",
+        "stats.size": "capacity.s3.users.used",
+        "stats.size_actual": "capacity.s3.users.used_total",
+        "stats.num_objects": "capacity.s3.users.objects"
     }
 }
