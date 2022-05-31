@@ -595,13 +595,13 @@ class CsmRestApi(CsmApi, ABC):
 
     @classmethod
     async def _clear_expired_sessions_bg(cls):
-        Log.debug('Started background task for clearing expired sessions')
+        Log.info('Started background task for clearing expired sessions')
         try:
             session_mgr_service = cls._app[const.SESSION_MGR_SERVICE]
             await session_mgr_service.clear_sessions()
         except AsyncioCancelledError:
             Log.error('Background task for clearing expired session cancelled')
-        Log.debug('Background task for clearing expired session done')
+        Log.info('Background task for clearing expired session done')
 
     @staticmethod
     async def _async_push(msg):

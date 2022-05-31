@@ -101,6 +101,7 @@ class Session:
     def is_expired(self) -> bool:
         """Check if the session is expired."""
         return datetime.now(timezone.utc) > self._expiry_time
+
 class InMemory:
     def __init__(self):
         """
