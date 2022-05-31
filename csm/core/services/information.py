@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.log import Log
-from cortx.utils.schema.release import Release
 from csm.common.services import ApplicationService
 
 class InformationService(ApplicationService):
@@ -29,7 +28,7 @@ class InformationService(ApplicationService):
         """
         Log.debug(f"Request body: {resource}")
         # TODO: Call Utils API to get information
-        # TODO: Remove code 
+        # TODO: Remove code
         # Sample Response
         response = {
             "cluster" : {
