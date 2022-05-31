@@ -109,7 +109,7 @@ class SessionManager:
         """
         today= datetime.now(timezone.utc).date()
         await self._timer_task(handler=self._remove_expired_sessions,
-        start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(seconds=2))
+        start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(days=1))
 
     async def _timer_task(self, handler, start: datetime, interval: timedelta):
         """
