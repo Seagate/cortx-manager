@@ -28,9 +28,24 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         Log.debug(f"Request body: {resource}")
-        # Call Utils API to get information
+        # TODO: Call Utils API to get information
+        # TODO: Remove code 
+        # Sample Response
         response = {
-            "authorized" : authorized
+            "cluster" : {
+                "info": {
+                    "CORTX": "2.0.0-123"
+                }
+            },
+            "certificate" : {
+                "info": {
+                    "key": "value"
+                }
+            }
         }
+        # Filter the Response based on authorization
+        if not authorized:
+            response.pop('certificate', None)
+
         return response
 
