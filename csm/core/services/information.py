@@ -15,6 +15,7 @@
 
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
+from csm.common.errors import CsmUnauthorizedError
 
 class InformationService(ApplicationService):
     """Information service class."""
@@ -27,6 +28,8 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         Log.debug(f"Request body: {resource}")
+        if not authorized and resource is "certicate":
+            raise CsmUnauthorizedError("Invalid authentication credentials for the target resource.")
         # TODO: Call Utils API to get information
         # TODO: Remove code
         # Sample Response
@@ -42,9 +45,10 @@ class InformationService(ApplicationService):
                 }
             }
         }
-        # Filter the Response based on authorization
+        # Filter the Response based on authorization and resource
+        if authorized and resource is not None:
+            return response.get(resource, None)
         if not authorized:
             response.pop('certificate', None)
-
         return response
 
