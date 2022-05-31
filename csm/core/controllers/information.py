@@ -70,10 +70,10 @@ class VersionInformationView(CsmView):
         except SetupError as se:
             Log.error(f"Setup Error in checking compatability: {se}")
             if se._rc == errno.EINVAL:
-                raise InvalidRequest(f"Error in checking compatability: {se}")
-            else: 
+                raise InvalidRequest(f"{se}")
+            else:
                 raise CsmInternalError(f"{se}")
         except Exception as e:
             Log.error(f"Error in checking compatability: {e}")
-            raise CsmInternalError(f"Error in checking compatability: {e}")
+            raise CsmInternalError(f"{e}")
         return CsmResponse(response)
