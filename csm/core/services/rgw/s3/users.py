@@ -16,9 +16,10 @@
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.core.data.models.rgw import RgwError
-from csm.core.services.rgw.s3.utils import S3BaseService
+from csm.common.services import ApplicationService
+from csm.common.errors import ServiceError
 
-class S3IAMUserService(S3BaseService):
+class S3IAMUserService(ApplicationService):
     """S3 IAM user management service class."""
 
     def __init__(self, plugin):
@@ -34,7 +35,7 @@ class S3IAMUserService(S3BaseService):
 
         plugin_response =await self._s3_iam_plugin.execute(operation, **kwargs)
         if isinstance(plugin_response, RgwError):
-            self._handle_error(plugin_response)
+            ServiceError.create(plugin_response)
         return plugin_response
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])

@@ -13,9 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from contextlib import contextmanager
+from typing import Any, Optional
 from cortx.utils.errors import BaseError
 from cortx.utils.log import Log
 from csm.core.blogic import const
+from csm.core.data.models.rgw import RgwError
 
 CSM_OPERATION_SUCESSFUL = 0x0000
 CSM_ERR_INVALID_VALUE = 0x1001
@@ -36,6 +39,7 @@ CSM_UNAUTHORIZED_ERROR = 0x100F
 CSM_UNKNOWN_ERROR = 0x1010
 CSM_HTTP_ERROR = 0x1011
 
+S3_SERVICE_ERROR = 0x3000
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
@@ -282,3 +286,41 @@ class CsmRequestCancelled(CsmError):
         super(CsmRequestCancelled, self).__init__(
             CSM_REQUEST_CANCELLED, desc,
             message_id, message_args)
+
+class S3ServiceError(Exception):
+    """S3 service error class."""
+
+    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
+        """S3 Service Error init."""
+        self.status = status
+        self.code = code
+        self.message = message
+        self.message_args = args
+
+
+class ServiceError():
+
+    @staticmethod
+    def create(error, args: Optional[Any] = None):
+        """A helper method for raising exceptions on service related errors."""
+
+        if isinstance(error, RgwError):
+            raise S3ServiceError(error.http_status,
+                                 error.error_code.name,
+                                 error.error_message,
+                                 args)
+
+    @staticmethod
+    @contextmanager
+    def guard_service():
+        from csm.core.controllers.view import CsmHttpException
+        try:
+            yield None
+        except S3ServiceError as error:
+            raise CsmHttpException(error.status,
+                                   S3_SERVICE_ERROR,
+                                   error.code,
+                                   error.message,
+                                   error.message_args)
+        else:
+            return
