@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import ast
 import os
 from cortx.utils.log import Log
 from csm.conf.setup import Setup, CsmSetupError
@@ -110,7 +111,7 @@ class Prepare(Setup):
         Sets database hosts address in CSM config.
         :return:
         """
-        _, consul_host, consul_port, secret, endpoint = Setup.get_consul_config()
+        _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         consul_endpoint_len = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_LEN)
         endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
@@ -128,7 +129,7 @@ class Prepare(Setup):
             for endpoint_count in range(consul_endpoint_len):
                 Conf.set(const.CSM_GLOBAL_INDEX,
                         f'{const.CONSUL_ENDPOINTS_KEY}[{endpoint_count}]',
-                        eval(f'{endpoint_list}[{endpoint_count}]'))
+                        ast.literal_eval(f'{endpoint_list}[{endpoint_count}]'))
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
