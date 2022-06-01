@@ -68,7 +68,7 @@ class VersionInformationView(CsmView):
         try:
             response = await self._service.check_compatibility(**request_body)
         except SetupError as se:
-            Log.error(f"Setup Error in checking compatability: {se}")
+            Log.error(f"Setup Error in checking compatability: {se}.")
             if se._rc == errno.EINVAL:
                 raise InvalidRequest(f"{se}")
             else:
