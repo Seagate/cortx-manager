@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import asyncio
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
@@ -101,6 +102,38 @@ class SessionManager:
     async def update(self, session: Session) -> None:
         await self._sessionFactory.store(session)
 
+    async def clear_sessions(self):
+        """
+        Entry point for clearing expired token background task
+        :return:
+        """
+        today= datetime.now(timezone.utc).date()
+        await self._timer_task(handler=self._remove_expired_sessions,
+        start=datetime(today.year, today.month, today.day,tzinfo=timezone.utc),interval=timedelta(hours=2))
+
+    async def _timer_task(self, handler, start: datetime, interval: timedelta):
+        """
+        Create timer for background task
+        :return:
+        """
+        current = datetime.now(timezone.utc)
+        while True:
+            delta = (start - current).total_seconds()
+            if delta > 0:
+                await asyncio.sleep(delta)
+            current = datetime.now(timezone.utc)
+            await handler(current)
+            current = datetime.now(timezone.utc)
+            start = start + interval
+
+    async def _remove_expired_sessions(self, current_time):
+        """
+        Remove expired sessions from the storage.
+        """
+        sessions = await self.get_all()
+        for s in sessions:
+            if s.is_expired():
+                await self.delete(s.session_id)
 
 class AuthPolicy(ABC):
     """ Base abstract class for various authentication policies """

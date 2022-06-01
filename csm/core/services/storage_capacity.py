@@ -21,6 +21,9 @@ from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
 from csm.common.errors import CsmInternalError
+from csm.core.data.models.rgw import RgwError
+from csm.common.errors import ServiceError
+from csm.plugins.cortx.rgw import RGWPlugin
 
 class StorageCapacityService(ApplicationService):
     """
@@ -139,3 +142,35 @@ class CapacityError:
         http_status: int
         message_id: str
         message: str
+
+
+class S3CapacityService(ApplicationService):
+    """S3 Capacity service."""
+
+    def __init__(self, s3_plugin:RGWPlugin):
+        """
+        Instanstiate capacity service.
+        Args:
+            s3_plugin (s3 plugin obj): S3 communication plugin object.
+        """
+        self._s3_iam_plugin = s3_plugin
+
+    async def get_usage(self, resource, resource_id):
+        if resource == const.USER:
+            Log.debug(f"Fetching IAM user capacity usage by uid = {resource_id}")
+            request_body = {const.UID:resource_id}
+            return await self._get_user_usage(**request_body)
+        if resource == const.BUCKET:
+            return {}
+        if resource == const.ACCOUNT:
+            return {}
+
+    async def _get_user_usage(self, **request_body):
+        plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_CAPACITY_OPERATION, **request_body)
+        users_dict = plugin_response["capacity"]["s3"]["users"]
+        users_list = []
+        users_list.append(users_dict.copy())
+        plugin_response["capacity"]["s3"]["users"] = users_list
+        if isinstance(plugin_response, RgwError):
+            ServiceError.create(plugin_response)
+        return plugin_response
