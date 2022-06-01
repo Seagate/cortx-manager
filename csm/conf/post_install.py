@@ -101,6 +101,8 @@ class PostInstall(Setup):
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
             Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH_KEY, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):

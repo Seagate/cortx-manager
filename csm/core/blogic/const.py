@@ -823,6 +823,7 @@ KEY_LOGPATH = 'key_logpath'
 SSL_CERTIFICATE_PATH = 'cortx>common>security>ssl_certificate'
 HTTPS_PORT = "HTTPS>port"
 LOG_PATH = 'cortx>common>storage>log'
+SSL_CERTIFICATE_PATH_KEY = 'HTTPS>certificate_path'
 PRIVATE_KEY_PATH_CONF = 'HTTPS>private_key_path'
 CLUSTER_ADMIN_USER = 'cortx>csm>mgmt_admin'
 CLUSTER_ADMIN_SECRET = 'cortx>csm>mgmt_secret'
