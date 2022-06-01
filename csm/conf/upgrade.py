@@ -59,9 +59,9 @@ class Upgrade(Setup):
         self.changed = Upgrade._parse_changeset(const.CHANGED)
         # Following commented keys will be used after implementation of deletion of keys.
         # deleted = self._parse_changeset(const.DELETED)
-        self._update_globalconfig(self.changed)
-        self._add_keys_csm_config(self.new)
-        self._modify_csm_config(self.changed)
+        self._update_globalconfig()
+        self._add_keys_csm_config()
+        self._modify_csm_config()
         self._update_general_config(const.CSM_DEFAULT_CONF_INDEX, const.CSM_GLOBAL_INDEX)
         self._update_db_config(const.CSM_DEFAULT_DB_CONF_INDEX, const.DATABASE_INDEX)
 
@@ -76,10 +76,11 @@ class Upgrade(Setup):
     @staticmethod
     def _parse_changeset(keyword):
         payload = Conf.get(const.CHANGESET_INDEX, keyword)
-        return list(map('>'.join, Upgrade.generate_keys(payload)))
+        ret = []
+        return list(map('>'.join, Upgrade.generate_keys(payload, ret)))
 
     @staticmethod
-    def generate_keys(payload, ret = []):
+    def generate_keys(payload, ret):
         return [i for a, b in payload.items() for i in ([ret + [a]] if not isinstance(b, dict) else Upgrade.generate_keys(b, ret+[a]))]
 
     def _add_keys_csm_config(self):
