@@ -198,15 +198,9 @@ class S3IAMUserView(S3BaseView):
             raise CsmPermissionDenied()
         path_params = {const.UID: uid}
         Log.debug(f"Handling s3 iam user DELETE request"
-<<<<<<< HEAD
                   f" path params/request body: {path_params}")
-        with self._guard_service():
-            response = await self._service.delete_user(**path_params)
-=======
-                  f" path params/request body: {request_body}")
         with ServiceError.guard_service():
-            response = await self._service.delete_user(**request_body)
->>>>>>> ad769029cc9dd35e2cb5d31b57ef3b54759a1992
+            response = await self._service.delete_user(**path_params)
             return CsmResponse(response)
 
     @CsmAuth.permissions({Resource.S3_IAM_USERS: {Action.UPDATE}})
