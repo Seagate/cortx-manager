@@ -969,6 +969,11 @@ SWAGGER_UI_URL = '/api/doc'
 SWAGGER_JSON_URL = '/api/doc/swagger.json'
 SWAGGER_UI_STATICS_URL = '/api/static'
 
+# Version Validation
+REQUIRES = 'requires'
+INFORMATION_SERVICE = "information_service"
+VERSION_RESOURCES = ['node']
+
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
