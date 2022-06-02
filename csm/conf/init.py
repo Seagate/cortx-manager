@@ -36,8 +36,8 @@ class Init(Setup):
         :return:
         """
         try:
-            Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            self.setup_logs_init()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
