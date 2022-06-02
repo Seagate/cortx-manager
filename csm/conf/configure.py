@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import ast
 import os
 import time
 from cortx.utils.product_features import unsupported_features
@@ -190,7 +189,7 @@ class Configure(Setup):
         for endpoint_count in range(endpoints_count):
             Conf.set(const.CSM_GLOBAL_INDEX,
                     f'{const.HAX_ENDPOINT_KEY}[{endpoint_count}]',
-                    ast.literal_eval(f'{endpoints}[{endpoint_count}]'))
+                    eval(f'{endpoints}[{endpoint_count}]'))
 
     async def _set_unsupported_feature_info(self):
         """
