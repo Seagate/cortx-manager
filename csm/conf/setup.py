@@ -216,7 +216,7 @@ class Setup:
         Log.init(service_name = "csm_setup", log_path = log_path,level=const.LOG_LEVEL)
 
     def get_csm_log_path(self):
-        log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
         return f"{log_path}/{const.CSM_COMPONENT_NAME}"
 
 class CsmSetup(Setup):
