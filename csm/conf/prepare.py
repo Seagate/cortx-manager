@@ -45,7 +45,7 @@ class Prepare(Setup):
         """
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
-            self.setup_logs_init()
+            Setup.setup_logs_init()
             Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")

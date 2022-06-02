@@ -50,7 +50,7 @@ class PostInstall(Setup):
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
-            self.setup_logs_init()
+            Setup.setup_logs_init()
             Setup.load_csm_config_indices()
             Setup.copy_base_configs()
         except KvError as e:
@@ -103,7 +103,7 @@ class PostInstall(Setup):
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
-        log_path = self.get_csm_log_path()
+        log_path = Setup.get_csm_log_path()
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
         Log.info(f"Setting log path: {log_path}")
 
