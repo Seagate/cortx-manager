@@ -186,10 +186,10 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
         endpoints_count = len(endpoints)
-        for endpoint_count in range(endpoints_count):
-            Conf.set(const.CSM_GLOBAL_INDEX,
-                    f'{const.HAX_ENDPOINT_KEY}[{endpoint_count}]',
-                    eval(f'{endpoints}[{endpoint_count}]'))
+        for count, value in enumerate(endpoints):
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                    f'{const.HAX_ENDPOINT_KEY}[{count}]',
+                    value)
 
     async def _set_unsupported_feature_info(self):
         """

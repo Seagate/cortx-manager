@@ -125,10 +125,10 @@ class Prepare(Setup):
             Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_ADMIN_KEY, consul_login)
             Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_ENDPOINTS_LEN, consul_endpoint_len)
             Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_SECRET_KEY, secret)
-            for endpoint_count in range(consul_endpoint_len):
+            for count, value in enumerate(endpoint_list):
                 Conf.set(const.CSM_GLOBAL_INDEX,
-                        f'{const.CONSUL_ENDPOINTS_KEY}[{endpoint_count}]',
-                        eval(f'{endpoint_list}[{endpoint_count}]'))
+                        f'{const.CONSUL_ENDPOINTS_KEY}[{count}]',
+                        value)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
