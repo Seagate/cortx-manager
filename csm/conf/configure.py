@@ -185,7 +185,6 @@ class Configure(Setup):
         hax_endpoint = Configure._get_hax_endpoint(endpoints)
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
-        endpoints_count = len(endpoints)
         for count, value in enumerate(endpoints):
                 Conf.set(const.CSM_GLOBAL_INDEX,
                     f'{const.HAX_ENDPOINT_KEY}[{count}]',
