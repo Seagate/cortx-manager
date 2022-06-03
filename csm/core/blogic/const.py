@@ -977,3 +977,7 @@ VERSION_RESOURCES = ['node']
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
+
+# error reposne schema
+ERROR_CODE = "error_code"
+MESSAGE_ID = "message_id"

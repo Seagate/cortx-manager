@@ -43,13 +43,14 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
                                CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
-                               CSM_HTTP_ERROR)
+                               CSM_HTTP_ERROR, ErrorResponseSchema)
 from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers.routes import CsmRoutes
 import re
 from cortx.utils.errors import DataAccessError
+from marshmallow import ValidationError
 
 
 class CsmApi(ABC):
@@ -135,7 +136,7 @@ class CsmRestApi(CsmApi, ABC):
             resp["stacktrace"] = traceback.format_exc().splitlines()
 
         if isinstance(err, CsmError):
-            resp["error_code"] = err.rc()
+            resp["error_code"] = int(err.rc())
             resp["message"] = err.error()
             resp["message_id"] = err.message_id()
             message_args = err.message_args()
@@ -150,7 +151,14 @@ class CsmRestApi(CsmApi, ABC):
             resp["message_id"] = const.UNKNOWN_ERROR
             resp["error_code"] = CSM_UNKNOWN_ERROR
 
-        return resp
+        #TODO: add validator no int/ no None
+        try:
+            schema = ErrorResponseSchema()
+            err_response = schema.load(resp, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            Log.error(f"InCorrect error response format: {val_err}")
+
+        return err_response
 
     @staticmethod
     def json_serializer(*args, **kwargs):

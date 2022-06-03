@@ -47,7 +47,7 @@ class CsmUserPatchSchema(Schema):
     def pre_load(self, data, **kwargs):
         """Validate PATCH body pre  marshamallow validation."""
         if const.CSM_USER_NAME in data:
-            raise InvalidRequest("username cannot be modified", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest("username cannot be modified")
         return data
 
     @post_load
@@ -55,14 +55,12 @@ class CsmUserPatchSchema(Schema):
         """Validate PATCH body for no operation post marshamallow validation."""
         # empty body is invalid request
         if not data:
-            raise InvalidRequest(
-                "Insufficient information in request body", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest("Insufficient information in request body")
 
         # just current_password in body is invalid
         if len(data) == 1 and const.CSM_USER_CURRENT_PASSWORD in data:
             Log.debug(f"User cannot be modified with only current_password field: {self.current_password}")
-            raise InvalidRequest(
-                f"Insufficient information in request body {data}", INVALID_REQUEST_PARAMETERS)
+            raise InvalidRequest(f"Insufficient information in request body {data}")
         return data
 
 class GetUsersSortBy(fields.Str):
@@ -110,8 +108,7 @@ class CsmUsersListView(CsmView):
         try:
             request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
-            raise InvalidRequest(
-                "Invalid parameter for user", str(val_err))
+            raise InvalidRequest(str(val_err))
         users = await self._service.get_user_list(**request_data)
         return {'users': users}
 
@@ -127,7 +124,7 @@ class CsmUsersListView(CsmView):
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
@@ -187,7 +184,7 @@ class CsmUsersView(CsmView):
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Request body missing")
+            raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
