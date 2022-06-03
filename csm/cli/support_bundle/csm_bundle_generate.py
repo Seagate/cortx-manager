@@ -59,14 +59,14 @@ class GenerateCsmBundle:
         target_path = os.path.join(GenerateCsmBundle.target_path, const.CSM_COMPONENT_NAME)
         os.makedirs(target_path,exist_ok=True)
         # Apply Time filter on CSM Logs Default: P5d
-        csm_time_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
+        csm_time_filtered_logs_dir = os.path.join(const.CSM_TEMP_PATH,
             f"{const.CSM_COMPONENT_NAME}_logs_time")
         GenerateCsmBundle.__clear_tmp_files(csm_time_filtered_logs_dir)
         os.makedirs(csm_time_filtered_logs_dir,exist_ok=True)
         FilterLog.limit_time(csm_log_path, csm_time_filtered_logs_dir,
             GenerateCsmBundle.duration, const.CSM_COMPONENT_NAME)
         # Create directory to keep filtered logs
-        csm_size_filtered_logs_dir = os.path.join(const.CSM_SETUP_LOG_DIR,
+        csm_size_filtered_logs_dir = os.path.join(const.CSM_TEMP_PATH,
             f"{const.CSM_COMPONENT_NAME}_logs")
         GenerateCsmBundle.__clear_tmp_files(csm_size_filtered_logs_dir)
         os.makedirs(csm_size_filtered_logs_dir,exist_ok=True)
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('-s','--services', dest=const.SB_SERVICES,
         help='Run csm-service support-bundle', default='agent')
     parser.add_argument('-t','--target', dest=const.SB_TARGET,
-        help='Target path to save support-bundle', default=const.CSM_SETUP_LOG_DIR)
+        help='Target path to save support-bundle', default=const.CSM_TEMP_PATH)
     parser.add_argument('-d', '--duration', default='P5D', dest=const.SB_DURATION,
         help="Duration - duration for which log should be captured, Default - P5D")
     parser.add_argument('--size_limit', default='500MB', dest=const.SB_SIZE_LIMIT,

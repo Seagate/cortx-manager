@@ -47,7 +47,6 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
 # ToDo: Revisit csm temp path
 CSM_TEMP_PATH = "{}/csm_temp".format(CSM_PATH)
-CSM_SETUP_LOG_DIR = CSM_TEMP_PATH
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"

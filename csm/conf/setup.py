@@ -214,7 +214,8 @@ class Setup:
     @staticmethod
     def setup_logs_init():
         log_path = Setup.get_csm_log_path()
-        Log.init(service_name = "csm_setup", log_path = log_path,level=const.LOG_LEVEL)
+        Log.init(service_name = const.CSM_SETUP_CMD, log_path = log_path, level=const.LOG_LEVEL,
+                console_output=True)
 
     @staticmethod
     def get_csm_log_path():
