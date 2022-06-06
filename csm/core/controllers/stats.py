@@ -34,9 +34,10 @@ class StatsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app["stat_service"]
-        status = self._service.init_message_bus()
-        Log.info(f"Message Bus up status: {status}")
-        #TODO: Check status and Add retry logic
+        if self._service.metrics_client is None:
+            status = self._service.init_message_bus()
+            Log.info(f"Message Bus up status: {status}")
+            #TODO: Check status and Add retry logic
         self._service_dispatch = {
             "get": self._service.get
         }
@@ -78,10 +79,10 @@ class StatsPanelListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app["stat_service"]
-        status = self._service.init_message_bus()
-        Log.info(f"Message Bus up status: {status}")
-        #TODO: Check status and Add retry logic
-
+        if self._service.metrics_client is None:
+            status = self._service.init_message_bus()
+            Log.info(f"Message Bus up status: {status}")
+            #TODO: Check status and Add retry logic
 
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
     async def get(self):
@@ -139,9 +140,10 @@ class MetricsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app["stat_service"]
-        status = self._service.init_message_bus()
-        Log.info(f"Message Bus up status: {status}")
-        #TODO: Check status and Add retry logic
+        if self._service.metrics_client is None:
+            status = self._service.init_message_bus()
+            Log.info(f"Message Bus up status: {status}")
+            #TODO: Check status and Add retry logic
 
 
     @CsmAuth.permissions({Resource.STATS: {Action.LIST}})
