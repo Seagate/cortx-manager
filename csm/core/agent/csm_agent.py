@@ -87,9 +87,6 @@ class CsmAgent:
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
-        # message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
-        #                                  unblock_consumer=True)
-
         CsmAgent._configure_cluster_management_service()
 
         # Stats service creation
