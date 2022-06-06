@@ -92,6 +92,9 @@ class CsmApi(ABC):
         return provider.process_request(request, callback)
 
 class ErrorResponseSchema(ValidateSchema):
+    """
+    Error Response validation schema
+    """
     error_code = fields.Int(data_key=const.ERROR_CODE, required=True)
     message_id = fields.Str(data_key=const.MESSAGE_ID, required=True)
     message = fields.Str(data_key=const.MESSAGE_LITERAL, required=True)
