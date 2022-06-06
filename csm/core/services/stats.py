@@ -25,6 +25,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.common.comm import MessageBusComm
 from aiohttp import web
 from csm.plugins.cortx.convertor import Convertor
 from csm.core.blogic import const
@@ -36,30 +37,38 @@ class StatsAppService(ApplicationService):
     Provides operations on stats without involving the domain specifics
     """
     BUFFER = []
-    def __init__(self, stats_provider, metrics_client):
+    def __init__(self, stats_provider):
         self._stats_provider = stats_provider
-        self.metrics_client = metrics_client
-        if self.metrics_client:
-                self.metrics_client.init(type=const.PRODUCER,
-                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_PRODUCER_ID),
-                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_MSG_TYPE),
-                            method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_METHOD))
-                self.metrics_client.init(type=const.CONSUMER,
-                            consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_CONSUMER_ID),
-                            consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
-                            consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_MSSG_TYPE)],
-                            auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_AUTO_ACK),
-                            offset=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_OFFSET))
+        self.metrics_client = None
         self.convertor_type = const.STATS_CONVERTOR
         self.convertor = Convertor(self.convertor_type)
+
+    def init_message_bus(self):
+        kafka_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        self.metrics_client = MessageBusComm(kafka_endpoints, unblock_consumer=True)
+        try:
+            self.metrics_client.init(type=const.PRODUCER,
+                        producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_PRODUCER_ID),
+                        message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_MSG_TYPE),
+                        method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_METHOD))
+            self.metrics_client.init(type=const.CONSUMER,
+                        consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_CONSUMER_ID),
+                        consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
+                        consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_MSSG_TYPE)],
+                        auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_AUTO_ACK),
+                        offset=Conf.get(const.CSM_GLOBAL_INDEX,
+                                            const.MSG_BUS_PERF_STAT_OFFSET))
+        except:
+            Log.error("Message bus failing")
+            return False
+        return True
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:

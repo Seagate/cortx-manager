@@ -40,6 +40,8 @@ class ClusterOperationsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
+        status = self.cluster_management_service.init_message_bus()
+        #TODO: Check status and Add retry logic
 
     @staticmethod
     def _validate_operation(resource: str, operation: str, role: str) -> None:
@@ -92,6 +94,12 @@ class ClusterStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
+        if self.cluster_management_service.message_bus_obj is None:
+            #TODO: Init message bus object
+            try:
+                status = self.cluster_management_service.init_message_bus()
+            except Exception as e:
+                #TODO: retry if status is failed
 
     @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)

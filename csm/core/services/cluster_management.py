@@ -17,6 +17,7 @@ from csm.common.services import ApplicationService
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from cortx.utils.log import Log
+from csm.common.comm import MessageBusComm
 
 
 class ClusterManagementAppService(ApplicationService):
@@ -26,14 +27,24 @@ class ClusterManagementAppService(ApplicationService):
 
     def __init__(self, plugin, message_bus_obj):
         self._cluster_management_plugin = plugin
-        self.message_bus_obj = message_bus_obj
-        self.message_bus_obj.init(type=const.PRODUCER,
-                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
-                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
-                            method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_CLUSTER_STOP_METHOD))
+        self.message_bus_obj = None
+
+    def init_message_bus(self):
+        self.message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
+                                         unblock_consumer=True)
+        try:
+            self.message_bus_obj.init(type=const.PRODUCER,
+                                producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                    const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
+                                message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                    const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
+                                method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                    const.MSG_BUS_CLUSTER_STOP_METHOD))
+            #TODO: Check if message object is correctly intialise
+        except:
+            Log.error("Message bus failing")
+            return False
+        return True
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_status(self, node_id):
