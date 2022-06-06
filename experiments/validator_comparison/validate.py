@@ -33,7 +33,9 @@
  ****************************************************************************
 """
 
-
+# Removed python package jsonschema from csm.
+# Following test is not valid.
+# TODO:Code clean up task will ne covered in future sprint.
 import jsonschema
 import json
 import timeit
