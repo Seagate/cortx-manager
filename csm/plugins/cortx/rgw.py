@@ -117,7 +117,7 @@ class RGWPlugin:
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
         if keys:
-            Log.info(f"Suppressing {keys} keys from raw response.")
+            Log.info(f"Suppressing keys from raw response.")
             try:
                 for key in keys:
                     suppressed_response = Utility.remove_json_key(suppressed_response, key)
