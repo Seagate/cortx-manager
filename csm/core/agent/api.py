@@ -151,7 +151,6 @@ class CsmRestApi(CsmApi, ABC):
             resp["message_id"] = const.UNKNOWN_ERROR
             resp["error_code"] = CSM_UNKNOWN_ERROR
 
-        #TODO: add validator no int/ no None
         try:
             schema = ErrorResponseSchema()
             err_response = schema.load(resp, unknown='EXCLUDE')
