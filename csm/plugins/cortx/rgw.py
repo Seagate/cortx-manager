@@ -83,9 +83,6 @@ class RGWPlugin:
             operation (str): IAM operation.
             response (dict): Response from s3 server.
 
-        Raises:
-            CsmInternalError.
-
         Returns:
             Mapped response.
         """
@@ -114,16 +111,13 @@ class RGWPlugin:
             operation (str): IAM operation.
             response (dict): Response from s3 server.
 
-        Raises:
-            CsmInternalError
-
         Returns:
             Modified response.
         """
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
-        Log.debug(f"Suppressing {keys} keys from raw response.")
         if keys:
+            Log.info(f"Suppressing {keys} keys from raw response.")
             try:
                 for key in keys:
                     suppressed_response = Utility.remove_json_key(suppressed_response, key)
