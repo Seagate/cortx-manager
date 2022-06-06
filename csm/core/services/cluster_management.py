@@ -41,8 +41,8 @@ class ClusterManagementAppService(ApplicationService):
                                 method=Conf.get(const.CSM_GLOBAL_INDEX,
                                                     const.MSG_BUS_CLUSTER_STOP_METHOD))
             #TODO: Check if message object is correctly intialise
-        except:
-            Log.error("Message bus failing")
+        except Exception as e:
+            Log.error(f"Message bus failing: {e}")
             return False
         return True
 
