@@ -65,8 +65,8 @@ class StatsAppService(ApplicationService):
                                             const.MSG_BUS_PERF_STAT_AUTO_ACK),
                         offset=Conf.get(const.CSM_GLOBAL_INDEX,
                                             const.MSG_BUS_PERF_STAT_OFFSET))
-        except:
-            Log.error("Message bus failing")
+        except Exception as e:
+            Log.error(f"Message bus failing: {e}")
             return False
         return True
 

@@ -43,6 +43,7 @@ class ClusterOperationsView(CsmView):
         if self.cluster_management_service.message_bus_obj is None:
             status = self.cluster_management_service.init_message_bus()
             Log.info(f"Message bus up status {status}")
+
     @staticmethod
     def _validate_operation(resource: str, operation: str, role: str) -> None:
         """
