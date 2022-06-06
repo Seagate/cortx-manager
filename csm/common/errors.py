@@ -19,8 +19,6 @@ from cortx.utils.errors import BaseError
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.core.data.models.rgw import RgwError
-from csm.core.controllers.validators import ValidateSchema
-from marshmallow import fields
 
 CSM_OPERATION_SUCESSFUL = 0x0000
 CSM_ERR_INVALID_VALUE = 0x1001
@@ -326,8 +324,3 @@ class ServiceError():
                                    error.message_args)
         else:
             return
-
-class ErrorResponseSchema(ValidateSchema):
-    error_code = fields.Int(data_key=const.ERROR_CODE, required=True)
-    message_id = fields.Str(data_key=const.MESSAGE_ID, required=True)
-    message = fields.Str(data_key=const.MESSAGE_LITERAL, required=True)

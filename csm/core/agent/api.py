@@ -43,14 +43,15 @@ from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
                                CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
-                               CSM_HTTP_ERROR, ErrorResponseSchema)
+                               CSM_HTTP_ERROR)
 from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers.routes import CsmRoutes
 import re
 from cortx.utils.errors import DataAccessError
-from marshmallow import ValidationError
+from marshmallow import ValidationError, fields
+from csm.core.controllers.validators import ValidateSchema
 
 
 class CsmApi(ABC):
@@ -89,6 +90,11 @@ class CsmApi(ABC):
                                                                       CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
+
+class ErrorResponseSchema(ValidateSchema):
+    error_code = fields.Int(data_key=const.ERROR_CODE, required=True)
+    message_id = fields.Str(data_key=const.MESSAGE_ID, required=True)
+    message = fields.Str(data_key=const.MESSAGE_LITERAL, required=True)
 
 
 class CsmRestApi(CsmApi, ABC):
