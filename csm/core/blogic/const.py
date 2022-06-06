@@ -861,6 +861,7 @@ CSM_DEBUG_MODE = 'DEBUG>http_enabled'
 RGW_S3_IAM_ADMIN_USER = 'cortx>rgw>auth_user'
 RGW_S3_IAM_ACCESS_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_IAM_SECRET_KEY = 'cortx>rgw>auth_secret'
+RGW_S3_ENDPOINTS = 'RGW>s3>endpoints'
 KEY_DECRYPTION = 'DECRYPTION>decrypt_value'
 # Degraded byte count
 CAPACITY_MANAGMENT_AUTH = 'STORAGE_CAPACITY_MANAGMENT>auth'
