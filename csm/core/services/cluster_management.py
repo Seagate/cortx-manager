@@ -25,7 +25,7 @@ class ClusterManagementAppService(ApplicationService):
     Manage operations on cluster and resources in it.
     """
 
-    def __init__(self, plugin, message_bus_obj):
+    def __init__(self, plugin):
         self._cluster_management_plugin = plugin
         self.message_bus_obj = None
 
