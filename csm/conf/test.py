@@ -83,7 +83,7 @@ class Test(Setup):
             if args_loc == "":
                 args_loc = const.DEFAULT_ARG_PATH
             if log_path == "":
-                log_path = const.CSM_SETUP_LOG_DIR
+                log_path = const.CSM_TEMP_PATH
             if output_file == "":
                 output_file = const.DEFAULT_OUTPUTFILE
             _ = (f"/usr/bin/csm_test -t  {plan_file} -f {args_loc} -l {log_path}"

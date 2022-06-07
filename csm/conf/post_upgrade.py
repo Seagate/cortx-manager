@@ -42,5 +42,7 @@ class PostUpgrade(PostInstall, Prepare, Configure, Init, Setup):
         :param command:
         :return:
         """
+        Setup.setup_logs_init()
+        Log.info("Executing csm_setup: post_upgrade phase.")
         # TODO: Implement post upgrade logic
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
