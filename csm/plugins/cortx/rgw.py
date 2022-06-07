@@ -43,9 +43,7 @@ class RGWPlugin:
     async def execute(self, operation, **kwargs) -> Any:
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
-        response = await self._process(api_operation, request_body)
-        suppressed_response = self._supress_response_keys(operation, response)
-        return self._build_response(operation, suppressed_response)
+        return await self._process(api_operation, request_body, operation)
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:
@@ -56,13 +54,14 @@ class RGWPlugin:
         return request_body
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
-    async def _process(self, api_operation, request_body) -> Any:
+    async def _process(self, api_operation, request_body, operation) -> Any:
         try:
             (code, body) = await self._rgw_admin_client.signed_http_request(api_operation['METHOD'], api_operation['ENDPOINT'], query_params=request_body)
             response_body = json.loads(body) if body else {}
             if code != api_operation['SUCCESS_CODE']:
                 return self._create_error(code, response_body)
-            return response_body
+            suppressed_response = self._supress_response_keys(operation, response_body)
+            return self._build_response(operation, suppressed_response)
         except S3ClientException as rgwe:
             Log.error(f'{const.S3_CLIENT_ERROR_MSG}: {rgwe}')
             if str(rgwe) == "Request timeout":
@@ -84,9 +83,6 @@ class RGWPlugin:
             operation (str): IAM operation.
             response (dict): Response from s3 server.
 
-        Raises:
-            CsmInternalError.
-
         Returns:
             Mapped response.
         """
@@ -104,7 +100,7 @@ class RGWPlugin:
             except Exception as e:
                 Log.error(f"Error occured while coverting raw api response to\
                     required response: {e}")
-                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+                raise e
         return mapped_response
 
     def _supress_response_keys(self, operation, response) -> Any:
@@ -115,22 +111,19 @@ class RGWPlugin:
             operation (str): IAM operation.
             response (dict): Response from s3 server.
 
-        Raises:
-            CsmInternalError
-
         Returns:
             Modified response.
         """
         suppressed_response = response
         keys = self._api_suppress_payload_schema.get(operation)
-        Log.debug(f"Suppressing {keys} keys from raw response.")
         if keys:
+            Log.info("Suppressing keys from raw response.")
             try:
                 for key in keys:
                     suppressed_response = Utility.remove_json_key(suppressed_response, key)
             except Exception as e:
                 Log.error(f"Error occured while suppressing {keys} keys from response: {e}")
-                raise CsmInternalError(const.S3_CLIENT_ERROR_MSG)
+                raise e
         return suppressed_response
 
     @staticmethod
