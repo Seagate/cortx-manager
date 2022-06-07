@@ -34,6 +34,8 @@ class Cleanup(Setup):
         :param command:
         :return:
         """
+        Setup.setup_logs_init()
+        Log.info("Executing csm_setup: cleanup phase.")
         # TODO: Implement reset logic
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 

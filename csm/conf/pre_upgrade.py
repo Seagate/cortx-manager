@@ -27,6 +27,8 @@ class PreUpgrade(Setup):
         super(PreUpgrade, self).__init__()
 
     async def execute(self, command):
-        Log.info("Perform preupgrade for csm_setup")
+
         # TODO: Implement preupgrade logic
+        Setup.setup_logs_init()
+        Log.info("Executing csm_setup: pre_upgrade phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
