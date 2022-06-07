@@ -75,7 +75,7 @@ class Prepare(Setup):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
-                const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
+                const.KEY_CLUSTER_ID:const.CLUSTER_ID_KEY,
                 const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
                 const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}"
                 # TODO: validate following keys once available in conf-store
@@ -112,6 +112,8 @@ class Prepare(Setup):
         """
         _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
+        consul_endpoint_len = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_LEN)
+        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         try:
             if consul_host and consul_port:
                 Conf.set(const.DATABASE_INDEX,
@@ -120,6 +122,13 @@ class Prepare(Setup):
                 Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT, consul_port)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_ADMIN_KEY, consul_login)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_ENDPOINTS_LEN, consul_endpoint_len)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CONSUL_SECRET_KEY, secret)
+            for count, value in enumerate(endpoint_list):
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                        f'{const.CONSUL_ENDPOINTS_KEY}[{count}]',
+                        value)
         except Exception as e:
             Log.error(f'Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')

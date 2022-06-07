@@ -106,9 +106,9 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
                 const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
-                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
-                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_IAM_ADMIN_USER}",
+                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_IAM_ACCESS_KEY}",
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_IAM_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -141,6 +141,7 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.HTTPS_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_PORT, csm_port)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_BASE_URL, csm_protocol+'://')
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_AGENT_ENDPOINTS_KEY, csm_endpoint)
 
     @staticmethod
     def _set_s3_endpoints():
@@ -150,7 +151,7 @@ class Configure(Setup):
             s3_endpoints_count = len(s3_endpoints)
             for endpoint_count in range(s3_endpoints_count):
                 Conf.set(const.CSM_GLOBAL_INDEX,
-                        f'{const.RGW_S3_ENDPOINTS}[{endpoint_count}]',
+                        f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{endpoint_count}]',
                         eval(f'{s3_endpoints}[{endpoint_count}]'))
         else:
             raise CsmSetupError("S3 endpoints not found.")
@@ -164,9 +165,9 @@ class Configure(Setup):
         Log.info("Setting S3 configurations in csm config")
         Configure._set_s3_endpoints()
         # Set IAM user credentails
-        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
-        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY)
-        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_SECRET_KEY)
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_IAM_ADMIN_USER)
+        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_IAM_ACCESS_KEY)
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_IAM_SECRET_KEY)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER, s3_auth_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY, s3_auth_admin)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
@@ -184,6 +185,10 @@ class Configure(Setup):
         hax_endpoint = Configure._get_hax_endpoint(endpoints)
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
+        for count, value in enumerate(endpoints):
+                Conf.set(const.CSM_GLOBAL_INDEX,
+                    f'{const.HAX_ENDPOINT_KEY}[{count}]',
+                    value)
 
     async def _set_unsupported_feature_info(self):
         """

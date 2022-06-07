@@ -46,7 +46,7 @@ def tmain(argp, argv):
             Log.init("csm_test", log_path=argp.l)
         else:
             Log.init("csm_test",
-                     log_path=Conf.get(Const.CSM_GLOBAL_INDEX, "Log>log_path"),
+                     log_path=Conf.get(Const.CSM_GLOBAL_INDEX, Const.LOG_PATH),
                      level=Conf.get(Const.CSM_GLOBAL_INDEX, "Log>log_level"))
         test_args_file = argp.f if argp.f is not None else os.path.join(ts_path, 'args.yaml')
         args = yaml.safe_load(open(test_args_file, 'r').read())

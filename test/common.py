@@ -42,6 +42,7 @@ class Const:
     DEV = 'dev'
     STATSD_PORT = 8125
     DEV = "dev"
+    LOG_PATH = 'cortx>common>storage>log'
 
 class TestFailed(Exception):
     def __init__(self, desc):

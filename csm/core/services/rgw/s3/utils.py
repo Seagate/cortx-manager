@@ -30,7 +30,7 @@ class CsmRgwConfigurationFactory:
         """Creates a configuration for RGW connection."""
         rgw_connection_config = RgwConnectionConfig()
         rgw_endpoint = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>endpoints[0]')
+            const.CSM_GLOBAL_INDEX, f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[0]')
         _, host, port = ServiceUrls.parse_url(rgw_endpoint)
         rgw_connection_config.host = host
         rgw_connection_config.port = port

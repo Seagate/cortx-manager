@@ -27,11 +27,15 @@ class Upgrade(Setup):
     def __init__(self):
         """Csm_setup upgrade operation initialization."""
         super(Upgrade, self).__init__()
+        self.new = None
+        self.changed = None
 
     async def execute(self, command):
         Log.info("Performing upgrade and loading config files")
         try:
+            # CAN WE HARDCODE GCONF PATH
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Conf.load(const.CHANGESET_INDEX, command.options.get(const.CHANGESET_URL))
             Setup.load_csm_config_indices()
             Setup.load_default_config()
         except KvError as e:
@@ -51,8 +55,47 @@ class Upgrade(Setup):
         Perform upgrade
         """
         Log.info("Preparing for upgrade.")
+        self.new = Upgrade._parse_changeset(const.NEW)
+        self.changed = Upgrade._parse_changeset(const.CHANGED)
+        # Following commented keys will be used after implementation of deletion of keys.
+        # deleted = self._parse_changeset(const.DELETED)
+        self._update_globalconfig()
+        self._add_keys_csm_config()
+        self._modify_csm_config()
         self._update_general_config(const.CSM_DEFAULT_CONF_INDEX, const.CSM_GLOBAL_INDEX)
         self._update_db_config(const.CSM_DEFAULT_DB_CONF_INDEX, const.DATABASE_INDEX)
+
+    def _update_globalconfig(self):
+        Log.info("Updating global configurations.")
+        for key in self.changed:
+            if Conf.get(const.CSM_DEFAULT_CONF_INDEX, key) == "":
+                value = Conf.get(const.CHANGESET_INDEX, f'{const.CHANGED}>{key}')
+                _, new_val = value.split('|')
+                Conf.set(const.CONSUMER_INDEX, key, new_val)
+
+    @staticmethod
+    def _parse_changeset(keyword):
+        payload = Conf.get(const.CHANGESET_INDEX, keyword)
+        ret = []
+        return list(map('>'.join, Upgrade.generate_keys(payload, ret)))
+
+    @staticmethod
+    def generate_keys(payload, ret):
+        return [i for a, b in payload.items() for i in ([ret + [a]] if not isinstance(b, dict) else Upgrade.generate_keys(b, ret+[a]))]
+
+    def _add_keys_csm_config(self):
+        Log.info("Adding new keys to csm configurations based on global configurations.")
+        for key in self.new:
+            if Conf.get(const.CSM_DEFAULT_CONF_INDEX, key) == "":
+                value = Conf.get(const.CHANGESET_INDEX, f'{const.NEW}>{key}')
+                Conf.set(const.CONSUMER_INDEX, key, value)
+
+    def _modify_csm_config(self):
+        Log.info("Updating values of keys to csm configurations based on global configurations.")
+        for key in self.changed:
+            if Conf.get(const.CSM_DEFAULT_CONF_INDEX, key):
+                value = Conf.get(const.CHANGESET_INDEX, f'{const.CHANGED}>{key}')
+                Conf.set(const.CONSUMER_INDEX, key, value)
 
     def _update_general_config(self, default_index, current_index):
         Log.info("Updating general configurations.")

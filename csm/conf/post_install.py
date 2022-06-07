@@ -75,8 +75,8 @@ class PostInstall(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
-                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
+                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_PATH}",
+                const.KEY_LOGPATH:f"{const.LOG_PATH}"
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -85,7 +85,7 @@ class PostInstall(Setup):
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def set_ssl_certificate(self):
-        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, const.SSL_CERTIFICATE_PATH)
         csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
@@ -101,11 +101,12 @@ class PostInstall(Setup):
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
             Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH_KEY, ssl_certificate_path)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
-        log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
+        log_path = Conf.get(const.CONSUMER_INDEX, const.LOG_PATH)
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, f"{log_path}/csm")
         Log.info(f"Setting log path: {log_path}")
 
