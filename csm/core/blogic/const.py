@@ -980,4 +980,4 @@ ACCOUNT = 'account'
 # error reposne schema
 ERROR_CODE = "error_code"
 MESSAGE_ID = "message_id"
-JSON_ERROR = "Could not parse request body, invalid JSON received."
+JSON_ERROR = "Unable to parse request body, Malformed request body received."
