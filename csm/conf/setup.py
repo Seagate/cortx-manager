@@ -211,6 +211,17 @@ class Setup:
         except ResourceExist:
             Log.error(f"Cluster admin already exists: {cluster_admin_user}")
 
+    @staticmethod
+    def setup_logs_init():
+        log_path = Setup.get_csm_log_path()
+        Log.init(service_name = const.CSM_SETUP_CMD, log_path = log_path, level=const.LOG_LEVEL,
+                console_output=True)
+
+    @staticmethod
+    def get_csm_log_path():
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
+        return f"{log_path}/{const.CSM_COMPONENT_NAME}"
+
 class CsmSetup(Setup):
     def __init__(self):
         """Csm Setup initialization."""

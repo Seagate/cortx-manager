@@ -32,6 +32,8 @@ class Upgrade(Setup):
         Log.info("Performing upgrade and loading config files")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Setup.setup_logs_init()
+            Log.info("Executing csm_setup: upgrade phase.")
             Setup.load_csm_config_indices()
             Setup.load_default_config()
         except KvError as e:

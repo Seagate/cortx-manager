@@ -51,8 +51,9 @@ class Configure(Setup):
         :return:
         """
         try:
-            Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Setup.setup_logs_init()
+            Log.info("Executing csm_setup: configure phase.")
             Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")

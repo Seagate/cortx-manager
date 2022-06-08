@@ -34,8 +34,6 @@ class CsmSetupCommand:
         self._validate()
         self._loop = asyncio.get_event_loop()
         Conf.init()
-        Log.init(service_name = "csm_setup", log_path = const.CSM_SETUP_LOG_DIR,
-                level=const.LOG_LEVEL)
 
     def _validate(self):
         """Validate setup command."""

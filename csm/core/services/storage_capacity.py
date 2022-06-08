@@ -94,7 +94,7 @@ class StorageCapacityService(ApplicationService):
 
 
     async def request(self, session: ClientSession, method, url, expected_success_code):
-        async with session.request(url=url, method=method) as resp:
+        async with session.request(url=url, method=method, verify_ssl=False) as resp:
             if resp.status != expected_success_code:
                 self._create_error(resp.status, resp.reason)
                 return self.capacity_error
@@ -167,10 +167,10 @@ class S3CapacityService(ApplicationService):
 
     async def _get_user_usage(self, **request_body):
         plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_CAPACITY_OPERATION, **request_body)
+        if isinstance(plugin_response, RgwError):
+            ServiceError.create(plugin_response)
         users_dict = plugin_response["capacity"]["s3"]["users"]
         users_list = []
         users_list.append(users_dict.copy())
         plugin_response["capacity"]["s3"]["users"] = users_list
-        if isinstance(plugin_response, RgwError):
-            ServiceError.create(plugin_response)
         return plugin_response
