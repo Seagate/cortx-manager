@@ -92,7 +92,7 @@ class CsmAgent:
         # Stats service creation
         time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         time_series_provider.init()
-        CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
+        CsmRestApi._app[const.STAT_SERVICE] = StatsAppService(time_series_provider)
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
@@ -211,7 +211,7 @@ class CsmAgent:
             CsmAgent._daemonize()
         CsmRestApi.run(port, https_conf, debug_conf)
         Log.info("Stopping Message Bus client")
-        CsmRestApi._app["stat_service"].stop_msg_bus()
+        CsmRestApi._app[const.STAT_SERVICE].stop_msg_bus()
         Log.info("Finished stopping csm agent")
 
 

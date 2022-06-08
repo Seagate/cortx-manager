@@ -20,11 +20,12 @@
 
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
+import time
 from typing import Dict
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
-from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.common.errors import CsmInternalError, InvalidRequest, CsmServiceNotAvailable
 from csm.common.comm import MessageBusComm
 from aiohttp import web
 from csm.plugins.cortx.convertor import Convertor
@@ -40,35 +41,48 @@ class StatsAppService(ApplicationService):
     def __init__(self, stats_provider):
         self._stats_provider = stats_provider
         self.metrics_client = None
+        self.init_message_bus()
         self.convertor_type = const.STATS_CONVERTOR
         self.convertor = Convertor(self.convertor_type)
 
     def init_message_bus(self):
         kafka_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
         self.metrics_client = MessageBusComm(kafka_endpoints, unblock_consumer=True)
-        try:
-            self.metrics_client.init(type=const.PRODUCER,
-                        producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_PRODUCER_ID),
-                        message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_MSG_TYPE),
-                        method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_METHOD))
-            self.metrics_client.init(type=const.CONSUMER,
-                        consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_CONSUMER_ID),
-                        consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
-                        consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_MSSG_TYPE)],
-                        auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_AUTO_ACK),
-                        offset=Conf.get(const.CSM_GLOBAL_INDEX,
-                                            const.MSG_BUS_PERF_STAT_OFFSET))
-        except Exception as e:
-            Log.error(f"Message bus failing: {e}")
-            return False
-        return True
+        MAX_RETRY_COUNT = 5
+        RETRY_SLEEP_DURATION = 3
+        is_kafka_error = False
+        for retry in range(0, MAX_RETRY_COUNT):
+            is_kafka_error = False
+            try:
+                self.metrics_client.init(type=const.PRODUCER,
+                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_PRODUCER_ID),
+                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_MSG_TYPE),
+                            method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_METHOD))
+                self.metrics_client.init(type=const.CONSUMER,
+                            consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_ID),
+                            consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
+                            consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_MSSG_TYPE)],
+                            auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_AUTO_ACK),
+                            offset=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                const.MSG_BUS_PERF_STAT_OFFSET))
+            except Exception as e:
+                Log.error(f"For Retry {retry} - Message bus failing: {e}")
+                is_kafka_error = True
+                time.sleep(RETRY_SLEEP_DURATION)
+            if not is_kafka_error:
+                Log.debug(f"Message Bus is instantiated")
+                break
+        if is_kafka_error:
+            Log.error("Kafka Message bus Service not available")
+            raise CsmServiceNotAvailable()
+
 
     async def get(self, stats_id, panel, from_t, to_t,
                   metric_list, interval, total_sample, unit, output_format, query) -> Dict:
@@ -225,6 +239,8 @@ class StatsAppService(ApplicationService):
 
     def stop_msg_bus(self):
         Log.info("Stopping Messagebus")
+        if self.metrics_client is None:
+            return
         self.metrics_client.stop()
 
     async def post_perf_metrics_to_msg_bus(self, messages):

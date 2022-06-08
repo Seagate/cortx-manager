@@ -33,7 +33,7 @@ class MatricsSchemaValidator(Schema):
 class StatsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["stat_service"]
+        self._service = self.request.app[const.STAT_SERVICE]
         if self._service.metrics_client is None:
             status = self._service.init_message_bus()
             Log.info(f"Message Bus up status: {status}")
@@ -78,7 +78,7 @@ class StatsView(CsmView):
 class StatsPanelListView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["stat_service"]
+        self._service = self.request.app[const.STAT_SERVICE]
         if self._service.metrics_client is None:
             status = self._service.init_message_bus()
             Log.info(f"Message Bus up status: {status}")
@@ -139,7 +139,7 @@ class StatsPanelListView(CsmView):
 class MetricsView(CsmView):
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app["stat_service"]
+        self._service = self.request.app[const.STAT_SERVICE]
         if self._service.metrics_client is None:
             status = self._service.init_message_bus()
             Log.info(f"Message Bus up status: {status}")

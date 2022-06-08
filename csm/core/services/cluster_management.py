@@ -13,12 +13,13 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
 from csm.common.services import ApplicationService
 from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 from cortx.utils.log import Log
 from csm.common.comm import MessageBusComm
-
+from csm.common.errors import CsmServiceNotAvailable
 
 class ClusterManagementAppService(ApplicationService):
     """
@@ -32,19 +33,29 @@ class ClusterManagementAppService(ApplicationService):
     def init_message_bus(self):
         self.message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
                                          unblock_consumer=True)
-        try:
-            self.message_bus_obj.init(type=const.PRODUCER,
-                                producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                    const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
-                                message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                    const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
-                                method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                    const.MSG_BUS_CLUSTER_STOP_METHOD))
-            #TODO: Check if message object is correctly intialise
-        except Exception as e:
-            Log.error(f"Message bus failing: {e}")
-            return False
-        return True
+        MAX_RETRY_COUNT = 5
+        RETRY_SLEEP_DURATION = 3
+        is_kafka_error = False
+        for retry in range(0, MAX_RETRY_COUNT):
+            is_kafka_error = False
+            try:
+                self.message_bus_obj.init(type=const.PRODUCER,
+                                    producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        const.MSG_BUS_CLUSTER_STOP_PRODUCER_ID),
+                                    message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        const.MSG_BUS_CLUSTER_STOP_MSG_TYPE),
+                                    method=Conf.get(const.CSM_GLOBAL_INDEX,
+                                                        const.MSG_BUS_CLUSTER_STOP_METHOD))
+            except Exception as e:
+                Log.error(f"Message bus failing: {e}")
+                is_kafka_error = True
+                time.sleep(RETRY_SLEEP_DURATION)
+            if not is_kafka_error:
+                break
+        if is_kafka_error:
+            Log.error("Kafka Message bus Service not available")
+            raise CsmServiceNotAvailable()
+
 
     @Log.trace_method(Log.DEBUG)
     async def get_cluster_status(self, node_id):

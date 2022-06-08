@@ -545,6 +545,7 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+STAT_SERVICE = "stat_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'

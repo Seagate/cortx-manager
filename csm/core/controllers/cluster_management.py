@@ -95,9 +95,6 @@ class ClusterStatusView(CsmView):
     def __init__(self, request):
         super().__init__(request)
         self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
-        if self.cluster_management_service.message_bus_obj is None:
-            status = self.cluster_management_service.init_message_bus()
-            Log.info(f"Message bus up status {status}")
 
     @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
