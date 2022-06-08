@@ -94,7 +94,7 @@ class StorageCapacityService(ApplicationService):
 
 
     async def request(self, session: ClientSession, method, url, expected_success_code):
-        async with session.request(url=url, method=method) as resp:
+        async with session.request(url=url, method=method, verify_ssl=False) as resp:
             if resp.status != expected_success_code:
                 self._create_error(resp.status, resp.reason)
                 return self.capacity_error
