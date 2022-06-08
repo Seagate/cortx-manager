@@ -25,8 +25,6 @@ from csm.common.errors import InvalidRequest, CsmPermissionDenied
 from cortx.utils.conf_store.conf_store import Conf
 
 
-INVALID_REQUEST_PARAMETERS = "invalid request parameter"
-
 
 class CsmUserCreateSchema(Schema):
     user_id = fields.Str(data_key='username', required=True,
@@ -124,7 +122,7 @@ class CsmUsersListView(CsmView):
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+            raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
@@ -184,7 +182,7 @@ class CsmUsersView(CsmView):
             user_body = schema.load(await self.request.json(), partial=True,
                                     unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+            raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 

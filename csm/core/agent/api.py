@@ -161,10 +161,13 @@ class CsmRestApi(CsmApi, ABC):
             resp["error_code"] = CSM_UNKNOWN_ERROR
 
         try:
+            # CSM error response should have error_code message and message_id
+            # Here we only check the Error response format
+            # For incorrect format, only log the error
             schema = ErrorResponseSchema()
             err_response = schema.load(resp, unknown='EXCLUDE')
         except ValidationError as val_err:
-            Log.error(f"InCorrect error response format: {val_err}")
+            Log.error(f"Malformed error response format: {val_err}")
 
         return err_response
 

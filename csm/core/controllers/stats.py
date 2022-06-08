@@ -144,7 +144,7 @@ class MetricsView(CsmView):
             schema = MatricsSchemaValidator()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Request body missing")
+            raise InvalidRequest(message_args="Request body missing")
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
         return await self._service.post_perf_metrics_to_msg_bus(user_body["messages"])
