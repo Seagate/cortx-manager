@@ -57,8 +57,8 @@ class ClusterManagementAppService(ApplicationService):
             Log.error("Message bus communication is not available")
             raise CsmServiceNotAvailable()
         # Initialise Message bus producer
-        # In case of failure, it throws Exception
-        # Sleep and retry for max defined count else throw Exception
+        # In case of failure, it throws Sleep and retry for max defined count 
+        # else throw CsmServiceNotAvailable Error
         is_kafka_initialized = False
         for retry in range(0, MAX_RETRY_COUNT):
             Log.debug(f"Initialising message bus")
