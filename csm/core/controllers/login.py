@@ -25,7 +25,7 @@ from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSc
 
 class LoginSchema(ValidateSchema):
     username = fields.Str(data_key=const.UNAME, required=True)
-    display_name = fields.Str(data_key=const.PASS, required=True)
+    password = fields.Str(data_key=const.PASS, required=True)
 
 @CsmView._app_routes.view("/api/v1/login")
 @CsmView._app_routes.view("/api/v2/login")
@@ -43,8 +43,9 @@ class LoginView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
 
-        username = request_body.get('username', None)
-        password = request_body.get('password', None)
+        body = await self.request.json()
+        username = body.get('username', None)
+        password = body.get('password', None)
 
         session_id, body = await self.request.app.login_service.login(username, password)
         Log.debug(f"Obtained session id for {username}")
