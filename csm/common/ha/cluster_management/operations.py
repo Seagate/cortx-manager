@@ -14,13 +14,15 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from abc import ABC, abstractmethod
 from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
-from csm.common.errors import InvalidRequest, CsmInternalError
+from csm.common.errors import InvalidRequest, CsmInternalError, CsmServiceNotAvailable
 from cortx.utils.log import Log
+from cortx.utils.conf_store.conf_store import Conf
 
 
 class Operation(ABC):
@@ -107,15 +109,36 @@ class ClusterShutdownSignal(Operation):
         """Validate arguments stub."""
         pass
 
+    def send_kafka_message(self, msg_bus_obj, message):
+        Log.debug("Sending kafka message")
+        try:
+            msg_bus_obj.send([str(message)])
+        except Exception as e:
+            Log.error(f"Error while sending message: {e}")
+            return False
+
     def execute(self, cluster_manager, **kwargs):
         """Execute stub."""
-        mssg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
+        msg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         message = {"start_cluster_shutdown": 1}
-        try:
-            mssg_bus_obj.send([str(message)])
-        except Exception as e:
-            Log.error(f"Error while sending shutdown signal:{e}")
-            raise CsmInternalError(f"Error while sending shutdown signal:{e}")
+        MAX_RETRY_COUNT = Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT)
+        RETRY_SLEEP_DURATION = Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION)
+
+        if msg_bus_obj is None:
+            Log.error("Message bus object is None")
+            raise CsmServiceNotAvailable()
+
+        is_success = False
+        for retry in range(0, MAX_RETRY_COUNT):
+            is_success = self.send_kafka_message(msg_bus_obj, message)
+            if not is_success:
+                Log.debug("Message is successfully send")
+                break
+            Log.debug(f"Failed to initialized message bus in attempt ({retry})")
+            time.sleep(RETRY_SLEEP_DURATION)
+        if not is_success:
+            Log.error("Message bus Service not available")
+            raise CsmServiceNotAvailable()
 
 
 class NodeStartOperation(Operation):

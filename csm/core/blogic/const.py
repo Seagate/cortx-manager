@@ -977,3 +977,7 @@ VERSION_RESOURCES = ['node']
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
+
+# Retry
+MAX_RETRY_COUNT        = 'RETRY>retry_count'
+RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'

@@ -90,9 +90,9 @@ class CsmAgent:
         CsmAgent._configure_cluster_management_service()
 
         # Stats service creation
-        time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
-        time_series_provider.init()
-        CsmRestApi._app[const.STAT_SERVICE] = StatsAppService(time_series_provider)
+        # time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
+        # time_series_provider.init()
+        # CsmRestApi._app[const.STAT_SERVICE] = StatsAppService(time_series_provider)
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
@@ -210,8 +210,8 @@ class CsmAgent:
         if Options.daemonize:
             CsmAgent._daemonize()
         CsmRestApi.run(port, https_conf, debug_conf)
-        Log.info("Stopping Message Bus client")
-        CsmRestApi._app[const.STAT_SERVICE].stop_msg_bus()
+        # Log.info("Stopping Message Bus client")
+        # CsmRestApi._app[const.STAT_SERVICE].stop_msg_bus()
         Log.info("Finished stopping csm agent")
 
 
@@ -231,12 +231,12 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
-    from csm.core.services.stats import StatsAppService
+    # from csm.core.services.stats import StatsAppService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import SessionManager, LoginService, AuthService
     from csm.core.agent.api import CsmRestApi
-    from csm.common.timeseries import TimelionProvider
+    # from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework
     from cortx.utils.cron import CronJob
     from cortx.utils.validator.v_consul import ConsulV
