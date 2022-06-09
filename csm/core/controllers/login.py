@@ -37,7 +37,7 @@ class LoginView(CsmView):
             schema = LoginSchema()
             request_body = schema.load(await self.request.json())
             Log.debug(f"Handling Login POST request"
-                      f" request body: {request_body}")
+                      f" request body: {request_body}.")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
