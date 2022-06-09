@@ -63,7 +63,7 @@ class ClusterManagementAppService(ApplicationService):
         for retry in range(0, MAX_RETRY_COUNT):
             Log.debug(f"Initialising message bus")
             is_kafka_initialized = self.init_message_bus_producer()
-            if not is_kafka_initialized:
+            if is_kafka_initialized:
                 Log.debug("Message bus Service is initialized")
                 break
             Log.debug(f"Failed to initialized message bus in attempt ({retry})")

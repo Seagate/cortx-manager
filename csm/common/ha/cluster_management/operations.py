@@ -113,6 +113,7 @@ class ClusterShutdownSignal(Operation):
         Log.debug("Sending kafka message")
         try:
             msg_bus_obj.send([str(message)])
+            return True
         except Exception as e:
             Log.error(f"Error while sending message: {e}")
             return False
@@ -131,10 +132,10 @@ class ClusterShutdownSignal(Operation):
         is_success = False
         for retry in range(0, MAX_RETRY_COUNT):
             is_success = self.send_kafka_message(msg_bus_obj, message)
-            if not is_success:
+            if is_success:
                 Log.debug("Message is successfully send")
                 break
-            Log.debug(f"Failed to initialized message bus in attempt ({retry})")
+            Log.error(f"Failed to initialized message bus in attempt ({retry})")
             time.sleep(RETRY_SLEEP_DURATION)
         if not is_success:
             Log.error("Message bus Service not available")
