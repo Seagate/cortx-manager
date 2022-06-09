@@ -50,8 +50,8 @@ class ClusterManagementAppService(ApplicationService):
         Log.debug(f"Initialising message bus communication")
         self.message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
                                          unblock_consumer=True)
-        MAX_RETRY_COUNT = Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT)
-        RETRY_SLEEP_DURATION = Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION)
+        MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
 
         if self.message_bus_obj is None:
             Log.error("Message bus communication is not available")
