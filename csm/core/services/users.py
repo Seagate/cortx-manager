@@ -244,7 +244,7 @@ class CsmUserService(ApplicationService):
         creator = await self.user_mgr.get(creator_id) if creator_id else None
         # Perform pre-creation checks for anonymous user
         if creator is None:
-            raise CsmPermissionDenied("Permission denied.")
+            raise CsmPermissionDenied()
         # ... and for logged in user
         else:
             if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:

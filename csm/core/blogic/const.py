@@ -976,3 +976,8 @@ VERSION_RESOURCES = ['node']
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
+
+# error reposne schema
+ERROR_CODE = "error_code"
+MESSAGE_ID = "message_id"
+JSON_ERROR = "Unable to parse request body, Malformed request body received."
