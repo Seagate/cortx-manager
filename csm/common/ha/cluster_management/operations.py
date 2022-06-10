@@ -122,8 +122,8 @@ class ClusterShutdownSignal(Operation):
         """Execute stub."""
         msg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
         message = {"start_cluster_shutdown": 1}
-        MAX_RETRY_COUNT = Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT)
-        RETRY_SLEEP_DURATION = Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION)
+        MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
 
         if msg_bus_obj is None:
             Log.error("Message bus object is None")
