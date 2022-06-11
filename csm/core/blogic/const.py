@@ -544,6 +544,8 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+INFORMATION_SERVICE = "information_service"
+ACTIVITY_MANAGEMENT_SERVICE = "activity_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -970,9 +972,15 @@ SWAGGER_UI_STATICS_URL = '/api/static'
 
 # Version Validation
 REQUIRES = 'requires'
-INFORMATION_SERVICE = "information_service"
 VERSION_RESOURCES = ['node']
 
-#Capacity API
+# Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
+
+# Activity API
+RESOURCE_PATH = 'resource_path'
+PROGRESS = 'progress'
+STATUS_DESC = 'status_description'
+ACTIVITY_ERROR = "Unable to process the request"
+ACTIVITY_NOT_FOUND = "ActivityNotFound"
