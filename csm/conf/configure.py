@@ -292,9 +292,10 @@ class Configure(Setup):
         # Minimum memroy limit is considered the bare minimem to run CSM only.
         # The rest part up to maximum limit is for handling incoming requests.
         # CSM also reserves some amount (const.CSM_USAGE_RESERVED_BUFFER_PERCENT) for future needs.
-        mem_for_req = mem_max - mem_min
-        reserved_mem = mem_for_req * const.CSM_USAGE_RESERVED_BUFFER_PERCENT // 100
-        quota = (mem_for_req - reserved_mem) // const.MAX_MEM_PER_REQUEST_MB
+        # MaxConcurrentRequest =  MaxAvailableMemForRequest/RequestSize
+
+        reserved_mem = mem_max * const.CSM_USAGE_RESERVED_BUFFER_PERCENT // 100
+        quota = (mem_max - reserved_mem) // const.MAX_MEM_PER_REQUEST_MB
         return quota
 
     @staticmethod
