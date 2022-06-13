@@ -17,12 +17,11 @@ import re
 from marshmallow.validate import Validator, ValidationError
 from csm.core.blogic import const
 from csm.core.services.file_transfer import FileRef
+from marshmallow import Schema, validates_schema
 
 
 class FileRefValidator(Validator):
-    """
-    Validator Class for check FileRef instance
-    """
+    """Validator Class for check FileRef instance."""
 
     def __call__(self, value):
         if not isinstance(value, FileRef):
@@ -30,9 +29,7 @@ class FileRefValidator(Validator):
 
 
 class IamUserNameValidator(Validator):
-    """
-    Validator Class for Iam Username
-    """
+    """Validator Class for Iam Username."""
 
     def __call__(self, value):
         if not re.search(r"^[\w@+=.,-]{1,64}$", value):
@@ -42,9 +39,7 @@ class IamUserNameValidator(Validator):
 
 
 class UserNameValidator(Validator):
-    """
-    Validator Class for Username Fields in CSM
-    """
+    """Validator Class for Username Fields in CSM."""
 
     def __call__(self, value):
         if not re.search(r"^[a-zA-Z0-9_-]{4,56}$", value):
@@ -54,9 +49,7 @@ class UserNameValidator(Validator):
 
 
 class AccessKeyValidator(Validator):
-    """
-    Validator Class for access_key field in CSM
-    """
+    """Validator Class for access_key field in CSM."""
 
     def __call__(self, value):
         if not re.search(r"^[a-zA-Z0-9_]{16,128}$", value):
@@ -65,11 +58,8 @@ class AccessKeyValidator(Validator):
                 "Must be between 16-128 Characters")
 
 
-
 class CommentsValidator(Validator):
-    """
-    Validation Class for Comments and Strings in CSM
-    """
+    """Validation Class for Comments and Strings in CSM."""
 
     def __call__(self, value):
         if len(value) > const.STRING_MAX_VALUE:
@@ -78,36 +68,32 @@ class CommentsValidator(Validator):
 
 
 class PortValidator(Validator):
-    """
-    Validation Class for Ports Entered in CSM
-    """
+    """Validation Class for Ports Entered in CSM."""
 
     def __call__(self, value):
         if not const.PORT_MIN_VALUE < int(value) or not const.PORT_MAX_VALUE > int(value):
-            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} and {const.PORT_MAX_VALUE}")
+            raise ValidationError(f"Port Value should be between {const.PORT_MIN_VALUE} and "
+                                  f"{const.PORT_MAX_VALUE}")
 
 
 class PathPrefixValidator(Validator):
-    """
-    Path Prefix Validator for S3 Paths.
-    """
+    """Path Prefix Validator for S3 Paths."""
 
     def __call__(self, value):
         if len(value) > const.PATH_PREFIX_MAX_VALUE:
-            raise ValidationError(f"Path must not be more than {const.PATH_PREFIX_MAX_VALUE} characters.")
+            raise ValidationError(
+                f"Path must not be more than {const.PATH_PREFIX_MAX_VALUE} characters.")
         if not value.startswith("/"):
             raise ValidationError("Path Must Start with '/'.")
 
 
 class PasswordValidator(Validator):
-    """
-    Password Validator Class for CSM Passwords Fields.
-    """
+    """Password Validator Class for CSM Passwords Fields."""
 
     def __call__(self, password):
         error = []
         if len(password) < 8:
-             error.append("Must be more than 8 characters.")
+            error.append("Must be more than 8 characters.")
         if not any(each_char.isupper() for each_char in password):
             error.append("Must contain at least one Uppercase Alphabet.")
         if not any(each_char.islower() for each_char in password):
@@ -123,14 +109,14 @@ class PasswordValidator(Validator):
 
 
 class BucketNameValidator(Validator):
-    """
-        Validator Class for Bucket Name.
-    """
+    """Validator Class for Bucket Name."""
 
-    def is_value_valid(self, value):
+    @staticmethod
+    def is_value_valid(value):
         return re.search(r"^[a-z0-9][a-z0-9-.]{2,54}[a-z0-9]$", value)
 
-    def _check_ipv4(self, value):
+    @staticmethod
+    def _check_ipv4(value):
         try:
             ipv4 = Ipv4()
             ipv4(value)
@@ -154,16 +140,14 @@ class BucketNameValidator(Validator):
 
 
 class Ipv4(Validator):
-    """
-    Validator class for ipv4 address validation.
-    """
+    """Validator class for ipv4 address validation."""
 
     @staticmethod
     def validate_ipv4(ip):
-        ip_regex = ("^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
-                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
-                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
-                    "25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$")
+        ip_regex = (r"^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    r"25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    r"25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.("
+                    r"25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$")
         return re.search(ip_regex, ip)
 
     def __call__(self, ip):
@@ -173,13 +157,11 @@ class Ipv4(Validator):
 
 
 class DomainName(Validator):
-    """
-    Validator class for domain name validation.
-    """
+    """Validator class for domain name validation."""
 
     @staticmethod
     def validate_domain_name(domain_name):
-        domain_regex = "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$"
+        domain_regex = r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$"
         return re.search(domain_regex, domain_name)
 
     def __call__(self, domain_name):
@@ -192,9 +174,7 @@ class DomainName(Validator):
 
 
 class Server(Validator):
-    """
-    Validator class for both ipv4 address and domain name validation.
-    """
+    """Validator class for both ipv4 address and domain name validation."""
 
     def __call__(self, server_name):
         if len(server_name) > 253:
@@ -205,33 +185,36 @@ class Server(Validator):
             raise ValidationError(
                 "Invalid server name.")
 
+
 class Enum(Validator):
     def __init__(self, validator_values):
         self._validator_values = validator_values
+
     def __call__(self, value):
         if value not in self._validator_values:
             raise ValidationError(
                 f"Incorrect Value: must be from {' '.join(self._validator_values)}"
             )
 
+
 class ValidationErrorFormatter:
     @staticmethod
     def format(validation_error_obj: ValidationError) -> str:
         """
-        This Method will Format Validation Error messages to Proper Error messages.
+        Format Validation Error messages to Proper Error messages.
+
         :param validation_error_obj: Validation Error Object :type: ValidationError
         :return: String for all Validation Error Messages
         """
         error_messages = []
         for each_key in validation_error_obj.messages.keys():
-            error_messages.append(f"{each_key.capitalize()}: {''.join(validation_error_obj.messages[each_key])}")
+            error_messages.append(f"{each_key.capitalize()}: "
+                                  f"{''.join(validation_error_obj.messages[each_key])}")
         return " ".join(error_messages)
 
 
 class IsoFilenameValidator(Validator):
-    """
-    Validator class for validating hotfix package file name.
-    """
+    """Validator class for validating hotfix package file name."""
 
     def __call__(self, file_name):
         if not file_name.endswith(".iso"):
@@ -239,10 +222,18 @@ class IsoFilenameValidator(Validator):
 
 
 class BinFilenameValidator(Validator):
-    """
-    Validator class for validating firmware package file name.
-    """
+    """Validator class for validating firmware package file name."""
 
     def __call__(self, file_name):
         if not file_name.endswith(".bin"):
             raise ValidationError("Package must be a '.bin' file.")
+
+class ValidateSchema(Schema):
+    """Base Class for Schema level Validation."""
+
+    @validates_schema
+    def invalidate_empty_values(self, data, **kwargs):
+        """Invalidate the empty strings."""
+        for key, value in data.items():
+            if value is not None and not str(value).strip():
+                raise ValidationError(f"Empty value for {key}")

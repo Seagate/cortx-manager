@@ -13,31 +13,33 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import inspect
-
+from contextlib import contextmanager
+from typing import Any, Optional
 from cortx.utils.errors import BaseError
 from cortx.utils.log import Log
 from csm.core.blogic import const
+from csm.core.data.models.rgw import RgwError
 
-CSM_OPERATION_SUCESSFUL     = 0x0000
-CSM_ERR_INVALID_VALUE       = 0x1001
-CSM_ERR_INTERRUPTED         = 0x1002
-CSM_INVALID_REQUEST         = 0x1003
-CSM_PROVIDER_NOT_AVAILABLE  = 0x1004
-CSM_INTERNAL_ERROR          = 0x1005
-CSM_SETUP_ERROR             = 0x1006
-CSM_RESOURCE_EXIST          = 0x1007
+CSM_OPERATION_SUCESSFUL = 0x0000
+CSM_ERR_INVALID_VALUE = 0x1001
+CSM_ERR_INTERRUPTED = 0x1002
+CSM_INVALID_REQUEST = 0x1003
+CSM_PROVIDER_NOT_AVAILABLE = 0x1004
+CSM_INTERNAL_ERROR = 0x1005
+CSM_SETUP_ERROR = 0x1006
+CSM_RESOURCE_EXIST = 0x1007
 CSM_OPERATION_NOT_PERMITTED = 0x1008
-CSM_FAILURE                 = 0x1009
-CSM_SERVICE_NOT_AVAILABLE   = 0x100A
-CSM_REQUEST_CANCELLED       = 0x100B
-CSM_NOT_IMPLEMENTED         = 0x100C
-CSM_SERVICE_CONFLICT        = 0x100D
-CSM_GATEWAY_TIMEOUT         = 0x100E
-CSM_UNAUTHORIZED_ERROR      = 0x100F
-CSM_UNKNOWN_ERROR           = 0x1010
-CSM_HTTP_ERROR              = 0x1011
+CSM_FAILURE = 0x1009
+CSM_SERVICE_NOT_AVAILABLE = 0x100A
+CSM_REQUEST_CANCELLED = 0x100B
+CSM_NOT_IMPLEMENTED = 0x100C
+CSM_SERVICE_CONFLICT = 0x100D
+CSM_GATEWAY_TIMEOUT = 0x100E
+CSM_UNAUTHORIZED_ERROR = 0x100F
+CSM_UNKNOWN_ERROR = 0x1010
+CSM_HTTP_ERROR = 0x1011
 
+S3_SERVICE_ERROR = 0x3000
 
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
@@ -82,7 +84,7 @@ class CommandTerminated(KeyboardInterrupt):
         """
         Instantiation Method for CommandTerminated class
         """
-        super(CommandTerminated, self).__init__(_err, _desc)
+        super(CommandTerminated, self).__init__(self._err, self._desc)
 
 
 class InvalidRequest(CsmError):
@@ -179,6 +181,7 @@ class CsmResourceNotAvailable(CsmInternalError):
         super(CsmResourceNotAvailable, self).__init__(
             desc, message_id, message_args)
 
+
 class CsmTypeError(CsmInternalError):
 
     """Issues related to incorrect type of argument/parameter, etc."""
@@ -191,6 +194,7 @@ class CsmTypeError(CsmInternalError):
         """
         super(CsmTypeError, self).__init__(
             desc, message_id, message_args)
+
 
 class CsmNotImplemented(CsmError):
 
@@ -206,6 +210,7 @@ class CsmNotImplemented(CsmError):
             CSM_NOT_IMPLEMENTED, desc,
             message_id, message_args)
 
+
 class CsmServiceConflict(CsmError):
 
     """Service in conflict stat or operation can cause that state"""
@@ -219,6 +224,7 @@ class CsmServiceConflict(CsmError):
         super(CsmServiceConflict, self).__init__(
             CSM_SERVICE_CONFLICT, desc,
             message_id, message_args)
+
 
 class CsmGatewayTimeout(CsmError):
 
@@ -237,6 +243,7 @@ class CsmGatewayTimeout(CsmError):
             CSM_GATEWAY_TIMEOUT, desc,
             message_id, message_args)
 
+
 class CsmUnauthorizedError(CsmError):
 
     """This error represents HTTP 401 Unauthorized Error"""
@@ -250,6 +257,7 @@ class CsmUnauthorizedError(CsmError):
         super(CsmUnauthorizedError, self).__init__(
             CSM_UNAUTHORIZED_ERROR, desc,
             message_id, message_args)
+
 
 class CsmServiceNotAvailable(CsmError):
 
@@ -265,6 +273,7 @@ class CsmServiceNotAvailable(CsmError):
             CSM_SERVICE_NOT_AVAILABLE, desc,
             message_id, message_args)
 
+
 class CsmRequestCancelled(CsmError):
     """This  error represents CSM service request is cancelled."""
 
@@ -277,3 +286,41 @@ class CsmRequestCancelled(CsmError):
         super(CsmRequestCancelled, self).__init__(
             CSM_REQUEST_CANCELLED, desc,
             message_id, message_args)
+
+class S3ServiceError(Exception):
+    """S3 service error class."""
+
+    def __init__(self, status: int, code: str, message: str, args: Optional[Any] = None) -> None:
+        """S3 Service Error init."""
+        self.status = status
+        self.code = code
+        self.message = message
+        self.message_args = args
+
+
+class ServiceError():
+
+    @staticmethod
+    def create(error, args: Optional[Any] = None):
+        """A helper method for raising exceptions on service related errors."""
+
+        if isinstance(error, RgwError):
+            raise S3ServiceError(error.http_status,
+                                 error.error_code.name,
+                                 error.error_message,
+                                 args)
+
+    @staticmethod
+    @contextmanager
+    def guard_service():
+        from csm.core.controllers.view import CsmHttpException
+        try:
+            yield None
+        except S3ServiceError as error:
+            raise CsmHttpException(error.status,
+                                   S3_SERVICE_ERROR,
+                                   error.code,
+                                   error.message,
+                                   error.message_args)
+        else:
+            return

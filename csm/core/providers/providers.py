@@ -13,13 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import yaml
 import errno
 from threading import Thread
 from csm.common.errors import CsmError
 from cortx.utils.log import Log
 from csm.core.blogic.email_conf import EmailConfig
-from cortx.utils.conf_store.conf_store import Conf
 from csm.core.blogic import const
 import getpass
 
@@ -137,7 +135,7 @@ class EmailProvider(Provider):
 
             response = Response(0, _output)
 
-        except CsmError as e:
+        except CsmError:
             raise
 
         except OSError as e:

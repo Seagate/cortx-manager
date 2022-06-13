@@ -16,7 +16,6 @@
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
-from cortx.utils.validator.v_elasticsearch import ElasticsearchV
 from cortx.utils.validator.error import VError
 from csm.common.services import ApplicationService
 from csm.core.blogic import const

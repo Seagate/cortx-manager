@@ -18,7 +18,7 @@
 PATH=/usr/bin:/sbin:/usr/sbin;export PATH
 source /opt/seagate/cortx/csm/home/.bashrc
 
-while getopts ":g:u:p:n:s" o; do
+while getopts ":u:p:n" o; do
     case "${o}" in
         u)
             USER=${OPTARG}
@@ -29,8 +29,10 @@ while getopts ":g:u:p:n:s" o; do
         n)
             NODE_NAME=${OPTARG}
             ;;
-        s)
-            EXIT=${OPTARG}
+        *)
+            echo "Invalid option specified: $o"
+            exit
+            ;;
     esac
 done
 

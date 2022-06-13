@@ -15,7 +15,7 @@
 
 
 from typing import List
-
+from urllib.parse import urlsplit
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.network_addresses import NetworkAddresses
 from csm.core.blogic import const
@@ -46,7 +46,7 @@ class ServiceUrls:
     @staticmethod
     def get_s3_uri(scheme: str = 's3') -> str:
         """
-        Obtains the S3 server URI.
+        Obtain the S3 server URI.
 
         :param scheme: URI scheme
         :returns: S3 server URI based on the provided scheme
@@ -62,7 +62,7 @@ class ServiceUrls:
     @staticmethod
     def get_s3_supported_schemas() -> List[str]:
         """
-        Obtains a list of S3 supported schemas.
+        Obtain a list of S3 supported schemas.
 
         :returns: List of S3 supported schemas.
         """
@@ -71,10 +71,22 @@ class ServiceUrls:
     @staticmethod
     def get_bucket_url(bucket_name: str, scheme: str) -> str:
         """
-        Obtains a bucket URL.
+        Obtain a bucket URL.
 
         :param scheme: URL scheme
         :param bucket_name: Bucket name to be appended to the URL as its path
         :returns: Bucket URL
         """
         return '{}/{}'.format(ServiceUrls.get_s3_uri(scheme), bucket_name)
+
+    @staticmethod
+    def parse_url(url: str):
+        """
+        Parses the url.
+
+        :returns protocol
+        :returns host
+        :returns port
+        """
+        url_split = urlsplit(url)
+        return url_split.scheme, url_split.hostname, url_split.port

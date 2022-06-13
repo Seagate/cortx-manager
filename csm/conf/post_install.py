@@ -13,22 +13,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-
-import crypt
 import os
 from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
 from cortx.utils.security.certificate import Certificate
 from cortx.utils.kv_store.error import KvError
 from cortx.utils.validator.error import VError
-from cortx.utils.validator.v_pkg import PkgV
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from csm.common.payload import Text
-from cortx.utils.service.service_handler import Service
 from cortx.utils.errors import SSLCertificateError
+from csm.common.service_urls import ServiceUrls
 
 class PostInstall(Setup):
     """
@@ -46,17 +42,18 @@ class PostInstall(Setup):
 
     async def execute(self, command):
         """
-        Execute all the Methods Required for Post Install Steps of CSM Rpm's.
+        Execute csm_setup post install operation.
+
         :param command: Command Class Object :type: class
         :return:
         """
         try:
-            Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
-            self.load_csm_config_indices()
-            self._copy_base_configs()
-
+            Setup.setup_logs_init()
+            Log.info("Executing csm_setup: post_install phase.")
+            Setup.load_csm_config_indices()
+            Setup.copy_base_configs()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
@@ -78,8 +75,7 @@ class PostInstall(Setup):
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
                 const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}",
-                const.KEY_LOGPATH:f"{const.CSM_LOG_PATH_KEY}"
+                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
                 })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -89,7 +85,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        csm_protocol, csm_host, csm_port = self._parse_endpoints(
+        csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
@@ -108,8 +104,8 @@ class PostInstall(Setup):
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     def set_logpath(self):
-        log_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_LOGPATH])
-        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, f"{log_path}/csm")
+        log_path = Setup.get_csm_log_path()
+        Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
         Log.info(f"Setting log path: {log_path}")
 
     def create(self):

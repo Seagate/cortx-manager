@@ -13,43 +13,33 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from contextlib import contextmanager
-from csm.core.controllers.view import CsmView, CsmHttpException
-from csm.core.services.rgw.s3.utils import S3ServiceError
-from marshmallow import Schema, ValidationError, validates_schema
 
-S3_SERVICE_ERROR = 0x3000
+from csm.core.controllers.view import CsmView
+from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
 
-class S3BaseSchema(Schema):
-    """
-    Base Class for S3 Schema Validation.
-    invalidate_empty_values : method with marshmallo schema validates_schema decorator
-    """
-    @validates_schema
-    def invalidate_empty_values(self, data, **kwargs):
-        """Method invalidates the empty strings."""
-        for key, value in data.items():
-            if value is not None and not str(value).strip():
-                raise ValidationError(f"Empty value for {key}")
 
 class S3BaseView(CsmView):
-
     """Simple base class for any S3 view which works with one service."""
 
     def __init__(self, request, service_name):
-        """S3 Base View init."""
+        """Construct S3 Base View."""
         super().__init__(request)
         self._service = self.request.app[service_name]
+        self._iam_privileged_user_uid = Conf.get(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
 
-    @contextmanager
-    def _guard_service(self):
-        try:
-            yield None
-        except S3ServiceError as error:
-            raise CsmHttpException(error.status,
-                                   S3_SERVICE_ERROR,
-                                   error.code,
-                                   error.message,
-                                   error.message_args)
-        else:
-            return
+    def _is_iam_privileged_user(self, uid) -> bool:
+        """
+        Check if uid is of privileged IAM user.
+
+        Args:
+            uid (string): uid of an IAM user.
+
+        Returns:
+            bool: True if input uid is of privileged IAM user.
+        """
+        result: bool = False
+        if uid == self._iam_privileged_user_uid:
+            result = True
+        return result
+

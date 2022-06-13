@@ -13,13 +13,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
-
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
-from csm.common.errors import InvalidRequest
 from csm.core.blogic import const
 from csm.common.ha.cluster_management.operations_factory import ResourceOperationsFactory
 
@@ -52,7 +47,7 @@ class ClusterManagementPlugin(CsmPlugin):
             process_request_resut = self._ha.get_cluster_status(node_id)
         elif request == const.PROCESS_CLUSTER_OPERATION_REQ:
             if operation == const.ShUTDOWN_SIGNAL:
-                process_request_resut = self._process_shutdown_signal(kwargs)
+                process_request_resut = ClusterManagementPlugin._process_shutdown_signal(kwargs)
             else:
                 process_request_resut = self._process_cluster_operation(kwargs)
         return process_request_resut
@@ -68,7 +63,8 @@ class ClusterManagementPlugin(CsmPlugin):
                                                             **arguments)
         return process_result
 
-    def _process_shutdown_signal(self, kwargs):
+    @staticmethod
+    def _process_shutdown_signal(kwargs):
         resource = kwargs.get(const.ARG_RESOURCE, "")
         operation = kwargs.get(const.ARG_OPERATION, "")
         ResourceOperationsFactory.get_operations_by_resource(resource)\

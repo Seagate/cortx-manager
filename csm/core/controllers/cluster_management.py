@@ -25,14 +25,15 @@ from csm.core.controllers.validators import ValidationErrorFormatter, Enum
 class ClusterOperationsQueryParameter(Schema):
     arguments_format_values = [const.ARGUMENTS_FORMAT_FLAT, const.ARGUMENTS_FORMAT_NESTED]
     arguments_format = fields.Str(default=const.ARGUMENTS_FORMAT_NESTED,
-                                    missing=const.ARGUMENTS_FORMAT_NESTED,
-                                    validate=[Enum(arguments_format_values)])
+                                  missing=const.ARGUMENTS_FORMAT_NESTED,
+                                  validate=[Enum(arguments_format_values)])
 
 
 class ClusterOperationsRequestBody(Schema):
     supported_operations = [const.ShUTDOWN_SIGNAL]
     operation = fields.Str(required=True,
-                        validate=[Enum(supported_operations)])
+                           validate=[Enum(supported_operations)])
+
 
 @CsmView._app_routes.view("/api/v2/system/management/{resource}")
 class ClusterOperationsView(CsmView):
@@ -56,9 +57,7 @@ class ClusterOperationsView(CsmView):
 
     @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.CREATE}})
     async def post(self):
-        """
-        API to manage resources in cluster.
-        """
+        """Manage resources in cluster."""
         resource = self.request.match_info["resource"]
         qp_schema = ClusterOperationsQueryParameter()
         req_body_schema = ClusterOperationsRequestBody()
@@ -76,15 +75,14 @@ class ClusterOperationsView(CsmView):
                 operation_arguments = req_body['arguments']
 
             Log.debug(f"Cluster operation {operation} on {resource} "
-                        f"with arguments {operation_arguments}. "
-                        f"user_id: {self.request.session.credentials.user_id}")
+                      f"with arguments {operation_arguments}. "
+                      f"user_id: {self.request.session.credentials.user_id}")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         ClusterOperationsView._validate_operation(
             resource, operation, self.request.session.get_user_role())
-        operation_req_result = await self.cluster_management_service\
-                                            .request_operation(resource, operation,
-                                                **operation_arguments)
+        operation_req_result = await self.cluster_management_service.request_operation(
+            resource, operation, **operation_arguments)
         return operation_req_result
 
 
@@ -98,13 +96,8 @@ class ClusterStatusView(CsmView):
     @CsmAuth.permissions({Resource.CLUSTER_MANAGEMENT: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        """
-        API to get cluster status if node with {node_id}
-        is stopped or powered off.
-        """
+        """Get cluster status if node with {node_id} is stopped or powered off."""
         node_id = self.request.match_info["node_id"]
         Log.debug(f"ClusterStatusView: Get cluster status due to node: {node_id}")
-        cluster_status = await self.cluster_management_service\
-                                        .get_cluster_status(node_id)
+        cluster_status = await self.cluster_management_service.get_cluster_status(node_id)
         return cluster_status
-

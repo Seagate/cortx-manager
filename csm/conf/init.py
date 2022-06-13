@@ -13,9 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import os
-import re
-import time
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
@@ -23,27 +20,25 @@ from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from cortx.utils.validator.error import VError
 
 class Init(Setup):
-    """
+    """Perform init operation for csm_setup."""
 
-    """
     def __init__(self):
-        """
-        Perform init operation for csm_setup
-        """
+        """Csm_setup init operation initialization."""
         super(Init, self).__init__()
 
     async def execute(self, command):
         """
+        Execute csm_setup init operation.
 
         :param command:
         :return:
         """
         try:
-            Log.info("Loading Url into conf store.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            Setup.setup_logs_init()
+            Log.info("Executing csm_setup: init phase.")
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")

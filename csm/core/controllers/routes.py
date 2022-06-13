@@ -17,7 +17,8 @@
 from .view import CsmView
 from .stats import StatsView
 from .login import LoginView, LogoutView
-from .storage_capacity import (CapacityStatusView, CapacityManagementView)
+from .storage_capacity import (CapacityStatusView, CapacityManagementView,
+                               S3CapacityView)
 from .permissions import CurrentPermissionsView
 from .users import CsmUsersListView, CsmUsersView
 from csm.core.blogic.storage import SyncInMemoryKeyValueStorage
@@ -28,7 +29,7 @@ from csm.core.controllers.system_status import SystemStatusView, SystemStatusAll
 from csm.core.controllers.rgw.s3.users import (S3IAMUserListView, S3IAMUserView,
                                                S3IAMUserKeyView, S3IAMUserCapsView, S3IAMUserQuotaView)
 from csm.core.controllers.rgw.s3.bucket import S3BucketView
-
+from csm.core.controllers.information import VersionInformationView
 
 class CsmRoutes():
     """

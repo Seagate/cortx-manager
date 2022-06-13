@@ -211,7 +211,8 @@ class CsmUserService(ApplicationService):
     def __init__(self, user_mgr: UserManager):
         self.user_mgr = user_mgr
 
-    def _user_to_dict(self, user: User):
+    @staticmethod
+    def _user_to_dict(user: User):
         """ Helper method to convert user model into a dictionary repreentation """
         return {
             "id": user.user_id,
@@ -243,7 +244,7 @@ class CsmUserService(ApplicationService):
         creator = await self.user_mgr.get(creator_id) if creator_id else None
         # Perform pre-creation checks for anonymous user
         if creator is None:
-            raise CsmPermissionDenied("Permission denied.")
+            raise CsmPermissionDenied()
         # ... and for logged in user
         else:
             if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:
@@ -378,11 +379,6 @@ class CsmUserService(ApplicationService):
         user = await self.user_mgr.get(user_id)
         if not user:
             raise CsmNotFoundError(f"User does not exist: {user_id}", USERS_MSG_USER_NOT_FOUND)
-
-        password = new_values.get(const.PASS, None)
-        current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
-        role = new_values.get('user_role', None)
-        reset_password = new_values.get('reset_password', None)
 
         loggedin_user = await self.user_mgr.get(loggedin_user_id)
         await self._validate_user_update(user, loggedin_user, new_values)
