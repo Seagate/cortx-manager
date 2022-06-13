@@ -34,7 +34,7 @@ class RGWPlugin:
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = S3Client(config.auth_user_access_key,
-            config.auth_user_secret_key, config.host, config.port, timeout=const.S3_CONNECTION_TIMEOUT)
+            config.auth_user_secret_key, url=config.url, timeout=const.S3_CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_suppress_payload_schema = Json(const.SUPPRESS_PAYLOAD_SCHEMA).load()
