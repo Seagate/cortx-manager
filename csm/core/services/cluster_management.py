@@ -54,7 +54,7 @@ class ClusterManagementAppService(ApplicationService):
         RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
 
         if self.message_bus_obj is None:
-            Log.error("Message bus communication is not available")
+            Log.error("Message bus communication is not available.")
             raise CsmServiceNotAvailable()
         # Initialise Message bus producer
         # In case of failure, it throws Sleep and retry for max defined count
