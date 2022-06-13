@@ -47,7 +47,6 @@ WEB_DEFAULT_PORT = 28100 # currently being used by USL only
 PROVISIONER_LOG_FILE_PATH = "/var/log/seagate"
 # ToDo: Revisit csm temp path
 CSM_TEMP_PATH = "{}/csm_temp".format(CSM_PATH)
-CSM_SETUP_LOG_DIR = CSM_TEMP_PATH
 # Access log of aiohttp
 # format
 MARSHMALLOW_EXCLUDE = "EXCLUDE"
@@ -799,7 +798,7 @@ CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
 CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
 CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
-CSM_LOG_PATH_KEY = 'cortx>common>storage>log'
+CORTX_LOG_PATH_KEY = 'cortx>common>storage>log'
 METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
 METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
@@ -977,3 +976,8 @@ VERSION_RESOURCES = ['node']
 #Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
+
+# error reposne schema
+ERROR_CODE = "error_code"
+MESSAGE_ID = "message_id"
+JSON_ERROR = "Unable to parse request body, Malformed request body received."

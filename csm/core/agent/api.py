@@ -50,6 +50,8 @@ from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers.routes import CsmRoutes
 import re
 from cortx.utils.errors import DataAccessError
+from marshmallow import ValidationError, fields
+from csm.core.controllers.validators import ValidateSchema
 
 
 class CsmApi(ABC):
@@ -88,6 +90,14 @@ class CsmApi(ABC):
                                                                       CsmApi._cluster)
         provider = CsmApi._providers[command]
         return provider.process_request(request, callback)
+
+class ErrorResponseSchema(ValidateSchema):
+    """
+    Error Response validation schema
+    """
+    error_code = fields.Int(data_key=const.ERROR_CODE, required=True)
+    message_id = fields.Str(data_key=const.MESSAGE_ID, required=True)
+    message = fields.Str(data_key=const.MESSAGE_LITERAL, required=True)
 
 
 class CsmRestApi(CsmApi, ABC):
@@ -135,7 +145,7 @@ class CsmRestApi(CsmApi, ABC):
             resp["stacktrace"] = traceback.format_exc().splitlines()
 
         if isinstance(err, CsmError):
-            resp["error_code"] = err.rc()
+            resp["error_code"] = int(err.rc())
             resp["message"] = err.error()
             resp["message_id"] = err.message_id()
             message_args = err.message_args()
@@ -150,7 +160,16 @@ class CsmRestApi(CsmApi, ABC):
             resp["message_id"] = const.UNKNOWN_ERROR
             resp["error_code"] = CSM_UNKNOWN_ERROR
 
-        return resp
+        try:
+            # CSM error response should have error_code message and message_id
+            # Here we only check the Error response format
+            # For incorrect format, only log the error
+            schema = ErrorResponseSchema()
+            err_response = schema.load(resp, unknown='EXCLUDE')
+        except ValidationError as val_err:
+            Log.error(f"Malformed error response format: {val_err}")
+
+        return err_response
 
     @staticmethod
     def json_serializer(*args, **kwargs):
