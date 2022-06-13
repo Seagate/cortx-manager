@@ -15,10 +15,17 @@
 
 import json
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, CsmUnauthorizedError
 from .view import CsmView, CsmResponse, CsmAuth
 from aiohttp import web
+from marshmallow import fields
+from marshmallow.exceptions import ValidationError
+from csm.core.blogic import const
+from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
 
+class LoginSchema(ValidateSchema):
+    username = fields.Str(data_key=const.UNAME, required=True)
+    password = fields.Str(data_key=const.PASS, required=True)
 
 @CsmView._app_routes.view("/api/v1/login")
 @CsmView._app_routes.view("/api/v2/login")
@@ -27,20 +34,23 @@ class LoginView(CsmView):
 
     async def post(self):
         try:
-            body = await self.request.json()
-            Log.debug(f"Handling Login Post request. Username: {body.get('username')}")
+            schema = LoginSchema()
+            request_body = schema.load(await self.request.json())
+            Log.debug(f"Handling Login POST request"
+                      f" request body: {request_body}.")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest(message_args="Request body is missing")
+            raise InvalidRequest(const.JSON_ERROR)
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
 
+        body = await self.request.json()
         username = body.get('username', None)
         password = body.get('password', None)
-        if not username or not password:
-            raise InvalidRequest(message_args="Username or password is missing")
 
         session_id, body = await self.request.app.login_service.login(username, password)
         Log.debug(f"Obtained session id for {username}")
         if not session_id:
-            raise web.HTTPUnauthorized()
+            raise CsmUnauthorizedError("Invalid credentials for user")
 
         Log.debug(f'User: {username} successfully logged in.')
         headers = {CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}'}

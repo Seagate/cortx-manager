@@ -980,3 +980,8 @@ ACCOUNT = 'account'
 # Retry
 MAX_RETRY_COUNT        = 'RETRY>retry_count'
 RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
+
+# error reposne schema
+ERROR_CODE = "error_code"
+MESSAGE_ID = "message_id"
+JSON_ERROR = "Unable to parse request body, Malformed request body received."
