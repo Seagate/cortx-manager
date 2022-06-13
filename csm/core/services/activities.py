@@ -56,11 +56,12 @@ class ActivityService(ApplicationService):
 
     async def activity_init(self):
         if not self.is_kv_store_initialzed:
+            Log.info("Activity tracker backend initialized.")
             Activity.init(self._backend_url)
             self.is_kv_store_initialzed = True
 
     @Log.trace_method(Log.DEBUG)
-    async def create_and_start(self, **request_body):
+    async def create(self, **request_body):
         _name = request_body.get(const.NAME)
         try:
             await self.activity_init()
@@ -68,10 +69,9 @@ class ActivityService(ApplicationService):
                 _name, 
                 request_body.get(const.RESOURCE_PATH),
                 request_body.get(const.DESCRIPTION))
-            _staus_desc = f"A new activity: {_name} has been created and started."
-            Activity.start(activity, _staus_desc)
             return json.loads(activity.payload.json)
-        except ActivityError as e:
+        except ActivityError as ae:
+            Log.error(f'Failed to create a new activity: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
@@ -82,7 +82,9 @@ class ActivityService(ApplicationService):
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):
-                raise CsmNotFoundError(f"Activity does not exist: {id}", const.ACTIVITY_NOT_FOUND)
+                Log.error(f'Failed to fetch the activity. Activity with id= {id} does not exist: {ae}')
+                raise CsmNotFoundError(f"Activity with id= {id} does not exist", const.ACTIVITY_NOT_FOUND)
+            Log.error(f'Failed to fetch the activity by id= {id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
@@ -96,5 +98,7 @@ class ActivityService(ApplicationService):
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):
+                Log.error(f'Failed to update the activity. Activity with id= {id} does not exist: {ae}')
                 raise CsmNotFoundError(f"Activity does not exist: {_id}", const.ACTIVITY_NOT_FOUND)
+            Log.error(f'Failed to update the activity by id= {id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)

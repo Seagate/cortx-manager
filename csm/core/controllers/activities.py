@@ -52,22 +52,21 @@ class ActivitiesListView(CsmView):
         super().__init__(request)
         self._activity_service: ActivityService = self.request.app[const.ACTIVITY_MANAGEMENT_SERVICE]
 
-    @CsmAuth.permissions({Resource.ACTIVITY: {Action.CREATE}})
-    @Log.trace_method(Log.DEBUG)
+    @CsmAuth.permissions({Resource.ACTIVITIES: {Action.CREATE}})
     async def post(self):
-        """POST REST implementation for creating and starting a new activity."""
-        Log.info(f"Handling create and start an activity POST request"
+        """POST REST implementation for creating a new activity."""
+        Log.info(f"Handling create an activity POST request"
                  f" user_id: {self.request.session.credentials.user_id}")
         try:
             schema = CreateActivitySchema()
             request_body = schema.load(await self.request.json())
-            Log.debug(f"Handling create and start an activity POST request"
+            Log.debug(f"Handling create an activity POST request"
                       f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._activity_service.create_and_start(**request_body)
+        response = await self._activity_service.create(**request_body)
         return CsmResponse(response, const.STATUS_CREATED)
 
 
@@ -78,8 +77,7 @@ class ActivitiesView(CsmView):
         super().__init__(request)
         self._activity_service:ActivityService = self.request.app[const.ACTIVITY_MANAGEMENT_SERVICE]
 
-    @CsmAuth.permissions({Resource.ACTIVITY: {Action.READ}})
-    @Log.trace_method(Log.DEBUG)
+    @CsmAuth.permissions({Resource.ACTIVITIES: {Action.READ}})
     async def get(self):
         """GET REST implementation for fetching an activity details."""
         Log.info(f"Handling fetch activity details GET request"
@@ -92,8 +90,7 @@ class ActivitiesView(CsmView):
         return CsmResponse(response)
 
 
-    @CsmAuth.permissions({Resource.ACTIVITY: {Action.UPDATE}})
-    @Log.trace_method(Log.DEBUG)
+    @CsmAuth.permissions({Resource.ACTIVITIES: {Action.UPDATE}})
     async def patch(self):
         """PATCH REST implementation to update the activity."""
         Log.info(f"Handling update ativity PATCH request"
