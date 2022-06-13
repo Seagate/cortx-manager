@@ -17,8 +17,7 @@ from enum import Enum
 class RgwConnectionConfig:
     """Configuration options for RGW connection."""
 
-    host: str
-    port: int
+    url: str
     auth_user: str
     auth_user_access_key: str
     auth_user_secret_key: str
