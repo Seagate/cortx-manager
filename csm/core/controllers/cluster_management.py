@@ -42,7 +42,7 @@ class ClusterOperationsView(CsmView):
         self.cluster_management_service = self.request.app[const.CLUSTER_MANAGEMENT_SERVICE]
         if self.cluster_management_service.message_bus_obj is None:
             self.cluster_management_service.init_message_bus()
-            Log.info(f"Message bus is initialized successfully.")
+            Log.info("Message bus is initialized successfully.")
 
     @staticmethod
     def _validate_operation(resource: str, operation: str, role: str) -> None:

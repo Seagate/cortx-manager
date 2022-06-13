@@ -31,7 +31,7 @@ class ClusterManagementAppService(ApplicationService):
         self.message_bus_obj = None
 
     def init_message_bus_producer(self):
-        Log.debug(f"Initialising message bus Producer")
+        Log.debug("Initialising message bus Producer")
         try:
             self.message_bus_obj.init(type=const.PRODUCER,
                     producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
@@ -43,11 +43,11 @@ class ClusterManagementAppService(ApplicationService):
         except Exception as e:
             Log.error(f"Message bus failing: {e}")
             return False
-        Log.debug(f"Message bus Producer initialized")
+        Log.debug("Message bus Producer initialized")
         return True
 
     def init_message_bus(self):
-        Log.debug(f"Initialising message bus communication")
+        Log.debug("Initialising message bus communication")
         self.message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
                                          unblock_consumer=True)
         MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
@@ -57,11 +57,11 @@ class ClusterManagementAppService(ApplicationService):
             Log.error("Message bus communication is not available")
             raise CsmServiceNotAvailable()
         # Initialise Message bus producer
-        # In case of failure, it throws Sleep and retry for max defined count 
+        # In case of failure, it throws Sleep and retry for max defined count
         # else throw CsmServiceNotAvailable Error
         is_kafka_initialized = False
         for retry in range(0, MAX_RETRY_COUNT):
-            Log.debug(f"Initialising message bus")
+            Log.debug("Initialising message bus")
             is_kafka_initialized = self.init_message_bus_producer()
             if is_kafka_initialized:
                 Log.debug("Message bus Service is initialized")

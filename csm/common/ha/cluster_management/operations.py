@@ -20,7 +20,7 @@ from functools import partial
 from abc import ABC, abstractmethod
 from marshmallow import Schema, fields, validate
 from csm.core.blogic import const
-from csm.common.errors import InvalidRequest, CsmInternalError, CsmServiceNotAvailable
+from csm.common.errors import InvalidRequest, CsmServiceNotAvailable
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
 
@@ -109,7 +109,8 @@ class ClusterShutdownSignal(Operation):
         """Validate arguments stub."""
         pass
 
-    def send_kafka_message(self, msg_bus_obj, message):
+    @staticmethod
+    def send_kafka_message(msg_bus_obj, message):
         Log.debug("Sending kafka message")
         try:
             msg_bus_obj.send([str(message)])
@@ -131,7 +132,7 @@ class ClusterShutdownSignal(Operation):
 
         is_success = False
         for retry in range(0, MAX_RETRY_COUNT):
-            is_success = self.send_kafka_message(msg_bus_obj, message)
+            is_success = ClusterShutdownSignal.send_kafka_message(msg_bus_obj, message)
             if is_success:
                 Log.debug("Message is successfully send")
                 break
