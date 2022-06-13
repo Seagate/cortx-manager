@@ -28,12 +28,19 @@ class CsmRgwConfigurationFactory:
     @staticmethod
     def get_rgw_connection_config():
         """Creates a configuration for RGW connection."""
+        https_endpoint = None
+        ep_cnt = 0
+        default_endpoint = Conf.get(const.CSM_GLOBAL_INDEX, f'RGW>s3>endpoints[{ep_cnt}]')
+        ep = default_endpoint
+        while ep is not None:
+            if ep.lower().startswith('https'):
+                https_endpoint = ep
+                break
+            ep_cnt += 1
+            ep = Conf.get(const.CSM_GLOBAL_INDEX, f'RGW>s3>endpoints[{ep_cnt}]')
         rgw_connection_config = RgwConnectionConfig()
-        rgw_endpoint = Conf.get(
-            const.CSM_GLOBAL_INDEX, 'RGW>s3>endpoints[0]')
-        _, host, port = ServiceUrls.parse_url(rgw_endpoint)
-        rgw_connection_config.host = host
-        rgw_connection_config.port = port
+        # HTTPS is prefferable way to connect, if it's not available select the first provided
+        rgw_connection_config.url = https_endpoint or default_endpoint
         rgw_connection_config.auth_user = Conf.get(
             const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER)
         rgw_connection_config.auth_user_access_key = Conf.get(
