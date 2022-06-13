@@ -94,8 +94,8 @@ class ActivitiesView(CsmView):
         """PATCH REST implementation to update the activity."""
         Log.info(f"Handling update ativity PATCH request"
                  f" user_id: {self.request.session.credentials.user_id}")
-        id = self.request.match_info[const.ID]
-        path_params = {const.ID: id}
+        activity_id = self.request.match_info[const.ID]
+        path_params = {const.ID: activity_id}
         try:
             schema = UpdateActivitySchema()
             request_params = schema.load(await self.request.json())
