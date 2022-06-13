@@ -82,11 +82,10 @@ class ActivitiesView(CsmView):
         """GET REST implementation for fetching an activity details."""
         Log.info(f"Handling fetch activity details GET request"
                  f" user_id: {self.request.session.credentials.user_id}")
-        id = self.request.match_info[const.ID]
-        path_params = {const.ID: id}
+        activity_id = self.request.match_info[const.ID]
         Log.debug(f"Handling fetch activity details GET request"
                   f" with path param: {id}")
-        response = await self._activity_service.get_by_id(**path_params)
+        response = await self._activity_service.get_by_id(activity_id)
         return CsmResponse(response)
 
 
@@ -98,7 +97,6 @@ class ActivitiesView(CsmView):
         id = self.request.match_info[const.ID]
         path_params = {const.ID: id}
         try:
-            
             schema = UpdateActivitySchema()
             request_params = schema.load(await self.request.json())
             request_body = {**path_params, **request_params}

@@ -65,8 +65,9 @@ class ActivityService(ApplicationService):
         _name = request_body.get(const.NAME)
         try:
             await self.activity_init()
+            Log.info(f"Creating new activity by name= {_name}")
             activity: ActivityEntry = Activity.create(
-                _name, 
+                _name,
                 request_body.get(const.RESOURCE_PATH),
                 request_body.get(const.DESCRIPTION))
             return json.loads(activity.payload.json)
@@ -75,16 +76,17 @@ class ActivityService(ApplicationService):
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
-    async def get_by_id(self, id):
+    async def get_by_id(self, activity_id):
         try:
             await self.activity_init()
-            activity: ActivityEntry = Activity.get(id)
+            Log.info(f"Fetching the activity by id= {activity_id}")
+            activity: ActivityEntry = Activity.get(activity_id)
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):
-                Log.error(f'Failed to fetch the activity. Activity with id= {id} does not exist: {ae}')
-                raise CsmNotFoundError(f"Activity with id= {id} does not exist", const.ACTIVITY_NOT_FOUND)
-            Log.error(f'Failed to fetch the activity by id= {id}: {ae}')
+                Log.error(f'Failed to fetch the activity. Activity with id= {activity_id} does not exist: {ae}')
+                raise CsmNotFoundError(f"Activity with id= {activity_id} does not exist", const.ACTIVITY_NOT_FOUND)
+            Log.error(f'Failed to fetch the activity by id= {activity_id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
@@ -92,7 +94,9 @@ class ActivityService(ApplicationService):
         _id = request_body.get(const.ID)
         try:
             await self.activity_init()
+            Log.info(f"Fetching the activity by id= {_id}")
             activity: ActivityEntry = Activity.get(_id)
+            Log.info(f"Updating the activity by id= {_id}")
             Activity.update(activity, request_body.get(const.PROGRESS),
                                   request_body.get(const.STATUS_LITERAL), request_body.get(const.STATUS_DESC))
             return json.loads(activity.payload.json)
