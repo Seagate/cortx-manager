@@ -344,8 +344,12 @@ class LoginService:
             Log.error(f'Failed to authenticate {user_id}')
             return None, None
 
-        permissions = await self._role_manager.calc_effective_permissions(user.user_role)
-        session = await self._session_manager.create(credentials, permissions)
+        # Check if valid session exists
+        session = await self._is_valid_session_exists(user_id)
+        if not session:
+            # if No valid session exists, then create new session
+            permissions = await self._role_manager.calc_effective_permissions(user.user_role)
+            session = await self._session_manager.create(credentials, permissions)
         if not session:
             Log.critical('Failed to create a new session')
             return None, None
@@ -410,3 +414,30 @@ class LoginService:
         for each_session in session_data:
             if each_session.credentials.user_id.lower() == user_id.lower():
                 await self._session_manager.delete(each_session.session_id)
+
+    async def update_session_expiry_time(self, session: Session) -> None:
+        session.expiry_time = self._session_manager.calc_expiry_time()
+        await self._session_manager.update(session)
+
+    async def _is_valid_session_exists(self, user_id: str) -> None:
+        """
+        This Function will get the current user's active session.
+        :param user_id: user_id for user. :type:Str
+        :return: None
+        """
+        Log.debug(f"Getting active session for user : {user_id}")
+        session_data = await self._session_manager.get_all()
+        for each_session in session_data:
+            if each_session.credentials.user_id.lower() == user_id.lower():
+                # Here we get session for active user
+                # Check if it is expired,
+                if each_session.is_expired():
+                    await self._session_manager.delete(each_session.session_id)
+                    continue
+                Log.debug(f"Got the active sessions for Userid: {user_id}"
+                            f"with session id: {each_session.session_id}")
+                # Refresh Expiry Time
+                await self.update_session_expiry_time(each_session)
+                # return valid session
+                return each_session
+        return None
