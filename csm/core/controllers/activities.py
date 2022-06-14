@@ -63,7 +63,7 @@ class ActivitiesListView(CsmView):
             Log.debug(f"Handling create an activity POST request"
                       f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+            raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         response = await self._activity_service.create(**request_body)
@@ -103,7 +103,7 @@ class ActivitiesView(CsmView):
             Log.debug(f"Handling update activity PATCH request"
                       f" request body: {request_body}")
         except json.decoder.JSONDecodeError:
-            raise InvalidRequest("Could not parse request body, invalid JSON received.")
+            raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         response = await self._activity_service.update_by_id(**request_body)
