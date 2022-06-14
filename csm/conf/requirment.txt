@@ -1,5 +1,5 @@
 aiohttp==3.8.1
-paramiko==2.7.1
+paramiko==2.10.4
 toml==0.10.0
 configparser==4.0.2
 dict2xml==1.6.1

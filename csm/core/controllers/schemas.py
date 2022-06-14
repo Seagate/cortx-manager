@@ -14,25 +14,29 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from marshmallow import Schema, fields
-from csm.core.controllers.validators import (FileRefValidator, IsoFilenameValidator, 
+from csm.core.controllers.validators import (FileRefValidator, IsoFilenameValidator,
                                              BinFilenameValidator)
 
 
 class FileFieldSchema(Schema):
-    """ Validation schema for uploaded files"""
+    """Validation schema for uploaded files."""
+
     content_type = fields.Str(required=True)
     filename = fields.Str(required=True)
     file_ref = fields.Field(validate=FileRefValidator())
 
 
 class IsoFileFieldSchema(Schema):
-    """Base File Filed validator for 'iso'-uploaded files"""
+    """Base File Filed validator for 'iso'-uploaded files."""
+
     content_type = fields.Str(required=True)
     filename = fields.Str(validate=IsoFilenameValidator(), required=True)
     file_ref = fields.Field(validate=FileRefValidator())
 
+
 class BinFileFieldSchema(Schema):
-    """Base File Filed validator for 'bin'-uploaded files"""
+    """Base File Filed validator for 'bin'-uploaded files."""
+
     content_type = fields.Str(required=True)
     filename = fields.Str(validate=BinFilenameValidator(), required=True)
     file_ref = fields.Field(validate=FileRefValidator())

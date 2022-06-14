@@ -25,6 +25,15 @@
         },
         "SUCCESS_CODE": 200
     },
+    "LIST_USERS": {
+        "ENDPOINT": "/admin/user?list",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "max_entries": "max-entries",
+            "marker": "marker"
+        },
+        "SUCCESS_CODE": 200
+    },
     "DELETE_USER": {
         "ENDPOINT": "/admin/user",
         "METHOD": "DELETE",
@@ -125,6 +134,14 @@
     },
     "GET_USER_LEVEL_QUOTA": {
         "ENDPOINT": "/admin/user?quota&quota-type=user",
+        "METHOD": "GET",
+        "REQUEST_BODY_SCHEMA": {
+            "uid": "uid"
+        },
+        "SUCCESS_CODE": 200
+    },
+    "GET_USER_CAPACITY": {
+        "ENDPOINT": "/admin/user?stats",
         "METHOD": "GET",
         "REQUEST_BODY_SCHEMA": {
             "uid": "uid"

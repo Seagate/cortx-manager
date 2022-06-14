@@ -14,9 +14,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 from cortx.utils.data.access import SortOrder
+
 
 class SortBy:
     def __init__(self, field, order: SortOrder):

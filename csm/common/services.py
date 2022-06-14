@@ -15,6 +15,7 @@
 
 import asyncio
 
+
 class Service:
     def __init__(self):
         super().__init__()
@@ -26,8 +27,7 @@ class Service:
 
 
 class ApplicationService(Service):
-    """
-    A service that is intended to be used by controllers
-    """
+    """A service that is intended to be used by controllers."""
+
     def __init_(self):
         super().__init__()

@@ -73,7 +73,7 @@ class RoleManager:
             Validator.validate_type(value, dict, 'role value')
             permissions = value.get('permissions', None)
             if permissions is None:
-                raise ValueError(f'Permission set should be specified for a role')
+                raise ValueError('Permission set should be specified for a role')
             cls._validate_role(name, permissions)
 
     def __init__(self, predefined_roles):
@@ -84,7 +84,7 @@ class RoleManager:
         roles in the RoleDB during the onboarding.
         """
 
-        Log.info(f'Initializing role manager with predefined roles')
+        Log.info('Initializing role manager with predefined roles')
         self._validate_roles(predefined_roles)
 
         self._roles = {

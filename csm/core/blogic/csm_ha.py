@@ -14,19 +14,17 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import subprocess
-
 from cortx.utils.log import Log
-from csm.common.payload import *
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.errors import CsmError
 from csm.core.blogic import const
-from csm.common.ha_framework import PcsHAFramework, PcsResourceAgent
+from csm.common.ha_framework import PcsResourceAgent
 
 class CsmResourceAgent(PcsResourceAgent):
-    ''' Provide initalization on csm resources '''
+    """Provide initalization on csm resources."""
 
     def __init__(self, resources):
+        """Csm resource agent init."""
         super(CsmResourceAgent, self).__init__(resources)
         self._resources = resources
         self._csm_index = const.CSM_GLOBAL_INDEX
@@ -34,22 +32,22 @@ class CsmResourceAgent(PcsResourceAgent):
         self._secondary = Conf.get(const.CSM_GLOBAL_INDEX, "HA>secondary")
 
     def init(self, force_flag):
-        ''' Perform initalization for CSM resources '''
+        """Perform initalization for CSM resources"""
         try:
             Log.info("Starting configuring HA for CSM..")
 
             if force_flag:
-                if self.is_available():
-                    self._delete_resource()
+                # if self.is_available():
+                #     self._delete_resource()
                 if os.path.exists(const.HA_INIT):
                     os.remove(const.HA_INIT)
 
             # Check if resource already configured
-            if self.is_available():
-                if not os.path.exists(const.HA_INIT):
-                    open(const.HA_INIT, 'a').close()
-                Log.info("Csm resources are already configured...")
-                return True
+            # if self.is_available():
+            #     if not os.path.exists(const.HA_INIT):
+            #         open(const.HA_INIT, 'a').close()
+            #     Log.info("Csm resources are already configured...")
+            #     return True
 
             self._ra_init()
 
@@ -62,7 +60,7 @@ class CsmResourceAgent(PcsResourceAgent):
 
             # TODO- check score for failback
             self._init_constraint("INFINITY")
-            self._execute_config()
+            # self._execute_config()
             open(const.HA_INIT, 'a').close()
             Log.info("Successed: Configuring HA for CSM..")
             return True

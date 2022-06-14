@@ -15,7 +15,7 @@
 
 from datetime import datetime, timezone
 from schematics.types import StringType, DateTimeType, IntType
-from csm.core.blogic.models import CsmModel
+from csm.core.blogic.models.base import CsmModel
 
 
 class ReplaceNode(CsmModel):
