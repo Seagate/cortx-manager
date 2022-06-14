@@ -347,7 +347,7 @@ class LoginService:
         # Check if valid session exists
         session = await self._is_valid_session_exists(user_id)
         if not session:
-            # Check if No valid session exists, then create new session
+            # if No valid session exists, then create new session
             permissions = await self._role_manager.calc_effective_permissions(user.user_role)
             session = await self._session_manager.create(credentials, permissions)
         if not session:
@@ -417,7 +417,7 @@ class LoginService:
 
     async def update_session_expiry_time(self, session: Session) -> None:
         session.expiry_time = self._session_manager.calc_expiry_time()
-        self._session_manager.update(session)
+        await self._session_manager.update(session)
 
     async def _is_valid_session_exists(self, user_id: str) -> None:
         """
