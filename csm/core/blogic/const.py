@@ -985,6 +985,10 @@ STATUS_DESC = 'status_description'
 ACTIVITY_ERROR = "Unable to process the request"
 ACTIVITY_NOT_FOUND = "ActivityNotFound"
 
+# Retry
+MAX_RETRY_COUNT        = 'RETRY>retry_count'
+RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
+
 # Error reposne schema
 ERROR_CODE = "error_code"
 MESSAGE_ID = "message_id"
