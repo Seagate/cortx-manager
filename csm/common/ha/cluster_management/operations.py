@@ -110,8 +110,8 @@ class ClusterShutdownSignal(Operation):
         pass
 
     @staticmethod
-    def send_kafka_message(msg_bus_obj, message):
-        Log.debug("Sending kafka message")
+    def send_message(msg_bus_obj, message):
+        Log.debug(f"Sending message over communication channel {message}")
         try:
             msg_bus_obj.send([str(message)])
             return True
@@ -122,25 +122,25 @@ class ClusterShutdownSignal(Operation):
     def execute(self, cluster_manager, **kwargs):
         """Execute stub."""
         msg_bus_obj = kwargs.get(const.ARG_MSG_OBJ, "")
+        if msg_bus_obj is None:
+            Log.error("Error while sending shutdown signal")
+            raise CsmServiceNotAvailable("Error while sending shutdown signal")
+
         message = {"start_cluster_shutdown": 1}
         MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
         RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
 
-        if msg_bus_obj is None:
-            Log.error("Message bus object is None")
-            raise CsmServiceNotAvailable()
-
         is_success = False
         for retry in range(0, MAX_RETRY_COUNT):
-            is_success = ClusterShutdownSignal.send_kafka_message(msg_bus_obj, message)
+            is_success = ClusterShutdownSignal.send_message(msg_bus_obj, message)
             if is_success:
-                Log.debug("Message is successfully send")
+                Log.info("Shutdown signal sent")
                 break
-            Log.error(f"Failed to initialized message bus in attempt ({retry})")
+            Log.error(f"Failed to send shutdown signal in attempt ({retry})")
             time.sleep(RETRY_SLEEP_DURATION)
         if not is_success:
-            Log.error("Message bus Service not available")
-            raise CsmServiceNotAvailable()
+            Log.error("Error while sending shutdown signal")
+            raise CsmServiceNotAvailable("Error while sending shutdown signal")
 
 
 class NodeStartOperation(Operation):
