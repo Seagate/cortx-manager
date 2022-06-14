@@ -425,7 +425,7 @@ class LoginService:
         :param user_id: user_id for user. :type:Str
         :return: None
         """
-        Log.debug(f"get active sessions for Userid: {user_id}")
+        Log.debug(f"Getting active session for user : {user_id}")
         session_data = await self._session_manager.get_all()
         for each_session in session_data:
             if each_session.credentials.user_id.lower() == user_id.lower():
