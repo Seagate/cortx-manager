@@ -27,6 +27,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
+from cortx.utils.message_bus.error import MessageBusError
 
 
 class Configure(Setup):
