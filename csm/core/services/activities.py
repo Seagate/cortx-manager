@@ -32,7 +32,7 @@ import json
 
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
-from csm.common.errors import CsmInternalError, CsmNotFoundError
+from csm.common.errors import CsmInternalError, CsmNotFoundError, InvalidRequest
 
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -90,15 +90,36 @@ class ActivityService(ApplicationService):
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
-    async def update_by_id(self, **request_body):
+    async def update(self, activity: ActivityEntry, **request_body):
+        pct_progress = request_body.get(const.PCT_PROGRESS)
+        activity_data = json.loads(activity.payload.json)
+        if pct_progress < activity_data.get(const.PCT_PROGRESS):
+            raise InvalidRequest(f"pct_progress can not be less than the previously updated value")
+        Activity.update(activity, pct_progress, request_body.get(const.STATUS_DESC))
+
+    @Log.trace_method(Log.DEBUG)
+    async def finish(self, activity: ActivityEntry, **request_body):
+        Activity.finish(activity, request_body.get(const.STATUS_DESC))
+
+    @Log.trace_method(Log.DEBUG)
+    async def suspend(self, activity: ActivityEntry, **request_body):
+        Activity.suspend(activity, request_body.get(const.STATUS_DESC))
+
+    operation_service_map = {
+        const.UPDATE : update,
+        const.FINISH : finish,
+        const.SUSPEND : suspend
+    }
+
+    @Log.trace_method(Log.DEBUG)
+    async def update_by_id(self, operation, **request_body):
         _id = request_body.get(const.ID)
         try:
             await self.activity_init()
             Log.info(f"Fetching the activity by id= {_id}")
             activity: ActivityEntry = Activity.get(_id)
             Log.info(f"Updating the activity by id= {_id}")
-            Activity.update(activity, request_body.get(const.PROGRESS),
-                                  request_body.get(const.STATUS_LITERAL), request_body.get(const.STATUS_DESC))
+            await self.operation_service_map[operation](self, activity, **request_body)
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):

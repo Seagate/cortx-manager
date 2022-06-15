@@ -24,7 +24,6 @@ from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSc
 from csm.core.services.activities import ActivityService
 
 from cortx.utils.log import Log
-from cortx.utils.activity_tracker.activity_store import Status
 
 
 class CreateActivitySchema(ValidateSchema):
@@ -35,14 +34,44 @@ class CreateActivitySchema(ValidateSchema):
     description = fields.Str(data_key=const.DESCRIPTION, required=True)
 
 
+class UpdateActivityBaseSchema(ValidateSchema):
+    """Update activity base schema validation class."""
+
+    operation = fields.Str(data_key=const.ARG_OPERATION, required=True,
+                           validate=validate.OneOf(const.SUPPORTED_ACTIVITY_OPS))
+    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(),
+                            values=fields.Raw(allow_none=True), required=True)
+
+
 class UpdateActivitySchema(ValidateSchema):
     """Update activity schema validation class."""
 
-    progress = fields.Int(validate=validate.Range(min=0, max=100), data_key=const.PROGRESS,
+    pct_progress = fields.Int(validate=validate.Range(min=0, max=99), data_key=const.PCT_PROGRESS,
         required=True)
-    status = fields.Str(data_key=const.STATUS_LITERAL,
-        validate=validate.OneOf(Status.list()), required=True)
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
+
+
+class SuspendActivitySchema(ValidateSchema):
+    """Suspend activity schema validation class."""
+
+    status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
+
+
+class FinishActivitySchema(ValidateSchema):
+    """Finish activity schema validation class."""
+
+    status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
+
+
+class SchemaFactory:
+    @staticmethod
+    def init(operation):
+        operation_schema_map = {
+            const.UPDATE: UpdateActivitySchema,
+            const.FINISH: FinishActivitySchema,
+            const.SUSPEND: SuspendActivitySchema
+        }
+        return operation_schema_map[operation]()
 
 
 @CsmView._app_routes.view("/api/v2/activities")
@@ -97,14 +126,19 @@ class ActivitiesView(CsmView):
         activity_id = self.request.match_info[const.ID]
         path_params = {const.ID: activity_id}
         try:
-            schema = UpdateActivitySchema()
+            schema = UpdateActivityBaseSchema()
             request_params = schema.load(await self.request.json())
-            request_body = {**path_params, **request_params}
+            operation = request_params.get(const.ARG_OPERATION)
+            operation_arguments = request_params.get(const.ARG_ARGUMENTS)
+            operation_schema = SchemaFactory.init(operation)
+            operation_request_params = operation_schema.load(operation_arguments)
+            request_body = {**path_params, **operation_request_params}
             Log.debug(f"Handling update activity PATCH request"
-                      f" request body: {request_body}")
+                      f" request operation: {operation}"
+                      f" request operation body: {operation_request_params}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._activity_service.update_by_id(**request_body)
+        response = await self._activity_service.update_by_id(operation, **request_body)
         return CsmResponse(response)
