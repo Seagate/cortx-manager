@@ -77,7 +77,17 @@ class Configure(Setup):
         Configure._set_csm_endpoint()
         Configure._set_s3_info()
         Configure.set_hax_endpoint()
-        Configure._create_topics()
+
+        try:
+            Log.info("Creating topics for various CSM functionalities.")
+            Configure._create_topics()
+        except MessageBusError as ex:
+            Log.error(f"Message bus connection error : {ex}")
+            raise CsmSetupError(f"Message bus connection error : {ex}")
+        except Exception as ex:
+            Log.error(f"Error occured while creating topics : {ex}")
+            raise CsmSetupError(f"Error occured while creating topics : {ex}")
+
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
