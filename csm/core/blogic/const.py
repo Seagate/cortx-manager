@@ -988,6 +988,8 @@ UPDATE = 'update'
 FINISH = 'finish'
 SUSPEND = 'suspend'
 SUPPORTED_ACTIVITY_OPS = [UPDATE, FINISH, SUSPEND]
+COMPLETED = "COMPLETED"
+
 # Retry
 MAX_RETRY_COUNT        = 'RETRY>retry_count'
 RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
