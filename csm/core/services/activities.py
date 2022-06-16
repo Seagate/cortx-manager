@@ -101,7 +101,8 @@ class ActivityService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def finish(self, activity: ActivityEntry, **request_body):
-        Activity.finish(activity, request_body.get(const.STATUS_DESC))
+        Activity.finish(activity, request_body.get(const.RC),
+            request_body.get(const.STATUS_DESC))
 
     @Log.trace_method(Log.DEBUG)
     async def suspend(self, activity: ActivityEntry, **request_body):

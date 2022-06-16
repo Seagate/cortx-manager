@@ -984,6 +984,7 @@ PCT_PROGRESS = 'pct_progress'
 STATUS_DESC = 'status_description'
 ACTIVITY_ERROR = "Unable to process the request"
 ACTIVITY_NOT_FOUND = "ActivityNotFound"
+RC = "rc"
 UPDATE = 'update'
 FINISH = 'finish'
 SUSPEND = 'suspend'

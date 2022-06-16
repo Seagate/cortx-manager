@@ -59,7 +59,7 @@ class SuspendActivitySchema(ValidateSchema):
 
 class FinishActivitySchema(ValidateSchema):
     """Finish activity schema validation class."""
-
+    rc = fields.Int(data_key=const.RC, required=True)
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
 
