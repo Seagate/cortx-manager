@@ -281,6 +281,7 @@ class Configure(Setup):
         Create required messagebus topics for csm.
         """
         message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         Configure._create_perf_stat_topic(mb_admin)
