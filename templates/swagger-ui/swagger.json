@@ -111,7 +111,7 @@
               }
           }
       },
-      "/csm/users": {
+      "/system/users": {
           "get": {
               "tags": [
                   "CSM User"
@@ -239,7 +239,7 @@
               }
           }
       },
-      "/csm/users/{user_id}": {
+      "/system/users/{user_id}": {
           "get": {
               "tags": [
                   "CSM User"
@@ -389,7 +389,7 @@
               ]
           }
       },
-      "/s3/iam/users": {
+      "/iam/users": {
           "post": {
               "tags": [
                   "IAM User"
@@ -489,7 +489,7 @@
               }
           }
       },
-      "/s3/iam/users/{uid}": {
+      "/iam/users/{uid}": {
           "get": {
               "tags": [
                   "IAM User"
@@ -661,24 +661,6 @@
               "content": {
                   "application/json": {}
               },
-              "requestBody": {
-                  "description": "When specified the buckets and objects belonging to the user will also be removed.",
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "type": "object",
-                              "required": false,
-                              "properties": {
-                                  "purge_data": {
-                                      "type": "boolean",
-                                      "example": "",
-                                      "required": false
-                                  }
-                              }
-                          }
-                      }
-                  }
-              },
               "parameters": [
                   {
                       "name": "uid",
@@ -692,7 +674,7 @@
               ]
           }
       },
-      "/s3/iam/keys": {
+      "/iam/keys": {
           "put": {
               "tags": [
                   "IAM User"
@@ -817,7 +799,7 @@
               }
           }
       },
-      "/s3/iam/caps/{uid}": {
+      "/iam/caps/{uid}": {
           "put": {
               "tags": [
                   "IAM User"
@@ -1085,6 +1067,120 @@
                       "example": "bytecount"
                   }
               ]
+          }
+      },
+      "/api/v2/capacity/s3/{resource}/{id}": {
+          "get": {
+            "tags": [
+                "Storage Capacity"
+            ],
+            "summary": "Get user level Capacity usage statistics.",
+            "responses": {
+                "200": {
+                    "description": "OK"
+                },
+                "401": {
+                    "description": "Unauthorized: Token has not found or invalid format or session is invalid"
+                },
+                "403": {
+                    "description": "Forbidden: This error is raised for all cases when user don't have permissions"
+                },
+                "503": {
+                    "description": "Unable to connect to the service"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "content": {
+                "application/json": {}
+            },
+            "parameters": [
+                {
+                    "name": "resource",
+                    "in": "path",
+                    "description": "The resource whose capacity usage need to check.",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": "user"
+                },
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Get capacity usage by user id",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": ""
+                }
+            ]
+          }
+      },
+      "/api/v2/system/management/{resource}":{
+          "POST": {
+            "tags": [
+                "Cluster Management"
+            ],
+            "summary": "Sends cluster shutdown signal.",
+            "responses": {
+                "200": {
+                    "description": "OK"
+                },
+                "401": {
+                    "description": "Unauthorized: Token has not found or invalid format or session is invalid"
+                },
+                "403": {
+                    "description": "Forbidden: This error is raised for all cases when user don't have permissions"
+                },
+                "503": {
+                    "description": "Unable to connect to the service"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "content": {
+                "application/json": {}
+            },
+            "requestBody": {
+                "description": "Perform operation for specified resource.",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "required": true,
+                            "properties": {
+                                "operation": {
+                                    "type": "string",
+                                    "example": "shutdown_signal",
+                                    "required": true
+                                },
+                                "arguments": {
+                                    "type": "object",
+                                    "example": {},
+                                    "required": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "resource",
+                    "in": "path",
+                    "description": "Perform operation based on resource.",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": "cluster"
+                }
+            ]
           }
       }
   }
