@@ -1069,7 +1069,7 @@
               ]
           }
       },
-      "/api/v2/capacity/s3/{resource}/{id}": {
+      "/capacity/s3/{resource}/{id}": {
           "get": {
             "tags": [
                 "Storage Capacity"
@@ -1119,7 +1119,7 @@
             ]
           }
       },
-      "/api/v2/system/management/{resource}":{
+      "/system/management/{resource}":{
           "POST": {
             "tags": [
                 "Cluster Management"
