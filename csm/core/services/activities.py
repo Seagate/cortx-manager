@@ -90,10 +90,10 @@ class ActivityService(ApplicationService):
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
     @Log.trace_method(Log.DEBUG)
-    async def update(self, activity: ActivityEntry, **request_body):
+    async def set_progress(self, activity: ActivityEntry, **request_body):
         pct_progress = request_body.get(const.PCT_PROGRESS)
         activity_data = json.loads(activity.payload.json)
-        if activity_data.get(const.STATUS_LITERAL) == const.COMPLETED:
+        if Activity.is_complete(activity_data):
             raise InvalidRequest(f"COMPLETED activity can not be updated")
         if pct_progress < activity_data.get(const.PCT_PROGRESS):
             raise InvalidRequest(f"pct_progress can not be less than the previously updated value")
@@ -101,31 +101,33 @@ class ActivityService(ApplicationService):
 
     @Log.trace_method(Log.DEBUG)
     async def finish(self, activity: ActivityEntry, **request_body):
-        Activity.finish(activity, request_body.get(const.RC),
+        if Activity.is_complete(json.loads(activity.payload.json)):
+            raise InvalidRequest(f"COMPLETED activity can not be updated")
+        Activity.finish(activity, request_body.get(const.RESULT_CODE),
             request_body.get(const.STATUS_DESC))
 
     @Log.trace_method(Log.DEBUG)
     async def suspend(self, activity: ActivityEntry, **request_body):
-        activity_data = json.loads(activity.payload.json)
-        if activity_data.get(const.STATUS_LITERAL) == const.COMPLETED:
+        if Activity.is_complete(json.loads(activity.payload.json)):
             raise InvalidRequest(f"COMPLETED activity can not be suspended")
         Activity.suspend(activity, request_body.get(const.STATUS_DESC))
 
-    operation_service_map = {
-        const.UPDATE : update,
-        const.FINISH : finish,
-        const.SUSPEND : suspend
+    status_service_map = {
+        const.IN_PROGRESS : set_progress,
+        const.COMPLETED : finish,
+        const.SUSPENDED : suspend
     }
 
     @Log.trace_method(Log.DEBUG)
-    async def update_by_id(self, operation, **request_body):
+    async def update_by_id(self, **request_body):
         _id = request_body.get(const.ID)
+        _status = request_body.get(const.STATUS_LITERAL)
         try:
             await self.activity_init()
             Log.info(f"Fetching the activity by id= {_id}")
             activity: ActivityEntry = Activity.get(_id)
             Log.info(f"Updating the activity by id= {_id}")
-            await self.operation_service_map[operation](self, activity, **request_body)
+            await self.status_service_map[_status](self, activity, **request_body)
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):

@@ -984,12 +984,11 @@ PCT_PROGRESS = 'pct_progress'
 STATUS_DESC = 'status_description'
 ACTIVITY_ERROR = "Unable to process the request"
 ACTIVITY_NOT_FOUND = "ActivityNotFound"
-RC = "rc"
-UPDATE = 'update'
-FINISH = 'finish'
-SUSPEND = 'suspend'
-SUPPORTED_ACTIVITY_OPS = [UPDATE, FINISH, SUSPEND]
-COMPLETED = "COMPLETED"
+IN_PROGRESS = 'IN_PROGRESS'
+COMPLETED = 'COMPLETED'
+SUSPENDED = 'SUSPENDED'
+RESULT_CODE = 'result_code'
+SUPPORTED_ACTIVITY_STATUS = [IN_PROGRESS, COMPLETED, SUSPENDED]
 
 # Retry
 MAX_RETRY_COUNT        = 'RETRY>retry_count'

@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import fields, ValidationError, validate
+from marshmallow import fields, ValidationError, validate, post_load
 
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
@@ -37,29 +37,32 @@ class CreateActivitySchema(ValidateSchema):
 class UpdateActivityBaseSchema(ValidateSchema):
     """Update activity base schema validation class."""
 
-    operation = fields.Str(data_key=const.ARG_OPERATION, required=True,
-                           validate=validate.OneOf(const.SUPPORTED_ACTIVITY_OPS))
-    arguments = fields.Dict(data_key=const.ARG_ARGUMENTS, keys=fields.Str(),
-                            values=fields.Raw(allow_none=True), required=True)
+    status = fields.Str(data_key=const.STATUS_LITERAL, required=True,
+                           validate=validate.OneOf(const.SUPPORTED_ACTIVITY_STATUS))
+    status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
+    pct_progress = fields.Int(data_key=const.PCT_PROGRESS)
+    result_code = fields.Int(data_key=const.RESULT_CODE)
 
-
-class UpdateActivitySchema(ValidateSchema):
+class InProgressSchema(ValidateSchema):
     """Update activity schema validation class."""
 
-    pct_progress = fields.Int(validate=validate.Range(min=0, max=99), data_key=const.PCT_PROGRESS,
-        required=True)
+    pct_progress = fields.Int(data_key=const.PCT_PROGRESS,
+        validate=validate.Range(min=0, max=99), required=True)
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
 
-class SuspendActivitySchema(ValidateSchema):
+class SuspendedSchema(ValidateSchema):
     """Suspend activity schema validation class."""
 
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
 
-class FinishActivitySchema(ValidateSchema):
+class CompletedSchema(ValidateSchema):
     """Finish activity schema validation class."""
-    rc = fields.Int(data_key=const.RC, required=True)
+
+    pct_progress = fields.Int(data_key=const.PCT_PROGRESS,
+        validate=validate.Equal(100), required=True)
+    result_code = fields.Int(data_key=const.RESULT_CODE, required=True)
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
 
@@ -67,9 +70,9 @@ class SchemaFactory:
     @staticmethod
     def init(operation):
         operation_schema_map = {
-            const.UPDATE: UpdateActivitySchema,
-            const.FINISH: FinishActivitySchema,
-            const.SUSPEND: SuspendActivitySchema
+            const.IN_PROGRESS: InProgressSchema,
+            const.COMPLETED: CompletedSchema,
+            const.SUSPENDED: SuspendedSchema
         }
         return operation_schema_map[operation]()
 
@@ -128,17 +131,15 @@ class ActivitiesView(CsmView):
         try:
             schema = UpdateActivityBaseSchema()
             request_params = schema.load(await self.request.json())
-            operation = request_params.get(const.ARG_OPERATION)
-            operation_arguments = request_params.get(const.ARG_ARGUMENTS)
-            operation_schema = SchemaFactory.init(operation)
-            operation_request_params = operation_schema.load(operation_arguments)
-            request_body = {**path_params, **operation_request_params}
+            status_val = request_params.get(const.STATUS_LITERAL)
+            status_schema = SchemaFactory.init(status_val)
+            _ = status_schema.load(request_params, unknown='EXCLUDE')
             Log.debug(f"Handling update activity PATCH request"
-                      f" request operation: {operation}"
-                      f" request operation body: {operation_request_params}")
+                      f" with request params: {request_params}")
+            request_body = {**path_params, **request_params}
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._activity_service.update_by_id(operation, **request_body)
+        response = await self._activity_service.update_by_id(**request_body)
         return CsmResponse(response)
