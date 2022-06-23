@@ -505,6 +505,9 @@
                   "403": {
                       "description": "Forbidden: This error is raised for all cases when user don't have permissions"
                   },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
+                  },
                   "503": {
                       "description": "Service Unavailable: Service is not available at the moment or unable to connect to service."
                   },
@@ -544,6 +547,9 @@
                   },
                   "403": {
                       "description": "Forbidden: This error is raised for all cases when user don't have permissions."
+                  },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
                   },
                   "409": {
                       "description": "Conflict: Provided access key exists or email belongs to another user."
@@ -815,6 +821,9 @@
                   "403": {
                       "description": "Forbidden: PermissionDenied: CSM user does not have the permission to perform operation."
                   },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
+                  },
                   "500": {
                       "description": "Internal Server Error: Unknown error occurred."
                   },
@@ -1003,9 +1012,6 @@
                   "401": {
                       "description": "Unauthorized: Token has not found or invalid token format or session is invalid."
                   },
-                  "403": {
-                      "description": "Forbidden: PermissionDenied: CSM user does not have the permission to perform operation."
-                  },
                   "500": {
                       "description": "Internal Server Error: Unknown error occurred."
                   },
@@ -1190,8 +1196,8 @@
               "200": {
                   "description": "OK"
               },
-              "503": {
-                  "description": "Unable to connect to the service"
+              "400": {
+                  "description": "Bad Request: MalformedRequest: Request body is missing or invalid request body."
               },
               "500": {
                   "description": "Internal Server Error"
