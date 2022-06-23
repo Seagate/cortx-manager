@@ -722,7 +722,7 @@
                                       "example": "",
                                       "required": false
                                   },
-                                  "acsess_key": {
+                                  "access_key": {
                                       "type": "string",
                                       "example": "",
                                       "required": false
@@ -787,7 +787,7 @@
                                       "example": "",
                                       "required": false
                                   },
-                                  "acsess_key": {
+                                  "access_key": {
                                       "type": "string",
                                       "example": "",
                                       "required": true
@@ -1032,7 +1032,7 @@
       "/capacity/status/{resource}": {
           "get": {
               "tags": [
-                  "Storage Capacity"
+                  "Degraded Byte Count"
               ],
               "summary": " Get degraded capacity in bytes count.",
               "responses": {
@@ -1072,7 +1072,7 @@
       "/capacity/s3/{resource}/{id}": {
           "get": {
             "tags": [
-                "Storage Capacity"
+                "Cortx Capacity"
             ],
             "summary": "Get user level Capacity usage statistics.",
             "responses": {
@@ -1119,8 +1119,8 @@
             ]
           }
       },
-      "/system/management/{resource}":{
-          "POST": {
+      "/system/management/{resource}": {
+          "post": {
             "tags": [
                 "Cluster Management"
             ],
@@ -1173,15 +1173,78 @@
                 {
                     "name": "resource",
                     "in": "path",
-                    "description": "Perform operation based on resource.",
+                    "description": "The resource whose capacity usage need to check.",
                     "required": true,
                     "schema": {
                         "type": "string"
                     },
-                    "example": "cluster"
+                    "example": "user"
                 }
             ]
           }
-      }
+      },
+      "/version/compatibility/{resource}/{resource_id}": {
+        "post": {
+          "tags": [
+              "Version Compatibility"
+          ],
+          "summary": "Check version compatibility.",
+          "responses": {
+              "200": {
+                  "description": "OK"
+              },
+              "503": {
+                  "description": "Unable to connect to the service"
+              },
+              "500": {
+                  "description": "Internal Server Error"
+              }
+          },
+          "content": {
+              "application/json": {}
+          },
+          "requestBody": {
+            "description": "Rules to check version compatibility.",
+            "required": true,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": true,
+                        "properties": {
+                            "requires": {
+                                "type": "list",
+                                "example": [],
+                                "required": true
+                            }
+                        }
+                    }
+                }
+            }
+          },
+          "parameters": [
+              {
+                  "name": "resource",
+                  "in": "path",
+                  "description": "The resource whose version compatibility need to check.",
+                  "required": true,
+                  "schema": {
+                      "type": "string"
+                  },
+                  "example": "node"
+              },
+              {
+                "name": "id",
+                "in": "path",
+                "description": "Id of the resource whose version compatibility need to check.",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                },
+                "example": "cortx-control"
+            }
+          ]
+        }
+    }
   }
 }
