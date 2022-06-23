@@ -44,7 +44,7 @@ class UpdateActivityBaseSchema(ValidateSchema):
     result_code = fields.Int(data_key=const.RESULT_CODE)
 
 class InProgressSchema(ValidateSchema):
-    """Update activity schema validation class."""
+    """InProgress activity schema validation class."""
 
     pct_progress = fields.Int(data_key=const.PCT_PROGRESS,
         validate=validate.Range(min=0, max=99), required=True)
@@ -52,16 +52,16 @@ class InProgressSchema(ValidateSchema):
 
 
 class SuspendedSchema(ValidateSchema):
-    """Suspend activity schema validation class."""
+    """Suspended activity schema validation class."""
 
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
 
 class CompletedSchema(ValidateSchema):
-    """Finish activity schema validation class."""
+    """Completed activity schema validation class."""
 
     pct_progress = fields.Int(data_key=const.PCT_PROGRESS,
-        validate=validate.Equal(100), required=True)
+        validate=validate.Equal(100))
     result_code = fields.Int(data_key=const.RESULT_CODE, required=True)
     status_description = fields.Str(data_key=const.STATUS_DESC, required=True)
 
