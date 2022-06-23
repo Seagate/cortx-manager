@@ -13,21 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-# CORTX-CSM: CORTX Management web and CLI interface.
-# Copyright (c) 2022 Seagate Technology LLC and/or its Affiliates
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published
-# by the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-# You should have received a copy of the GNU Affero General Public License
-# along with this program. If not, see <https://www.gnu.org/licenses/>.
-# For any questions about this software or licensing,
-# please email opensource@seagate.com or cortx-questions@seagate.com.
-
 import json
 
 from csm.core.blogic import const
@@ -84,8 +69,10 @@ class ActivityService(ApplicationService):
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):
-                Log.error(f'Failed to fetch the activity. Activity with id= {activity_id} does not exist: {ae}')
-                raise CsmNotFoundError(f"Activity with id= {activity_id} does not exist", const.ACTIVITY_NOT_FOUND)
+                Log.error(f'Failed to fetch the activity. Activity with id= \
+                    {activity_id} does not exist: {ae}')
+                raise CsmNotFoundError(f"Activity with id= {activity_id} does \
+                    not exist", const.ACTIVITY_NOT_FOUND)
             Log.error(f'Failed to fetch the activity by id= {activity_id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
 
@@ -96,8 +83,10 @@ class ActivityService(ApplicationService):
         if Activity.is_complete(activity_data):
             raise InvalidRequest("COMPLETED activity can not be updated")
         if pct_progress < activity_data.get(const.PCT_PROGRESS):
-            raise InvalidRequest(f"pct_progress can not be less than the previously updated value")
-        Activity.update(activity, pct_progress, request_body.get(const.STATUS_DESC))
+            raise InvalidRequest("pct_progress can not be less than the \
+                previously updated value")
+        Activity.update(activity, pct_progress, 
+            request_body.get(const.STATUS_DESC))
 
     @Log.trace_method(Log.DEBUG)
     async def finish(self, activity: ActivityEntry, **request_body):
@@ -127,11 +116,14 @@ class ActivityService(ApplicationService):
             Log.info(f"Fetching the activity by id= {_id}")
             activity: ActivityEntry = Activity.get(_id)
             Log.info(f"Updating the activity by id= {_id}")
-            await self.status_service_map[_status](self, activity, **request_body)
+            await self.status_service_map[_status](self, activity,
+                **request_body)
             return json.loads(activity.payload.json)
         except ActivityError as ae:
             if "get(): invalid activity id" in str(ae):
-                Log.error(f'Failed to update the activity. Activity with id= {id} does not exist: {ae}')
-                raise CsmNotFoundError(f"Activity does not exist: {_id}", const.ACTIVITY_NOT_FOUND)
+                Log.error(f'Failed to update the activity. Activity with id= \
+                    {id} does not exist: {ae}')
+                raise CsmNotFoundError(f"Activity does not exist: {_id}", 
+                    const.ACTIVITY_NOT_FOUND)
             Log.error(f'Failed to update the activity by id= {id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
