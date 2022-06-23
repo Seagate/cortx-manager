@@ -27,6 +27,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
+from cortx.utils.message_bus.error import MessageBusError
 
 
 class Configure(Setup):
@@ -77,7 +78,17 @@ class Configure(Setup):
         Configure._set_csm_endpoint()
         Configure._set_s3_info()
         Configure.set_hax_endpoint()
-        Configure._create_topics()
+
+        try:
+            Log.info("Creating topics for various CSM functionalities.")
+            Configure._create_topics()
+        except MessageBusError as ex:
+            Log.error(f"Message bus connection error : {ex}")
+            raise CsmSetupError(f"Message bus connection error : {ex}")
+        except Exception as ex:
+            Log.error(f"Error occured while creating topics : {ex}")
+            raise CsmSetupError(f"Error occured while creating topics : {ex}")
+
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
@@ -270,6 +281,7 @@ class Configure(Setup):
         Create required messagebus topics for csm.
         """
         message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         Configure._create_perf_stat_topic(mb_admin)
