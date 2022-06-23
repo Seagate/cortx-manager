@@ -20,9 +20,6 @@
   "servers": [
       {
           "url": "/api/v2"
-      },
-      {
-          "url": "/api/v1"
       }
   ],
   "paths": {
