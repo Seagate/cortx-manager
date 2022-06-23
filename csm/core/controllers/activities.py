@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import json
-from marshmallow import fields, ValidationError, validate, post_load
+from marshmallow import fields, ValidationError, validate
 
 from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action

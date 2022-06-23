@@ -94,7 +94,7 @@ class ActivityService(ApplicationService):
         pct_progress = request_body.get(const.PCT_PROGRESS)
         activity_data = json.loads(activity.payload.json)
         if Activity.is_complete(activity_data):
-            raise InvalidRequest(f"COMPLETED activity can not be updated")
+            raise InvalidRequest("COMPLETED activity can not be updated")
         if pct_progress < activity_data.get(const.PCT_PROGRESS):
             raise InvalidRequest(f"pct_progress can not be less than the previously updated value")
         Activity.update(activity, pct_progress, request_body.get(const.STATUS_DESC))
@@ -102,14 +102,14 @@ class ActivityService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def finish(self, activity: ActivityEntry, **request_body):
         if Activity.is_complete(json.loads(activity.payload.json)):
-            raise InvalidRequest(f"COMPLETED activity can not be updated")
+            raise InvalidRequest("COMPLETED activity can not be updated")
         Activity.finish(activity, request_body.get(const.RESULT_CODE),
             request_body.get(const.STATUS_DESC))
 
     @Log.trace_method(Log.DEBUG)
     async def suspend(self, activity: ActivityEntry, **request_body):
         if Activity.is_complete(json.loads(activity.payload.json)):
-            raise InvalidRequest(f"COMPLETED activity can not be suspended")
+            raise InvalidRequest("COMPLETED activity can not be suspended")
         Activity.suspend(activity, request_body.get(const.STATUS_DESC))
 
     status_service_map = {
