@@ -1199,6 +1199,9 @@
               "400": {
                   "description": "Bad Request: MalformedRequest: Request body is missing or invalid request body."
               },
+              "404": {
+                "description": "Not Found"
+              },
               "500": {
                   "description": "Internal Server Error"
               }
