@@ -214,7 +214,7 @@
                                   },
                                   "password": {
                                       "type": "string",
-                                      "example": "password"
+                                      "example": "Password@123"
                                   },
                                   "email": {
                                       "type": "string",
@@ -1170,12 +1170,12 @@
                 {
                     "name": "resource",
                     "in": "path",
-                    "description": "The resource whose capacity usage need to check.",
+                    "description": "The resource for which operation need to perform.",
                     "required": true,
                     "schema": {
                         "type": "string"
                     },
-                    "example": "user"
+                    "example": "cluster"
                 }
             ]
           }
@@ -1231,7 +1231,7 @@
                   "example": "node"
               },
               {
-                "name": "id",
+                "name": "resource_id",
                 "in": "path",
                 "description": "Id of the resource whose version compatibility need to check.",
                 "required": true,
