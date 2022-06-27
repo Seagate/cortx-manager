@@ -84,22 +84,23 @@ class ActivitiesListView(CsmView):
         super().__init__(request)
         self._activity_service: ActivityService = self.request.app[const.ACTIVITY_MANAGEMENT_SERVICE]
 
-    @CsmAuth.permissions({Resource.ACTIVITIES: {Action.CREATE}})
-    async def post(self):
-        """POST REST implementation for creating a new activity."""
-        Log.info(f"Handling create an activity POST request"
-                 f" user_id: {self.request.session.credentials.user_id}")
-        try:
-            schema = CreateActivitySchema()
-            request_body = schema.load(await self.request.json())
-            Log.debug(f"Handling create an activity POST request"
-                      f" request body: {request_body}")
-        except json.decoder.JSONDecodeError:
-            raise InvalidRequest(const.JSON_ERROR)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._activity_service.create(**request_body)
-        return CsmResponse(response, const.STATUS_CREATED)
+    # Note: Commenting create activity interface.
+    # @CsmAuth.permissions({Resource.ACTIVITIES: {Action.CREATE}})
+    # async def post(self):
+    #     """POST REST implementation for creating a new activity."""
+    #     Log.info(f"Handling create an activity POST request"
+    #              f" user_id: {self.request.session.credentials.user_id}")
+    #     try:
+    #         schema = CreateActivitySchema()
+    #         request_body = schema.load(await self.request.json())
+    #         Log.debug(f"Handling create an activity POST request"
+    #                   f" request body: {request_body}")
+    #     except json.decoder.JSONDecodeError:
+    #         raise InvalidRequest(const.JSON_ERROR)
+    #     except ValidationError as val_err:
+    #         raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+    #     response = await self._activity_service.create(**request_body)
+    #     return CsmResponse(response, const.STATUS_CREATED)
 
 
 @CsmView._app_routes.view("/api/v2/activities/{id}")
@@ -120,26 +121,26 @@ class ActivitiesView(CsmView):
         response = await self._activity_service.get_by_id(activity_id)
         return CsmResponse(response)
 
-
-    @CsmAuth.permissions({Resource.ACTIVITIES: {Action.UPDATE}})
-    async def patch(self):
-        """PATCH REST implementation to update the activity."""
-        Log.info(f"Handling update ativity PATCH request"
-                 f" user_id: {self.request.session.credentials.user_id}")
-        activity_id = self.request.match_info[const.ID]
-        path_params = {const.ID: activity_id}
-        try:
-            schema = UpdateActivityBaseSchema()
-            request_params = schema.load(await self.request.json())
-            status_val = request_params.get(const.STATUS_LITERAL)
-            status_schema = SchemaFactory.init(status_val)
-            _ = status_schema.load(request_params, unknown='EXCLUDE')
-            Log.debug(f"Handling update activity PATCH request"
-                      f" with request params: {request_params}")
-            request_body = {**path_params, **request_params}
-        except json.decoder.JSONDecodeError:
-            raise InvalidRequest(const.JSON_ERROR)
-        except ValidationError as val_err:
-            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-        response = await self._activity_service.update_by_id(**request_body)
-        return CsmResponse(response)
+    # Note: Commenting update activity interface.
+    # @CsmAuth.permissions({Resource.ACTIVITIES: {Action.UPDATE}})
+    # async def patch(self):
+    #     """PATCH REST implementation to update the activity."""
+    #     Log.info(f"Handling update ativity PATCH request"
+    #              f" user_id: {self.request.session.credentials.user_id}")
+    #     activity_id = self.request.match_info[const.ID]
+    #     path_params = {const.ID: activity_id}
+    #     try:
+    #         schema = UpdateActivityBaseSchema()
+    #         request_params = schema.load(await self.request.json())
+    #         status_val = request_params.get(const.STATUS_LITERAL)
+    #         status_schema = SchemaFactory.init(status_val)
+    #         _ = status_schema.load(request_params, unknown='EXCLUDE')
+    #         Log.debug(f"Handling update activity PATCH request"
+    #                   f" with request params: {request_params}")
+    #         request_body = {**path_params, **request_params}
+    #     except json.decoder.JSONDecodeError:
+    #         raise InvalidRequest(const.JSON_ERROR)
+    #     except ValidationError as val_err:
+    #         raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+    #     response = await self._activity_service.update_by_id(**request_body)
+    #     return CsmResponse(response)

@@ -1251,6 +1251,46 @@
             }
           ]
         }
+    },
+    "/activities/{id}": {
+        "get": {
+          "tags": [
+              "Activity Tracking"
+          ],
+          "summary": "Fetch activity details by id.",
+          "responses": {
+              "200": {
+                  "description": "OK"
+              },
+              "400": {
+                  "description": "Bad Request: MalformedRequest: Request body is missing or invalid request body."
+              },
+              "401": {
+                  "description": "Unauthorized: Token has not found or invalid format or session is invalid."
+              },
+              "404": {
+                "description": "ActivityNotFound : Activity does not exist in storage."
+              },
+              "500": {
+                  "description": "Internal Server Error"
+              }
+          },
+          "content": {
+              "application/json": {}
+          },
+          "parameters": [
+              {
+                  "name": "id",
+                  "in": "path",
+                  "description": "Activity id.",
+                  "required": true,
+                  "schema": {
+                      "type": "string"
+                  },
+                  "example": ""
+              }
+          ]
+        }
     }
   }
 }

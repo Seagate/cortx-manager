@@ -85,7 +85,7 @@ class ActivityService(ApplicationService):
         if pct_progress < activity_data.get(const.PCT_PROGRESS):
             raise InvalidRequest("pct_progress can not be less than the \
                 previously updated value")
-        Activity.update(activity, pct_progress, 
+        Activity.update(activity, pct_progress,
             request_body.get(const.STATUS_DESC))
 
     @Log.trace_method(Log.DEBUG)
@@ -123,7 +123,7 @@ class ActivityService(ApplicationService):
             if "get(): invalid activity id" in str(ae):
                 Log.error(f'Failed to update the activity. Activity with id= \
                     {id} does not exist: {ae}')
-                raise CsmNotFoundError(f"Activity does not exist: {_id}", 
+                raise CsmNotFoundError(f"Activity does not exist: {_id}",
                     const.ACTIVITY_NOT_FOUND)
             Log.error(f'Failed to update the activity by id= {id}: {ae}')
             raise CsmInternalError(const.ACTIVITY_ERROR)
