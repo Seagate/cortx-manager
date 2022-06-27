@@ -13,14 +13,12 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
-from marshmallow import fields, ValidationError, validate
+from marshmallow import fields, validate
 
-from csm.common.errors import InvalidRequest
 from csm.common.permission_names import Resource, Action
 from csm.core.blogic import const
 from csm.core.controllers.view import CsmView, CsmAuth, CsmResponse
-from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSchema
+from csm.core.controllers.validators import ValidateSchema
 from csm.core.services.activities import ActivityService
 
 from cortx.utils.log import Log
