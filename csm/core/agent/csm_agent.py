@@ -116,6 +116,7 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
         CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+        CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod
     def _configure_cluster_management_service():
@@ -251,6 +252,7 @@ if __name__ == '__main__':
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
+    from csm.core.services.activities import ActivityService
 
     try:
         client = None
