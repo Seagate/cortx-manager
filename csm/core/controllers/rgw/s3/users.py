@@ -38,7 +38,7 @@ class UserCreateSchema(ValidateSchema):
     user_caps = fields.Str(data_key=const.USER_CAPS, missing=None, allow_none=False)
     generate_key = fields.Bool(data_key=const.GENERATE_KEY, missing=None, allow_none=False)
     max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None, allow_none=False)
-    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
+    suspended = fields.Bool(data_key=const.SUSPENDED_KEY, missing=None, allow_none=False)
     tenant = fields.Str(data_key=const.TENANT, missing=None, allow_none=False)
 
 
@@ -60,7 +60,7 @@ class UserModifySchema(ValidateSchema):
     key_type = fields.Str(data_key=const.KEY_TYPE, missing=None, allow_none=False,
                           validate=validate.OneOf(const.SUPPORTED_KEY_TYPES))
     max_buckets = fields.Int(data_key=const.MAX_BUCKETS, missing=None, allow_none=False)
-    suspended = fields.Bool(data_key=const.SUSPENDED, missing=None, allow_none=False)
+    suspended = fields.Bool(data_key=const.SUSPENDED_KEY, missing=None, allow_none=False)
     op_mask = fields.Str(data_key=const.OP_MASK, missing=None, allow_none=False,
                          validate=validate_op_mask)
 
