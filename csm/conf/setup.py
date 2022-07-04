@@ -54,15 +54,22 @@ class Setup:
 
     @staticmethod
     def get_consul_config():
-        protocol, host, port, secret, each_endpoint = '','','','',''
-        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        for each_endpoint in endpoint_list:
-            if 'http' in each_endpoint:
-                protocol, host, port = ServiceUrls.parse_url(each_endpoint)
-                Log.info(f"Fetching consul endpoint : {each_endpoint}")
-                break
-        return protocol, host, port, secret, each_endpoint
+        protocol, host, port, secret, consul_ep = '','','','',''
+        consul_num_eps = Conf.get(const.CONSUMER_INDEX,
+            const.CONSUL_NUM_ENDPOINTS_KEY)
+        for ep_count in range(int(consul_num_eps)):
+            ep = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CONSUL_ENDPOINTS_KEY}[{ep_count}]')
+            if ep:
+                protocol, host, port = ServiceUrls.parse_url(ep)
+                if protocol == "https" or protocol == "http":
+                    consul_ep = ep
+                    Log.info(f"Fetching consul endpoint : {consul_ep}")
+                    break
+            else:
+                raise CsmSetupError("Consul endpoint not found.")
+        return protocol, host, port, secret, consul_ep
 
     @staticmethod
     def load_csm_config_indices():

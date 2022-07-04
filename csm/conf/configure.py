@@ -156,16 +156,16 @@ class Configure(Setup):
 
     @staticmethod
     def _set_s3_endpoints():
-        s3_endpoints = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_DATA_ENDPOINTS_KEY)
-        if s3_endpoints:
-            Log.info(f"Fetching s3 endpoint.{s3_endpoints}")
-            s3_endpoints_count = len(s3_endpoints)
-            for endpoint_count in range(s3_endpoints_count):
+        s3_num_eps = Conf.get(const.CONSUMER_INDEX,
+            const.RGW_NUM_ENDPOINTS_KEY)
+        for ep_count in range(int(s3_num_eps)):
+            ep = Conf.get(const.CONSUMER_INDEX,
+                f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{ep_count}]')
+            if ep:
                 Conf.set(const.CSM_GLOBAL_INDEX,
-                        f'{const.RGW_S3_ENDPOINTS}[{endpoint_count}]',
-                        eval(f'{s3_endpoints}[{endpoint_count}]'))
-        else:
-            raise CsmSetupError("S3 endpoints not found.")
+                        f'{const.RGW_S3_ENDPOINTS}[{ep_count}]', ep)
+            else:
+                raise CsmSetupError("S3 endpoint not found.")
 
     @staticmethod
     def _set_s3_info():
@@ -184,16 +184,20 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
 
     @staticmethod
-    def _get_hax_endpoint(endpoints):
-        for endpoint in endpoints:
-            protocol, _, _ = ServiceUrls.parse_url(endpoint)
-            if protocol == "https" or protocol == "http":
-                return endpoint
-
-    @staticmethod
     def set_hax_endpoint():
-        endpoints = Conf.get(const.CONSUMER_INDEX, const.HAX_ENDPOINT_KEY)
-        hax_endpoint = Configure._get_hax_endpoint(endpoints)
+        hax_endpoint = None
+        hax_num_eps = Conf.get(const.CONSUMER_INDEX,
+            const.HAX_NUM_ENDPOINT_KEY)
+        for ep_count in range(int(hax_num_eps)):
+            ep = Conf.get(const.CONSUMER_INDEX,
+                f'{const.HAX_ENDPOINT_KEY}[{ep_count}]')
+            if ep:
+                protocol, _, _ = ServiceUrls.parse_url(ep)
+                if protocol == "https" or protocol == "http":
+                    hax_endpoint = ep
+                    break
+            else:
+                raise CsmSetupError("Hax endpoint not found.")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
 
@@ -280,7 +284,16 @@ class Configure(Setup):
         """
         Create required messagebus topics for csm.
         """
-        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        message_server_endpoints = list()
+        kafka_num_eps = Conf.get(const.CONSUMER_INDEX,
+            const.KAFKA_NUM_ENDPOINTS)
+        for ep_count in range(int(kafka_num_eps)):
+            ep = Conf.get(const.CONSUMER_INDEX,
+                f'{const.KAFKA_ENDPOINTS}[{ep_count}]')
+            if ep:
+                message_server_endpoints.append(ep)
+            else:
+                raise CsmSetupError("Kafka endpoint not found.")
         Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
