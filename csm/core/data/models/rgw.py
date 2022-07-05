@@ -45,6 +45,7 @@ class RgwErrors(Enum):
     EmailExists = "Provided email address exists."
     InvalidCapability = "Attempt to grant invalid admin capability."
     InvalidTenantName = "Invalid tenant name provided."
+    BucketAlreadyExists = "Bucket resource exists."
 
 class RgwError:
     """Class that describes a non-successful result"""
