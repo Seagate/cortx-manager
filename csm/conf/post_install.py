@@ -74,9 +74,8 @@ class PostInstall(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
-                })
+            const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
+            })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:

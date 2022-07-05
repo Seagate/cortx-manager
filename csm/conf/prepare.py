@@ -74,10 +74,8 @@ class Prepare(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.CONSUL_ENDPOINTS_KEY:f"{const.CONSUL_ENDPOINTS_KEY}",
                 const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}"
                 # TODO: validate following keys once available in conf-store
                 #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
@@ -96,7 +94,7 @@ class Prepare(Setup):
         """
         Log.info("Set decryption keys for CSM and S3")
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
-                    self.conf_store_keys[const.CONSUL_ENDPOINTS_KEY].split('>')[0])
+            const.CONSUL_ENDPOINTS_KEY.split('>')[0])
 
     def _set_cluster_id(self):
         Log.info("Setting up cluster id")

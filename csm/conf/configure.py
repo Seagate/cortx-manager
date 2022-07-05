@@ -114,10 +114,7 @@ class Configure(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
-                const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
                 const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
