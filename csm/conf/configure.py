@@ -92,15 +92,15 @@ class Configure(Setup):
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
-            for count in range(0, 4):
-                try:
-                    await self._set_unsupported_feature_info()
-                    break
-                except Exception as e_:
-                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
-                    time.sleep(2**count)
-            else:
-                raise CsmSetupError("Unable to connect to storage after 4 attempts")
+            # for count in range(0, 4):
+            #     try:
+            #         await self._set_unsupported_feature_info()
+            #         break
+            #     except Exception as e_:
+            #         Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
+            #         time.sleep(2**count)
+            # else:
+            #     raise CsmSetupError("Unable to connect to storage after 4 attempts")
         except ValidationError as ve:
             Log.error(f"Validation Error: {ve}")
             raise CsmSetupError(f"Validation Error: {ve}")
