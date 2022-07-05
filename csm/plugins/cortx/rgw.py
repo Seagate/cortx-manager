@@ -156,6 +156,6 @@ class RGWPlugin:
         except ValueError:
             Log.error("Unable to parse error code received from S3,"
                 "Generating generic error response.")
-            rgw_error.error_code = body['Code']
+            rgw_error.error_code = RgwErrors["UnknownError"]
             rgw_error.error_message = const.S3_CLIENT_ERROR_MSG
         return rgw_error
