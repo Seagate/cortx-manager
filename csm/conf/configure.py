@@ -153,16 +153,23 @@ class Configure(Setup):
 
     @staticmethod
     def _set_s3_endpoints():
-        s3_num_eps = Conf.get(const.CONSUMER_INDEX,
+        result : bool = False
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.RGW_NUM_ENDPOINTS_KEY)
-        for ep_count in range(int(s3_num_eps)):
-            ep = Conf.get(const.CONSUMER_INDEX,
-                f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{ep_count}]')
-            if ep:
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Rgw num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{count}]')
+            if endpoint:
+                result = True
                 Conf.set(const.CSM_GLOBAL_INDEX,
-                        f'{const.RGW_S3_ENDPOINTS}[{ep_count}]', ep)
-            else:
-                raise CsmSetupError("S3 endpoint not found.")
+                        f'{const.RGW_S3_ENDPOINTS}[{count}]', endpoint)
+        if not result:
+            raise CsmSetupError("S3 endpoint not found.")
 
     @staticmethod
     def _set_s3_info():
@@ -183,18 +190,25 @@ class Configure(Setup):
     @staticmethod
     def set_hax_endpoint():
         hax_endpoint = None
-        hax_num_eps = Conf.get(const.CONSUMER_INDEX,
+        result : bool = False
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.HAX_NUM_ENDPOINT_KEY)
-        for ep_count in range(int(hax_num_eps)):
-            ep = Conf.get(const.CONSUMER_INDEX,
-                f'{const.HAX_ENDPOINT_KEY}[{ep_count}]')
-            if ep:
-                protocol, _, _ = ServiceUrls.parse_url(ep)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Hax num_endpoints value is not a valid"
+                " integer.")
+        for count in range(int(count_endpoints)):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.HAX_ENDPOINT_KEY}[{count}]')
+            if endpoint:
+                protocol, _, _ = ServiceUrls.parse_url(endpoint)
                 if protocol == "https" or protocol == "http":
-                    hax_endpoint = ep
+                    result = True
+                    hax_endpoint = endpoint
                     break
-            else:
-                raise CsmSetupError("Hax endpoint not found.")
+        if not result:
+            raise CsmSetupError("Hax endpoint not found.")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
 
@@ -281,16 +295,23 @@ class Configure(Setup):
         """
         Create required messagebus topics for csm.
         """
+        result : bool = False
         message_server_endpoints = list()
-        kafka_num_eps = Conf.get(const.CONSUMER_INDEX,
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.KAFKA_NUM_ENDPOINTS)
-        for ep_count in range(int(kafka_num_eps)):
-            ep = Conf.get(const.CONSUMER_INDEX,
-                f'{const.KAFKA_ENDPOINTS}[{ep_count}]')
-            if ep:
-                message_server_endpoints.append(ep)
-            else:
-                raise CsmSetupError("Kafka endpoint not found.")
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Kafka num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.KAFKA_ENDPOINTS}[{count}]')
+            if endpoint:
+                result =  True
+                message_server_endpoints.append(endpoint)
+        if not result:
+            raise CsmSetupError("Kafka endpoint not found.")
         Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))

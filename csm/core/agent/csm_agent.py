@@ -138,23 +138,29 @@ class CsmAgent:
 
     @staticmethod
     def _get_consul_config():
+        result : bool = False
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        protocol, host, port, secret, consul_ep = '','','','',''
-        consul_num_eps = Conf.get(const.CONSUMER_INDEX,
+        protocol, host, port, consul_endpoint = '','','',''
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.CONSUL_NUM_ENDPOINTS_KEY)
-        for ep_count in range(int(consul_num_eps)):
-            ep = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CONSUL_ENDPOINTS_KEY}[{ep_count}]')
-            if ep:
-                protocol, host, port = ServiceUrls.parse_url(ep)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmInternalError("Consul num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
+            if endpoint:
+                protocol, host, port = ServiceUrls.parse_url(endpoint)
                 if protocol == "https" or protocol == "http":
-                    consul_ep = ep
-                    Log.info(f"Fetching consul endpoint : {consul_ep}")
+                    result = True
+                    consul_endpoint = endpoint
+                    Log.info(f"Fetching consul endpoint : {consul_endpoint}")
                     break
-            else:
-                raise CsmInternalError(desc="Consul endpoint not found.")
-        return protocol, host, port, secret, consul_ep
-
+        if not result:
+            raise CsmInternalError("Consul endpoint not found.")
+        return protocol, host, port, secret, consul_endpoint
     @staticmethod
     def load_csm_config_indices():
         """Load CSM configuration from the database."""
