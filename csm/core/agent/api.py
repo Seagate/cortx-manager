@@ -366,10 +366,11 @@ class CsmRestApi(CsmApi, ABC):
                         if (lower_key.find("password") > -1 or lower_key.find("passwd") > -1 or
                                 lower_key.find("secret") > -1):
                             del(request_body[key])
-            try:
-                await CsmRestApi.check_for_unsupported_endpoint(request)
-            except DataAccessError as e:
-                Log.warn(f"Exception: {e}")
+            # Disabled: unsupported features endpoint checking
+            # try:
+            #     await CsmRestApi.check_for_unsupported_endpoint(request)
+            # except DataAccessError as e:
+            #     Log.warn(f"Exception: {e}")
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)

@@ -64,7 +64,7 @@ class Prepare(Setup):
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
         self._prepare_and_validate_confstore_keys()
-        self._set_secret_string_for_decryption()
+        Prepare._set_secret_string_for_decryption()
         self._set_cluster_id()
         # TODO: set configurations of perf stats once keys are available in conf-store.
         # self._set_msgbus_perf_stat_info()
@@ -87,7 +87,8 @@ class Prepare(Setup):
             Log.error(f"Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
-    def _set_secret_string_for_decryption(self):
+    @staticmethod
+    def _set_secret_string_for_decryption():
         """
         This will be the root of csm secret key
         eg: for "cortx>software>csm>secret" root is "cortx".

@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import time
 from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json
@@ -92,6 +91,7 @@ class Configure(Setup):
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
+            # Disabled: unsupported features
             # for count in range(0, 4):
             #     try:
             #         await self._set_unsupported_feature_info()
