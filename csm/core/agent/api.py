@@ -125,6 +125,7 @@ class CsmRestApi(CsmApi, ABC):
             CsmRestApi._app.router, CsmRestApi.process_websocket)
         ApiRoutes.add_swagger_ui_routes(CsmRestApi._app.router)
 
+        CsmRestApi._app.on_response_prepare.append(CsmRestApi._hide_headers)
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
@@ -473,6 +474,10 @@ class CsmRestApi(CsmApi, ABC):
                 task.cancel()
         await site.stop()
         loop.stop()
+
+    @staticmethod
+    async def _hide_headers(request, response) -> None:
+        del response.headers['Server']
 
     @staticmethod
     async def _handle_sigint(loop, site):
