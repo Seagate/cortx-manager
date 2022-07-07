@@ -316,13 +316,13 @@ class CsmRestApi(CsmApi, ABC):
             if conf_key.lower() == const.ENABLE:
                 is_public = False
         Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
-        try:
-            session_id = CsmRestApi._extract_bearer(request.headers)
-            session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
-            Log.info(f'Username: {session.credentials.user_id}')
-        except CsmNotFoundError as e:
-            if not is_public:
-                CsmRestApi._unauthorised(e.error())
+        if not is_public:
+            try:
+                session_id = CsmRestApi._extract_bearer(request.headers)
+                session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
+                Log.info(f'Username: {session.credentials.user_id}')
+            except CsmNotFoundError as e:
+                    CsmRestApi._unauthorised(e.error())
         request.session = session
         return await handler(request)
 
