@@ -48,9 +48,19 @@ class ClusterManagementAppService(ApplicationService):
             return False
 
     def init_message_bus(self):
+        message_server_endpoints = list()
+        kafka_num_eps = Conf.get(const.CONSUMER_INDEX,
+            const.KAFKA_NUM_ENDPOINTS)
+        for ep_count in range(int(kafka_num_eps)):
+            ep = Conf.get(const.CONSUMER_INDEX,
+                f'{const.KAFKA_ENDPOINTS}[{ep_count}]')
+            if ep:
+                message_server_endpoints.append(ep)
+            else:
+                raise CsmServiceNotAvailable("Kafka endpoint not found.")
         Log.info("Initializing communication broker.")
-        self.message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
-                                         unblock_consumer=True)
+        self.message_bus_obj = MessageBusComm(message_server_endpoints,
+            unblock_consumer=True)
         MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
         RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
 
