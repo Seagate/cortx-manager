@@ -71,7 +71,6 @@ if __name__ == '__main__':
     from csm.common.payload import Json
     from cortx.utils.cli_framework.parser import CommandParser
     from csm.core.blogic import const
-    from cortx.utils.log import Log
     from cortx.utils.cli_framework.client import CliClient
     from csm.conf.post_install import PostInstall
     from csm.conf.prepare import Prepare
