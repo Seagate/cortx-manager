@@ -68,15 +68,14 @@ class PostInstall(Setup):
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
         self.set_ssl_certificate()
-        self.set_logpath()
+        PostInstall.set_logpath()
         self.create()
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO: f"{const.NODE}>{self.machine_id}",
-                const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
-                })
+            const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
+            })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
@@ -103,7 +102,8 @@ class PostInstall(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
         Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
-    def set_logpath(self):
+    @staticmethod
+    def set_logpath():
         log_path = Setup.get_csm_log_path()
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
         Log.info(f"Setting log path: {log_path}")
