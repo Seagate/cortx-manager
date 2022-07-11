@@ -103,8 +103,9 @@ class CsmAgent:
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
+        active_users_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_ACTIVE_USERS_QUOTA_KEY))
         session_manager = QuotaSessionManager(
-            db, const.CSM_ACTIVE_USERS_QUOTA, const.CSM_SESSIONS_PER_USER_QUOTA)
+            db, active_users_quota, const.CSM_SESSIONS_PER_USER_QUOTA)
         CsmRestApi._app[const.SESSION_MGR_SERVICE ] = session_manager
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      user_manager,

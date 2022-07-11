@@ -178,6 +178,8 @@ class QuotaSessionManager(SessionManager):
         :param user_id: new session user's ID.
         :returns: True if quota is not full, False otherwise.
         """
+        if self._active_users_quota <= 0:
+            return True
         if not self._active_users_restored:
             self._active_users_restored = True
             await self._restore_active_users()
