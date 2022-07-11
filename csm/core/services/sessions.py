@@ -25,7 +25,7 @@ from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
-from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
+from csm.common.errors import CsmError, CsmPermissionDenied, CSM_ERR_INVALID_VALUE
 from csm.core.services.session.session_factory import (SessionFactory, SessionCredentials,
                                                Session, LocalCredentials)
 
@@ -222,6 +222,8 @@ class QuotaSessionManager(SessionManager):
         user_id = credentials.user_id
         if await self._add_active_user_with_quota(user_id):
             session = await super().create(credentials, permissions)
+        else:
+            raise CsmPermissionDenied('Active users quota is reached')
         return session
 
     async def delete(self, session_id: Session.Id) -> None:
