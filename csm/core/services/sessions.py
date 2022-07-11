@@ -138,20 +138,18 @@ class SessionManager:
 class QuotaSessionManager(SessionManager):
     """Session manager that tracks usage and maintains usage quotas."""
 
-    def __init__(self, storage: DataBaseProvider, active_users_quota: int, sessions_quota: int) -> None:
+    def __init__(self, storage: DataBaseProvider, active_users_quota: int) -> None:
         """
         Initialize the QuotaSessionManager.
 
         :param storage: storage for sessions.
         :param active_users_quota: number of users that are allowed to simultaneously use CSM.
-        :param sessions_quota: number of sessions allowed per active user.
         :returns: None.
         """
         super().__init__(storage)
         self._active_users_restored = False
         self._active_users = dict()
         self._active_users_quota = active_users_quota
-        self._sessions_quota = sessions_quota
 
     async def _restore_active_users(self):
         """Restore active users statistics from the session list."""
@@ -184,17 +182,12 @@ class QuotaSessionManager(SessionManager):
             self._active_users_restored = True
             await self._restore_active_users()
         active_users = len(self._active_users)
-        user_sessions = self._active_users.get(user_id, 0)
-        overflow = (active_users >= self._active_users_quota or
-                    user_sessions >= self._sessions_quota)
+        overflow = (active_users >= self._active_users_quota)
         # Try to free space by removing expired sessions
         if overflow:
             await self._remove_expired_sessions()
         active_users = len(self._active_users)
-        user_sessions = self._active_users.get(user_id, 0)
-        # Case where active_users == self._active_users_quota is handled later.
-        overflow = (active_users > self._active_users_quota or
-                    user_sessions >= self._sessions_quota)
+        overflow = (active_users > self._active_users_quota)
         if overflow:
             return False
         user_sessions = self._active_users.get(user_id, 0)
