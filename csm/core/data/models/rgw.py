@@ -47,6 +47,8 @@ class RgwErrors(Enum):
     InvalidTenantName = "Invalid tenant name provided."
     DeleteConflict = "Attempt to delete a resource that has attached"\
     " subordinate entities."
+    BucketAlreadyExists = "Attempt to delete a resource that has attached"\
+    " subordinate entities."
 
 class RgwError:
     """Class that describes a non-successful result"""

@@ -149,13 +149,14 @@ class RGWPlugin:
         Log.error(f"Create error body: {body}")
 
         rgw_error = RgwError()
-        rgw_error.http_status = status
         try:
+            rgw_error.http_status = status
             rgw_error.error_code = RgwErrors[body['Code']]
             rgw_error.error_message = rgw_error.error_code.value
         except KeyError:
             Log.error(f"Unable to parse error code received from S3:"
-            f" {body['Code']}, Generating generic error response.")
+            f" {body['Code']}, returning unknown error.")
+            rgw_error.http_status = 500
             rgw_error.error_code = RgwErrors["UnknownError"]
             rgw_error.error_message = const.S3_CLIENT_ERROR_MSG
         return rgw_error
