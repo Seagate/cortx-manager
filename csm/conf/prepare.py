@@ -43,10 +43,10 @@ class Prepare(Setup):
         :param command:
         :return:
         """
+        Log.info("csm_setup: prepare phase started.")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
-            Log.info("Executing csm_setup: prepare phase.")
             Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Configuration Loading Failed {e}")
@@ -70,9 +70,11 @@ class Prepare(Setup):
         # self._set_msgbus_perf_stat_info()
         Prepare._set_db_host_addr()
         self.create()
+        Log.info("csm_setup: prepare phase completed.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
+        Log.info("Preparing and validating configuration store keys")
         self.conf_store_keys.update({
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
@@ -110,6 +112,7 @@ class Prepare(Setup):
         Sets database hosts address in CSM config.
         :return:
         """
+        Log.info("Setting database host address")
         _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
@@ -125,6 +128,7 @@ class Prepare(Setup):
             raise CsmSetupError(f'Unable to set host address: {e}')
 
     def _set_msgbus_perf_stat_info(self):
+        Log.info("Setting message bus performance statistics information")
         msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
         retention_size = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_RETENTION_SIZE])
         Log.info(f"Set message_type:{msg_type} and retention_size:{retention_size} for perf_stat")

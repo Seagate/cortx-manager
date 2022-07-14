@@ -47,11 +47,11 @@ class PostInstall(Setup):
         :param command: Command Class Object :type: class
         :return:
         """
+        Log.info("csm_setup: post_install phase started.")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             Setup.setup_logs_init()
-            Log.info("Executing csm_setup: post_install phase.")
             Setup.load_csm_config_indices()
             Setup.copy_base_configs()
         except KvError as e:
@@ -65,14 +65,18 @@ class PostInstall(Setup):
         else:
             services=[services]
         if not "agent" in services:
+            # TODO: Need to discuss
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
         self._prepare_and_validate_confstore_keys()
         self.set_ssl_certificate()
         PostInstall.set_logpath()
         self.create()
+        Log.info("csm_setup: post_install phase completed.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
+        Log.info("Preparing and validating configuration store keys")
         self.conf_store_keys.update({
             const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
             })
@@ -84,6 +88,7 @@ class PostInstall(Setup):
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
         csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
@@ -100,7 +105,6 @@ class PostInstall(Setup):
             Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
-        Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     @staticmethod
     def set_logpath():

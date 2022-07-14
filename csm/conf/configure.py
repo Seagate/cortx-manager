@@ -50,6 +50,7 @@ class Configure(Setup):
         :param command:
         :return:
         """
+        Log.info("csm_setup: configure phase started.")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
@@ -110,9 +111,11 @@ class Configure(Setup):
                        f"{e} - {str(traceback.format_exc())}")
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
+        Log.info("csm_setup: configure phase completed.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
+        Log.info("Preparing and validating configuration store keys")
         self.conf_store_keys.update({
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
@@ -137,7 +140,7 @@ class Configure(Setup):
 
     @staticmethod
     def _set_csm_endpoint():
-        Log.info("Setting csm endpoint in csm config")
+        Log.info("Setting csm endpoint in csm configuration")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
         csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
@@ -153,6 +156,7 @@ class Configure(Setup):
 
     @staticmethod
     def _set_s3_endpoints():
+        Log.info("Setting S3 endpoints in csm config")
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.RGW_NUM_ENDPOINTS_KEY)
@@ -177,7 +181,7 @@ class Configure(Setup):
         This Function will set s3  related configurations.
         :return:
         """
-        Log.info("Setting S3 configurations in csm config")
+        Log.info("Setting S3 information in csm config")
         Configure._set_s3_endpoints()
         # Set IAM user credentails
         s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
@@ -189,6 +193,7 @@ class Configure(Setup):
 
     @staticmethod
     def set_hax_endpoint():
+        Log.info("Setting hax endpoints in csm config")
         hax_endpoint = None
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
@@ -265,6 +270,7 @@ class Configure(Setup):
 
     @staticmethod
     def _create_perf_stat_topic(mb_admin):
+        Log.info("Creating performance statistics topic")
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
@@ -280,6 +286,7 @@ class Configure(Setup):
 
     @staticmethod
     def _create_cluster_stop_topic(mb_admin):
+        Log.info("Creating cluster stop topic")
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
@@ -295,6 +302,7 @@ class Configure(Setup):
         """
         Create required messagebus topics for csm.
         """
+        Log.info("Creating topics for communication channel.")
         result : bool = False
         message_server_endpoints = list()
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
