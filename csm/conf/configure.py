@@ -50,18 +50,17 @@ class Configure(Setup):
         :param command:
         :return:
         """
-        Log.info("csm_setup: configure phase started.")
+        Log.info("Setup: Initiating Config phase.")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
-            Log.info("Executing csm_setup: configure phase.")
             Setup.load_csm_config_indices()
         except KvError as e:
-            Log.error(f"Configuration Loading Failed {e}")
+            Log.error(f"Setup: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         self.force_action = command.options.get('f')
-        Log.info(f"Force flag: {self.force_action}")
+        Log.info(f"Config: Force flag: {self.force_action}")
         services = command.options.get("services")
         if ',' in services:
             services = services.split(",")
@@ -80,13 +79,13 @@ class Configure(Setup):
         Configure.set_hax_endpoint()
 
         try:
-            Log.info("Creating topics for various CSM functionalities.")
+            Log.info("Config: Creating topics for various CSM functionalities.")
             Configure._create_topics()
         except MessageBusError as ex:
-            Log.error(f"Message bus connection error : {ex}")
+            Log.error(f"Config: Message bus connection error : {ex}")
             raise CsmSetupError(f"Message bus connection error : {ex}")
         except Exception as ex:
-            Log.error(f"Error occured while creating topics : {ex}")
+            Log.error(f"Config: Error occured while creating topics : {ex}")
             raise CsmSetupError(f"Error occured while creating topics : {ex}")
 
         try:
@@ -103,7 +102,7 @@ class Configure(Setup):
             # else:
             #     raise CsmSetupError("Unable to connect to storage after 4 attempts")
         except ValidationError as ve:
-            Log.error(f"Validation Error: {ve}")
+            Log.error(f"Config: Validation Error: {ve}")
             raise CsmSetupError(f"Validation Error: {ve}")
         except Exception as e:
             import traceback
@@ -111,11 +110,11 @@ class Configure(Setup):
                        f"{e} - {str(traceback.format_exc())}")
             Log.error(err_msg)
             raise CsmSetupError(err_msg)
-        Log.info("csm_setup: configure phase completed.")
+        Log.info("Setup: Successfully passed Config phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        Log.info("Preparing and validating configuration store keys")
+        Log.info("Config: Validating required configuration.")
         self.conf_store_keys.update({
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
@@ -131,7 +130,7 @@ class Configure(Setup):
         :return:
         """
 
-        Log.info("Creating CSM Conf File on Required Location.")
+        Log.info("Config: Creating CSM Conf File on Required Location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
@@ -140,7 +139,7 @@ class Configure(Setup):
 
     @staticmethod
     def _set_csm_endpoint():
-        Log.info("Setting csm endpoint in csm configuration")
+        Log.info("Config: Setting CSM endpoint in configuration.")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
         csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
@@ -156,7 +155,7 @@ class Configure(Setup):
 
     @staticmethod
     def _set_s3_endpoints():
-        Log.info("Setting S3 endpoints in csm config")
+        Log.info("Config: Setting S3 endpoints in configuration")
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.RGW_NUM_ENDPOINTS_KEY)
@@ -181,7 +180,7 @@ class Configure(Setup):
         This Function will set s3  related configurations.
         :return:
         """
-        Log.info("Setting S3 information in csm config")
+        Log.info("Config: Setting S3 information in configuration")
         Configure._set_s3_endpoints()
         # Set IAM user credentails
         s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
@@ -193,7 +192,7 @@ class Configure(Setup):
 
     @staticmethod
     def set_hax_endpoint():
-        Log.info("Setting hax endpoints in csm config")
+        Log.info("Config: Setting hax endpoints in configuration")
         hax_endpoint = None
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
@@ -232,19 +231,19 @@ class Configure(Setup):
         """
 
         def get_component_list_from_features_endpoints():
-            Log.info("Get Component List.")
+            Log.info("Config: Get Component List.")
             feature_endpoints = Json(
                 const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for
                               feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
         try:
-            Log.info("Set unsupported feature list to ES.")
+            Log.info("Config: Set unsupported feature list to ES.")
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []
             for component in components_list:
-                Log.info(f"Fetch Unsupported Features for {component}.")
+                Log.info(f"Config: Fetch Unsupported Features for {component}.")
                 unsupported = await unsupported_feature_instance.get_unsupported_features(
                     component_name=component)
                 for feature in unsupported:
@@ -258,41 +257,41 @@ class Configure(Setup):
             unique_unsupported_features_list = list(
                 filter(None, unsupported_features_list))
             if unique_unsupported_features_list:
-                Log.info("Store Unsupported Features.")
+                Log.info("Config: Store Unsupported Features.")
                 await unsupported_feature_instance.store_unsupported_features(
                     component_name=str(const.CSM_COMPONENT_NAME),
                     features=unique_unsupported_features_list)
             else:
-                Log.info("Unsupported features list is empty.")
+                Log.info("Config: Unsupported features list is empty.")
         except Exception as e_:
-            Log.error(f"Error in storing unsupported features: {e_}")
+            Log.error(f"Config: Error in storing unsupported features: {e_}")
             raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     @staticmethod
     def _create_perf_stat_topic(mb_admin):
-        Log.info("Creating performance statistics topic")
+        Log.info("Config: Creating performance statistics topic")
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
         if not message_type in mb_admin.list_message_types():
-            Log.info(f"Registering message_type:{message_type}")
+            Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,
                                             expire_time_ms=retention_period,
                                             data_limit_bytes=retention_size)
         else:
-            Log.info(f"message_type:{message_type} already exists.")
+            Log.info(f"Config: message_type:{message_type} already exists.")
 
     @staticmethod
     def _create_cluster_stop_topic(mb_admin):
-        Log.info("Creating cluster stop topic")
+        Log.info("Config: Creating cluster stop topic")
         message_type = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_MSG_TYPE)
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD))
         if not message_type in mb_admin.list_message_types():
-            Log.info(f"Registering message_type:{message_type}")
+            Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,
                                             expire_time_ms=retention_period,
@@ -302,7 +301,7 @@ class Configure(Setup):
         """
         Create required messagebus topics for csm.
         """
-        Log.info("Creating topics for communication channel.")
+        Log.info("Config: Creating topics for communication channel.")
         result : bool = False
         message_server_endpoints = list()
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
@@ -320,7 +319,7 @@ class Configure(Setup):
                 message_server_endpoints.append(endpoint)
         if not result:
             raise CsmSetupError("Kafka endpoint not found.")
-        Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
+        Log.info(f"Config: Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         Configure._create_perf_stat_topic(mb_admin)

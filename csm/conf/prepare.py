@@ -43,13 +43,13 @@ class Prepare(Setup):
         :param command:
         :return:
         """
-        Log.info("csm_setup: prepare phase started.")
+        Log.info("Setup: Initiating Prepare phase.")
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
             Setup.load_csm_config_indices()
         except KvError as e:
-            Log.error(f"Configuration Loading Failed {e}")
+            Log.error(f"Setup: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
 
@@ -70,11 +70,11 @@ class Prepare(Setup):
         # self._set_msgbus_perf_stat_info()
         Prepare._set_db_host_addr()
         self.create()
-        Log.info("csm_setup: prepare phase completed.")
+        Log.info("Setup: Successfully passed Prepare phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
-        Log.info("Preparing and validating configuration store keys")
+        Log.info("Prepare: Validating required configuration.")
         self.conf_store_keys.update({
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
@@ -86,7 +86,7 @@ class Prepare(Setup):
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
-            Log.error(f"Key not found in Conf Store: {ve}")
+            Log.error(f"Prepare: Key not found in Conf Store: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     @staticmethod
@@ -95,12 +95,12 @@ class Prepare(Setup):
         This will be the root of csm secret key
         eg: for "cortx>software>csm>secret" root is "cortx".
         """
-        Log.info("Set decryption keys for CSM and S3")
+        Log.info("Prepare: Set decryption keys for CSM and S3")
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
             const.CONSUL_ENDPOINTS_KEY.split('>')[0])
 
     def _set_cluster_id(self):
-        Log.info("Setting up cluster id")
+        Log.info("Prepare: Setting up cluster id")
         cluster_id = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_CLUSTER_ID])
         if not cluster_id:
             raise CsmSetupError("Failed to fetch cluster id")
@@ -112,7 +112,7 @@ class Prepare(Setup):
         Sets database hosts address in CSM config.
         :return:
         """
-        Log.info("Setting database host address")
+        Log.info("Prepare: Setting database host address")
         _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
@@ -124,14 +124,14 @@ class Prepare(Setup):
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PASSWORD, secret)
             Conf.set(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_LOGIN, consul_login)
         except Exception as e:
-            Log.error(f'Unable to set host address: {e}')
+            Log.error(f'Prepare: Unable to set host address: {e}')
             raise CsmSetupError(f'Unable to set host address: {e}')
 
     def _set_msgbus_perf_stat_info(self):
-        Log.info("Setting message bus performance statistics information")
+        Log.info("Prepare: Setting message bus performance statistics information")
         msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
         retention_size = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_RETENTION_SIZE])
-        Log.info(f"Set message_type:{msg_type} and retention_size:{retention_size} for perf_stat")
+        Log.info(f"Prepare: Set message_type:{msg_type} and retention_size:{retention_size} for perf_stat")
         Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_MSG_TYPE, msg_type)
         Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_RETENTION_SIZE, retention_size)
 
@@ -141,7 +141,7 @@ class Prepare(Setup):
         :return:
         """
 
-        Log.info("Creating CSM Conf File on Required Location.")
+        Log.info("Prepare: Creating configuration file on required location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE,
                      const.DEV)
