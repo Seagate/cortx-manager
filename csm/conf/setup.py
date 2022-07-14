@@ -66,12 +66,12 @@ class Setup:
 
     @staticmethod
     def load_csm_config_indices():
+        Log.info("Loading CSM configuration")
         set_config_flag = False
         _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:
             try:
                 ConsulV().validate_service_status(consul_host,consul_port)
-                Log.info("Setting CSM configuration to consul")
                 Conf.load(const.CSM_GLOBAL_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
