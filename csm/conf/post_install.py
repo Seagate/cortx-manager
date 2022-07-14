@@ -82,12 +82,12 @@ class PostInstall(Setup):
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
-            Log.error(f"Post Install: Key not found in Conf Store: {ve}")
+            Log.error(f"Post Install: Key not found in configuration: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
-        Log.info(f"Post Install: Setting ssl certificate path: {ssl_certificate_path}")
+        Log.info(f"Post Install: Setting SSL certificate path: {ssl_certificate_path}")
         csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
@@ -101,7 +101,7 @@ class PostInstall(Setup):
             except SSLCertificateError as e:
                 Log.error(f"Post Install: Failed to generate self signed ssl certificate: {e}")
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
-            Log.info(f"Post Install: Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
+            Log.info(f"Post Install: Self signed SSL certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
 
@@ -117,7 +117,7 @@ class PostInstall(Setup):
         :return:
         """
 
-        Log.info("Post Install: Creating CSM Conf File on Required Location.")
+        Log.info("Post Install: Creating CSM configuration file on required location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)

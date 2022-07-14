@@ -86,7 +86,7 @@ class Prepare(Setup):
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
-            Log.error(f"Prepare: Key not found in Conf Store: {ve}")
+            Log.error(f"Prepare: Key not found in configuration: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     @staticmethod
@@ -95,7 +95,7 @@ class Prepare(Setup):
         This will be the root of csm secret key
         eg: for "cortx>software>csm>secret" root is "cortx".
         """
-        Log.info("Prepare: Set decryption keys for CSM and S3")
+        Log.info("Prepare: Setting decryption keys for CSM and S3")
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
             const.CONSUL_ENDPOINTS_KEY.split('>')[0])
 
@@ -131,7 +131,7 @@ class Prepare(Setup):
         Log.info("Prepare: Setting message bus performance statistics information")
         msg_type = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_MSG_TYPE])
         retention_size = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.METRICS_PERF_STATS_RETENTION_SIZE])
-        Log.info(f"Prepare: Set message_type:{msg_type} and retention_size:{retention_size} for perf_stat")
+        Log.info(f"Prepare: Setting message_type:{msg_type} and retention_size:{retention_size} for perf_stat")
         Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_MSG_TYPE, msg_type)
         Conf.set(const.CSM_GLOBAL_INDEX, const.MSG_BUS_PERF_STAT_RETENTION_SIZE, retention_size)
 

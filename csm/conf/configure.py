@@ -56,7 +56,7 @@ class Configure(Setup):
             Setup.setup_logs_init()
             Setup.load_csm_config_indices()
         except KvError as e:
-            Log.error(f"Setup: Configuration Loading Failed {e}")
+            Log.error(f"Setup: Configuration loading failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         self.force_action = command.options.get('f')
@@ -130,7 +130,7 @@ class Configure(Setup):
         :return:
         """
 
-        Log.info("Config: Creating CSM Conf File on Required Location.")
+        Log.info("Config: Creating CSM configuration file on required location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
@@ -192,7 +192,7 @@ class Configure(Setup):
 
     @staticmethod
     def set_hax_endpoint():
-        Log.info("Config: Setting hax endpoints in configuration")
+        Log.info("Config: Setting HAX endpoints in configuration")
         hax_endpoint = None
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
@@ -231,19 +231,19 @@ class Configure(Setup):
         """
 
         def get_component_list_from_features_endpoints():
-            Log.info("Config: Get Component List.")
+            Log.info("Config: Getting component list.")
             feature_endpoints = Json(
                 const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
             component_list = [feature for v in feature_endpoints.values() for
                               feature in v.get(const.DEPENDENT_ON)]
             return list(set(component_list))
         try:
-            Log.info("Config: Set unsupported feature list to ES.")
+            Log.info("Config: Setting unsupported feature list to ES.")
             unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
             components_list = get_component_list_from_features_endpoints()
             unsupported_features_list = []
             for component in components_list:
-                Log.info(f"Config: Fetch Unsupported Features for {component}.")
+                Log.info(f"Config: Fetching unsupported features for {component}.")
                 unsupported = await unsupported_feature_instance.get_unsupported_features(
                     component_name=component)
                 for feature in unsupported:
@@ -257,7 +257,7 @@ class Configure(Setup):
             unique_unsupported_features_list = list(
                 filter(None, unsupported_features_list))
             if unique_unsupported_features_list:
-                Log.info("Config: Store Unsupported Features.")
+                Log.info("Config: Storing unsupported features.")
                 await unsupported_feature_instance.store_unsupported_features(
                     component_name=str(const.CSM_COMPONENT_NAME),
                     features=unique_unsupported_features_list)
