@@ -94,7 +94,7 @@ class CsmUsersListView(CsmView):
     async def check_max_user_limit(self):
         max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
         existing_users_count = await self._service.get_user_count()
-        if existing_users_count >= max_users_allowed:
+        if existing_users_count >= max_users_allowed and max_users_allowed > 0:
             raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
 
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
