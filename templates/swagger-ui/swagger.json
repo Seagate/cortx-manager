@@ -20,9 +20,6 @@
   "servers": [
       {
           "url": "/api/v2"
-      },
-      {
-          "url": "/api/v1"
       }
   ],
   "paths": {
@@ -111,7 +108,7 @@
               }
           }
       },
-      "/csm/users": {
+      "/system/users": {
           "get": {
               "tags": [
                   "CSM User"
@@ -217,7 +214,7 @@
                                   },
                                   "password": {
                                       "type": "string",
-                                      "example": "password"
+                                      "example": "Password@123"
                                   },
                                   "email": {
                                       "type": "string",
@@ -239,7 +236,7 @@
               }
           }
       },
-      "/csm/users/{user_id}": {
+      "/system/users/{user_id}": {
           "get": {
               "tags": [
                   "CSM User"
@@ -389,7 +386,7 @@
               ]
           }
       },
-      "/s3/iam/users": {
+      "/iam/users": {
           "post": {
               "tags": [
                   "IAM User"
@@ -489,7 +486,7 @@
               }
           }
       },
-      "/s3/iam/users/{uid}": {
+      "/iam/users/{uid}": {
           "get": {
               "tags": [
                   "IAM User"
@@ -507,6 +504,9 @@
                   },
                   "403": {
                       "description": "Forbidden: This error is raised for all cases when user don't have permissions"
+                  },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
                   },
                   "503": {
                       "description": "Service Unavailable: Service is not available at the moment or unable to connect to service."
@@ -547,6 +547,9 @@
                   },
                   "403": {
                       "description": "Forbidden: This error is raised for all cases when user don't have permissions."
+                  },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
                   },
                   "409": {
                       "description": "Conflict: Provided access key exists or email belongs to another user."
@@ -661,24 +664,6 @@
               "content": {
                   "application/json": {}
               },
-              "requestBody": {
-                  "description": "When specified the buckets and objects belonging to the user will also be removed.",
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "type": "object",
-                              "required": false,
-                              "properties": {
-                                  "purge_data": {
-                                      "type": "boolean",
-                                      "example": "",
-                                      "required": false
-                                  }
-                              }
-                          }
-                      }
-                  }
-              },
               "parameters": [
                   {
                       "name": "uid",
@@ -692,7 +677,7 @@
               ]
           }
       },
-      "/s3/iam/keys": {
+      "/iam/keys": {
           "put": {
               "tags": [
                   "IAM User"
@@ -740,7 +725,7 @@
                                       "example": "",
                                       "required": false
                                   },
-                                  "acsess_key": {
+                                  "access_key": {
                                       "type": "string",
                                       "example": "",
                                       "required": false
@@ -805,7 +790,7 @@
                                       "example": "",
                                       "required": false
                                   },
-                                  "acsess_key": {
+                                  "access_key": {
                                       "type": "string",
                                       "example": "",
                                       "required": true
@@ -817,7 +802,7 @@
               }
           }
       },
-      "/s3/iam/caps/{uid}": {
+      "/iam/caps/{uid}": {
           "put": {
               "tags": [
                   "IAM User"
@@ -835,6 +820,9 @@
                   },
                   "403": {
                       "description": "Forbidden: PermissionDenied: CSM user does not have the permission to perform operation."
+                  },
+                  "404": {
+                    "description": "No Found: NoSuchUser: User does not exist. "
                   },
                   "500": {
                       "description": "Internal Server Error: Unknown error occurred."
@@ -1024,9 +1012,6 @@
                   "401": {
                       "description": "Unauthorized: Token has not found or invalid token format or session is invalid."
                   },
-                  "403": {
-                      "description": "Forbidden: PermissionDenied: CSM user does not have the permission to perform operation."
-                  },
                   "500": {
                       "description": "Internal Server Error: Unknown error occurred."
                   },
@@ -1050,7 +1035,7 @@
       "/capacity/status/{resource}": {
           "get": {
               "tags": [
-                  "Storage Capacity"
+                  "Degraded Byte Count"
               ],
               "summary": " Get degraded capacity in bytes count.",
               "responses": {
@@ -1086,6 +1071,226 @@
                   }
               ]
           }
-      }
+      },
+      "/capacity/s3/{resource}/{id}": {
+          "get": {
+            "tags": [
+                "Cortx Capacity"
+            ],
+            "summary": "Get resource capacity usage statistics.",
+            "responses": {
+                "200": {
+                    "description": "OK"
+                },
+                "401": {
+                    "description": "Unauthorized: Token has not found or invalid format or session is invalid"
+                },
+                "403": {
+                    "description": "Forbidden: This error is raised for all cases when user don't have permissions"
+                },
+                "503": {
+                    "description": "Unable to connect to the service"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "content": {
+                "application/json": {}
+            },
+            "parameters": [
+                {
+                    "name": "resource",
+                    "in": "path",
+                    "description": "The resource whose capacity usage need to check.",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": "user"
+                },
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "Get capacity usage by resource id",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": ""
+                }
+            ]
+          }
+      },
+      "/system/management/{resource}": {
+          "post": {
+            "tags": [
+                "Cluster Management"
+            ],
+            "summary": "Sends cluster shutdown signal.",
+            "responses": {
+                "200": {
+                    "description": "OK"
+                },
+                "401": {
+                    "description": "Unauthorized: Token has not found or invalid format or session is invalid"
+                },
+                "403": {
+                    "description": "Forbidden: This error is raised for all cases when user don't have permissions"
+                },
+                "503": {
+                    "description": "Unable to connect to the service"
+                },
+                "500": {
+                    "description": "Internal Server Error"
+                }
+            },
+            "content": {
+                "application/json": {}
+            },
+            "requestBody": {
+                "description": "Perform operation for specified resource.",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "required": true,
+                            "properties": {
+                                "operation": {
+                                    "type": "string",
+                                    "example": "shutdown_signal",
+                                    "required": true
+                                },
+                                "arguments": {
+                                    "type": "object",
+                                    "example": {},
+                                    "required": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "resource",
+                    "in": "path",
+                    "description": "The resource for which operation need to perform.",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    },
+                    "example": "cluster"
+                }
+            ]
+          }
+      },
+      "/version/compatibility/{resource}/{resource_id}": {
+        "post": {
+          "tags": [
+              "Version Compatibility"
+          ],
+          "summary": "Check version compatibility.",
+          "responses": {
+              "200": {
+                  "description": "OK"
+              },
+              "400": {
+                  "description": "Bad Request: MalformedRequest: Request body is missing or invalid request body."
+              },
+              "404": {
+                "description": "Not Found"
+              },
+              "500": {
+                  "description": "Internal Server Error"
+              }
+          },
+          "content": {
+              "application/json": {}
+          },
+          "requestBody": {
+            "description": "Rules to check version compatibility.",
+            "required": true,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": true,
+                        "properties": {
+                            "requires": {
+                                "type": "list",
+                                "example": [],
+                                "required": true
+                            }
+                        }
+                    }
+                }
+            }
+          },
+          "parameters": [
+              {
+                  "name": "resource",
+                  "in": "path",
+                  "description": "The resource whose version compatibility need to check.",
+                  "required": true,
+                  "schema": {
+                      "type": "string"
+                  },
+                  "example": "node"
+              },
+              {
+                "name": "resource_id",
+                "in": "path",
+                "description": "Id of the resource whose version compatibility need to check.",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                },
+                "example": "cortx-control"
+            }
+          ]
+        }
+    },
+    "/activities/{id}": {
+        "get": {
+          "tags": [
+              "Activity Tracking"
+          ],
+          "summary": "Fetch activity details by id.",
+          "responses": {
+              "200": {
+                  "description": "OK"
+              },
+              "400": {
+                  "description": "Bad Request: MalformedRequest: Request body is missing or invalid request body."
+              },
+              "401": {
+                  "description": "Unauthorized: Token has not found or invalid format or session is invalid."
+              },
+              "404": {
+                "description": "ActivityNotFound : Activity does not exist in storage."
+              },
+              "500": {
+                  "description": "Internal Server Error"
+              }
+          },
+          "content": {
+              "application/json": {}
+          },
+          "parameters": [
+              {
+                  "name": "id",
+                  "in": "path",
+                  "description": "Activity id.",
+                  "required": true,
+                  "schema": {
+                      "type": "string"
+                  },
+                  "example": ""
+              }
+          ]
+        }
+    }
   }
 }

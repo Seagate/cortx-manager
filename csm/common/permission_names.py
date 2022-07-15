@@ -38,6 +38,7 @@ class Resource:
     CLUSTER_MANAGEMENT = 'cluster_management'
     S3_IAM_USERS = 's3_iam_users'
     S3_BUCKET = 's3_bucket'
+    ACTIVITIES = 'activities'
 
 
 class Action:

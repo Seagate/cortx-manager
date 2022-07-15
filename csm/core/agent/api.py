@@ -134,6 +134,7 @@ class CsmRestApi(CsmApi, ABC):
             CsmRestApi._app.router, CsmRestApi.process_websocket)
         ApiRoutes.add_swagger_ui_routes(CsmRestApi._app.router)
 
+        CsmRestApi._app.on_response_prepare.append(CsmRestApi._hide_headers)
         CsmRestApi._app.on_startup.append(CsmRestApi._on_startup)
         CsmRestApi._app.on_shutdown.append(CsmRestApi._on_shutdown)
 
@@ -342,12 +343,12 @@ class CsmRestApi(CsmApi, ABC):
                 is_public = False
         Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
         try:
-            session_id = CsmRestApi._extract_bearer(request.headers)
-            session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
-            Log.info(f'Username: {session.credentials.user_id}')
-        except CsmNotFoundError as e:
             if not is_public:
-                CsmRestApi._unauthorised(e.error())
+                session_id = CsmRestApi._extract_bearer(request.headers)
+                session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
+                Log.info(f'Username: {session.credentials.user_id}')
+        except CsmNotFoundError as e:
+            CsmRestApi._unauthorised(e.error())
         request.session = session
         return await handler(request)
 
@@ -391,10 +392,11 @@ class CsmRestApi(CsmApi, ABC):
                         if (lower_key.find("password") > -1 or lower_key.find("passwd") > -1 or
                                 lower_key.find("secret") > -1):
                             del(request_body[key])
-            try:
-                await CsmRestApi.check_for_unsupported_endpoint(request)
-            except DataAccessError as e:
-                Log.warn(f"Exception: {e}")
+            # Disabled: unsupported features endpoint checking
+            # try:
+            #     await CsmRestApi.check_for_unsupported_endpoint(request)
+            # except DataAccessError as e:
+            #     Log.warn(f"Exception: {e}")
             resp = await handler(request)
             if isinstance(resp, DownloadFileEntity):
                 file_resp = web.FileResponse(resp.path_to_file)
@@ -497,6 +499,10 @@ class CsmRestApi(CsmApi, ABC):
                 task.cancel()
         await site.stop()
         loop.stop()
+
+    @staticmethod
+    async def _hide_headers(request, response) -> None:
+        del response.headers['Server']
 
     @staticmethod
     async def _handle_sigint(loop, site):

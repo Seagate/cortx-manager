@@ -18,7 +18,8 @@
             "health": ["list"],
             "cluster_management": ["create", "list"],
             "s3_iam_users": ["create", "list", "update", "delete"],
-            "s3_bucket": ["update"]
+            "s3_bucket": ["update"],
+            "activities": ["create", "read","update"]
         }
     },
     "manage":{
@@ -36,7 +37,8 @@
             "security": ["read"],
             "cluster_management": ["create", "list"],
             "s3_iam_users": ["create", "list", "update", "delete"],
-            "s3_bucket": ["update"]
+            "s3_bucket": ["update"],
+            "activities": ["create", "read", "update"]
         }
     },
     "monitor": {
@@ -52,7 +54,8 @@
             "replace_node": ["list"],
             "health": ["list"],
             "security": ["read"],
-            "s3_iam_users": ["list"]
+            "s3_iam_users": ["list"],
+            "activities": ["read"]
         }
     },
     "s3": {

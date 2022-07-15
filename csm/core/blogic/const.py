@@ -545,6 +545,8 @@ APPLIANCE_INFO_SERVICE = "appliance_info_service"
 UNSUPPORTED_FEATURES_SERVICE = "unsupported_features_service"
 SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
+INFORMATION_SERVICE = "information_service"
+ACTIVITY_MANAGEMENT_SERVICE = "activity_management_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
@@ -759,7 +761,6 @@ CONSUMER_OFFSET = 'MESSAGEBUS>CONSUMER>ALERTS>offset'
 #ConfStore Keys
 KEY_DEPLOYMENT_MODE = f"{DEPLOYMENT}>{MODE}"
 SERVER_NODE_INFO = f"{SERVER_NODE}>machine_id"
-KEY_SERVER_NODE_INFO = "server_node_info_key"
 KEY_SERVER_NODE_TYPE = "server_node_type_key"
 KEY_ENCLOSURE_ID = "enclosure_id_key"
 KEY_CLUSTER_ID = "cluster_id_key"
@@ -782,8 +783,10 @@ DEFAULT_OUTPUTFILE = '{}/output.log'.format(CSM_TEMP_PATH)
 ENV_TYPE = "env_type"
 CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
 KAFKA_ENDPOINTS = 'cortx>external>kafka>endpoints'
+KAFKA_NUM_ENDPOINTS = 'cortx>external>kafka>num_endpoints'
 CONSUL_ENDPOINTS = 'consul_endpoints'
 CONSUL_ENDPOINTS_KEY = 'cortx>external>consul>endpoints'
+CONSUL_NUM_ENDPOINTS_KEY = 'cortx>external>consul>num_endpoints'
 CONSUL_ADMIN = 'consul_admin'
 CONSUL_ADMIN_KEY = 'cortx>external>consul>admin'
 CONSUL_SECRET = 'consul_secret'
@@ -794,7 +797,6 @@ DOMAIN_CERTIFICATE = 'domain_certificate'
 DOMAIN_CERTIFICATE_KEY = 'cortx>common>security>domain_certificate'
 DEVICE_CERTIFICATE = 'device_certificate'
 DEVICE_CERTIFICATE_KEY = 'cortx>common>security>device_certificate'
-CSM_AGENT_ENDPOINTS = 'csm_agent_endpoints'
 CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints[0]'
 CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
 CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
@@ -805,8 +807,8 @@ METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
 METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
 METRICS_PERF_STATS_RETENTION_SIZE_KEY = 'cortx>csm>metrics>stats>retention_size'
-RGW_S3_DATA_ENDPOINT = 'rgw_s3_data_endpoints'
 RGW_S3_DATA_ENDPOINTS_KEY = 'cortx>rgw>public>endpoints'
+RGW_NUM_ENDPOINTS_KEY = 'cortx>rgw>public>num_endpoints'
 RGW_S3_AUTH_USER = 'rgw_s3_auth_user'
 RGW_S3_AUTH_USER_KEY = 'cortx>rgw>auth_user'
 RGW_S3_AUTH_ADMIN = 'rgw_s3_auth_admin'
@@ -814,6 +816,7 @@ RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
 RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
 HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
+HAX_NUM_ENDPOINT_KEY = 'cortx>hare>hax>num_endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -917,7 +920,7 @@ SKEY = 'secret_key'
 USER_CAPS = 'user_caps'
 GENERATE_KEY = 'generate_key'
 MAX_BUCKETS = 'max_buckets'
-SUSPENDED = 'suspended'
+SUSPENDED_KEY = 'suspended'
 TENANT = 'tenant'
 PURGE_DATA = 'purge_data'
 OP_MASK = 'op_mask'
@@ -981,14 +984,29 @@ SWAGGER_UI_STATICS_URL = '/api/static'
 
 # Version Validation
 REQUIRES = 'requires'
-INFORMATION_SERVICE = "information_service"
 VERSION_RESOURCES = ['node']
 
-#Capacity API
+# Capacity API
 SUPPORTED_RESOURCE_TYPES = [USER]
 ACCOUNT = 'account'
 
-# error reposne schema
+# Activity API
+RESOURCE_PATH = 'resource_path'
+PCT_PROGRESS = 'pct_progress'
+STATUS_DESC = 'status_description'
+ACTIVITY_ERROR = "Unable to process the request"
+ACTIVITY_NOT_FOUND = "ActivityNotFound"
+IN_PROGRESS = 'IN_PROGRESS'
+COMPLETED = 'COMPLETED'
+SUSPENDED = 'SUSPENDED'
+RESULT_CODE = 'result_code'
+SUPPORTED_ACTIVITY_STATUS = [IN_PROGRESS, COMPLETED, SUSPENDED]
+
+# Retry
+MAX_RETRY_COUNT        = 'RETRY>retry_count'
+RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
+
+# Error reposne schema
 ERROR_CODE = "error_code"
 MESSAGE_ID = "message_id"
 JSON_ERROR = "Unable to parse request body, Malformed request body received."

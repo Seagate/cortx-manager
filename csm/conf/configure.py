@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import time
 from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json
@@ -27,6 +26,7 @@ from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
+from cortx.utils.message_bus.error import MessageBusError
 
 
 class Configure(Setup):
@@ -78,19 +78,30 @@ class Configure(Setup):
         Configure._set_csm_endpoint()
         Configure._set_s3_info()
         Configure.set_hax_endpoint()
-        Configure._create_topics()
+
+        try:
+            Log.info("Creating topics for various CSM functionalities.")
+            Configure._create_topics()
+        except MessageBusError as ex:
+            Log.error(f"Message bus connection error : {ex}")
+            raise CsmSetupError(f"Message bus connection error : {ex}")
+        except Exception as ex:
+            Log.error(f"Error occured while creating topics : {ex}")
+            raise CsmSetupError(f"Error occured while creating topics : {ex}")
+
         try:
             await self._create_cluster_admin(self.force_action)
             self.create()
-            for count in range(0, 4):
-                try:
-                    await self._set_unsupported_feature_info()
-                    break
-                except Exception as e_:
-                    Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
-                    time.sleep(2**count)
-            else:
-                raise CsmSetupError("Unable to connect to storage after 4 attempts")
+            # Disabled: unsupported features
+            # for count in range(0, 4):
+            #     try:
+            #         await self._set_unsupported_feature_info()
+            #         break
+            #     except Exception as e_:
+            #         Log.warn(f"Unable to connect to ES. Retrying : {count+1}. {e_}")
+            #         time.sleep(2**count)
+            # else:
+            #     raise CsmSetupError("Unable to connect to storage after 4 attempts")
         except ValidationError as ve:
             Log.error(f"Validation Error: {ve}")
             raise CsmSetupError(f"Validation Error: {ve}")
@@ -104,10 +115,7 @@ class Configure(Setup):
 
     def _prepare_and_validate_confstore_keys(self):
         self.conf_store_keys.update({
-                const.KEY_SERVER_NODE_INFO:f"{const.NODE}>{self.machine_id}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.CSM_AGENT_ENDPOINTS:f"{const.CSM_AGENT_ENDPOINTS_KEY}",
-                const.RGW_S3_DATA_ENDPOINT: f"{const.RGW_S3_DATA_ENDPOINTS_KEY}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
                 const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}",
@@ -147,16 +155,23 @@ class Configure(Setup):
 
     @staticmethod
     def _set_s3_endpoints():
-        s3_endpoints = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_DATA_ENDPOINTS_KEY)
-        if s3_endpoints:
-            Log.info(f"Fetching s3 endpoint.{s3_endpoints}")
-            s3_endpoints_count = len(s3_endpoints)
-            for endpoint_count in range(s3_endpoints_count):
+        result : bool = False
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
+            const.RGW_NUM_ENDPOINTS_KEY)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Rgw num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{count}]')
+            if endpoint:
+                result = True
                 Conf.set(const.CSM_GLOBAL_INDEX,
-                        f'{const.RGW_S3_ENDPOINTS}[{endpoint_count}]',
-                        eval(f'{s3_endpoints}[{endpoint_count}]'))
-        else:
-            raise CsmSetupError("S3 endpoints not found.")
+                        f'{const.RGW_S3_ENDPOINTS}[{count}]', endpoint)
+        if not result:
+            raise CsmSetupError("S3 endpoint not found.")
 
     @staticmethod
     def _set_s3_info():
@@ -175,16 +190,27 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
 
     @staticmethod
-    def _get_hax_endpoint(endpoints):
-        for endpoint in endpoints:
-            protocol, _, _ = ServiceUrls.parse_url(endpoint)
-            if protocol == "https" or protocol == "http":
-                return endpoint
-
-    @staticmethod
     def set_hax_endpoint():
-        endpoints = Conf.get(const.CONSUMER_INDEX, const.HAX_ENDPOINT_KEY)
-        hax_endpoint = Configure._get_hax_endpoint(endpoints)
+        hax_endpoint = None
+        result : bool = False
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
+            const.HAX_NUM_ENDPOINT_KEY)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Hax num_endpoints value is not a valid"
+                " integer.")
+        for count in range(int(count_endpoints)):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.HAX_ENDPOINT_KEY}[{count}]')
+            if endpoint:
+                protocol, _, _ = ServiceUrls.parse_url(endpoint)
+                if protocol == "https" or protocol == "http":
+                    result = True
+                    hax_endpoint = endpoint
+                    break
+        if not result:
+            raise CsmSetupError("Hax endpoint not found.")
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
 
@@ -271,7 +297,24 @@ class Configure(Setup):
         """
         Create required messagebus topics for csm.
         """
-        message_server_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
+        result : bool = False
+        message_server_endpoints = list()
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
+            const.KAFKA_NUM_ENDPOINTS)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmSetupError("Kafka num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.KAFKA_ENDPOINTS}[{count}]')
+            if endpoint:
+                result =  True
+                message_server_endpoints.append(endpoint)
+        if not result:
+            raise CsmSetupError("Kafka endpoint not found.")
+        Log.info(f"Connecting to message bus using endpoint :{message_server_endpoints}")
         MessageBus.init(message_server_endpoints)
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         Configure._create_perf_stat_topic(mb_admin)

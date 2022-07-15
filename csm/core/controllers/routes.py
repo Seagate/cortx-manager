@@ -30,6 +30,7 @@ from csm.core.controllers.rgw.s3.users import (S3IAMUserListView, S3IAMUserView,
                                                S3IAMUserKeyView, S3IAMUserCapsView, S3IAMUserQuotaView)
 from csm.core.controllers.rgw.s3.bucket import S3BucketView
 from csm.core.controllers.information import VersionInformationView
+from csm.core.controllers.activities import ActivitiesListView, ActivitiesView
 
 class CsmRoutes():
     """

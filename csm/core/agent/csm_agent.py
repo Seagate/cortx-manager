@@ -64,9 +64,6 @@ class CsmAgent:
         conf = GeneralConfig(db_config)
         db = DataBaseProvider(conf)
 
-        # Remove all Old Shutdown Cron Jobs
-        CronJob(Conf.get(const.CSM_GLOBAL_INDEX, const.NON_ROOT_USER_KEY)).remove_job(
-            const.SHUTDOWN_COMMENT)
         # TODO: Remove the below line it only dumps the data when server starts.
         # kept for debugging alerts_storage.add_data()
 
@@ -87,17 +84,13 @@ class CsmAgent:
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
-        message_bus_obj = MessageBusComm(Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS),
-                                         unblock_consumer=True)
+        CsmAgent._configure_cluster_management_service()
 
-        CsmAgent._configure_cluster_management_service(message_bus_obj)
-
+        # Archieve stat service
         # Stats service creation
-        time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
-        time_series_provider.init()
-        kafka_endpoints = Conf.get(const.CONSUMER_INDEX, const.KAFKA_ENDPOINTS)
-        CsmRestApi._app["stat_service"] = StatsAppService(
-            time_series_provider, MessageBusComm(kafka_endpoints, unblock_consumer=True))
+        # time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
+        # time_series_provider.init()
+        # CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
@@ -121,15 +114,16 @@ class CsmAgent:
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
         CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+        CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod
-    def _configure_cluster_management_service(message_bus_obj):
+    def _configure_cluster_management_service():
         # Cluster Management configuration
         cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
         cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(
             CortxHAFramework())
         cluster_management_service = ClusterManagementAppService(
-            cluster_management_plugin_obj, message_bus_obj)
+            cluster_management_plugin_obj)
         CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
 
     @staticmethod
@@ -142,15 +136,29 @@ class CsmAgent:
 
     @staticmethod
     def _get_consul_config():
-        protocol, host, port, secret, each_endpoint = '','','','',''
-        endpoint_list = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ENDPOINTS_KEY)
-        secret = Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        for each_endpoint in endpoint_list:
-            if 'http' in each_endpoint:
-                protocol, host, port = ServiceUrls.parse_url(each_endpoint)
-                break
-        return protocol, host, port, secret, each_endpoint
-
+        result : bool = False
+        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
+        protocol, host, port, consul_endpoint = '','','',''
+        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
+            const.CONSUL_NUM_ENDPOINTS_KEY)
+        try:
+            count_endpoints = int(count_endpoints)
+        except ValueError:
+            raise CsmInternalError("Consul num_endpoints value is not a valid"
+                " integer.")
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
+            if endpoint:
+                protocol, host, port = ServiceUrls.parse_url(endpoint)
+                if protocol == "https" or protocol == "http":
+                    result = True
+                    consul_endpoint = endpoint
+                    Log.info(f"Fetching consul endpoint : {consul_endpoint}")
+                    break
+        if not result:
+            raise CsmInternalError("Consul endpoint not found.")
+        return protocol, host, port, secret, consul_endpoint
     @staticmethod
     def load_csm_config_indices():
         """Load CSM configuration from the database."""
@@ -216,8 +224,9 @@ class CsmAgent:
         if Options.daemonize:
             CsmAgent._daemonize()
         CsmRestApi.run(port, https_conf, debug_conf)
-        Log.info("Stopping Message Bus client")
-        CsmRestApi._app["stat_service"].stop_msg_bus()
+        # Archieve stat service
+        # Log.info("Stopping Message Bus client")
+        # CsmRestApi._app["stat_service"].stop_msg_bus()
         Log.info("Finished stopping csm agent")
 
 
@@ -237,12 +246,12 @@ if __name__ == '__main__':
     from csm.core.blogic import const
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
-    from csm.core.services.stats import StatsAppService
+    # from csm.core.services.stats import StatsAppService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import QuotaSessionManager, LoginService, AuthService
     from csm.core.agent.api import CsmRestApi
-    from csm.common.timeseries import TimelionProvider
+    # from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework
     from cortx.utils.cron import CronJob
     from cortx.utils.validator.v_consul import ConsulV
@@ -251,11 +260,11 @@ if __name__ == '__main__':
     from csm.common.errors import CsmInternalError
     from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
-    from csm.common.comm import MessageBusComm
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
+    from csm.core.services.activities import ActivityService
 
     try:
         client = None
