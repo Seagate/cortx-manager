@@ -48,11 +48,10 @@ class LoginView(CsmView):
         password = body.get('password', None)
 
         session_id, body = await self.request.app.login_service.login(username, password)
-        Log.debug(f"Obtained session id for {username}")
         if not session_id:
             raise CsmUnauthorizedError("Invalid credentials for user")
 
-        Log.debug(f'User: {username} successfully logged in.')
+        Log.info(f'User: {username} successfully logged in.')
         headers = {CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}'}
         return CsmResponse(body, headers=headers)
 
@@ -69,5 +68,5 @@ class LogoutView(CsmView):
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
-        Log.info('Session ended')
+        Log.info(f"user_id: {self.request.session.credentials.user_id} successfully logged out")
         return CsmResponse()
