@@ -211,51 +211,51 @@ class CsmRestApi(CsmApi, ABC):
         handler = await CsmRestApi._resolve_handler(request)
         return CsmView.get_permissions(handler, request.method)
 
-    @classmethod
-    async def get_unsupported_features(cls):
-        if cls.__unsupported_features is None:
-            db = unsupported_features.UnsupportedFeaturesDB()
-            cls.__unsupported_features = await db.get_unsupported_features()
-        return cls.__unsupported_features
+    # @classmethod
+    # async def get_unsupported_features(cls):
+    #     if cls.__unsupported_features is None:
+    #         db = unsupported_features.UnsupportedFeaturesDB()
+    #         cls.__unsupported_features = await db.get_unsupported_features()
+    #     return cls.__unsupported_features
 
-    @classmethod
-    async def is_feature_supported(cls, component, feature):
-        unsupported_features = await cls.get_unsupported_features()
-        for entry in unsupported_features:
-            if (
-                component == entry[const.COMPONENT_NAME] and
-                feature == entry[const.FEATURE_NAME]
-            ):
-                return False
-        return True
+    # @classmethod
+    # async def is_feature_supported(cls, component, feature):
+    #     unsupported_features = await cls.get_unsupported_features()
+    #     for entry in unsupported_features:
+    #         if (
+    #             component == entry[const.COMPONENT_NAME] and
+    #             feature == entry[const.FEATURE_NAME]
+    #         ):
+    #             return False
+    #     return True
 
-    @classmethod
-    async def check_for_unsupported_endpoint(cls, request):
-        """Check whether the endpoint is supported. If not, send proper error reponse."""
-        def getMatchingEndpoint(endpoint_map, path):
-            for key, value in endpoint_map.items():
-                map_re = f'^{key}$'.replace("*", r"[\w\d]*")
-                if re.search(rf"{map_re}", path):
-                    return value
+    # @classmethod
+    # async def check_for_unsupported_endpoint(cls, request):
+    #     """Check whether the endpoint is supported. If not, send proper error reponse."""
+    #     def getMatchingEndpoint(endpoint_map, path):
+    #         for key, value in endpoint_map.items():
+    #             map_re = f'^{key}$'.replace("*", r"[\w\d]*")
+    #             if re.search(rf"{map_re}", path):
+    #                 return value
 
-        feature_endpoint_map = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-        endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
-        if endpoint:
-            if endpoint[const.DEPENDENT_ON]:
-                for component in endpoint[const.DEPENDENT_ON]:
-                    if not await cls.is_feature_supported(component, endpoint[const.FEATURE_NAME]):
-                        Log.debug(f"The request {request.path} "
-                                  f"of feature {endpoint[const.FEATURE_NAME]} "
-                                  f"is not supported by {component}")
-                        raise InvalidRequest("This feature is not supported on this environment.")
-            if not await cls.is_feature_supported(const.CSM_COMPONENT_NAME,
-                                                  endpoint[const.FEATURE_NAME]):
-                Log.debug(f"The request {request.path} "
-                          f"of feature {endpoint[const.FEATURE_NAME]} "
-                          f"is not supported by {const.CSM_COMPONENT_NAME}")
-                raise InvalidRequest("This feature is not supported on this environment.")
-        else:
-            Log.debug(f"Feature endpoint is not found for {request.path}")
+    #     feature_endpoint_map = Json(const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
+    #     endpoint = getMatchingEndpoint(feature_endpoint_map, request.path)
+    #     if endpoint:
+    #         if endpoint[const.DEPENDENT_ON]:
+    #             for component in endpoint[const.DEPENDENT_ON]:
+    #                 if not await cls.is_feature_supported(component, endpoint[const.FEATURE_NAME]):
+    #                     Log.debug(f"The request {request.path} "
+    #                               f"of feature {endpoint[const.FEATURE_NAME]} "
+    #                               f"is not supported by {component}")
+    #                     raise InvalidRequest("This feature is not supported on this environment.")
+    #         if not await cls.is_feature_supported(const.CSM_COMPONENT_NAME,
+    #                                               endpoint[const.FEATURE_NAME]):
+    #             Log.debug(f"The request {request.path} "
+    #                       f"of feature {endpoint[const.FEATURE_NAME]} "
+    #                       f"is not supported by {const.CSM_COMPONENT_NAME}")
+    #             raise InvalidRequest("This feature is not supported on this environment.")
+    #     else:
+    #         Log.debug(f"Feature endpoint is not found for {request.path}")
 
     @staticmethod
     def _extract_bearer(headers: Dict) -> Tuple[str, str]:
