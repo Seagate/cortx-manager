@@ -40,7 +40,7 @@ class Init(Setup):
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
         except KvError as e:
-            Log.error(f"Setup: Configuration Loading Failed {e}")
+            Log.error(f"Init: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         services = command.options.get("services")

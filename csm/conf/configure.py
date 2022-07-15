@@ -56,7 +56,7 @@ class Configure(Setup):
             Setup.setup_logs_init()
             Setup.load_csm_config_indices()
         except KvError as e:
-            Log.error(f"Setup: Configuration loading failed {e}")
+            Log.error(f"Config: Configuration loading failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         self.force_action = command.options.get('f')
@@ -216,56 +216,56 @@ class Configure(Setup):
         Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
                 hax_endpoint)
 
-    async def _set_unsupported_feature_info(self):
-        """
-        This method stores CSM unsupported features in two ways:
-        1. It first gets all the unsupported features lists of the components,
-        which CSM interacts with. Add all these features as CSM unsupported
-        features. The list of components, CSM interacts with, is
-        stored in csm.conf file. So if there is change in name of any
-        component, csm.conf file must be updated accordingly.
-        2. Installation/envioronment type and its mapping with CSM unsupported
-        features are maintained in unsupported_feature_schema. Based on the
-        installation/environment type received as argument, CSM unsupported
-        features can be stored.
-        """
+    # async def _set_unsupported_feature_info(self):
+    #     """
+    #     This method stores CSM unsupported features in two ways:
+    #     1. It first gets all the unsupported features lists of the components,
+    #     which CSM interacts with. Add all these features as CSM unsupported
+    #     features. The list of components, CSM interacts with, is
+    #     stored in csm.conf file. So if there is change in name of any
+    #     component, csm.conf file must be updated accordingly.
+    #     2. Installation/envioronment type and its mapping with CSM unsupported
+    #     features are maintained in unsupported_feature_schema. Based on the
+    #     installation/environment type received as argument, CSM unsupported
+    #     features can be stored.
+    #     """
 
-        def get_component_list_from_features_endpoints():
-            Log.info("Config: Getting component list.")
-            feature_endpoints = Json(
-                const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
-            component_list = [feature for v in feature_endpoints.values() for
-                              feature in v.get(const.DEPENDENT_ON)]
-            return list(set(component_list))
-        try:
-            Log.info("Config: Setting unsupported feature list to ES.")
-            unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
-            components_list = get_component_list_from_features_endpoints()
-            unsupported_features_list = []
-            for component in components_list:
-                Log.info(f"Config: Fetching unsupported features for {component}.")
-                unsupported = await unsupported_feature_instance.get_unsupported_features(
-                    component_name=component)
-                for feature in unsupported:
-                    unsupported_features_list.append(
-                        feature.get(const.FEATURE_NAME))
-            csm_unsupported_feature = Json(
-                const.UNSUPPORTED_FEATURE_SCHEMA).load()
-            unsupported_features_list.extend(csm_unsupported_feature)
+    #     def get_component_list_from_features_endpoints():
+    #         Log.info("Config: Getting component list.")
+    #         feature_endpoints = Json(
+    #             const.FEATURE_ENDPOINT_MAPPING_SCHEMA).load()
+    #         component_list = [feature for v in feature_endpoints.values() for
+    #                           feature in v.get(const.DEPENDENT_ON)]
+    #         return list(set(component_list))
+    #     try:
+    #         Log.info("Config: Setting unsupported feature list to storage.")
+    #         unsupported_feature_instance = unsupported_features.UnsupportedFeaturesDB()
+    #         components_list = get_component_list_from_features_endpoints()
+    #         unsupported_features_list = []
+    #         for component in components_list:
+    #             Log.info(f"Config: Fetching unsupported features for {component}.")
+    #             unsupported = await unsupported_feature_instance.get_unsupported_features(
+    #                 component_name=component)
+    #             for feature in unsupported:
+    #                 unsupported_features_list.append(
+    #                     feature.get(const.FEATURE_NAME))
+    #         csm_unsupported_feature = Json(
+    #             const.UNSUPPORTED_FEATURE_SCHEMA).load()
+    #         unsupported_features_list.extend(csm_unsupported_feature)
 
-            unsupported_features_list = list(set(unsupported_features_list))
-            unique_unsupported_features_list = list(
-                filter(None, unsupported_features_list))
-            if unique_unsupported_features_list:
-                Log.info("Config: Storing unsupported features.")
-                await unsupported_feature_instance.store_unsupported_features(
-                    component_name=str(const.CSM_COMPONENT_NAME),
-                    features=unique_unsupported_features_list)
-            else:
-                Log.info("Config: Unsupported features list is empty.")
-        except Exception as e_:
-            Log.error(f"Config: Error in storing unsupported features: {e_}")
-            raise CsmSetupError(f"Error in storing unsupported features: {e_}")
+    #         unsupported_features_list = list(set(unsupported_features_list))
+    #         unique_unsupported_features_list = list(
+    #             filter(None, unsupported_features_list))
+    #         if unique_unsupported_features_list:
+    #             Log.info("Config: Storing unsupported features.")
+    #             await unsupported_feature_instance.store_unsupported_features(
+    #                 component_name=str(const.CSM_COMPONENT_NAME),
+    #                 features=unique_unsupported_features_list)
+    #         else:
+    #             Log.info("Config: Unsupported features list is empty.")
+    #     except Exception as e_:
+    #         Log.error(f"Config: Error in storing unsupported features: {e_}")
+    #         raise CsmSetupError(f"Error in storing unsupported features: {e_}")
 
     @staticmethod
     def _create_perf_stat_topic(mb_admin):

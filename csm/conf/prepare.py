@@ -49,7 +49,7 @@ class Prepare(Setup):
             Setup.setup_logs_init()
             Setup.load_csm_config_indices()
         except KvError as e:
-            Log.error(f"Setup: Configuration Loading Failed {e}")
+            Log.error(f"Prepare: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
 
