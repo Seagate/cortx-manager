@@ -14,7 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-from cortx.utils.product_features import unsupported_features
+# from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.payload import Json
 from csm.common.service_urls import ServiceUrls
@@ -50,8 +50,8 @@ class Configure(Setup):
         :param command:
         :return:
         """
-        Log.info("Setup: Initiating Config phase.")
         try:
+            Log.info("Setup: Initiating Config phase.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
             Setup.load_csm_config_indices()

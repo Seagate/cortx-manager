@@ -18,7 +18,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 
 
-@CsmView._app_routes.view("/api/v2/unsupported_features")
+# @CsmView._app_routes.view("/api/v2/unsupported_features")
 @CsmAuth.public
 class UnsupportedFeaturesView(CsmView):
     def __init__(self, request):

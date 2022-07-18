@@ -47,8 +47,8 @@ class PostInstall(Setup):
         :param command: Command Class Object :type: class
         :return:
         """
-        Log.info("Setup:  Initiating Post Install phase.")
         try:
+            Log.info("Setup:  Initiating Post Install phase.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             Setup.setup_logs_init()
