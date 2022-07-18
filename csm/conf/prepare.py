@@ -44,9 +44,9 @@ class Prepare(Setup):
         :return:
         """
         try:
-            Log.info("Setup: Initiating Prepare phase.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
+            Log.info("Setup: Initiating Prepare phase.")
             Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Prepare: Configuration Loading Failed {e}")

@@ -48,10 +48,10 @@ class PostInstall(Setup):
         :return:
         """
         try:
-            Log.info("Setup:  Initiating Post Install phase.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             Setup.setup_logs_init()
+            Log.info("Setup:  Initiating Post Install phase.")
             Setup.load_csm_config_indices()
             Setup.copy_base_configs()
         except KvError as e:

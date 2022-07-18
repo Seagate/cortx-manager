@@ -51,9 +51,9 @@ class Configure(Setup):
         :return:
         """
         try:
-            Log.info("Setup: Initiating Config phase.")
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
+            Log.info("Setup: Initiating Config phase.")
             Setup.load_csm_config_indices()
         except KvError as e:
             Log.error(f"Config: Configuration loading failed {e}")
