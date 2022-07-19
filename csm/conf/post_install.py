@@ -51,11 +51,11 @@ class PostInstall(Setup):
             Conf.load(const.CONSUMER_INDEX, command.options.get(
                 const.CONFIG_URL))
             Setup.setup_logs_init()
-            Log.info("Executing csm_setup: post_install phase.")
+            Log.info("Setup:  Initiating Post Install phase.")
             Setup.load_csm_config_indices()
             Setup.copy_base_configs()
         except KvError as e:
-            Log.error(f"Configuration Loading Failed {e}")
+            Log.error(f"Post Install: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
         services = command.options.get("services")
         if ',' in services:
@@ -66,28 +66,32 @@ class PostInstall(Setup):
             services=[services]
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
+
         self._prepare_and_validate_confstore_keys()
         self.set_ssl_certificate()
         PostInstall.set_logpath()
         self.create()
+        Log.info("Setup: Successfully passed Post Install phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
     def _prepare_and_validate_confstore_keys(self):
+        Log.info("Post Install: Validating required configuration.")
         self.conf_store_keys.update({
             const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
             })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
         except VError as ve:
-            Log.error(f"Key not found in Conf Store: {ve}")
+            Log.error(f"Post Install: Key not found in configuration: {ve}")
             raise CsmSetupError(f"Key not found in Conf Store: {ve}")
 
     def set_ssl_certificate(self):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
+        Log.info(f"Post Install: Setting SSL certificate path: {ssl_certificate_path}")
         csm_protocol, *_ = ServiceUrls.parse_url(
             Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
-            Log.warn(f"HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
+            Log.warn(f"Post Install: HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
                     Generating self signed ssl certificate")
             try:
                 ssl_cert_configs = const.SSL_CERT_CONFIGS
@@ -95,18 +99,17 @@ class PostInstall(Setup):
                 ssl_cert_obj.generate(cert_path = ssl_certificate_path, dns_list = const.DNS_LIST,
                                             **ssl_cert_configs)
             except SSLCertificateError as e:
-                Log.error(f"Failed to generate self signed ssl certificate: {e}")
+                Log.error(f"Post Install: Failed to generate self signed ssl certificate: {e}")
                 raise CsmSetupError("Failed to generate self signed ssl certificate")
-            Log.info(f"Self signed ssl certificate generated and saved at: {ssl_certificate_path}")
+            Log.info(f"Post Install: Self signed SSL certificate generated and saved at: {ssl_certificate_path}")
         Conf.set(const.CSM_GLOBAL_INDEX, const.SSL_CERTIFICATE_PATH, ssl_certificate_path)
         Conf.set(const.CSM_GLOBAL_INDEX, const.PRIVATE_KEY_PATH_CONF, ssl_certificate_path)
-        Log.info(f"Setting ssl certificate path: {ssl_certificate_path}")
 
     @staticmethod
     def set_logpath():
         log_path = Setup.get_csm_log_path()
         Conf.set(const.CSM_GLOBAL_INDEX, const.LOG_PATH, log_path)
-        Log.info(f"Setting log path: {log_path}")
+        Log.info(f"Post Install: Setting log path: {log_path}")
 
     def create(self):
         """
@@ -114,7 +117,7 @@ class PostInstall(Setup):
         :return:
         """
 
-        Log.info("Creating CSM Conf File on Required Location.")
+        Log.info("Post Install: Creating CSM configuration file on required location.")
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)

@@ -111,7 +111,7 @@ class CsmAgent:
         user_service = CsmUserService(user_manager)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
-        CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
+        # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
         CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     from cortx.utils.validator.error import VError
     from csm.core.services.storage_capacity import StorageCapacityService, S3CapacityService
     from csm.common.errors import CsmInternalError
-    from csm.core.services.unsupported_features import UnsupportedFeaturesService
+    # from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
