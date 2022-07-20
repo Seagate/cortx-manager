@@ -17,7 +17,6 @@ import json
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest, CsmUnauthorizedError
 from .view import CsmView, CsmResponse, CsmAuth
-from aiohttp import web
 from marshmallow import fields
 from marshmallow.exceptions import ValidationError
 from csm.core.blogic import const

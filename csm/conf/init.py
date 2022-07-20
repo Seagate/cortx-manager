@@ -38,9 +38,9 @@ class Init(Setup):
         try:
             Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
-            Log.info("Executing csm_setup: init phase.")
+            Log.info("Setup: Initiating Init phase.")
         except KvError as e:
-            Log.error(f"Configuration Loading Failed {e}")
+            Log.error(f"Init: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
         services = command.options.get("services")
@@ -52,5 +52,5 @@ class Init(Setup):
             services=[services]
         if not "agent" in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
-
+        Log.info("Setup: Successfully passed Init phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

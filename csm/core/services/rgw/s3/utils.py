@@ -15,7 +15,6 @@
 
 from csm.core.data.models.rgw import RgwConnectionConfig
 from csm.core.blogic import const
-from csm.common.service_urls import ServiceUrls
 from csm.common.conf import Security
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.security.cipher import CipherInvalidToken
