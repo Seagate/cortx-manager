@@ -228,18 +228,19 @@ class Setup:
     @staticmethod
     def setup_logs_init():
         log_path = Setup.get_csm_log_path()
-        Log.init(service_name = const.CSM_SETUP_CMD, log_path = log_path, level=const.LOG_LEVEL,
-                console_output=True)
-
-    @staticmethod
-    def get_csm_log_path():
-        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
         if Conf.machine_id is not None:
             machine_id = Conf.machine_id
             csm_machine_log_path = f"{log_path}/{const.CSM_COMPONENT_NAME}/{machine_id}"
         else:
             csm_machine_log_path = f"{log_path}/{const.CSM_COMPONENT_NAME}"
-        return csm_machine_log_path
+
+        Log.init(service_name = const.CSM_SETUP_CMD, log_path = csm_machine_log_path, level=const.LOG_LEVEL,
+                console_output=True)
+
+    @staticmethod
+    def get_csm_log_path():
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
+        return f"{log_path}/{const.CSM_COMPONENT_NAME}"
 
 class CsmSetup(Setup):
     def __init__(self):
