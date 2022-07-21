@@ -121,12 +121,11 @@ class SessionManager:
             delta = (start - current).total_seconds()
             if delta > 0:
                 await asyncio.sleep(delta)
-            current = datetime.now(timezone.utc)
-            await handler(current)
+            await handler()
             current = datetime.now(timezone.utc)
             start = start + interval
 
-    async def _remove_expired_sessions(self, current_time):
+    async def _remove_expired_sessions(self):
         """
         Remove expired sessions from the storage.
         """
