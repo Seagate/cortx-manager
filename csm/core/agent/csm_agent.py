@@ -45,8 +45,11 @@ class CsmAgent:
         log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
         console_output = Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true"
         csm_log_path = Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path")
-        machine_id = Conf.machine_id
-        csm_machine_log_path = f"{csm_log_path}/{machine_id}"
+        if Conf.machine_id is not None:
+            machine_id = Conf.machine_id
+            csm_machine_log_path = f"{csm_log_path}/{machine_id}"
+        else:
+            csm_machine_log_path = csm_log_path
         Log.init("csm_agent",
                  backup_count=int(backup_count) if backup_count else None,
                  file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,

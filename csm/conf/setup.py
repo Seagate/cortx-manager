@@ -234,7 +234,12 @@ class Setup:
     @staticmethod
     def get_csm_log_path():
         log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
-        return f"{log_path}/{const.CSM_COMPONENT_NAME}"
+        if Conf.machine_id is not None:
+            machine_id = Conf.machine_id
+            csm_machine_log_path = f"{log_path}/{const.CSM_COMPONENT_NAME}/{machine_id}"
+        else:
+            csm_machine_log_path = f"{log_path}/{const.CSM_COMPONENT_NAME}"
+        return csm_machine_log_path
 
 class CsmSetup(Setup):
     def __init__(self):
