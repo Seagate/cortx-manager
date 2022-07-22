@@ -17,6 +17,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
+from csm.common.errors import CsmUnauthorizedError
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -41,4 +42,49 @@ class InformationService(ApplicationService):
             "compatible": status,
             "reason": reason
         }
+        return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_cortx_information(self, authorized=True):
+        """
+        Method to fetch the cortx information
+        :param **request_body: Request body kwargs
+        """
+        #TODO: call utils api to get all information
+        response = {}
+        return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def query_cortx_topology(self, authorized=True, **path_param):
+        """
+        Method to fetch the cortx topology
+        :param **request_body: Request body kwargs
+        """
+        Log.debug(f"Request body: {resource}")
+        resource = path_param[const.ARG_RESOURCE]
+        resource_id = path_param[const.ARG_RESOURCE_ID]
+        view = path_param[const.ARG_VIEW]
+        view_id = path_param[const.ARG_VIEW_ID]
+        #if not authorized and resource == "certificate":
+        #    raise CsmUnauthorizedError("Invalid authentication credentials for the target resource.")
+        # TODO: Call Utils API to get information
+        # TODO: Adding mapping
+        # Sample Response
+        response = {
+            "cluster" : {
+                "info": {
+                    "CORTX": "2.0.0-123"
+                }
+            },
+            "certificate" : {
+                "info": {
+                    "key": "value"
+                }
+            }
+        }
+        # Filter the Response based on authorization and resource
+        #if authorized and resource is not None:
+        #    return response.get(resource, None)
+        #if not authorized:
+        #    response.pop('certificate', None)
         return response

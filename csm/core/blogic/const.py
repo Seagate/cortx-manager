@@ -303,6 +303,8 @@ RESPONSE_FORMAT_TREE = 'tree'
 RESPONSE_FORMAT_TABLE = 'flattened'
 ARG_RESOURCE = 'resource'
 ARG_RESOURCE_ID = 'resource_id'
+ARG_VIEW = 'view'
+ARG_VIEW_ID = 'view_id'
 ARG_DEPTH = 'depth'
 HEALTH_DEFAULT_DEPTH = 1
 ARG_RESPONSE_FORMAT = 'response_format'
@@ -999,3 +1001,7 @@ RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
 ERROR_CODE = "error_code"
 MESSAGE_ID = "message_id"
 JSON_ERROR = "Unable to parse request body, Malformed request body received."
+
+# Query deployment 
+VALID_RESOURCES = ['cluster']
+VALID_VIEWS = ['id', 'version', 'nodes', 'storage_set', 'certificate']

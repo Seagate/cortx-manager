@@ -77,3 +77,63 @@ class VersionInformationView(CsmView):
             Log.error(f"Error in checking compatability: {e}")
             raise CsmInternalError(f"{e}")
         return CsmResponse(response)
+
+@CsmView._app_routes.view("/api/v2/system/topology")
+class CortxInformationView(CsmView):
+    """
+    Complete CORTX topology will be provided
+    GET: Complete CORTX topology
+    """
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.INFORMATION_SERVICE]
+
+    async def get(self):
+        """GET REST implementation for complete cortx topology."""
+        Log.debug("Handling GET request for Cortx topology.")
+        # Check if request is authenticated
+        authorized = False
+        if self.request.session is not None:
+            authorized = True
+        # Call Cortx Information Service
+        response = await self._service.get_cortx_information(authorized)
+        return CsmResponse(response)
+
+@CsmAuth.public
+@CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}/{view}/{view_id}")
+class ResourceInformationView(CsmView):
+    """
+    Query only specific subset of CORTX topology.
+    GET: Provide information about subset of CORTX topology.
+    """
+    def __init__(self, request):
+        super().__init__(request)
+        self._service = self.request.app[const.INFORMATION_SERVICE]
+
+    async def get(self):
+        """GET REST implementation to query only specific subset of CORTX topology."""
+        Log.debug("Handling GET request to query only specific subset of CORTX topology.")
+        # Read path parameter
+        resource = self.request.match_info[const.ARG_RESOURCE]
+        resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
+        view = self.request.match_info[const.ARG_VIEW]
+        view_id = self.request.match_info[const.ARG_VIEW_ID]
+        # Check for valid Resource
+        if resource not in const.VALID_RESOURCES:
+            raise CsmNotFoundError(f"resource {resource} is not valid")
+        if view not in const.VALID_VIEWS:
+            raise CsmNotFoundError(f"view {view} is not valid")
+        path_params_dict = {
+            const.ARG_RESOURCE : resource,
+            const.ARG_RESOURCE_ID : resource_id,
+            const.ARG_VIEW : view,
+            const.ARG_VIEW_ID : view_id
+        }
+        # Check if request is authenticated
+        authorized = False
+        if self.request.session is not None:
+            authorized = True
+        # Call Cortx Information Service
+        Log.debug(f"Fetching cortx information for {resource}.")
+        response = await self._service.get_cortx_information(authorized, **path_params_dict)
+        return CsmResponse(response)
