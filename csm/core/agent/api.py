@@ -330,7 +330,7 @@ class CsmRestApi(CsmApi, ABC):
             CsmRestApi.__nreq += 1
 
         try:
-            # Here we call handler 
+            # Here we call handler
             # Handler can return json response or can raise an exception
             res = await handler(request)
         finally:
