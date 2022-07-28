@@ -318,16 +318,25 @@ class CsmRestApi(CsmApi, ABC):
     @web.middleware
     async def throttler_middleware(request, handler):
         if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
+            # This block get executed when number of request reaches the request quota
             CsmRestApi.__nblocked += 1
             msg = (f"The request is blocked because the number of requests reached threshold\n"
                    f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
             Log.warn(msg)
             return web.Response(status=429, text="Too many requests")
         else:
+            # This block get executed when number of request are less than request quota
+            # Increment the counter for number of request executing
             CsmRestApi.__nreq += 1
 
-        res = await handler(request)
-        CsmRestApi.__nreq -= 1
+        try:
+            # Here we call handler
+            # Handler can return json response or can raise an exception
+            res = await handler(request)
+        finally:
+            # Decrements the counter of number of request executing
+            # This block always gets executed
+            CsmRestApi.__nreq -= 1
         return res
 
     @staticmethod
