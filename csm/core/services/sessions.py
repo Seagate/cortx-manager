@@ -242,14 +242,17 @@ class LoginService:
         #     credentials = await self._auth_service.authenticate(user, password)
 
         if credentials:
-            permissions = await self._role_manager.calc_effective_permissions(user.user_role)
-            session = await self._session_manager.create(credentials, permissions)
+            permissions = await self._role_manager.calc_effective_permissions(
+                user.user_role)
+            session = await self._session_manager.create(credentials,
+                permissions)
             if session:
+                Log.info(f"A new session is created for user: {user_id}")
                 return session.session_id, {"reset_password": user.reset_password}
             else:
-                Log.critical('Failed to create a new session')
+                Log.error(f"Failed to create a new session for user: {user_id}")
         else:
-            Log.error(f'Failed to authenticate {user_id}')
+            Log.error(f'Authentication failed for user: {user_id}')
         return None, None
 
     async def logout(self, session_id):
@@ -260,19 +263,12 @@ class LoginService:
         session = await self._session_manager.get(session_id)
         if not session:
             raise CsmError(CSM_ERR_INVALID_VALUE, f'Invalid session id: {session_id}')
-
-        # TODO: Check if user has not been dropped.
-        # We can not do it for now as non-local S3
-        # users are no present in the local user database.
-
         # Check Expiry Time
         if datetime.now(timezone.utc) > session.expiry_time:
             await self._session_manager.delete(session_id)
             raise CsmError(CSM_ERR_INVALID_VALUE, 'Session expired')
-
         # Refresh Expiry Time
         session.expiry_time = self._session_manager.calc_expiry_time()
-
         return session
 
     async def get_temp_access_keys(self, user_id: str) -> list:
