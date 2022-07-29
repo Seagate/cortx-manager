@@ -109,7 +109,8 @@ class CsmAgent:
         # S3 service
         CsmAgent._configure_s3_services()
 
-        user_service = CsmUserService(user_manager)
+        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
+        user_service = CsmUserService(user_manager, max_users_allowed)
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()

@@ -91,12 +91,6 @@ class CsmUsersListView(CsmView):
         self._service = self.request.app["csm_user_service"]
         self._service_dispatch = {}
 
-    async def check_max_user_limit(self):
-        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
-        existing_users_count = await self._service.get_user_count()
-        if existing_users_count >= max_users_allowed and max_users_allowed > 0:
-            raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
-
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         """GET REST implementation for fetching csm users."""
@@ -125,8 +119,6 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
-
-        await self.check_max_user_limit()
 
         # TODO: Story has been taken for unsupported services
         # The following commented lines will be removed by above story

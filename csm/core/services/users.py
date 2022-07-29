@@ -15,6 +15,7 @@
 
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
+import asyncio
 from enum import Enum, auto
 from typing import Dict, List, Optional
 from cortx.utils.log import Log
@@ -208,8 +209,10 @@ class CsmUserService(ApplicationService):
     """
     Service that exposes csm user management actions from the csm core.
     """
-    def __init__(self, user_mgr: UserManager):
+    def __init__(self, user_mgr: UserManager, users_quota: int):
         self.user_mgr = user_mgr
+        self.users_quota = users_quota
+        self.lock = asyncio.Lock()
 
     @staticmethod
     def _user_to_dict(user: User):
@@ -241,17 +244,25 @@ class CsmUserService(ApplicationService):
         """
         Log.debug(f"Create user service. user_id: {user_id}")
 
-        creator = await self.user_mgr.get(creator_id) if creator_id else None
-        # Perform pre-creation checks for anonymous user
-        if creator is None:
-            raise CsmPermissionDenied()
-        # ... and for logged in user
-        else:
-            if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:
-                raise CsmPermissionDenied("Only admin user can create other admin users")
+        await self.lock.acquire()
+        try:
+            creator = await self.user_mgr.get(creator_id) if creator_id else None
+            # Perform pre-creation checks for anonymous user
+            if creator is None:
+                raise CsmPermissionDenied()
+            # ... and for logged in user
+            else:
+                if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:
+                    raise CsmPermissionDenied("Only admin user can create other admin users")
 
-        user = User.instantiate_csm_user(user_id, password, email, role, alert_notification=True)
-        await self.user_mgr.create(user)
+            existing_users_count = await self.get_user_count()
+            if existing_users_count >= self.users_quota and self.users_quota > 0:
+                raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
+
+            user = User.instantiate_csm_user(user_id, password, email, role, alert_notification=True)
+            await self.user_mgr.create(user)
+        finally:
+            self.lock.release()
         return self._user_to_dict(user)
 
     async def get_user(self, user_id: str):
