@@ -48,13 +48,14 @@ class InformationService(ApplicationService):
         }
         return response
 
-    def get_topology(self):
+    @Log.trace_method(Log.DEBUG)
+    async def get_topology(self):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
         plugin_response = self._query_deployment_plugin.get_topology()
-        return json.dumps(plugin_response)
+        return plugin_response
 
     def _filter_from_dict(self, inputdict, keyword):
         res = inputdict.copy()
@@ -63,34 +64,38 @@ class InformationService(ApplicationService):
                 res.pop(item)
         return res
 
-    def get_resources(self, resource):
+    @Log.trace_method(Log.DEBUG)
+    async def get_resources(self, resource):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
         plugin_response = self._query_deployment_plugin.get_topology()
-        # TODO: Add plugin response from plugin section
-        plugin_response['topology'] = self._filter_from_dict(plugin_response['topology'], resource)
-        return json.dumps(plugin_response)
+        if isinstance(plugin_response['topology'], dict):
+                plugin_response['topology'] = {key:value for key, value in plugin_response['topology'].items() if key == resource}
+        return plugin_response
 
-    def get_specific_resource(self, resource, resource_id):
+    @Log.trace_method(Log.DEBUG)
+    async def get_specific_resource(self, resource, resource_id):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        res = self.get_resources(resource)
-        payload = res["topology"][resource]
+        response = await self.get_resources(resource)
+        payload = response["topology"][resource]
         key = self.resource_id_key[resource]
-        res["topology"][resource] = [item for item in payload if item.get(key) == resource_id]
-        return json.dumps(res)
+        if isinstance(payload, list):
+            response["topology"][resource] = [item for item in payload if item.get(key) == resource_id]
+        return response
 
-    def get_views(self, resource, resource_id, view):
+    @Log.trace_method(Log.DEBUG)
+    async def get_views(self, resource, resource_id, view):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
 
-        res = self.get_specific_resource(resource, resource_id)
+        res = await self.get_specific_resource(resource, resource_id)
         payload = res["topology"][resource][0]
         response = {
             "id": payload['id'],
@@ -99,7 +104,8 @@ class InformationService(ApplicationService):
         res["topology"][resource][0] = response
         return res
 
-    def get_specific_view(self, **path_param):
+    @Log.trace_method(Log.DEBUG)
+    async def get_specific_view(self, **path_param):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
@@ -108,7 +114,7 @@ class InformationService(ApplicationService):
         resource_id = path_param[const.ARG_RESOURCE_ID]
         view = path_param[const.ARG_VIEW]
         view_id = path_param[const.ARG_VIEW_ID]
-        res = self.get_views(resource, resource_id, view)
+        res = await self.get_views(resource, resource_id, view)
         payload = res["topology"][resource][0][view]
         res["topology"][resource][0][view] = [item for item in payload if item.get("id") == view_id]
         return res

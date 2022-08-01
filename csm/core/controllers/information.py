@@ -110,7 +110,6 @@ class ResourcesTopologyView(CsmView):
     async def get(self):
         """GET REST implementation to query information about all resources from cortx topology."""
         Log.debug("Handling GET request to query information about all resources from cortx topology.")
-        # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
@@ -148,7 +147,7 @@ class AllViews(CsmView):
     """
     def __init__(self, request):
         super().__init__(request)
-        self._service = self.request.app[const.INFORMATION_SERVICE]
+        self._service =self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
         """GET REST implementation to query information about all
@@ -187,7 +186,5 @@ class SpecificView(CsmView):
             const.ARG_VIEW : view,
             const.ARG_VIEW_ID : view_id
         }
-        # Call Cortx Information Service
-        Log.debug(f"Fetching cortx information for {resource}.")
         response = await self._service.get_specific_view(**path_params_dict)
         return CsmResponse(response)
