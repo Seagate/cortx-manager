@@ -91,7 +91,7 @@ class TopologyView(CsmView):
 
     async def get(self):
         """GET REST implementation for complete cortx topology."""
-        Log.debug("Handling GET request for Cortx topology.")
+        Log.info("Fetching cortx topology.")
         # Call Cortx Information Service
         response = await self._service.get_topology()
         return CsmResponse(response)
@@ -112,7 +112,7 @@ class ResourcesTopologyView(CsmView):
         Log.debug("Handling GET request to query information about all resources from cortx topology.")
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Call Cortx Information Service
-        Log.debug(f"Fetching cortx information for {resource}.")
+        Log.info(f"Fetching cortx topology for resource:{resource}.")
         response = await self._service.get_resources(resource)
         return CsmResponse(response)
 
@@ -130,11 +130,10 @@ class ResourceTopologyView(CsmView):
     async def get(self):
         """GET REST implementation to query information about specific resource from cortx topology."""
         Log.debug("Handling GET request to query information about specific resource from cortx topology.")
-        # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
+        Log.info(f"Fetching cortx topology for resource:{resource} and resource_id:{resource}.")
         # Call Cortx Information Service
-        Log.debug(f"Fetching cortx information for {resource}.")
         response = await self._service.get_specific_resource(resource, resource_id)
         return CsmResponse(response)
 
@@ -158,7 +157,7 @@ class AllViews(CsmView):
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         view = self.request.match_info[const.ARG_VIEW]
         # Call Cortx Information Service
-        Log.debug(f"Fetching cortx information for {resource}.")
+        Log.info(f"Fetching cortx topology for resource:{resource}, resource_id:{resource} and view:{view}.")
         response = await self._service.get_views(resource, resource_id, view)
         return CsmResponse(response)
 
@@ -186,5 +185,7 @@ class SpecificView(CsmView):
             const.ARG_VIEW : view,
             const.ARG_VIEW_ID : view_id
         }
+        Log.info(f"Fetching cortx topology for {path_params_dict}.")
+        # Call Cortx Information Service
         response = await self._service.get_specific_view(**path_params_dict)
         return CsmResponse(response)

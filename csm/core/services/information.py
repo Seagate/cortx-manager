@@ -13,7 +13,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import json
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
@@ -72,7 +71,8 @@ class InformationService(ApplicationService):
         """
         plugin_response = self._query_deployment_plugin.get_topology()
         if isinstance(plugin_response['topology'], dict):
-                plugin_response['topology'] = {key:value for key, value in plugin_response['topology'].items() if key == resource}
+                plugin_response['topology'] = {key:value for key, value in \
+                    plugin_response['topology'].items() if key == resource}
         return plugin_response
 
     @Log.trace_method(Log.DEBUG)
@@ -85,7 +85,8 @@ class InformationService(ApplicationService):
         payload = response["topology"][resource]
         key = self.resource_id_key[resource]
         if isinstance(payload, list):
-            response["topology"][resource] = [item for item in payload if item.get(key) == resource_id]
+            response["topology"][resource] = [item for item in \
+                payload if item.get(key) == resource_id]
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -116,5 +117,6 @@ class InformationService(ApplicationService):
         view_id = path_param[const.ARG_VIEW_ID]
         res = await self.get_views(resource, resource_id, view)
         payload = res["topology"][resource][0][view]
-        res["topology"][resource][0][view] = [item for item in payload if item.get("id") == view_id]
+        res["topology"][resource][0][view] = [item for item in \
+            payload if item.get("id") == view_id]
         return res

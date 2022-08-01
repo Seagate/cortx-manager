@@ -395,23 +395,29 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         #TODO: Add device certificate/domain certificate once available.
         path = input_payload.get("security").get("ssl_certificate")
-        cert_details['path'] = path
         cert_details = SSLCertificate(path).get_certificate_details()
         cert_details = cert_details['cert_details']
+        cert_details['path'] = path
+        cert_details['type'] = "SSL Certificate"
         return [cert_details]
 
     def _create_node_payload(self, node):
+        """
+        Create payload for given node
+        """
         payload = {}
         payload['id'] = node['node_id']
         payload['version'] = node['version']
         payload['type'] = node['type']
         payload['components'] = node['components']
-        # TODO: use get payload['cvg'] always set it
         if node.get('cvg'):
             payload['cvg'] = node.get('cvg')
         return payload
 
     def _get_nodes(self, attribute, input_payload, cluster_id):
+        """
+        Get node details specific to cluster
+        """
         nodes = input_payload['nodes']
         res = []
         for node in nodes:
@@ -419,7 +425,10 @@ class QueryDeploymentPlugin(CsmPlugin):
                 res.append(self._create_node_payload(node))
         return res
 
-    def create_cluster_payload(self, resource, valid_attributes, input_payload):
+    def _create_cluster_payload(self, resource, valid_attributes, input_payload):
+        """
+        Generate payload for clusters.
+        """
         res  = []
         total_clusters = input_payload[resource]
         for cluster in total_clusters:
@@ -433,29 +442,38 @@ class QueryDeploymentPlugin(CsmPlugin):
                 elif attribute == 'certificate':
                     partial_payload[attribute] = self._get_certificate_details(cluster)
                 elif attribute == 'version':
-                    # TODO: get value
                     partial_payload[attribute] = input_payload.get("cortx").get("common").get("release").get("version")
             res.append(partial_payload)
         return res
 
-    def create_resource_payload(self, resource, valid_attributes, input_payload):
+    def create_resource_payload(self, resource, input_payload):
+        """
+        Create payload body for each resource.
+        """
+        # Create payload based on specific resource and its schema.
         if resource == 'cluster':
-            return self.create_cluster_payload(resource, valid_attributes, input_payload)
+            return self._create_cluster_payload(resource, self.valid_resources[resource], input_payload)
 
     def get_resource_payload(self, input_payload):
+        """
+        Get payload for all valid resource
+        """
         resources_payload = {}
         for resource in self.valid_resources:
-            resources_payload[resource] = self.create_resource_payload(resource, self.valid_resources[resource], input_payload)
+            resources_payload[resource] = self.create_resource_payload(resource, input_payload)
             return resources_payload
 
     def convert_schema(self, input_payload):
+        """
+        Covert schema of payload
+        """
         coverted_payload = self.get_resource_payload(input_payload)
         res_payload = {}
         res_payload['topology'] = coverted_payload
         return res_payload
 
     def validate_input(self, topology):
-        # TODO: validate input
+        # TODO: validation will be taken in future sprint
         pass
 
     def get_topology(self):
@@ -464,8 +482,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         # 1. Call utils interface
         # Uncomment after integration
-        #topology = QueryDeployment._get_cortx_topology({""})
-        Log.info(f"Fetching details of cortx topology")
+        # topology = QueryDeployment._get_cortx_topology({""})
         topology = self.output
         self.validate_input(topology)
         res = self.convert_schema(topology)
