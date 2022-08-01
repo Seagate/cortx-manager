@@ -571,6 +571,7 @@ SESSION_MGR_SERVICE = "session_manager"
 ALERT_PLUGIN = "alert"
 HEALTH_PLUGIN = "health"
 CLUSTER_MANAGEMENT_PLUGIN = "cluster_management"
+QUERY_DEPLOYMENT_PLUGIN = "query_deployment"
 S3_PLUGIN = "s3"
 PROVISIONER_PLUGIN = "provisioner"
 PLUGIN_REQUEST = "request"
@@ -1002,6 +1003,6 @@ ERROR_CODE = "error_code"
 MESSAGE_ID = "message_id"
 JSON_ERROR = "Unable to parse request body, Malformed request body received."
 
-# Query deployment 
+# Query deployment
 VALID_RESOURCES = ['cluster']
-VALID_VIEWS = ['id', 'version', 'nodes', 'storage_set', 'certificate']
+VALID_VIEWS = ['version', 'nodes', 'storage_set', 'certificate']

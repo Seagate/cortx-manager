@@ -13,6 +13,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import resource
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
@@ -21,6 +22,10 @@ from csm.common.errors import CsmUnauthorizedError
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
+
+    def __init__(self, plugin):
+        self._query_deployment_plugin = plugin
+        self.resource_id_key = {"cluster": "id"}
 
     @Log.trace_method(Log.DEBUG)
     async def check_compatibility(self, **request_body):
@@ -44,18 +49,52 @@ class InformationService(ApplicationService):
         }
         return response
 
-    @Log.trace_method(Log.DEBUG)
-    async def get_cortx_information(self, authorized=True):
+    def get_topology(self):
         """
-        Method to fetch the cortx information
+        Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        #TODO: call utils api to get all information
+        plugin_response = self._query_deployment_plugin.get_topology()
+        return plugin_response
+
+    def _filter_from_dict(self, inputdict, keyword):
+        res = inputdict.copy()
+        for item in inputdict:
+            if item != keyword:
+                res.pop(item)
+        return res
+
+    def get_all_resources(self, resource):
+        """
+        Method to fetch the cortx topology
+        :param **request_body: Request body kwargs
+        """
+        plugin_response = self._query_deployment_plugin.get_topology()
+        # TODO: Add plugin response from plugin section
+        plugin_response['topology'] = self._filter_from_dict(plugin_response['topology'])
+        return plugin_response
+
+    def get_resource(self, resource, resource_id):
+        """
+        Method to fetch the cortx topology
+        :param **request_body: Request body kwargs
+        """
+        res = self.get_all_resources(resource)
+        payload = res["topology"][resource]
+        key = self.resource_id_key[resource]
+        res["topology"][resource] = [item for item in payload if item.get(key) != resource]
+        return res
+
+    def get_all_views(self, resource, resource_id, view):
+        """
+        Method to fetch the cortx topology
+        :param **request_body: Request body kwargs
+        """
+        #TODO: call plugin
         response = {}
         return response
 
-    @Log.trace_method(Log.DEBUG)
-    async def query_cortx_topology(self, authorized=True, **path_param):
+    def get_view(self, **path_param):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
@@ -65,26 +104,6 @@ class InformationService(ApplicationService):
         resource_id = path_param[const.ARG_RESOURCE_ID]
         view = path_param[const.ARG_VIEW]
         view_id = path_param[const.ARG_VIEW_ID]
-        #if not authorized and resource == "certificate":
-        #    raise CsmUnauthorizedError("Invalid authentication credentials for the target resource.")
-        # TODO: Call Utils API to get information
-        # TODO: Adding mapping
-        # Sample Response
-        response = {
-            "cluster" : {
-                "info": {
-                    "CORTX": "2.0.0-123"
-                }
-            },
-            "certificate" : {
-                "info": {
-                    "key": "value"
-                }
-            }
-        }
-        # Filter the Response based on authorization and resource
-        #if authorized and resource is not None:
-        #    return response.get(resource, None)
-        #if not authorized:
-        #    response.pop('certificate', None)
+        #TODO: call plugin
+        response = {}
         return response
