@@ -81,7 +81,7 @@ class InformationService(ApplicationService):
         res = self.get_resources(resource)
         payload = res["topology"][resource]
         key = self.resource_id_key[resource]
-        res["topology"][resource] = [item for item in payload if item.get(key) != resource_id]
+        res["topology"][resource] = [item for item in payload if item.get(key) == resource_id]
         return json.dumps(res)
 
     def get_views(self, resource, resource_id, view):
@@ -89,9 +89,14 @@ class InformationService(ApplicationService):
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        #TODO: call plugin
+
         res = self.get_specific_resource(resource, resource_id)
-        #payload = res["topology"][resource][0]
+        payload = res["topology"][resource][0]
+        response = {
+            "id": payload['id'],
+            view: payload[view]
+        }
+        res["topology"][resource][0] = response
         return res
 
     def get_specific_view(self, **path_param):
@@ -103,6 +108,7 @@ class InformationService(ApplicationService):
         resource_id = path_param[const.ARG_RESOURCE_ID]
         view = path_param[const.ARG_VIEW]
         view_id = path_param[const.ARG_VIEW_ID]
-        #TODO: call plugin
-        response = {}
-        return response
+        res = self.get_views(resource, resource_id, view)
+        payload = res["topology"][resource][0][view]
+        res["topology"][resource][0][view] = [item for item in payload if item.get("id") == view_id]
+        return res

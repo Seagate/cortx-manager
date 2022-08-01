@@ -44,10 +44,10 @@ class SSLCertificate(Certificate):
 
         cert_details[const.SUBJECT] = subject_details
         cert_details[const.ISSUER] = issuer_details
-        cert_details[const.NOT_VALID_AFTER] = cert.not_valid_after
-        cert_details[const.NOT_VALID_BEFORE] = cert.not_valid_before
+        cert_details[const.NOT_VALID_AFTER] = str(cert.not_valid_after)
+        cert_details[const.NOT_VALID_BEFORE] = str(cert.not_valid_before)
         cert_details[const.SERIAL_NUMBER] = cert.serial_number
-        cert_details[const.VERSION] = cert.version
+        cert_details[const.VERSION] = str(cert.version)
 
         Log.debug(f"SSL certificate details: {cert_details}")
         return  { const.CERT_DETAILS: cert_details }
