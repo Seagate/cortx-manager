@@ -309,7 +309,6 @@ class CsmRestApi(CsmApi, ABC):
     @web.middleware
     async def session_middleware(request, handler):
         session = None
-        session_id = None
         is_public = await CsmRestApi._is_public(request)
         is_hybrid = await CsmRestApi._is_hybrid(request)
         if is_hybrid:
@@ -319,7 +318,7 @@ class CsmRestApi(CsmApi, ABC):
                 is_public = False
         Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
         try:
-            if not is_public or session_id:
+            if not is_public:
                 session_id = CsmRestApi._extract_bearer(request.headers)
                 session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
                 Log.info(f'Username: {session.credentials.user_id}')

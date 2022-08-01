@@ -15,7 +15,6 @@
 
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
-from csm.core.blogic import const
 from csm.common.certificate import SSLCertificate
 #TODO: Uncomment after integration
 #from cortx.utils.query_deployment import QueryDeployment
@@ -456,6 +455,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         # 1. Call utils interface
         # Uncomment after integration
         #topology = QueryDeployment._get_cortx_topology({""})
+        Log.info(f"Fetching details of cortx topology")
         topology = self.output
         self.validate_input(topology)
         res = self.convert_schema(topology)

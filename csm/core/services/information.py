@@ -13,12 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-import resource
+import json
 from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
-from csm.common.errors import CsmUnauthorizedError
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -55,7 +54,7 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         plugin_response = self._query_deployment_plugin.get_topology()
-        return plugin_response
+        return json.dumps(plugin_response)
 
     def _filter_from_dict(self, inputdict, keyword):
         res = inputdict.copy()
@@ -64,28 +63,28 @@ class InformationService(ApplicationService):
                 res.pop(item)
         return res
 
-    def get_all_resources(self, resource):
+    def get_resources(self, resource):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
         plugin_response = self._query_deployment_plugin.get_topology()
         # TODO: Add plugin response from plugin section
-        plugin_response['topology'] = self._filter_from_dict(plugin_response['topology'])
+        plugin_response['topology'] = self._filter_from_dict(plugin_response['topology'], resource)
         return plugin_response
 
-    def get_resource(self, resource, resource_id):
+    def get_specific_resource(self, resource, resource_id):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        res = self.get_all_resources(resource)
+        res = self.get_resources(resource)
         payload = res["topology"][resource]
         key = self.resource_id_key[resource]
-        res["topology"][resource] = [item for item in payload if item.get(key) != resource]
+        res["topology"][resource] = [item for item in payload if item.get(key) != resource_id]
         return res
 
-    def get_all_views(self, resource, resource_id, view):
+    def get_views(self, resource, resource_id, view):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
@@ -94,12 +93,11 @@ class InformationService(ApplicationService):
         response = {}
         return response
 
-    def get_view(self, **path_param):
+    def get_specific_view(self, **path_param):
         """
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        Log.debug(f"Request body: {resource}")
         resource = path_param[const.ARG_RESOURCE]
         resource_id = path_param[const.ARG_RESOURCE_ID]
         view = path_param[const.ARG_VIEW]

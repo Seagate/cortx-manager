@@ -114,7 +114,7 @@ class ResourcesTopologyView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
-        response = await self._service.get_all_resources(resource)
+        response = await self._service.get_resources(resource)
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -136,7 +136,7 @@ class ResourceTopologyView(CsmView):
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
-        response = await self._service.get_resource(resource, resource_id)
+        response = await self._service.get_specific_resource(resource, resource_id)
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -160,7 +160,7 @@ class AllViews(CsmView):
         view = self.request.match_info[const.ARG_VIEW]
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
-        response = await self._service.get_all_views(resource, resource_id, view)
+        response = await self._service.get_views(resource, resource_id, view)
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -189,5 +189,5 @@ class SpecificView(CsmView):
         }
         # Call Cortx Information Service
         Log.debug(f"Fetching cortx information for {resource}.")
-        response = await self._service.get_view(**path_params_dict)
+        response = await self._service.get_specific_view(**path_params_dict)
         return CsmResponse(response)
