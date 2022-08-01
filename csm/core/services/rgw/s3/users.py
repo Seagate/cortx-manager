@@ -35,6 +35,8 @@ class S3IAMUserService(ApplicationService):
 
         plugin_response =await self._s3_iam_plugin.execute(operation, **kwargs)
         if isinstance(plugin_response, RgwError):
+            Log.error(f"S3ServiceError: {plugin_response.error_code.name}:"\
+                f" {plugin_response.error_message}")
             ServiceError.create(plugin_response)
         return plugin_response
 

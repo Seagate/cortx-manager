@@ -408,7 +408,6 @@ class CsmRestApi(CsmApi, ABC):
                     request=request, request_id=request_id),
                 status=499)
         except CsmHttpException as e:
-            Log.error(f'CsmHttpException {e.status}: {e.reason}')
             raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')

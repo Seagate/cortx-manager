@@ -61,7 +61,7 @@ class LogoutView(CsmView):
         username = self.request.session.credentials.user_id
         Log.info(
             f"Processing request: {self.request.method} {self.request.path}"\
-            f" user: {username}")
+            f" User: {username}")
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
