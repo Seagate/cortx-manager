@@ -39,13 +39,14 @@ class QueryDeploymentPlugin(CsmPlugin):
             }
         }
     },
-    'cluster': [{
+    'cluster': [
+        {
         'id': '0007ec45379e36d9fa089a3d615c32a3',
         'name': 'cortx-cluster',
         'security': {
                 'device_certificate': '/etc/cortx/solution/ssl/stx.pem',
                 'domain_certificate': '/etc/cortx/solution/ssl/stx.pem',
-                'ssl_certificate': '/opt/seagate/cortx/s3/install/haproxy/ssl/s3.seagate.com.pem'
+                'ssl_certificate': '/etc/cortx/solution/ssl/s3.seagate.com.pem'
             },
         'storage_set_count': 1,
         'storage_set': [{
@@ -63,13 +64,14 @@ class QueryDeploymentPlugin(CsmPlugin):
                 }
             }
             }]
-    },{
+    },
+    {
         'id': '0007ec45379e36d9fa089a3d615c32a31',
         'name': 'cortx-cluster1',
         'security': {
                 'device_certificate': '/etc/cortx/solution/ssl/stx.pem1',
                 'domain_certificate': '/etc/cortx/solution/ssl/stx.pem1',
-                'ssl_certificate': '/opt/seagate/cortx/s3/install/haproxy/ssl/s3.seagate.com.pem1'
+                'ssl_certificate': '/etc/cortx/solution/ssl/s3.seagate.com.pem'
             },
         'storage_set_count': 11,
         'storage_set': [{
@@ -380,15 +382,22 @@ class QueryDeploymentPlugin(CsmPlugin):
         }]
     }
 
+    def init(self, **kwargs):
+        pass
+
+    @Log.trace_method(Log.DEBUG)
+    def process_request(self, **kwargs):
+        pass
+
     def _get_certificate_details(self, input_payload):
         """
         Get Certificate details
         """
         #TODO: Add device certificate/domain certificate once available.
         path = input_payload.get("security").get("ssl_certificate")
+        cert_details['path'] = path
         cert_details = SSLCertificate(path).get_certificate_details()
         cert_details = cert_details['cert_details']
-        cert_details['path'] = path
         return [cert_details]
 
     def _create_node_payload(self, node):
@@ -437,6 +446,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         resources_payload = {}
         for resource in self.valid_resources:
             resources_payload[resource] = self.create_resource_payload(resource, self.valid_resources[resource], input_payload)
+            return resources_payload
 
     def convert_schema(self, input_payload):
         coverted_payload = self.get_resource_payload(input_payload)

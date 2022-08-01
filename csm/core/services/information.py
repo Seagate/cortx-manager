@@ -71,7 +71,7 @@ class InformationService(ApplicationService):
         plugin_response = self._query_deployment_plugin.get_topology()
         # TODO: Add plugin response from plugin section
         plugin_response['topology'] = self._filter_from_dict(plugin_response['topology'], resource)
-        return plugin_response
+        return json.dumps(plugin_response)
 
     def get_specific_resource(self, resource, resource_id):
         """
@@ -82,7 +82,7 @@ class InformationService(ApplicationService):
         payload = res["topology"][resource]
         key = self.resource_id_key[resource]
         res["topology"][resource] = [item for item in payload if item.get(key) != resource_id]
-        return res
+        return json.dumps(res)
 
     def get_views(self, resource, resource_id, view):
         """
@@ -90,8 +90,9 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         #TODO: call plugin
-        response = {}
-        return response
+        res = self.get_specific_resource(resource, resource_id)
+        #payload = res["topology"][resource][0]
+        return res
 
     def get_specific_view(self, **path_param):
         """
