@@ -100,24 +100,27 @@ class CsmUsersListView(CsmView):
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         """GET REST implementation for fetching csm users."""
-        Log.debug(f"Handling csm users fetch request."
-                  f" user_id: {self.request.session.credentials.user_id}")
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         csm_schema = CsmGetUsersSchema()
         try:
             request_data = csm_schema.load(self.request.rel_url.query, unknown='EXCLUDE')
         except ValidationError as val_err:
             raise InvalidRequest(str(val_err))
         users = await self._service.get_user_list(**request_data)
+        Log.info(
+            f"Processed request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         return {'users': users}
 
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
         """POST REST implementation for creating a csm user."""
-        Log.debug("Handling users post request.")
-
         creator = self.request.session.credentials.user_id if self.request.session else None
-        Log.debug(f"User ID {creator}")
-
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {creator}")
         try:
             schema = CsmUserCreateSchema()
             user_body = schema.load(await self.request.json(), unknown='EXCLUDE')
@@ -137,6 +140,9 @@ class CsmUsersListView(CsmView):
 
         user_body['creator_id'] = creator
         response = await self._service.create_user(**user_body)
+        Log.info(
+            f"Processed request: {self.request.method} {self.request.path}"\
+            f" User: {creator}")
         return CsmResponse(response, const.STATUS_CREATED)
 
 
@@ -151,30 +157,41 @@ class CsmUsersView(CsmView):
     @CsmAuth.permissions({Resource.USERS: {Action.LIST}})
     async def get(self):
         """GET REST implementation for csm account get request."""
-        Log.debug(f"Handling get csm account request."
-                  f" user_id: {self.request.session.credentials.user_id}")
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
-        return await self._service.get_user(user_id)
+        resp = await self._service.get_user(user_id)
+        Log.info(
+            f"Processed request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
+        return resp
 
     @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
         """DELETE REST implementation for csm account delete request."""
-        Log.debug(f"Handling delete csm account request."
-                  f" user_id: {self.request.session.credentials.user_id}")
+        loggedin_user_id = self.request.session.credentials.user_id
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {loggedin_user_id}")
         user_id = self.request.match_info["user_id"]
-        resp = await self._service.delete_user(user_id,
-                                               self.request.session.credentials.user_id)
+        resp = await self._service.delete_user(user_id, loggedin_user_id)
         # TODO: check if the user has really been deleted
         # delete session for user
         # admin cannot be deleted
         await self.request.app.login_service.delete_all_sessions_for_user(user_id)
+        Log.info(
+            f"Processed request: {self.request.method} {self.request.path}"\
+            f" User: {loggedin_user_id}")
         return resp
 
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def patch(self):
         """PATCH implementation for creating a csm user."""
-        Log.debug(f"Handling users patch request."
-                  f" user_id: {self.request.session.credentials.user_id}")
+        loggedin_user_id = self.request.session.credentials.user_id
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {loggedin_user_id}")
         user_id = self.request.match_info["user_id"]
 
         try:
@@ -186,6 +203,9 @@ class CsmUsersView(CsmView):
         except ValidationError as val_err:
             raise InvalidRequest(f"Invalid request body: {val_err}")
 
-        resp = await self._service.update_user(user_id, user_body,
-                                               self.request.session.credentials.user_id)
+        resp = await self._service.update_user(
+            user_id, user_body, loggedin_user_id)
+        Log.info(
+            f"Processed request: {self.request.method} {self.request.path}"\
+            f" User: {loggedin_user_id}")
         return resp

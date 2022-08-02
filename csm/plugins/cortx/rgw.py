@@ -146,7 +146,7 @@ class RGWPlugin:
         :returns: instance of error.
         """
 
-        Log.error(f"Create error body: {body}")
+        Log.error(f"Recieved error response from s3 server: {body}")
 
         rgw_error = RgwError()
         try:
