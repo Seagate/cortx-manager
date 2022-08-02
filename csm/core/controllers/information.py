@@ -98,7 +98,7 @@ class TopologyView(CsmView):
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}")
-class ResourcesTopologyView(CsmView):
+class ResourceTopology(CsmView):
     """
     Get information about all resources from deployment topology.
     GET: Get information about all resources from deployment topology.
@@ -121,7 +121,7 @@ class ResourcesTopologyView(CsmView):
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}")
-class ResourceTopologyView(CsmView):
+class SubresourceTopology(CsmView):
     """
     Get information about specific resource from deployment topology.
     GET: Get information about specific resource from deployment topology.
@@ -145,7 +145,7 @@ class ResourceTopologyView(CsmView):
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}/{view}")
-class AllViews(CsmView):
+class ViewTopology(CsmView):
     """
     Get information about specific resource from deployment topology.
     GET: Get information about specific resource from deployment topology.
@@ -175,7 +175,7 @@ class AllViews(CsmView):
 
 @CsmAuth.public
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}/{view}/{view_id}")
-class SpecificView(CsmView):
+class SubviewTopology(CsmView):
     """GET REST implementation to query information about specific
        views of specific resource from deployment topology."""
     Log.debug("Handling GET request to fetch details from .")

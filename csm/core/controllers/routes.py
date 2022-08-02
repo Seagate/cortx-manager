@@ -31,7 +31,7 @@ from csm.core.controllers.rgw.s3.users import (S3IAMUserListView, S3IAMUserView,
 from csm.core.controllers.rgw.s3.bucket import S3BucketView
 from csm.core.controllers.information import VersionInformationView
 from csm.core.controllers.activities import ActivitiesListView, ActivitiesView
-from csm.core.controllers.information import TopologyView, ResourcesTopologyView, ResourceTopologyView, AllViews, SpecificView
+from csm.core.controllers.information import TopologyView, ResourceTopology, SubresourceTopology, ViewTopology, SubviewTopology
 
 class CsmRoutes():
     """
