@@ -483,8 +483,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Get topology of cortx deployment
         """
-        # 1. Call utils interface
-        # Uncomment after integration
+        # TODO: Uncomment following call after integration
         # topology = QueryDeployment._get_cortx_topology({""})
         topology = self.output
         self.validate_input(topology)
