@@ -89,9 +89,9 @@ class TopologyView(CsmView):
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
-        """GET REST implementation for complete cortx topology."""
-        Log.info("Fetching cortx topology.")
-        # Call Cortx Information Service
+        """GET REST implementation for complete topology."""
+        Log.info("Fetching topology.")
+        # Call Information Service
         response = await self._service.get_topology()
         return CsmResponse(response)
 
@@ -112,7 +112,7 @@ class ResourceTopology(CsmView):
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
             raise CsmNotFoundError(f"{resource} is not valid")
-        # Call Cortx Information Service
+        # Call Information Service
         Log.debug(f"Fetching deployment topology for resource:{resource}.")
         response = await self._service.get_resources(resource)
         return CsmResponse(response)
