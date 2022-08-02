@@ -49,7 +49,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_topology(self):
         """
-        Method to fetch the cortx topology
+        Method to fetch topology
         :param **request_body: Request body kwargs
         """
         plugin_response = self._plugin.get_topology()
@@ -58,7 +58,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_resources(self, resource):
         """
-        Method to fetch the cortx topology
+        Method to fetch topology
         :param **request_body: Request body kwargs
         """
         plugin_response = self._plugin.get_topology()
@@ -70,7 +70,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_specific_resource(self, resource, resource_id):
         """
-        Method to fetch the cortx topology
+        Method to fetch topology
         :param **request_body: Request body kwargs
         """
         response = await self.get_resources(resource)
@@ -83,7 +83,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_views(self, resource, resource_id, view):
         """
-        Method to fetch the cortx topology
+        Method to fetch topology
         :param **request_body: Request body kwargs
         """
 
@@ -99,7 +99,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_specific_view(self, **path_param):
         """
-        Method to fetch the cortx topology
+        Method to fetch topology
         :param **request_body: Request body kwargs
         """
         resource = path_param[const.ARG_RESOURCE]
