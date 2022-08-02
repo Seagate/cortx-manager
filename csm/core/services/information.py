@@ -22,8 +22,7 @@ class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
 
     def __init__(self, plugin):
-        self._query_deployment_plugin = plugin
-        self.resource_id_key = {"cluster": "id"}
+        self._plugin = plugin
 
     @Log.trace_method(Log.DEBUG)
     async def check_compatibility(self, **request_body):
@@ -53,15 +52,8 @@ class InformationService(ApplicationService):
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        plugin_response = self._query_deployment_plugin.get_topology()
+        plugin_response = self._plugin.get_topology()
         return plugin_response
-
-    def _filter_from_dict(self, inputdict, keyword):
-        res = inputdict.copy()
-        for item in inputdict:
-            if item != keyword:
-                res.pop(item)
-        return res
 
     @Log.trace_method(Log.DEBUG)
     async def get_resources(self, resource):
@@ -69,10 +61,10 @@ class InformationService(ApplicationService):
         Method to fetch the cortx topology
         :param **request_body: Request body kwargs
         """
-        plugin_response = self._query_deployment_plugin.get_topology()
-        if isinstance(plugin_response['topology'], dict):
-                plugin_response['topology'] = {key:value for key, value in \
-                    plugin_response['topology'].items() if key == resource}
+        plugin_response = self._plugin.get_topology()
+        if isinstance(plugin_response[const.TOPOLOGY], dict):
+            plugin_response[const.TOPOLOGY] = {key:value for key, value in \
+                plugin_response[const.TOPOLOGY].items() if key == resource}
         return plugin_response
 
     @Log.trace_method(Log.DEBUG)
@@ -82,11 +74,10 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         response = await self.get_resources(resource)
-        payload = response["topology"][resource]
-        key = self.resource_id_key[resource]
+        payload = response[const.TOPOLOGY][resource]
         if isinstance(payload, list):
-            response["topology"][resource] = [item for item in \
-                payload if item.get(key) == resource_id]
+            response[const.TOPOLOGY][resource] = [item for item in \
+                payload if item.get(const.ID) == resource_id]
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -97,12 +88,12 @@ class InformationService(ApplicationService):
         """
 
         res = await self.get_specific_resource(resource, resource_id)
-        payload = res["topology"][resource][0]
+        payload = res[const.TOPOLOGY][resource][0]
         response = {
-            "id": payload['id'],
+            const.ID: payload[const.ID],
             view: payload[view]
         }
-        res["topology"][resource][0] = response
+        res[const.TOPOLOGY][resource][0] = response
         return res
 
     @Log.trace_method(Log.DEBUG)
@@ -116,7 +107,7 @@ class InformationService(ApplicationService):
         view = path_param[const.ARG_VIEW]
         view_id = path_param[const.ARG_VIEW_ID]
         res = await self.get_views(resource, resource_id, view)
-        payload = res["topology"][resource][0][view]
-        res["topology"][resource][0][view] = [item for item in \
-            payload if item.get("id") == view_id]
+        payload = res[const.TOPOLOGY][resource][0][view]
+        res[const.TOPOLOGY][resource][0][view] = [item for item in \
+            payload if item.get(const.ID) == view_id]
         return res

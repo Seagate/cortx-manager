@@ -82,8 +82,8 @@ class VersionInformationView(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology")
 class TopologyView(CsmView):
     """
-    Complete CORTX topology will be provided
-    GET: Complete CORTX topology
+    Complete deployment topology will be provided
+    GET: Complete deployment topology
     """
     def __init__(self, request):
         super().__init__(request)
@@ -100,19 +100,22 @@ class TopologyView(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}")
 class ResourcesTopologyView(CsmView):
     """
-    Get information about all resources from cortx topology.
-    GET: Get information about all resources from cortx topology.
+    Get information about all resources from deployment topology.
+    GET: Get information about all resources from deployment topology.
     """
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
-        """GET REST implementation to query information about all resources from cortx topology."""
-        Log.debug("Handling GET request to query information about all resources from cortx topology.")
+        """GET REST implementation to query information about all resources from deployment topology."""
+        Log.debug("Handling GET request to query information about all resources from deployment topology.")
         resource = self.request.match_info[const.ARG_RESOURCE]
+        # Check for valid Resource
+        if resource not in const.VALID_RESOURCES:
+            raise CsmNotFoundError(f"{resource} is not valid")
         # Call Cortx Information Service
-        Log.info(f"Fetching cortx topology for resource:{resource}.")
+        Log.info(f"Fetching deployment topology for resource:{resource}.")
         response = await self._service.get_resources(resource)
         return CsmResponse(response)
 
@@ -120,20 +123,23 @@ class ResourcesTopologyView(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}")
 class ResourceTopologyView(CsmView):
     """
-    Get information about specific resource from cortx topology.
-    GET: Get information about specific resource from cortx topology.
+    Get information about specific resource from deployment topology.
+    GET: Get information about specific resource from deployment topology.
     """
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
-        """GET REST implementation to query information about specific resource from cortx topology."""
-        Log.debug("Handling GET request to query information about specific resource from cortx topology.")
+        """GET REST implementation to query information about specific resource from deployment topology."""
+        Log.debug("Handling GET request to query information about specific resource from deployment topology.")
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
-        Log.info(f"Fetching cortx topology for resource:{resource} and resource_id:{resource}.")
-        # Call Cortx Information Service
+        # Check for valid Resource
+        if resource not in const.VALID_RESOURCES:
+            raise CsmNotFoundError(f"{resource} is not valid")
+        Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
+        # Call Information Service
         response = await self._service.get_specific_resource(resource, resource_id)
         return CsmResponse(response)
 
@@ -141,8 +147,8 @@ class ResourceTopologyView(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}/{view}")
 class AllViews(CsmView):
     """
-    Get information about specific resource from cortx topology.
-    GET: Get information about specific resource from cortx topology.
+    Get information about specific resource from deployment topology.
+    GET: Get information about specific resource from deployment topology.
     """
     def __init__(self, request):
         super().__init__(request)
@@ -150,14 +156,20 @@ class AllViews(CsmView):
 
     async def get(self):
         """GET REST implementation to query information about all
-           views of specific resource from cortx topology."""
-        Log.debug("Handling GET request to query information about all views of specific resource from cortx topology.")
+           views of specific resource from deployment topology."""
+        Log.debug("Handling GET request to query information about all views of specific resource from deployment topology.")
         # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         view = self.request.match_info[const.ARG_VIEW]
-        # Call Cortx Information Service
-        Log.info(f"Fetching cortx topology for resource:{resource}, resource_id:{resource} and view:{view}.")
+        # Check for valid Resource
+        if resource not in const.VALID_RESOURCES:
+            raise CsmNotFoundError(f"resource {resource} is not valid")
+        # Check for valid View
+        if view not in const.VALID_VIEWS:
+            raise CsmNotFoundError(f"view {view} is not valid")
+        # Call Information Service
+        Log.info(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
         response = await self._service.get_views(resource, resource_id, view)
         return CsmResponse(response)
 
@@ -165,27 +177,33 @@ class AllViews(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}/{view}/{view_id}")
 class SpecificView(CsmView):
     """GET REST implementation to query information about specific
-       views of specific resource from cortx topology."""
+       views of specific resource from deployment topology."""
     Log.debug("Handling GET request to fetch details from .")
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
-        """GET REST implementation to query only specific subset of CORTX topology."""
-        Log.debug("Handling GET request to query only specific subset of CORTX topology.")
+        """GET REST implementation to query only specific subset of deployment topology."""
+        Log.debug("Handling GET request to query only specific subset of deployment topology.")
         # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         view = self.request.match_info[const.ARG_VIEW]
         view_id = self.request.match_info[const.ARG_VIEW_ID]
+        # Check for valid Resource
+        if resource not in const.VALID_RESOURCES:
+            raise CsmNotFoundError(f"resource {resource} is not valid")
+        # Check for valid View
+        if view not in const.VALID_VIEWS:
+            raise CsmNotFoundError(f"view {view} is not valid")
         path_params_dict = {
             const.ARG_RESOURCE : resource,
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_VIEW : view,
             const.ARG_VIEW_ID : view_id
         }
-        Log.info(f"Fetching cortx topology for {path_params_dict}.")
-        # Call Cortx Information Service
+        Log.info(f"Fetching deployment topology for {path_params_dict}.")
+        # Call Information Service
         response = await self._service.get_specific_view(**path_params_dict)
         return CsmResponse(response)

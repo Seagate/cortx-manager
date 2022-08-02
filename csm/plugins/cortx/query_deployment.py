@@ -16,6 +16,7 @@
 from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
 from csm.common.certificate import SSLCertificate
+from csm.core.blogic import const
 #TODO: Uncomment after integration
 #from cortx.utils.query_deployment import QueryDeployment
 
@@ -29,6 +30,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Initialize query deployment plugin
         """
+        # set valid resources along with their attributes.
         self.valid_resources = {'cluster':['id', 'version', 'nodes', 'storage_set', 'certificate']}
         self.output = {
     'cortx': {
@@ -394,11 +396,11 @@ class QueryDeploymentPlugin(CsmPlugin):
         Get Certificate details
         """
         #TODO: Add device certificate/domain certificate once available.
-        path = input_payload.get("security").get("ssl_certificate")
+        path = input_payload.get(const.SECURITY).get(const.SSL_CERTIFICATE)
         cert_details = SSLCertificate(path).get_certificate_details()
-        cert_details = cert_details['cert_details']
-        cert_details['path'] = path
-        cert_details['type'] = "SSL Certificate"
+        cert_details = cert_details[const.CERT_DETAILS]
+        cert_details[const.PATH] = path
+        cert_details[const.TYPE] = "SSL Certificate"
         return [cert_details]
 
     def _create_node_payload(self, node):
@@ -406,22 +408,22 @@ class QueryDeploymentPlugin(CsmPlugin):
         Create payload for given node
         """
         payload = {}
-        payload['id'] = node['node_id']
-        payload['version'] = node['version']
-        payload['type'] = node['type']
-        payload['components'] = node['components']
-        if node.get('cvg'):
-            payload['cvg'] = node.get('cvg')
+        payload[const.ID] = node[const.ARG_NODE_ID]
+        payload[const.VERSION] = node[const.VERSION]
+        payload[const.TYPE] = node[const.TYPE]
+        payload[const.COMPONENTS] = node[const.COMPONENTS]
+        if node.get(const.CVG):
+            payload[const.CVG] = node.get(const.CVG)
         return payload
 
     def _get_nodes(self, attribute, input_payload, cluster_id):
         """
         Get node details specific to cluster
         """
-        nodes = input_payload['nodes']
+        nodes = input_payload[const.NODES]
         res = []
         for node in nodes:
-            if node['cluster_id'] == cluster_id:
+            if node[const.CLUSTER_ID] == cluster_id:
                 res.append(self._create_node_payload(node))
         return res
 
@@ -434,15 +436,16 @@ class QueryDeploymentPlugin(CsmPlugin):
         for cluster in total_clusters:
             partial_payload = {}
             for attribute in valid_attributes:
-                if attribute == 'id' or attribute == 'storage_set':
+                if attribute == const.ID or attribute == const.STORAGE_SET:
                     partial_payload[attribute] = cluster[attribute]
-                elif attribute == 'nodes':
-                    cluster_id = cluster['id']
+                elif attribute == const.NODES:
+                    cluster_id = cluster[const.ID]
                     partial_payload[attribute] = self._get_nodes(attribute, input_payload, cluster_id)
-                elif attribute == 'certificate':
+                elif attribute == const.CERTIFICATE:
                     partial_payload[attribute] = self._get_certificate_details(cluster)
-                elif attribute == 'version':
-                    partial_payload[attribute] = input_payload.get("cortx").get("common").get("release").get("version")
+                elif attribute == const.VERSION:
+                    partial_payload[attribute] = input_payload.get(const.CORTX).\
+                        get(const.COMMON).get(const.RELEASE).get(const.VERSION)
             res.append(partial_payload)
         return res
 
@@ -451,7 +454,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         Create payload body for each resource.
         """
         # Create payload based on specific resource and its schema.
-        if resource == 'cluster':
+        if resource == const.CLUSTER:
             return self._create_cluster_payload(resource, self.valid_resources[resource], input_payload)
 
     def get_resource_payload(self, input_payload):
@@ -469,7 +472,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         coverted_payload = self.get_resource_payload(input_payload)
         res_payload = {}
-        res_payload['topology'] = coverted_payload
+        res_payload[const.TOPOLOGY] = coverted_payload
         return res_payload
 
     def validate_input(self, topology):

@@ -1006,3 +1006,12 @@ JSON_ERROR = "Unable to parse request body, Malformed request body received."
 # Query deployment
 VALID_RESOURCES = ['cluster']
 VALID_VIEWS = ['version', 'nodes', 'storage_set', 'certificate']
+TOPOLOGY = 'topology'
+COMPONENTS = 'components'
+CVG = 'cvg'
+STORAGE_SET = 'storage_set'
+NODES = 'nodes'
+CERTIFICATE = 'certificate'
+RELEASE = 'release'
+SECURITY ='security'
+PATH = 'path'
