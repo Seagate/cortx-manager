@@ -35,22 +35,20 @@ class LoginView(CsmView):
         try:
             schema = LoginSchema()
             request_body = schema.load(await self.request.json())
-            Log.debug(f"Handling Login POST request"
-                      f" request body: {request_body}.")
+            username = request_body.get(const.UNAME)
+            password = request_body.get(const.PASS)
+            Log.info(
+                f"Processing request: {self.request.method} {self.request.path}"\
+                f" user: {username}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(const.JSON_ERROR)
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
-
-        body = await self.request.json()
-        username = body.get('username', None)
-        password = body.get('password', None)
-
-        session_id, body = await self.request.app.login_service.login(username, password)
+        session_id, body = await self.request.app.login_service.login(
+            username, password)
         if not session_id:
             raise CsmUnauthorizedError("Invalid credentials for user")
-
-        Log.info(f'User: {username} successfully logged in.')
+        Log.info(f"Login successful. User: {username}")
         headers = {CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}'}
         return CsmResponse(body, headers=headers)
 
@@ -60,12 +58,12 @@ class LoginView(CsmView):
 class LogoutView(CsmView):
 
     async def post(self):
-        Log.debug(f"Handling Logout Post request. "
-                  f"user_id: {self.request.session.credentials.user_id}")
-        # We use POST method here instead of GET
-        # to avoid browser prefetching this URL
+        username = self.request.session.credentials.user_id
+        Log.info(
+            f"Processing request: {self.request.method} {self.request.path}"\
+            f" User: {username}")
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
-        Log.info(f"user_id: {self.request.session.credentials.user_id} successfully logged out")
+        Log.info(f"Logout successful. User: {username}")
         return CsmResponse()

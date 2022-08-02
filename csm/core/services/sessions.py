@@ -332,23 +332,26 @@ class LoginService:
         Log.debug(f'Logging in user {user_id}')
 
         user = await self._user_manager.get(user_id)
+
         if user is None:
             Log.error(f"User with ID - {user_id} - does not exist")
             return None, None
         credentials = await self._auth_service.authenticate(user, password)
         if credentials is None:
-            Log.error(f'Failed to authenticate {user_id}')
+            Log.error(f'Authentication failed for user: {user_id}')
             return None, None
 
         # Check if valid session exists
         session = await self._is_valid_session_exists(user_id)
         if not session:
             # if No valid session exists, then create new session
+            Log.info(f"Session expired, creating new session for user: {user_id}")
             permissions = await self._role_manager.calc_effective_permissions(user.user_role)
             session = await self._session_manager.create(credentials, permissions)
         if not session:
-            Log.critical('Failed to create a new session')
+            Log.error(f"Failed to create a new session for user: {user_id}")
             return None, None
+        
         return session.session_id, {"reset_password": user.reset_password}
 
     async def logout(self, session_id):
@@ -359,19 +362,12 @@ class LoginService:
         session = await self._session_manager.get(session_id)
         if not session:
             raise CsmError(CSM_ERR_INVALID_VALUE, f'Invalid session id: {session_id}')
-
-        # TODO: Check if user has not been dropped.
-        # We can not do it for now as non-local S3
-        # users are no present in the local user database.
-
         # Check Expiry Time
         if datetime.now(timezone.utc) > session.expiry_time:
             await self._session_manager.delete(session_id)
             raise CsmError(CSM_ERR_INVALID_VALUE, 'Session expired')
-
         # Refresh Expiry Time
         session.expiry_time = self._session_manager.calc_expiry_time()
-
         return session
 
     async def get_temp_access_keys(self, user_id: str) -> list:

@@ -43,12 +43,12 @@ class CsmAgent:
         backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
         file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
         log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
-        console_output = Conf.get(const.CSM_GLOBAL_INDEX, "Log>console_logging") == "true"
         Log.init("csm_agent",
                  backup_count=int(backup_count) if backup_count else None,
                  file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
                  log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-                 level=log_level, console_output=console_output)
+                 level=log_level, console_output=True,
+                 console_output_level='INFO')
 
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
         db_config = {
