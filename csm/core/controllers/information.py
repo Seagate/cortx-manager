@@ -49,7 +49,7 @@ class VersionInformationView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.VERSION_RESOURCES:
-            raise CsmNotFoundError(f"{resource} is not valid")
+            raise CsmNotFoundError(f"Invalid resource {resource}")
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
@@ -111,7 +111,7 @@ class ResourceTopology(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"{resource} is not valid")
+            raise CsmNotFoundError(f"Invalid resource {resource}")
         # Call Information Service
         Log.debug(f"Fetching deployment topology for resource:{resource}.")
         response = await self._service.get_resources(resource)
@@ -134,7 +134,7 @@ class SubresourceTopology(CsmView):
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"{resource} is not valid")
+            raise CsmNotFoundError(f"Invalid resource {resource}")
         Log.debug(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
         # Call Information Service
         response = await self._service.get_specific_resource(resource, resource_id)
@@ -163,7 +163,7 @@ class ViewTopology(CsmView):
             raise CsmNotFoundError(f"resource {resource} is not valid")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise CsmNotFoundError(f"view {view} is not valid")
+            raise CsmNotFoundError(f"Invalid view {view}")
         # Call Information Service
         Log.debug(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
         response = await self._service.get_views(resource, resource_id, view)
@@ -192,7 +192,7 @@ class SubviewTopology(CsmView):
             raise CsmNotFoundError(f"resource {resource} is not valid")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise CsmNotFoundError(f"view {view} is not valid")
+            raise CsmNotFoundError(f"Invalid view {view}")
         path_params_dict = {
             const.ARG_RESOURCE : resource,
             const.ARG_RESOURCE_ID : resource_id,
