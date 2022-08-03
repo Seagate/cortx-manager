@@ -124,7 +124,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
     def tearDownClass(cls):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
             for user in cls.__created_users:
-                session.open_endpoint('DELETE', f'api/v2/csm/users/{user}')
+                session.open_endpoint('DELETE', f'api/v2/system/users/{user}')
 
     def test_000_default_admin_user_exists(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD):
@@ -140,7 +140,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create required manage users
@@ -151,7 +151,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             username = 'test_manage1'
@@ -161,7 +161,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create required monitor users
@@ -172,7 +172,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             username = 'test_monitor1'
@@ -182,7 +182,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -195,7 +195,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -208,7 +208,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -221,7 +221,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -235,7 +235,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            session.open_endpoint('POST', 'api/v2/system/users', new_user)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_create_manage_user_as_manage_user_ok(self):
@@ -247,7 +247,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -260,7 +260,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -274,7 +274,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            session.open_endpoint('POST', 'api/v2/system/users', new_user)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_create_manage_user_as_monitor_user_fail(self):
@@ -287,7 +287,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            session.open_endpoint('POST', 'api/v2/system/users', new_user)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_create_monitor_user_as_monitor_user_fail(self):
@@ -300,7 +300,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            session.open_endpoint('POST', 'api/v2/system/users', new_user)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_admin_user_as_admin_user_ok(self):
@@ -309,7 +309,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_admin@cortx-examples.seagate.com',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_manage_user_as_admin_user_ok(self):
@@ -318,7 +318,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_admin@cortx-examples.seagate.com',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_monitor_user_as_admin_user_ok(self):
@@ -327,7 +327,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_admin@cortx-examples.seagate.com',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_self_as_admin_user_ok(self):
@@ -337,7 +337,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'email': f'{username}_by_self@cortx-examples.seagate.com',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_admin_user_as_manage_user_fail(self):
@@ -347,7 +347,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 new_email = {
                     'email': f'{username}_by_manage@cortx-examples.seagate.com',
                 }
-                session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+                session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_manage_user_as_manage_user_ok(self):
@@ -356,7 +356,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_manage@cortx-examples.seagate.com',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_monitor_user_as_manage_user_ok(self):
@@ -365,7 +365,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_manage@cortx-examples.seagate.com',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_self_as_manage_user_ok(self):
@@ -375,7 +375,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'email': f'{username}_by_self@cortx-examples.seagate.com',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_change_email_of_admin_user_as_monitor_user_fail(self):
@@ -385,7 +385,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_monitor@cortx-examples.seagate.com',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_manage_user_as_monitor_user_fail(self):
@@ -395,7 +395,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_monitor@cortx-examples.seagate.com',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_monitor_user_as_monitor_user_fail(self):
@@ -405,7 +405,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_email = {
                 'email': f'{username}_by_monitor@cortx-examples.seagate.com',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_010_change_email_of_self_as_monitor_user_ok(self):
@@ -415,13 +415,13 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'email': f'{username}_by_self@cortx-examples.seagate.com',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_email)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_email)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_010_search_existing_user_by_name_ok(self):
         with CSMSession(_AGENT_URL, 'test_monitor0', 'Seagate@1') as session:
             username = 'cortxadmin'
-            resp = session.open_endpoint('GET', f'api/v2/csm/users?username={username}')
+            resp = session.open_endpoint('GET', f'api/v2/system/users?username={username}')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
             body = _body_as_object(resp)
             usernames = [user['username'] for user in body['users']]
@@ -434,7 +434,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'current_password': 'Seagate@1',
                 'password': 'Seagate@99',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_014_change_password_of_self_as_manage_user_ok(self):
@@ -444,7 +444,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'current_password': 'Seagate@1',
                 'password': 'Seagate@99',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_014_change_password_of_self_as_monitor_user_ok(self):
@@ -454,7 +454,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'current_password': 'Seagate@1',
                 'password': 'Seagate@99',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_admin_user_password_as_admin_user_ok(self):
@@ -463,7 +463,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@2',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_manage_user_password_as_admin_user_ok(self):
@@ -472,7 +472,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@2',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_monitor_user_password_as_admin_user_ok(self):
@@ -481,7 +481,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@2',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_admin_user_password_as_manage_user_fail(self):
@@ -491,7 +491,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@3',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_015_reset_manage_user_password_as_manage_user_ok(self):
@@ -500,7 +500,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@3',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_monitor_user_password_as_manage_user_ok(self):
@@ -509,7 +509,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@3',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_015_reset_admin_user_password_as_monitor_user_fail(self):
@@ -519,7 +519,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@4',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_015_reset_manage_user_password_as_monitor_user_fail(self):
@@ -529,7 +529,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@4',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_015_reset_monitor_user_password_as_monitor_user_fail(self):
@@ -539,7 +539,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_password = {
                 'password': 'Seagate@4',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_password)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_password)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020__PREPARE(self):
@@ -552,7 +552,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             # create manage user to be deleted by admin
             username = 'test_manage_del_by_admin'
@@ -562,7 +562,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             # create monitor user to be deleted by admin
             username = 'test_monitor_del_by_admin'
@@ -572,7 +572,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             # create admin user to be deleted by itself
             username = 'test_admin_del_by_itself'
@@ -582,7 +582,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             # create manage user to be deleted by itself
             username = 'test_manage_del_by_itself'
@@ -592,7 +592,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             # create monitor user to be deleted by itself
             username = 'test_monitor_del_by_itself'
@@ -602,25 +602,25 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
 
     def test_020_delete_admin_user_as_admin_user_ok(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
             username = 'test_admin_del_by_admin'
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_020_delete_manage_user_as_admin_user_ok(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
             username = 'test_manage_del_by_admin'
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_020_delete_monitor_user_as_admin_user_ok(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
             username = 'test_monitor_del_by_admin'
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_020_delete_itself_as_one_of_existing_admin_users_ok(self):
@@ -628,7 +628,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
         with self.assertRaises(HTTPError) as cm, \
                 CSMSession(_AGENT_URL, 'test_admin_del_by_itself', 'Seagate@1') as session:
             username = session.username
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.UNAUTHORIZED)
         self.assertIsInstance(resp, HTTPResponse)
         self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
@@ -637,21 +637,21 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
         with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_admin0'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_manage_user_as_manage_user_fail(self):
         with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_manage1'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_monitor_user_as_manage_user_fail(self):
         with CSMSession(_AGENT_URL, 'test_manage0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_monitor1'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_itself_as_manage_user_ok(self):
@@ -659,7 +659,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
         with self.assertRaises(HTTPError) as cm, \
                 CSMSession(_AGENT_URL, 'test_manage_del_by_itself', 'Seagate@1') as session:
             username = session.username
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.UNAUTHORIZED)
         self.assertIsInstance(resp, HTTPResponse)
         self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
@@ -668,21 +668,21 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
         with CSMSession(_AGENT_URL, 'test_monitor0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_admin0'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_manage_user_as_monitor_user_fail(self):
         with CSMSession(_AGENT_URL, 'test_monitor0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_manage1'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_monitor_user_as_monitor_user_fail(self):
         with CSMSession(_AGENT_URL, 'test_monitor0', 'Seagate@1') as session, \
                 self.assertRaises(HTTPError) as cm:
             username = 'test_monitor1'
-            session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_020_delete_itself_as_monitor_user_ok(self):
@@ -690,7 +690,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
         with self.assertRaises(HTTPError) as cm, \
                 CSMSession(_AGENT_URL, 'test_monitor_del_by_itself', 'Seagate@1') as session:
             username = session.username
-            resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+            resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.UNAUTHORIZED)
         self.assertIsInstance(resp, HTTPResponse)
         self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
@@ -705,7 +705,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create manage user
@@ -716,7 +716,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create monitor user
@@ -727,7 +727,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create cycle (by admin) user: admin->manage->admin->monitor->manage->monitor->admin
@@ -738,7 +738,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create cycle (by manage) user: manage->monitor->manage
@@ -749,7 +749,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create admin->manage (by self) user
@@ -760,7 +760,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
             # create admin->monitor (by self) user
@@ -771,7 +771,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'password': 'Seagate@1',
             }
-            resp = session.open_endpoint('POST', 'api/v2/csm/users', new_user)
+            resp = session.open_endpoint('POST', 'api/v2/system/users', new_user)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.CREATED)
             type(self).__created_users.append(username)
 
@@ -782,7 +782,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_manage_user_as_monitor_user_fail(self):
@@ -792,7 +792,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_monitor_user_as_monitor_user_fail(self):
@@ -802,7 +802,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_manage_user_to_admin_user_as_monitor_user_fail(self):
@@ -812,7 +812,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_manage_user_to_manage_user_as_monitor_user_fail(self):
@@ -822,7 +822,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_manage_user_to_monitor_user_as_monitor_user_fail(self):
@@ -832,7 +832,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_monitor_user_to_admin_user_as_monitor_user_fail(self):
@@ -842,7 +842,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_monitor_user_to_manage_user_as_monitor_user_fail(self):
@@ -852,7 +852,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_monitor_user_to_monitor_user_as_monitor_user_fail(self):
@@ -862,7 +862,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_self_to_admin_user_as_monitor_user_fail(self):
@@ -873,7 +873,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_self_to_manage_user_as_monitor_user_fail(self):
@@ -884,7 +884,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_self_to_monitor_user_as_monitor_user_fail(self):
@@ -895,7 +895,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_admin_user_as_manage_user_fail(self):
@@ -905,7 +905,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_manage_user_as_manage_user_fail(self):
@@ -915,7 +915,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_monitor_user_as_manage_user_fail(self):
@@ -925,7 +925,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_manage_user_to_admin_user_as_manage_user_fail(self):
@@ -935,7 +935,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_manage_user_to_manage_user_as_manage_user_ok(self):
@@ -944,7 +944,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_monitor_user_to_admin_user_as_manage_user_fail(self):
@@ -954,7 +954,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_031_change_role_of_manage_user_to_monitor_user_as_manage_user_ok(self):
@@ -963,7 +963,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_032_change_role_of_monitor_user_to_manage_user_as_manage_user_ok(self):
@@ -972,7 +972,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_monitor_user_to_monitor_user_as_manage_user_ok(self):
@@ -981,7 +981,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_self_to_admin_user_as_manage_user_fail(self):
@@ -992,7 +992,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_self_to_manage_user_as_manage_user_fail(self):
@@ -1003,7 +1003,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_self_to_monitor_user_as_manage_user_fail(self):
@@ -1014,7 +1014,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'current_password': 'Seagate@1',
             }
-            session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
         self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
     def test_030_change_role_of_admin_user_to_admin_user_as_admin_user_ok(self):
@@ -1023,7 +1023,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_manage_user_to_manage_user_as_admin_user_ok(self):
@@ -1032,7 +1032,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_monitor_user_to_monitor_user_as_admin_user_ok(self):
@@ -1041,7 +1041,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_self_to_admin_user_as_admin_user_ok(self):
@@ -1051,7 +1051,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'admin',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_self_to_manage_user_as_admin_user_ok(self):
@@ -1061,7 +1061,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'manage',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_030_change_role_of_self_to_monitor_user_as_admin_user_ok(self):
@@ -1071,7 +1071,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 'role': 'monitor',
                 'current_password': 'Seagate@1',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_031_change_role_of_admin_user_to_manage_user_as_admin_user_ok(self):
@@ -1080,7 +1080,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_032_change_role_of_manage_user_to_admin_user_as_admin_user_ok(self):
@@ -1089,7 +1089,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_033_change_role_of_admin_user_to_monitor_user_as_admin_user_ok(self):
@@ -1098,7 +1098,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_034_change_role_of_monitor_user_to_manage_user_as_admin_user_ok(self):
@@ -1107,7 +1107,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'manage',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_035_change_role_of_manage_user_to_monitor_user_as_admin_user_ok(self):
@@ -1116,7 +1116,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'monitor',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_036_change_role_of_monitor_user_to_admin_user_as_admin_user_ok(self):
@@ -1125,12 +1125,12 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             new_role = {
                 'role': 'admin',
             }
-            resp = session.open_endpoint('PATCH', f'api/v2/csm/users/{username}', new_role)
+            resp = session.open_endpoint('PATCH', f'api/v2/system/users/{username}', new_role)
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
 
     def test_040__PREPARE(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
-            resp = session.open_endpoint('GET', 'api/v2/csm/users?role=admin')
+            resp = session.open_endpoint('GET', 'api/v2/system/users?role=admin')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
             users = _body_as_object(resp).get('users')
             self.assertIsNotNone(users)
@@ -1138,14 +1138,14 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
                 username = user['username']
                 if username == _DEFAULT_ADMIN_USERNAME:
                     continue
-                resp = session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+                resp = session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
                 self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
                 type(self).__created_users.remove(username)
 
     def test_040_delete_itself_as_single_admin_user_fail(self):
         with CSMSession(_AGENT_URL, _DEFAULT_ADMIN_USERNAME, _DEFAULT_ADMIN_PASSWORD) as session:
             username = session.username
-            resp = session.open_endpoint('GET', 'api/v2/csm/users?role=admin')
+            resp = session.open_endpoint('GET', 'api/v2/system/users?role=admin')
             self.assertEqual(HTTPStatus(resp.status, None),  HTTPStatus.OK)
             users = _body_as_object(resp).get('users')
             self.assertIsNotNone(users)
@@ -1153,7 +1153,7 @@ class TestUserManagementAPIFunctionalRequirements(TestCase):
             user = users[0]
             self.assertEqual(user.get('username'), username)
             with self.assertRaises(HTTPError) as cm:
-                session.open_endpoint('DELETE', f'api/v2/csm/users/{username}')
+                session.open_endpoint('DELETE', f'api/v2/system/users/{username}')
             self.assertEqual(HTTPStatus(cm.exception.status, None),  HTTPStatus.FORBIDDEN)
 
 
