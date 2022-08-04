@@ -206,7 +206,8 @@ class Setup:
                     conf['databases']["consul_db"]["config"][const.PORT])
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
-        usr_service = CsmUserService(usr_mngr)
+        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
+        usr_service = CsmUserService(usr_mngr, max_users_allowed)
         if (not force_action) and \
             (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
             Log.console("WARNING: Cortx cluster admin already created.\n"

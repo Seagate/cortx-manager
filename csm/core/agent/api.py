@@ -102,9 +102,11 @@ class ErrorResponseSchema(ValidateSchema):
 
 class CsmRestApi(CsmApi, ABC):
     """REST Interface to communicate with CSM."""
-
-    __is_shutting_down = False
     # __unsupported_features = None
+    __is_shutting_down = False
+    __nreq = 0
+    __nblocked = 0
+    __request_quota = 0
 
     @staticmethod
     def init():
@@ -113,8 +115,12 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
+        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA))
+        Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
+
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers,
+            middlewares=[CsmRestApi.throttler_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
@@ -303,6 +309,31 @@ class CsmRestApi(CsmApi, ABC):
         key = method + ":" + path
         conf_key = CsmAuth.HYBRID_APIS[key]
         return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
+    @web.middleware
+    async def throttler_middleware(request, handler):
+        if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
+            # This block get executed when number of request reaches the request quota
+            CsmRestApi.__nblocked += 1
+            msg = (f"The request is blocked because the number of requests reached threshold\n"
+                   f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
+            Log.warn(msg)
+            return web.Response(status=429, text="Too many requests")
+        else:
+            # This block get executed when number of request are less than request quota
+            # Increment the counter for number of request executing
+            CsmRestApi.__nreq += 1
+
+        try:
+            # Here we call handler
+            # Handler can return json response or can raise an exception
+            res = await handler(request)
+        finally:
+            # Decrements the counter of number of request executing
+            # This block always gets executed
+            CsmRestApi.__nreq -= 1
+        return res
 
     @staticmethod
     @web.middleware

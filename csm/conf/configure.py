@@ -74,6 +74,7 @@ class Configure(Setup):
 
         self.cluster_id = Conf.get(const.CONSUMER_INDEX,
                         self.conf_store_keys[const.KEY_CLUSTER_ID])
+        Configure.set_resource_limits()
         Configure._set_csm_endpoint()
         Configure._set_s3_info()
         Configure.set_hax_endpoint()
@@ -119,7 +120,8 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}",
+                const.KEY_SERVICE_LIMITS: const.CSM_USAGE_LIMIT_SERVICES
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -324,3 +326,62 @@ class Configure(Setup):
         mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
         Configure._create_perf_stat_topic(mb_admin)
         Configure._create_cluster_stop_topic(mb_admin)
+
+    @staticmethod
+    def _calculate_request_quota(mem_min: int, mem_max: int, cpu_min: int, cpu_max: int) -> int:
+        """
+        Calculate the maximum number of requests CSM handles at particular time.
+
+        :param mem_min: minimum memory limit.
+        :param mem_max: maximum memory limit.
+        :param cpu_min: minumem CPU limit.
+        :param cpu_max: maximum CPU limit.
+        :returns: number of requests.
+        """
+        Log.info(f"CPU boundaries are currently not included in calculation: {cpu_min}:{cpu_max}")
+        # Minimum memroy limit is considered the bare minimem to run CSM only.
+        # The rest part up to maximum limit is for handling incoming requests.
+        # CSM also reserves some amount (const.CSM_USAGE_RESERVED_BUFFER_PERCENT) for future needs.
+        # MaxConcurrentRequest =  MaxAvailableMemForRequest/RequestSize
+
+        reserved_mem = mem_max * const.CSM_USAGE_RESERVED_BUFFER_PERCENT // 100
+        quota = (mem_max - reserved_mem) // const.MAX_MEM_PER_REQUEST_MB
+        return quota
+
+    @staticmethod
+    def _mem_limit_to_int(mem: str) -> int:
+        """
+        Convert memory limit from Conf to integer, e.g. '128Mi' -> 128.
+
+        :param mem: value from Conf as string.
+        :returns: integer value.
+        """
+        numbers_only = mem[:mem.find('M')]
+        return int(numbers_only)
+
+    @staticmethod
+    def _cpu_limit_to_int(cpu: str) -> int:
+        """
+        Convert CPU limit from Conf string to integer, e.g. '250m' -> 250.
+
+        :param cpu: value from Conf as string.
+        :returns: integer value.
+        """
+        numbers_only = cpu[:cpu.find('m')]
+        return int(numbers_only)
+
+    @staticmethod
+    def set_resource_limits() -> None:
+        """Set resource limits for CSM."""
+        limits = Conf.get(const.CONSUMER_INDEX, const.CSM_USAGE_LIMIT_SERVICES)
+        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_USAGE_LIMIT_SERVICES, limits)
+        limits = next(filter(lambda x: x[const.NAME] == "agent", limits), None)
+        if limits:
+            mem_min = Configure._mem_limit_to_int(limits["memory"]["min"])
+            mem_max = Configure._mem_limit_to_int(limits["memory"]["max"])
+            cpu_min = Configure._cpu_limit_to_int(limits["cpu"]["min"])
+            cpu_max = Configure._cpu_limit_to_int(limits["cpu"]["max"])
+
+            request_rate = Configure._calculate_request_quota(mem_min, mem_max, cpu_min, cpu_max)
+            Conf.set(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA, request_rate)
+
