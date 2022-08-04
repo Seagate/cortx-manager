@@ -16,7 +16,6 @@
 import os
 # from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
-from csm.common.payload import Json
 from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf

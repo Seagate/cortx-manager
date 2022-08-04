@@ -45,9 +45,7 @@ def test1(args):
         url = "http://" if not ssl_check else "https://"
         url = url + host + ":" + str(port)
         resp = process_request(url)
-        if resp.status_code != 401:
-            raise
-    except Exception:
+    except requests.exceptions.RequestException:
         raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
 
 def test2(args):

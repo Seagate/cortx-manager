@@ -16,7 +16,7 @@
 class PermissionSet:
     """Permission Set stored in a compact way as a dictionary."""
 
-    def __init__(self, items: dict = {}):
+    def __init__(self, items: dict = dict()):
         self._items = {
             resource: set(actions)
                 for resource, actions in items.items()

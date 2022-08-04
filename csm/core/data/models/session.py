@@ -32,7 +32,7 @@ class SessionModel(CsmModel):
                 expiry_time: datetime,
                 user_id: str,
                 user_role: str,
-                permissions: {}):
+                permissions: dict):
         session = SessionModel()
         session._session_id = session_id
         session._expiry_time = expiry_time
