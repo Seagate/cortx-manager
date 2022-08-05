@@ -60,7 +60,7 @@ class Prepare(Setup):
             services = ["agent"]
         else:
             services=[services]
-        if not "agent" in services:
+        if "agent" not in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
 
         self._prepare_and_validate_confstore_keys()

@@ -38,7 +38,7 @@ class Conf:
     def load(index, doc, force=False):
         if not os.path.isfile(doc):
             raise CsmError(-1, f'File {doc} does not exist')
-        if index in Conf._payloads.keys():
+        if index in Conf._payloads:
             if not force:
                 raise Exception(f'index {index} is already loaded')
             Conf.save(index)
@@ -67,7 +67,7 @@ class Conf:
 
     @staticmethod
     def save(index=None):
-        indexes = [x for x in Conf._payloads.keys()] if index is None else [index]
+        indexes = [x for x in Conf._payloads] if index is None else [index]
         for index in indexes:
             Conf._payloads[index].dump()
 

@@ -67,7 +67,7 @@ class Configure(Setup):
             services = ["agent"]
         else:
             services=[services]
-        if not "agent" in services:
+        if "agent" not in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
 
@@ -142,7 +142,7 @@ class Configure(Setup):
     def _set_csm_endpoint():
         Log.info("Config: Setting CSM endpoint in configuration.")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
-        csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
+        csm_protocol, _, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
@@ -275,7 +275,7 @@ class Configure(Setup):
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
-        if not message_type in mb_admin.list_message_types():
+        if message_type not in mb_admin.list_message_types():
             Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,
@@ -291,7 +291,7 @@ class Configure(Setup):
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD))
-        if not message_type in mb_admin.list_message_types():
+        if message_type not in mb_admin.list_message_types():
             Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,

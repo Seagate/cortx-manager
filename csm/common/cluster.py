@@ -120,7 +120,7 @@ class Cluster(object):
             sw_components = self._inventory[node_type][const.KEY_COMPONENTS]
             admin_user = self._inventory[node_type][const.ADMIN_USER]
             for node_id in self._inventory[node_type][const.KEY_NODES]:
-                if node_id not in self._node_list.keys():
+                if node_id not in self._node_list:
                     node = Node(node_id, node_type, sw_components, admin_user)
                     self._node_list[node_id] = node
 
@@ -131,15 +131,15 @@ class Cluster(object):
     def node_list(self, node_type=None):
         """Get nodes of specified type."""
         if node_type is None:
-            return [self._node_list[x] for x in self._node_list.keys()]
-        return [self._node_list[x] for x in self._node_list.keys()
+            return [self._node_list[x] for x in self._node_list]
+        return [self._node_list[x] for x in self._node_list
                 if self._node_list[x].node_type() == node_type]
 
     def host_list(self, node_type=None):
         """Get the list of all SSUs in the cluster."""
         if node_type is None:
-            return [self._node_list[x].host_name() for x in self._node_list.keys()]
-        return [self._node_list[x].host_name() for x in self._node_list.keys()
+            return [self._node_list[x].host_name() for x in self._node_list]
+        return [self._node_list[x].host_name() for x in self._node_list
                 if self._node_list[x].node_type() == node_type]
 
     def sw_components(self, node_type):
@@ -149,7 +149,7 @@ class Cluster(object):
     def active_node_list(self):
         """Get all the active nodes in the cluster."""
         # TODO - Scan the list and identify reachable nodes
-        return [self._node_list[x] for x in self._node_list.keys()
+        return [self._node_list[x] for x in self._node_list
                 if self._node_list[x].is_active()]
 
     def state(self):

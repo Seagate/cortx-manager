@@ -143,10 +143,10 @@ class TimelionProvider(TimeSeriesProvider):
     def _parse(self, nodes, panel, output):
         for node in nodes:
             if isinstance(node["val"], str):
-                if node["val"] in self._metric_set.keys():
+                if node["val"] in self._metric_set:
                     output = self._parse(node["node"], panel, output)
                     output = "(" + output + ")." + self._metric_set[node["val"]]
-                elif node["val"] in self._config_list.keys():
+                elif node["val"] in self._config_list:
                     cv = self._config_list[node["val"]]
                     if cv is None:
                         raise CsmInternalError('Can not load config parameter "%s"' % node["val"])
@@ -221,7 +221,7 @@ class TimelionProvider(TimeSeriesProvider):
                 if st not in mu:
                     mu.append(st)
                 if panel == "throughput":
-                    for sz in self._SIZE_DIV.keys():
+                    for sz in self._SIZE_DIV:
                         st = (str(panel) + '.' + str(metric.get('name')) + '.' + str(sz))
                         if st not in mu:
                             mu.append(st)
@@ -239,7 +239,7 @@ class TimelionProvider(TimeSeriesProvider):
             unit_li = unit
         if len(metric_list) == 0:
             metric_list = list(await self.get_labels(panel))
-        for i in range(0, len(metric_list)):
+        for i, _ in enumerate(metric_list):
             if metric_list[i] not in aggr_panel:
                 raise CsmInternalError("Invalid label %s for %s" % (metric_list[i], panel))
             if isinstance(unit, list):
@@ -367,7 +367,7 @@ class TimelionProvider(TimeSeriesProvider):
         res_payload['stats'] = panel
         if "sheet" in timelion_payload:
             data_list = timelion_payload["sheet"][0]["list"]
-            for i in range(0, len(data_list)):
+            for i, _ in enumerate(data_list):
                 datapoint = await self._modify_panel_val(data_list[i]["data"], panel, units[i])
                 if output_format == "gui":
                     datapoint = await self._get_list(datapoint)
@@ -398,7 +398,7 @@ class TimelionProvider(TimeSeriesProvider):
         Modify throughput with unit
         """
         li = []
-        if unit not in self._SIZE_DIV.keys():
+        if unit not in self._SIZE_DIV:
             raise CsmInternalError("Invalid unit for stats %s" % unit)
         unit_val = self._SIZE_DIV[unit]
         for point in datapoint:

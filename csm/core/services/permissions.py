@@ -16,12 +16,12 @@
 class PermissionSet:
     """Permission Set stored in a compact way as a dictionary."""
 
-    def __init__(self, items: dict = dict()):
-        self._items = {
-            resource: set(actions)
-                for resource, actions in items.items()
-                    if len(actions) > 0
-        }
+    def __init__(self, items:dict = None):
+        if items:
+            self._items = { resource: set(actions)
+                for resource, actions in items.items() if len(actions) > 0 }
+        else:
+            self._items = {}
 
     def __str__(self) -> str:
         """String Representation Operator."""
