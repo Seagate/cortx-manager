@@ -24,365 +24,326 @@ from csm.core.blogic import const
 class QueryDeploymentPlugin(CsmPlugin):
     """
     Communicates with utils framework for fetching
-    cortx topology.
+    deployment topology.
     """
     def __init__(self):
         """
         Initialize query deployment plugin
         """
         # set valid resources along with their attributes.
-        self.valid_resources = {'cluster':['id', 'version', 'nodes', 'storage_set', 'certificate']}
+        self.valid_resources = {'clusters':['id', 'version', 'nodes', 'storage_set', 'certificates']}
         self.output = {
-    'cortx': {
-        'common': {
-            'release': {
-                'name': 'CORTX',
-                'version': '2.0.0-5072'
-            }
-        }
-    },
-    'cluster': [
-        {
-        'id': '0007ec45379e36d9fa089a3d615c32a3',
-        'name': 'cortx-cluster',
-        'security': {
-                'device_certificate': '/etc/cortx/solution/ssl/stx.pem',
-                'domain_certificate': '/etc/cortx/solution/ssl/stx.pem',
-                'ssl_certificate': '/etc/cortx/solution/ssl/s3.seagate.com.pem'
-            },
-        'storage_set_count': 1,
-        'storage_set': [{
-            'name': 'storage-set-1',
-            'durability': {
-                'dix': {
-                    'data': '1',
-                    'parity': '0',
-                    'spare': '0'
-                },
-                'sns': {
-                    'data': '1',
-                    'parity': '0',
-                    'spare': '0'
-                }
-            }
-            }]
-    },
-    {
-        'id': '0007ec45379e36d9fa089a3d615c32a31',
-        'name': 'cortx-cluster1',
-        'security': {
-                'device_certificate': '/etc/cortx/solution/ssl/stx.pem1',
-                'domain_certificate': '/etc/cortx/solution/ssl/stx.pem1',
-                'ssl_certificate': '/etc/cortx/solution/ssl/s3.seagate.com.pem'
-            },
-        'storage_set_count': 11,
-        'storage_set': [{
-            'name': 'storage-set-11',
-            'durability': {
-                'dix': {
-                    'data': '11',
-                    'parity': '0',
-                    'spare': '0'
-                },
-                'sns': {
-                    'data': '11',
-                    'parity': '0',
-                    'spare': '0'
-                }
-            }
-            }]
-    }],
-    'nodes': [{
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data1-node2',
-            'name': 'data1-node2',
-            'node_id': 'bbb340f79047df9bb52fa460615c32a5',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/1',
-            'version': '2.0.0-84',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdc', '/dev/sdd'],
-                    'metadata': ['/dev/sdb'],
-                    'log': ['/dev/sdh']
-                },
-                'name': 'cvg-01',
-                'type': 'ios'
-            }]
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data2-node2',
-            'name': 'data2-node2',
-            'node_id': 'bba340f79047df9bb52fa460615c32a5',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/2',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdf', '/dev/sdg'],
-                    'metadata': ['/dev/sde'],
-                    'log': ['/dev/sdi']
-                },
-                'name': 'cvg-02',
-                'type': 'ios'
-            }],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'ha-node',
-            'name': 'ha-node',
-            'node_id': '1115f539f4f770e2a3fe9e2e615c32a8',
-            'storage_set': 'storage-set-1',
-            'type': 'ha_node',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'ha',
-                    'version': '2.0.0-5070'
-                }
-            ],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data1-node3',
-            'name': 'data1-node3',
-            'node_id': 'ccc8700fe6797ed532e311b0615c32a7',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/1',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdc', '/dev/sdd'],
-                    'metadata': ['/dev/sdb'],
-                    'log': ['/dev/sdh']
-                },
-                'name': 'cvg-01',
-                'type': 'ios'
-            }],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'ssc-vm-rhev4-2905.colo.seagate.com',
-            'name': 'control-node',
-            'node_id': '8efd697708a8f7e428d3fd520c180795',
-            'storage_set': 'storage-set-1',
-            'type': 'control_node',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'csm',
-                    'services': ['agent'],
-                    'version': '2.0.0-5072'
-                }
-            ],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'server-node3',
-            'name': 'server-node3',
-            'node_id': 'fff8700fe6797ed532e311b0615c32a7',
-            'storage_set': 'storage-set-1',
-            'type': 'server_node',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                },
-                {
-                    'name': 'rgw',
-                    'version': '2.0.0-5073',
-                    'services': ['rgw_s3']
-                }
-            ],
-        },
-        {
-            'hostname': 'server-node2',
-            'name': 'server-node2',
-            'node_id': 'eee340f79047df9bb52fa460615c32a5',
-            'storage_set': 'storage-set-1',
-            'type': 'server_node',
-            'version': '2.0.0-846',
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'hare'
-                }, {
-                    'name': 'rgw',
-                    'version': '2.0.0-5073',
-                    'services': ['rgw_s3']
-                }
-            ],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data1-node1',
-            'name': 'data1-node1',
-            'node_id': 'aaa120a9e051d103c164f605615c32a4',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/1',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdc', '/dev/sdd'],
-                    'metadata': ['/dev/sdb'],
-                    'log': ['/dev/sdh']
-                },
-                'name': 'cvg-01',
-                'type': 'ios'
-            }],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'server-node1',
-            'name': 'server-node1',
-            'node_id': 'ddd120a9e051d103c164f605615c32a4',
-            'storage_set': 'storage-set-1',
-            'type': 'server_node',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                },
-                {
-                    'name': 'rgw',
-                    'version': '2.0.0-5073',
-                    'services': ['rgw_s3']
-                }
-            ],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data2-node3',
-            'name': 'data2-node3',
-            'node_id': 'cca8700fe6797ed532e311b0615c32a7',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/2',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdf', '/dev/sdg'],
-                    'metadata': ['/dev/sde'],
-                    'log': ['/dev/sdi']
-                },
-                'name': 'cvg-02',
-                'type': 'ios'
-            }],
-        },
-        {
-            'cluster_id': '0007ec45379e36d9fa089a3d615c32a3',
-            'hostname': 'data2-node1',
-            'name': 'data2-node1',
-            'node_id': 'eee120a9e051d103c164f605615c32a4',
-            'storage_set': 'storage-set-1',
-            'type': 'data_node/2',
-            'version': '2.0.0-846',
-            'components': [{
-                    'name': 'utils',
-                    'version': '2.0.0-5058'
-                },
-                {
-                    'name': 'motr',
-                    'version': '2.0.0-5060',
-                    'services': ['io']
-                }, {
-                    'name': 'hare',
-                    'version': '2.0.0-5072'
-                }
-            ],
-            'cvg': [{
-                'devices': {
-                    'data': ['/dev/sdf', '/dev/sdg'],
-                    'metadata': ['/dev/sde'],
-                    'log': ['/dev/sdi']
-                },
-                'name': 'cvg-02',
-                'type': 'ios'
-            }],
-        }]
-    }
+	'cortx': {
+		'common': {
+			'release': {
+				'name': 'CORTX',
+				'version': '2.0.0-7440'
+			}
+		}
+	},
+	'clusters': [{
+		'id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'security': {
+			'device_certificate': '/etc/cortx/solution/ssl/stx.pem',
+			'domain_certificate': '/etc/cortx/solution/ssl/stx.pem',
+			'ssl_certificate': '/etc/cortx/solution/ssl/s3.seagate.com.pem'
+		},
+		'storage_set': [{
+			'durability': {
+				'dix': {
+					'data': '1',
+					'parity': '0',
+					'spare': '0'
+				},
+				'sns': {
+					'data': '1',
+					'parity': '0',
+					'spare': '0'
+				}
+			},
+			'name': 'storage-set-1'
+		}]
+	}],
+	'nodes': [{
+		'machine_id': '3b404b96fc01319b5edb2e84e323595a',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'rgw',
+			'services': ['rgw_s3'],
+			'version': '2.0.0-7440'
+		}],
+		'hostname': 'cortx-server-1.cortx-server-headless.cortx.svc.cluster.local',
+		'name': 'cortx-server-1',
+		'node_id': 'cortx-server-1.cortx-server-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606892',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'server_node'
+	}, {
+		'machine_id': '6ac2b08cfe659acf910fed4d11b7df53',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdd', '/dev/sde'],
+				'metadata': ['/dev/sdc']
+			},
+			'name': 'cvg-01',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g0-2.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g0-2',
+		'node_group': 'ssc-vm-g2-rhev4-3260.colo.seagate.com',
+		'node_id': 'cortx-data-g0-2.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606856',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/0'
+	}, {
+		'machine_id': '7ba8990a85d38508ca9bac4ff516d3ea',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdd', '/dev/sde'],
+				'metadata': ['/dev/sdc']
+			},
+			'name': 'cvg-01',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g0-0.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g0-0',
+		'node_group': 'ssc-vm-g2-rhev4-3262.colo.seagate.com',
+		'node_id': 'cortx-data-g0-0.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606855',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/0'
+	}, {
+		'machine_id': '7d9ee991ae6ce628a0e10294bdebaa6b',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'ha',
+			'version': '2.0.0-7440'
+		}],
+		'hostname': 'cortx-ha-headless',
+		'name': 'cortx-ha',
+		'node_id': 'cortx-ha-headless',
+		'deployment_time': '1659606866',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'ha_node'
+	}, {
+		'machine_id': 'aa378e768a2ba5291d786b3dc48d5650',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdg', '/dev/sdh'],
+				'metadata': ['/dev/sdf']
+			},
+			'name': 'cvg-02',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g1-0.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g1-0',
+		'node_group': 'ssc-vm-g2-rhev4-3262.colo.seagate.com',
+		'node_id': 'cortx-data-g1-0.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606852',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/1'
+	}, {
+		'machine_id': 'ac2f9656e38a92990522025e1f3ccaef',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'rgw',
+			'services': ['rgw_s3'],
+			'version': '2.0.0-7440'
+		}],
+		'hostname': 'cortx-server-0.cortx-server-headless.cortx.svc.cluster.local',
+		'name': 'cortx-server-0',
+		'node_id': 'cortx-server-0.cortx-server-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606889',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'server_node'
+	}, {
+		'machine_id': 'cd1e4c61d297a784245dd88106262cd3',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdd', '/dev/sde'],
+				'metadata': ['/dev/sdc']
+			},
+			'name': 'cvg-01',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g0-1.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g0-1',
+		'node_group': 'ssc-vm-g2-rhev4-3261.colo.seagate.com',
+		'node_id': 'cortx-data-g0-1.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606854',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/0'
+	}, {
+		'machine_id': 'd62dc0d2c3ee12aee9b946379519133a',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'rgw',
+			'services': ['rgw_s3'],
+			'version': '2.0.0-7440'
+		}],
+		'hostname': 'cortx-server-2.cortx-server-headless.cortx.svc.cluster.local',
+		'name': 'cortx-server-2',
+		'node_id': 'cortx-server-2.cortx-server-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606892',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'server_node'
+	}, {
+		'machine_id': 'ecabccb4bced858e282f568d6bf04558',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'csm',
+			'services': ['agent'],
+			'version': '2.0.0-7440'
+		}],
+		'hostname': 'cortx-control',
+		'name': 'cortx-control',
+		'node_id': 'cortx-control',
+		'deployment_time': '1659606820',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'control_node'
+	}, {
+		'machine_id': 'f488442b875fe8c4328e148f8aca7aa7',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdg', '/dev/sdh'],
+				'metadata': ['/dev/sdf']
+			},
+			'name': 'cvg-02',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g1-2.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g1-2',
+		'node_group': 'ssc-vm-g2-rhev4-3260.colo.seagate.com',
+		'node_id': 'cortx-data-g1-2.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606856',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/1'
+	}, {
+		'machine_id': 'fae544140e673b0f2a0d26cb2011516a',
+		'cluster_id': '752a4fa7-45e9-4f61-a7e0-e204fd439c0e',
+		'components': [{
+			'name': 'utils',
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'motr',
+			'services': ['io'],
+			'version': '2.0.0-7440'
+		}, {
+			'name': 'hare',
+			'version': '2.0.0-7440'
+		}],
+		'cvg': [{
+			'devices': {
+				'data': ['/dev/sdg', '/dev/sdh'],
+				'metadata': ['/dev/sdf']
+			},
+			'name': 'cvg-02',
+			'type': 'ios'
+		}],
+		'hostname': 'cortx-data-g1-1.cortx-data-headless.cortx.svc.cluster.local',
+		'name': 'cortx-data-g1-1',
+		'node_group': 'ssc-vm-g2-rhev4-3261.colo.seagate.com',
+		'node_id': 'cortx-data-g1-1.cortx-data-headless.cortx.svc.cluster.local',
+		'deployment_time': '1659606856',
+		'version': '2.0.0-7440',
+		'storage_set': 'storage-set-1',
+		'type': 'data_node/1'
+	}]
+}
 
     def init(self, **kwargs):
         pass
@@ -407,16 +368,19 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Create payload for given node
         """
+        # TODO: Use get method
         payload = {}
-        payload[const.ID] = node[const.ARG_NODE_ID]
+        payload[const.ID] = node[const.MACHINE_ID]
+        payload[const.HOSTNAME] = node[const.HOSTNAME]
         payload[const.VERSION] = node[const.VERSION]
+        payload[const.DEPLOYMENT_TIME] = node[const.DEPLOYMENT_TIME]
         payload[const.TYPE] = node[const.TYPE]
         payload[const.COMPONENTS] = node[const.COMPONENTS]
         if node.get(const.CVG):
             payload[const.CVG] = node.get(const.CVG)
         return payload
 
-    def _get_nodes(self, attribute, input_payload, cluster_id):
+    def _get_nodes(self, input_payload, cluster_id):
         """
         Get node details specific to cluster
         """
@@ -427,6 +391,13 @@ class QueryDeploymentPlugin(CsmPlugin):
                 res.append(self._create_node_payload(node))
         return res
 
+    def _get_storage_set(self, payload):
+        """
+        Get storage_set details specific to cluster
+        """
+        return [{const.ID:item[const.NAME], const.DURABILITY:item[const.DURABILITY]} \
+            for item in payload]
+
     def _create_cluster_payload(self, resource, valid_attributes, input_payload):
         """
         Generate payload for clusters.
@@ -436,12 +407,15 @@ class QueryDeploymentPlugin(CsmPlugin):
         for cluster in total_clusters:
             partial_payload = {}
             for attribute in valid_attributes:
-                if attribute == const.ID or attribute == const.STORAGE_SET:
-                    partial_payload[attribute] = cluster[attribute]
+                if attribute == const.ID:
+                    partial_payload[attribute] = cluster.get(attribute) if cluster.get(attribute) \
+						else cluster.get(const.CLUSTER)
+                elif attribute == const.STORAGE_SET:
+                    partial_payload[attribute] = self._get_storage_set(cluster[attribute])
                 elif attribute == const.NODES:
                     cluster_id = cluster[const.ID]
-                    partial_payload[attribute] = self._get_nodes(attribute, input_payload, cluster_id)
-                elif attribute == const.CERTIFICATE:
+                    partial_payload[attribute] = self._get_nodes(input_payload, cluster_id)
+                elif attribute == const.CERTIFICATES:
                     partial_payload[attribute] = self._get_certificate_details(cluster)
                 elif attribute == const.VERSION:
                     partial_payload[attribute] = input_payload.get(const.CORTX).\
@@ -454,7 +428,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         Create payload body for each resource.
         """
         # Create payload based on specific resource and its schema.
-        if resource == const.CLUSTER:
+        if resource == const.CLUSTERS:
             return self._create_cluster_payload(resource, self.valid_resources[resource], input_payload)
 
     def get_resource_payload(self, input_payload):
@@ -481,11 +455,14 @@ class QueryDeploymentPlugin(CsmPlugin):
 
     def get_topology(self):
         """
-        Get topology of cortx deployment
+        Get topology of deployment
         """
         # TODO: Uncomment following call after integration
-        # topology = QueryDeployment._get_cortx_topology({""})
+        # consul://cortx-consul-server:8500/conf
+        # topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
+        # use try
+        #topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
         topology = self.output
-        self.validate_input(topology)
         res = self.convert_schema(topology)
+        self.validate_input(res)
         return res

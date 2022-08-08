@@ -63,9 +63,10 @@ class InformationService(ApplicationService):
         :param **request_body: Request body kwargs
         """
         plugin_response = self._plugin.get_topology()
+        payload  = plugin_response[const.TOPOLOGY]
         if isinstance(plugin_response[const.TOPOLOGY], dict):
             plugin_response[const.TOPOLOGY] = {key:value for key, value in \
-                plugin_response[const.TOPOLOGY].items() if key == resource}
+                payload.items() if key == resource}
         return plugin_response
 
     @Log.trace_method(Log.DEBUG)
@@ -80,8 +81,7 @@ class InformationService(ApplicationService):
             response[const.TOPOLOGY][resource] = [item for item in \
                 payload if item.get(const.ID) == resource_id]
             if len(response[const.TOPOLOGY][resource]) < 1:
-                raise CsmNotFoundError(f"Invalid resource_id {resource_id}\
-                    for resource {resource}")
+                raise CsmNotFoundError(f"Invalid resource_id {resource_id} for resource {resource}")
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -93,11 +93,12 @@ class InformationService(ApplicationService):
 
         res = await self.get_specific_resource(resource, resource_id)
         payload = res[const.TOPOLOGY][resource][0]
-        response = {
-            const.ID: payload[const.ID],
-            view: payload[view]
-        }
-        res[const.TOPOLOGY][resource][0] = response
+        if isinstance(payload, dict):
+            response = {
+                const.ID: payload[const.ID],
+                view: payload[view]
+            }
+            res[const.TOPOLOGY][resource][0] = response
         return res
 
     @Log.trace_method(Log.DEBUG)
@@ -112,9 +113,9 @@ class InformationService(ApplicationService):
         view_id = path_param[const.ARG_VIEW_ID]
         res = await self.get_views(resource, resource_id, view)
         payload = res[const.TOPOLOGY][resource][0][view]
-        res[const.TOPOLOGY][resource][0][view] = [item for item in \
-            payload if item.get(const.ID) == view_id]
-        if res[const.TOPOLOGY][resource][0][view] < 1:
-            raise CsmNotFoundError(f"Invalid id {view_id}\
-                for view {view} and resource {resource}")
+        if isinstance(payload, list):
+            res[const.TOPOLOGY][resource][0][view] = [item for item in \
+                payload if item.get(const.ID) == view_id]
+            if len(res[const.TOPOLOGY][resource][0][view]) < 1:
+                raise CsmNotFoundError(f"Invalid id {view_id} for view {view} and resource {resource}")
         return res
