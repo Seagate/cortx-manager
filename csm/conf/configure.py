@@ -374,7 +374,7 @@ class Configure(Setup):
         """Set resource limits for CSM."""
         Log.info("Config: Fetching CSM services cpu and memory limits")
         count_services : str = Conf.get(const.CONSUMER_INDEX,
-            const.CSM_LIMITS_NUM_ENDPOINTS_KEY)
+            const.CSM_LIMITS_NUM_SERVICES_KEY)
         try:
             count_services = int(count_services)
         except ValueError:
@@ -382,16 +382,16 @@ class Configure(Setup):
                 " integer.")
         for count in range(count_services):
             name = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CSM_LIMITS_NUM_ENDPOINTS_KEY}[{count}]>name')
+                f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>name')
             if name == "agent":
                 mem_min = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_NUM_ENDPOINTS_KEY}[{count}]>memory>min')
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>min')
                 mem_max = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_NUM_ENDPOINTS_KEY}[{count}]>memory>max')
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>max')
                 cpu_min = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_NUM_ENDPOINTS_KEY}[{count}]>cpu>min')
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>min')
                 cpu_max = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_NUM_ENDPOINTS_KEY}[{count}]>cpu>max')
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>max')
 
                 mem_min = Configure._mem_limit_to_int(mem_min)
                 mem_max = Configure._mem_limit_to_int(mem_max)

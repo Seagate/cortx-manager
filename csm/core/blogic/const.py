@@ -972,7 +972,8 @@ CSM_USAGE_RESERVED_BUFFER_PERCENT = 5
 MAX_MEM_PER_REQUEST_MB = 2
 
 USAGE_REQUEST_QUOTA = 'usage>request_quota'
-CSM_LIMITS_NUM_ENDPOINTS_KEY = 'cortx>csm>limits>num_services'
+CSM_LIMITS_SERVICES_KEY = 'cortx>csm>limits>services'
+CSM_LIMITS_NUM_SERVICES_KEY = 'cortx>csm>limits>num_services'
 
 # Swagger UI
 SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)
