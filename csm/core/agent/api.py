@@ -568,17 +568,19 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._run_server(
             CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
-    @staticmethod
-    async def process_request(request):
-        """Receive a request, processes and sends response back to client."""
-        cmd = request.rel_url.query['cmd']
-        action = request.rel_url.query['action']
-        args = request.rel_url.query['args']
+    # Deprecated Method
+    # TODO: remove this code
+    # @staticmethod
+    # async def process_request(request):
+    #     """Receive a request, processes and sends response back to client."""
+    #     cmd = request.rel_url.query['cmd']
+    #     action = request.rel_url.query['action']
+    #     args = request.rel_url.query['args']
 
-        request = Request(action, args)
-        response = CsmApi.process_request(cmd, request)
+    #     request = Request(action, args)
+    #     response = CsmApi.process_request(cmd, request)
 
-        return response
+    #     return response
 
     @staticmethod
     @CsmAuth.public
