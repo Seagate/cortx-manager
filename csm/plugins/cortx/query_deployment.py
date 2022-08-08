@@ -18,7 +18,7 @@ from csm.common.plugin import CsmPlugin
 from csm.common.certificate import SSLCertificate
 from csm.core.blogic import const
 #TODO: Uncomment after integration
-#from cortx.utils.query_deployment import QueryDeployment
+from cortx.utils.query_deployment import QueryDeployment
 
 
 class QueryDeploymentPlugin(CsmPlugin):
@@ -461,8 +461,8 @@ class QueryDeploymentPlugin(CsmPlugin):
         # consul://cortx-consul-server:8500/conf
         # topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
         # use try
-        #topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
-        topology = self.output
+        topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
+        #topology = self.output
         res = self.convert_schema(topology)
         self.validate_input(res)
         return res
