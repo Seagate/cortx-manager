@@ -770,7 +770,6 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
-KEY_SERVICE_LIMITS = "limits_services"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -840,6 +839,7 @@ AGENT_ENDPOINTS = 'CSM_SERVICE>CSM_AGENT>endpoints'
 AGENT_HOST = 'CSM_SERVICE>CSM_AGENT>host'
 AGENT_PORT = 'CSM_SERVICE>CSM_AGENT>port'
 AGENT_BASE_URL = 'CSM_SERVICE>CSM_AGENT>base_url'
+AGENT_REQUEST_QUOTA = 'CSM_SERVICE>CSM_AGENT>request_quota'
 AUTH = 'STATS>auth'
 STATS_CONVERTOR = 'Prometheus'
 ENABLE = 'enable'
@@ -972,7 +972,7 @@ CSM_USAGE_RESERVED_BUFFER_PERCENT = 5
 MAX_MEM_PER_REQUEST_MB = 2
 
 USAGE_REQUEST_QUOTA = 'usage>request_quota'
-CSM_USAGE_LIMIT_SERVICES = 'cortx>csm>limits>services'
+CSM_LIMITS_NUM_ENDPOINTS_KEY = 'cortx>csm>limits>num_services'
 
 # Swagger UI
 SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)
