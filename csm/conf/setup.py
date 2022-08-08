@@ -206,7 +206,8 @@ class Setup:
                     conf['databases']["consul_db"]["config"][const.PORT])
         db = DataBaseProvider(conf)
         usr_mngr = UserManager(db)
-        usr_service = CsmUserService(usr_mngr)
+        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
+        usr_service = CsmUserService(usr_mngr, max_users_allowed)
         if (not force_action) and \
             (await usr_service.validate_cluster_admin_create(cluster_admin_user)):
             Log.console("WARNING: Cortx cluster admin already created.\n"
@@ -229,7 +230,7 @@ class Setup:
     def setup_logs_init():
         log_path = Setup.get_csm_log_path()
         Log.init(service_name = const.CSM_SETUP_CMD, log_path = log_path, level=const.LOG_LEVEL,
-                console_output=True)
+                console_output=True, console_output_level='INFO')
 
     @staticmethod
     def get_csm_log_path():

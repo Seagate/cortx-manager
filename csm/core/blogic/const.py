@@ -177,6 +177,7 @@ CSM_USER_ROLES = [CSM_SUPER_USER_ROLE, CSM_MANAGE_ROLE, CSM_MONITOR_ROLE]
 CSM_USER_INTERFACES = ['cli', 'web', 'api']
 CSM_CONF_URL = f"yaml://{CSM_CONF_PATH}/{CSM_CONF_FILE_NAME}"
 CSM_MAX_USERS_ALLOWED = "CSM_USERS>max_users_allowed"
+CSM_ACTIVE_USERS_QUOTA_KEY = "CSM_USERS>active_users_quota"
 
 # Non root user
 NON_ROOT_USER = 'csm'
@@ -772,6 +773,7 @@ KEY_ROAMING_IP = "roaming_ip_key"
 KEY_HOSTNAME = "node_hostname_key"
 KEY_DATA_NW_PUBLIC_FQDN = "data_nw_public_fqdn"
 KEY_DATA_NW_PRIVATE_FQDN = "data_nw_private_fqdn"
+KEY_SERVICE_LIMITS = "limits_services"
 
 #CSM TEST Consts
 DEFAULT_BROWSER = 'chrome'
@@ -965,6 +967,15 @@ SESSION_STORAGE_KEY = 'CSM>SESSION>storage'
 SESSION_BACKEND_KEY = 'CSM>SESSION>backend'
 LOCAL               = 'local'
 PERSISTENT          = 'persistent'
+
+# CSM usage quotas
+CSM_ACTIVE_USERS_QUOTA = 50
+CSM_ACTIVE_REQUESTS_QUOTA = 100
+CSM_USAGE_RESERVED_BUFFER_PERCENT = 5
+MAX_MEM_PER_REQUEST_MB = 2
+
+USAGE_REQUEST_QUOTA = 'usage>request_quota'
+CSM_USAGE_LIMIT_SERVICES = 'cortx>csm>limits>services'
 
 # Swagger UI
 SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)

@@ -102,9 +102,11 @@ class ErrorResponseSchema(ValidateSchema):
 
 class CsmRestApi(CsmApi, ABC):
     """REST Interface to communicate with CSM."""
-
+    # __unsupported_features = None
     __is_shutting_down = False
-    __unsupported_features = None
+    __nreq = 0
+    __nblocked = 0
+    __request_quota = 0
 
     @staticmethod
     def init():
@@ -113,8 +115,12 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
+        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA))
+        Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
+
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.set_secure_headers,
+            middlewares=[CsmRestApi.throttler_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
@@ -294,7 +300,6 @@ class CsmRestApi(CsmApi, ABC):
             raise CsmNotFoundError(e.error())
         if not session:
             raise CsmNotFoundError('Invalid auth token')
-        Log.info(f'Username: {session.credentials.user_id}')
         return session
 
     @staticmethod
@@ -304,6 +309,31 @@ class CsmRestApi(CsmApi, ABC):
         key = method + ":" + path
         conf_key = CsmAuth.HYBRID_APIS[key]
         return Conf.get(const.CSM_GLOBAL_INDEX, conf_key)
+
+    @staticmethod
+    @web.middleware
+    async def throttler_middleware(request, handler):
+        if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
+            # This block get executed when number of request reaches the request quota
+            CsmRestApi.__nblocked += 1
+            msg = (f"The request is blocked because the number of requests reached threshold\n"
+                   f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
+            Log.warn(msg)
+            return web.Response(status=429, text="Too many requests")
+        else:
+            # This block get executed when number of request are less than request quota
+            # Increment the counter for number of request executing
+            CsmRestApi.__nreq += 1
+
+        try:
+            # Here we call handler
+            # Handler can return json response or can raise an exception
+            res = await handler(request)
+        finally:
+            # Decrements the counter of number of request executing
+            # This block always gets executed
+            CsmRestApi.__nreq -= 1
+        return res
 
     @staticmethod
     @web.middleware
@@ -320,8 +350,10 @@ class CsmRestApi(CsmApi, ABC):
         try:
             if not is_public:
                 session_id = CsmRestApi._extract_bearer(request.headers)
-                session = await CsmRestApi._validate_bearer(request.app.login_service, session_id)
-                Log.info(f'Username: {session.credentials.user_id}')
+                session = await CsmRestApi._validate_bearer(
+                    request.app.login_service, session_id)
+                Log.info("Session token validated. User:"\
+                    f" {session.credentials.user_id}")
         except CsmNotFoundError as e:
             CsmRestApi._unauthorised(e.error())
         request.session = session
@@ -338,7 +370,12 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'User permissions: {request.session.permissions}')
             Log.debug(f'Allow access: {verdict}')
             if not verdict:
-                raise CsmPermissionDenied("Access to the requested resource is forbidden")
+                Log.info(f"Authorization failed. User:"\
+                f" {request.session.credentials.user_id}")
+                raise CsmPermissionDenied("Access to the requested resource"\
+                    " is forbidden")
+            Log.info(f"Authorization successful. User:"\
+                f" {request.session.credentials.user_id}")
         return await handler(request)
 
     @staticmethod
@@ -402,7 +439,6 @@ class CsmRestApi(CsmApi, ABC):
                     request=request, request_id=request_id),
                 status=499)
         except CsmHttpException as e:
-            Log.error(f'CsmHttpException {e.status}: {e.reason}')
             raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
@@ -414,7 +450,7 @@ class CsmRestApi(CsmApi, ABC):
             resp = CsmRestApi.error_response(e, request=request, request_id=request_id)
             return CsmRestApi.json_response(resp, status=503)
         except InvalidRequest as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
+            Log.debug(f"Invalid Request: {e} \n {traceback.format_exc()}")
             return CsmRestApi.json_response(
                 CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
         except CsmNotFoundError as e:
@@ -446,7 +482,7 @@ class CsmRestApi(CsmApi, ABC):
             return CsmRestApi.json_response(
                 CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
         except KeyError as e:
-            Log.error(f"Error: {e} \n {traceback.format_exc()}")
+            Log.debug(f"Key Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
             return CsmRestApi.json_response(
                 CsmRestApi.error_response(KeyError(message), request=request,

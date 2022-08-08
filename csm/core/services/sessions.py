@@ -25,7 +25,7 @@ from csm.core.data.models.users import UserType, User, Passwd
 from csm.core.services.users import UserManager
 from csm.core.services.roles import RoleManager
 from csm.core.services.permissions import PermissionSet
-from csm.common.errors import CsmError, CSM_ERR_INVALID_VALUE
+from csm.common.errors import CsmError, CsmPermissionDenied, CSM_ERR_INVALID_VALUE
 from csm.core.services.session.session_factory import (SessionFactory, SessionCredentials,
                                                Session, LocalCredentials)
 
@@ -121,12 +121,11 @@ class SessionManager:
             delta = (start - current).total_seconds()
             if delta > 0:
                 await asyncio.sleep(delta)
-            current = datetime.now(timezone.utc)
-            await handler(current)
+            await handler()
             current = datetime.now(timezone.utc)
             start = start + interval
 
-    async def _remove_expired_sessions(self, current_time):
+    async def _remove_expired_sessions(self):
         """
         Remove expired sessions from the storage.
         """
@@ -134,6 +133,110 @@ class SessionManager:
         for s in sessions:
             if s.is_expired():
                 await self.delete(s.session_id)
+
+class QuotaSessionManager(SessionManager):
+    """Session manager that tracks usage and maintains usage quotas."""
+
+    def __init__(self, storage: DataBaseProvider, active_users_quota: int) -> None:
+        """
+        Initialize the QuotaSessionManager.
+
+        :param storage: storage for sessions.
+        :param active_users_quota: number of users that are allowed to simultaneously use CSM.
+        :returns: None.
+        """
+        super().__init__(storage)
+        self._active_users_restored = False
+        self._active_users = dict()
+        self._active_users_quota = active_users_quota
+
+    async def _restore_active_users(self):
+        """Restore active users statistics from the session list."""
+        sessions = await self.get_all()
+        for s in sessions:
+            if s.is_expired():
+                await self.delete(s.session_id)
+            else:
+                await self._add_active_user_with_quota(s.credentials.user_id)
+
+    async def _remove_expired_sessions(self):
+        """Remove expired sessions from the storage."""
+        # FIXME: support deletion by query for in-memory Session storage and then
+        # use query to remove expired items.
+        sessions = await self.get_all()
+        for s in sessions:
+            if s.is_expired():
+                await self.delete(s.session_id)
+
+    async def _add_active_user_with_quota(self, user_id: str) -> bool:
+        """
+        Increment the number of sessions for the user with the provided ID if the quota is not full.
+
+        :param user_id: new session user's ID.
+        :returns: True if quota is not full, False otherwise.
+        """
+        if self._active_users_quota <= 0:
+            return True
+        if not self._active_users_restored:
+            self._active_users_restored = True
+            await self._restore_active_users()
+        active_users = len(self._active_users)
+        overflow = (active_users >= self._active_users_quota)
+        # Try to free space by removing expired sessions
+        if overflow:
+            await self._remove_expired_sessions()
+        active_users = len(self._active_users)
+        overflow = (active_users > self._active_users_quota)
+        if overflow:
+            return False
+        user_sessions = self._active_users.get(user_id, 0)
+        # Active users quota is full and the new user is added.
+        if active_users == self._active_users_quota and user_sessions == 0:
+            return False
+        self._active_users[user_id] = user_sessions + 1
+        return True
+
+    def _remove_active_user(self, user_id: str) -> None:
+        """
+        Decrement the number of sessions for the user with the provided ID.
+
+        :param user_id: removed session user's ID.
+        :returns: None.
+        """
+        user_sessions = self._active_users.get(user_id, 0)
+        if user_sessions > 1:
+            self._active_users[user_id] = user_sessions - 1
+        elif user_sessions == 1:
+            del self._active_users[user_id]
+
+    async def create(self, credentials: SessionCredentials, permissions: PermissionSet) -> Session:
+        """
+        Create a new session followint the quota.
+
+        :param credentials: session credentials.
+        :param permissions: session permissions.
+        :returns: Session object.
+        """
+        session = None
+        user_id = credentials.user_id
+        if await self._add_active_user_with_quota(user_id):
+            session = await super().create(credentials, permissions)
+        else:
+            raise CsmPermissionDenied('Active users quota is reached')
+        return session
+
+    async def delete(self, session_id: Session.Id) -> None:
+        """
+        Delete the session updating quota related statistics.
+
+        :param session_id: session ID.
+        :returns: None.
+        """
+        session = await self.get(session_id)
+        user_id = session.credentials.user_id
+        await super().delete(session_id)
+        self._remove_active_user(user_id)
+
 
 class AuthPolicy(ABC):
     """ Base abstract class for various authentication policies """
@@ -229,28 +332,27 @@ class LoginService:
         Log.debug(f'Logging in user {user_id}')
 
         user = await self._user_manager.get(user_id)
-        credentials = None
-        if user:
-            credentials = await self._auth_service.authenticate(user, password)
 
-        # TODO: Commenting S3 login mechanism. Uncomment to support it again in future
-        # if not credentials:
-        #     # TODO: Try to search Customer LDAP or S3 account
-        #     # and create corresponding user record if found.
-        #     Log.debug(f'User {user_id} does not exist in the local database - trying S3 account')
-        #     user = User.instantiate_s3_account_user(user_id)
-        #     credentials = await self._auth_service.authenticate(user, password)
+        if user is None:
+            Log.error(f"User with ID - {user_id} - does not exist")
+            return None, None
+        credentials = await self._auth_service.authenticate(user, password)
+        if credentials is None:
+            Log.error(f'Authentication failed for user: {user_id}')
+            return None, None
 
-        if credentials:
+        # Check if valid session exists
+        session = await self._is_valid_session_exists(user_id)
+        if not session:
+            # if No valid session exists, then create new session
+            Log.info(f"Session expired, creating new session for user: {user_id}")
             permissions = await self._role_manager.calc_effective_permissions(user.user_role)
             session = await self._session_manager.create(credentials, permissions)
-            if session:
-                return session.session_id, {"reset_password": user.reset_password}
-            else:
-                Log.critical('Failed to create a new session')
-        else:
-            Log.error(f'Failed to authenticate {user_id}')
-        return None, None
+        if not session:
+            Log.error(f"Failed to create a new session for user: {user_id}")
+            return None, None
+        
+        return session.session_id, {"reset_password": user.reset_password}
 
     async def logout(self, session_id):
         Log.debug(f'Logging out session {session_id}.')
@@ -260,19 +362,12 @@ class LoginService:
         session = await self._session_manager.get(session_id)
         if not session:
             raise CsmError(CSM_ERR_INVALID_VALUE, f'Invalid session id: {session_id}')
-
-        # TODO: Check if user has not been dropped.
-        # We can not do it for now as non-local S3
-        # users are no present in the local user database.
-
         # Check Expiry Time
         if datetime.now(timezone.utc) > session.expiry_time:
             await self._session_manager.delete(session_id)
             raise CsmError(CSM_ERR_INVALID_VALUE, 'Session expired')
-
         # Refresh Expiry Time
         session.expiry_time = self._session_manager.calc_expiry_time()
-
         return session
 
     async def get_temp_access_keys(self, user_id: str) -> list:
@@ -311,3 +406,30 @@ class LoginService:
         for each_session in session_data:
             if each_session.credentials.user_id.lower() == user_id.lower():
                 await self._session_manager.delete(each_session.session_id)
+
+    async def update_session_expiry_time(self, session: Session) -> None:
+        session.expiry_time = self._session_manager.calc_expiry_time()
+        await self._session_manager.update(session)
+
+    async def _is_valid_session_exists(self, user_id: str) -> None:
+        """
+        This Function will get the current user's active session.
+        :param user_id: user_id for user. :type:Str
+        :return: None
+        """
+        Log.debug(f"Getting active session for user : {user_id}")
+        session_data = await self._session_manager.get_all()
+        for each_session in session_data:
+            if each_session.credentials.user_id.lower() == user_id.lower():
+                # Here we get session for active user
+                # Check if it is expired,
+                if each_session.is_expired():
+                    await self._session_manager.delete(each_session.session_id)
+                    continue
+                Log.debug(f"Got the active sessions for Userid: {user_id}"
+                            f"with session id: {each_session.session_id}")
+                # Refresh Expiry Time
+                await self.update_session_expiry_time(each_session)
+                # return valid session
+                return each_session
+        return None
