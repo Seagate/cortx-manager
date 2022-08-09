@@ -120,8 +120,7 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}",
-                const.KEY_SERVICE_LIMITS: const.CSM_USAGE_LIMIT_SERVICES
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -373,15 +372,36 @@ class Configure(Setup):
     @staticmethod
     def set_resource_limits() -> None:
         """Set resource limits for CSM."""
-        limits = Conf.get(const.CONSUMER_INDEX, const.CSM_USAGE_LIMIT_SERVICES)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_USAGE_LIMIT_SERVICES, limits)
-        limits = next(filter(lambda x: x[const.NAME] == "agent", limits), None)
-        if limits:
-            mem_min = Configure._mem_limit_to_int(limits["memory"]["min"])
-            mem_max = Configure._mem_limit_to_int(limits["memory"]["max"])
-            cpu_min = Configure._cpu_limit_to_int(limits["cpu"]["min"])
-            cpu_max = Configure._cpu_limit_to_int(limits["cpu"]["max"])
+        Log.info("Config: Fetching CSM services cpu and memory limits")
+        count_services : str = Conf.get(const.CONSUMER_INDEX,
+            const.CSM_LIMITS_NUM_SERVICES_KEY)
+        try:
+            count_services = int(count_services)
+        except ValueError:
+            raise CsmSetupError("CSM num_services value is not a valid"
+                " integer.")
+        for count in range(count_services):
+            name = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>name')
+            if name == "agent":
+                mem_min = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>min')
+                mem_max = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>max')
+                cpu_min = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>min')
+                cpu_max = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>max')
 
-            request_rate = Configure._calculate_request_quota(mem_min, mem_max, cpu_min, cpu_max)
-            Conf.set(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA, request_rate)
+                mem_min = Configure._mem_limit_to_int(mem_min)
+                mem_max = Configure._mem_limit_to_int(mem_max)
+                cpu_min = Configure._cpu_limit_to_int(cpu_min)
+                cpu_max = Configure._cpu_limit_to_int(cpu_max)
 
+                request_quota = Configure._calculate_request_quota(
+                    mem_min, mem_max, cpu_min, cpu_max)
+                Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_REQUEST_QUOTA,
+                    request_quota)
+            else:
+                raise CsmSetupError("CSM agent service mem and cpu limits are"
+                    " not found")

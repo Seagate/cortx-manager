@@ -115,7 +115,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
-        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA))
+        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_REQUEST_QUOTA))
         Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
 
         CsmRestApi._app = web.Application(
