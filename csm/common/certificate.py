@@ -70,8 +70,8 @@ class SSLCertificate(Certificate):
         except Exception as e:
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
-            Log.error(f"Cannot load certificate: {e}")
-            raise CsmInternalError(f"Cannot load certificate: {e}")
+            Log.error(f"Unable to load certificate for topology information: {e}")
+            raise CsmInternalError(f"Unable to load certificate for topology information: {e}")
 
     def _get_name_details(self, rdns):
         """

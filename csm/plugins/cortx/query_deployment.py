@@ -163,9 +163,9 @@ class QueryDeploymentPlugin(CsmPlugin):
             res = self.convert_schema(topology)
             self.validate_input(res)
         except QueryDeploymentError as e:
-            Log.error(f'QueryDeployment error: {e}')
-            raise CsmInternalError(f"Unable to fetch topology")
+            Log.error(f'QueryDeployment Error: {e}')
+            raise CsmInternalError("Unable to fetch topology information.")
         except Exception as e:
-            Log.error(f'{const.UNKNOWN_ERROR}: e')
-            raise CsmInternalError(f"Unable to fetch topology")
+            Log.error(f'Unable to fetch topology information: {e}')
+            raise CsmInternalError("Unable to fetch topology information.")
         return res

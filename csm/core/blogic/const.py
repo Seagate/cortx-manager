@@ -1034,4 +1034,3 @@ CLUSTERS = 'clusters'
 CONSUL_CONFIG_HOST = 'databases>consul_db>config>hosts[0]'
 TOPOLOGY_INDEX = 'TOPLOLOGY>index'
 TOPOLOGY_BACKEND = 'TOPLOLOGY>backend'
-
