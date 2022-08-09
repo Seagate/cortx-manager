@@ -47,7 +47,7 @@ class EmailConfig(object):
         self._email_conf_dict["AuthPass"] = password
         try:
             File = open(EmailConfig.SSMTP_CONF, "w")
-            for key in self._email_conf_dict.keys():
+            for key in self._email_conf_dict:
                 conf_line = key+"="+self._email_conf_dict[key]+"\n"
                 File.write(conf_line)
             File.close()
@@ -79,7 +79,7 @@ class EmailConfig(object):
         self._email_conf_dict["AuthPass"] = ""
         try:
             File = open(EmailConfig.SSMTP_CONF, "w")
-            for key in self._email_conf_dict.keys():
+            for key in self._email_conf_dict:
                 conf_line = key+"="+self._email_conf_dict[key]+"\n"
                 File.write(conf_line)
             File.close()
@@ -154,7 +154,7 @@ class EmailConfig(object):
             if os.path.isfile(EmailConfig.SSMTP_CONF):
                 File = open(EmailConfig.SSMTP_CONF, "r")
                 conf = File.readline()
-                while (conf != None and conf != ""):
+                while (conf is not None and conf != ""):
                     if (conf.startswith("AuthUser")):
                         conf.strip("\n")
                         msg = "Sender: "+conf.split("=")[1]

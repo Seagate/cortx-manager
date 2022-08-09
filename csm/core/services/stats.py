@@ -40,24 +40,26 @@ class StatsAppService(ApplicationService):
         self._stats_provider = stats_provider
         self.metrics_client = metrics_client
         if self.metrics_client:
-                self.metrics_client.init(type=const.PRODUCER,
-                            producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_PRODUCER_ID),
-                            message_type=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_MSG_TYPE),
-                            method=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_METHOD))
-                self.metrics_client.init(type=const.CONSUMER,
-                            consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_CONSUMER_ID),
-                            consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
-                            consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_MSSG_TYPE)],
-                            auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_AUTO_ACK),
-                            offset=Conf.get(const.CSM_GLOBAL_INDEX,
-                                                const.MSG_BUS_PERF_STAT_OFFSET))
+            self.metrics_client.init(type=const.PRODUCER,
+                producer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_PRODUCER_ID),
+                message_type=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_MSG_TYPE),
+                method=Conf.get(const.CSM_GLOBAL_INDEX,
+                        const.MSG_BUS_PERF_STAT_METHOD)
+                )
+            self.metrics_client.init(type=const.CONSUMER,
+                consumer_id=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_CONSUMER_ID),
+                consumer_group=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_CONSUMER_GROUP),
+                consumer_message_types=[Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_MSSG_TYPE)],
+                auto_ack=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_AUTO_ACK),
+                offset=Conf.get(const.CSM_GLOBAL_INDEX,
+                    const.MSG_BUS_PERF_STAT_OFFSET)
+                )
         self.convertor_type = const.STATS_CONVERTOR
         self.convertor = Convertor(self.convertor_type)
 
@@ -159,7 +161,7 @@ class StatsAppService(ApplicationService):
         if stats_id:
             output["id"]=stats_id
         data_list = []
-        for panel in panels.keys():
+        for panel in panels:
             panel_data = await self._stats_provider.process_request(
                                                   stats_id = stats_id,
                                                   panel = panel,

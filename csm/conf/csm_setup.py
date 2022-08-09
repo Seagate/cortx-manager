@@ -65,6 +65,8 @@ class CsmSetupCommand:
                                      response=response)
 
 if __name__ == '__main__':
+
+
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(__file__)), '..', '..'))
     sys.path.append(os.path.join(os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     from cortx.utils.conf_store.conf_store import Conf
@@ -72,16 +74,6 @@ if __name__ == '__main__':
     from cortx.utils.cli_framework.parser import CommandParser
     from csm.core.blogic import const
     from cortx.utils.cli_framework.client import CliClient
-    from csm.conf.post_install import PostInstall
-    from csm.conf.prepare import Prepare
-    from csm.conf.configure import Configure
-    from csm.conf.init import Init
-    from csm.conf.reset import Reset
-    from csm.conf.test import Test
-    from csm.conf.upgrade import Upgrade
-    from csm.conf.pre_upgrade import PreUpgrade
-    from csm.conf.post_upgrade import PostUpgrade
-    from csm.conf.cleanup import Cleanup
 
     try:
         csm_setup = CsmSetupCommand(sys.argv)

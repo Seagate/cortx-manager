@@ -50,7 +50,7 @@ class Init(Setup):
             services = ["agent"]
         else:
             services=[services]
-        if not "agent" in services:
+        if "agent" not in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         Log.info("Init: Successfully passed Init phase.")
         return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)

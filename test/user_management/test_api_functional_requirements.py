@@ -60,7 +60,7 @@ class CSMSession:
         assert self.__authorization_header is not None
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.__username is not None and self.__authorization_header is not None:
             self.__logout(self.__username)
 
