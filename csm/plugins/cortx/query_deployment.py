@@ -33,7 +33,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         Initialize query deployment plugin
         """
         # Set valid resources along with their attributes.
-        self.valid_resources = {'clusters':['id', 'version', 'nodes', 'storage_set', 'certificates']}
+        self.valid_resources = {'clusters':['id', 'version', 'nodes', 'storage_sets', 'certificates']}
 
     def init(self, **kwargs):
         pass
