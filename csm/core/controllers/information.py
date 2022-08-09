@@ -21,7 +21,6 @@ from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
 from csm.common.errors import InvalidRequest, CsmInternalError
 from csm.core.blogic import const
-from csm.common.errors import CsmNotFoundError
 from csm.core.controllers.validators import ValidationErrorFormatter
 from cortx.utils.schema.release import SetupError
 
@@ -49,7 +48,7 @@ class VersionInformationView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.VERSION_RESOURCES:
-            raise CsmNotFoundError(f"Invalid resource: {resource}")
+            raise InvalidRequest(f"Invalid resource: {resource}")
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
