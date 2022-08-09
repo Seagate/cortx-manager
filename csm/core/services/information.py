@@ -14,11 +14,10 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.log import Log
-from archive.core.controllers.usl import _View
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
-from csm.common.errors import CsmNotFoundError, CsmInternalError, InvalidRequest
+from csm.common.errors import CsmInternalError, InvalidRequest
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
