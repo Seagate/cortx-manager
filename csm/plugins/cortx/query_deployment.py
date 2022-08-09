@@ -21,6 +21,7 @@ from csm.core.blogic import const
 from cortx.utils.query_deployment import QueryDeployment
 from cortx.utils.query_deployment.error import QueryDeploymentError
 from csm.common.errors import CsmInternalError
+from cortx.utils.conf_store.conf_store import Conf
 
 
 class QueryDeploymentPlugin(CsmPlugin):
@@ -49,7 +50,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         #TODO: Add device certificate/domain certificate once available.
         path = input_payload.get(const.SECURITY).get(const.SSL_CERTIFICATE)
         cert_details = SSLCertificate(path).get_certificate_details()
-        cert_details = cert_details[const.CERT_DETAILS]
+        cert_details = cert_details.get(const.CERT_DETAILS)
         cert_details[const.PATH] = path
         cert_details[const.TYPE] = "SSL Certificate"
         return [cert_details]
@@ -60,12 +61,12 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         # TODO: Use get method
         payload = {}
-        payload[const.ID] = node[const.MACHINE_ID]
-        payload[const.HOSTNAME] = node[const.HOSTNAME]
-        payload[const.VERSION] = node[const.VERSION]
-        payload[const.DEPLOYMENT_TIME] = node[const.DEPLOYMENT_TIME]
-        payload[const.TYPE] = node[const.TYPE]
-        payload[const.COMPONENTS] = node[const.COMPONENTS]
+        payload[const.ID] = node.get(const.MACHINE_ID)
+        payload[const.HOSTNAME] = node.get(const.HOSTNAME)
+        payload[const.VERSION] = node.get(const.VERSION)
+        payload[const.DEPLOYMENT_TIME] = node.get(const.DEPLOYMENT_TIME)
+        payload[const.TYPE] = node.get(const.TYPE)
+        payload[const.COMPONENTS] = node.get(const.COMPONENTS)
         if node.get(const.CVG):
             payload[const.CVG] = node.get(const.CVG)
         return payload
@@ -74,10 +75,10 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Get node details specific to cluster
         """
-        nodes = input_payload[const.NODES]
+        nodes = input_payload.get(const.NODES)
         res = []
         for node in nodes:
-            if node[const.CLUSTER_ID] == cluster_id:
+            if node.get(const.CLUSTER_ID) == cluster_id:
                 res.append(self._create_node_payload(node))
         return res
 
@@ -92,14 +93,14 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Generate payload for clusters.
         """
+        Log.debug(f'Creating payload for resource: {resource}')
         res  = []
-        total_clusters = input_payload[resource]
+        total_clusters = input_payload[const.CLUSTER]
         for cluster in total_clusters:
             partial_payload = {}
             for attribute in valid_attributes:
                 if attribute == const.ID:
-                    partial_payload[attribute] = cluster.get(attribute) if cluster.get(attribute) \
-						else cluster.get(const.CLUSTER)
+                    partial_payload[attribute] = cluster.get(attribute)
                 elif attribute == const.STORAGE_SET:
                     partial_payload[attribute] = self._get_storage_set(cluster[attribute])
                 elif attribute == const.NODES:
@@ -143,12 +144,22 @@ class QueryDeploymentPlugin(CsmPlugin):
         # TODO: validation will be taken in future sprint
         pass
 
+    def _get_url(self):
+        """
+        Get url for fetching topology.
+        """
+        host = Conf.get(const.DATABASE_INDEX, const.CONSUL_CONFIG_HOST)
+        port = Conf.get(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT)
+        index = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_INDEX)
+        backend = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_BACKEND)
+        return f"{backend}://{host}:{port}/{index}"
+
     def get_topology(self):
         """
         Get topology of deployment
         """
         try:
-            topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
+            topology = QueryDeployment.get_cortx_topology(self._get_url())
             res = self.convert_schema(topology)
             self.validate_input(res)
         except QueryDeploymentError as e:
