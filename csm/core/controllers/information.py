@@ -90,9 +90,13 @@ class TopologyView(CsmView):
 
     async def get(self):
         """GET REST implementation for complete topology."""
-        Log.info("Fetching topology.")
+        Log.info(f"Processing request: {self.request.method} {self.request.path}")
         # Call Information Service
-        response = await self._service.get_topology()
+        try:
+            response = await self._service.get_topology()
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -107,14 +111,18 @@ class ResourceTopology(CsmView):
 
     async def get(self):
         """GET REST implementation to query information about all resources from deployment topology."""
-        Log.info("Handling GET request to query information about all resources from deployment topology.")
+        Log.info(f"Processing request: {self.request.method} {self.request.path}")
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
             raise CsmNotFoundError(f"Invalid resource {resource}")
         # Call Information Service
-        Log.debug(f"Fetching deployment topology for resource:{resource}.")
-        response = await self._service.get_resources(resource)
+        Log.info(f"Fetching deployment topology for resource:{resource}.")
+        try:
+            response = await self._service.get_resources(resource)
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -129,15 +137,20 @@ class SubresourceTopology(CsmView):
 
     async def get(self):
         """GET REST implementation to query information about specific resource from deployment topology."""
-        Log.info("Handling GET request to query information about specific resource from deployment topology.")
+        Log.info(f"Processing request: {self.request.method} {self.request.path}")
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
             raise CsmNotFoundError(f"Invalid resource {resource}")
-        Log.debug(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
+        Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
         # Call Information Service
         response = await self._service.get_specific_resource(resource, resource_id)
+        try:
+            response = await self._service.get_specific_resource(resource, resource_id)
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -153,7 +166,7 @@ class ViewTopology(CsmView):
     async def get(self):
         """GET REST implementation to query information about all
            views of specific resource from deployment topology."""
-        Log.info("Handling GET request to query information about all views of specific resource from deployment topology.")
+        Log.info(f"Processing request: {self.request.method} {self.request.path}")
         # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
@@ -165,8 +178,12 @@ class ViewTopology(CsmView):
         if view not in const.TOPOLOGY_VIEWS:
             raise CsmNotFoundError(f"Invalid view {view}")
         # Call Information Service
-        Log.debug(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
-        response = await self._service.get_views(resource, resource_id, view)
+        Log.info(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
+        try:
+            response = await self._service.get_views(resource, resource_id, view)
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -181,7 +198,7 @@ class SubviewTopology(CsmView):
 
     async def get(self):
         """GET REST implementation to query only specific subset of deployment topology."""
-        Log.info("Handling GET request to query only specific subset of deployment topology.")
+        Log.info(f"Processing request: {self.request.method} {self.request.path}")
         # Read path parameter
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
@@ -199,7 +216,11 @@ class SubviewTopology(CsmView):
             const.ARG_VIEW : view,
             const.ARG_VIEW_ID : view_id
         }
-        Log.debug(f"Fetching deployment topology for {path_params_dict}.")
+        Log.info(f"Fetching deployment topology for {path_params_dict}.")
         # Call Information Service
-        response = await self._service.get_specific_view(**path_params_dict)
+        try:
+            response = await self._service.get_specific_view(**path_params_dict)
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)

@@ -17,7 +17,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
-from csm.common.errors import CsmNotFoundError
+from csm.common.errors import CsmNotFoundError, CsmInternalError
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -53,7 +53,10 @@ class InformationService(ApplicationService):
         Method to fetch topology
         :param **request_body: Request body kwargs
         """
-        plugin_response = self._plugin.get_topology()
+        try:
+            plugin_response = self._plugin.get_topology()
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
         return plugin_response
 
     @Log.trace_method(Log.DEBUG)
@@ -62,7 +65,10 @@ class InformationService(ApplicationService):
         Method to fetch topology
         :param **request_body: Request body kwargs
         """
-        plugin_response = self._plugin.get_topology()
+        try:
+            plugin_response = self._plugin.get_topology()
+        except Exception as e:
+            raise CsmInternalError(f"Internal error in fetching topology: {e}")
         payload  = plugin_response[const.TOPOLOGY]
         if isinstance(plugin_response[const.TOPOLOGY], dict):
             plugin_response[const.TOPOLOGY] = {key:value for key, value in \
