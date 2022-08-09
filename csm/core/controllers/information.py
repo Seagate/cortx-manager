@@ -115,7 +115,7 @@ class ResourceTopology(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"Invalid resource {resource}")
+            raise CsmNotFoundError(f"Not a valid resource: {resource}")
         # Call Information Service
         Log.info(f"Fetching deployment topology for resource:{resource}.")
         try:
@@ -142,7 +142,7 @@ class SubresourceTopology(CsmView):
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"Invalid resource {resource}")
+            raise CsmNotFoundError(f"Not a valid resource: {resource}")
         Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
         # Call Information Service
         response = await self._service.get_specific_resource(resource, resource_id)
@@ -173,10 +173,10 @@ class ViewTopology(CsmView):
         view = self.request.match_info[const.ARG_VIEW]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"resource {resource} is not valid")
+            raise CsmNotFoundError(f"Not a valid resource: {resource}")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise CsmNotFoundError(f"Invalid view {view}")
+            raise CsmNotFoundError(f"Not a valid view:{view}")
         # Call Information Service
         Log.info(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
         try:
@@ -206,10 +206,10 @@ class SubviewTopology(CsmView):
         view_id = self.request.match_info[const.ARG_VIEW_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise CsmNotFoundError(f"resource {resource} is not valid")
+            raise CsmNotFoundError(f"Not a valid resource: {resource}")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise CsmNotFoundError(f"Invalid view {view}")
+            raise CsmNotFoundError(f"Not a valid view: {view}")
         path_params_dict = {
             const.ARG_RESOURCE : resource,
             const.ARG_RESOURCE_ID : resource_id,
