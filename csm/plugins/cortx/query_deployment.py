@@ -19,7 +19,7 @@ from csm.common.certificate import SSLCertificate
 from csm.core.blogic import const
 from cortx.utils.query_deployment import QueryDeployment
 from cortx.utils.query_deployment.error import QueryDeploymentError
-from csm.common.errors import CsmInternalError
+from csm.common.errors import CsmInternalError, CsmNotFoundError
 from cortx.utils.conf_store.conf_store import Conf
 
 
@@ -162,6 +162,9 @@ class QueryDeploymentPlugin(CsmPlugin):
             self.validate_input(res)
         except QueryDeploymentError as e:
             Log.error(f'QueryDeployment Error: {e}')
+            raise CsmInternalError("Unable to fetch topology information.")
+        except CsmNotFoundError as e:
+            Log.error(f'Error in fetching certificate information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
