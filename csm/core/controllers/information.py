@@ -49,7 +49,7 @@ class VersionInformationView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.VERSION_RESOURCES:
-            raise CsmNotFoundError(f"Invalid resource:{resource}")
+            raise CsmNotFoundError(f"Invalid resource: {resource}")
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource

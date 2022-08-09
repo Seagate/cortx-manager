@@ -17,7 +17,6 @@ from cortx.utils.log import Log
 from csm.common.plugin import CsmPlugin
 from csm.common.certificate import SSLCertificate
 from csm.core.blogic import const
-#TODO: Uncomment after integration
 from cortx.utils.query_deployment import QueryDeployment
 from cortx.utils.query_deployment.error import QueryDeploymentError
 from csm.common.errors import CsmInternalError
@@ -33,7 +32,7 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Initialize query deployment plugin
         """
-        # set valid resources along with their attributes.
+        # Set valid resources along with their attributes.
         self.valid_resources = {'clusters':['id', 'version', 'nodes', 'storage_set', 'certificates']}
 
     def init(self, **kwargs):
@@ -59,7 +58,6 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         Create payload for given node
         """
-        # TODO: Use get method
         payload = {}
         payload[const.ID] = node.get(const.MACHINE_ID)
         payload[const.HOSTNAME] = node.get(const.HOSTNAME)

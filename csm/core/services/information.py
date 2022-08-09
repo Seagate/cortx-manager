@@ -14,10 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.log import Log
+from archive.core.controllers.usl import _View
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
-from csm.common.errors import CsmNotFoundError, CsmInternalError
+from csm.common.errors import CsmNotFoundError, CsmInternalError, InvalidRequest
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -50,8 +51,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_topology(self):
         """
-        Method to fetch topology
-        :param **request_body: Request body kwargs
+        Get topology
         """
         try:
             plugin_response = self._plugin.get_topology()
@@ -62,8 +62,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_resources(self, resource):
         """
-        Method to fetch topology
-        :param **request_body: Request body kwargs
+        Fetch all resources from topology
         """
         try:
             plugin_response = self._plugin.get_topology()
@@ -78,8 +77,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_specific_resource(self, resource, resource_id):
         """
-        Method to fetch topology
-        :param **request_body: Request body kwargs
+        Fetch specific resource from topology
         """
         response = await self.get_resources(resource)
         payload = response[const.TOPOLOGY][resource]
@@ -87,14 +85,13 @@ class InformationService(ApplicationService):
             response[const.TOPOLOGY][resource] = [item for item in \
                 payload if item.get(const.ID) == resource_id]
             if len(response[const.TOPOLOGY][resource]) < 1:
-                raise CsmNotFoundError(f"Invalid resource_id {resource_id} for resource {resource}")
+                raise InvalidRequest(f"Invalid resource_id: {resource_id}")
         return response
 
     @Log.trace_method(Log.DEBUG)
     async def get_views(self, resource, resource_id, view):
         """
-        Method to fetch topology
-        :param **request_body: Request body kwargs
+        Fetch all view of specific resource topology
         """
 
         res = await self.get_specific_resource(resource, resource_id)
@@ -110,8 +107,7 @@ class InformationService(ApplicationService):
     @Log.trace_method(Log.DEBUG)
     async def get_specific_view(self, **path_param):
         """
-        Method to fetch topology
-        :param **request_body: Request body kwargs
+        Fetch specific view of specific resource from topology
         """
         resource = path_param[const.ARG_RESOURCE]
         resource_id = path_param[const.ARG_RESOURCE_ID]
@@ -123,5 +119,5 @@ class InformationService(ApplicationService):
             res[const.TOPOLOGY][resource][0][view] = [item for item in \
                 payload if item.get(const.ID) == view_id]
             if len(res[const.TOPOLOGY][resource][0][view]) < 1:
-                raise CsmNotFoundError(f"Invalid id {view_id} for view {view} and resource {resource}")
+                raise InvalidRequest(f"Invalid resource_id: {view_id}")
         return res
