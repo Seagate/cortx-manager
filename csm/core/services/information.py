@@ -55,8 +55,8 @@ class InformationService(ApplicationService):
         """
         try:
             plugin_response = self._plugin.get_topology()
-        except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        except CsmInternalError as e:
+            raise e
         return plugin_response
 
     @Log.trace_method(Log.DEBUG)
@@ -67,8 +67,8 @@ class InformationService(ApplicationService):
         """
         try:
             plugin_response = self._plugin.get_topology()
-        except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+        except CsmInternalError as e:
+            raise e
         payload  = plugin_response[const.TOPOLOGY]
         if isinstance(plugin_response[const.TOPOLOGY], dict):
             plugin_response[const.TOPOLOGY] = {key:value for key, value in \

@@ -19,6 +19,7 @@ from csm.common.certificate import SSLCertificate
 from csm.core.blogic import const
 #TODO: Uncomment after integration
 from cortx.utils.query_deployment import QueryDeployment
+from cortx.utils.query_deployment.error import QueryDeploymentError
 from csm.common.errors import CsmInternalError
 
 
@@ -148,8 +149,12 @@ class QueryDeploymentPlugin(CsmPlugin):
         """
         try:
             topology = QueryDeployment.get_cortx_topology("consul://cortx-consul-server:8500/conf")
+            res = self.convert_schema(topology)
+            self.validate_input(res)
+        except QueryDeploymentError as e:
+            Log.error(f'QueryDeployment error: {e}')
+            raise CsmInternalError(f"Unable to fetch topology")
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
-        res = self.convert_schema(topology)
-        self.validate_input(res)
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Unable to fetch topology")
         return res

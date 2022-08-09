@@ -94,8 +94,11 @@ class TopologyView(CsmView):
         # Call Information Service
         try:
             response = await self._service.get_topology()
+        except CsmInternalError as e:
+            raise e
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Internal error in fetching topology")
         Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
@@ -120,8 +123,11 @@ class ResourceTopology(CsmView):
         Log.info(f"Fetching deployment topology for resource:{resource}.")
         try:
             response = await self._service.get_resources(resource)
+        except CsmInternalError as e:
+            raise e
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Internal error in fetching topology")
         Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
@@ -148,8 +154,11 @@ class SubresourceTopology(CsmView):
         response = await self._service.get_specific_resource(resource, resource_id)
         try:
             response = await self._service.get_specific_resource(resource, resource_id)
+        except CsmInternalError as e:
+            raise e
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Internal error in fetching topology")
         Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
@@ -181,8 +190,11 @@ class ViewTopology(CsmView):
         Log.info(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
         try:
             response = await self._service.get_views(resource, resource_id, view)
+        except CsmInternalError as e:
+            raise e
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Internal error in fetching topology")
         Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
 
@@ -220,7 +232,10 @@ class SubviewTopology(CsmView):
         # Call Information Service
         try:
             response = await self._service.get_specific_view(**path_params_dict)
+        except CsmInternalError as e:
+            raise e
         except Exception as e:
-            raise CsmInternalError(f"Internal error in fetching topology: {e}")
+            Log.error(f'{const.UNKNOWN_ERROR}: e')
+            raise CsmInternalError(f"Internal error in fetching topology")
         Log.info(f"Processed request: {self.request.method} {self.request.path}")
         return CsmResponse(response)
