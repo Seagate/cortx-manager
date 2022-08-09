@@ -99,8 +99,8 @@ class QueryDeploymentPlugin(CsmPlugin):
             for attribute in valid_attributes:
                 if attribute == const.ID:
                     partial_payload[attribute] = cluster.get(attribute)
-                elif attribute == const.STORAGE_SET:
-                    partial_payload[attribute] = self._get_storage_set(cluster[attribute])
+                elif attribute == const.STORAGE_SETS:
+                    partial_payload[attribute] = self._get_storage_set(cluster[const.STORAGE_SET])
                 elif attribute == const.NODES:
                     cluster_id = cluster[const.ID]
                     partial_payload[attribute] = self._get_nodes(input_payload, cluster_id)

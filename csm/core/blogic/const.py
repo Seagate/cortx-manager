@@ -1016,10 +1016,11 @@ JSON_ERROR = "Unable to parse request body, Malformed request body received."
 
 # Query deployment
 TOPOLOGY_RESOURCES = ['clusters']
-TOPOLOGY_VIEWS = ['nodes', 'storage_set', 'certificates']
+TOPOLOGY_VIEWS = ['nodes', 'storage_sets', 'certificates']
 TOPOLOGY = 'topology'
 COMPONENTS = 'components'
 CVG = 'cvg'
+STORAGE_SETS = 'storage_sets'
 STORAGE_SET = 'storage_set'
 NODES = 'nodes'
 CERTIFICATES = 'certificates'
