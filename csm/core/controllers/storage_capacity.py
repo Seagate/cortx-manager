@@ -93,7 +93,7 @@ class CapacityManagementView(CsmView):
     @Log.trace_method(Log.DEBUG)
     async def get(self):
         path_param = self.request.match_info[const.CAPACITY_RESOURCE]
-        Log.info(f"Handling GET implementation for getting cluster staus data"
+        Log.info(f"Handling GET implementation for getting cluster status data"
                  f" with path param: {path_param}")
         resp = await self._service.get_cluster_data(path_param)
         if isinstance(resp, CapacityError):

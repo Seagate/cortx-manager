@@ -22,7 +22,6 @@ import traceback
 from importlib import import_module
 import pathlib
 
-
 # TODO: Implement proper plugin factory design
 def import_plugin_module(name):
     """Import product-specific plugin module by the plugin name."""
@@ -114,7 +113,9 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+        query_deployment_plugin = import_plugin_module(const.QUERY_DEPLOYMENT_PLUGIN)
+        query_deployment_plugin_obj = query_deployment_plugin.QueryDeploymentPlugin()
+        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService(query_deployment_plugin_obj)
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod

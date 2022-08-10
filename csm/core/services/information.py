@@ -17,9 +17,13 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
+from csm.common.errors import CsmInternalError, InvalidRequest
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
+
+    def __init__(self, plugin):
+        self._plugin = plugin
 
     @Log.trace_method(Log.DEBUG)
     async def check_compatibility(self, **request_body):
@@ -42,3 +46,77 @@ class InformationService(ApplicationService):
             "reason": reason
         }
         return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_topology(self):
+        """
+        Get topology
+        """
+        try:
+            plugin_response = self._plugin.get_topology()
+        except CsmInternalError as e:
+            raise e
+        return plugin_response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_resources(self, resource):
+        """
+        Fetch all resources from topology
+        """
+        try:
+            plugin_response = self._plugin.get_topology()
+        except CsmInternalError as e:
+            raise e
+        payload  = plugin_response[const.TOPOLOGY]
+        if isinstance(plugin_response[const.TOPOLOGY], dict):
+            plugin_response[const.TOPOLOGY] = {key:value for key, value in \
+                payload.items() if key == resource}
+        return plugin_response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_specific_resource(self, resource, resource_id):
+        """
+        Fetch specific resource from topology
+        """
+        response = await self.get_resources(resource)
+        payload = response[const.TOPOLOGY][resource]
+        if isinstance(payload, list):
+            response[const.TOPOLOGY][resource] = [item for item in \
+                payload if item.get(const.ID) == resource_id]
+            if len(response[const.TOPOLOGY][resource]) < 1:
+                raise InvalidRequest(f"Invalid resource_id: {resource_id}")
+        return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_views(self, resource, resource_id, view):
+        """
+        Fetch all view of specific resource topology
+        """
+
+        res = await self.get_specific_resource(resource, resource_id)
+        payload = res[const.TOPOLOGY][resource][0]
+        if isinstance(payload, dict):
+            response = {
+                const.ID: payload[const.ID],
+                view: payload[view]
+            }
+            res[const.TOPOLOGY][resource][0] = response
+        return res
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_specific_view(self, **path_param):
+        """
+        Fetch specific view of specific resource from topology
+        """
+        resource = path_param[const.ARG_RESOURCE]
+        resource_id = path_param[const.ARG_RESOURCE_ID]
+        view = path_param[const.ARG_VIEW]
+        view_id = path_param[const.ARG_VIEW_ID]
+        res = await self.get_views(resource, resource_id, view)
+        payload = res[const.TOPOLOGY][resource][0][view]
+        if isinstance(payload, list):
+            res[const.TOPOLOGY][resource][0][view] = [item for item in \
+                payload if item.get(const.ID) == view_id]
+            if len(res[const.TOPOLOGY][resource][0][view]) < 1:
+                raise InvalidRequest(f"Invalid resource_id: {view_id}")
+        return res
