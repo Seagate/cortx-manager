@@ -71,7 +71,7 @@ class SSLCertificate(Certificate):
             # TODO: Catch proper exceptions instead of generic Exception
             # TODO: Consider to raise another exceptions (SyntaxError?)
             Log.error(f"Unable to load certificate information: {e}")
-            raise CsmInternalError(f"Unable to load certificate information: {e}")
+            raise CsmInternalError("Unable to load certificate information.")
 
     def _get_name_details(self, rdns):
         """
