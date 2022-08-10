@@ -345,7 +345,6 @@ class CsmUserService(ApplicationService):
         password = new_values.get(const.PASS, None)
         current_password = new_values.get(const.CSM_USER_CURRENT_PASSWORD, None)
         role = new_values.get('user_role', None)
-        reset_password = new_values.get('reset_password', None)
 
         allowed = CSM_USER_PASSWD_UPDATE_RULES[loggedin_user_role][user_role].apply(self_update)
         if not allowed:

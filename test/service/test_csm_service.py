@@ -44,10 +44,8 @@ def test1(args):
         port = int(Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_AGENT>port"))
         url = "http://" if not ssl_check else "https://"
         url = url + host + ":" + str(port)
-        resp = process_request(url)
-        if resp.status_code != 401:
-            raise
-    except Exception:
+        process_request(url)
+    except requests.exceptions.RequestException:
         raise TestFailed("csm_agent service is not running. Error: %s" %traceback.format_exc())
 
 def test2(args):
@@ -62,10 +60,8 @@ def test2(args):
         port = Conf.get(const.CSM_GLOBAL_INDEX, "CSM_SERVICE>CSM_WEB>port")
         url = "http://" if not ssl_check else "https://"
         url = url + host + ":" + str(port)
-        resp = process_request(url)
-        if resp.status_code != 200:
-            raise
-    except Exception:
+        process_request(url)
+    except requests.exceptions.RequestException:
         raise TestFailed("csm_web service is not running. Error: %s" %traceback.format_exc())
 
 test_list = [ test1 ]

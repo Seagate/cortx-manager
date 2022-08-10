@@ -255,7 +255,6 @@ if __name__ == '__main__':
     from csm.core.agent.api import CsmRestApi
     # from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework
-    from cortx.utils.cron import CronJob
     from cortx.utils.validator.v_consul import ConsulV
     from cortx.utils.validator.error import VError
     from csm.core.services.storage_capacity import StorageCapacityService, S3CapacityService

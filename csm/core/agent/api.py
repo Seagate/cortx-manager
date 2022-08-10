@@ -36,8 +36,6 @@ from csm.core.services.sessions import LoginService
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.conf import ConfSection, DebugConf
 from cortx.utils.log import Log
-from cortx.utils.product_features import unsupported_features
-from csm.common.payload import Json
 from csm.core.blogic import const
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
@@ -48,7 +46,6 @@ from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
 from csm.core.controllers.view import CsmView, CsmAuth, CsmHttpException
 from csm.core.controllers.routes import CsmRoutes
-import re
 from cortx.utils.errors import DataAccessError
 from marshmallow import ValidationError, fields
 from csm.core.controllers.validators import ValidateSchema
@@ -85,7 +82,7 @@ class CsmApi(ABC):
         Log.info('command=%s action=%s args=%s' % (command,
                                                    request.action(),
                                                    request.args()))
-        if command not in CsmApi._providers.keys():
+        if command not in CsmApi._providers:
             CsmApi._providers[command] = ProviderFactory.get_provider(command,
                                                                       CsmApi._cluster)
         provider = CsmApi._providers[command]
@@ -115,7 +112,7 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._bgtasks = []
         CsmRestApi._wsclients = WeakSet()
 
-        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA))
+        CsmRestApi.__request_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_REQUEST_QUOTA))
         Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
 
         CsmRestApi._app = web.Application(
@@ -390,8 +387,8 @@ class CsmRestApi(CsmApi, ABC):
     async def rest_middleware(request, handler):
         if CsmRestApi.__is_shutting_down:
             return CsmRestApi.json_response("CSM agent is shutting down", status=503)
+        request.request_id = int(time.time())
         try:
-            request_id = int(time.time())
             request_body = dict(request.rel_url.query) if request.rel_url.query else {}
             if not request_body and request.content_length and request.content_length > 0:
                 try:
@@ -433,69 +430,80 @@ class CsmRestApi(CsmApi, ABC):
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError):
             Log.warn(f"Client cancelled call for {request.method} {request.path}")
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(
+            resp = CsmRestApi.error_response(
                     CsmRequestCancelled(desc="Call cancelled by client"),
-                    request=request, request_id=request_id),
-                status=499)
+                    request=request, request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=499)
         except CsmHttpException as e:
             raise e
         except web.HTTPException as e:
             Log.error(f'HTTP Exception {e.status}: {e.reason}')
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id),
-                status=e.status)
+            resp = CsmRestApi.error_response(e, request=request,
+                    request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=e.status)
         except DataAccessError as e:
             Log.error(f"Failed to access the database: {e}")
-            resp = CsmRestApi.error_response(e, request=request, request_id=request_id)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=503)
         except InvalidRequest as e:
             Log.debug(f"Invalid Request: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
+            resp = CsmRestApi.error_response(e, request=request,
+                    request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=400)
         except CsmNotFoundError as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=404)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=404)
         except CsmPermissionDenied as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=403)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=403)
         except ResourceExist as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id),
-                status=const.STATUS_CONFLICT)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=const.STATUS_CONFLICT)
         except CsmInternalError as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=500)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=500)
         except CsmNotImplemented as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=501)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=501)
         except CsmGatewayTimeout as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=504)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=504)
         except CsmServiceConflict as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=409)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=409)
         except CsmUnauthorizedError as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=401)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=401)
         except CsmError as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=400)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=400)
         except KeyError as e:
             Log.debug(f"Key Error: {e} \n {traceback.format_exc()}")
             message = f"Missing Key for {e}"
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(KeyError(message), request=request,
-                                          request_id=request_id),
-                status=422)
+            resp = CsmRestApi.error_response(KeyError(message), request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=422)
         except (ServerDisconnectedError, ClientConnectorError, ClientOSError,
                 ConcurrentTimeoutError) as e:
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=503)
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=503)
         except Exception as e:
-            Log.critical(f"Unhandled Exception Caught: {e} \n {traceback.format_exc()}")
-            return CsmRestApi.json_response(
-                CsmRestApi.error_response(e, request=request, request_id=request_id), status=500)
+            Log.critical(f"Unhandled Exception Caught: {e} \n"
+                f"{traceback.format_exc()}")
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=500)
 
     @staticmethod
     async def _shut_down(loop, site, server=None):
@@ -560,17 +568,19 @@ class CsmRestApi(CsmApi, ABC):
         CsmRestApi._run_server(
             CsmRestApi._app, port=port, ssl_context=ssl_context, access_log=None)
 
-    @staticmethod
-    async def process_request(request):
-        """Receive a request, processes and sends response back to client."""
-        cmd = request.rel_url.query['cmd']
-        action = request.rel_url.query['action']
-        args = request.rel_url.query['args']
+    # Deprecated Method
+    # TODO: remove this code
+    # @staticmethod
+    # async def process_request(request):
+    #     """Receive a request, processes and sends response back to client."""
+    #     cmd = request.rel_url.query['cmd']
+    #     action = request.rel_url.query['action']
+    #     args = request.rel_url.query['args']
 
-        request = Request(action, args)
-        response = CsmApi.process_request(cmd, request)
+    #     request = Request(action, args)
+    #     response = CsmApi.process_request(cmd, request)
 
-        return response
+    #     return response
 
     @staticmethod
     @CsmAuth.public

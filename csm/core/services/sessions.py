@@ -351,7 +351,7 @@ class LoginService:
         if not session:
             Log.error(f"Failed to create a new session for user: {user_id}")
             return None, None
-        
+
         return session.session_id, {"reset_password": user.reset_password}
 
     async def logout(self, session_id):

@@ -135,7 +135,7 @@ class Archivator:
                       if thread_pool_exec is None else thread_pool_exec)
         self._loop = asyncio.get_event_loop() if loop is None else loop
 
-    async def make_archive(self, base_name, format=ArchiveFormats.GZTAR.value,
+    async def make_archive(self, base_name, _format=ArchiveFormats.GZTAR.value,
                            root_dir=None, base_dir=None):
 
         def _make_archive(_base_name, _format, _root_dir, _base_dir):
@@ -143,13 +143,13 @@ class Archivator:
             make_archive(base_name=_base_name, format=_format,
                          root_dir=_root_dir, base_dir=_base_dir)
         await self._loop.run_in_executor(self._pool, _make_archive,
-                                         base_name, format, root_dir, base_dir)
+                                         base_name, _format, root_dir, base_dir)
 
-    async def unpack_archive(self, filename, extract_dir=None, format=None):
+    async def unpack_archive(self, filename, extract_dir=None, _format=None):
 
         def _unpack_archive(_filename, _extract_dir, _format):
             # imported function validates correctness/existence of archive and directories itself
             unpack_archive(filename=_filename, extract_dir=_extract_dir, format=_format)
 
         await self._loop.run_in_executor(self._pool, _unpack_archive,
-                                         filename, extract_dir, format)
+                                         filename, extract_dir, _format)

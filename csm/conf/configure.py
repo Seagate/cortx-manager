@@ -16,7 +16,6 @@
 import os
 # from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
-from csm.common.payload import Json
 from csm.common.service_urls import ServiceUrls
 from cortx.utils.log import Log
 from cortx.utils.conf_store.conf_store import Conf
@@ -68,7 +67,7 @@ class Configure(Setup):
             services = ["agent"]
         else:
             services=[services]
-        if not "agent" in services:
+        if "agent" not in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
         self._prepare_and_validate_confstore_keys()
 
@@ -120,8 +119,7 @@ class Configure(Setup):
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
                 const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
                 const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}",
-                const.KEY_SERVICE_LIMITS: const.CSM_USAGE_LIMIT_SERVICES
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -143,7 +141,7 @@ class Configure(Setup):
     def _set_csm_endpoint():
         Log.info("Config: Setting CSM endpoint in configuration.")
         csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
-        csm_protocol, csm_host, csm_port = ServiceUrls.parse_url(csm_endpoint)
+        csm_protocol, _, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
         # Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_HOST, csm_host)
@@ -276,7 +274,7 @@ class Configure(Setup):
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_PERF_STAT_RETENTION_PERIOD))
-        if not message_type in mb_admin.list_message_types():
+        if message_type not in mb_admin.list_message_types():
             Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,
@@ -292,7 +290,7 @@ class Configure(Setup):
         partitions = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_PARTITIONS))
         retention_size = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_SIZE))
         retention_period = int(Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_CLUSTER_STOP_RETENTION_PERIOD))
-        if not message_type in mb_admin.list_message_types():
+        if message_type not in mb_admin.list_message_types():
             Log.info(f"Config: Registering message_type:{message_type}")
             mb_admin.register_message_type(message_types=[message_type], partitions=partitions)
             mb_admin.set_message_type_expire(message_type,
@@ -373,15 +371,36 @@ class Configure(Setup):
     @staticmethod
     def set_resource_limits() -> None:
         """Set resource limits for CSM."""
-        limits = Conf.get(const.CONSUMER_INDEX, const.CSM_USAGE_LIMIT_SERVICES)
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_USAGE_LIMIT_SERVICES, limits)
-        limits = next(filter(lambda x: x[const.NAME] == "agent", limits), None)
-        if limits:
-            mem_min = Configure._mem_limit_to_int(limits["memory"]["min"])
-            mem_max = Configure._mem_limit_to_int(limits["memory"]["max"])
-            cpu_min = Configure._cpu_limit_to_int(limits["cpu"]["min"])
-            cpu_max = Configure._cpu_limit_to_int(limits["cpu"]["max"])
+        Log.info("Config: Fetching CSM services cpu and memory limits")
+        count_services : str = Conf.get(const.CONSUMER_INDEX,
+            const.CSM_LIMITS_NUM_SERVICES_KEY)
+        try:
+            count_services = int(count_services)
+        except ValueError:
+            raise CsmSetupError("CSM num_services value is not a valid"
+                " integer.")
+        for count in range(count_services):
+            name = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>name')
+            if name == "agent":
+                mem_min = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>min')
+                mem_max = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>max')
+                cpu_min = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>min')
+                cpu_max = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>max')
 
-            request_rate = Configure._calculate_request_quota(mem_min, mem_max, cpu_min, cpu_max)
-            Conf.set(const.CSM_GLOBAL_INDEX, const.USAGE_REQUEST_QUOTA, request_rate)
+                mem_min = Configure._mem_limit_to_int(mem_min)
+                mem_max = Configure._mem_limit_to_int(mem_max)
+                cpu_min = Configure._cpu_limit_to_int(cpu_min)
+                cpu_max = Configure._cpu_limit_to_int(cpu_max)
 
+                request_quota = Configure._calculate_request_quota(
+                    mem_min, mem_max, cpu_min, cpu_max)
+                Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_REQUEST_QUOTA,
+                    request_quota)
+            else:
+                raise CsmSetupError("CSM agent service mem and cpu limits are"
+                    " not found")
