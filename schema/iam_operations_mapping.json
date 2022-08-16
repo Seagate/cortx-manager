@@ -5,6 +5,7 @@
         "marker": "marker"
     },
     "GET_USER_CAPACITY": {
+        "tenant":"capacity.s3.users.tenant",
         "user_id": "capacity.s3.users.id",
         "stats.size": "capacity.s3.users.used",
         "stats.size_actual": "capacity.s3.users.used_rounded",
