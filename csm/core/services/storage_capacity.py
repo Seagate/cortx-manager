@@ -170,8 +170,6 @@ class S3CapacityService(ApplicationService):
         if isinstance(plugin_response, RgwError):
             ServiceError.create(plugin_response)
         users_dict = plugin_response["capacity"]["s3"]["users"]
-        users_dict["id"] = users_dict["keys"][0]["user"]
-        del users_dict["keys"]
         users_list = []
         users_list.append(users_dict.copy())
         plugin_response["capacity"]["s3"]["users"] = users_list
