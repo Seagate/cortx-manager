@@ -125,7 +125,7 @@ class StorageCapacityService(ApplicationService):
                     Log.info(f"Fetching cluster status retry counter: {retry}")
                     response = await self.request(session, method, url, expected_success_code)
                     break
-                except ClientConnectorError as e:
+                except ClientConnectorError:
                     Log.error(f"Failed to get cluster status in attempt ({retry})")
                     if retry == MAX_RETRY_COUNT-1:
                         self._create_error(503, "Unable to connect to the service")
