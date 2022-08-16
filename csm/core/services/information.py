@@ -17,7 +17,7 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
-from csm.common.errors import CsmInternalError, InvalidRequest
+from csm.common.errors import CsmInternalError, CsmNotFoundError
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
@@ -84,7 +84,7 @@ class InformationService(ApplicationService):
             response[const.TOPOLOGY][resource] = [item for item in \
                 payload if item.get(const.ID) == resource_id]
             if len(response[const.TOPOLOGY][resource]) < 1:
-                raise InvalidRequest(f"Invalid resource_id: {resource_id}")
+                raise CsmNotFoundError(f"Invalid resource_id: {resource_id}")
         return response
 
     @Log.trace_method(Log.DEBUG)
@@ -118,5 +118,5 @@ class InformationService(ApplicationService):
             res[const.TOPOLOGY][resource][0][view] = [item for item in \
                 payload if item.get(const.ID) == view_id]
             if len(res[const.TOPOLOGY][resource][0][view]) < 1:
-                raise InvalidRequest(f"Invalid resource_id: {view_id}")
+                raise CsmNotFoundError(f"Invalid resource_id: {view_id}")
         return res

@@ -19,7 +19,7 @@ from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
 from csm.core.controllers.view import CsmView, CsmResponse, CsmAuth
 from cortx.utils.log import Log
-from csm.common.errors import InvalidRequest, CsmInternalError
+from csm.common.errors import InvalidRequest, CsmInternalError, CsmNotFoundError
 from csm.core.blogic import const
 from csm.core.controllers.validators import ValidationErrorFormatter
 from cortx.utils.schema.release import SetupError
@@ -48,7 +48,7 @@ class VersionInformationView(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.VERSION_RESOURCES:
-            raise InvalidRequest(f"Invalid resource: {resource}")
+            raise CsmNotFoundError(f"Invalid resource: {resource}")
         path_params_dict = {
             const.ARG_RESOURCE_ID : resource_id,
             const.ARG_RESOURCE : resource
@@ -118,7 +118,7 @@ class ResourceTopology(CsmView):
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise InvalidRequest(f"Invalid resource: {resource}")
+            raise CsmNotFoundError(f"Invalid resource: {resource}")
         # Call Information Service
         Log.info(f"Fetching deployment topology for resource:{resource}.")
         try:
@@ -149,13 +149,15 @@ class SubresourceTopology(CsmView):
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-           raise InvalidRequest(f"Invalid resource: {resource}")
+           raise CsmNotFoundError(f"Invalid resource: {resource}")
         Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
         # Call Information Service
         response = await self._service.get_specific_resource(resource, resource_id)
         try:
             response = await self._service.get_specific_resource(resource, resource_id)
         except CsmInternalError as e:
+            raise e
+        except CsmNotFoundError as e:
             raise e
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
@@ -183,15 +185,17 @@ class TopologyView(CsmView):
         view = self.request.match_info[const.ARG_VIEW]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise InvalidRequest(f"Invalid resource: {resource}")
+            raise CsmNotFoundError(f"Invalid resource: {resource}")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise InvalidRequest(f"Invalid resource: {view}")
+            raise CsmNotFoundError(f"Invalid resource: {view}")
         # Call Information Service
         Log.info(f"Fetching deployment topology for resource:{resource}, resource_id:{resource_id} and view:{view}.")
         try:
             response = await self._service.get_views(resource, resource_id, view)
         except CsmInternalError as e:
+            raise e
+        except CsmNotFoundError as e:
             raise e
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
@@ -219,10 +223,10 @@ class TopologySubview(CsmView):
         view_id = self.request.match_info[const.ARG_VIEW_ID]
         # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
-            raise InvalidRequest(f"Invalid resource: {resource}")
+            raise CsmNotFoundError(f"Invalid resource: {resource}")
         # Check for valid View
         if view not in const.TOPOLOGY_VIEWS:
-            raise InvalidRequest(f"Invalid resource: {view}")
+            raise CsmNotFoundError(f"Invalid resource: {view}")
         path_params_dict = {
             const.ARG_RESOURCE : resource,
             const.ARG_RESOURCE_ID : resource_id,
@@ -234,6 +238,8 @@ class TopologySubview(CsmView):
         try:
             response = await self._service.get_specific_view(**path_params_dict)
         except CsmInternalError as e:
+            raise e
+        except CsmNotFoundError as e:
             raise e
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
