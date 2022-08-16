@@ -15,6 +15,8 @@
 
 from typing import Any
 import json
+import time
+from cortx.utils.conf_store.conf_store import Conf
 from csm.core.services.rgw.s3.utils import CsmRgwConfigurationFactory
 from csm.core.data.models.rgw import RgwErrors, RgwError
 from csm.common.errors import CsmInternalError
@@ -34,16 +36,27 @@ class RGWPlugin:
         """
         config = CsmRgwConfigurationFactory.get_rgw_connection_config()
         self._rgw_admin_client = S3Client(config.auth_user_access_key,
-            config.auth_user_secret_key, url=config.url, timeout=const.S3_CONNECTION_TIMEOUT)
+            config.auth_user_secret_key, url=config.url, timeout=const.CONNECTION_TIMEOUT)
         self._api_operations = Json(const.RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_response_mapping_schema = Json(const.IAM_OPERATIONS_MAPPING_SCHEMA).load()
         self._api_suppress_payload_schema = Json(const.SUPPRESS_PAYLOAD_SCHEMA).load()
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     async def execute(self, operation, **kwargs) -> Any:
+        MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
         api_operation = self._api_operations.get(operation)
         request_body = self._build_request(api_operation['REQUEST_BODY_SCHEMA'], **kwargs)
-        return await self._process(api_operation, request_body, operation)
+        for retry in range(0, MAX_RETRY_COUNT):
+            Log.info(f"Executing RGW request retry counter : {retry}")
+            response = await self._process(api_operation, request_body, operation)
+            if isinstance(response, RgwError) and response.http_status == 503:
+                Log.error(f"Failed to execute RGW request on retry counter: {retry}")
+                time.sleep(RETRY_SLEEP_DURATION)
+                continue
+            Log.info(f"Executed RGW request on retry counter: {retry}")
+            break
+        return response
 
     @Log.trace_method(Log.DEBUG, exclude_args=['access_key', 'secret_key'])
     def _build_request(self, request_body_schema, **kwargs) -> Any:

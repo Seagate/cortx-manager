@@ -13,8 +13,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
 import aiohttp
 from aiohttp.client import ClientSession
+from aiohttp.client_exceptions import ClientConnectorError
 from cortx.utils.conf_store.conf_store import Conf
 # from csm.common.process import AsyncioSubprocess
 from cortx.utils.log import Log
@@ -114,16 +116,26 @@ class StorageCapacityService(ApplicationService):
         if data_filter:
             url = url + "/" + data_filter
         Log.info(f"Request {url} for cluster data")
-        async with aiohttp.ClientSession() as session:
-            try:
-                response = await self.request(session, method, url, expected_success_code)
-            except Exception as e:
-                Log.error(f"Error in obtaining response from {url}: {e}")
-                if "Cannot connect to" in str(e):
-                    self._create_error(503, "Unable to connect to the service")
-                    return self.capacity_error
-                raise CsmInternalError(f"Error in obtaining response from {url}: {e}")
-
+        timeout = aiohttp.ClientTimeout(total=const.CONNECTION_TIMEOUT)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+            RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
+            for retry in range(0, MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"Fetching cluster status retry counter: {retry}")
+                    response = await self.request(session, method, url, expected_success_code)
+                    break
+                except ClientConnectorError:
+                    Log.error(f"Failed to get cluster status in attempt ({retry})")
+                    if retry == MAX_RETRY_COUNT-1:
+                        self._create_error(503, "Unable to connect to the service")
+                        return self.capacity_error
+                    else:
+                        time.sleep(RETRY_SLEEP_DURATION)
+                        continue
+                except Exception as e:
+                    Log.error(f"Error in obtaining response from {url}:{e}")
+                    raise CsmInternalError("Error in obtaining response")
             return response
 
     def _create_error(self, status: int, reason):
