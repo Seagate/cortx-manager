@@ -122,7 +122,7 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware]
         )
-
+        CsmRestApi._app.url_map.strict_slashes = False
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
             CsmRestApi._app.router, CsmRestApi.process_websocket)
