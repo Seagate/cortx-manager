@@ -28,6 +28,7 @@ from weakref import WeakSet
 from aiohttp import web, web_exceptions
 from aiohttp.client_exceptions import ServerDisconnectedError, ClientConnectorError, ClientOSError
 from abc import ABC
+from aiohttp.web_middlewares import normalize_path_middleware
 from secure import SecureHeaders
 from typing import Dict, Tuple
 from csm.core.providers.provider_factory import ProviderFactory
@@ -120,7 +121,8 @@ class CsmRestApi(CsmApi, ABC):
                          CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
-                         CsmRestApi.permission_middleware]
+                         CsmRestApi.permission_middleware,
+                         web.normalize_path_middleware(remove_slash=True, append_slash = False)]
         )
         CsmRestApi._app.url_map.strict_slashes = False
         CsmRoutes.add_routes(CsmRestApi._app)
