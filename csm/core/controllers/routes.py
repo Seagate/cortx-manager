@@ -16,7 +16,7 @@
 # To add new route import from view file
 from .view import CsmView
 from .stats import StatsView
-from .login import LoginView, LogoutView
+from .login import LoginView, LogoutView, HelloView
 from .storage_capacity import (CapacityStatusView, CapacityManagementView,
                                S3CapacityView)
 from .permissions import CurrentPermissionsView
