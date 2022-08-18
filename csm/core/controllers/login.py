@@ -68,8 +68,8 @@ class LogoutView(CsmView):
         Log.info(f"Logout successful. User: {username}")
         return CsmResponse()
 
-@CsmView._app_routes.view("/api/v1/logout")
-@CsmView._app_routes.view("/api/v2/logout")
+@CsmView._app_routes.view("/api/v1/hello")
+@CsmView._app_routes.view("/api/v2/hello")
 @CsmAuth.public
 
 class HelloView(CsmView):
