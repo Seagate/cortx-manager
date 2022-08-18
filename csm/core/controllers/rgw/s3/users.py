@@ -124,12 +124,12 @@ class S3IAMUserListView(S3BaseView):
     async def post(self):
         """POST REST implementation for creating a new s3 iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         try:
             schema = UserCreateSchema()
             user_body = schema.load(await self.request.json())
-            Log.debug(f"Handling create s3 iam user PUT request"
+            Log.debug(f"[{self.request.request_id}] Handling create s3 iam user PUT request"
                       f" request body: {user_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
@@ -138,7 +138,7 @@ class S3IAMUserListView(S3BaseView):
         with ServiceError.guard_service():
             response = await self._service.create_user(**user_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response, const.STATUS_CREATED)
 
@@ -149,12 +149,12 @@ class S3IAMUserListView(S3BaseView):
         GET REST implementation for list IAM users.
         """
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         try:
             schema = ListAllUsersSchema()
             request_parameters = schema.load(self.request.rel_url.query)
-            Log.debug(f"Handling listing of all IAM users request"
+            Log.debug(f"[{self.request.request_id}] Handling listing of all IAM users request"
                   f" request body: {request_parameters}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
@@ -163,7 +163,7 @@ class S3IAMUserListView(S3BaseView):
         with ServiceError.guard_service():
             response = await self._service.get_all_users(**request_parameters)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -186,16 +186,16 @@ class S3IAMUserView(S3BaseView):
     async def get(self):
         """GET REST implementation for fetching an existing s3 iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
         path_params_dict = {const.UID: uid}
-        Log.debug(f"Handling s3 iam user GET request"
+        Log.debug(f"[{self.request.request_id}] Handling s3 iam user GET request"
                   f" with path param: {uid}")
         with ServiceError.guard_service():
             response = await self._service.get_user(**path_params_dict)
             Log.info(
-                f"Processing request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -204,18 +204,18 @@ class S3IAMUserView(S3BaseView):
     async def delete(self):
         """DELETE REST implementation for deleting an existing s3 iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
         if self._is_iam_privileged_user(uid):
             raise CsmPermissionDenied()
         path_params = {const.UID: uid}
-        Log.debug(f"Handling s3 iam user DELETE request"
+        Log.debug(f"[{self.request.request_id}] Handling s3 iam user DELETE request"
                   f" path params/request body: {path_params}")
         with ServiceError.guard_service():
             response = await self._service.delete_user(**path_params)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -224,7 +224,7 @@ class S3IAMUserView(S3BaseView):
     async def patch(self):
         """PATCH REST implementation for modifying an existing s3 iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
         path_params_dict = {const.UID: uid}
@@ -241,12 +241,12 @@ class S3IAMUserView(S3BaseView):
         except ValidationError as val_err:
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         request_body = {**path_params_dict, **request_body_params_dict}
-        Log.debug(f"Handling s3 iam user Modify request"
+        Log.debug(f"[{self.request.request_id}] Handling s3 iam user Modify request"
                   f" path params/request body: {request_body}")
         with ServiceError.guard_service():
             response = await self._service.modify_user(**request_body)
             Log.info(
-                f"Processing request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -269,14 +269,14 @@ class S3IAMUserKeyView(S3BaseView):
     async def put(self):
         """PUT REST implementation to create/add access key for iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         try:
             schema = CreateKeySchema()
             create_key_body = schema.load(await self.request.json())
             if self._is_iam_privileged_user(create_key_body.get(const.UID)):
                 raise CsmPermissionDenied()
-            Log.debug(f"Handling Add access key PUT request"
+            Log.debug(f"[{self.request.request_id}] Handling Add access key PUT request"
                       f" request body: {create_key_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
@@ -285,7 +285,7 @@ class S3IAMUserKeyView(S3BaseView):
         with ServiceError.guard_service():
             response = await self._service.create_key(**create_key_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -294,14 +294,14 @@ class S3IAMUserKeyView(S3BaseView):
     async def delete(self):
         """DELETE REST implementation to remove access key of user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         try:
             schema = RemoveKeySchema()
             remove_key_body = schema.load(await self.request.json())
             if self._is_iam_privileged_user(remove_key_body.get(const.UID)):
                 raise CsmPermissionDenied()
-            Log.debug(f"Handling Remove access key DELETE request"
+            Log.debug(f"[{self.request.request_id}] Handling Remove access key DELETE request"
                       f" request body: {remove_key_body}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest("Could not parse request body, invalid JSON received.")
@@ -310,7 +310,7 @@ class S3IAMUserKeyView(S3BaseView):
         with ServiceError.guard_service():
             response = await self._service.remove_key(**remove_key_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -341,7 +341,7 @@ class S3IAMUserCapsView(S3BaseView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         path_params_dict = {const.UID: uid}
         request_body = {**path_params_dict, **user_caps_body}
-        Log.debug(f"Handling user caps request"
+        Log.debug(f"[{self.request.request_id}] Handling user caps request"
                   f" request body: {request_body}")
         return request_body
 
@@ -350,14 +350,14 @@ class S3IAMUserCapsView(S3BaseView):
     async def put(self):
         """PUT REST implementation to add user caps for iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         request_body = await self.create_caps_request_body()
 
         with ServiceError.guard_service():
             response = await self._service.add_user_caps(**request_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -366,13 +366,13 @@ class S3IAMUserCapsView(S3BaseView):
     async def delete(self):
         """DELETE REST implementation to remove user caps for iam user."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         request_body = await self.create_caps_request_body()
         with ServiceError.guard_service():
             response = await self._service.remove_user_caps(**request_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -395,7 +395,7 @@ class S3IAMUserQuotaView(S3BaseView):
     async def get(self):
         """GET REST implementation for fetching user level quota by uid."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
         path_params_dict = {const.UID: uid}
@@ -404,7 +404,7 @@ class S3IAMUserQuotaView(S3BaseView):
         with ServiceError.guard_service():
             response = await self._service.get_user_quota(**path_params_dict)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
 
@@ -413,7 +413,7 @@ class S3IAMUserQuotaView(S3BaseView):
     async def put(self):
         """PUT REST implementation for setting user level quota by uid."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         uid = self.request.match_info[const.UID]
         try:
@@ -430,11 +430,11 @@ class S3IAMUserQuotaView(S3BaseView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         path_params_dict = {const.UID: uid}
         request_body = {**path_params_dict, **request_body_params_dict}
-        Log.debug(f"Handling iam user quota PUT request"
+        Log.debug(f"[{self.request.request_id}] Handling iam user quota PUT request"
                   f" path params/request body: {request_body}")
         with ServiceError.guard_service():
             response = await self._service.set_user_quota(**request_body)
             Log.info(
-                f"Processed request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)

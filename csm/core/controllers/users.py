@@ -93,7 +93,7 @@ class CsmUsersListView(CsmView):
     async def get(self):
         """GET REST implementation for fetching csm users."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         csm_schema = CsmGetUsersSchema()
         try:
@@ -102,7 +102,7 @@ class CsmUsersListView(CsmView):
             raise InvalidRequest(str(val_err))
         users = await self._service.get_user_list(**request_data)
         Log.info(
-            f"Processed request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         return {'users': users}
 
@@ -111,7 +111,7 @@ class CsmUsersListView(CsmView):
         """POST REST implementation for creating a csm user."""
         creator = self.request.session.credentials.user_id if self.request.session else None
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {creator}")
         try:
             schema = CsmUserCreateSchema()
@@ -131,7 +131,7 @@ class CsmUsersListView(CsmView):
         user_body['creator_id'] = creator
         response = await self._service.create_user(**user_body)
         Log.info(
-            f"Processed request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {creator}")
         return CsmResponse(response, const.STATUS_CREATED)
 
@@ -148,12 +148,12 @@ class CsmUsersView(CsmView):
     async def get(self):
         """GET REST implementation for csm account get request."""
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         user_id = self.request.match_info["user_id"]
         resp = await self._service.get_user(user_id)
         Log.info(
-            f"Processed request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         return resp
 
@@ -162,7 +162,7 @@ class CsmUsersView(CsmView):
         """DELETE REST implementation for csm account delete request."""
         loggedin_user_id = self.request.session.credentials.user_id
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
         user_id = self.request.match_info["user_id"]
         resp = await self._service.delete_user(user_id, loggedin_user_id)
@@ -171,7 +171,7 @@ class CsmUsersView(CsmView):
         # admin cannot be deleted
         await self.request.app.login_service.delete_all_sessions_for_user(user_id)
         Log.info(
-            f"Processed request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
         return resp
 
@@ -180,7 +180,7 @@ class CsmUsersView(CsmView):
         """PATCH implementation for creating a csm user."""
         loggedin_user_id = self.request.session.credentials.user_id
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
         user_id = self.request.match_info["user_id"]
 
@@ -196,6 +196,6 @@ class CsmUsersView(CsmView):
         resp = await self._service.update_user(
             user_id, user_body, loggedin_user_id)
         Log.info(
-            f"Processed request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
         return resp
