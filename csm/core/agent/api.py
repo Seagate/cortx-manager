@@ -117,12 +117,13 @@ class CsmRestApi(CsmApi, ABC):
         Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
 
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.throttler_middleware,
+            middlewares=[web.normalize_path_middleware(remove_slash=True, append_slash = False),
+                        CsmRestApi.throttler_middleware,
                          CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
                          CsmRestApi.permission_middleware,
-                         web.normalize_path_middleware(remove_slash=True, append_slash = False)]
+                         ]
         )
         CsmRoutes.add_routes(CsmRestApi._app)
         ApiRoutes.add_websocket_routes(
