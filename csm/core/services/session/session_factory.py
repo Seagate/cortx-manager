@@ -147,10 +147,12 @@ class Database:
         return sessionModel
 
     async def delete(self, session_id: Session.Id) -> None:
+        # TODO: add retry
         await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
+        # TODO: add retry
         session__model_list = await self.storage(SessionModel).get(query)
         # Storage get() -> param query: session id
         # returns empty list or list with session model object which satisfy the passed query condition
@@ -164,6 +166,7 @@ class Database:
     async def get_all(self):
         # Convert SessionModel to Session
         query = Query()
+        # TODO: add retry
         session__model_list = await self.storage(SessionModel).get(query)
         session_list = await self.convert_model_to_session(session__model_list)
         return session_list
@@ -171,6 +174,7 @@ class Database:
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
         sessionModel = await self.convert_session_to_model(session)
+        # TODO: add retry
         await self.storage(SessionModel).store(sessionModel)
 
 class SessionFactory:

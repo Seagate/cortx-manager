@@ -16,6 +16,7 @@
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
 import asyncio
+import time
 from enum import Enum, auto
 from typing import Dict, List, Optional
 from cortx.utils.log import Log
@@ -27,6 +28,8 @@ from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.errors import DataAccessError
 
 
 class UserManager:
@@ -47,7 +50,7 @@ class UserManager:
         if existing_user:
             msg = f"User already exists: {existing_user.user_id}"
             raise ResourceExist(msg, USERS_MSG_ALREADY_EXISTS)
-
+        # ADD retry
         return await self.storage(User).store(user)
 
     async def get(self, user_id) -> User:
@@ -68,6 +71,7 @@ class UserManager:
 
     async def delete(self, user_id: str) -> None:
         Log.debug(f"Delete user service user id:{user_id}")
+        # ADD retry
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
     async def get_list(self, offset: Optional[int] = None, limit: Optional[int] = None,
@@ -103,15 +107,30 @@ class UserManager:
             query = query.filter_by(And(*query_filters))
 
         Log.debug(f"Get user list service query: {query}")
-        return await self.storage(User).get(query)
+        MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
+        for retry in range(0, MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"Fetching user list retry count: {retry}")
+                    response = await self.storage(User).get(query)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to fetch user: {e}")
+                    if retry == MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(RETRY_SLEEP_DURATION)
+        return response
 
     async def get_list_alert_notification_emails(self) -> List[User]:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
+        # ADD retry
         user_list = await self.storage(User).get(query)
         return [user.email_address for user in user_list]
 
     async def count(self):
+        # ADD retry
         return await self.storage(User).count(None)
 
     async def save(self, user: User):
@@ -120,6 +139,7 @@ class UserManager:
         :param user:
         """
         # TODO: validate the model
+        # ADD retry
         await self.storage(User).store(user)
 
     async def count_admins(self):
@@ -129,6 +149,7 @@ class UserManager:
         :returns: number of CORTX admin users.
         """
         fltr = Compare(User.user_role, '=', const.CSM_SUPER_USER_ROLE)
+        # ADD retry
         return await self.storage(User).count(fltr)
 
 
