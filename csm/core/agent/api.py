@@ -661,9 +661,9 @@ class CsmRestApi(CsmApi, ABC):
             for ws in clients:
                 json_msg = CsmRestApi.json_serializer(msg)
                 await ws.send_str(json_msg)
-        except Exception as e:
+        except Exception :
             # Log.debug('REST API websock broadcast error')
-            Log.debug('REST API websock broadcast error : {e}')
+            Log.debug('REST API websock broadcast error')
 
     @classmethod
     async def _ssl_cert_check_bg(cls):
