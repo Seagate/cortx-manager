@@ -181,6 +181,8 @@ class S3CapacityService(ApplicationService):
     async def _get_user_usage(self, **request_body):
         plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_CAPACITY_OPERATION, **request_body)
         if isinstance(plugin_response, RgwError):
+            Log.error(f"S3ServiceError: {plugin_response.error_code.name}:"\
+                f" {plugin_response.error_message}")
             ServiceError.create(plugin_response)
         users_dict = plugin_response["capacity"]["s3"]["users"]
         users_list = []
