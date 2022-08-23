@@ -420,7 +420,7 @@ class CsmRestApi(CsmApi, ABC):
                 resp_obj = {'message': resp.output()}
                 status = resp.rc()
                 if not 200 <= status <= 299:
-                    Log.error(f"Error: ({status}):{resp_obj['message']}")
+                    Log.error(f"[{request.request_id}] : Error: ({status}):{resp_obj['message']}")
             else:
                 resp_obj = resp
             return CsmRestApi.json_response(resp_obj, status)
@@ -429,7 +429,7 @@ class CsmRestApi(CsmApi, ABC):
         # These exceptions are thrown by aiohttp when request is cancelled
         # by client to complete task which are await use atomic
         except (ConcurrentCancelledError, AsyncioCancelledError):
-            Log.warn(f"Client cancelled call for {request.method} {request.path}")
+            Log.warn(f"[{request.request_id}] : Client cancelled call for {request.method} {request.path}")
             resp = CsmRestApi.error_response(
                     CsmRequestCancelled(desc="Call cancelled by client"),
                     request=request, request_id=request.request_id)
@@ -437,70 +437,80 @@ class CsmRestApi(CsmApi, ABC):
         except CsmHttpException as e:
             raise e
         except web.HTTPException as e:
-            Log.error(f'HTTP Exception {e.status}: {e.reason}')
+            Log.error(f'[{request.request_id}] : HTTP Exception {e.status}: {e.reason}')
             resp = CsmRestApi.error_response(e, request=request,
                     request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=e.status)
         except DataAccessError as e:
-            Log.error(f"Failed to access the database: {e}")
+            Log.error(f"[{request.request_id}] : Failed to access the database: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=503)
         except InvalidRequest as e:
-            Log.debug(f"Invalid Request: {e} \n {traceback.format_exc()}")
+            Log.debug(f"[{request.request_id}] Invalid Request: {e} \n {traceback.format_exc()}")
             resp = CsmRestApi.error_response(e, request=request,
                     request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=400)
         except CsmNotFoundError as e:
+            Log.error(f"[{request.request_id}] : CSM not found: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=404)
         except CsmPermissionDenied as e:
+            Log.debug(f"[{request.request_id}] : CSM permission denied: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=403)
         except ResourceExist as e:
+            Log.debug(f"[{request.request_id}] : Resource Exists : {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=const.STATUS_CONFLICT)
         except CsmInternalError as e:
+            Log.error(f"[{request.request_id}] : CSM Internal error: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=500)
         except CsmNotImplemented as e:
+            Log.debug(f"[{request.request_id}] : CSM Not Implemented : {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=501)
         except CsmGatewayTimeout as e:
+            Log.debug(f"[{request.request_id}] : CSM Gateway Timeout : {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=504)
         except CsmServiceConflict as e:
+            Log.error(f"[{request.request_id}] : CSM Service conflict: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=409)
         except CsmUnauthorizedError as e:
+            Log.error(f"[{request.request_id}] : CSM Unauthorized Error: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=401)
         except CsmError as e:
+            Log.error(f"[{request.request_id}] : CSM Error : {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=400)
         except KeyError as e:
-            Log.debug(f"Key Error: {e} \n {traceback.format_exc()}")
+            Log.error(f"[{request.request_id}] : Key Error: {e}")
+
             message = f"Missing Key for {e}"
             resp = CsmRestApi.error_response(KeyError(message), request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=422)
         except (ServerDisconnectedError, ClientConnectorError, ClientOSError,
                 ConcurrentTimeoutError) as e:
+            Log.error(f"[{request.request_id}] : Error : {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=503)
         except Exception as e:
-            Log.critical(f"Unhandled Exception Caught: {e} \n"
-                f"{traceback.format_exc()}")
+            Log.critical(f"[{request.request_id}] : Unhandled Exception Caught: {e}")
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=500)
@@ -650,7 +660,8 @@ class CsmRestApi(CsmApi, ABC):
             for ws in clients:
                 json_msg = CsmRestApi.json_serializer(msg)
                 await ws.send_str(json_msg)
-        except Exception:
+        except Exception :
+            # Log.debug('REST API websock broadcast error')
             Log.debug('REST API websock broadcast error')
 
     @classmethod
