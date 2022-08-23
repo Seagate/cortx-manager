@@ -26,7 +26,9 @@ from concurrent.futures import (CancelledError as ConcurrentCancelledError,
 from asyncio import CancelledError as AsyncioCancelledError
 from weakref import WeakSet
 from aiohttp import web, web_exceptions
-from aiohttp.client_exceptions import ServerDisconnectedError, ClientConnectorError, ClientOSError
+from aiohttp.client_exceptions import (ServerDisconnectedError,
+    ClientConnectorError, ClientOSError)
+from aiohttp.web_middlewares import normalize_path_middleware
 from abc import ABC
 from secure import SecureHeaders
 from typing import Dict, Tuple
@@ -116,11 +118,14 @@ class CsmRestApi(CsmApi, ABC):
         Log.info(f"CSM request quota is set to {CsmRestApi.__request_quota}")
 
         CsmRestApi._app = web.Application(
-            middlewares=[CsmRestApi.throttler_middleware,
-                         CsmRestApi.set_secure_headers,
+            middlewares=[normalize_path_middleware(remove_slash=True,
+                            append_slash = False),
+                         CsmRestApi.throttler_middleware,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
-                         CsmRestApi.permission_middleware]
+                         CsmRestApi.permission_middleware,
+                         CsmRestApi.set_secure_headers
+                        ]
         )
 
         CsmRoutes.add_routes(CsmRestApi._app)
