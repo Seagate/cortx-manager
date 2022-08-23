@@ -154,3 +154,4 @@ class IamUserView(S3AuthenticatedView):
         with self._guard_service():
             return await self._service.delete_user(self._s3_session,
                                                    user_name)
+                                                   

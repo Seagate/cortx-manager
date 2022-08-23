@@ -151,3 +151,4 @@ class IamUsersService(S3BaseService):
 
     def update_user(self, user_name: str):
         pass
+        
