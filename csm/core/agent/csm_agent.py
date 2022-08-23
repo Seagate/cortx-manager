@@ -114,7 +114,16 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+        host = Conf.get(const.DATABASE_INDEX, const.CONSUL_CONFIG_HOST)
+        port = Conf.get(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT)
+        index = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_INDEX)
+        backend = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_BACKEND)
+        # TODO: Find proper name insted of backend
+        topology_config = {
+            const.BACKEND : Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_OBJECT_STORE),
+            const.URL : f"{backend}://{host}:{port}/{index}"
+            }
+        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService(topology_config)
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod
