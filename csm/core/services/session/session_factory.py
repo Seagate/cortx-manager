@@ -13,8 +13,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+import time
 from typing import Optional
 from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.errors import DataAccessError
+from cortx.utils.log import Log
 from csm.core.blogic import const
 from cortx.utils.data.access import Query
 from cortx.utils.data.access.filters import Compare
@@ -128,6 +131,57 @@ class Database:
         if storage is None:
             raise CsmInternalError("Database Provider is NULL")
         self.storage = storage
+        self.MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        self.RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
+
+    async def _get(self, query):
+        """
+        Get session details based on query from DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"get session retry count: {retry}")
+                    response = await self.storage(SessionModel).get(query)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to get session: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
+        return response
+
+    async def _store(self, sessionModel):
+        """
+        Stores session in DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"store session retry count: {retry}")
+                    self.storage(SessionModel).store(sessionModel)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to store session: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
+
+    async def _delete(self, session_id):
+        """
+        delete session based on query from DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"delete session retry count: {retry}")
+                    await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to delete session: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
 
     async def convert_model_to_session(self, session_model_list):
         session_list = []
@@ -147,13 +201,11 @@ class Database:
         return sessionModel
 
     async def delete(self, session_id: Session.Id) -> None:
-        # TODO: add retry
-        await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
+        await self._delete(session_id)
 
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
-        # TODO: add retry
-        session__model_list = await self.storage(SessionModel).get(query)
+        session__model_list = await self._get(query)
         # Storage get() -> param query: session id
         # returns empty list or list with session model object which satisfy the passed query condition
 
@@ -166,16 +218,14 @@ class Database:
     async def get_all(self):
         # Convert SessionModel to Session
         query = Query()
-        # TODO: add retry
-        session__model_list = await self.storage(SessionModel).get(query)
+        session__model_list = await self._get(query)
         session_list = await self.convert_model_to_session(session__model_list)
         return session_list
 
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
         sessionModel = await self.convert_session_to_model(session)
-        # TODO: add retry
-        await self.storage(SessionModel).store(sessionModel)
+        await self._store(sessionModel)
 
 class SessionFactory:
     @staticmethod
