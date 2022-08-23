@@ -70,14 +70,18 @@ class CapacityStatusView(CsmView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
-        Log.info("Handling GET implementation for getting cluster staus data")
-
+        Log.info(
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         resp = await self._service.get_cluster_data()
         if isinstance(resp, CapacityError):
             raise CsmHttpException(resp.http_status,
                                    CAPACITY_SERVICE_ERROR,
                                    resp.message_id,
                                    resp.message)
+        Log.info(
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         return resp
 
 
@@ -92,15 +96,19 @@ class CapacityManagementView(CsmView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
+        Log.info(
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         path_param = self.request.match_info[const.CAPACITY_RESOURCE]
-        Log.info(f"Handling GET implementation for getting cluster staus data"
-                 f" with path param: {path_param}")
         resp = await self._service.get_cluster_data(path_param)
         if isinstance(resp, CapacityError):
             raise CsmHttpException(resp.http_status,
                                    CAPACITY_SERVICE_ERROR,
                                    resp.message_id,
                                    resp.message)
+        Log.info(
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         return resp
 
 @CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}")
@@ -117,10 +125,11 @@ class S3CapacityView(CsmView):
     @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
     @Log.trace_method(Log.DEBUG)
     async def get(self):
+        Log.info(
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ID]
-        Log.info(f"Handling GET s3 capacity request"
-                  f"resource={resource} and id ={resource_id}")
         try:
             schema = S3CapacitySchema()
             schema.load({const.ARG_RESOURCE:resource})
@@ -128,4 +137,7 @@ class S3CapacityView(CsmView):
             raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
         with ServiceError.guard_service():
             response = await self._service.get_usage(resource, resource_id)
+            Log.info(
+            f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
+            f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
