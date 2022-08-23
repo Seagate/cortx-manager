@@ -131,7 +131,7 @@ class S3CapacityView(CsmView):
             return CsmResponse(response)
 
 
-@CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}/{tenant}")
+@CsmView._app_routes.view("/api/v2/capacity/s3/{tenant}/{resource}/{id}")
 class S3CapacityTenantView(CsmView):
     """
     GET REST API view implementation for getting capacity usage for specific user
