@@ -23,11 +23,11 @@ from cortx.utils.conf_store.error import ConfError
 from csm.common.errors import CsmInternalError, CsmNotFoundError
 
 class ITopology(metaclass=ABCMeta):
-    "The Topology Interface (Product)"
+    "The Topology Interface"
 
     @staticmethod
     @abstractmethod
-    def get():
+    def get(self):
         "A static interface method"
         pass
 
@@ -79,15 +79,15 @@ class CortxTopology(ITopology):
         return res
 
     def _get_durability(self, payload):
-            dix = payload.get(const.DIX)
-            sns = payload.get(const.SNS)
-            res = {
-                const.DATA: f"{dix.get(const.DATA)}+{dix.get(const.PARITY)}"\
-                            f"+{dix.get(const.SPARE)}",
-                const.METADATA: f"{sns.get(const.DATA)}+{sns.get(const.PARITY)}"\
-                            f"+{sns.get(const.SPARE)}"
-            }
-            return res
+        dix = payload.get(const.DIX)
+        sns = payload.get(const.SNS)
+        res = {
+            const.DATA: f"{dix.get(const.DATA)}+{dix.get(const.PARITY)}"\
+                        f"+{dix.get(const.SPARE)}",
+            const.METADATA: f"{sns.get(const.DATA)}+{sns.get(const.PARITY)}"\
+                        f"+{sns.get(const.SPARE)}"
+        }
+        return res
 
     def _get_storage_set(self, payload):
         """
@@ -161,7 +161,7 @@ class CortxTopology(ITopology):
         except CsmNotFoundError as e:
             Log.error(f'Error in fetching certificate information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
-        except ConfError:
+        except ConfError as e:
             Log.error(f'Unable to fetch topology information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
         except Exception as e:
