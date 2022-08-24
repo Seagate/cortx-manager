@@ -345,11 +345,11 @@ class LoginService:
         session = await self._is_valid_session_exists(user_id)
         if not session:
             # if No valid session exists, then create new session
-            Log.info(f"[{self.request.request_id}] Session expired, creating new session for user: {user_id}")
+            Log.info(f"Session expired, creating new session for user: {user_id}")
             permissions = await self._role_manager.calc_effective_permissions(user.user_role)
             session = await self._session_manager.create(credentials, permissions)
         if not session:
-            Log.error(f"[{self.request.request_id}] Failed to create a new session for user: {user_id}")
+            Log.error(f"Failed to create a new session for user: {user_id}")
             return None, None
 
         return session.session_id, {"reset_password": user.reset_password}
