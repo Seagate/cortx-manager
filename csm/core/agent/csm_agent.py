@@ -16,6 +16,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import sys
+import time
 import os
 import glob
 import traceback
@@ -167,16 +168,21 @@ class CsmAgent:
         Conf.load(const.CONSUMER_INDEX, Options.config)
         _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:
-            try:
-                ConsulV().validate_service_status(consul_host, consul_port)
-                Conf.load(const.CSM_GLOBAL_INDEX,
-                          f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
-                Conf.load(const.DATABASE_INDEX,
-                          f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+            for retry in range(0, const.MAX_RETRY):
+                try:
+                    Log.info(f"Connecting to consul retry count : {retry}")
+                    ConsulV().validate_service_status(consul_host,consul_port)
+                    Conf.load(const.CSM_GLOBAL_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
+                    Conf.load(const.DATABASE_INDEX,
+                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                except VError as ve:
+                    Log.error(f"Unable to fetch the configurations from consul: {ve}")
+                    if retry == const.MAX_RETRY-1:
+                        raise CsmInternalError("Unable to fetch the configurations")
+                    time.sleep(const.SLEEP_DURATION)
                 set_config_flag = True
-            except VError as ve:
-                Log.error(f"Unable to fetch the configurations from consul: {ve}")
-                raise CsmInternalError(desc="Unable to fetch the configurations")
+                break
 
         if not set_config_flag:
             conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)

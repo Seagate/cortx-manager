@@ -16,6 +16,7 @@
 # Let it all reside in a separate controller until we've all agreed on request
 # processing architecture
 import asyncio
+import time
 from enum import Enum, auto
 from typing import Dict, List, Optional
 from cortx.utils.log import Log
@@ -27,6 +28,8 @@ from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.errors import DataAccessError
 
 
 class UserManager:
@@ -36,6 +39,75 @@ class UserManager:
     """
     def __init__(self, storage: DataBaseProvider) -> None:
         self.storage = storage
+        self.MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX, const.MAX_RETRY_COUNT))
+        self.RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX, const.RETRY_SLEEP_DURATION))
+
+    async def _store(self, user):
+        """
+        Stores a new user in DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"store user retry count: {retry}")
+                    response = await self.storage(User).store(user)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to store user: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
+        return response
+
+    async def _count(self, filter):
+        """
+        Count operation based on query on DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"perform count operation retry count: {retry}")
+                    count = await self.storage(User).count(filter)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to perform count operation: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
+        return count
+
+    async def _get(self, query):
+        """
+        Get users based on query from DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"get user retry count: {retry}")
+                    response = await self.storage(User).get(query)
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to get user: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
+        return response
+
+    async def _delete(self, user_id):
+        """
+        delete users based on query from DB
+        """
+        for retry in range(0, self.MAX_RETRY_COUNT):
+                try:
+                    Log.info(f"delete user retry count: {retry}")
+                    await self.storage(User).delete(Compare(User.user_id, '=', user_id))
+                    break
+                except DataAccessError as e:
+                    Log.error(f"Failed to delete user: {e}")
+                    if retry == self.MAX_RETRY_COUNT-1:
+                        raise e
+                        # TODO: catch it
+                    time.sleep(self.RETRY_SLEEP_DURATION)
 
     async def create(self, user: User) -> User:
         """
@@ -47,8 +119,7 @@ class UserManager:
         if existing_user:
             msg = f"User already exists: {existing_user.user_id}"
             raise ResourceExist(msg, USERS_MSG_ALREADY_EXISTS)
-
-        return await self.storage(User).store(user)
+        return await self._store(user)
 
     async def get(self, user_id) -> User:
         """
@@ -68,7 +139,8 @@ class UserManager:
 
     async def delete(self, user_id: str) -> None:
         Log.debug(f"Delete user service user id:{user_id}")
-        await self.storage(User).delete(Compare(User.user_id, '=', user_id))
+        # ADD retry
+        await self._delete(user_id)
 
     async def get_list(self, offset: Optional[int] = None, limit: Optional[int] = None,
                        sort: Optional[SortBy] = None,
@@ -103,16 +175,17 @@ class UserManager:
             query = query.filter_by(And(*query_filters))
 
         Log.debug(f"Get user list service query: {query}")
-        return await self.storage(User).get(query)
+        response = await self._get(query)
+        return response
 
     async def get_list_alert_notification_emails(self) -> List[User]:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
-        user_list = await self.storage(User).get(query)
+        user_list = await self._get(query)
         return [user.email_address for user in user_list]
 
     async def count(self):
-        return await self.storage(User).count(None)
+        return await self._count(None)
 
     async def save(self, user: User):
         """
@@ -120,7 +193,7 @@ class UserManager:
         :param user:
         """
         # TODO: validate the model
-        await self.storage(User).store(user)
+        await self._store(user)
 
     async def count_admins(self):
         """
@@ -129,7 +202,7 @@ class UserManager:
         :returns: number of CORTX admin users.
         """
         fltr = Compare(User.user_role, '=', const.CSM_SUPER_USER_ROLE)
-        return await self.storage(User).count(fltr)
+        return await self._count(fltr)
 
 
 USERS_MSG_USER_NOT_FOUND = "users_not_found"
