@@ -19,6 +19,7 @@ from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from csm.common.certificate import SSLCertificate
 from pathlib import Path
+from cortx.utils.conf_store.error import ConfError
 
 class ITopology(metaclass=ABCMeta):
     "The Topology Interface (Product)"
@@ -39,7 +40,7 @@ class CortxTopology(ITopology):
 
     def _get_services(self, components):
         """
-        get services provided by all components for given node
+        get services provided by all components for given node.
         """
         services = []
         for component in components:
@@ -54,14 +55,17 @@ class CortxTopology(ITopology):
         payload = {}
         payload[const.ID] = node_id
         payload[const.VERSION] = node.get(const.PROVISIONING).get(const.VERSION)
-        payload[const.SERVICES] = self._get_services(node[const.COMPONENTS])
+        services = self._get_services(node[const.COMPONENTS])
+        if services:
+            payload[const.SERVICES] = services
         payload[const.TYPE] = node.get(const.TYPE)
         payload[const.STORAGE_SET] = node.get(const.STORAGE_SET)
-        payload[const.DEPLOYMENT_TIME] = node.get(const.PROVISIONING).get(const.DEPLOYMENT_TIME)
+        payload[const.DEPLOYMENT_TIME] = node.get(const.PROVISIONING).get(const.TIME)
         payload[const.HOSTNAME] = node.get(const.HOSTNAME)
         if node.get(const.CVG):
-            node[const.CVG][const.DEVICES] = {key: value for key, value \
-                in node[const.CVG][const.DEVICES].items() if not ('num_' in key)}
+            for cvg in node.get(const.CVG):
+                cvg[const.DEVICES] = {key: value for key, value \
+                    in cvg[const.DEVICES].items() if not ('num_' in key)}
             payload[const.STORAGE] = node.get(const.CVG)
         return payload
 
@@ -84,10 +88,10 @@ class CortxTopology(ITopology):
             const.DIX = payload.get(const.DIX)
             const.SNS = payload.get(const.SNS)
             res = {
-                const.DATA: f"{const.DIX.get(const.DATA)}+{const.DIX.get(const.PARITY)}\
-                            +{const.DIX.get(const.SPARE)}",
-                const.METADATA: f"{const.SNS.get(const.DATA)}+{const.SNS.get(const.PARITY)}\
-                            +{const.SNS.get(const.SPARE)}"
+                const.DATA: f"{const.DIX.get(const.DATA)}+{const.DIX.get(const.PARITY)}"\
+                            f"+{const.DIX.get(const.SPARE)}",
+                const.METADATA: f"{const.SNS.get(const.DATA)}+{const.SNS.get(const.PARITY)}"\
+                            f"+{const.SNS.get(const.SPARE)}"
             }
             return res
         return [{const.ID:item[const.NAME], const.DURABILITY:_get_durability(item[const.DURABILITY])} \
@@ -98,7 +102,7 @@ class CortxTopology(ITopology):
         Get Certificate details
         """
         #TODO: Add device certificate/domain certificate once available.
-        path = input_payload.get(const.CORTX).get(const.SECURITY).get(const.SSL_CERTIFICATE)
+        path = input_payload.get(const.CORTX).get(const.COMMON).get(const.SECURITY).get(const.SSL_CERTIFICATE)
         cert_details = SSLCertificate(path).get_certificate_details()
         cert_details = cert_details.get(const.CERT_DETAILS)
         cert_details[const.NAME] = Path(path).name
@@ -107,7 +111,7 @@ class CortxTopology(ITopology):
 
     def _create_cluster_payload(self, resource, valid_attributes, input_payload):
         """
-        Generate payload for clusters.
+        Generate payload for cluster with required attributes.
         """
         Log.debug(f'Creating payload for resource: {resource}')
         cluster = input_payload[const.CLUSTER]
@@ -146,7 +150,7 @@ class CortxTopology(ITopology):
 
     def _convert(self, input_payload):
         """
-        Convert topology schema to specific format
+        Convert topology payload schema to specific format.
         """
         coverted_payload = self.get_resource_payload(input_payload)
         res_payload = {}
@@ -157,7 +161,10 @@ class CortxTopology(ITopology):
         """
         get toplogy payload from current deployment.
         """
-        Conf.load(const.TOPOLOGY_DICT_INDEX, 'dict:{"k":"v"}')
+        try:
+            Conf.load(const.TOPOLOGY_DICT_INDEX, 'dict:{"k":"v"}')
+        except ConfError:
+            Log.debug(f"index {const.TOPOLOGY_DICT_INDEX} is already loaded")
         Conf.copy(const.CONSUMER_INDEX, const.TOPOLOGY_DICT_INDEX)
         payload = {
             const.CLUSTER : Conf.get(const.TOPOLOGY_DICT_INDEX, const.CLUSTER),
@@ -180,7 +187,7 @@ class TopologyFactory:
         "A method to get a instance of specific topology"
         # TODO: CHANGE name "backend to more appropriate one"
         topology = {
-                const.CORTX : CortxTopology(config.get(const.url))
+                const.CORTX : CortxTopology(config.get(const.URL))
         }
         obj_topology = topology[config.get(const.BACKEND)]
         return obj_topology
