@@ -65,15 +65,15 @@ class InformationService(ApplicationService):
         """
         Fetch list of of resorces of specific type.
         """
-        response = await self.get_topology()
-        payload  = response[const.TOPOLOGY]
+        topology = await self.get_topology()
+        payload  = topology[const.TOPOLOGY]
         if isinstance(payload, dict):
             response = {
                 const.ID: payload[const.ID],
                 resource: payload[resource]
             }
-            response[const.TOPOLOGY][resource] = response
-        return response
+            topology[const.TOPOLOGY] = response
+        return topology
 
     @Log.trace_method(Log.DEBUG)
     async def get_specific_resource(self, resource, resource_id):

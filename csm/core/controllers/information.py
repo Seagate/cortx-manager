@@ -122,7 +122,7 @@ class ResourceTopology(CsmView):
         # Call Information Service
         Log.info(f"Fetching deployment topology for resource:{resource}.")
         try:
-            response = await self._service.get_resources(resource)
+            response = await self._service.get_resource(resource)
         except CsmInternalError as e:
             raise e
         except Exception as e:

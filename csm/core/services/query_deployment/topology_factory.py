@@ -173,7 +173,6 @@ class TopologyFactory:
     "The Factory Class"
     def get_instance(config):
         "A method to get a instance of specific topology"
-        # TODO: CHANGE name "backend to more appropriate one"
         topology = {
                 const.CORTX : CortxTopology(config.get(const.URL))
         }
