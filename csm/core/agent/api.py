@@ -313,7 +313,7 @@ class CsmRestApi(CsmApi, ABC):
         if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
             # This block get executed when number of request reaches the request quota
             CsmRestApi.__nblocked += 1
-            msg = (f"The request is blocked because the number of requests reached threshold\n"
+            msg = (f"[{request.request_id}] The request is blocked because the number of requests reached threshold\n"
                    f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
             Log.warn(msg)
             return web.Response(status=429, text="Too many requests")
@@ -343,13 +343,13 @@ class CsmRestApi(CsmApi, ABC):
             conf_key = CsmRestApi._retrieve_config(request)
             if conf_key.lower() == const.ENABLE:
                 is_public = False
-        Log.debug(f'{"Public" if is_public else "Non-public"}: {request}')
+        Log.debug(f'[{request.request_id}]{"Public" if is_public else "Non-public"}: {request}')
         try:
             if not is_public:
                 session_id = CsmRestApi._extract_bearer(request.headers)
                 session = await CsmRestApi._validate_bearer(
                     request.app.login_service, session_id)
-                Log.info("Session token validated. User:"\
+                Log.info(f"[{request.request_id}]Session token validated. User:"\
                     f" {session.credentials.user_id}")
         except CsmNotFoundError as e:
             CsmRestApi._unauthorised(e.error())
@@ -363,15 +363,15 @@ class CsmRestApi(CsmApi, ABC):
             # Check user permissions
             required = await cls._get_permissions(request)
             verdict = (request.session.permissions & required) == required
-            Log.debug(f'Required permissions: {required}')
-            Log.debug(f'User permissions: {request.session.permissions}')
-            Log.debug(f'Allow access: {verdict}')
+            Log.debug(f'[{request.request_id}] Required permissions: {required}')
+            Log.debug(f'[{request.request_id}] User permissions: {request.session.permissions}')
+            Log.debug(f'[{request.request_id}] Allow access: {verdict}')
             if not verdict:
                 Log.info(f"Authorization failed. User:"\
                 f" {request.session.credentials.user_id}")
                 raise CsmPermissionDenied("Access to the requested resource"\
                     " is forbidden")
-            Log.info(f"Authorization successful. User:"\
+            Log.info(f"[{request.request_id}]Authorization successful. User:"\
                 f" {request.session.credentials.user_id}")
         return await handler(request)
 
