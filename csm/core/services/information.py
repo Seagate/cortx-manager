@@ -61,65 +61,30 @@ class InformationService(ApplicationService):
         return response
 
     @Log.trace_method(Log.DEBUG)
-    async def get_resources(self, resource):
+    async def get_resource(self, resource):
         """
-        Fetch all resources from topology
+        Fetch list of of resorces of specific type.
         """
-        try:
-            topology = TopologyFactory.get_instance(self.config)
-            response = topology.get()
-        except CsmInternalError as e:
-            raise e
+        response = await self.get_topology()
         payload  = response[const.TOPOLOGY]
-        if isinstance(response[const.TOPOLOGY], dict):
-            response[const.TOPOLOGY] = {key:value for key, value in \
-                payload.items() if key == resource}
+        if isinstance(payload, dict):
+            response = {
+                const.ID: payload[const.ID],
+                resource: payload[resource]
+            }
+            response[const.TOPOLOGY][resource] = response
         return response
 
     @Log.trace_method(Log.DEBUG)
     async def get_specific_resource(self, resource, resource_id):
         """
-        Fetch specific resource from topology
+        Query specific resource using id.
         """
-        response = await self.get_resources(resource)
-        payload = response[const.TOPOLOGY][resource]
+        response = await self.get_resource(resource)
+        payload = response.get(const.TOPOLOGY).get(resource)
         if isinstance(payload, list):
             response[const.TOPOLOGY][resource] = [item for item in \
                 payload if item.get(const.ID) == resource_id]
             if len(response[const.TOPOLOGY][resource]) < 1:
                 raise CsmNotFoundError(f"Invalid resource_id: {resource_id}")
         return response
-
-    @Log.trace_method(Log.DEBUG)
-    async def get_views(self, resource, resource_id, view):
-        """
-        Fetch all view of specific resource topology
-        """
-
-        res = await self.get_specific_resource(resource, resource_id)
-        payload = res[const.TOPOLOGY][resource][0]
-        if isinstance(payload, dict):
-            response = {
-                const.ID: payload[const.ID],
-                view: payload[view]
-            }
-            res[const.TOPOLOGY][resource][0] = response
-        return res
-
-    @Log.trace_method(Log.DEBUG)
-    async def get_specific_view(self, **path_param):
-        """
-        Fetch specific view of specific resource from topology
-        """
-        resource = path_param[const.ARG_RESOURCE]
-        resource_id = path_param[const.ARG_RESOURCE_ID]
-        view = path_param[const.ARG_VIEW]
-        view_id = path_param[const.ARG_VIEW_ID]
-        res = await self.get_views(resource, resource_id, view)
-        payload = res[const.TOPOLOGY][resource][0][view]
-        if isinstance(payload, list):
-            res[const.TOPOLOGY][resource][0][view] = [item for item in \
-                payload if item.get(const.ID) == view_id]
-            if len(res[const.TOPOLOGY][resource][0][view]) < 1:
-                raise CsmNotFoundError(f"Invalid resource_id: {view_id}")
-        return res
