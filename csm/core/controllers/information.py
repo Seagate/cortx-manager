@@ -106,14 +106,14 @@ class Topology(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}")
 class ResourceTopology(CsmView):
     """
-    GET: Get information about all resources from deployment topology.
+    GET: Get topology of resource specified.
     """
     def __init__(self, request):
         super().__init__(request)
         self._service = self.request.app[const.INFORMATION_SERVICE]
 
     async def get(self):
-        """GET REST implementation to query information about all resources from deployment topology."""
+        """GET REST implementation to query information about resource from deployment topology."""
         Log.info(f"Processing request: {self.request.method} {self.request.path}")
         resource = self.request.match_info[const.ARG_RESOURCE]
         # Check for valid Resource
@@ -136,7 +136,7 @@ class ResourceTopology(CsmView):
 @CsmView._app_routes.view("/api/v2/system/topology/{resource}/{resource_id}")
 class SubresourceTopology(CsmView):
     """
-    GET: Get information about specific resource from deployment topology.
+    GET: Query information about specific resource from deployment topology.
     """
     def __init__(self, request):
         super().__init__(request)
@@ -152,7 +152,6 @@ class SubresourceTopology(CsmView):
            raise CsmNotFoundError(f"Invalid resource: {resource}")
         Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
         # Call Information Service
-        response = await self._service.get_specific_resource(resource, resource_id)
         try:
             response = await self._service.get_specific_resource(resource, resource_id)
         except CsmInternalError as e:

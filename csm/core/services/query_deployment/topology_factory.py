@@ -72,6 +72,7 @@ class CortxTopology(ITopology):
         """
         Get node details specific to cluster
         """
+        Log.debug("Creating payload for nodes")
         nodes = input_payload.get(const.NODE)
         res = []
         for node_id in nodes.keys():
@@ -93,6 +94,7 @@ class CortxTopology(ITopology):
         """
         Get storage_set details.
         """
+        Log.debug("Creating payload for storage_sets")
         response = [{const.ID:storage_set[const.NAME], const.DURABILITY:\
             self._get_durability(storage_set[const.DURABILITY])} \
             for storage_set in payload]
@@ -103,6 +105,7 @@ class CortxTopology(ITopology):
         Get Certificate details
         """
         #TODO: Add device certificate/domain certificate once available.
+        Log.debug("Creating payload for certificates")
         path = input_payload.get(const.CORTX).get(const.COMMON).get(const.SECURITY)\
             .get(const.SSL_CERTIFICATE)
         cert_details = SSLCertificate(path).get_certificate_details()
@@ -115,7 +118,7 @@ class CortxTopology(ITopology):
         """
         Generate payload for cluster with required attributes.
         """
-        Log.debug("Creating payload for resource")
+        Log.debug("Creating payload for resources")
         cluster = input_payload[const.CLUSTER]
         payload = dict()
         payload[const.ID] = cluster.get(const.ID)
