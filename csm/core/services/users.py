@@ -22,11 +22,15 @@ from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.common.queries import SortBy
 from csm.core.data.models.users import User, Passwd
-from csm.common.errors import (CsmNotFoundError, InvalidRequest, CsmPermissionDenied, ResourceExist)
+from csm.core.blogic import const
+from csm.common.errors import (CsmNotFoundError, InvalidRequest,
+    CsmPermissionDenied, ResourceExist)
 from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
-from csm.core.blogic import const
+from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.errors import DataAccessError
+from cortx.utils.common import ExponentialBackoff
 
 
 class UserManager:
@@ -34,9 +38,17 @@ class UserManager:
     The class encapsulates user management activities.
     This is intended to be used during user management and authorization
     """
+
+    MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX,
+            const.MAX_RETRY_COUNT))
+    RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX,
+            const.RETRY_SLEEP_DURATION))
+
     def __init__(self, storage: DataBaseProvider) -> None:
         self.storage = storage
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def create(self, user: User) -> User:
         """
         Stores a new user
@@ -66,10 +78,14 @@ class UserManager:
                 return user
         return None
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def delete(self, user_id: str) -> None:
         Log.debug(f"Delete user service user id:{user_id}")
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_list(self, offset: Optional[int] = None, limit: Optional[int] = None,
                        sort: Optional[SortBy] = None,
                        role: Optional[str] = None, username: Optional[str] = None) -> List[User]:
@@ -105,15 +121,21 @@ class UserManager:
         Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_list_alert_notification_emails(self) -> List[User]:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
         user_list = await self.storage(User).get(query)
         return [user.email_address for user in user_list]
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def count(self):
         return await self.storage(User).count(None)
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def save(self, user: User):
         """
         Stores an already existing user.
@@ -122,6 +144,8 @@ class UserManager:
         # TODO: validate the model
         await self.storage(User).store(user)
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def count_admins(self):
         """
         Counts the number of created CORTX admin users.
@@ -255,7 +279,7 @@ class CsmUserService(ApplicationService):
                 if role == const.CSM_SUPER_USER_ROLE and creator.user_role != const.CSM_SUPER_USER_ROLE:
                     raise CsmPermissionDenied("Only admin user can create other admin users")
 
-            existing_users_count = await self.get_user_count()
+            existing_users_count = await self.user_mgr.count()
             if existing_users_count >= self.users_quota and self.users_quota > 0:
                 raise CsmPermissionDenied("User creation failed. Maximum user limit reached.")
 
@@ -298,12 +322,6 @@ class CsmUserService(ApplicationService):
             role, username)
 
         return [self._user_to_dict(x) for x in user_list]
-
-    async def get_user_count(self):
-        """
-        Return the count of existing users
-        """
-        return await self.user_mgr.count()
 
     async def delete_user(self, user_id: str, loggedin_user_id: str):
         """ User deletion """

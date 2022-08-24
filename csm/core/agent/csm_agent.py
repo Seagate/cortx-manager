@@ -160,6 +160,13 @@ class CsmAgent:
         if not result:
             raise CsmInternalError("Consul endpoint not found.")
         return protocol, host, port, secret, consul_endpoint
+
+    @staticmethod
+    @ExponentialBackoff(exception=VError, tries=const.MAX_RETRY,
+        cap=const.SLEEP_DURATION)
+    def _validate_consul_service(consul_host,consul_port):
+        ConsulV().validate_service_status(consul_host,consul_port)
+
     @staticmethod
     def load_csm_config_indices():
         """Load CSM configuration from the database."""
@@ -168,7 +175,7 @@ class CsmAgent:
         _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV().validate_service_status(consul_host, consul_port)
+                CsmAgent._validate_consul_service(consul_host, consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
                           f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
@@ -237,12 +244,16 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(
         os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
     sys.path.append(os.path.join(
-        os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..', '..'))
+        os.path.dirname(pathlib.Path(os.path.realpath(__file__))),
+            '..', '..', '..'))
     from cortx.utils.log import Log
+    from cortx.utils.conf_store.conf_store import Conf
+    from cortx.utils.validator.v_consul import ConsulV
+    from cortx.utils.validator.error import VError
+    from cortx.utils.common import ExponentialBackoff
     from csm.common.runtime import Options
     Options.parse(sys.argv)
     from csm.common.conf import ConfSection, DebugConf
-    from cortx.utils.conf_store.conf_store import Conf
     from csm.common.payload import Json
     from csm.core.blogic import const
     from csm.core.services.health import HealthAppService
@@ -250,13 +261,13 @@ if __name__ == '__main__':
     # from csm.core.services.stats import StatsAppService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
-    from csm.core.services.sessions import QuotaSessionManager, LoginService, AuthService
+    from csm.core.services.sessions import (QuotaSessionManager,
+        LoginService, AuthService)
     from csm.core.agent.api import CsmRestApi
     # from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework
-    from cortx.utils.validator.v_consul import ConsulV
-    from cortx.utils.validator.error import VError
-    from csm.core.services.storage_capacity import StorageCapacityService, S3CapacityService
+    from csm.core.services.storage_capacity import (StorageCapacityService,
+        S3CapacityService)
     from csm.common.errors import CsmInternalError
     # from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
@@ -264,7 +275,7 @@ if __name__ == '__main__':
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
-    from csm.core.services.activities import ActivityService
+    from csm.core.services.activities import ActivityService    
 
     try:
         client = None

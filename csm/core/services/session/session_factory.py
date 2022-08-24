@@ -14,15 +14,18 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from typing import Optional
-from cortx.utils.data.db.db_provider import DataBaseProvider
+from datetime import datetime, timezone
 from csm.core.blogic import const
-from cortx.utils.data.access import Query
-from cortx.utils.data.access.filters import Compare
 from csm.core.services.permissions import PermissionSet
 from csm.core.data.models.session import SessionModel
 from csm.common.errors import CsmInternalError
 from cortx.utils.conf_store.conf_store import Conf
-from datetime import datetime, timezone
+from cortx.utils.data.access import Query
+from cortx.utils.data.access.filters import Compare
+from cortx.utils.data.db.db_provider import DataBaseProvider
+from cortx.utils.errors import DataAccessError
+from cortx.utils.common import ExponentialBackoff
+
 
 class SessionCredentials:
     """ Base class for a variying part of the session
@@ -121,6 +124,12 @@ class InMemory:
         self._stg[session.session_id] = session
 
 class Database:
+
+    MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.MAX_RETRY_COUNT))
+    RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.RETRY_SLEEP_DURATION))
+
     def __init__(self, storage: DataBaseProvider):
         """
         Instantiation Method for Database class
@@ -146,21 +155,26 @@ class Database:
                                                         session._permissions._items)
         return sessionModel
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def delete(self, session_id: Session.Id) -> None:
-        await self.storage(SessionModel).delete(Compare(SessionModel._session_id, '=', session_id))
+        await self.storage(SessionModel).delete(
+            Compare(SessionModel._session_id, '=', session_id))
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get(self, session_id: Session.Id) -> Optional[Session]:
-        query = Query().filter_by(Compare(SessionModel._session_id, '=', session_id))
+        query = Query().filter_by(
+            Compare(SessionModel._session_id, '=', session_id))
         session__model_list = await self.storage(SessionModel).get(query)
-        # Storage get() -> param query: session id
-        # returns empty list or list with session model object which satisfy the passed query condition
-
         session_list = await self.convert_model_to_session(session__model_list)
         if session_list:
             return session_list[0]
         else:
             return None
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_all(self):
         # Convert SessionModel to Session
         query = Query()
@@ -168,6 +182,8 @@ class Database:
         session_list = await self.convert_model_to_session(session__model_list)
         return session_list
 
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
         sessionModel = await self.convert_session_to_model(session)

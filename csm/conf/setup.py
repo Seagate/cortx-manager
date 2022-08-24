@@ -26,6 +26,7 @@ from csm.common.service_urls import ServiceUrls
 from csm.common.conf import Security
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.validator.v_confkeys import ConfKeysV
+from cortx.utils.common import ExponentialBackoff
 client = None
 
 
@@ -79,13 +80,19 @@ class Setup:
         return protocol, host, port, secret, consul_endpoint
 
     @staticmethod
+    @ExponentialBackoff(exception=VError, tries=const.MAX_RETRY,
+        cap=const.SLEEP_DURATION)
+    def validate_consul_service(consul_host,consul_port):
+        ConsulV().validate_service_status(consul_host,consul_port)
+
+    @staticmethod
     def load_csm_config_indices():
         Log.info("Loading CSM configuration")
         set_config_flag = False
         _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:
             try:
-                ConsulV().validate_service_status(consul_host,consul_port)
+                Setup.validate_consul_service(consul_host,consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
