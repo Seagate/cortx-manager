@@ -32,7 +32,7 @@ from csm.core.controllers.rgw.s3.bucket import S3BucketView
 from csm.core.controllers.information import VersionInformationView
 from csm.core.controllers.activities import ActivitiesListView, ActivitiesView
 from csm.core.controllers.information import (Topology, ResourceTopology,
-                                            SubresourceTopology, TopologyView, TopologySubview)
+                                            SubresourceTopology)
 
 class CsmRoutes():
     """
