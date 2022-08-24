@@ -53,13 +53,15 @@ class CortxTopology(ITopology):
         """
         payload = dict()
         payload[const.ID] = node_id
-        payload[const.VERSION] = node.get(const.PROVISIONING).get(const.VERSION)
+        if node.get(const.PROVISIONING):
+            payload[const.VERSION] = node.get(const.PROVISIONING).get(const.VERSION)
         services = self._get_services(node[const.COMPONENTS])
         if services:
             payload[const.SERVICES] = services
         payload[const.TYPE] = node.get(const.TYPE)
         payload[const.STORAGE_SET] = node.get(const.STORAGE_SET)
-        payload[const.DEPLOYMENT_TIME] = node.get(const.PROVISIONING).get(const.TIME)
+        if node.get(const.PROVISIONING):
+            payload[const.DEPLOYMENT_TIME] = node.get(const.PROVISIONING).get(const.TIME)
         payload[const.HOSTNAME] = node.get(const.HOSTNAME)
         if node.get(const.CVG):
             for cvg in node.get(const.CVG):
