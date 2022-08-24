@@ -367,7 +367,7 @@ class CsmRestApi(CsmApi, ABC):
             Log.debug(f'[{request.request_id}] User permissions: {request.session.permissions}')
             Log.debug(f'[{request.request_id}] Allow access: {verdict}')
             if not verdict:
-                Log.info(f"Authorization failed. User:"\
+                Log.info(f"[{request.request_id}] Authorization failed. User:"\
                 f" {request.session.credentials.user_id}")
                 raise CsmPermissionDenied("Access to the requested resource"\
                     " is forbidden")
