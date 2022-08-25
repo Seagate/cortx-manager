@@ -16,7 +16,6 @@
 import os
 import aiohttp
 import traceback
-from cortx.utils.validator.v_consul import ConsulV
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
 from csm.core.blogic import const

@@ -25,11 +25,12 @@ from csm.core.data.models.users import User, Passwd
 from csm.core.blogic import const
 from csm.common.errors import (CsmNotFoundError, InvalidRequest,
     CsmPermissionDenied, ResourceExist)
-from csm.common.utility import ExponentialBackoff
+from cortx.utils.common import ExponentialBackoff
 from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
 from cortx.utils.errors import DataAccessError
+from cortx.utils.conf_store.conf_store import Conf
 
 
 class UserManager:
@@ -38,10 +39,16 @@ class UserManager:
     This is intended to be used during user management and authorization
     """
 
+    MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.MAX_RETRY_COUNT))
+    RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.RETRY_SLEEP_DURATION))
+
     def __init__(self, storage: DataBaseProvider) -> None:
         self.storage = storage
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def create(self, user: User) -> User:
         """
         Stores a new user
@@ -71,12 +78,14 @@ class UserManager:
                 return user
         return None
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def delete(self, user_id: str) -> None:
         Log.debug(f"Delete user service user id:{user_id}")
         await self.storage(User).delete(Compare(User.user_id, '=', user_id))
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_list(self, offset: Optional[int] = None, limit: Optional[int] = None,
                        sort: Optional[SortBy] = None,
                        role: Optional[str] = None, username: Optional[str] = None) -> List[User]:
@@ -112,18 +121,21 @@ class UserManager:
         Log.debug(f"Get user list service query: {query}")
         return await self.storage(User).get(query)
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_list_alert_notification_emails(self) -> List[User]:
         """ return list of emails for user having alert_notification true"""
         query = Query().filter_by(Compare(User.alert_notification, '=', True))
         user_list = await self.storage(User).get(query)
         return [user.email_address for user in user_list]
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def count(self):
         return await self.storage(User).count(None)
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def save(self, user: User):
         """
         Stores an already existing user.
@@ -132,7 +144,8 @@ class UserManager:
         # TODO: validate the model
         await self.storage(User).store(user)
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def count_admins(self):
         """
         Counts the number of created CORTX admin users.

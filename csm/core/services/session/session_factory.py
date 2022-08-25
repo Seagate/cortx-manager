@@ -19,7 +19,7 @@ from csm.core.blogic import const
 from csm.core.services.permissions import PermissionSet
 from csm.core.data.models.session import SessionModel
 from csm.common.errors import CsmInternalError
-from csm.common.utility import ExponentialBackoff
+from cortx.utils.common import ExponentialBackoff
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.data.access import Query
 from cortx.utils.data.access.filters import Compare
@@ -125,8 +125,10 @@ class InMemory:
 
 class Database:
 
-    MAX_RETRY_COUNT = None
-    RETRY_SLEEP_DURATION = None
+    MAX_RETRY_COUNT = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.MAX_RETRY_COUNT))
+    RETRY_SLEEP_DURATION = int(Conf.get(const.CSM_GLOBAL_INDEX,
+        const.RETRY_SLEEP_DURATION))
 
     def __init__(self, storage: DataBaseProvider):
         """
@@ -153,12 +155,14 @@ class Database:
                                                         session._permissions._items)
         return sessionModel
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def delete(self, session_id: Session.Id) -> None:
         await self.storage(SessionModel).delete(
             Compare(SessionModel._session_id, '=', session_id))
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get(self, session_id: Session.Id) -> Optional[Session]:
         query = Query().filter_by(
             Compare(SessionModel._session_id, '=', session_id))
@@ -169,7 +173,8 @@ class Database:
         else:
             return None
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def get_all(self):
         # Convert SessionModel to Session
         query = Query()
@@ -177,7 +182,8 @@ class Database:
         session_list = await self.convert_model_to_session(session__model_list)
         return session_list
 
-    @ExponentialBackoff(exception=DataAccessError)
+    @ExponentialBackoff(exception=DataAccessError, tries=MAX_RETRY_COUNT,
+        cap=RETRY_SLEEP_DURATION)
     async def store(self, session: Session) -> None:
         # Convert session to SessionModel
         sessionModel = await self.convert_session_to_model(session)

@@ -33,11 +33,55 @@ class CsmAgent:
     """CSM Core Agent / Deamon."""
 
     @staticmethod
+    def _get_consul_config():
+        result : bool = False
+        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
+        protocol, host, port, consul_endpoint = '','','',''
+        count_endpoints : str = int(Conf.get(const.CONSUMER_INDEX,
+            const.CONSUL_NUM_ENDPOINTS_KEY))
+        for count in range(count_endpoints):
+            endpoint = Conf.get(const.CONSUMER_INDEX,
+                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
+            if endpoint:
+                protocol, host, port = ServiceUrls.parse_url(endpoint)
+                if protocol == "https" or protocol == "http":
+                    result = True
+                    consul_endpoint = endpoint
+                    break
+        if not result:
+            raise ValueError("Consul endpoint not found.")
+        return protocol, host, port, secret, consul_endpoint
+
+    @staticmethod
+    def init_configs():
+        """Load CSM configuration from the database."""
+        Conf.load(const.CONSUMER_INDEX, Options.config)
+        _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
+        Conf.load(const.CSM_GLOBAL_INDEX,
+                    f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
+        Conf.load(const.DATABASE_INDEX,
+                    f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+        Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
+        Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
+        Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
+        Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
+
+    @staticmethod
+    def init_logs():
+        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
+        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
+        log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
+        Log.init("csm_agent",
+                 backup_count=int(backup_count) if backup_count else None,
+                 file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+                 level=log_level, console_output=True,
+                 console_output_level='INFO')
+
+    @staticmethod
     def init():
         """Initializa CSM agent."""
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
-        CsmAgent._load_csm_config_indices()
-        CsmAgent._init_logs()
         db_config = {
             'databases': Conf.get(const.DB_DICT_INDEX, 'databases'),
             'models': Conf.get(const.DB_DICT_INDEX, 'models')
@@ -105,18 +149,6 @@ class CsmAgent:
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod
-    def _init_logs():
-        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
-        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
-        log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
-        Log.init("csm_agent",
-                 backup_count=int(backup_count) if backup_count else None,
-                 file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
-                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-                 level=log_level, console_output=True,
-                 console_output_level='INFO')
-
-    @staticmethod
     def _configure_cluster_management_service():
         # Cluster Management configuration
         cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
@@ -133,51 +165,6 @@ class CsmAgent:
         CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
         CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
         CsmRestApi._app[const.S3_CAPACITY_SERVICE] = S3CapacityService(s3_plugin_obj)
-
-    @staticmethod
-    def _get_consul_config():
-        result : bool = False
-        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        protocol, host, port, consul_endpoint = '','','',''
-        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.CONSUL_NUM_ENDPOINTS_KEY)
-        try:
-            count_endpoints = int(count_endpoints)
-        except ValueError:
-            raise CsmInternalError("Consul num_endpoints value is not a valid"
-                " integer.")
-        for count in range(count_endpoints):
-            endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
-            if endpoint:
-                protocol, host, port = ServiceUrls.parse_url(endpoint)
-                if protocol == "https" or protocol == "http":
-                    result = True
-                    consul_endpoint = endpoint
-                    Log.info(f"Fetching consul endpoint : {consul_endpoint}")
-                    break
-        if not result:
-            raise CsmInternalError("Consul endpoint not found.")
-        return protocol, host, port, secret, consul_endpoint
-
-    @staticmethod
-    def _load_csm_config_indices():
-        """Load CSM configuration from the database."""
-        Conf.load(const.CONSUMER_INDEX, Options.config)
-        _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
-        if consul_host and consul_port:
-            try:
-                Conf.load(const.CSM_GLOBAL_INDEX,
-                          f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
-                Conf.load(const.DATABASE_INDEX,
-                          f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-                Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
-                Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
-                Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
-                Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
-            except ConfError as ce:
-                Log.error(f"Unable to load the config indexes from consul: {ce}")
-                raise CsmInternalError(desc="Unable to load the configurations")
 
     @staticmethod
     def _daemonize():
@@ -228,16 +215,39 @@ if __name__ == '__main__':
         os.path.dirname(pathlib.Path(__file__)), '..', '..', '..'))
     sys.path.append(os.path.join(
         os.path.dirname(pathlib.Path(os.path.realpath(__file__))), '..', '..'))
-    sys.path.append(os.path.join(
-        os.path.dirname(pathlib.Path(os.path.realpath(__file__))),
-            '..', '..', '..'))
-    from cortx.utils.log import Log
+    sys.path.append(os.path.join(os.path.dirname(
+        pathlib.Path(os.path.realpath(__file__))),'..', '..', '..'))
+
+    # Note: Do not change the sequence of the imports.
+    # Below are the min & must have imports to load configs and logs init.
     from cortx.utils.conf_store.conf_store import (Conf, ConfError)
+    from cortx.utils.log import Log
     from csm.core.blogic import const
     from csm.common.runtime import Options
+    from csm.common.service_urls import ServiceUrls
+
+    try:
+        # Note: No Conf interface calls should happen before below fun execution.
+        Options.parse(sys.argv)
+        CsmAgent.init_configs()
+    except ValueError as ve:
+        print("Error while fetching config backend url: ",ve)
+    except ConfError as ce:
+        print("Error while initialising configs: ", ce)
+    except Exception as e:
+        print("Unknown error while initialising configs: ", e)
+        print(traceback.format_exc())        
+
+    try:
+        # No logging should happen before below fun execution.
+        CsmAgent.init_logs()
+    except Exception as e:
+        print("Unknown error while initialising logs: ", e)
+        print(traceback.format_exc())
+
+    # CSM related imports
     from csm.common.conf import ConfSection, DebugConf
     from csm.common.payload import Json
-    from csm.core.blogic import const
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
     # from csm.core.services.stats import StatsAppService
@@ -250,18 +260,14 @@ if __name__ == '__main__':
     from csm.common.ha_framework import CortxHAFramework
     from csm.core.services.storage_capacity import (StorageCapacityService,
         S3CapacityService)
-    from csm.common.errors import CsmInternalError
     # from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
-    from csm.common.service_urls import ServiceUrls
     from csm.core.services.activities import ActivityService
 
     try:
-        Options.parse(sys.argv)
-        client = None
         CsmAgent.init()
         CsmAgent.run()
     except Exception as e:
