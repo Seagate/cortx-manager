@@ -175,7 +175,7 @@ class CortxTopology(ITopology):
         return payload
 
 class TopologyFactory:
-    "The Factory Class"
+    "Factory Class to get topology"
     def get_instance(config):
         "A method to get a instance of specific topology"
         topology = {

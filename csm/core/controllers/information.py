@@ -89,8 +89,8 @@ class Topology(CsmView):
 
     async def get(self):
         """GET REST implementation for complete topology."""
-        Log.info(f"Processing request: {self.request.method} {self.request.path}")
-        # Call Information Service
+        Log.info(f"[{self.request.request_id}] Processing request: "
+            f"{self.request.method} {self.request.path}")
         try:
             response = await self._service.get_topology()
         except CsmInternalError as e:
@@ -98,8 +98,8 @@ class Topology(CsmView):
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
-        Log.info(
-            f"Processed request: {self.request.method} {self.request.path}")
+        Log.info(f"[{self.request.request_id}] Processed request: "
+            f"{self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -114,13 +114,13 @@ class ResourceTopology(CsmView):
 
     async def get(self):
         """GET REST implementation to query information about resource from deployment topology."""
-        Log.info(f"Processing request: {self.request.method} {self.request.path}")
+        Log.info(f"[{self.request.request_id}] Processing request: "
+            f"{self.request.method} {self.request.path}")
         resource = self.request.match_info[const.ARG_RESOURCE]
-        # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
             raise CsmNotFoundError(f"Invalid resource: {resource}")
-        # Call Information Service
-        Log.info(f"Fetching deployment topology for resource:{resource}.")
+        Log.info(f"[{self.request.request_id}] Fetching deployment "
+            f"topology for resource:{resource}.")
         try:
             response = await self._service.get_resource(resource)
         except CsmInternalError as e:
@@ -128,8 +128,8 @@ class ResourceTopology(CsmView):
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
-        Log.info(
-            f"Processed request: {self.request.method} {self.request.path}")
+        Log.info(f"[{self.request.request_id}] Processed request: "
+            f"{self.request.method} {self.request.path}")
         return CsmResponse(response)
 
 @CsmAuth.public
@@ -144,14 +144,14 @@ class SubresourceTopology(CsmView):
 
     async def get(self):
         """GET REST implementation to query information about specific resource from deployment topology."""
-        Log.info(f"Processing request: {self.request.method} {self.request.path}")
+        Log.info(f"[{self.request.request_id}] Processing request: "
+            f"{self.request.method} {self.request.path}")
         resource = self.request.match_info[const.ARG_RESOURCE]
         resource_id = self.request.match_info[const.ARG_RESOURCE_ID]
-        # Check for valid Resource
         if resource not in const.TOPOLOGY_RESOURCES:
            raise CsmNotFoundError(f"Invalid resource: {resource}")
-        Log.info(f"Fetching deployment topology for resource:{resource} and resource_id:{resource_id}.")
-        # Call Information Service
+        Log.info(f"[{self.request.request_id}] Fetching deployment topology for "
+            f"resource:{resource} and resource_id:{resource_id}.")
         try:
             response = await self._service.get_specific_resource(resource, resource_id)
         except CsmInternalError as e:
@@ -161,5 +161,6 @@ class SubresourceTopology(CsmView):
         except Exception as e:
             Log.error(f'Unable to fetch topology information: {e}')
             raise CsmInternalError("Unable to fetch topology information.")
-        Log.info(f"Processed request: {self.request.method} {self.request.path}")
+        Log.info(f"[{self.request.request_id}] Processed request: "
+            f"{self.request.method} {self.request.path}")
         return CsmResponse(response)
