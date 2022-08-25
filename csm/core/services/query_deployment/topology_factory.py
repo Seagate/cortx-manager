@@ -123,7 +123,7 @@ class CortxTopology(ITopology):
         Log.debug("Creating payload for resources")
         cluster = input_payload[const.CLUSTER]
         payload = dict()
-        payload[const.ID] = cluster.get(const.ID)
+        payload[const.CLUSTER_ID] = cluster.get(const.ID)
         payload[const.VERSION] = input_payload.get(const.CORTX).\
                     get(const.COMMON).get(const.RELEASE).get(const.VERSION)
         payload[const.NODES] = self._get_nodes(input_payload)
