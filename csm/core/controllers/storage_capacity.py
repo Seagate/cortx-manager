@@ -160,7 +160,7 @@ class S3CapacityTenantView(CsmView):
         resource_id = self.request.match_info[const.ID]
         tenant = self.request.match_info[const.TENANT]
         resource_id = tenant+'$'+resource_id
-        Log.info(f"Handling GET s3 capacity request"
+        Log.info(f"[{self.request.request_id}] Handling GET s3 capacity request"
                   f"resource={resource} and id ={resource_id}")
         try:
             schema = S3CapacitySchema()
