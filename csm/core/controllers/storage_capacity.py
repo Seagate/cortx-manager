@@ -141,3 +141,32 @@ class S3CapacityView(CsmView):
             f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
+
+
+@CsmView._app_routes.view("/api/v2/capacity/s3/{tenant}/{resource}/{id}")
+class S3CapacityTenantView(CsmView):
+    """
+    GET REST API view implementation for getting capacity usage for specific user
+    """
+    def __init__(self, request):
+        """Get user level capacity usage Init."""
+        super().__init__(request)
+        self._service: S3CapacityService = self.request.app[const.S3_CAPACITY_SERVICE]
+
+    @CsmAuth.permissions({Resource.CAPACITY: {Action.LIST}})
+    @Log.trace_method(Log.DEBUG)
+    async def get(self):
+        resource = self.request.match_info[const.ARG_RESOURCE]
+        resource_id = self.request.match_info[const.ID]
+        tenant = self.request.match_info[const.TENANT]
+        resource_id = tenant+'$'+resource_id
+        Log.info(f"Handling GET s3 capacity request"
+                  f"resource={resource} and id ={resource_id}")
+        try:
+            schema = S3CapacitySchema()
+            schema.load({const.ARG_RESOURCE:resource})
+        except ValidationError as val_err:
+            raise InvalidRequest(f"{ValidationErrorFormatter.format(val_err)}")
+        with ServiceError.guard_service():
+            response = await self._service.get_usage(resource, resource_id)
+            return CsmResponse(response)
