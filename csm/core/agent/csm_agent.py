@@ -175,12 +175,9 @@ class CsmAgent:
                 Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
                 Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
                 Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
-            except VError as ve:
-                Log.error(f"Unable to fetch the configurations from consul: {ve}")
-                raise CsmInternalError(desc="Unable to fetch the configurations")
             except ConfError as ce:
-                Log.error(f"Unable to fetch the configurations from consul: {ce}")
-                raise CsmInternalError(desc="Unable to fetch the configurations")
+                Log.error(f"Unable to load the config indexes from consul: {ce}")
+                raise CsmInternalError(desc="Unable to load the configurations")
 
     @staticmethod
     def _daemonize():
@@ -236,7 +233,6 @@ if __name__ == '__main__':
             '..', '..', '..'))
     from cortx.utils.log import Log
     from cortx.utils.conf_store.conf_store import (Conf, ConfError)
-    from cortx.utils.validator.error import VError
     from csm.core.blogic import const
     from csm.common.runtime import Options
     from csm.common.conf import ConfSection, DebugConf

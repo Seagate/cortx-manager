@@ -19,7 +19,6 @@ import traceback
 from cortx.utils.validator.v_consul import ConsulV
 from aiohttp.client_exceptions import ClientConnectionError
 from cortx.utils.log import Log
-from cortx.utils.validator.error import VError
 from csm.core.blogic import const
 from csm.common.errors import CsmSetupError, ResourceExist
 from csm.common.service_urls import ServiceUrls
@@ -79,20 +78,21 @@ class Setup:
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-            except VError as ve:
-                Log.error(f"Unable to fetch the configurations from consul: {ve}")
-                raise CsmSetupError("Unable to fetch the configurations")
             except ConfError as ce:
-                Log.error(f"Unable to fetch the configurations from consul: {ce}")
-                raise CsmSetupError(desc="Unable to fetch the configurations")
+                Log.error(f"Unable to load the config indexes from consul: {ce}")
+                raise CsmSetupError(desc="Unable to load the configurations")
 
     @staticmethod
     def copy_base_configs():
-        Log.info("Copying Csm base configurations to destination indices")
-        Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
-        Conf.load("DATABASE_SOURCE_CONF_INDEX",f"yaml://{const.DB_SOURCE_CONF}")
-        Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
-        Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
+        try:
+            Log.info("Copying Csm base configurations to destination indices")
+            Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
+            Conf.load("DATABASE_SOURCE_CONF_INDEX",f"yaml://{const.DB_SOURCE_CONF}")
+            Conf.copy("CSM_SOURCE_CONF_INDEX", const.CSM_GLOBAL_INDEX)
+            Conf.copy("DATABASE_SOURCE_CONF_INDEX", const.DATABASE_INDEX)
+        except ConfError as ce:
+            Log.error(f"Unable to move source configurations to consul: {ce}")
+            raise CsmSetupError(desc="Unable to move source configurations to db")
 
     @staticmethod
     def load_default_config():
