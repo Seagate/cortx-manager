@@ -114,7 +114,10 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        topology_config = CsmAgent.get_topology_config()
+        topology_config = {
+            const.NAME : Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_NAME),
+            const.URL : Options.config
+            }
         CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService(topology_config)
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
@@ -135,18 +138,6 @@ class CsmAgent:
         CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
         CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
         CsmRestApi._app[const.S3_CAPACITY_SERVICE] = S3CapacityService(s3_plugin_obj)
-
-    @staticmethod
-    def get_topology_config():
-        host = Conf.get(const.DATABASE_INDEX, const.CONSUL_CONFIG_HOST)
-        port = Conf.get(const.DATABASE_INDEX, const.DB_CONSUL_CONFIG_PORT)
-        index = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_INDEX)
-        backend = Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_BACKEND)
-        topology_config = {
-            const.BACKEND : Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_OBJECT_STORE),
-            const.URL : f"{backend}://{host}:{port}/{index}"
-            }
-        return topology_config
 
     @staticmethod
     def _get_consul_config():

@@ -181,5 +181,5 @@ class TopologyFactory:
         topology = {
                 const.CORTX : CortxTopology(config.get(const.URL))
         }
-        obj_topology = topology[config.get(const.BACKEND)]
+        obj_topology = topology[config.get(const.NAME).lower()]
         return obj_topology
