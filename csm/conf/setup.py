@@ -24,9 +24,8 @@ from csm.core.blogic import const
 from csm.common.errors import CsmSetupError, ResourceExist
 from csm.common.service_urls import ServiceUrls
 from csm.common.conf import Security
-from cortx.utils.conf_store.conf_store import Conf
+from cortx.utils.conf_store.conf_store import (Conf, ConfError)
 from cortx.utils.validator.v_confkeys import ConfKeysV
-from cortx.utils.common import ExponentialBackoff
 client = None
 
 
@@ -42,16 +41,6 @@ class Setup:
         self._is_env_dev = False
         self.machine_id = Conf.machine_id
         self.conf_store_keys = {}
-
-    @staticmethod
-    def _set_csm_conf_path():
-        conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY,
-                                                     const.CORTX_CONFIG_DIR)
-        conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
-        if not os.path.exists(conf_path):
-            os.makedirs(conf_path, exist_ok=True)
-        Log.info(f"Setting Config saving path:{conf_path} from confstore")
-        return conf_path
 
     @staticmethod
     def get_consul_config():
@@ -79,37 +68,23 @@ class Setup:
             raise CsmSetupError("Consul endpoint not found.")
         return protocol, host, port, secret, consul_endpoint
 
-    @staticmethod
-    @ExponentialBackoff(exception=VError, tries=const.MAX_RETRY,
-        cap=const.SLEEP_DURATION)
-    def validate_consul_service(consul_host,consul_port):
-        ConsulV().validate_service_status(consul_host,consul_port)
 
     @staticmethod
     def load_csm_config_indices():
         Log.info("Loading CSM configuration")
-        set_config_flag = False
         _, consul_host, consul_port, _, _ = Setup.get_consul_config()
         if consul_host and consul_port:
             try:
-                Setup.validate_consul_service(consul_host,consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-                set_config_flag = True
             except VError as ve:
                 Log.error(f"Unable to fetch the configurations from consul: {ve}")
                 raise CsmSetupError("Unable to fetch the configurations")
-
-        if not set_config_flag:
-            config_path = Setup._set_csm_conf_path()
-            Log.info(f"Setting CSM configuration to local storage: {config_path}")
-            Conf.load(const.CSM_GLOBAL_INDEX,
-                    f"yaml://{config_path}/{const.CSM_CONF_FILE_NAME}")
-            Conf.load(const.DATABASE_INDEX,
-                    f"yaml://{config_path}/{const.DB_CONF_FILE_NAME}")
-            set_config_flag = True
+            except ConfError as ce:
+                Log.error(f"Unable to fetch the configurations from consul: {ce}")
+                raise CsmSetupError(desc="Unable to fetch the configurations")
 
     @staticmethod
     def copy_base_configs():
