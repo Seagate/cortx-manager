@@ -69,7 +69,7 @@ class InformationService(ApplicationService):
         payload  = topology[const.TOPOLOGY]
         if isinstance(payload, dict):
             response = {
-                const.ID: payload[const.ID],
+                const.CLUSTER_ID: payload[const.CLUSTER_ID],
                 resource: payload[resource]
             }
             topology[const.TOPOLOGY] = response
