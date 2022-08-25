@@ -162,7 +162,7 @@ class CsmAgent:
 
     @staticmethod
     def _load_csm_config_indices():
-        """Load CSM configuration from the database.""" 
+        """Load CSM configuration from the database."""
         Conf.load(const.CONSUMER_INDEX, Options.config)
         _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:

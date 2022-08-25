@@ -29,7 +29,6 @@ from csm.common.utility import ExponentialBackoff
 from cortx.utils.data.db.db_provider import DataBaseProvider
 from cortx.utils.data.access.filters import Compare, And
 from cortx.utils.data.access import Query, SortOrder
-from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.errors import DataAccessError
 
 
