@@ -35,22 +35,9 @@ class CsmAgent:
     @staticmethod
     def init():
         """Initializa CSM agent."""
-        CsmAgent.load_csm_config_indices()
-        Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
-        Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
-        Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
-        Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
-        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
-        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
-        log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
-        Log.init("csm_agent",
-                 backup_count=int(backup_count) if backup_count else None,
-                 file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
-                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
-                 level=log_level, console_output=True,
-                 console_output_level='INFO')
-
         from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+        CsmAgent._load_csm_config_indices()
+        CsmAgent._init_logs()
         db_config = {
             'databases': Conf.get(const.DB_DICT_INDEX, 'databases'),
             'models': Conf.get(const.DB_DICT_INDEX, 'models')
@@ -118,6 +105,18 @@ class CsmAgent:
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod
+    def _init_logs():
+        backup_count = Conf.get(const.CSM_GLOBAL_INDEX, "Log>total_files")
+        file_size_in_mb = Conf.get(const.CSM_GLOBAL_INDEX, "Log>file_size")
+        log_level = "DEBUG" if Options.debug else Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_level")
+        Log.init("csm_agent",
+                 backup_count=int(backup_count) if backup_count else None,
+                 file_size_in_mb=int(file_size_in_mb) if file_size_in_mb else None,
+                 log_path=Conf.get(const.CSM_GLOBAL_INDEX, "Log>log_path"),
+                 level=log_level, console_output=True,
+                 console_output_level='INFO')
+
+    @staticmethod
     def _configure_cluster_management_service():
         # Cluster Management configuration
         cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
@@ -162,37 +161,34 @@ class CsmAgent:
         return protocol, host, port, secret, consul_endpoint
 
     @staticmethod
-    @ExponentialBackoff(exception=VError, tries=const.MAX_RETRY,
-        cap=const.SLEEP_DURATION)
-    def _validate_consul_service(consul_host,consul_port):
-        ConsulV().validate_service_status(consul_host,consul_port)
-
-    @staticmethod
-    def load_csm_config_indices():
+    def _load_csm_config_indices():
         """Load CSM configuration from the database."""
-        set_config_flag = False
+        from cortx.utils.common import ExponentialBackoff
+        from cortx.utils.validator.error import VError
+
+        @ExponentialBackoff(exception=VError, tries=const.MAX_RETRY, cap=const.SLEEP_DURATION)
+        def _validate_consul_service(consul_host,consul_port):
+            ConsulV().validate_service_status(consul_host,consul_port)
+
         Conf.load(const.CONSUMER_INDEX, Options.config)
         _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
         if consul_host and consul_port:
             try:
-                CsmAgent._validate_consul_service(consul_host, consul_port)
+                _validate_consul_service(consul_host, consul_port)
                 Conf.load(const.CSM_GLOBAL_INDEX,
                           f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                 Conf.load(const.DATABASE_INDEX,
                           f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-                set_config_flag = True
+                Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
+                Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
+                Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
+                Conf.copy(const.DATABASE_INDEX, const.DB_DICT_INDEX)
             except VError as ve:
                 Log.error(f"Unable to fetch the configurations from consul: {ve}")
                 raise CsmInternalError(desc="Unable to fetch the configurations")
-
-        if not set_config_flag:
-            conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
-            csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
-            Conf.load(const.CSM_GLOBAL_INDEX,
-                      f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
-            Conf.load(const.DATABASE_INDEX,
-                      f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
-            set_config_flag = True
+            except ConfError as ce:
+                Log.error(f"Unable to fetch the configurations from consul: {ce}")
+                raise CsmInternalError(desc="Unable to fetch the configurations")
 
     @staticmethod
     def _daemonize():
@@ -247,12 +243,10 @@ if __name__ == '__main__':
         os.path.dirname(pathlib.Path(os.path.realpath(__file__))),
             '..', '..', '..'))
     from cortx.utils.log import Log
-    from cortx.utils.conf_store.conf_store import Conf
+    from cortx.utils.conf_store.conf_store import (Conf, ConfError)
     from cortx.utils.validator.v_consul import ConsulV
-    from cortx.utils.validator.error import VError
-    from cortx.utils.common import ExponentialBackoff
+    from csm.core.blogic import const
     from csm.common.runtime import Options
-    Options.parse(sys.argv)
     from csm.common.conf import ConfSection, DebugConf
     from csm.common.payload import Json
     from csm.core.blogic import const
@@ -275,9 +269,10 @@ if __name__ == '__main__':
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
-    from csm.core.services.activities import ActivityService    
+    from csm.core.services.activities import ActivityService
 
     try:
+        Options.parse(sys.argv)
         client = None
         CsmAgent.init()
         CsmAgent.run()
