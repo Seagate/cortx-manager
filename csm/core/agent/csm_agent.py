@@ -79,9 +79,9 @@ class CsmAgent:
                  console_output_level='INFO')
 
     @staticmethod
-    def init():
-        """Initializa CSM agent."""
-        from cortx.utils.data.db.db_provider import (DataBaseProvider, GeneralConfig)
+    def _getDataBaseProvider():
+        from cortx.utils.data.db.db_provider import (DataBaseProvider,
+            GeneralConfig)
         db_config = {
             'databases': Conf.get(const.DB_DICT_INDEX, 'databases'),
             'models': Conf.get(const.DB_DICT_INDEX, 'models')
@@ -93,28 +93,33 @@ class CsmAgent:
         db_config['databases']["consul_db"]["config"][const.PORT] = int(
             db_config['databases']["consul_db"]["config"][const.PORT])
         conf = GeneralConfig(db_config)
-        db = DataBaseProvider(conf)
+        return DataBaseProvider(conf)
 
-        # TODO: Remove the below line it only dumps the data when server starts.
-        # kept for debugging alerts_storage.add_data()
+    @staticmethod
+    def init():
+        """Initialises CSM agent."""
+
+        # Get DB provider based on database conf
+        db = CsmAgent._getDataBaseProvider()
 
         # Clearing cached files
         cached_files = glob.glob(const.CSM_TMP_FILE_CACHE_DIR + '/*')
         for f in cached_files:
             os.remove(f)
 
-        # CSM REST API initialization
+        # CSM REST API initialisation
         CsmRestApi.init()
 
         # system status
-        system_status_service = SystemStatusService()
-        CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = system_status_service
+        CsmRestApi._app[const.SYSTEM_STATUS_SERVICE] = SystemStatusService()
 
         # Heath configuration
         health_plugin = import_plugin_module(const.HEALTH_PLUGIN)
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
-        health_service = HealthAppService(health_plugin_obj)
-        CsmRestApi._app[const.HEALTH_SERVICE] = health_service
+        CsmRestApi._app[const.HEALTH_SERVICE] = \
+            HealthAppService(health_plugin_obj)
+
+        # Cluster Management Service
         CsmAgent._configure_cluster_management_service()
 
         # Archieve stat service
@@ -122,49 +127,64 @@ class CsmAgent:
         # time_series_provider = TimelionProvider(const.AGGREGATION_RULE)
         # time_series_provider.init()
         # CsmRestApi._app["stat_service"] = StatsAppService(time_series_provider)
+
         # User/Role/Session management services
         roles = Json(const.ROLES_MANAGEMENT).load()
         auth_service = AuthService()
         user_manager = UserManager(db)
         role_manager = RoleManager(roles)
-        active_users_quota = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_ACTIVE_USERS_QUOTA_KEY))
+        active_users_quota = int(Conf.get(const.CSM_GLOBAL_INDEX,
+            const.CSM_ACTIVE_USERS_QUOTA_KEY))
         session_manager = QuotaSessionManager(db, active_users_quota)
         CsmRestApi._app[const.SESSION_MGR_SERVICE ] = session_manager
         CsmRestApi._app.login_service = LoginService(auth_service,
                                                      user_manager,
                                                      role_manager,
                                                      session_manager)
+        CsmRestApi._app[const.ROLES_SERVICE] = RoleManagementService(role_manager)
+        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX,
+            const.CSM_MAX_USERS_ALLOWED))
+        CsmRestApi._app[const.CSM_USER_SERVICE] = \
+            CsmUserService(user_manager, max_users_allowed)
 
-        roles_service = RoleManagementService(role_manager)
-        CsmRestApi._app["roles_service"] = roles_service
         # S3 service
         CsmAgent._configure_s3_services()
 
-        max_users_allowed = int(Conf.get(const.CSM_GLOBAL_INDEX, const.CSM_MAX_USERS_ALLOWED))
-        user_service = CsmUserService(user_manager, max_users_allowed)
-        CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
-        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
-        # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
-        CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
+        # Capacity Service
+        CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = \
+            StorageCapacityService()
 
+        # Unsupported Features Service
+        # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = \
+        #   UnsupportedFeaturesService()
+
+        # Information Service
+        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+
+        # Activity Service
+        CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
+    
     @staticmethod
     def _configure_cluster_management_service():
         # Cluster Management configuration
-        cluster_management_plugin = import_plugin_module(const.CLUSTER_MANAGEMENT_PLUGIN)
-        cluster_management_plugin_obj = cluster_management_plugin.ClusterManagementPlugin(
-            CortxHAFramework())
-        cluster_management_service = ClusterManagementAppService(
-            cluster_management_plugin_obj)
-        CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = cluster_management_service
+        cluster_management_plugin = import_plugin_module(
+            const.CLUSTER_MANAGEMENT_PLUGIN)
+        cluster_management_plugin_obj = \
+            cluster_management_plugin.ClusterManagementPlugin(
+                CortxHAFramework())
+        CsmRestApi._app[const.CLUSTER_MANAGEMENT_SERVICE] = \
+            ClusterManagementAppService(cluster_management_plugin_obj)
 
     @staticmethod
     def _configure_s3_services():
         s3_plugin = import_plugin_module(const.RGW_PLUGIN)
         s3_plugin_obj = s3_plugin.RGWPlugin()
-        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = S3IAMUserService(s3_plugin_obj)
-        CsmRestApi._app[const.S3_BUCKET_SERVICE] = BucketService(s3_plugin_obj)
-        CsmRestApi._app[const.S3_CAPACITY_SERVICE] = S3CapacityService(s3_plugin_obj)
+        CsmRestApi._app[const.S3_IAM_USERS_SERVICE] = \
+            S3IAMUserService(s3_plugin_obj)
+        CsmRestApi._app[const.S3_BUCKET_SERVICE] = \
+            BucketService(s3_plugin_obj)
+        CsmRestApi._app[const.S3_CAPACITY_SERVICE] = \
+            S3CapacityService(s3_plugin_obj)
 
     @staticmethod
     def _daemonize():
@@ -197,6 +217,7 @@ class CsmAgent:
     @staticmethod
     def run():
         """Run CSM agent."""
+        from csm.common.conf import ConfSection, DebugConf
         https_conf = ConfSection(Conf.get(const.CSM_DICT_INDEX, "HTTPS"))
         debug_conf = DebugConf(ConfSection(Conf.get(const.CSM_DICT_INDEX, "DEBUG")))
         port = Conf.get(const.CSM_GLOBAL_INDEX, const.AGENT_PORT)
@@ -232,11 +253,14 @@ if __name__ == '__main__':
         CsmAgent.init_configs()
     except ValueError as ve:
         print("Error while fetching config backend url: ",ve)
+        os._exit(1)
     except ConfError as ce:
         print("Error while initialising configs: ", ce)
+        os._exit(1)
     except Exception as e:
         print("Unknown error while initialising configs: ", e)
-        print(traceback.format_exc())        
+        print(traceback.format_exc())
+        os._exit(1)     
 
     try:
         # No logging should happen before below fun execution.
@@ -244,28 +268,28 @@ if __name__ == '__main__':
     except Exception as e:
         print("Unknown error while initialising logs: ", e)
         print(traceback.format_exc())
+        os._exit(1)
 
-    # CSM related imports
-    from csm.common.conf import ConfSection, DebugConf
+    # CSM REST API and services related imports
     from csm.common.payload import Json
+    from csm.core.agent.api import CsmRestApi
     from csm.core.services.health import HealthAppService
     from csm.core.services.cluster_management import ClusterManagementAppService
-    # from csm.core.services.stats import StatsAppService
     from csm.core.services.users import CsmUserService, UserManager
     from csm.core.services.roles import RoleManagementService, RoleManager
     from csm.core.services.sessions import (QuotaSessionManager,
         LoginService, AuthService)
-    from csm.core.agent.api import CsmRestApi
-    # from csm.common.timeseries import TimelionProvider
     from csm.common.ha_framework import CortxHAFramework
     from csm.core.services.storage_capacity import (StorageCapacityService,
         S3CapacityService)
-    # from csm.core.services.unsupported_features import UnsupportedFeaturesService
     from csm.core.services.system_status import SystemStatusService
     from csm.core.services.rgw.s3.users import S3IAMUserService
     from csm.core.services.rgw.s3.bucket import BucketService
     from csm.core.services.information import InformationService
     from csm.core.services.activities import ActivityService
+    # from csm.core.services.stats import StatsAppService
+    # from csm.common.timeseries import TimelionProvider
+    # from csm.core.services.unsupported_features import UnsupportedFeaturesService
 
     try:
         CsmAgent.init()

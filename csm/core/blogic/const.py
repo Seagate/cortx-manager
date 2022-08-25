@@ -547,6 +547,7 @@ SYSTEM_STATUS_SERVICE = "system_status_service"
 CLUSTER_MANAGEMENT_SERVICE = "cluster_management_service"
 INFORMATION_SERVICE = "information_service"
 ACTIVITY_MANAGEMENT_SERVICE = "activity_management_service"
+ROLES_SERVICE = "roles_service"
 
 # System Status flight
 SYSTEM_STATUS_CONSUL = 'consul'
