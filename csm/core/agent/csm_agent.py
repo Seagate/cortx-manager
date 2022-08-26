@@ -114,7 +114,11 @@ class CsmAgent:
         CsmRestApi._app[const.CSM_USER_SERVICE] = user_service
         CsmRestApi._app[const.STORAGE_CAPACITY_SERVICE] = StorageCapacityService()
         # CsmRestApi._app[const.UNSUPPORTED_FEATURES_SERVICE] = UnsupportedFeaturesService()
-        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService()
+        topology_config = {
+            const.NAME : Conf.get(const.CSM_GLOBAL_INDEX, const.TOPOLOGY_NAME),
+            const.URL : Options.config
+            }
+        CsmRestApi._app[const.INFORMATION_SERVICE] = InformationService(topology_config)
         CsmRestApi._app[const.ACTIVITY_MANAGEMENT_SERVICE] = ActivityService()
 
     @staticmethod

@@ -17,9 +17,14 @@ from cortx.utils.log import Log
 from csm.core.blogic import const
 from csm.common.services import ApplicationService
 from cortx.utils.schema.release import Release
+from csm.common.errors import CsmInternalError, CsmNotFoundError
+from csm.core.services.query_deployment.topology_factory import TopologyFactory
 
 class InformationService(ApplicationService):
     """Version Comptibility Validation service class."""
+
+    def __init__(self, topology_config):
+        self.config = topology_config
 
     @Log.trace_method(Log.DEBUG)
     async def check_compatibility(self, **request_body):
@@ -41,4 +46,45 @@ class InformationService(ApplicationService):
             "compatible": status,
             "reason": reason
         }
+        return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_topology(self):
+        """
+        Get topology
+        """
+        try:
+            topology = TopologyFactory.get_instance(self.config)
+            response = topology.get()
+        except CsmInternalError as e:
+            raise e
+        return response
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_resource(self, resource):
+        """
+        Fetch list of of resorces of specific type.
+        """
+        topology = await self.get_topology()
+        payload  = topology[const.TOPOLOGY]
+        if isinstance(payload, dict):
+            response = {
+                const.CLUSTER_ID: payload[const.CLUSTER_ID],
+                resource: payload[resource]
+            }
+            topology[const.TOPOLOGY] = response
+        return topology
+
+    @Log.trace_method(Log.DEBUG)
+    async def get_specific_resource(self, resource, resource_id):
+        """
+        Query specific resource using id.
+        """
+        response = await self.get_resource(resource)
+        payload = response.get(const.TOPOLOGY).get(resource)
+        if isinstance(payload, list):
+            response[const.TOPOLOGY][resource] = [item for item in \
+                payload if item.get(const.ID) == resource_id]
+            if len(response[const.TOPOLOGY][resource]) < 1:
+                raise CsmNotFoundError(f"Invalid resource_id: {resource_id}")
         return response
