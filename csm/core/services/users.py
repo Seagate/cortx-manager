@@ -30,6 +30,7 @@ from cortx.utils.data.access import Query, SortOrder
 from csm.core.blogic import const
 from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.errors import DataAccessError
+from aiohttp.client_exceptions import ClientConnectorError
 
 
 class UserManager:
@@ -51,7 +52,7 @@ class UserManager:
                     Log.info(f"store user retry count: {retry}")
                     response = await self.storage(User).store(user)
                     break
-                except DataAccessError as e:
+                except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to store user: {e}")
                     if retry == self.MAX_RETRY_COUNT-1:
                         raise e
@@ -68,7 +69,7 @@ class UserManager:
                     Log.info(f"perform count operation retry count: {retry}")
                     count = await self.storage(User).count(filter)
                     break
-                except DataAccessError as e:
+                except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to perform count operation: {e}")
                     if retry == self.MAX_RETRY_COUNT-1:
                         raise e
@@ -85,7 +86,7 @@ class UserManager:
                     Log.info(f"get user retry count: {retry}")
                     response = await self.storage(User).get(query)
                     break
-                except DataAccessError as e:
+                except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to get user: {e}")
                     if retry == self.MAX_RETRY_COUNT-1:
                         raise e
@@ -102,7 +103,7 @@ class UserManager:
                     Log.info(f"delete user retry count: {retry}")
                     await self.storage(User).delete(Compare(User.user_id, '=', user_id))
                     break
-                except DataAccessError as e:
+                except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to delete user: {e}")
                     if retry == self.MAX_RETRY_COUNT-1:
                         raise e

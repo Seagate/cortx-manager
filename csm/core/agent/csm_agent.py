@@ -165,6 +165,7 @@ class CsmAgent:
         if not result:
             raise CsmInternalError("Consul endpoint not found.")
         return protocol, host, port, secret, consul_endpoint
+
     @staticmethod
     def load_csm_config_indices():
         """Load CSM configuration from the database."""
@@ -180,13 +181,13 @@ class CsmAgent:
                         f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
                     Conf.load(const.DATABASE_INDEX,
                         f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
+                    break
                 except VError as ve:
                     Log.error(f"Unable to fetch the configurations from consul: {ve}")
                     if retry == const.MAX_RETRY-1:
                         raise CsmInternalError("Unable to fetch the configurations")
                     time.sleep(const.SLEEP_DURATION)
-                set_config_flag = True
-                break
+            set_config_flag = True
 
         if not set_config_flag:
             conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)

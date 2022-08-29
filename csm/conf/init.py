@@ -36,7 +36,6 @@ class Init(Setup):
         :return:
         """
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
             Setup.setup_logs_init()
             Log.info("Init: Initiating Init phase.")
         except KvError as e:

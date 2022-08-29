@@ -549,7 +549,7 @@ INFORMATION_SERVICE = "information_service"
 ACTIVITY_MANAGEMENT_SERVICE = "activity_management_service"
 
 # System Status flight
-SYSTEM_STATUS_CONSUL = 'consul'
+CONSUL = 'consul'
 SYSTEM_STATUS_SUCCESS = 'success'
 
 # https status code
