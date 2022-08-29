@@ -100,6 +100,8 @@ class CapacityManagementView(CsmView):
             f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
         path_param = self.request.match_info[const.CAPACITY_RESOURCE]
+        Log.info(f"Handling GET implementation for getting cluster status data"
+                 f" with path param: {path_param}")
         resp = await self._service.get_cluster_data(path_param)
         if isinstance(resp, CapacityError):
             raise CsmHttpException(resp.http_status,
