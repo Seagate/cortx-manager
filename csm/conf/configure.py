@@ -26,6 +26,8 @@ from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 from cortx.utils.message_bus.error import MessageBusError
+from csm.common.utility import Utility
+from cortx.utils.validator.error import VError
 
 
 class Configure(Setup):
@@ -50,11 +52,11 @@ class Configure(Setup):
         :return:
         """
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            conf = command.options.get(const.CONFIG_URL)
+            Utility.load_csm_config_indices(conf)
             Setup.setup_logs_init()
             Log.info("Setup: Initiating Config phase.")
-            Setup.load_csm_config_indices()
-        except KvError as e:
+        except (KvError, VError) as e:
             Log.error(f"Config: Configuration loading failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
@@ -134,6 +136,11 @@ class Configure(Setup):
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, f"{const.DEPLOYMENT}>{const.MODE}",
                      const.DEV)
+        try:
+            Utility.validate_consul()
+        except VError as e:
+            Log.error(f"Unable to save the configurations to consul: {e}")
+            raise CsmSetupError("Unable to save the configurations")
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)
 

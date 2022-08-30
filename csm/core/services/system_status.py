@@ -28,7 +28,7 @@ class SystemStatusService(ApplicationService):
 
     def __init__(self):
         super(SystemStatusService, self).__init__()
-        self._action_map = {const.SYSTEM_STATUS_CONSUL: self._get_consul_status}
+        self._action_map = {const.CONSUL: self._get_consul_status}
 
     async def check_status(self, resources):
         """

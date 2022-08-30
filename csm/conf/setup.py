@@ -53,58 +53,6 @@ class Setup:
         return conf_path
 
     @staticmethod
-    def get_consul_config():
-        result : bool = False
-        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        protocol, host, port, consul_endpoint = '','','',''
-        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.CONSUL_NUM_ENDPOINTS_KEY)
-        try:
-            count_endpoints = int(count_endpoints)
-        except ValueError:
-            raise CsmSetupError("Consul num_endpoints value is not a valid"
-                " integer.")
-        for count in range(count_endpoints):
-            endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
-            if endpoint:
-                protocol, host, port = ServiceUrls.parse_url(endpoint)
-                if protocol == "https" or protocol == "http":
-                    result = True
-                    consul_endpoint = endpoint
-                    Log.info(f"Fetching consul endpoint : {consul_endpoint}")
-                    break
-        if not result:
-            raise CsmSetupError("Consul endpoint not found.")
-        return protocol, host, port, secret, consul_endpoint
-
-    @staticmethod
-    def load_csm_config_indices():
-        Log.info("Loading CSM configuration")
-        set_config_flag = False
-        _, consul_host, consul_port, _, _ = Setup.get_consul_config()
-        if consul_host and consul_port:
-            try:
-                ConsulV().validate_service_status(consul_host,consul_port)
-                Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
-                Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-                set_config_flag = True
-            except VError as ve:
-                Log.error(f"Unable to fetch the configurations from consul: {ve}")
-                raise CsmSetupError("Unable to fetch the configurations")
-
-        if not set_config_flag:
-            config_path = Setup._set_csm_conf_path()
-            Log.info(f"Setting CSM configuration to local storage: {config_path}")
-            Conf.load(const.CSM_GLOBAL_INDEX,
-                    f"yaml://{config_path}/{const.CSM_CONF_FILE_NAME}")
-            Conf.load(const.DATABASE_INDEX,
-                    f"yaml://{config_path}/{const.DB_CONF_FILE_NAME}")
-            set_config_flag = True
-
-    @staticmethod
     def copy_base_configs():
         Log.info("Copying Csm base configurations to destination indices")
         Conf.load("CSM_SOURCE_CONF_INDEX",f"yaml://{const.CSM_SOURCE_CONF}")
