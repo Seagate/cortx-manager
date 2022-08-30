@@ -14,7 +14,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
-import time
 import aiohttp
 import traceback
 from cortx.utils.validator.v_consul import ConsulV

@@ -36,7 +36,11 @@ class CsmAgent:
     @staticmethod
     def init():
         """Initializa CSM agent."""
-        CsmAgent.load_csm_config_indices()
+        conf = Options.config
+        try:
+            Utility.load_csm_config_indices(conf)
+        except (KvError, VError) as e:
+            raise CsmInternalError("Unable to load configurations")
         Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
         Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
         Conf.copy(const.CSM_GLOBAL_INDEX, const.CSM_DICT_INDEX)
@@ -141,64 +145,6 @@ class CsmAgent:
         CsmRestApi._app[const.S3_CAPACITY_SERVICE] = S3CapacityService(s3_plugin_obj)
 
     @staticmethod
-    def _get_consul_config():
-        result : bool = False
-        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
-        protocol, host, port, consul_endpoint = '','','',''
-        count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.CONSUL_NUM_ENDPOINTS_KEY)
-        try:
-            count_endpoints = int(count_endpoints)
-        except ValueError:
-            raise CsmInternalError("Consul num_endpoints value is not a valid"
-                " integer.")
-        for count in range(count_endpoints):
-            endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
-            if endpoint:
-                protocol, host, port = ServiceUrls.parse_url(endpoint)
-                if protocol == "https" or protocol == "http":
-                    result = True
-                    consul_endpoint = endpoint
-                    Log.info(f"Fetching consul endpoint : {consul_endpoint}")
-                    break
-        if not result:
-            raise CsmInternalError("Consul endpoint not found.")
-        return protocol, host, port, secret, consul_endpoint
-
-    @staticmethod
-    def load_csm_config_indices():
-        """Load CSM configuration from the database."""
-        set_config_flag = False
-        Conf.load(const.CONSUMER_INDEX, Options.config)
-        _, consul_host, consul_port, _, _ = CsmAgent._get_consul_config()
-        if consul_host and consul_port:
-            for retry in range(0, const.MAX_RETRY):
-                try:
-                    Log.info(f"Connecting to consul retry count : {retry}")
-                    ConsulV().validate_service_status(consul_host,consul_port)
-                    Conf.load(const.CSM_GLOBAL_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.CSM_CONF_BASE}")
-                    Conf.load(const.DATABASE_INDEX,
-                        f"consul://{consul_host}:{consul_port}/{const.DATABASE_CONF_BASE}")
-                    break
-                except VError as ve:
-                    Log.error(f"Unable to fetch the configurations from consul: {ve}")
-                    if retry == const.MAX_RETRY-1:
-                        raise CsmInternalError("Unable to fetch the configurations")
-                    time.sleep(const.SLEEP_DURATION)
-            set_config_flag = True
-
-        if not set_config_flag:
-            conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY)
-            csm_config_dir = os.path.join(conf_path, const.NON_ROOT_USER)
-            Conf.load(const.CSM_GLOBAL_INDEX,
-                      f"yaml://{csm_config_dir}/{const.CSM_CONF_FILE_NAME}")
-            Conf.load(const.DATABASE_INDEX,
-                      f"yaml://{csm_config_dir}/{const.DB_CONF_FILE_NAME}")
-            set_config_flag = True
-
-    @staticmethod
     def _daemonize():
         """Change process into background service."""
         if not os.path.isdir("/var/run/csm/"):
@@ -276,6 +222,9 @@ if __name__ == '__main__':
     from csm.core.services.information import InformationService
     from csm.common.service_urls import ServiceUrls
     from csm.core.services.activities import ActivityService
+    from cortx.utils.kv_store.error import KvError
+    from csm.common.utility import Utility
+    from cortx.utils.validator.error import VError
 
     try:
         client = None

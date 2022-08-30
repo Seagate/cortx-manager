@@ -20,6 +20,9 @@ from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
+from cortx.utils.kv_store.error import KvError
+from csm.common.utility import Utility
+from cortx.utils.validator.error import VError
 
 class Init(Setup):
     """Perform init operation for csm_setup."""
@@ -36,9 +39,11 @@ class Init(Setup):
         :return:
         """
         try:
+            conf = command.options.get(const.CONFIG_URL)
+            Utility.load_csm_config_indices(conf)
             Setup.setup_logs_init()
             Log.info("Init: Initiating Init phase.")
-        except KvError as e:
+        except (KvError, VError) as e:
             Log.error(f"Init: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
