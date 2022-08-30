@@ -110,7 +110,7 @@ class Utility:
                 break
             except KvError as e:
                 if retry == const.MAX_RETRY-1:
-                        raise e
+                    raise e
                 Log.error(f"Unable to fetch the configuration: {e}")
                 time.sleep(const.SLEEP_DURATION)
         _, consul_host, consul_port, _, _ = Utility.get_consul_config()
