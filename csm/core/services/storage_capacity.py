@@ -125,8 +125,8 @@ class StorageCapacityService(ApplicationService):
                     Log.info(f"Fetching cluster status retry counter: {retry}")
                     response = await self.request(session, method, url, expected_success_code)
                     break
-                except ClientConnectorError:
-                    Log.error(f"Failed to get cluster status in attempt ({retry})")
+                except ClientConnectorError as error:
+                    Log.error(f"Failed to get cluster status in attempt ({retry}):{error}")
                     if retry == MAX_RETRY_COUNT-1:
                         self._create_error(503, "Unable to connect to the service")
                         return self.capacity_error
@@ -180,9 +180,12 @@ class S3CapacityService(ApplicationService):
     async def _get_user_usage(self, **request_body):
         plugin_response = await self._s3_iam_plugin.execute(const.GET_USER_CAPACITY_OPERATION, **request_body)
         if isinstance(plugin_response, RgwError):
+            Log.error(f"S3ServiceError: {plugin_response.error_code.name}:"\
+                f" {plugin_response.error_message}")
             ServiceError.create(plugin_response)
         users_dict = plugin_response["capacity"]["s3"]["users"]
         users_list = []
         users_list.append(users_dict.copy())
         plugin_response["capacity"]["s3"]["users"] = users_list
         return plugin_response
+        
