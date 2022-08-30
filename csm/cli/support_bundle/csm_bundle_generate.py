@@ -52,7 +52,7 @@ class GenerateCsmBundle:
         GenerateCsmBundle.duration = args[const.SB_DURATION]
         GenerateCsmBundle.size_limit = args[const.SB_SIZE_LIMIT]
         #NOTE: Not making use of services, binlogs, coredumps, stacktrace args.
-        GenerateCsmBundle.services = args[const.SB_SERVICES]
+        GenerateCsmBundle.services = args[const.SERVICES]
         GenerateCsmBundle.binlogs = args[const.SB_BINLOGS]
         GenerateCsmBundle.coredumps = args[const.SB_COREDUMPS]
         GenerateCsmBundle.stacktrace = args[const.SB_STACKTRACE]
@@ -109,7 +109,7 @@ if __name__ == '__main__':
                     default=f'SB_csm_{datetime.now().strftime("%d%m%Y_%H-%M-%S")}')
     parser.add_argument('-c','--config', dest=const.CONFIG_URL,
         help='Confstore URL eg:<type>://<path>')
-    parser.add_argument('-s','--services', dest=const.SB_SERVICES,
+    parser.add_argument('-s','--services', dest=const.SERVICES,
         help='Run csm-service support-bundle', default='agent')
     parser.add_argument('-t','--target', dest=const.SB_TARGET,
         help='Target path to save support-bundle', default=const.CSM_TEMP_PATH)
