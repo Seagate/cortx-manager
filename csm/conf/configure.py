@@ -354,8 +354,25 @@ class Configure(Setup):
         :param mem: value from Conf as string.
         :returns: integer value.
         """
-        numbers_only = mem[:mem.find('M')]
-        return int(numbers_only)
+#         numbers_only = mem[:mem.find('M')]
+#         return int(numbers_only)
+        num = ''
+        unit = ''
+        for char in mem:
+            if ord(char) >= 48 and ord(char) <= 57:
+                num = num + char
+            elif (ord(char) >= 65 and ord(char) <= 90) or (ord(char) >= 97 and ord(char) <= 122):
+                unit += char
+        
+        valueInMib = int(num)
+        if unit == 'G':
+            valueInMib = valueInMib * 1024
+        elif unit == 'T':
+            valueInMib = valueInMib * 1024 * 1024
+        elif unit == 'P':
+            valueInMib = valueInMib * 1024 * 1024 * 1024
+        unit = 'M'
+        return int(valueInMib)
 
     @staticmethod
     def _cpu_limit_to_int(cpu: str) -> int:
