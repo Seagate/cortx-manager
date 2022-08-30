@@ -60,14 +60,14 @@ class UserManager:
                     time.sleep(self.RETRY_SLEEP_DURATION)
         return response
 
-    async def _count(self, filter):
+    async def _count(self, filter_query):
         """
         Count operation based on query on DB
         """
         for retry in range(0, self.MAX_RETRY_COUNT):
                 try:
                     Log.info(f"perform count operation retry count: {retry}")
-                    count = await self.storage(User).count(filter)
+                    count = await self.storage(User).count(filter_query)
                     break
                 except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to perform count operation: {e}")

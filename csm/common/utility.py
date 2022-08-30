@@ -21,8 +21,6 @@ from cortx.utils.log import Log
 from cortx.utils.validator.v_consul import ConsulV
 from csm.common.service_urls import ServiceUrls
 from cortx.utils.kv_store.error import KvError
-from cortx.utils.validator.error import VError
-import time
 
 class Utility:
     """

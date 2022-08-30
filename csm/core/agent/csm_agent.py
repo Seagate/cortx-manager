@@ -16,7 +16,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import sys
-import time
 import os
 import glob
 import traceback
@@ -39,7 +38,7 @@ class CsmAgent:
         conf = Options.config
         try:
             Utility.load_csm_config_indices(conf)
-        except (KvError, VError) as e:
+        except (KvError, VError):
             raise CsmInternalError("Unable to load configurations")
         Conf.load(const.DB_DICT_INDEX, 'dict:{"k":"v"}')
         Conf.load(const.CSM_DICT_INDEX, 'dict:{"k":"v"}')
@@ -224,7 +223,6 @@ if __name__ == '__main__':
     from csm.core.services.activities import ActivityService
     from cortx.utils.kv_store.error import KvError
     from csm.common.utility import Utility
-    from cortx.utils.validator.error import VError
 
     try:
         client = None

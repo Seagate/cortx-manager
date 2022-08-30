@@ -14,13 +14,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from cortx.utils.log import Log
-from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.kv_store.error import KvError
 from csm.conf.setup import Setup, CsmSetupError
 from csm.core.blogic import const
 from csm.core.providers.providers import Response
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
-from cortx.utils.kv_store.error import KvError
 from csm.common.utility import Utility
 from cortx.utils.validator.error import VError
 
