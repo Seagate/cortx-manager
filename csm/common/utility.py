@@ -62,6 +62,9 @@ class Utility:
 
     @staticmethod
     def get_consul_config():
+        """
+       Get consul endpoint related details
+        """
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         protocol, host, port, consul_endpoint = '','','',''
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
@@ -83,6 +86,9 @@ class Utility:
 
     @staticmethod
     def validate_consul():
+        """
+        Validate consul service
+        """
         _, consul_host, consul_port, _, _ = Utility.get_consul_config()
         for retry in range(0, const.MAX_RETRY):
             try:
@@ -102,7 +108,7 @@ class Utility:
             try:
                 Conf.load(const.CONSUMER_INDEX, conf)
                 break
-            except Exception as e:
+            except KvError as e:
                 if retry == const.MAX_RETRY-1:
                         raise e
                 Log.error(f"Unable to fetch the configuration: {e}")
