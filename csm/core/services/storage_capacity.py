@@ -188,3 +188,4 @@ class S3CapacityService(ApplicationService):
         users_list.append(users_dict.copy())
         plugin_response["capacity"]["s3"]["users"] = users_list
         return plugin_response
+
