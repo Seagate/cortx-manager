@@ -438,3 +438,4 @@ class S3IAMUserQuotaView(S3BaseView):
                 f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
                 f" User: {self.request.session.credentials.user_id}")
             return CsmResponse(response)
+            

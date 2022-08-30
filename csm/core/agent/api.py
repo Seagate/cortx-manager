@@ -694,3 +694,4 @@ class CsmRestApi(CsmApi, ABC):
         coro = CsmRestApi._async_push(alert)
         asyncio.run_coroutine_threadsafe(coro, CsmRestApi._app.loop)
         return True
+        
