@@ -22,6 +22,7 @@ from csm.core.providers.providers import Response
 from csm.core.blogic import const
 from csm.common.errors import CSM_OPERATION_SUCESSFUL
 from cortx.utils.validator.error import VError
+from csm.common.utility import Utility
 
 
 class Prepare(Setup):
@@ -44,11 +45,11 @@ class Prepare(Setup):
         :return:
         """
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            conf = command.options.get(const.CONFIG_URL)
+            Utility.load_csm_config_indices(conf)
             Setup.setup_logs_init()
             Log.info("Setup: Initiating Prepare phase.")
-            Setup.load_csm_config_indices()
-        except KvError as e:
+        except (KvError, VError) as e:
             Log.error(f"Prepare: Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store.")
 
@@ -113,7 +114,7 @@ class Prepare(Setup):
         :return:
         """
         Log.info("Prepare: Setting database host address")
-        _, consul_host, consul_port, secret, _ = Setup.get_consul_config()
+        _, consul_host, consul_port, secret, _ = Utility.get_consul_config()
         consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
         try:
             if consul_host and consul_port:
@@ -145,5 +146,10 @@ class Prepare(Setup):
         if self._is_env_dev:
             Conf.set(const.CSM_GLOBAL_INDEX, const.CSM_DEPLOYMENT_MODE,
                      const.DEV)
+        try:
+            Utility.validate_consul()
+        except VError as e:
+            Log.error(f"Unable to save the configurations to consul: {e}")
+            raise CsmSetupError("Unable to save the configurations")
         Conf.save(const.CSM_GLOBAL_INDEX)
         Conf.save(const.DATABASE_INDEX)

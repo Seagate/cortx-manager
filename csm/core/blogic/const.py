@@ -549,7 +549,7 @@ INFORMATION_SERVICE = "information_service"
 ACTIVITY_MANAGEMENT_SERVICE = "activity_management_service"
 
 # System Status flight
-SYSTEM_STATUS_CONSUL = 'consul'
+CONSUL = 'consul'
 SYSTEM_STATUS_SUCCESS = 'success'
 
 # https status code
@@ -1006,6 +1006,8 @@ SUPPORTED_ACTIVITY_STATUS = [IN_PROGRESS, COMPLETED, SUSPENDED]
 # Retry
 MAX_RETRY_COUNT        = 'RETRY>retry_count'
 RETRY_SLEEP_DURATION   = 'RETRY>sleep_duration'
+MAX_RETRY = 5
+SLEEP_DURATION = 3
 
 # Error reposne schema
 ERROR_CODE = "error_code"
