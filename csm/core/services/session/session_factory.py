@@ -142,7 +142,7 @@ class Database:
         for retry in range(0, self.MAX_RETRY_COUNT):
                 try:
                     response = await self.storage(SessionModel).get(query)
-                    break
+                    return response
                 except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to get session: {e}")
                     if retry == self.MAX_RETRY_COUNT-1:
@@ -150,7 +150,6 @@ class Database:
                         # TODO: catch it
                     time.sleep(self.RETRY_SLEEP_DURATION)
                     Log.info(f"get session retry count: {retry+1}")
-        return response
 
     async def _store(self, sessionModel):
         """
@@ -159,7 +158,7 @@ class Database:
         for retry in range(0, self.MAX_RETRY_COUNT):
                 try:
                     Log.info(f"store session retry count: {retry}")
-                    self.storage(SessionModel).store(sessionModel)
+                    await self.storage(SessionModel).store(sessionModel)
                     break
                 except (DataAccessError, ClientConnectorError) as e:
                     Log.error(f"Failed to store session: {e}")
