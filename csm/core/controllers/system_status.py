@@ -22,7 +22,7 @@ from marshmallow import (Schema, fields, ValidationError)
 
 
 class GetSystemStatusSchema(Schema):
-    db_name = fields.Str(required=True, validate=[Enum([const.SYSTEM_STATUS_CONSUL])])
+    db_name = fields.Str(required=True, validate=[Enum([const.CONSUL])])
 
 
 @CsmView._app_routes.view("/api/v1/system/status")
@@ -36,7 +36,7 @@ class SystemStatusAllView(CsmView):
     async def get(self):
         """Fetch All system status."""
         Log.debug("Handling all system status request")
-        resp = await self._service.check_status([const.SYSTEM_STATUS_CONSUL])
+        resp = await self._service.check_status([const.CONSUL])
         if not resp[const.SYSTEM_STATUS_SUCCESS]:
             return CsmResponse(resp, status=503)
         return resp
