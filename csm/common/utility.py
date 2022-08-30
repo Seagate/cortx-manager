@@ -63,7 +63,7 @@ class Utility:
     @staticmethod
     def get_consul_config():
         """
-       Get consul endpoint related details
+        Get consul endpoint related details
         """
         secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
         protocol, host, port, consul_endpoint = '','','',''
@@ -96,10 +96,10 @@ class Utility:
                 ConsulV().validate_service_status(consul_host,consul_port)
                 break
             except VError as e:
-                    Log.error(f"Failed to connect with consul: {e}")
-                    if retry == const.MAX_RETRY-1:
-                        raise e
-                    time.sleep(const.SLEEP_DURATION)
+                Log.error(f"Failed to connect with consul: {e}")
+                if retry == const.MAX_RETRY-1:
+                    raise e
+                time.sleep(const.SLEEP_DURATION)
 
     @staticmethod
     def load_csm_config_indices(conf):
