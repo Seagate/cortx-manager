@@ -121,10 +121,10 @@ class CsmRestApi(CsmApi, ABC):
             middlewares=[normalize_path_middleware(remove_slash=True,
                             append_slash = False),
                          CsmRestApi.throttler_middleware,
+                         CsmRestApi.set_secure_headers,
                          CsmRestApi.rest_middleware,
                          CsmRestApi.session_middleware,
-                         CsmRestApi.permission_middleware,
-                         CsmRestApi.set_secure_headers
+                         CsmRestApi.permission_middleware
                         ]
         )
 

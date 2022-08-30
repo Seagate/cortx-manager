@@ -78,7 +78,7 @@ class CapacityStatusView(CsmView):
                                    CAPACITY_SERVICE_ERROR,
                                    resp.message_id,
                                    resp.message)
-        return resp
+        return CsmResponse(resp)
 
 
 @CsmView._app_routes.view("/api/v2/capacity/status/{capacity_resource}")
@@ -101,7 +101,7 @@ class CapacityManagementView(CsmView):
                                    CAPACITY_SERVICE_ERROR,
                                    resp.message_id,
                                    resp.message)
-        return resp
+        return CsmResponse(resp)
 
 @CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}")
 class S3CapacityView(CsmView):

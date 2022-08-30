@@ -104,7 +104,7 @@ class CsmUsersListView(CsmView):
         Log.info(
             f"Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
-        return {'users': users}
+        return CsmResponse({'users': users})
 
     @CsmAuth.permissions({Resource.USERS: {Action.CREATE}})
     async def post(self):
@@ -155,7 +155,7 @@ class CsmUsersView(CsmView):
         Log.info(
             f"Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
-        return resp
+        return CsmResponse(resp)
 
     @CsmAuth.permissions({Resource.USERS: {Action.DELETE}})
     async def delete(self):
@@ -173,7 +173,7 @@ class CsmUsersView(CsmView):
         Log.info(
             f"Processed request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
-        return resp
+        return CsmResponse(resp)
 
     @CsmAuth.permissions({Resource.USERS: {Action.UPDATE}})
     async def patch(self):
@@ -198,4 +198,4 @@ class CsmUsersView(CsmView):
         Log.info(
             f"Processed request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
-        return resp
+        return CsmResponse(resp)
