@@ -888,7 +888,7 @@ S3_CLIENT_ERROR_CODES = {
     408: { "Code": "RequestTimeout" },
     503: { "Code": "S3ServiceUnavailable" }
     }
-CONNECTION_TIMEOUT = 20
+CONNECTION_TIMEOUT = 60
 RGW_ADMIN_OPERATIONS_MAPPING_SCHEMA = '{}/schema/rgw_admin_api_operations.json'.format(CSM_PATH)
 IAM_OPERATIONS_MAPPING_SCHEMA = '{}/schema/iam_operations_mapping.json'.format(CSM_PATH)
 SUPPRESS_PAYLOAD_SCHEMA = '{}/schema/suppress_payload.json'.format(CSM_PATH)
