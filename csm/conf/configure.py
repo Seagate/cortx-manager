@@ -365,11 +365,17 @@ class Configure(Setup):
                 unit += char
         
         valueInMib = int(num)
-        if unit == 'G' or unit == 'Gi':
+        if unit == 'G':
+            valueInMib = valueInMib * 1000
+        elif unit == 'T':
+            valueInMib = valueInMib * 1000 * 1000
+        elif unit == 'P':
+            valueInMib = valueInMib * 1000 * 1000 * 1000
+        elif unit == 'Gi':
             valueInMib = valueInMib * 1024
-        elif unit == 'T' or unit == 'Ti':
+        elif unit == 'Ti':
             valueInMib = valueInMib * 1024 * 1024
-        elif unit == 'P'  or unit == 'Pi':
+        elif unit == 'Pi':
             valueInMib = valueInMib * 1024 * 1024 * 1024
         unit = 'M'
         return int(valueInMib)
