@@ -82,7 +82,7 @@ class CapacityStatusView(CsmView):
         Log.info(
             f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
-        return CsmResponse(resp)
+        return resp
 
 
 @CsmView._app_routes.view("/api/v2/capacity/status/{capacity_resource}")
@@ -111,7 +111,7 @@ class CapacityManagementView(CsmView):
         Log.info(
             f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {self.request.session.credentials.user_id}")
-        return CsmResponse(resp)
+        return resp
 
 @CsmView._app_routes.view("/api/v2/capacity/s3/{resource}/{id}")
 class S3CapacityView(CsmView):
