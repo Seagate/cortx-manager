@@ -313,7 +313,7 @@ class CsmRestApi(CsmApi, ABC):
         if CsmRestApi.__nreq >= CsmRestApi.__request_quota:
             # This block get executed when number of request reaches the request quota
             CsmRestApi.__nblocked += 1
-            msg = (f"[{request.request_id}] The request is blocked because the number of requests reached threshold\n"
+            msg = (f"The request is blocked because the number of requests reached threshold\n"
                    f"Number of requests blocked since the start is {CsmRestApi.__nblocked}")
             Log.warn(msg)
             return web.Response(status=429, text="Too many requests")
