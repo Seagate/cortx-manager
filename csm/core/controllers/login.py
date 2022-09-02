@@ -38,7 +38,7 @@ class LoginView(CsmView):
             username = request_body.get(const.UNAME)
             password = request_body.get(const.PASS)
             Log.info(
-                f"Processing request: {self.request.method} {self.request.path}"\
+                f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
                 f" user: {username}")
         except json.decoder.JSONDecodeError:
             raise InvalidRequest(const.JSON_ERROR)
@@ -48,7 +48,7 @@ class LoginView(CsmView):
             username, password)
         if not session_id:
             raise CsmUnauthorizedError("Invalid credentials for user")
-        Log.info(f"Login successful. User: {username}")
+        Log.info(f"[{self.request.request_id}] Login successful. User: {username}")
         headers = {CsmAuth.HDR: f'{CsmAuth.TYPE} {session_id}'}
         return CsmResponse(body, headers=headers)
 
@@ -60,10 +60,11 @@ class LogoutView(CsmView):
     async def post(self):
         username = self.request.session.credentials.user_id
         Log.info(
-            f"Processing request: {self.request.method} {self.request.path}"\
+            f"[{self.request.request_id}] Processing request: {self.request.method} {self.request.path}"\
             f" User: {username}")
         session_id = self.request.session.session_id
         await self.request.app.login_service.logout(session_id)
         # TODO: Stop any websocket connection corresponding to this session
-        Log.info(f"Logout successful. User: {username}")
+        Log.info(f"[{self.request.request_id}] Logout successful. User: {username}")
         return CsmResponse()
+        

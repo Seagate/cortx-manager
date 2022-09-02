@@ -20,6 +20,8 @@ from cortx.utils.log import Log
 from cortx.utils.conf_store import Conf
 from csm.conf.setup import Setup, CsmSetupError
 from cortx.utils.kv_store.error import KvError
+from csm.common.utility import Utility
+from cortx.utils.validator.error import VError
 
 class Upgrade(Setup):
     """Perform upgrade operation for csm_setup."""
@@ -31,12 +33,12 @@ class Upgrade(Setup):
     async def execute(self, command):
         Log.info("Performing upgrade and loading config files")
         try:
-            Conf.load(const.CONSUMER_INDEX, command.options.get(const.CONFIG_URL))
+            conf = command.options.get(const.CONFIG_URL)
+            Utility.load_csm_config_indices(conf)
             Setup.setup_logs_init()
             Log.info("Executing csm_setup: upgrade phase.")
-            Setup.load_csm_config_indices()
             Setup.load_default_config()
-        except KvError as e:
+        except (KvError, VError) as e:
             Log.error(f"Configuration Loading Failed {e}")
             raise CsmSetupError("Could Not Load Url Provided in Kv Store, Unable to load configurations")
 
