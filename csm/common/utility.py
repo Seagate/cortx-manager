@@ -128,13 +128,8 @@ class Utility:
                 
      @staticmethod
      def conversion_mem_limit(intVal, convertFrom, convertTo):
-        
-        convertToByte = {
-
-            'B' : 1, 'K' : 1000, 'M' : 1000**2, 'G' : 1000**3, 'T' : 1000 ** 4, 'P' : 1000 ** 5,
-            'Ki' : 1024, 'Mi' : 1024**2, 'Gi' : 1024**3, 'Ti' : 1024 ** 4, 'Pi' : 1024 ** 5,
-        }
+        convertToByte = {'B' : 1, 'K' : 1000, 'M' : 1000**2, 'G' : 1000**3, 'T' : 1000 ** 4, 'P' : 1000 ** 5,'Ki' : 1024, 'Mi' : 1024**2, 'Gi' : 1024**3, 'Ti' : 1024 ** 4, 'Pi' : 1024 ** 5}
         valInByte = convertToByte.get(convertFrom) * intVal
         val = convertToByte.get(convertTo)
         ans = valInByte / val
-        return int(ans)    
+        return int(ans)  
