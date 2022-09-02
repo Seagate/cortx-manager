@@ -28,6 +28,7 @@ from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 from cortx.utils.message_bus.error import MessageBusError
 from csm.common.utility import Utility
 from cortx.utils.validator.error import VError
+from csm.common.utility import Utility
 
 
 class Configure(Setup):
@@ -370,22 +371,11 @@ class Configure(Setup):
                 num = num + char
             elif (ord(char) >= 65 and ord(char) <= 90) or (ord(char) >= 97 and ord(char) <= 122):
                 unit += char
-        
-        valueInMib = int(num)
-        if unit == 'G':
-            valueInMib = valueInMib * 1000
-        elif unit == 'T':
-            valueInMib = valueInMib * 1000 * 1000
-        elif unit == 'P':
-            valueInMib = valueInMib * 1000 * 1000 * 1000
-        elif unit == 'Gi':
-            valueInMib = valueInMib * 1024
-        elif unit == 'Ti':
-            valueInMib = valueInMib * 1024 * 1024
-        elif unit == 'Pi':
-            valueInMib = valueInMib * 1024 * 1024 * 1024
-        unit = 'M'
-        return int(valueInMib)
+
+        intVal = int(num)
+        convertFrom = unit
+        convertTo = 'M'
+        return Utility.conversion_mem_limit(intVal, convertFrom, convertTo)
 
     @staticmethod
     def _cpu_limit_to_int(cpu: str) -> int:
