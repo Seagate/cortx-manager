@@ -28,7 +28,6 @@ from cortx.utils.message_bus import MessageBusAdmin,MessageBus
 from cortx.utils.message_bus.error import MessageBusError
 from csm.common.utility import Utility
 from cortx.utils.validator.error import VError
-from csm.common.utility import Utility
 
 
 class Configure(Setup):
