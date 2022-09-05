@@ -199,4 +199,3 @@ class CsmUsersView(CsmView):
             f"[{self.request.request_id}] Processed request: {self.request.method} {self.request.path}"\
             f" User: {loggedin_user_id}")
         return resp
-        
