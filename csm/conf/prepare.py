@@ -97,8 +97,9 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx".
         """
         Log.info("Prepare: Setting decryption keys for CSM and S3")
+        key = Conf.get(const.CONSUMER_INDEX, 'root')
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
-            const.CONSUL_ENDPOINTS_KEY.split('>')[0])
+            key)
 
     def _set_cluster_id(self):
         Log.info("Prepare: Setting up cluster id")

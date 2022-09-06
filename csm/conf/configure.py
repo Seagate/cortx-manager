@@ -324,13 +324,14 @@ class Configure(Setup):
             if endpoint:
                 result =  True
                 message_server_endpoints.append(endpoint)
-        if not result:
-            raise CsmSetupError("Kafka endpoint not found.")
-        Log.info(f"Config: Connecting to message bus using endpoint :{message_server_endpoints}")
-        MessageBus.init(message_server_endpoints)
-        mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
-        Configure._create_perf_stat_topic(mb_admin)
-        Configure._create_cluster_stop_topic(mb_admin)
+        if result:
+            Log.info(f"Config: Connecting to message bus using endpoint :{message_server_endpoints}")
+            MessageBus.init(message_server_endpoints)
+            mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
+            Configure._create_perf_stat_topic(mb_admin)
+            Configure._create_cluster_stop_topic(mb_admin)
+        else:
+            Log.warn("Kafka endpoint not found.")
 
     @staticmethod
     def _calculate_request_quota(mem_min: int, mem_max: int, cpu_min: int, cpu_max: int) -> int:

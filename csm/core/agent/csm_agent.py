@@ -88,7 +88,7 @@ class CsmAgent:
         health_plugin_obj = health_plugin.HealthPlugin(CortxHAFramework())
         health_service = HealthAppService(health_plugin_obj)
         CsmRestApi._app[const.HEALTH_SERVICE] = health_service
-        CsmAgent._configure_cluster_management_service()
+        #CsmAgent._configure_cluster_management_service()
 
         # Archieve stat service
         # Stats service creation
