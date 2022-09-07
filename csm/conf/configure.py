@@ -204,24 +204,25 @@ class Configure(Setup):
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.HAX_NUM_ENDPOINT_KEY)
-        try:
-            count_endpoints = int(count_endpoints)
-        except ValueError:
-            raise CsmSetupError("Hax num_endpoints value is not a valid"
-                " integer.")
-        for count in range(int(count_endpoints)):
-            endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.HAX_ENDPOINT_KEY}[{count}]')
-            if endpoint:
-                protocol, _, _ = ServiceUrls.parse_url(endpoint)
-                if protocol == "https" or protocol == "http":
-                    result = True
-                    hax_endpoint = endpoint
-                    break
-        if not result:
-            raise CsmSetupError("Hax endpoint not found.")
-        Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
-                hax_endpoint)
+        if count_endpoints:
+            try:
+                count_endpoints = int(count_endpoints)
+            except ValueError:
+                raise CsmSetupError("Hax num_endpoints value is not a valid"
+                    " integer.")
+            for count in range(int(count_endpoints)):
+                endpoint = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.HAX_ENDPOINT_KEY}[{count}]')
+                if endpoint:
+                    protocol, _, _ = ServiceUrls.parse_url(endpoint)
+                    if protocol == "https" or protocol == "http":
+                        result = True
+                        hax_endpoint = endpoint
+                        break
+            if not result:
+                raise CsmSetupError("Hax endpoint not found.")
+            Conf.set(const.CSM_GLOBAL_INDEX, const.CAPACITY_MANAGMENT_HCTL_SVC_ENDPOINT,
+                    hax_endpoint)
 
     # async def _set_unsupported_feature_info(self):
     #     """
@@ -313,25 +314,25 @@ class Configure(Setup):
         message_server_endpoints = list()
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
             const.KAFKA_NUM_ENDPOINTS)
-        try:
-            count_endpoints = int(count_endpoints)
-        except ValueError:
-            raise CsmSetupError("Kafka num_endpoints value is not a valid"
-                " integer.")
-        for count in range(count_endpoints):
-            endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.KAFKA_ENDPOINTS}[{count}]')
-            if endpoint:
-                result =  True
-                message_server_endpoints.append(endpoint)
-        if result:
+        if count_endpoints:
+            try:
+                count_endpoints = int(count_endpoints)
+            except ValueError:
+                raise CsmSetupError("Kafka num_endpoints value is not a valid"
+                    " integer.")
+            for count in range(count_endpoints):
+                endpoint = Conf.get(const.CONSUMER_INDEX,
+                    f'{const.KAFKA_ENDPOINTS}[{count}]')
+                if endpoint:
+                    result =  True
+                    message_server_endpoints.append(endpoint)
+            if not result:
+                raise CsmSetupError("Kafka endpoint not found.")
             Log.info(f"Config: Connecting to message bus using endpoint :{message_server_endpoints}")
             MessageBus.init(message_server_endpoints)
             mb_admin = MessageBusAdmin(admin_id = Conf.get(const.CSM_GLOBAL_INDEX,const.MSG_BUS_ADMIN_ID))
             Configure._create_perf_stat_topic(mb_admin)
             Configure._create_cluster_stop_topic(mb_admin)
-        else:
-            Log.warn("Kafka endpoint not found.")
 
     @staticmethod
     def _calculate_request_quota(mem_min: int, mem_max: int, cpu_min: int, cpu_max: int) -> int:
