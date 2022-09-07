@@ -135,10 +135,11 @@ class StorageCapacityService(ApplicationService):
                         time.sleep(RETRY_SLEEP_DURATION)
                         continue
                 except asyncio.TimeoutError as e:
+                    Log.error(f"Error in obtaining response from {url}:{e}")
                     self._create_error(408, "Request Timeout")
                     return self.capacity_error
                 except Exception as e:
-                    Log.error(f"Error in obtaining response from {url}:{type(e)}")
+                    Log.error(f"Error in obtaining response from {url}:{e}")
                     raise CsmInternalError("Error in obtaining response")
             return response
 
