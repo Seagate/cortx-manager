@@ -26,6 +26,7 @@ from csm.common.errors import CsmInternalError
 from csm.core.data.models.rgw import RgwError
 from csm.common.errors import ServiceError
 from csm.plugins.cortx.rgw import RGWPlugin
+import asyncio
 
 class StorageCapacityService(ApplicationService):
     """
@@ -133,8 +134,11 @@ class StorageCapacityService(ApplicationService):
                     else:
                         time.sleep(RETRY_SLEEP_DURATION)
                         continue
+                except asyncio.TimeoutError as e:
+                    self._create_error(408, "Request Timeout")
+                    return self.capacity_error
                 except Exception as e:
-                    Log.error(f"Error in obtaining response from {url}:{e}")
+                    Log.error(f"Error in obtaining response from {url}:{type(e)}")
                     raise CsmInternalError("Error in obtaining response")
             return response
 
@@ -144,7 +148,7 @@ class StorageCapacityService(ApplicationService):
         :param status: HTTP Status code.
         :param body: parsed HTTP response (dict) with the error's decription.
         """
-        Log.error(f"Create error body: {reason}")
+        Log.error(f"{reason}")
         self.capacity_error.http_status = status
         self.capacity_error.message_id = reason
         self.capacity_error.message = reason
@@ -188,4 +192,4 @@ class S3CapacityService(ApplicationService):
         users_list.append(users_dict.copy())
         plugin_response["capacity"]["s3"]["users"] = users_list
         return plugin_response
-        
+
