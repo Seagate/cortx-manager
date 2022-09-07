@@ -51,6 +51,7 @@ class PostInstall(Setup):
         try:
             conf = command.options.get(const.CONFIG_URL)
             Utility.load_csm_config_indices(conf)
+            Setup.config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
             Setup.setup_logs_init()
             Log.info("Setup:  Initiating Post Install phase.")
             Setup.copy_base_configs()
@@ -66,7 +67,6 @@ class PostInstall(Setup):
             services=[services]
         if "agent" not in services:
             return Response(output=const.CSM_SETUP_PASS, rc=CSM_OPERATION_SUCESSFUL)
-
         self._prepare_and_validate_confstore_keys()
         self.set_ssl_certificate()
         PostInstall.set_logpath()
@@ -77,7 +77,7 @@ class PostInstall(Setup):
     def _prepare_and_validate_confstore_keys(self):
         Log.info("Post Install: Validating required configuration.")
         self.conf_store_keys.update({
-            const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY}"
+            const.KEY_SSL_CERTIFICATE:f"{const.SSL_CERTIFICATE_KEY.format(Setup.config_root)}"
             })
         try:
             Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -89,7 +89,7 @@ class PostInstall(Setup):
         ssl_certificate_path = Conf.get(const.CONSUMER_INDEX, self.conf_store_keys[const.KEY_SSL_CERTIFICATE])
         Log.info(f"Post Install: Setting SSL certificate path: {ssl_certificate_path}")
         csm_protocol, *_ = ServiceUrls.parse_url(
-            Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY))
+            Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY.format(Setup.config_root)))
         if csm_protocol == 'https' and not os.path.exists(ssl_certificate_path):
             Log.warn(f"Post Install: HTTPS enabled but SSL certificate not found at: {ssl_certificate_path}.\
                     Generating self signed ssl certificate")

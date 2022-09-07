@@ -54,6 +54,7 @@ class Configure(Setup):
         try:
             conf = command.options.get(const.CONFIG_URL)
             Utility.load_csm_config_indices(conf)
+            Setup.config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
             Setup.setup_logs_init()
             Log.info("Setup: Initiating Config phase.")
         except (KvError, VError) as e:
@@ -119,9 +120,9 @@ class Configure(Setup):
         Log.info("Config: Validating required configuration.")
         self.conf_store_keys.update({
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY}",
-                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY}",
-                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY}"
+                const.RGW_S3_AUTH_USER: f"{const.RGW_S3_AUTH_USER_KEY.format(Setup.config_root)}",
+                const.RGW_S3_AUTH_ADMIN: f"{const.RGW_S3_AUTH_ADMIN_KEY.format(Setup.config_root)}",
+                const.RGW_S3_AUTH_SECRET: f"{const.RGW_S3_AUTH_SECRET_KEY.format(Setup.config_root)}"
                 })
 
         Setup._validate_conf_store_keys(const.CONSUMER_INDEX, keylist = list(self.conf_store_keys.values()))
@@ -147,7 +148,7 @@ class Configure(Setup):
     @staticmethod
     def _set_csm_endpoint():
         Log.info("Config: Setting CSM endpoint in configuration.")
-        csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY)
+        csm_endpoint = Conf.get(const.CONSUMER_INDEX, const.CSM_AGENT_ENDPOINTS_KEY.format(Setup.config_root))
         csm_protocol, _, csm_port = ServiceUrls.parse_url(csm_endpoint)
         Conf.set(const.CSM_GLOBAL_INDEX, const.AGENT_ENDPOINTS, csm_endpoint)
         # Not considering Hostname. Bydefault 0.0.0.0 used
@@ -165,7 +166,7 @@ class Configure(Setup):
         Log.info("Config: Setting S3 endpoints in configuration")
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.RGW_NUM_ENDPOINTS_KEY)
+            const.RGW_NUM_ENDPOINTS_KEY.format(Setup.config_root))
         try:
             count_endpoints = int(count_endpoints)
         except ValueError:
@@ -173,7 +174,7 @@ class Configure(Setup):
                 " integer.")
         for count in range(count_endpoints):
             endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.RGW_S3_DATA_ENDPOINTS_KEY}[{count}]')
+                f'{const.RGW_S3_DATA_ENDPOINTS_KEY.format(Setup.config_root)}[{count}]')
             if endpoint:
                 result = True
                 Conf.set(const.CSM_GLOBAL_INDEX,
@@ -190,9 +191,9 @@ class Configure(Setup):
         Log.info("Config: Setting S3 information in configuration")
         Configure._set_s3_endpoints()
         # Set IAM user credentails
-        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY)
-        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY)
-        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_SECRET_KEY)
+        s3_auth_user = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_USER_KEY.format(Setup.config_root))
+        s3_auth_admin = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_ADMIN_KEY.format(Setup.config_root))
+        s3_auth_secret = Conf.get(const.CONSUMER_INDEX, const.RGW_S3_AUTH_SECRET_KEY.format(Setup.config_root))
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ADMIN_USER, s3_auth_user)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_ACCESS_KEY, s3_auth_admin)
         Conf.set(const.CSM_GLOBAL_INDEX, const.RGW_S3_IAM_SECRET_KEY, s3_auth_secret)
@@ -203,7 +204,7 @@ class Configure(Setup):
         hax_endpoint = None
         result : bool = False
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.HAX_NUM_ENDPOINT_KEY)
+            const.HAX_NUM_ENDPOINT_KEY.format(Setup.config_root))
         if count_endpoints:
             try:
                 count_endpoints = int(count_endpoints)
@@ -212,7 +213,7 @@ class Configure(Setup):
                     " integer.")
             for count in range(int(count_endpoints)):
                 endpoint = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.HAX_ENDPOINT_KEY}[{count}]')
+                    f'{const.HAX_ENDPOINT_KEY.format(Setup.config_root)}[{count}]')
                 if endpoint:
                     protocol, _, _ = ServiceUrls.parse_url(endpoint)
                     if protocol == "https" or protocol == "http":
@@ -313,7 +314,7 @@ class Configure(Setup):
         result : bool = False
         message_server_endpoints = list()
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.KAFKA_NUM_ENDPOINTS)
+            const.KAFKA_NUM_ENDPOINTS.format(Setup.config_root))
         if count_endpoints:
             try:
                 count_endpoints = int(count_endpoints)
@@ -322,7 +323,7 @@ class Configure(Setup):
                     " integer.")
             for count in range(count_endpoints):
                 endpoint = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.KAFKA_ENDPOINTS}[{count}]')
+                    f'{const.KAFKA_ENDPOINTS.format(Setup.config_root)}[{count}]')
                 if endpoint:
                     result =  True
                     message_server_endpoints.append(endpoint)
@@ -382,7 +383,7 @@ class Configure(Setup):
         """Set resource limits for CSM."""
         Log.info("Config: Fetching CSM services cpu and memory limits")
         count_services : str = Conf.get(const.CONSUMER_INDEX,
-            const.CSM_LIMITS_NUM_SERVICES_KEY)
+            const.CSM_LIMITS_NUM_SERVICES_KEY.format(Setup.config_root))
         try:
             count_services = int(count_services)
         except ValueError:
@@ -390,16 +391,16 @@ class Configure(Setup):
                 " integer.")
         for count in range(count_services):
             name = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>name')
+                f'{const.CSM_LIMITS_SERVICES_KEY.format(Setup.config_root)}[{count}]>name')
             if name == "agent":
                 mem_min = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>min')
+                    f'{const.CSM_LIMITS_SERVICES_KEY.format(Setup.config_root)}[{count}]>memory>min')
                 mem_max = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>memory>max')
+                    f'{const.CSM_LIMITS_SERVICES_KEY.format(Setup.config_root)}[{count}]>memory>max')
                 cpu_min = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>min')
+                    f'{const.CSM_LIMITS_SERVICES_KEY.format(Setup.config_root)}[{count}]>cpu>min')
                 cpu_max = Conf.get(const.CONSUMER_INDEX,
-                    f'{const.CSM_LIMITS_SERVICES_KEY}[{count}]>cpu>max')
+                    f'{const.CSM_LIMITS_SERVICES_KEY.format(Setup.config_root)}[{count}]>cpu>max')
 
                 mem_min = Configure._mem_limit_to_int(mem_min)
                 mem_max = Configure._mem_limit_to_int(mem_max)

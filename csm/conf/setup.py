@@ -31,6 +31,7 @@ client = None
 
 class Setup:
     """Base class for csm_setup operations."""
+    config_root = None
 
     def __init__(self):
         """Setup init."""
@@ -44,7 +45,7 @@ class Setup:
 
     @staticmethod
     def _set_csm_conf_path():
-        conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY,
+        conf_path = Conf.get(const.CONSUMER_INDEX, const.CONFIG_STORAGE_DIR_KEY.format(Setup.config_root),
                                                      const.CORTX_CONFIG_DIR)
         conf_path = os.path.join(conf_path, const.NON_ROOT_USER)
         if not os.path.exists(conf_path):
@@ -125,11 +126,11 @@ class Setup:
         from csm.core.controllers.validators import PasswordValidator, UserNameValidator
         Log.info("Creating cluster admin account")
         cluster_admin_user = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_ADMIN_KEY)
+                                    const.CSM_AGENT_MGMT_ADMIN_KEY.format(Setup.config_root))
         cluster_admin_secret = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_MGMT_SECRET_KEY)
+                                    const.CSM_AGENT_MGMT_SECRET_KEY.format(Setup.config_root))
         cluster_admin_emailid = Conf.get(const.CONSUMER_INDEX,
-                                    const.CSM_AGENT_EMAIL_KEY)
+                                    const.CSM_AGENT_EMAIL_KEY.format(Setup.config_root))
         cluster_id = Conf.get(const.CSM_GLOBAL_INDEX, const.CLUSTER_ID_KEY)
         decryption_key = Conf.get(const.CSM_GLOBAL_INDEX,const.KEY_DECRYPTION)
         if not (cluster_admin_user or cluster_admin_secret or cluster_admin_emailid):
@@ -182,7 +183,7 @@ class Setup:
 
     @staticmethod
     def get_csm_log_path():
-        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY.format(Setup.config_root))
         return f"{log_path}/{const.CSM_COMPONENT_NAME}"
 
 class CsmSetup(Setup):

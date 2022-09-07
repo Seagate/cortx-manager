@@ -45,7 +45,8 @@ class GenerateCsmBundle:
     def generate_bundle(args):
 
         Conf.load(const.CONSUMER_INDEX, args[const.CONFIG_URL])
-        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY)
+        config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
+        log_path = Conf.get(const.CONSUMER_INDEX, const.CORTX_LOG_PATH_KEY.format(config_root))
         csm_log_path = os.path.join(log_path, const.CSM_COMPONENT_NAME)
         GenerateCsmBundle.bundle_id = args[const.SB_BUNDLE_ID]
         GenerateCsmBundle.target_path = args [const.SB_TARGET]

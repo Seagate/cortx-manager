@@ -65,17 +65,18 @@ class Utility:
         """
         Get consul endpoint related details
         """
-        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY)
+        config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
+        secret =  Conf.get(const.CONSUMER_INDEX, const.CONSUL_SECRET_KEY.format(config_root))
         protocol, host, port, consul_endpoint = '','','',''
         count_endpoints : str = Conf.get(const.CONSUMER_INDEX,
-            const.CONSUL_NUM_ENDPOINTS_KEY)
+            const.CONSUL_NUM_ENDPOINTS_KEY.format(config_root))
         try:
             count_endpoints = int(count_endpoints)
         except ValueError as e:
             raise e
         for count in range(count_endpoints):
             endpoint = Conf.get(const.CONSUMER_INDEX,
-                f'{const.CONSUL_ENDPOINTS_KEY}[{count}]')
+                f'{const.CONSUL_ENDPOINTS_KEY.format(config_root)}[{count}]')
             if endpoint:
                 protocol, host, port = ServiceUrls.parse_url(endpoint)
                 if protocol == "https" or protocol == "http":

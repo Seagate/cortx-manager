@@ -47,6 +47,7 @@ class Prepare(Setup):
         try:
             conf = command.options.get(const.CONFIG_URL)
             Utility.load_csm_config_indices(conf)
+            Setup.config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
             Setup.setup_logs_init()
             Log.info("Setup: Initiating Prepare phase.")
         except (KvError, VError) as e:
@@ -79,7 +80,6 @@ class Prepare(Setup):
         self.conf_store_keys.update({
                 const.KEY_HOSTNAME:f"{const.NODE}>{self.machine_id}>{const.HOSTNAME}",
                 const.KEY_CLUSTER_ID:f"{const.NODE}>{self.machine_id}>{const.CLUSTER_ID}",
-                const.CONSUL_SECRET_KEY:f"{const.CONSUL_SECRET_KEY}"
                 # TODO: validate following keys once available in conf-store
                 #const.METRICS_PERF_STATS_MSG_TYPE : const.METRICS_PERF_STATS_MSG_TYPE_KEY,
                 #const.METRICS_PERF_STATS_RETENTION_SIZE:const.METRICS_PERF_STATS_RETENTION_SIZE_KEY
@@ -97,7 +97,7 @@ class Prepare(Setup):
         eg: for "cortx>software>csm>secret" root is "cortx".
         """
         Log.info("Prepare: Setting decryption keys for CSM and S3")
-        key = Conf.get(const.CONSUMER_INDEX, 'root')
+        key = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
         Conf.set(const.CSM_GLOBAL_INDEX, const.KEY_DECRYPTION,
             key)
 
@@ -116,7 +116,7 @@ class Prepare(Setup):
         """
         Log.info("Prepare: Setting database host address")
         _, consul_host, consul_port, secret, _ = Utility.get_consul_config()
-        consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY)
+        consul_login = Conf.get(const.CONSUMER_INDEX, const.CONSUL_ADMIN_KEY.format(Setup.config_root))
         try:
             if consul_host and consul_port:
                 Conf.set(const.DATABASE_INDEX,

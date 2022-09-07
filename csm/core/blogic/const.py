@@ -634,7 +634,6 @@ DEV = 'dev'
 VM = 'VM'
 VIRTUAL = 'virtual'
 ENV_TYPE = 'env_type'
-ENV_TYPE_KEY = 'cortx>common>setup_type'
 
 # System config list
 SYSCONFIG_TYPE = ['management_network_settings', 'data_network_settings',
@@ -780,42 +779,42 @@ DEFAULT_OUTPUTFILE = '{}/output.log'.format(CSM_TEMP_PATH)
 
 # cluster.conf keys
 ENV_TYPE = "env_type"
-CONFIG_STORAGE_DIR_KEY = "cortx>common>storage>local"
-KAFKA_ENDPOINTS = 'cortx>external>kafka>endpoints'
-KAFKA_NUM_ENDPOINTS = 'cortx>external>kafka>num_endpoints'
+CONFIG_STORAGE_DIR_KEY = "{}>common>storage>local"
+KAFKA_ENDPOINTS = '{}>external>kafka>endpoints'
+KAFKA_NUM_ENDPOINTS = '{}>external>kafka>num_endpoints'
 CONSUL_ENDPOINTS = 'consul_endpoints'
-CONSUL_ENDPOINTS_KEY = 'cortx>external>consul>endpoints'
-CONSUL_NUM_ENDPOINTS_KEY = 'cortx>external>consul>num_endpoints'
+CONSUL_ENDPOINTS_KEY = '{}>external>consul>endpoints'
+CONSUL_NUM_ENDPOINTS_KEY = '{}>external>consul>num_endpoints'
 CONSUL_ADMIN = 'consul_admin'
-CONSUL_ADMIN_KEY = 'cortx>external>consul>admin'
+CONSUL_ADMIN_KEY = '{}>external>consul>admin'
 CONSUL_SECRET = 'consul_secret'
-CONSUL_SECRET_KEY = 'cortx>external>consul>secret'
+CONSUL_SECRET_KEY = '{}>external>consul>secret'
 SSL_CERTIFICATE = 'ssl_certificate'
-SSL_CERTIFICATE_KEY = 'cortx>common>security>ssl_certificate'
+SSL_CERTIFICATE_KEY = '{}>common>security>ssl_certificate'
 DOMAIN_CERTIFICATE = 'domain_certificate'
-DOMAIN_CERTIFICATE_KEY = 'cortx>common>security>domain_certificate'
+DOMAIN_CERTIFICATE_KEY = '{}>common>security>domain_certificate'
 DEVICE_CERTIFICATE = 'device_certificate'
-DEVICE_CERTIFICATE_KEY = 'cortx>common>security>device_certificate'
-CSM_AGENT_ENDPOINTS_KEY = 'cortx>csm>agent>endpoints[0]'
-CSM_AGENT_EMAIL_KEY = 'cortx>csm>email_address'
-CSM_AGENT_MGMT_ADMIN_KEY = 'cortx>csm>mgmt_admin'
-CSM_AGENT_MGMT_SECRET_KEY ='cortx>csm>mgmt_secret'
-CSM_CONFIG_PATH_KEY = 'cortx>common>storage>config'
-CORTX_LOG_PATH_KEY = 'cortx>common>storage>log'
+DEVICE_CERTIFICATE_KEY = '{}>common>security>device_certificate'
+CSM_AGENT_ENDPOINTS_KEY = '{}>csm>agent>endpoints[0]'
+CSM_AGENT_EMAIL_KEY = '{}>csm>email_address'
+CSM_AGENT_MGMT_ADMIN_KEY = '{}>csm>mgmt_admin'
+CSM_AGENT_MGMT_SECRET_KEY ='{}>csm>mgmt_secret'
+CSM_CONFIG_PATH_KEY = '{}>common>storage>config'
+CORTX_LOG_PATH_KEY = '{}>common>storage>log'
 METRICS_PERF_STATS_MSG_TYPE = 'perf_stat_msg_type'
-METRICS_PERF_STATS_MSG_TYPE_KEY = 'cortx>csm>metrics>stats>message_type'
+METRICS_PERF_STATS_MSG_TYPE_KEY = '{}>csm>metrics>stats>message_type'
 METRICS_PERF_STATS_RETENTION_SIZE = 'perf_stat_msg_retention_size'
-METRICS_PERF_STATS_RETENTION_SIZE_KEY = 'cortx>csm>metrics>stats>retention_size'
-RGW_S3_DATA_ENDPOINTS_KEY = 'cortx>rgw>public>endpoints'
-RGW_NUM_ENDPOINTS_KEY = 'cortx>rgw>public>num_endpoints'
+METRICS_PERF_STATS_RETENTION_SIZE_KEY = '{}>csm>metrics>stats>retention_size'
+RGW_S3_DATA_ENDPOINTS_KEY = '{}>rgw>public>endpoints'
+RGW_NUM_ENDPOINTS_KEY = '{}>rgw>public>num_endpoints'
 RGW_S3_AUTH_USER = 'rgw_s3_auth_user'
-RGW_S3_AUTH_USER_KEY = 'cortx>rgw>auth_user'
+RGW_S3_AUTH_USER_KEY = '{}>rgw>auth_user'
 RGW_S3_AUTH_ADMIN = 'rgw_s3_auth_admin'
-RGW_S3_AUTH_ADMIN_KEY = 'cortx>rgw>auth_admin'
+RGW_S3_AUTH_ADMIN_KEY = '{}>rgw>auth_admin'
 RGW_S3_AUTH_SECRET = 'rgw_s3_auth_secret'
-RGW_S3_AUTH_SECRET_KEY = 'cortx>rgw>auth_secret'
-HAX_ENDPOINT_KEY = 'cortx>hare>hax>endpoints'
-HAX_NUM_ENDPOINT_KEY = 'cortx>hare>hax>num_endpoints'
+RGW_S3_AUTH_SECRET_KEY = '{}>rgw>auth_secret'
+HAX_ENDPOINT_KEY = '{}>hare>hax>endpoints'
+HAX_NUM_ENDPOINT_KEY = '{}>hare>hax>num_endpoints'
 # keys for conf file setup
 K8S = "K8"
 S3_DATA_ENDPOINT = 'S3>data>endpoints'
@@ -972,8 +971,8 @@ CSM_USAGE_RESERVED_BUFFER_PERCENT = 5
 MAX_MEM_PER_REQUEST_MB = 2
 
 USAGE_REQUEST_QUOTA = 'usage>request_quota'
-CSM_LIMITS_SERVICES_KEY = 'cortx>csm>limits>services'
-CSM_LIMITS_NUM_SERVICES_KEY = 'cortx>csm>limits>num_services'
+CSM_LIMITS_SERVICES_KEY = '{}>csm>limits>services'
+CSM_LIMITS_NUM_SERVICES_KEY = '{}>csm>limits>num_services'
 
 # Swagger UI
 SWAGGER_UI_DIST = '{}/templates/swagger-ui'.format(CSM_PATH)

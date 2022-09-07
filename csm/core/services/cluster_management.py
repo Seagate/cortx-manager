@@ -49,11 +49,12 @@ class ClusterManagementAppService(ApplicationService):
 
     def init_message_bus(self):
         message_server_endpoints = list()
+        config_root = Conf.get(const.CONSUMER_INDEX, const.ROOT, const.CORTX)
         kafka_num_eps = Conf.get(const.CONSUMER_INDEX,
-            const.KAFKA_NUM_ENDPOINTS)
+            const.KAFKA_NUM_ENDPOINTS.format(config_root))
         for ep_count in range(int(kafka_num_eps)):
             ep = Conf.get(const.CONSUMER_INDEX,
-                f'{const.KAFKA_ENDPOINTS}[{ep_count}]')
+                f'{const.KAFKA_ENDPOINTS.format(config_root)}[{ep_count}]')
             if ep:
                 message_server_endpoints.append(ep)
             else:
