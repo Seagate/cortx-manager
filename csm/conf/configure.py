@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import os
+import re
 # from cortx.utils.product_features import unsupported_features
 from marshmallow.exceptions import ValidationError
 from csm.common.service_urls import ServiceUrls
@@ -361,18 +362,20 @@ class Configure(Setup):
         :param mem: value from Conf as string.
         :returns: integer value.
         """
-#         numbers_only = mem[:mem.find('M')]
-#         return int(numbers_only)
-        num = ''
-        unit = ''
-        for char in mem:
-            if ord(char) >= 48 and ord(char) <= 57:
-                num = num + char
-            elif (ord(char) >= 65 and ord(char) <= 90) or (ord(char) >= 97 and ord(char) <= 122):
-                unit += char
-
-        intVal = int(num)
-        convertFrom = unit
+        temp = re.compile("([0-9]+)(Gi?|Mi?|Pi?|Ki?|Ti?|B)")
+        try:
+            memLimit = temp.match(mem).groups()
+            if len(memLimit[1]) == 1: 
+                flag = (len(memLimit[0]) == len(mem)-1)
+                if not (flag): raise AttributeError
+            elif len(memLimit[1]) == 2:
+                flag = (len(memLimit[0]) == len(mem)-2)
+                if not (flag): raise AttributeError
+            else:
+                raise AttributeError
+        except(AttributeError) as e:
+            raise e
+        intVal, convertFrom = int(memLimit[0]), memLimit[1]
         convertTo = 'M'
         return Utility.conversion_mem_limit(intVal, convertFrom, convertTo)
 
