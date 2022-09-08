@@ -125,7 +125,7 @@ class Utility:
             except (VError, KvError) as e:
                 Log.error(f"Unable to fetch the configurations from consul: {e}")
                 raise e
-                
+
     @staticmethod
     def conversion_mem_limit(intVal, convertFrom, convertTo):
         convertToByte = {'B' : 1, 'K' : 1000, 'M' : 1000**2, 'G' : 1000**3,
