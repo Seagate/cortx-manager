@@ -14,6 +14,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import time
+import asyncio
 import aiohttp
 from aiohttp.client import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
@@ -26,7 +27,6 @@ from csm.common.errors import CsmInternalError
 from csm.core.data.models.rgw import RgwError
 from csm.common.errors import ServiceError
 from csm.plugins.cortx.rgw import RGWPlugin
-import asyncio
 
 class StorageCapacityService(ApplicationService):
     """
@@ -149,7 +149,7 @@ class StorageCapacityService(ApplicationService):
         :param status: HTTP Status code.
         :param body: parsed HTTP response (dict) with the error's decription.
         """
-        Log.error(f"{reason}")
+        Log.error(f"Operation failed: {reason}")
         self.capacity_error.http_status = status
         self.capacity_error.message_id = reason
         self.capacity_error.message = reason
