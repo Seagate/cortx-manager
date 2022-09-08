@@ -365,7 +365,7 @@ class Configure(Setup):
         temp = re.compile("([0-9]+)(Gi?|Mi?|Pi?|Ki?|Ti?|B)")
         try:
             memLimit = temp.match(mem).groups()
-            if len(memLimit[1]) == 1: 
+            if len(memLimit[1]) == 1:
                 flag = (len(memLimit[0]) == len(mem)-1)
                 if not (flag): raise AttributeError
             elif len(memLimit[1]) == 2:
