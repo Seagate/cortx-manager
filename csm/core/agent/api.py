@@ -42,7 +42,7 @@ from csm.core.blogic import const
 from csm.common.errors import (CsmError, CsmNotFoundError, CsmPermissionDenied,
                                CsmInternalError, InvalidRequest, ResourceExist,
                                CsmNotImplemented, CsmServiceConflict, CsmGatewayTimeout,
-                               CsmRequestCancelled, CsmUnauthorizedError, CSM_UNKNOWN_ERROR,
+                               CsmRequestCancelled, CsmUnauthorizedError, RequestTimeout, CSM_UNKNOWN_ERROR,
                                CSM_HTTP_ERROR)
 from csm.core.routes import ApiRoutes
 from csm.core.services.file_transfer import DownloadFileEntity
@@ -486,6 +486,11 @@ class CsmRestApi(CsmApi, ABC):
             resp = CsmRestApi.error_response(e, request=request,
                 request_id=request.request_id)
             return CsmRestApi.json_response(resp, status=504)
+        except RequestTimeout as e:
+            Log.debug(f"[{request.request_id}] : RequestTimeout : {e}")
+            resp = CsmRestApi.error_response(e, request=request,
+                request_id=request.request_id)
+            return CsmRestApi.json_response(resp, status=408)
         except CsmServiceConflict as e:
             Log.error(f"[{request.request_id}] : CSM Service conflict: {e}")
             resp = CsmRestApi.error_response(e, request=request,

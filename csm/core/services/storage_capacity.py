@@ -23,7 +23,7 @@ from cortx.utils.conf_store.conf_store import Conf
 from cortx.utils.log import Log
 from csm.common.services import ApplicationService
 from csm.core.blogic import const
-from csm.common.errors import CsmInternalError
+from csm.common.errors import CsmInternalError, RequestTimeout
 from csm.core.data.models.rgw import RgwError
 from csm.common.errors import ServiceError
 from csm.plugins.cortx.rgw import RGWPlugin
@@ -136,8 +136,7 @@ class StorageCapacityService(ApplicationService):
                         continue
                 except asyncio.TimeoutError as e:
                     Log.error(f"Error in obtaining response from {url}:{e}")
-                    self._create_error(408, "Request Timeout")
-                    return self.capacity_error
+                    raise RequestTimeout("Unable to get response from service")
                 except Exception as e:
                     Log.error(f"Error in obtaining response from {url}:{e}")
                     raise CsmInternalError("Error in obtaining response")
@@ -149,7 +148,7 @@ class StorageCapacityService(ApplicationService):
         :param status: HTTP Status code.
         :param body: parsed HTTP response (dict) with the error's decription.
         """
-        Log.error(f"Operation failed: {reason}")
+        Log.error(f"Create error body: {reason}")
         self.capacity_error.http_status = status
         self.capacity_error.message_id = reason
         self.capacity_error.message = reason

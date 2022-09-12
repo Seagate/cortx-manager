@@ -21,11 +21,9 @@ from csm.core.controllers.validators import ValidationErrorFormatter, ValidateSc
 from marshmallow import fields, ValidationError, validate
 from csm.core.services.storage_capacity import CapacityError
 from csm.core.services.storage_capacity import S3CapacityService
-from csm.common.errors import InvalidRequest
+from csm.common.errors import InvalidRequest, ServiceError, CAPACITY_SERVICE_ERROR
 from csm.core.controllers.view import CsmHttpException, CsmResponse
-from csm.common.errors import ServiceError
 
-CAPACITY_SERVICE_ERROR = 0x3010
 
 class S3CapacitySchema(ValidateSchema):
     resource = fields.Str(data_key=const.ARG_RESOURCE, required=True, allow_none=False,

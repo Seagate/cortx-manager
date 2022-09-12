@@ -38,9 +38,9 @@ CSM_GATEWAY_TIMEOUT = 0x100E
 CSM_UNAUTHORIZED_ERROR = 0x100F
 CSM_UNKNOWN_ERROR = 0x1010
 CSM_HTTP_ERROR = 0x1011
-
 S3_SERVICE_ERROR = 0x3000
-
+TIMEOUT_ERROR = 0x1012
+CAPACITY_SERVICE_ERROR = 0x3010
 class CsmError(BaseError):
     """ Parent class for the cli error classes """
 
@@ -241,6 +241,23 @@ class CsmGatewayTimeout(CsmError):
         """
         super(CsmGatewayTimeout, self).__init__(
             CSM_GATEWAY_TIMEOUT, desc,
+            message_id, message_args)
+
+class RequestTimeout(CsmError):
+
+    """
+    This error represents a scenario where CSM was acting as a client did not receive
+    a timely response from the upstream server.
+    """
+
+    _desc = "Unable to get timely response from service."
+
+    def __init__(self, desc=None, message_id=const.TIMEOUT, message_args=None):
+        """
+        Instantiation Method for RequestTimeout class
+        """
+        super(RequestTimeout, self).__init__(
+            TIMEOUT_ERROR, desc,
             message_id, message_args)
 
 
