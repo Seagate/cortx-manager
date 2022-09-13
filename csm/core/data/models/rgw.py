@@ -49,7 +49,6 @@ class RgwErrors(Enum):
     " subordinate entities."
     BucketAlreadyExists = "Attempt to delete a resource that has attached"\
     " subordinate entities."
-    SlowDown = "kkkk"
 
 class RgwError:
     """Class that describes a non-successful result"""
