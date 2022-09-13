@@ -252,14 +252,13 @@ class RequestTimeout(CsmError):
 
     _desc = "Unable to get timely response from service."
 
-    def __init__(self, desc=None, message_id=const.TIMEOUT, message_args=None):
+    def __init__(self, desc=None, message_id=const.REQUESTTIMEOUT, message_args=None):
         """
         Instantiation Method for RequestTimeout class
         """
         super(RequestTimeout, self).__init__(
             TIMEOUT_ERROR, desc,
             message_id, message_args)
-
 
 class CsmUnauthorizedError(CsmError):
 
