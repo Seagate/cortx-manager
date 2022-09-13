@@ -85,10 +85,10 @@ class CortxTopology(ITopology):
         dix = payload.get(const.DIX)
         sns = payload.get(const.SNS)
         res = {
-            const.DATA: f"{dix.get(const.DATA)}+{dix.get(const.PARITY)}"\
-                        f"+{dix.get(const.SPARE)}",
-            const.METADATA: f"{sns.get(const.DATA)}+{sns.get(const.PARITY)}"\
-                        f"+{sns.get(const.SPARE)}"
+            const.DATA: f"{sns.get(const.DATA)}+{sns.get(const.PARITY)}"\
+                        f"+{sns.get(const.SPARE)}",
+            const.METADATA: f"{dix.get(const.DATA)}+{dix.get(const.PARITY)}"\
+                        f"+{dix.get(const.SPARE)}"
         }
         return res
 
