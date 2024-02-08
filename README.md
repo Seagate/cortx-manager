@@ -1,4 +1,4 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d8d7bdb96b1c43e28181c573e8c3434d)](https://www.codacy.com/gh/Seagate/cortx-manager/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Seagate/cortx-manager&amp;utm_campaign=Badge_Grade) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/Seagate/cortx-manager/blob/main/LICENSE) [![Slack](https://img.shields.io/badge/chat-on%20Slack-blue")](https://cortx.link/join-slack) [![YouTube](https://img.shields.io/badge/Video-YouTube-red)](https://cortx.link/videos) [![GitHub contributors](https://img.shields.io/github/contributors/Seagate/cortx-manager)](https://github.com/Seagate/cortx-manager/graphs/contributors/)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/Seagate/cortx-manager/blob/main/LICENSE) [![Slack](https://img.shields.io/badge/chat-on%20Slack-blue")](https://cortx.link/join-slack) [![YouTube](https://img.shields.io/badge/Video-YouTube-red)](https://cortx.link/videos) [![GitHub contributors](https://img.shields.io/github/contributors/Seagate/cortx-manager)](https://github.com/Seagate/cortx-manager/graphs/contributors/)
 
 <!--
 CORTX-CSM: CORTX Management web and CLI interface.
@@ -17,6 +17,7 @@ For any questions about this software or licensing,
 please email opensource@seagate.com or cortx-questions@seagate.com.
 -->
 
+# Disclaimer: This project is not maintained anymore
 # CORTX-Manager
 
 CORTX Manager provides APIs which communicate with different CORTX components and features. These APIs are consumed by CORTX Management Portal and CLI.
